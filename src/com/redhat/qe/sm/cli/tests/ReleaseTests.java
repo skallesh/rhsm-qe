@@ -27,7 +27,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
- *
+ * 
+ * References:
+ * https://engineering.redhat.com/trac/Entitlement/wiki/ReleaseVer
  */
 
 @Test(groups={"ReleaseTests","AcceptanceTest"})

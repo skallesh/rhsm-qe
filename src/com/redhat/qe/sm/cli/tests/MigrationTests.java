@@ -2277,7 +2277,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public List<List<Object>> getRhnChannelFromProductBaselineDataAsListOfLists() throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
-		
+				
 		for (String productId : cdnProductBaselineProductIdMap.keySet()) {
 			for (String rhnChannel : cdnProductBaselineProductIdMap.get(productId)) {
 
@@ -2294,26 +2294,26 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				if (rhnChannelExceptions.contains(rhnChannel) && !clienttasks.redhatReleaseX.equals(/*"5"*/"6")) continue;
 				
 				// bugzillas
-				Object bugzilla = null;
+				Set<String> bugIds = new HashSet<String>();
 				if (rhnChannel.contains("-rhev-agent-") && clienttasks.redhatReleaseX.equals("5")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
 					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
-					bugzilla = new BlockedByBzBug("786278");
+					bugIds.add("786278");
 				}
 				if (rhnChannel.contains("-vt-")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
 					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
-					bugzilla = new BlockedByBzBug("786278");
+					bugIds.add("786278");
 				}
 				if (rhnChannel.startsWith("rhel-i386-rhev-agent-") /* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
 					// Bug 816364 - channel-cert-mapping.txt is missing a mapping for product 150 "Red Hat Enterprise Virtualization" on i386
-					bugzilla = new BlockedByBzBug("816364");
+					bugIds.add("816364");
 				}
 				if (rhnChannel.endsWith("-beta") && clienttasks.redhatReleaseX.equals("5")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
 					// Bug 786203 - all RHN *beta Channels in channel-cert-mapping.txt are mapped to "none" instead of valid productId
-					bugzilla = new BlockedByBzBug("786203");
+					bugIds.add("786203");
 				}			
 				if (rhnChannel.endsWith("-debuginfo") && clienttasks.redhatReleaseX.equals("5")) { 
 					// Bug 786140 - RHN Channels for "*debuginfo" are missing from the channel-cert-mapping.txt 
-					bugzilla = new BlockedByBzBug("786140");
+					bugIds.add("786140");
 				}
 				if (rhnChannel.startsWith("rhel-x86_64-server-optional-6-htb") ||
 					rhnChannel.startsWith("rhel-x86_64-server-sfs-6-htb") ||
@@ -2337,54 +2337,59 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					rhnChannel.startsWith("rhel-x86_64-server-6-cf-se-1") ||
 					rhnChannel.startsWith("sam-rhel-x86_64-server-6-htb") || rhnChannel.startsWith("sam-rhel-x86_64-server-6-beta")) { 
 					// Bug 799152 - subscription-manager-migration-data is missing some product certs for RHN Channels in product-baseline.json
-					bugzilla = new BlockedByBzBug("799152");
+					bugIds.add("799152");
 				}
 				if (rhnChannel.equals("rhel-s390x-server-6") ||
 					rhnChannel.equals("rhel-s390x-server-optional-6") ||
 					rhnChannel.equals("rhel-s390x-server-supplementary-6")) { 
 					// Bug 799103 - no mapping for s390x product cert included in the subscription-manager-migration-data
-					bugzilla = new BlockedByBzBug("799103");
+					bugIds.add("799103");
 				}
 				if (rhnChannel.equals("sam-rhel-x86_64-server-6") ||
 					rhnChannel.equals("sam-rhel-x86_64-server-6-debuginfo")) { 
 					// Bug 815433 - sam-rhel-x86_64-server-6-beta channel mapping needs replacement in channel-cert-mapping.txt 
-					bugzilla = new BlockedByBzBug("815433");
+					bugIds.add("815433");
 				}
 				if (productId.equals("167")) {
 					// Bug 811633 - channel-cert-mapping.txt is missing a mapping for product 167 "Red Hat CloudForms"
-					bugzilla = new BlockedByBzBug("811633");
+					bugIds.add("811633");
 				}
 				if (productId.equals("183") || productId.equals("184") || productId.equals("185")) if (clienttasks.redhatReleaseX.equals("6")) {
 					// Bug 825603 - channel-cert-mapping.txt is missing a mapping for JBoss product ids 183,184,185
-					bugzilla = new BlockedByBzBug("825603");
+					bugIds.add("825603");
 				}
 				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("6")) { 
 					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
-					bugzilla = new BlockedByBzBug("820749");
+					bugIds.add("820749");
 				}
 				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("5")) { 
 					// Bug 852551 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
-					bugzilla = new BlockedByBzBug("852551");
+					bugIds.add("852551");
 				}
 				if (productId.equals("181")) {
 					// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
-					bugzilla = new BlockedByBzBug("840148");
+					bugIds.add("840148");
 				}
 				if (rhnChannel.startsWith("rhel-i386-rhev-agent-5-")) { 
 					// Bug 849305 - rhel-i386-rhev-agent-5-* maps in channel-cert-mapping.txt do not match CDN Product Baseline
-					bugzilla = new BlockedByBzBug("849305");
+					bugIds.add("849305");
 				}
 				if (rhnChannel.startsWith("jbappplatform-4.2-els-")) { 
 					// Bug 861470 - JBoss Enterprise Application Platform - ELS (jbappplatform-4.2.0) 192.pem product certs are missing from subscription-manager-migration-data
-					bugzilla = new BlockedByBzBug("861470");
+					bugIds.add("861470");
 				}
 				if (rhnChannel.startsWith("rhel-x86_64-rhev-mgmt-agent-5")) { 
 					// Bug 861420 - Red Hat Enterprise Virtualization (rhev-3.0) 150.pem product certs are missing from subscription-manager-migration-data
-					bugzilla = new BlockedByBzBug("861420");
+					bugIds.add("861420");
+				}
+				if (rhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-5-debuginfo") || rhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-5-beta-debuginfo")) { 
+					// Bug 865566 - RHEL-5/channel-cert-mapping.txt is missing a mapping for two rhev debuginfo channels
+					bugIds.add("865566");
 				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
-				ll.add(Arrays.asList(new Object[]{bugzilla,	rhnChannel,	productId}));
+				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnChannel,	productId}));
 			}
 		}
 		
@@ -2407,86 +2412,86 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (String rhnAvailableChildChannel : rhnAvailableChildChannels) {
 			
 			// bugzillas
-			Object bugzilla = null;
+			Set<String> bugIds = new HashSet<String>();
 			if (rhnAvailableChildChannel.matches("sam-rhel-.+-server-6-beta.*")) {	// sam-rhel-x86_64-server-6-beta-debuginfo
 				// Bug 819092 - channels for sam-rhel-<ARCH>-server-6-beta-* are not yet mapped to product certs in rcm/rhn-definitions.git
-				bugzilla = new BlockedByBzBug("819092");
+				bugIds.add("819092");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-rhui-2(-.*|$)")) {	// rhel-x86_64-server-6-rhui-2-debuginfo
 				// Bug 819089 - channels for rhel-<ARCH>-rhui-2-* are not yet mapped to product certs in rcm/rhn-definitions.git
-				bugzilla = new BlockedByBzBug("819089");
+				bugIds.add("819089");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-6-mrg-.+")) {	// rhel-x86_64-server-6-mrg-grid-execute-2-debuginfo rhel-x86_64-server-6-mrg-messaging-2-debuginfo
 				// Bug 819088 - channels for rhel-<ARCH>-server-6-mrg-* are not yet mapped to product certs in rcm/rhn-definitions.git 
-				bugzilla = new BlockedByBzBug("819088");
+				bugIds.add("819088");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-hpc-node-6-mrg-.*")) {	// rhel-x86_64-hpc-node-6-mrg-grid-execute-2  rhel-x86_64-hpc-node-6-mrg-grid-execute-2-debuginfo  rhel-x86_64-hpc-node-6-mrg-management-2  rhel-x86_64-hpc-node-6-mrg-management-2-debuginfo
 				// Bug 825608 - channels for rhel-<ARCH>-hpc-node-6-mrg-* are not yet mapped to product certs in rcm/rhn-definitions.git
-				bugzilla = new BlockedByBzBug("825608");
+				bugIds.add("825608");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-v2vwin-6(-.*|$)")) {	// rhel-x86_64-server-v2vwin-6-beta-debuginfo
 				// Bug 817791 - v2vwin content does not exist in CDN
-				bugzilla = new BlockedByBzBug("817791");
+				bugIds.add("817791");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-fastrack-6(-.*|$)")) {	// rhel-x86_64-server-ha-fastrack-6-debuginfo
 				// Bug 818202 - Using subscription-manager, some repositories like fastrack are not available as they are in rhn.
-				bugzilla = new BlockedByBzBug("818202");
+				bugIds.add("818202");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-eucjp-6(-.+|$)")) {	// rhel-x86_64-server-eucjp-6 rhel-x86_64-server-eucjp-6-beta etc.
 				// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
-				bugzilla = new BlockedByBzBug("840148");
+				bugIds.add("840148");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-fastrack-5(-.*|$)")) {	// rhel-x86_64-server-fastrack-5 rhel-x86_64-server-fastrack-5-debuginfo
 				// Bug 818202 - Using subscription-manager, some repositories like fastrack are not available as they are in rhn.
-				bugzilla = new BlockedByBzBug("818202");
+				bugIds.add("818202");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-cf-tools-1(-beta)?-debuginfo")) {	// rhel-x86_64-server-5-cf-tools-1-beta-debuginfo, rhel-x86_64-server-5-cf-tools-1-debuginfo
 				// Bug 840099 - debug info channels for rhel-x86_64-server-5-cf-tools are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugzilla = new BlockedByBzBug("840099");
+				bugIds.add("840099");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-mrg-.*")) {	// rhel-x86_64-server-5-mrg-grid-1 rhel-x86_64-server-5-mrg-grid-1-beta rhel-x86_64-server-5-mrg-grid-2 rhel-x86_64-server-5-mrg-grid-execute-1 rhel-x86_64-server-5-mrg-grid-execute-1-beta rhel-x86_64-server-5-mrg-grid-execute-2 etc.
 				// Bug 840102 - channels for rhel-<ARCH>-server-5-mrg-* are not yet mapped to product certs in rcm/rcm-metadata.git 
-				bugzilla = new BlockedByBzBug("840102");
+				bugIds.add("840102");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-hpc-5(-.*|$)")) {	// rhel-x86_64-server-hpc-5-beta
 				// Bug 840103 - channel for rhel-x86_64-server-hpc-5-beta is not yet mapped to product cert in rcm/rcm-metadata.git
-				bugzilla = new BlockedByBzBug("840103");
+				bugIds.add("840103");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-rhev-hdk-2-5(-.+|$)")) {	// rhel-x86_64-server-rhev-hdk-2-5 rhel-x86_64-server-rhev-hdk-2-5-beta
 				// Bug 840108 - channels for rhel-<ARCH>-rhev-hdk-2-5-* are not yet mapped to product certs in rcm/rhn-definitions.git
-				bugzilla = new BlockedByBzBug("840108");
+				bugIds.add("840108");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-productivity-5-beta(-.+|$)")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugzilla = new BlockedByBzBug("840136");	// CLOSED in favor of bug 840099
-				bugzilla = new BlockedByBzBug("840099");
+				bugIds.add("840136");	// CLOSED in favor of bug 840099
+				bugIds.add("840099");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-rhsclient-5(-.+|$)")) {	// rhel-x86_64-server-rhsclient-5 rhel-x86_64-server-rhsclient-5-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugzilla = new BlockedByBzBug("840136");	// CLOSED in favor of bug 840099
-				bugzilla = new BlockedByBzBug("840099");
+				bugIds.add("840136");	// CLOSED in favor of bug 840099
+				bugIds.add("840099");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-xfs-5(-.+|$)")) {	// rhel-x86_64-server-xfs-5 rhel-x86_64-server-xfs-5-beta
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugzilla = new BlockedByBzBug("840136");	// CLOSED in favor of bug 840099
-				bugzilla = new BlockedByBzBug("840099");
+				bugIds.add("840136");	// CLOSED in favor of bug 840099
+				bugIds.add("840099");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-shadow(-.+|$)")) {	// rhel-x86_64-server-5-shadow-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugzilla = new BlockedByBzBug("840136");	// CLOSED in favor of bug 840099
-				bugzilla = new BlockedByBzBug("840099");
+				bugIds.add("840136");	// CLOSED in favor of bug 840099
+				bugIds.add("840099");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-eucjp-5(-.+|$)")) {	// rhel-x86_64-server-eucjp-5 rhel-x86_64-server-eucjp-5-beta etc.
 				// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
-				bugzilla = new BlockedByBzBug("840148");
+				bugIds.add("840148");
 			}
 			if (rhnAvailableChildChannel.startsWith("rhx-")) {	// rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5 etcetera
 				// Bug 840111 - various rhx channels are not yet mapped to product certs in rcm/rcm-metadata.git 
-				bugzilla = new BlockedByBzBug("840111");
+				bugIds.add("840111");
 			}
 
-			
-			ll.add(Arrays.asList(new Object[]{bugzilla,	rhnAvailableChildChannel}));
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
 		
 		return ll;

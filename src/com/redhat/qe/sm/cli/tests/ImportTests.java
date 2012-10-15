@@ -396,10 +396,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
 
 			// verify that the expectedEntitlementCertFile now exists
-			Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),1,"After attempting multiple certificate import, the expected destination for the entitlement cert file should now exist ("+expectedEntitlementCertFile+").");
+			Assert.assertTrue(RemoteFileTasks.testExists(client, expectedEntitlementCertFile.getPath()),"After attempting multiple certificate import, the expected destination for the entitlement cert file should now exist ("+expectedEntitlementCertFile+").");
 
 			// verify that the expectedEntitlementKeyFile also exists
-			Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),1,"After attempting multiple certificate import, the expected destination for the entitlement key file should now exist ("+expectedEntitlementKeyFile+").");
+			Assert.assertTrue(RemoteFileTasks.testExists(client, expectedEntitlementKeyFile.getPath()),"After attempting multiple certificate import, the expected destination for the entitlement key file should now exist ("+expectedEntitlementKeyFile+").");
 		}
 	}
 	
@@ -440,20 +440,20 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(importResult.getStdout().contains(errorMsg),"The result from the import command contains expected message: "+errorMsg);		
 
 				// verify that the expectedEntitlementCertFile does not exist
-				Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),0,"After attempting multiple certificate import, the expected destination for the invalid entitlement cert file should NOT exist ("+expectedEntitlementCertFile+").");
+				Assert.assertTrue(!RemoteFileTasks.testExists(client, expectedEntitlementCertFile.getPath()),"After attempting multiple certificate import, the expected destination for the invalid entitlement cert file should NOT exist ("+expectedEntitlementCertFile+").");
 				
 				// verify that the expectedEntitlementKeyFile  does not exist
-				Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),0,"After attempting multiple certificate import, the expected destination for the invalid entitlement key file should NOT exist ("+expectedEntitlementKeyFile+").");
+				Assert.assertTrue(!RemoteFileTasks.testExists(client, expectedEntitlementKeyFile.getPath()),"After attempting multiple certificate import, the expected destination for the invalid entitlement key file should NOT exist ("+expectedEntitlementKeyFile+").");
 
 			} else {
 				String successMsg = "Successfully imported certificate "+new File(importCertificate).getName();
 				Assert.assertTrue(importResult.getStdout().contains(successMsg),"The result from the import command contains expected message: "+successMsg);		
 				
 				// verify that the expectedEntitlementCertFile now exists
-				Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),1,"After attempting multiple certificate import, the expected destination for the entitlement cert file should now exist ("+expectedEntitlementCertFile+").");
+				Assert.assertTrue(RemoteFileTasks.testExists(client, expectedEntitlementCertFile.getPath()),"After attempting multiple certificate import, the expected destination for the entitlement cert file should now exist ("+expectedEntitlementCertFile+").");
 				
 				// verify that the expectedEntitlementKeyFile also exists
-				Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),1,"After attempting multiple certificate import, the expected destination for the entitlement key file should now exist ("+expectedEntitlementKeyFile+").");
+				Assert.assertTrue(RemoteFileTasks.testExists(client, expectedEntitlementKeyFile.getPath()),"After attempting multiple certificate import, the expected destination for the entitlement key file should now exist ("+expectedEntitlementKeyFile+").");
 			}
 		}
 		
@@ -463,7 +463,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: unsubscribe from an imported entitlement (while not registered)",
-			groups={"blockedByBug-735338","blockedByBug-838146","blockedByBug-860344"},
+			groups={"blockedByBug-735338","blockedByBug-838146","blockedByBug-860344","blockedByBug-865590"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportACertificateAndUnsubscribeWhileNotRegistered_Test() {
@@ -505,7 +505,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	
+	// TODO make ImportACertificateAndUnsubscribeWhileNotRegistered_Test run with both v1 and v3 entitlement certs
 	
 	
 	// Protected Class Variables ***********************************************************************
