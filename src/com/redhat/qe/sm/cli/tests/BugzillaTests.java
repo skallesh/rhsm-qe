@@ -74,20 +74,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 * @throws JSONException 
 	 */
-	@Test(	description="subscription-manager facts --update changes update date after facts update",
-			groups={"VerifyrhsmcertdRefreshIdentityCert","blockedByBug-827034"},
-			enabled=false)	
+	@Test(	description="verify if rhsmcertd process refresh the identity certificate after every restart",
+			groups={"VerifyrhsmcertdRefreshIdentityCert","blockedByBug-827034","blockedByBug-827035"},
+			enabled=true)	
 
 	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		
-		clienttasks.getCurrentConsumerCert();
-		client.runCommandAndWait("date -s '16 years'");
+		Calendar StartTimeBeforeRHSM=clienttasks.getCurrentConsumerCert().validityNotBefore;
+		Calendar EndTimeBeforeRHSM=clienttasks.getCurrentConsumerCert().validityNotAfter;
+		String existingCertdate=client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStdout();
 		clienttasks.restart_rhsmcertd(null, null, false, null);
+		SubscriptionManagerCLITestScript.sleep(2*60*1000);
+		Calendar StartTimeAfterRHSM=clienttasks.getCurrentConsumerCert().validityNotBefore;
+		Calendar EndTimeAfterRHSM=clienttasks.getCurrentConsumerCert().validityNotAfter;
+		String updatedCertdate=client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStdout();
+		Assert.assertNotSame(StartTimeBeforeRHSM, StartTimeAfterRHSM);
+		Assert.assertNotSame(EndTimeBeforeRHSM, EndTimeAfterRHSM);
+		Assert.assertNotSame(existingCertdate, updatedCertdate);
+
 		
-		String currentDate=client.runCommandAndWait("date +"+"'%Y-%m-%d'").getStdout().trim();
-		client.runCommandAndWait("date -s '16 years ago'");
-	
 	}
 	
 	
