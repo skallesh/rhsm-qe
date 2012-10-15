@@ -465,7 +465,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="the facts for net.interface.sit0.mac_address and net.interface.lo.mac_address should not be listed",
 			groups={"blockedByBug-838123"}, dependsOnGroups={},
-			enabled=true)
+			enabled=true)	// TODO re-implement this test after fix for Bug 866645
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertFactsForNetInterfaceMacAddress_Test() {
 		
@@ -485,6 +485,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 707525 - Facts update command displays consumed uuid
 	// TODO Bug 722239 - subscription-manager cli does not show all facts
 	// TODO Bug 700821 - Update of consumer facts does not update the update timestamp
+	// TODO Bug 866645 - [RFE] Omit interfaces from facts based on their type. 
+	
 	
 	// TODO create tests that overrides the facts, for example....  and the uses getSystemSubscriptionPoolProductDataAsListOfLists()
 	// see TODO MOVE THIS BLOCK OF TESTING INTO ITS OWN "RULES CHECK TEST" from SubscribeTests
