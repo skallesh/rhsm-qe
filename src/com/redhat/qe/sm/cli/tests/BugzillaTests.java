@@ -73,25 +73,22 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception 
 	 * @throws JSONException 
-	 *//*
+	 */
 	@Test(	description="subscription-manager facts --update changes update date after facts update",
 			groups={"VerifyrhsmcertdRefreshIdentityCert","blockedByBug-827034"},
 			enabled=false)	
 
 	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		String filepath="/etc/pki/consumer/cert.pem";
-		OrderNamespace date=OrderNamespace.parseStdoutFromRctCatCert(client.runCommandAndWait("rct cat-cert "+filepath).getStdout());
+		
+		clienttasks.getCurrentConsumerCert();
 		client.runCommandAndWait("date -s '16 years'");
 		clienttasks.restart_rhsmcertd(null, null, false, null);
-		//String StartDateAfterRestart=client.runCommandAndWait("rct cat-cert "+filepath+" |grep 'Start Date' | cut -d ' ' -f3").getStdout();
-		date=OrderNamespace.parseStdoutFromRctCatCert(client.runCommandAndWait("rct cat-cert "+filepath).getStdout());
-		Calendar ConStartDate = date.startDate;
+		
 		String currentDate=client.runCommandAndWait("date +"+"'%Y-%m-%d'").getStdout().trim();
-		System.out.println(OrderNamespace.formatDateString(ConStartDate)+"   " +currentDate);
 		client.runCommandAndWait("date -s '16 years ago'");
 	
-	}*/
+	}
 	
 	
 	/**
@@ -578,6 +575,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		String Flag="false";
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		List<ProductSubscription> consumed= clienttasks.getCurrentlyConsumedProductSubscriptions();
+		if(!(consumed.isEmpty())){
+			clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		}
 		Map<String,String> factsMap = new HashMap<String,String>();
 		Integer moreSockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
@@ -718,7 +719,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	@Test(   description="subscription-manager: subscribe_ multiple pools in incorrect format",
 			groups={"MysubscribeTest","blockedByBug-772218"},
-			enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
+			enabled=true)	
 	public void VerifyIncorrectSubscriptionFormat() {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null,
 				null, null);
@@ -847,8 +848,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 */
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe_ all the available products ",
-			groups={"VerifyFuturesubscription_Test"},
-			//   dataProvider="getAllFutureSystemSubscriptionPoolsData",
+			groups={"VerifyFuturesubscription_Test","blockedByBug-746035"},
 			enabled=true)
 	public void VerifyFuturesubscription_Test() throws Exception{
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
@@ -861,7 +861,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			futureJSONPool = (JSONObject) l.get(0);
 		}
 		Calendar onDate = parseISO8601DateString(futureJSONPool.getString("startDate"),"GMT"); 
-		System.out.println(onDate + "  onDate");
 		onDate.add(Calendar.DATE, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(onDate.getTime());
@@ -877,6 +876,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					clienttasks.subscribe_(null, null,result, null, null, null, null, null, null, null, null);							
 
 			}}
+		System.out.println("future subscription   " +clienttasks.getCurrentlyInstalledProducts());
 		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			if(installedProduct.productName==ProductIds){
