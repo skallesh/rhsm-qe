@@ -65,10 +65,32 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	//https://bugzilla.redhat.com/show_bug.cgi?id=733327
 	// TODO Bug 674652 - Subscription Manager Leaves Broken Yum Repos After Unregister//done
 	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback.//done
-	// TODO Bug 806958 - One empty certificate file in /etc/rhsm/ca causes registration failure
+	// TODO Bug 806958 - One empty certificate file in /etc/rhsm/ca causes registration failure//done
 	//https://bugzilla.redhat.com/show_bug.cgi?id=700821
-	// TODO Bug 827034 - Teach rhsmcertd to refresh the identity certificate
+	// TODO Bug 827034 - Teach rhsmcertd to refresh the identity certificate//done
+	//https://bugzilla.redhat.com/show_bug.cgi?id=607162//done
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="verify if corrupt identity cert displays a trace back for list command",
+			groups={"VerifyCorruptIdentityCert","blockedByBug-607162"},
+			enabled=true)	
 
+	public void VerifyCorruptIdentityCert() throws JSONException, Exception {
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		client.runCommandAndWait("cp /etc/pki/consumer/cert.pem /etc/pki/consumer/cert.pem.save");
+		client.runCommandAndWait("echo 'cert should fail now'> /etc/pki/consumer/cert.pem");
+		String result=clienttasks.list_(null, true, null, null, null, null, null, null, null).getStdout();
+		Assert.assertEquals(result.trim(), clienttasks.msg_ConsumerNotRegistered);
+		client.runCommandAndWait("mv -f /etc/pki/consumer/cert.pem.save /etc/pki/consumer/cert.pem");
+
+	}
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -120,6 +142,47 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(createdDateBeforeUpdate, createdDateAfterUpdate,"no changed in date value after facts update");
 		Assert.assertNoMatch(UpdateDateBeforeUpdate, UpdateDateAfterUpdate,"updated date has been changed after facts update");
 	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="verify healing of installed products without taking future subscriptions into consideration",
+			groups={"VerifyHealingForFutureSubscription"},
+			enabled=true)	
+
+	public void VerifyHealingForFutureSubscription() throws JSONException, Exception {
+		int healFrequency=2;
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		Calendar now = new GregorianCalendar();
+		List<String> productId=new ArrayList<String>();
+		now.add(Calendar.YEAR, 1);
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		for(SubscriptionPool availOnDate:clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest)){
+			System.out.println(availOnDate.poolId + " avail on date is");
+			clienttasks.subscribe(null, null, availOnDate.poolId, null, null, null, null, null, null, null, null);
+		}
+		for(InstalledProduct installedproduct :clienttasks.getCurrentlyInstalledProducts()){
+			if(installedproduct.status.equals("Future Subscription")){
+				productId.add(installedproduct.productId);
+			}
+		}
+		clienttasks.restart_rhsmcertd(null, healFrequency, false,null);
+		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
+
+		for(InstalledProduct installedproduct :clienttasks.getCurrentlyInstalledProducts()){
+		 for(String productid:productId){
+			if(installedproduct.productId.equals(productid)){
+				System.out.println(installedproduct.productId +"   "+productid );
+				Assert.assertEquals(installedproduct.status.trim(), "Subscribed");
+				
+			}}
+		}
+		
+		}
 	
 	/**
 	 * @author skallesh
@@ -594,7 +657,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId, "sockets");
 				if((!(poolProductSocketsAttribute==null)) && (poolProductSocketsAttribute.equals("2"))){
 					clienttasks.subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool);
-
 				}
 			}
 		}for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
@@ -771,7 +833,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if architecture for auto-subscribe_ test",
 			groups={"VerifyarchitectureForAutobind_Test"},
-			//   dataProvider="getAllFutureSystemSubscriptionPoolsData",
 			enabled=true)
 	public void VerifyarchitectureForAutobind_Test() throws Exception{
 
@@ -857,38 +918,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"VerifyFuturesubscription_Test","blockedByBug-746035"},
 			enabled=true)
 	public void VerifyFuturesubscription_Test() throws Exception{
-		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		Calendar now = new GregorianCalendar();
-		List<String> productname=new ArrayList<String>();
-		String ProductIds=null;
-		JSONObject futureJSONPool = null;
-		now.setTimeInMillis(System.currentTimeMillis());
-		for (List<Object> l : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
-			futureJSONPool = (JSONObject) l.get(0);
-		}
-		Calendar onDate = parseISO8601DateString(futureJSONPool.getString("startDate"),"GMT"); 
-		onDate.add(Calendar.DATE, 1);
+		List<String> productId=new ArrayList<String>();
+		now.add(Calendar.YEAR, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		String onDateToTest = yyyy_MM_dd_DateFormat.format(onDate.getTime());
-		for(InstalledProduct installed  : clienttasks.getCurrentlyInstalledProducts()){
-			productname.add(installed.productName);
-
+		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		for(SubscriptionPool availOnDate:clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest)){
+			System.out.println(availOnDate.poolId + " avail on date is");
+			clienttasks.subscribe(null, null, availOnDate.poolId, null, null, null, null, null, null, null, null);
 		}
-		List<String> FuturePool = listFutureSubscription_OnDate(true,onDateToTest);
-		for(String result:FuturePool){
-			for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-				ProductIds=installedProduct.productName;
-				if(!(installedProduct.status.equals( "Future Subscription")))
-					clienttasks.subscribe_(null, null,result, null, null, null, null, null, null, null, null);							
-
-			}}
-		System.out.println("future subscription   " +clienttasks.getCurrentlyInstalledProducts());
-		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
-		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-			if(installedProduct.productName==ProductIds){
-				Assert.assertEquals(installedProduct.status, "Subscribed");
+		for(InstalledProduct installedproduct :clienttasks.getCurrentlyInstalledProducts()){
+			if(installedproduct.status.equals("Future Subscription")){
+				productId.add(installedproduct.productId);
 			}
-		}}
+		}
+		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installedproduct :clienttasks.getCurrentlyInstalledProducts()){
+			 for(String productid:productId){
+				if(installedproduct.productId.equals(productid)){
+					System.out.println(installedproduct.productId +"   "+productid );
+					Assert.assertEquals(installedproduct.status.trim(), "Subscribed");
+					
+				}}
+			}}
 
 
 	protected Calendar parseISO8601DateString(String dateString, String timeZone) {
@@ -1038,84 +1092,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A new system consumer's autoheal attribute value defaults to true.");
 	}
-	/*	// Configuration methods ***********************************************************************
-	 *//**
-	 * @param startingMinutesFromNow
-	 * @param endingMinutesFromNow
-	 * @return poolId to the newly available SubscriptionPool
-	 * @throws JSONException
-	 * @throws Exception
-	 *//*
-	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {
-
-
-		if (true) return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId, null).getString("id");
-// TODO DELETE THE REST OF THIS METHOD'S CODE WHEN WE KNOW THE ABOVE CANDLEPIN TASK IS WORKING 8/12/2011
-
-		// set the start and end dates
-		Calendar endCalendar = new GregorianCalendar();
-		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
-		Date endDate = endCalendar.getTime();
-		Calendar startCalendar = new GregorianCalendar();
-		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
-		Date startDate = startCalendar.getTime();
-
-
-		// randomly choose a contract number
-		Integer contractNumber = Integer.valueOf(getRandInt());
-
-		// randomly choose an account number
-		Integer accountNumber = Integer.valueOf(getRandInt());
-
-		// choose a product id for the subscription
-		//String productId =  "MKT-rhel-server";  // too hard coded
-		//JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
-		//String productId = null;
-		//do {	// pick a random productId (excluding a personal productId) // too random; could pick a product that is not available to this system
-		//	productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
-		//} while (getPersonProductIds().contains(productId));
-		String productId = randomAvailableProductId;
-
-		// choose providedProducts for the subscription
-		//String[] providedProducts = {"37068", "37069", "37060"};
-		//String[] providedProducts = {
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
-		//};
-		List<String> providedProducts = null;
-
-		// create the subscription
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();
-		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
-
-		// refresh the pools
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
-
-		// assemble an activeon parameter set to the start date so we can pass it on to the REST API call to find the created pool
-		DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");				// "2012-02-08T00:00:00.000+0000"
-		String iso8601FormatedDateString = iso8601DateFormat.format(startDate);
-		iso8601FormatedDateString = iso8601FormatedDateString.replaceFirst("(..$)", ":$1");				// "2012-02-08T00:00:00.000+00:00"	// see https://bugzilla.redhat.com/show_bug.cgi?id=720493 // http://books.xmlschemata.org/relaxng/ch19-77049.html requires a colon in the time zone for xsd:dateTime
-		String urlEncodedActiveOnDate = java.net.URLEncoder.encode(iso8601FormatedDateString, "UTF-8");	// "2012-02-08T00%3A00%3A00.000%2B00%3A00"	encode the string to escape the colons and plus signs so it can be passed as a parameter on an http call
-
-		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription id activeon startDate
-		String poolId = null;
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
-		for (int i = 0; i < jsonPools.length(); i++) {
-			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {
-			if (jsonPool.getString("subscriptionId").equals(jsonSubscription.getString("id"))) {
-				poolId = jsonPool.getString("id");
-				break;
-			}
-		}
-		Assert.assertNotNull(poolId,"Found newly created pool corresponding to the newly created subscription with id: "+jsonSubscription.getString("id"));
-		log.info("The newly created subscription pool with id '"+poolId+"' will start '"+startingMinutesFromNow+"' minutes from now.");
-		log.info("The newly created subscription pool with id '"+poolId+"' will expire '"+endingMinutesFromNow+"' minutes from now.");
-		return poolId; // return poolId to the newly available SubscriptionPool
-
-	}*/
+		// Configuration methods ***********************************************************************
+	
 	protected Integer configuredHealFrequency = null;
 	@BeforeClass (groups="setup")
 	public void rememberConfiguredHealFrequency() {

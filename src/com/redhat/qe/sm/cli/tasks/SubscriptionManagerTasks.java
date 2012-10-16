@@ -924,6 +924,12 @@ public class SubscriptionManagerTasks {
 	public List<ProductSubscription> getCurrentlyConsumedProductSubscriptions() {
 		return ProductSubscription.parse(listConsumedProductSubscriptions().getStdout());
 	}
+	/**
+	 * @return list of objects representing the subscription-manager list --avail --ondate
+	 */
+	public List<SubscriptionPool> getAvailableFutureSubscriptionsOndate(String onDateToTest) {
+		return SubscriptionPool.parse(list_(null, true, null, null, null, onDateToTest, null, null, null).getStdout());
+	}
 	
 	/**
 	 * @return list of objects representing the subscription-manager repos --list
