@@ -67,6 +67,34 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 827034 - Teach rhsmcertd to refresh the identity certificate//done
 	//https://bugzilla.redhat.com/show_bug.cgi?id=607162//done
 	
+	// https://tcms.engineering.redhat.com/case/50215/?from_plan=2851
+	// https://tcms.engineering.redhat.com/case/50238/?from_plan=2851
+	
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="verify content set associated with product",
+			groups={"VerifycertsAfterUnsubscribeAndunregister"},
+			enabled=true)	
+	@ImplementsNitrateTest(caseId=50215)
+	public void VerifycertsAfterUnsubscribeAndunregister() throws JSONException, Exception {
+	
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		List<File> certs=clienttasks.getCurrentEntitlementCertFiles();
+		Assert.assertTrue(certs.isEmpty());
+		certs=clienttasks.getCurrentProductCertFiles();
+		Assert.assertFalse(certs.isEmpty());
+		clienttasks.unregister(null,null,null);
+		ConsumerCert consumerCerts=clienttasks.getCurrentConsumerCert();
+		Assert.assertNull(consumerCerts);
+	}
+	
 	
 	
 	/**
@@ -194,6 +222,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	public void VerifyHealingForFutureSubscription() throws JSONException, Exception {
 		int healFrequency=2;
+		
 		String consumerId = clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -233,7 +262,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder",
 			groups={"VerifyUnsubscribeAllForExpiredSubscription","blockedByBug-852630"},
-			enabled=true)	
+			enabled=false)	
 
 	public void VerifyUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -755,12 +784,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId=119327)
 
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
+		int certfrequency=240;
+		Integer healFrequency=2;
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value=true.");
-		Integer healFrequency=2;
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+		clienttasks.restart_rhsmcertd(certfrequency, healFrequency, false, null);
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<ProductSubscription> certs = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -1019,10 +1049,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"Verifyautosubscribe_Test"},
 			enabled=true)
 	public void Verifyautosubscribe_Test() throws JSONException, Exception{
-		/*Map<String,String> factsMap = new HashMap<String,String>();
-		Integer moreSockets = 4;
-		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues("/socket.facts",factsMap);*/
+		
 		List<String> ProductIdBeforeAuto=new ArrayList<String>();
 		List<String> ProductIdAfterAuto=new ArrayList<String>();
 
@@ -1083,6 +1110,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				if(installedProductsAfterAuto.productName.contains(pool))
 
 					if((installedProductsAfterAuto.status).equalsIgnoreCase("Subscribed")){
+						Map<String,String> factsMap = new HashMap<String,String>();
+						factsMap.put("cpu.cpu_socket(s)", String.valueOf(1));
+						clienttasks.createFactsFileWithOverridingValues(factsMap);
 						Assert.assertEquals("Subscribed", (installedProductsAfterAuto.status).trim(), "test  has failed");
 					}
 			}
