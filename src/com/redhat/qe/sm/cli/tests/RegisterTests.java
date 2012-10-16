@@ -55,17 +55,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	/**
-	 * @author skallesh
-	 */
-	@Test(    description="subscription-manager: attempt register to with white space in the user name should fail",
-			  groups={"registeredTests","blockedByBug-719378"},
-			              enabled=true)
-			
-	public void AttemptRegisterWithWhiteSpacesInUsername_Test() {
-	SSHCommandResult result = clienttasks.register_("user name","password",sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,true,null,null,null,null);
-	Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(), "The expected stdout result when attempting to register with a username containing whitespace.");
-	}
+	
 	
 	
 	@BeforeGroups(value={"RegisterWithCredentials_Test"},alwaysRun=true)

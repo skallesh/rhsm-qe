@@ -71,6 +71,48 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	//https://bugzilla.redhat.com/show_bug.cgi?id=607162//done
 	
 	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="verify content set associated with product",
+			groups={"Verifycontentsetassociatedwithproduct"},
+			enabled=true)	
+	@ImplementsNitrateTest(caseId=61115)
+	public void Verifycontentsetassociatedwithproduct() throws JSONException, Exception {
+		clienttasks.unregister(null,null,null);
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		List<SubscriptionPool> pools=clienttasks.getCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToSubscriptionPool_(pools.get(randomGenerator.nextInt(pools.size())));
+		List<File> certs=clienttasks.getCurrentEntitlementCertFiles();
+		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+certs.get(randomGenerator.nextInt(certs.size()))+" > /tmp/stdout; mv /tmp/stdout -f "+certs.get(randomGenerator.nextInt(certs.size())), 0);
+
+		String consumed=clienttasks.list_(null, null, true, null, null, null, null, null, null).getStderr();
+		Assert.assertEquals(consumed.trim(), "Error loading certificate");
+		}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="verify reregister with invalid consumerid",
+			groups={"VerifyRegisterUsingInavlidConsumerId"},
+			enabled=true)	
+	@ImplementsNitrateTest(caseId=61716)
+	public void VerifyRegisterUsingInavlidConsumerId() throws JSONException, Exception {
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		String consumerId=clienttasks.getCurrentConsumerId();
+		String invalidconsumerId=randomGenerator.nextInt()+consumerId;
+		System.out.println(invalidconsumerId +"  "+consumerId );
+		SSHCommandResult result=clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, invalidconsumerId, null, null, null, (String)null, null, null, true, null, null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), "The system with UUID "+consumerId+" has been unregistered");
+		Assert.assertEquals(result.getStderr().trim(), "Consumer with id "+ invalidconsumerId+" could not be found.");
+
+	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -83,7 +125,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyCorruptIdentityCert() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		client.runCommandAndWait("cp /etc/pki/consumer/cert.pem /etc/pki/consumer/cert.pem.save");
-		client.runCommandAndWait("echo 'cert should fail now'> /etc/pki/consumer/cert.pem");
+		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile()+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile(), 0);
 		String result=clienttasks.list_(null, true, null, null, null, null, null, null, null).getStdout();
 		Assert.assertEquals(result.trim(), clienttasks.msg_ConsumerNotRegistered);
 		client.runCommandAndWait("mv -f /etc/pki/consumer/cert.pem.save /etc/pki/consumer/cert.pem");
