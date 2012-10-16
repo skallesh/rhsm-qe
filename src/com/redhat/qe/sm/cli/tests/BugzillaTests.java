@@ -6,7 +6,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
@@ -23,10 +22,8 @@ import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
-
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
-import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
@@ -88,10 +85,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribeToSubscriptionPool_(pools.get(randomGenerator.nextInt(pools.size())));
 		List<File> certs=clienttasks.getCurrentEntitlementCertFiles();
 		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+certs.get(randomGenerator.nextInt(certs.size()))+" > /tmp/stdout; mv /tmp/stdout -f "+certs.get(randomGenerator.nextInt(certs.size())), 0);
-
 		String consumed=clienttasks.list_(null, null, true, null, null, null, null, null, null).getStderr();
 		Assert.assertEquals(consumed.trim(), "Error loading certificate");
-		}
+		clienttasks.restart_rhsmcertd(null, null, false, null);
+		SubscriptionManagerCLITestScript.sleep(2*60*1000);
+		consumed=clienttasks.list_(null, null, true, null, null, null, null, null, null).getStdout();
+	}
 	
 	/**
 	 * @author skallesh
@@ -110,7 +109,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result=clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, invalidconsumerId, null, null, null, (String)null, null, null, true, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "The system with UUID "+consumerId+" has been unregistered");
 		Assert.assertEquals(result.getStderr().trim(), "Consumer with id "+ invalidconsumerId+" could not be found.");
-
 	}
 	
 	/**
@@ -196,6 +194,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	public void VerifyHealingForFutureSubscription() throws JSONException, Exception {
 		int healFrequency=2;
+		String consumerId = clienttasks.getCurrentConsumerId();
+		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		Calendar now = new GregorianCalendar();
@@ -614,10 +614,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				if(product.equals(installedProduct.productId))
 					Assert.assertEquals(installedProduct.status, "Subscribed");
 			}}
-		moreSockets=2;
+		moreSockets=1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
 		clienttasks.facts(null, true, null, null, null);
+		
 	}
 
 	/**
@@ -706,8 +707,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				Flag="true";
 			}
 		}
+		moreSockets = 1;
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
+		clienttasks.createFactsFileWithOverridingValues("/socket.facts",factsMap);
 		Assert.assertEquals(Flag, "true");
-
 	}
 
 	/**
