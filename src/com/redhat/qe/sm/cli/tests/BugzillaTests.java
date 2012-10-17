@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -167,36 +168,40 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if rhsmcertd process refresh the identity certificate after every restart",
 			groups={"VerifyrhsmcertdRefreshIdentityCert","blockedByBug-827034","blockedByBug-827035"},
-			enabled=false)	
+			enabled=true)	
 
 	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		
 		Calendar StartTimeBeforeRHSM=clienttasks.getCurrentConsumerCert().validityNotBefore;
 		Calendar EndTimeBeforeRHSM=clienttasks.getCurrentConsumerCert().validityNotAfter;
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[]{"server","insecure", "1"});
+		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		String existingCertdate=client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStdout();
-		client.runCommandAndWait("date -s '15 year 5 month'");
-		client = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-		client.runCommandAndWait("date -s '15 year 5 month'");
-		client.runCommandAndWait("exit");
-		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase,"date -s '15 year 9 month'");
+		log.info("Changed the date of candlepin" +client.runCommandAndWait("hostname"));
+		setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase,"date -s '15 year 9 month'");
 		clienttasks.restart_rhsmcertd(null, null, false, null);
-		SubscriptionManagerCLITestScript.sleep(2*60*1000);
+		SubscriptionManagerCLITestScript.sleep(3*60*1000);
 		Calendar StartTimeAfterRHSM=clienttasks.getCurrentConsumerCert().validityNotBefore;
 		Calendar EndTimeAfterRHSM=clienttasks.getCurrentConsumerCert().validityNotAfter;
 		String updatedCertdate=client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStdout();
-		client.runCommandAndWait("date -s '15 year ago 5 month ago'");
-		client = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-		client.runCommandAndWait("date -s '15 year ago 5 month ago'");
-		client.runCommandAndWait("exit");
-		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-
-		System.out.println(StartTimeAfterRHSM.getTime()+" StartTimeAfterRHSM   "+ StartTimeBeforeRHSM.getTime());
+		setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase,"date -s '15 year ago 9 month ago'");
+		log.info("Changed the date of candlepin" +client.runCommandAndWait("hostname"));
+		setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase,"date -s '15 year ago 9 month ago'");
+		listOfSectionNameValues.clear();
+		listOfSectionNameValues.add(new String[]{"server","insecure", "0"});
+		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		Assert.assertNotSame(StartTimeBeforeRHSM.getTime(), StartTimeAfterRHSM.getTime());
-
-		Assert.assertNotSame(EndTimeBeforeRHSM, EndTimeAfterRHSM);
+		Assert.assertNotSame(EndTimeBeforeRHSM.getTime(), EndTimeAfterRHSM.getTime());
 		Assert.assertNotSame(existingCertdate, updatedCertdate);
 
+		
+	}
+	public void setDate(String hostname,String user,String passphrase,String privatekey,String datecmd) throws IOException{
+		client = new SSHCommandRunner(hostname, user, passphrase, privatekey,null);
+		client.runCommandAndWait(datecmd);
 		
 	}
 	
