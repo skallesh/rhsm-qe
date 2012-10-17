@@ -728,7 +728,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if(!(SubscriptionPool.multiEntitlement)){
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId, "sockets");
 				if((!(poolProductSocketsAttribute==null)) && (poolProductSocketsAttribute.equals("2"))){
-					clienttasks.subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool);
+					clienttasks.subscribeToSubscriptionPool_(SubscriptionPool);
 				}
 			}
 		}for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
