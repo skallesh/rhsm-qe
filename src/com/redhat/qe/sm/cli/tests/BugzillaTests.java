@@ -35,6 +35,7 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
+import com.redhat.qe.tools.SSHCommandRunner;
 
 
 /**
@@ -166,7 +167,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if rhsmcertd process refresh the identity certificate after every restart",
 			groups={"VerifyrhsmcertdRefreshIdentityCert","blockedByBug-827034","blockedByBug-827035"},
-			enabled=true)	
+			enabled=false)	
 
 	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
@@ -174,12 +175,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Calendar StartTimeBeforeRHSM=clienttasks.getCurrentConsumerCert().validityNotBefore;
 		Calendar EndTimeBeforeRHSM=clienttasks.getCurrentConsumerCert().validityNotAfter;
 		String existingCertdate=client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStdout();
+		client.runCommandAndWait("date -s '15 year 5 month'");
+		client = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		client.runCommandAndWait("date -s '15 year 5 month'");
+		client.runCommandAndWait("exit");
+		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		SubscriptionManagerCLITestScript.sleep(2*60*1000);
 		Calendar StartTimeAfterRHSM=clienttasks.getCurrentConsumerCert().validityNotBefore;
 		Calendar EndTimeAfterRHSM=clienttasks.getCurrentConsumerCert().validityNotAfter;
 		String updatedCertdate=client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStdout();
-		Assert.assertNotSame(StartTimeBeforeRHSM, StartTimeAfterRHSM);
+		client.runCommandAndWait("date -s '15 year ago 5 month ago'");
+		client = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		client.runCommandAndWait("date -s '15 year ago 5 month ago'");
+		client.runCommandAndWait("exit");
+		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+
+		System.out.println(StartTimeAfterRHSM.getTime()+" StartTimeAfterRHSM   "+ StartTimeBeforeRHSM.getTime());
+		Assert.assertNotSame(StartTimeBeforeRHSM.getTime(), StartTimeAfterRHSM.getTime());
+
 		Assert.assertNotSame(EndTimeBeforeRHSM, EndTimeAfterRHSM);
 		Assert.assertNotSame(existingCertdate, updatedCertdate);
 
