@@ -196,9 +196,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotSame(StartTimeBeforeRHSM.getTime(), StartTimeAfterRHSM.getTime());
 		Assert.assertNotSame(EndTimeBeforeRHSM.getTime(), EndTimeAfterRHSM.getTime());
 		Assert.assertNotSame(existingCertdate, updatedCertdate);
-
 		
 	}
+	@Test(	description="Set the date",
+			groups={},
+			enabled=true)
 	public void setDate(String hostname,String user,String passphrase,String privatekey,String datecmd) throws IOException{
 		client = new SSHCommandRunner(hostname, user, passphrase, privatekey,null);
 		client.runCommandAndWait(datecmd);
