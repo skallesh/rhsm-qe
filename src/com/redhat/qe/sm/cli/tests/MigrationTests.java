@@ -2370,6 +2370,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				if (productId.equals("181")) {
 					// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
 					bugIds.add("840148");
+					// Bug 847069 - Add certificates for rhel-x86_64-server-eucjp-5* channels.
+					bugIds.add("847069");
 				}
 				if (rhnChannel.startsWith("rhel-i386-rhev-agent-5-")) { 
 					// Bug 849305 - rhel-i386-rhev-agent-5-* maps in channel-cert-mapping.txt do not match CDN Product Baseline
@@ -2485,6 +2487,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-eucjp-5(-.+|$)")) {	// rhel-x86_64-server-eucjp-5 rhel-x86_64-server-eucjp-5-beta etc.
 				// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
 				bugIds.add("840148");
+				// Bug 847069 - Add certificates for rhel-x86_64-server-eucjp-5* channels.
+				bugIds.add("847069");
 			}
 			if (rhnAvailableChildChannel.startsWith("rhx-")) {	// rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5 etcetera
 				// Bug 840111 - various rhx channels are not yet mapped to product certs in rcm/rcm-metadata.git 
