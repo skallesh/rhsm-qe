@@ -389,7 +389,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for(InstalledProduct installedProduct:clienttasks.getCurrentlyInstalledProducts()){
 			if(productId.equals(installedProduct.productId)){
 				if(!(installedProduct.status.equals("Subscribed")))moveProductCertFiles("", false);
-				//String consumed=clienttasks.list_(null, null, true, null, null, null, null, null, null).getStdout();
 				List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
 				Assert.assertEquals(consumed.size(), sockets);
 				Assert.assertEquals(installedProduct.status, "Subscribed");
@@ -1001,7 +1000,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
 		for(SubscriptionPool availOnDate:clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest)){
-			System.out.println(availOnDate.poolId + " avail on date is");
 			clienttasks.subscribe(null, null, availOnDate.poolId, null, null, null, null, null, null, null, null);
 		}
 		for(InstalledProduct installedproduct :clienttasks.getCurrentlyInstalledProducts()){
@@ -1013,7 +1011,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for(InstalledProduct installedproduct :clienttasks.getCurrentlyInstalledProducts()){
 			 for(String productid:productId){
 				if(installedproduct.productId.equals(productid)){
-					System.out.println(installedproduct.productId +"   "+productid );
 					Assert.assertEquals(installedproduct.status.trim(), "Subscribed");
 					
 				}}
