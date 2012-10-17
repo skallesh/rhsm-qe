@@ -198,14 +198,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotSame(existingCertdate, updatedCertdate);
 		
 	}
-	@Test(	description="Set the date",
-			groups={},
-			enabled=true)
-	public void setDate(String hostname,String user,String passphrase,String privatekey,String datecmd) throws IOException{
-		client = new SSHCommandRunner(hostname, user, passphrase, privatekey,null);
-		client.runCommandAndWait(datecmd);
-		
-	}
+	
+	
 	
 	
 	/**
@@ -727,7 +721,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Verify if Subscription manager displays incorrect status for partially subscribed subscription",
 			groups={"VerifyStatusForPartialSubscription","blockedByBug-743710"},
-			enabled=true)	
+			enabled=false)	
 	@ImplementsNitrateTest(caseId=119327)
 
 	public void VerifyStatusForPartialSubscription() throws JSONException, Exception {
@@ -1216,6 +1210,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	// Protected methods ***********************************************************************
 
+	protected void setDate(String hostname,String user,String passphrase,String privatekey,String datecmd) throws IOException{
+		client = new SSHCommandRunner(hostname, user, passphrase, privatekey,null);
+		client.runCommandAndWait(datecmd);
+		
+	}
+	
 	protected void moveProductCertFiles(String filename,Boolean move) {
 		String result=client.runCommandAndWait("ls /etc/pki/tmp1/").getStderr();
 		if(result.contains("ls: /etc/pki/tmp1/: No such file or directory")){
