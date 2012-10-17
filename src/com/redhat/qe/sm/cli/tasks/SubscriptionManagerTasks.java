@@ -716,24 +716,7 @@ public class SubscriptionManagerTasks {
 	}
 		
 	
-	public Boolean waitForRegexInRhsmLog(String logRegex) {
-			
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -10 "+rhsmLogFile,Integer.valueOf(0));
-		String input=	sshCommandRunner.runCommandAndWait("tail -10 "+rhsmLogFile).getStdout().trim();
-		Pattern pattern = Pattern.compile(logRegex,Pattern.MULTILINE);
-        Matcher  matcher = pattern.matcher(input);
-        int count = 0;
-        Boolean flag = false;
-        while (matcher.find()){
-              count++;
-        }
-        if(count>=2){
-        	flag=true;
-        }
-		return flag;
-
-		
-	}
+	
 
 	/**
 	 * @return the current service level returned by subscription-manager service-level --show (must already be registered); will return an empty string when the service level preference is not set.
@@ -940,6 +923,12 @@ public class SubscriptionManagerTasks {
 	 */
 	public List<ProductSubscription> getCurrentlyConsumedProductSubscriptions() {
 		return ProductSubscription.parse(listConsumedProductSubscriptions().getStdout());
+	}
+	/**
+	 * @return list of objects representing the subscription-manager list --avail --ondate
+	 */
+	public List<SubscriptionPool> getAvailableFutureSubscriptionsOndate(String onDateToTest) {
+		return SubscriptionPool.parse(list_(null, true, null, null, null, onDateToTest, null, null, null).getStdout());
 	}
 	
 	/**

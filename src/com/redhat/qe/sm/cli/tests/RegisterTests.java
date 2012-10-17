@@ -55,17 +55,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	/**
-	 * @author skallesh
-	 */
-	@Test(    description="subscription-manager: attempt register to with white space in the user name should fail",
-			  groups={"registeredTests","blockedByBug-719378"},
-			              enabled=true)
-			
-	public void AttemptRegisterWithWhiteSpacesInUsername_Test() {
-	SSHCommandResult result = clienttasks.register_("user name","password",sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,true,null,null,null,null);
-	Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(), "The expected stdout result when attempting to register with a username containing whitespace.");
-	}
+	
 	
 	
 	@BeforeGroups(value={"RegisterWithCredentials_Test"},alwaysRun=true)
@@ -1367,8 +1357,8 @@ Expected Results:
 	// TODO Bug 627665 - subscription-manager-cli reregister should not allow a --username to reregister using a --consumerid that belongs to someone else
 	// TODO Bug 668814 - firstboot and subscription-manager display "network error" on server 500
 	// TODO Bug 669395 - gui defaults to consumer name of the hostname and doesn't let you set it to empty string. cli defaults to username, and does let you set it to empty string
-	// TODO Bug 693896 - subscription-manager does not always reload dbus scripts automatically
-	// TODO Bug 719378 - White space in user name causes error 
+	// TODO Bug 693896 - subscription-manager does not always reload dbus scripts automatically //done
+	// TODO Bug 719378 - White space in user name causes error //done
 	
 	
 	// Protected Class Variables ***********************************************************************
