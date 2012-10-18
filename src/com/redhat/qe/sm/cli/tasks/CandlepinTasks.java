@@ -80,7 +80,7 @@ public class CandlepinTasks {
 	public static String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
 	public static String rubyClientDir	= "/client/ruby";
 	public static File candlepinCACertFile = new File("/etc/candlepin/certs/candlepin-ca.crt");
-	public static String generatedProductsDir	= "/proxy/generated_certs";
+	public static String generatedProductsDir	= "/generated_certs";	// "/proxy/generated_certs";
 	public static HttpClient client;
 	CandlepinType serverType = CandlepinType.hosted;
 	public String branch = "";
@@ -181,14 +181,16 @@ public class CandlepinTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);
 		
 		// modify the gen-certs file so the candlepin cert is valid for more than one year (make it 10 years)
-		RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/proxy/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 3650 ");
+		//RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/proxy/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 3650 ");
+		RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 3650 ");
 		
 		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "for item in $(for gem in $(gem list | grep -v \"\\*\"); do echo $gem; done | grep -v \"(\" | grep -v \")\"); do echo 'Y' | gem uninstall $item -a; done", Integer.valueOf(0), "Successfully uninstalled", null);	// probably only needs to be run once  // for item in $(for gem in $(gem list | grep -v "\*"); do echo $gem; done | grep -v "(" | grep -v ")"); do echo 'Y' | gem uninstall $item -a; done
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install bundler", Integer.valueOf(0), "installed", null);	// probably only needs to be run once
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install buildr", Integer.valueOf(0), "1 gem installed", null);	// probably only needs to be run once
 		*/
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 
 		
 		// TODO cleanup this messy os version detection
@@ -278,7 +280,8 @@ schema generation failed
 		}
 		// run the buildr API script to see a report of the current API
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildr candlepin:apicrawl", Integer.valueOf(0), "Wrote Candlepin API to: target/candlepin_methods.json", null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		log.info("Following is a report of all the candlepin API urls:");
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());		// 9/18/2012 the path appears to have moved
 		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
