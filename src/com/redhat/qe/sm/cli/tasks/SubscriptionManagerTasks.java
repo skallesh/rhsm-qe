@@ -120,14 +120,21 @@ public class SubscriptionManagerTasks {
 		if (redhatRelease.contains("ComputeNode")) variant = "ComputeNode";	//76.pem
 		//if (redhatRelease.contains("IBM POWER")) variant = "IBM Power";	//74.pem	Red Hat Enterprise Linux for IBM POWER	// TODO  Not sure if these are correct or if they are just Server on a different arch
 		//if (redhatRelease.contains("IBM System z")) variant = "System Z";	//72.pem	Red Hat Enterprise Linux for IBM System z	// TODO
-		if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | sort | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
-		if (redhatRelease.contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
 
 		Pattern pattern = Pattern.compile("\\d+\\.\\d+");
 		Matcher matcher = pattern.matcher(redhatRelease);
 		Assert.assertTrue(matcher.find(),"Extracted redhatReleaseXY '"+matcher.group()+"' from '"+redhatRelease+"'");
 		redhatReleaseXY = matcher.group();
 		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
+		
+		// predict sockets on the system
+		if (Float.valueOf(redhatReleaseXY) < 6.0) {
+			sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | sort | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
+		} else if (Float.valueOf(redhatReleaseXY) < 6.4) {
+			sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket(s)'").getStdout().split(":")[1].trim();	// CPU socket(s):         2	
+		} else {
+			sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'Socket(s)'").getStdout().split(":")[1].trim();	// Socket(s):             2
+		}
 	}
 	
 
