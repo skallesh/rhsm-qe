@@ -526,7 +526,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 //			log.warning("Skipping the removal of the non default productCertDir '"+nonDefaultProductCertDir+"' before Testing without the dryrun option...");
 //		} else
 //		// END OF WORKAROUND
-// TODO This test path is not yet complete - epends on the outcome of bug 840415
+// TODO This test path is not yet complete - depends on the outcome of bug 840415
 		// when testing with the non-default productCertDir, make sure it does not exist (the list --installed call above will create it as a side affect)
 		// Note: this if block help reveal bug 840415 - Install-num migration throws traceback for invalid product cert location.
 		if (clienttasks.productCertDir.equals(nonDefaultProductCertDir)) {
@@ -656,7 +656,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("There is no workaround for this installed version of "+bugVer+".  Blocked by Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
 		}
 		// END OF WORKAROUND
-
+		
+		//if (clienttasks.redhatReleaseXY.equals("5.9")) {
+		//if (Arrays.asList("5.7","5.8","5.9").contains(clienttasks.redhatReleaseXY)) {
+		if (Float.valueOf(clienttasks.redhatReleaseXY) <= 5.9f) {
+			throw new SkipException("Blocking bugzilla 840415 was fixed in a subsequent release.  Skipping this test since we already know it will fail in RHEL release '"+clienttasks.redhatReleaseXY+"'.");
+		}
 		
 		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
