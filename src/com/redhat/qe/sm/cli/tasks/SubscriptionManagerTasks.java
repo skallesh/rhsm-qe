@@ -128,9 +128,9 @@ public class SubscriptionManagerTasks {
 		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
 		
 		// predict sockets on the system
-		if (Float.valueOf(redhatReleaseXY) < 6.0) {
+		if (Float.valueOf(redhatReleaseXY) < 6.0f) {
 			sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | sort | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
-		} else if (Float.valueOf(redhatReleaseXY) < 6.4) {
+		} else if (Float.valueOf(redhatReleaseXY) < 6.4f) {
 			sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket(s)'").getStdout().split(":")[1].trim();	// CPU socket(s):         2	
 		} else {
 			sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'Socket(s)'").getStdout().split(":")[1].trim();	// Socket(s):             2
