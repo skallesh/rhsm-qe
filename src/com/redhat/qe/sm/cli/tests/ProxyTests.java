@@ -1439,15 +1439,34 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	@DataProvider(name="getSubscribeAttemptsUsingProxyServerData")
 	public Object[][] getSubscribeAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeAttemptsUsingProxyServerDataAsListOfLists());
+	}
+	protected List<List<Object>> getSubscribeAttemptsUsingProxyServerDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
+			if (l.get(8)==nErrMsg) l.set(0,new BlockedByBzBug("869046"));
+			ll.add(l);
+		}
+		return ll;
 	}
 	
 	
 	@DataProvider(name="getSubscribeAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getSubscribeAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
-	
+	protected List<List<Object>> getSubscribeAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
+			if (l.get(12)!=null) {
+				if (l.get(12)==nErrMsg) l.set(0,new BlockedByBzBug("869046"));
+				ll.add(l);
+			}
+		}
+		return ll;
+	}
 	
 	@DataProvider(name="getUnsubscribeAttemptsUsingProxyServerData")
 	public Object[][] getUnsubscribeAttemptsUsingProxyServerDataAs2dArray() {
