@@ -217,13 +217,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// process all the migration product cert files into ProductCerts and assert they match those from the RHN Definitions
 
-		// get the local migration product certs available for install
+		// get all of the rhnDefnition product certs
 		List<ProductCert> rhnDefnitionProductCerts = new ArrayList<ProductCert>();
 		for (String rhnDefinitionsProductCertsDir : sm_rhnDefinitionsProductCertsDirs) {
 			String tmpRhnDefinitionsProductCertsDir = clienttasks.rhnDefinitionsDir+rhnDefinitionsProductCertsDir;
 			Assert.assertTrue(RemoteFileTasks.testExists(client, tmpRhnDefinitionsProductCertsDir),"The rhn definitions product certs dir '"+rhnDefinitionsProductCertsDir+"' has been locally cloned to '"+tmpRhnDefinitionsProductCertsDir+"'.");
 			rhnDefnitionProductCerts.addAll(clienttasks.getProductCerts(tmpRhnDefinitionsProductCertsDir));
 		}
+		/* ALTERNATIVE WAY OF GETTING ALL rhnDefnition PRODUCT CERTS FROM ALL DIRECTORIES
+		SSHCommandResult result = client.runCommandAndWait("find "+clienttasks.rhnDefinitionsDir+"/product_ids/ -name '*.pem'");
+		String[] rhnDefnitionProductCertPaths = result.getStdout().trim().split("\\n");
+		if (rhnDefnitionProductCertPaths.length==1 && rhnDefnitionProductCertPaths[0].equals("")) rhnDefnitionProductCertPaths = new String[]{};
+		for (String rhnDefnitionProductCertPath : rhnDefnitionProductCertPaths) {
+			rhnDefnitionProductCerts.add(clienttasks.getProductCertFromProductCertFile(new File(rhnDefnitionProductCertPath)));
+		}
+		*/
+		
+		// get the local migration product certs available for install
 		List<ProductCert> migrationProductCerts = clienttasks.getProductCerts(baseProductsDir);
 
 		// test that these local migration product certs came from the current rhnDefinitions structure
@@ -2371,6 +2381,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("5")) { 
 					// Bug 852551 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
 					bugIds.add("852551");
+				}
+				if (productId.equals("195")) {
+					// Bug 869008 - mapping for productId 195 "Red Hat Developer Toolset (for RHEL for IBM POWER)" is missing
+					bugIds.add("869008");
 				}
 				if (productId.equals("181")) {
 					// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
