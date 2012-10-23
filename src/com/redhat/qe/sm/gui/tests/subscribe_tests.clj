@@ -72,10 +72,11 @@
         (verify (= false (tasks/ui rowexist? :my-subscriptions-view subscription)))
         (catch [:type :not-subscribed] _)))
 
-(defn ^{Test {:groups ["subscribe" "blockedByBug-703920"]
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-703920"
+                       "blockedByBug-869028"]
               :dataProvider "subscriptions"}}
   check_contract_selection_dates
-  "https://bugzilla.redhat.com/show_bug.cgi?id=703920"
   [_ subscription]
   (try+ (tasks/open-contract-selection subscription)
         (try
