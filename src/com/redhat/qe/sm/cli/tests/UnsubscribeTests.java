@@ -153,7 +153,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(description="Attempt to unsubscribe when not registered",
-			groups={"blockedByBug-735338","blockedByBug-838146"},
+			groups={"blockedByBug-735338","blockedByBug-838146","blockedByBug-865590"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromSerialWhenNotRegistered_Test() {

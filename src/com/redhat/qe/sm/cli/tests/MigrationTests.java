@@ -217,13 +217,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// process all the migration product cert files into ProductCerts and assert they match those from the RHN Definitions
 
-		// get the local migration product certs available for install
+		// get all of the rhnDefnition product certs
 		List<ProductCert> rhnDefnitionProductCerts = new ArrayList<ProductCert>();
 		for (String rhnDefinitionsProductCertsDir : sm_rhnDefinitionsProductCertsDirs) {
 			String tmpRhnDefinitionsProductCertsDir = clienttasks.rhnDefinitionsDir+rhnDefinitionsProductCertsDir;
 			Assert.assertTrue(RemoteFileTasks.testExists(client, tmpRhnDefinitionsProductCertsDir),"The rhn definitions product certs dir '"+rhnDefinitionsProductCertsDir+"' has been locally cloned to '"+tmpRhnDefinitionsProductCertsDir+"'.");
 			rhnDefnitionProductCerts.addAll(clienttasks.getProductCerts(tmpRhnDefinitionsProductCertsDir));
 		}
+		/* ALTERNATIVE WAY OF GETTING ALL rhnDefnition PRODUCT CERTS FROM ALL DIRECTORIES
+		SSHCommandResult result = client.runCommandAndWait("find "+clienttasks.rhnDefinitionsDir+"/product_ids/ -name '*.pem'");
+		String[] rhnDefnitionProductCertPaths = result.getStdout().trim().split("\\n");
+		if (rhnDefnitionProductCertPaths.length==1 && rhnDefnitionProductCertPaths[0].equals("")) rhnDefnitionProductCertPaths = new String[]{};
+		for (String rhnDefnitionProductCertPath : rhnDefnitionProductCertPaths) {
+			rhnDefnitionProductCerts.add(clienttasks.getProductCertFromProductCertFile(new File(rhnDefnitionProductCertPath)));
+		}
+		*/
+		
+		// get the local migration product certs available for install
 		List<ProductCert> migrationProductCerts = clienttasks.getProductCerts(baseProductsDir);
 
 		// test that these local migration product certs came from the current rhnDefinitions structure
@@ -526,7 +536,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 //			log.warning("Skipping the removal of the non default productCertDir '"+nonDefaultProductCertDir+"' before Testing without the dryrun option...");
 //		} else
 //		// END OF WORKAROUND
-// TODO This test path is not yet complete - epends on the outcome of bug 840415
+// TODO This test path is not yet complete - depends on the outcome of bug 840415
 		// when testing with the non-default productCertDir, make sure it does not exist (the list --installed call above will create it as a side affect)
 		// Note: this if block help reveal bug 840415 - Install-num migration throws traceback for invalid product cert location.
 		if (clienttasks.productCertDir.equals(nonDefaultProductCertDir)) {
@@ -656,7 +666,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("There is no workaround for this installed version of "+bugVer+".  Blocked by Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
 		}
 		// END OF WORKAROUND
-
+		
+		//if (clienttasks.redhatReleaseXY.equals("5.9")) {
+		//if (Arrays.asList("5.7","5.8","5.9").contains(clienttasks.redhatReleaseXY)) {
+		if (Float.valueOf(clienttasks.redhatReleaseXY) <= 5.9f) {
+			throw new SkipException("Blocking bugzilla 840415 was fixed in a subsequent release.  Skipping this test since we already know it will fail in RHEL release '"+clienttasks.redhatReleaseXY+"'.");
+		}
 		
 		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
@@ -2367,9 +2382,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 852551 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
 					bugIds.add("852551");
 				}
+				if (productId.equals("195")) {
+					// Bug 869008 - mapping for productId 195 "Red Hat Developer Toolset (for RHEL for IBM POWER)" is missing
+					bugIds.add("869008");
+				}
 				if (productId.equals("181")) {
 					// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
 					bugIds.add("840148");
+					// Bug 847069 - Add certificates for rhel-x86_64-server-eucjp-5* channels.
+					bugIds.add("847069");
 				}
 				if (rhnChannel.startsWith("rhel-i386-rhev-agent-5-")) { 
 					// Bug 849305 - rhel-i386-rhev-agent-5-* maps in channel-cert-mapping.txt do not match CDN Product Baseline
@@ -2485,6 +2506,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-eucjp-5(-.+|$)")) {	// rhel-x86_64-server-eucjp-5 rhel-x86_64-server-eucjp-5-beta etc.
 				// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
 				bugIds.add("840148");
+				// Bug 847069 - Add certificates for rhel-x86_64-server-eucjp-5* channels.
+				bugIds.add("847069");
 			}
 			if (rhnAvailableChildChannel.startsWith("rhx-")) {	// rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5 etcetera
 				// Bug 840111 - various rhx channels are not yet mapped to product certs in rcm/rcm-metadata.git 

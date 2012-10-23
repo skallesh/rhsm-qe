@@ -141,6 +141,10 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfServerWhenRegisteredAndUsingRHNClassic_Test() {
+		
+		if (Arrays.asList("6.1","6.2","6.3","5.7","5.8","5.9").contains(clienttasks.redhatReleaseXY)) {
+			throw new SkipException("Blocking bugzilla 852328 was fixed in a subsequent release.  Skipping this test since we already know it will fail in RHEL release '"+clienttasks.redhatReleaseXY+"'.");
+		}
 
 		// make sure we are registered
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null);
@@ -219,8 +223,9 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	protected void assertServerVersion(String serverVersion, String serverType) {
 		// set the expected results
 		String expectedVersion;
-		expectedVersion = "remote entitlement server: "+serverVersion;	// changed by bug 846834
-		expectedVersion = "registered to: "+serverVersion;
+		expectedVersion = "remote entitlement server: "+serverVersion;	// original label
+		expectedVersion = "registered to: "+serverVersion;	// label changed by bug 846834
+		// TODO expectedVersion = "subscription management server: "+serverVersion;	// label changed by bug 862308
 		String expectedType;
 		expectedType = "server type: "+serverType;
 		

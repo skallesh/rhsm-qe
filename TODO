@@ -64,6 +64,7 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=818238
   https://bugzilla.redhat.com/show_bug.cgi?id=810998
   https://bugzilla.redhat.com/show_bug.cgi?id=812903
+  https://bugzilla.redhat.com/show_bug.cgi?id=855257
 
 KATELLO:
   https://bugzilla.redhat.com/show_bug.cgi?id=820294
@@ -143,6 +144,8 @@ CLI TCMS Tests identified as automatible
   https://tcms.engineering.redhat.com/case/61710/?from_plan=2476
   https://tcms.engineering.redhat.com/case/61716/?from_plan=2476
   https://tcms.engineering.redhat.com/case/46712/?from_plan=2476
+  
+  //CLI done
   https://tcms.engineering.redhat.com/case/50211/?from_plan=2476
 
 
