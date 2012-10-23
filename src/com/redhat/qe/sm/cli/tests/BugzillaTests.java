@@ -79,9 +79,28 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	// https://tcms.engineering.redhat.com/case/50215/?from_plan=2851
 	// https://tcms.engineering.redhat.com/case/50238/?from_plan=2851
+	//https://tcms.engineering.redhat.com/case/214136/?from_plan=5846
 
 
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="verify content set associated with product",
+			groups={"VerifyUnsubscribingCertV3"},
+			enabled=true)	
+	@ImplementsNitrateTest(caseId=50215)
+	public void VerifyUnsubscribingCertV3() throws JSONException, Exception {
 
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		File expectCertFile = new File(System.getProperty("automation.dir", null)+"/certs/CertV3.pem");
+		RemoteFileTasks.putFile(client.getConnection(), expectCertFile.toString(), "/root/", "0755");
+		String expected="This machine has been unsubscribed from 1 subscriptions";
+		String result=clienttasks.unsubscribe_(true, null, null, null, null).getStdout();
+		Assert.assertEquals(result.trim(), expected);
+	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -255,7 +274,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		int healFrequency=2;
 
 		String consumerId = clienttasks.getCurrentConsumerId();
-		CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
+		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
+		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value=true.");
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		Calendar now = new GregorianCalendar();
@@ -1150,7 +1170,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		String consumerId=clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
-		Assert.assertFalse(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled off (expected value=false).");
 		clienttasks.unsubscribe_(true, null, null, null, null);
 
 
@@ -1374,7 +1393,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				countBefore=Integer.parseInt(client.runCommandAndWait("wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1").getStdout().trim());
 				clienttasks.subscribe_(null, null,pool.poolId, null, null, null, null, null, null, null, null);	
 			}
-			//		SubscriptionManagerCLITestScript.sleep(1*60*1000);
 			if(countBefore!=0){
 				int countAfter=Integer.parseInt(client.runCommandAndWait("wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1").getStdout().trim());
 
@@ -1383,14 +1401,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 
 		}
-		//		SubscriptionManagerCLITestScript.sleep(1*60*1000);
-		if(countBefore!=0){
-			int countAfter=Integer.parseInt(client.runCommandAndWait("wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1").getStdout().trim());
-
-			Boolean flag=waitForRegexInRhsmLog("@ /etc/pki/entitlement",countAfter-countBefore);
-			Assert.assertEquals(flag, actual);
-		}
-
+		
 	}
 
 	/**
@@ -1620,11 +1631,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 
 	protected void moveProductCertFiles(String filename,Boolean move) {
-		String result=client.runCommandAndWait("ls /etc/pki/tmp1/").getStderr();
-		if(result.contains("ls: /etc/pki/tmp1/: No such file or directory")){
-			client.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
-
-		}
+		client.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
+		
 		if(move==true){
 			client.runCommandAndWait("mv "+clienttasks.productCertDir+"/"+filename+" "+"/etc/pki/tmp1/");
 		}else {
