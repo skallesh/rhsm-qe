@@ -232,7 +232,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify healing of installed products without taking future subscriptions into consideration",
 			groups={"VerifyHealingForFutureSubscription"},
-			enabled=true)	
+			enabled=false)	
 
 	public void VerifyHealingForFuturesubscription() throws JSONException, Exception {
 		int healFrequency=2;
@@ -541,7 +541,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify healing of installed products without taking future subscriptions into consideration",
 			groups={"VerifyHealingForFutureSubscription"},
-			enabled=true)	
+			enabled=false)	
 
 	public void VerifyHealingForFutureSubscription() throws JSONException, Exception {
 		int healFrequency=2;
@@ -585,7 +585,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder",
 			groups={"VerifyUnsubscribeAllForExpiredSubscription","blockedByBug-852630"},
-			enabled=true)	
+			enabled=false)	
 
 	public void VerifyUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -873,7 +873,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="subscription-manager: facts --list,verify system.entitlements_valid ",
 			groups={"validTest","blockedByBug-669513"},
-			enabled=true)
+			enabled=false)
 	public void VerifyEntilementValidityInFactsList_Test() throws JSONException, Exception {
 		List <String> productId =new ArrayList<String>();   
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -1190,7 +1190,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal with SLA",
 			groups={"AutoHealFailForSLA"},
-			enabled=true)	
+			enabled=false)	
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
 		String filename=null;
