@@ -263,13 +263,6 @@
                       (catch Object e (:type e)))]
       (verify (= :date-error error)))
     (verify (= "" (tasks/ui gettextvalue :date-entry)))
-
-    (comment ;this is the old test after it autofilled the date
-      (let [date (tasks/ui gettextvalue :date-entry)
-            systemtime (.trim (.getStdout (.runCommandAndWait @clientcmd "date +%m/%d/%Y")))]
-        (verify (not (nil? (re-matches #"\d{2}/\d{2}/\d{4}" date))))
-        (verify (= date systemtime))))
-
     (finally (tasks/restart-app))))
 
 (defn ^{Test {:groups ["subscribe"
