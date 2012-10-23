@@ -446,8 +446,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		consumed=clienttasks.list_(null, null, true, null, null, null, null, null, null).getStdout();
 	}
 
-	
-	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
