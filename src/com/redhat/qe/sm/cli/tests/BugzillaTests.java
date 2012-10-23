@@ -130,6 +130,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		consumed=clienttasks.list_(null, null, true, null, null, null, null, null, null).getStdout();
 	}
 
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -149,6 +151,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), "Consumer with id "+ invalidconsumerId+" could not be found.");
 	}
 
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -168,6 +172,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	}
 
+	
+	
 
 	/**
 	 * @author skallesh
@@ -210,7 +216,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 
 
-
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -235,6 +240,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNoMatch(UpdateDateBeforeUpdate, UpdateDateAfterUpdate,"updated date has been changed after facts update");
 	}
 
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -279,6 +286,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	}
 
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -308,6 +317,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.trim(), expected);
 	}
 
+	
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -326,6 +338,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(result);
 	}
 
+	
 
 	/**
 	 * @author skallesh
@@ -354,6 +367,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -383,6 +397,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -431,6 +446,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		consumed=clienttasks.list_(null, null, true, null, null, null, null, null, null).getStdout();
 	}
 
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
