@@ -89,7 +89,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify content set associated with product",
 			groups={"VerifyUnsubscribingCertV3"},
-			enabled=true)	
+			enabled=false)	
 	@ImplementsNitrateTest(caseId=50215)
 	public void VerifyUnsubscribingCertV3() throws JSONException, Exception {
 
@@ -194,43 +194,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	
 
-	/**
-	 * @author skallesh
-	 * @throws Exception 
-	 * @throws JSONException 
-	 */
-	@Test(	description="verify if rhsmcertd process refresh the identity certificate after every restart",
-			groups={"VerifyrhsmcertdRefreshIdentityCert","blockedByBug-827034","blockedByBug-827035"},
-			enabled=true)	
-
-	public void VerifyRhsmcertdRefreshIdentityCert() throws JSONException, Exception {
-		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-
-		Calendar StartTimeBeforeRHSM=clienttasks.getCurrentConsumerCert().validityNotBefore;
-		Calendar EndTimeBeforeRHSM=clienttasks.getCurrentConsumerCert().validityNotAfter;
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[]{"server","insecure", "1"});
-		clienttasks.config_(null,null,true,listOfSectionNameValues);
-		String existingCertdate=client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStdout();
-		setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase,"date -s '15 year 9 month'");
-		log.info("Changed the date of candlepin" +client.runCommandAndWait("hostname"));
-		setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase,"date -s '15 year 9 month'");
-		clienttasks.restart_rhsmcertd(null, null, false, null);
-		SubscriptionManagerCLITestScript.sleep(3*60*1000);
-		Calendar StartTimeAfterRHSM=clienttasks.getCurrentConsumerCert().validityNotBefore;
-		Calendar EndTimeAfterRHSM=clienttasks.getCurrentConsumerCert().validityNotAfter;
-		String updatedCertdate=client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStdout();
-		setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase,"date -s '15 year ago 9 month ago'");
-		log.info("Changed the date of candlepin" +client.runCommandAndWait("hostname"));
-		setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase,"date -s '15 year ago 9 month ago'");
-		listOfSectionNameValues.clear();
-		listOfSectionNameValues.add(new String[]{"server","insecure", "0"});
-		clienttasks.config_(null,null,true,listOfSectionNameValues);
-		Assert.assertNotSame(StartTimeBeforeRHSM.getTime(), StartTimeAfterRHSM.getTime());
-		Assert.assertNotSame(EndTimeBeforeRHSM.getTime(), EndTimeAfterRHSM.getTime());
-		Assert.assertNotSame(existingCertdate, updatedCertdate);
-
-	}
+	
 
 
 
@@ -276,6 +240,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value=true.");
+	
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		Calendar now = new GregorianCalendar();
@@ -292,7 +257,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				productId.add(installedproduct.productId);
 			}
 		}
-		clienttasks.restart_rhsmcertd(null, healFrequency, false,null);
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 
 		for(InstalledProduct installedproduct :clienttasks.getCurrentlyInstalledProducts()){
@@ -1232,6 +1197,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		List<String> availableServiceLevelData = clienttasks.getCurrentlyAvailableServiceLevels();
 		String availableService = availableServiceLevelData.get(randomGenerator.nextInt(availableServiceLevelData.size()));	
+		clienttasks.service_level_(null, null, null, null, null, null, null, null, null, null, null);
 		clienttasks.subscribe_(true, availableService, (String)null, null, null,null, null, null, null, null, null);
 		for(InstalledProduct installedProduct:clienttasks.getCurrentlyInstalledProducts()){
 
