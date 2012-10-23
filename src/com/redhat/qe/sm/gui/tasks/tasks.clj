@@ -55,7 +55,7 @@
                    :network-error #"Unable to reach the server at"
                    :error-updating #"Error updating system data*"
                    :date-error #"Invalid date format. Please re-enter a valid date*"
-                   :invalid-cert #"An error occurred while importing the following certificates"
+                   :invalid-cert #"The following files are not valid certificates and were not imported"
                    :no-sla-available #"No service level will cover all installed products"
                    })
 
