@@ -1651,8 +1651,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return client.runCommandAndWait(command);
 	}
 	public Boolean waitForRegexInRhsmLog(String logRegex,int linecount) {
-
-
 		String input=	client.runCommandAndWait("tail -"+linecount +" "+clienttasks.rhsmLogFile).getStdout().trim();
 		Pattern pattern = Pattern.compile(logRegex,Pattern.MULTILINE);
 		Matcher  matcher = pattern.matcher(input);
@@ -1665,9 +1663,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			flag=true;
 		}
 		return flag;
-
-
-	
 
 	}
 
@@ -1684,35 +1679,4 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return PoolId;
 	}}
 
-// Data Providers ***********************************************************************
-/*@BeforeClass(groups="setup")
-	public void skipIfHosted() {
-		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("These tests are only valid for standalone candlepin servers.");
-	}
 
-	@BeforeClass(groups="setup", dependsOnMethods="skipIfHosted")
-	public void register_BeforeClass() throws Exception {
-		clienttasks.unregister_(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null));
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
-	}
-
-
-	@BeforeClass(groups="setup", dependsOnMethods="register_BeforeClass")
-	public void findRandomAvailableProductIdBeforeClass() throws Exception {
-		List<String> poolIdsList = new ArrayList<String>();
-		clienttasks.subscribe_(true, null, (String)null, null, null,null, null, null, null, null, null);
-		List<ProductSubscription> subscribe=clienttasks.getCurrentlyConsumedProductSubscriptions();
-		if(!(subscribe.size()==0)){
-
-
-		for (ProductSubscription pool  : subscribe) {
-			poolIdsList.add(pool.productId);
-		}
-		randomAvailableProductId = poolIdsList.get(randomGenerator.nextInt(poolIdsList.size()));
-		}else
-			Assert.fail("no pools compatible with installed product");
-	}
-
-}
- */
