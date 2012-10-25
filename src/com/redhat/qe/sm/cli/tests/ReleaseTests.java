@@ -535,7 +535,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,	sm_clientUsername, sm_clientPassword, sm_clientOrg}));
 
 		if (sm_serverType.equals(CandlepinType.hosted) && !sm_rhnUsername.isEmpty())
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("861151"),	sm_rhnUsername, sm_rhnPassword, null}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"861151","870141"}),	sm_rhnUsername, sm_rhnPassword, null}));
 
 		return ll;
 	}
