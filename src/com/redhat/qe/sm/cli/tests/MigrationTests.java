@@ -2469,7 +2469,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-cf-tools-1(-beta)?-debuginfo")) {	// rhel-x86_64-server-5-cf-tools-1-beta-debuginfo, rhel-x86_64-server-5-cf-tools-1-debuginfo
 				// Bug 840099 - debug info channels for rhel-x86_64-server-5-cf-tools are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugIds.add("840099");
+				bugIds.add("840099");	// CLOSED as a dup of bug 818202
+				bugIds.add("818202");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-mrg-.*")) {	// rhel-x86_64-server-5-mrg-grid-1 rhel-x86_64-server-5-mrg-grid-1-beta rhel-x86_64-server-5-mrg-grid-2 rhel-x86_64-server-5-mrg-grid-execute-1 rhel-x86_64-server-5-mrg-grid-execute-1-beta rhel-x86_64-server-5-mrg-grid-execute-2 etc.
 				// Bug 840102 - channels for rhel-<ARCH>-server-5-mrg-* are not yet mapped to product certs in rcm/rcm-metadata.git 
@@ -2486,22 +2487,26 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-productivity-5-beta(-.+|$)")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
-				bugIds.add("840099");
+				bugIds.add("840099");	// CLOSED as a dup of bug 818202
+				bugIds.add("818202");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-rhsclient-5(-.+|$)")) {	// rhel-x86_64-server-rhsclient-5 rhel-x86_64-server-rhsclient-5-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
-				bugIds.add("840099");
+				bugIds.add("840099");	// CLOSED as a dup of bug 818202
+				bugIds.add("818202");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-xfs-5(-.+|$)")) {	// rhel-x86_64-server-xfs-5 rhel-x86_64-server-xfs-5-beta
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
-				bugIds.add("840099");
+				bugIds.add("840099");	// CLOSED as a dup of bug 818202
+				bugIds.add("818202");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-shadow(-.+|$)")) {	// rhel-x86_64-server-5-shadow-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
-				bugIds.add("840099");
+				bugIds.add("840099");	// CLOSED as a dup of bug 818202
+				bugIds.add("818202");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-eucjp-5(-.+|$)")) {	// rhel-x86_64-server-eucjp-5 rhel-x86_64-server-eucjp-5-beta etc.
 				// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
