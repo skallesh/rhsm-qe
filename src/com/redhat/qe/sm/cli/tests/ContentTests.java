@@ -237,7 +237,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
-			groups={"AcceptanceTests","blockedByBug-804227"},
+			groups={"AcceptanceTests","blockedByBug-804227","blockedByBug-871146"},
 	        enabled=true)
 	@ImplementsNitrateTest(caseId=47578,fromPlan=2479)
 	public void VerifyYumRepoListsEnabledContent_Test() throws JSONException, Exception{
