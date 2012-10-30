@@ -355,25 +355,31 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt to enable an invalid repo id",
-			groups={},
+			groups={"blockedByBug-846207"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposEnableInvalidRepo_Test(){
-		SSHCommandResult result = clienttasks.repos_(null, "invalid-repo-id", null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable an invalid-repo-id.");
-		Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to enable an invalid-repo-id.");
+		String invalidRepo = "invalid-repo-id";
+		SSHCommandResult result = clienttasks.repos_(null, invalidRepo, null, null, null, null);
+		//Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable an invalid-repo-id.");	// valid in RHEL59
+		//Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to enable an invalid-repo-id.");	// valid in RHEL59
+		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to enable an invalid-repo-id.");
+		Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo id. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to enable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to enable an invalid-repo-id.");
 	}
 	
 	
 	@Test(	description="subscription-manager: attempt to disable an invalid repo id",
-			groups={},
+			groups={"blockedByBug-846207"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposDisableInvalidRepo_Test(){
-		SSHCommandResult result = clienttasks.repos_(null, null, "invalid-repo-id", null, null, null);
-		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to disable an invalid-repo-id.");
-		Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to disable an invalid-repo-id.");
+		String invalidRepo = "invalid-repo-id";
+		SSHCommandResult result = clienttasks.repos_(null, null, invalidRepo, null, null, null);
+		//Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to disable an invalid-repo-id.");	// valid in RHEL59
+		//Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to disable an invalid-repo-id.");	// valid in RHEL59
+		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to disable an invalid-repo-id.");
+		Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo id. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to disable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
 	}
 	
@@ -422,8 +428,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	// Candidates for an automated Test:
 	// TODO Bug 797243 - manual changes to redhat.repo are too sticky
-
-	
+	// TODO	Bug 846207 - multiple specifications of --enable doesnot throw error when repo id is invalid
 	
 	
 	

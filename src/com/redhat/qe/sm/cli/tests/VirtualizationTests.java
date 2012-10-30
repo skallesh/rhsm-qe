@@ -686,7 +686,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void VerifyHostAndGuestPoolQuantities_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
-
+//if (!productId.equals("awesomeos-virt-unlimited")) throw new SkipException("debugTesting VerifyHostAndGuestPoolQuantities_Test");
 		JSONObject jsonHostPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+hostPoolId));	
 		int jsonHostPoolQuantity = jsonHostPool.getInt("quantity");
 		int jsonHostPoolQuantityConsumed = jsonHostPool.getInt("consumed");
@@ -720,7 +720,14 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// get the guestPool
 		SubscriptionPool guestPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", guestPoolId, allAvailablePools);
 		// determine the availability of the guestPool
-		if (jsonGuestPoolQuantityConsumed > jsonGuestPoolQuantity) {
+		if (jsonGuestPoolQuantity==-1) {
+			Assert.assertNotNull(guestPool,"Guest pool id '"+guestPoolId+"', derived from the virtualization-aware subscription id '"+subscriptionId+"', is listed in all available subscriptions: "+guestPool);
+
+			// assert guestPoolId quantity is unlimited
+			Assert.assertEquals(guestPool.quantity, "unlimited", "When the subscription product has a quantity attribute of '-1', then the guest pool's quantity viewed by within the list --all --available should be 'unlimited'.");
+			Assert.assertEquals(virtLimit, "unlimited", "When the subscription product has a quantity attribute of '-1', then the guest pool's virt_limit attribute should be 'unlimited'.");
+
+		} else if (jsonGuestPoolQuantityConsumed > jsonGuestPoolQuantity) {
 			Assert.fail("Guest pool id '"+guestPoolId+"' has a consumed attribute value '"+jsonGuestPoolQuantityConsumed+"' that exceeds its total quantity '"+jsonGuestPoolQuantity+"'.  This does NOT make sense.");
 		} else if (jsonGuestPoolQuantityConsumed == jsonGuestPoolQuantity) {
 			Assert.assertNull(guestPool,"Guest pool id '"+guestPoolId+"', derived from the virtualization-aware subscription id '"+subscriptionId+"', is NOT listed in all available subscriptions since all of its quantity are already being consumed by other systems.");
@@ -728,11 +735,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(guestPool,"Guest pool id '"+guestPoolId+"', derived from the virtualization-aware subscription id '"+subscriptionId+"', is listed in all available subscriptions: "+guestPool);
 
 			// assert guestPoolId quantity
-			if (virtLimit.equals("unlimited")) {
-				Assert.assertEquals(guestPool.quantity, virtLimit, "When the subscription product has a virt_limit of 'unlimited', then the guest pool's quantity should be 'unlimited'.");
-			} else {
-				Assert.assertEquals(Integer.valueOf(guestPool.quantity), Integer.valueOf((quantity-jsonHostPoolQuantityExported)*Integer.valueOf(virtLimit)-jsonGuestPoolQuantityConsumed), "Assuming '"+jsonGuestPoolQuantityConsumed+"' entitlements are currently being consumed from guest pool '"+guestPool.poolId+"', the quantity of available entitlements for this guest pool should be the host pool's virt_limit of '"+virtLimit+"' times (the host's total quantity '"+quantity+"' minus those exported '"+jsonHostPoolQuantityExported+"') minus the number of already consumed from the pool '"+jsonGuestPoolQuantityConsumed+"'.");
-			}
+			Assert.assertEquals(Integer.valueOf(guestPool.quantity), Integer.valueOf((quantity-jsonHostPoolQuantityExported)*Integer.valueOf(virtLimit)-jsonGuestPoolQuantityConsumed), "Assuming '"+jsonGuestPoolQuantityConsumed+"' entitlements are currently being consumed from guest pool '"+guestPool.poolId+"', the quantity of available entitlements for this guest pool should be the host pool's virt_limit of '"+virtLimit+"' times (the host's total quantity '"+quantity+"' minus those exported '"+jsonHostPoolQuantityExported+"') minus the number of already consumed from the pool '"+jsonGuestPoolQuantityConsumed+"'.");
 		}
 	}
 		

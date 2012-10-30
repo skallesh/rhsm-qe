@@ -104,7 +104,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 	
 	@Test(	description="subscription-manager-cli: identity should report RHN Classic remote server type and candlepin when over-registered",
-			groups={"RHNClassicTests"},
+			groups={"RHNClassicTests","blockedByBug-846834","blockedByBug-852328"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void IdentityWhenRegisteredToRHNClassicAndCandlepin_Test() {
@@ -121,7 +121,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		List<String> expectedStdoutRegexs = new ArrayList<String>();
 		expectedStdoutRegexs.add("^Current identity is: "+consumerId);
 		//expectedStdoutRegexs.add("^remote entitlement server type: RHN classic and subscription management service$");	// changed by bug 846834
-		expectedStdoutRegexs.add("^server type: RHN classic and Red Hat Subscription Management$");
+		//expectedStdoutRegexs.add("^server type: RHN classic and Red Hat Subscription Management$");	// changed by bug 852328
+		expectedStdoutRegexs.add("^server type: RHN Classic and Red Hat Subscription Management$");
 		for (String expectedStdoutRegex : expectedStdoutRegexs) {
 			Assert.assertTrue(Pattern.compile(expectedStdoutRegex, Pattern.MULTILINE/* | Pattern.DOTALL*/).matcher(identityResult.getStdout()).find(),"Stdout contains expected regex: "+expectedStdoutRegex);
 		}

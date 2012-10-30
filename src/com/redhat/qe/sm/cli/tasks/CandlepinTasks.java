@@ -2469,7 +2469,8 @@ schema generation failed
 	
 	public JSONObject createOwnerUsingCPC(String owner_name) throws JSONException {
 		log.info("Using the ruby client to create_owner owner_name='"+owner_name+"'...");
-
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc create_owner \"%s\"", serverInstallDir+rubyClientDir, owner_name);
 		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
@@ -2488,7 +2489,8 @@ schema generation failed
 	
 	public SSHCommandResult deleteOwnerUsingCPC(String owner_name) {
 		log.info("Using the ruby client to delete_owner owner_name='"+owner_name+"'...");
-
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc delete_owner \"%s\"", serverInstallDir+rubyClientDir, owner_name);
 		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
@@ -2496,7 +2498,8 @@ schema generation failed
 	
 	public JSONObject createProductUsingCPC(String id, String name) throws JSONException {
 		log.info("Using the ruby client to create_product id='"+id+"' name='"+name+"'...");
-
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc create_product \"%s\" \"%s\"", serverInstallDir+rubyClientDir, id, name);
 		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
@@ -2506,7 +2509,8 @@ schema generation failed
 
 	public JSONObject createSubscriptionUsingCPC(String ownerKey, String productId) throws JSONException {
 		log.info("Using the ruby client to create_subscription ownerKey='"+ownerKey+"' productId='"+productId+"'...");
-
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc create_subscription \"%s\" \"%s\"", serverInstallDir+rubyClientDir, ownerKey, productId);
 		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
@@ -2516,7 +2520,8 @@ schema generation failed
 	
 	public JSONObject createPoolUsingCPC(String productId, String productName, String ownerId, String quantity) throws JSONException {
 		log.info("Using the ruby client to create_pool productId='"+productId+"' productName='"+productName+"' ownerId='"+ownerId+"' quantity='"+quantity+"'...");
-
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc create_pool \"%s\" \"%s\" \"%s\" \"%s\"", serverInstallDir+rubyClientDir, productId, productName, ownerId, quantity);
 		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
@@ -2526,7 +2531,8 @@ schema generation failed
 	
 	public SSHCommandResult deletePoolUsingCPC(String id) {
 		log.info("Using the ruby client to delete_pool id='"+id+"'...");
-
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc delete_pool \"%s\"", serverInstallDir+rubyClientDir, id);
 		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
@@ -2534,7 +2540,8 @@ schema generation failed
 	
 	public SSHCommandResult deleteSubscriptionUsingCPC(String id) {
 		log.info("Using the ruby client to delete_subscription id='"+id+"'...");
-
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc delete_subscription \"%s\"", serverInstallDir+rubyClientDir, id);
 		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
@@ -2542,7 +2549,8 @@ schema generation failed
 	
 	public JSONObject refreshPoolsUsingCPC(String ownerKey, boolean immediate) throws JSONException {
 		log.info("Using the ruby client to refresh_pools ownerKey='"+ownerKey+"' immediate='"+immediate+"'...");
-
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc refresh_pools \"%s\" %s", serverInstallDir+rubyClientDir, ownerKey, Boolean.toString(immediate));
 		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
