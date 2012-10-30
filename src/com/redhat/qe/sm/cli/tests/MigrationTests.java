@@ -1583,7 +1583,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(rhnChannels.size(), 1, "The number of base RHN Classic base channels this system is consuming.");
 		rhnBaseChannel = getCurrentRhnClassicChannels().get(0);
 
-		// get all of the available RHN Classic child channels available for cunsumption under this base channel
+		// get all of the available RHN Classic child channels available for consumption under this base channel
 		rhnAvailableChildChannels.clear();
 		String command = String.format("rhn-channels.py --username=%s --password=%s --server=%s --basechannel=%s --no-custom --available", sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnBaseChannel);
 		//debugTesting if (true) command = "echo rhel-x86_64-server-5 && echo rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 && echo rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5";
@@ -2139,9 +2139,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
 		
-		// split rhnAvailableChildChannels into two parts to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
-		List<String> rhnAvailableChildChannelsPart1 = 	rhnAvailableChildChannels.subList(0, rhnAvailableChildChannels.size()/2);
-		List<String> rhnAvailableChildChannelsPart2 = 	rhnAvailableChildChannels.subList(rhnAvailableChildChannels.size()/2,rhnAvailableChildChannels.size());
+		int rhnChildChannelSubSize = 40;	// 50;	// used to break down rhnAvailableChildChannels into smaller sub-lists to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
 		
 		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
 		String regUsername=null, regPassword=null, regOrg=null;
@@ -2178,17 +2176,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"-n",		regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
 		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"-n",		regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-n -f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-n -f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
+		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize),	"-n -f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
+		}
 
 		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"",			regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
 		//ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"",			regUsername,	regPassword,	regOrg,	/*areAllChannelsMapped(rhnAvailableChildChannels)?noServiceLevelIndex:*/null,	defaultServiceLevel}));
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-f",		regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f",		regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
-
+		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
+			ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize),	"-f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
+		}
+		
 		// test variations of a valid serverUrl
 		for (String serverUrl : regServerUrls) {
-			List<String> availableChildChannelList = 	rhnAvailableChildChannels.isEmpty()? rhnAvailableChildChannels : Arrays.asList(rhnAvailableChildChannels.get(randomGenerator.nextInt(rhnAvailableChildChannels.size())));	// randomly choose an available child channel just to add a little fun
+			List<String> availableChildChannelList = rhnAvailableChildChannels.isEmpty()? rhnAvailableChildChannels : Arrays.asList(rhnAvailableChildChannels.get(randomGenerator.nextInt(rhnAvailableChildChannels.size())));	// randomly choose an available child channel just to add a little fun
 			ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	availableChildChannelList,	"-f --serverurl="+serverUrl,		sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,	defaultServiceLevel}));		
 		}
 
@@ -2196,9 +2196,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (String serviceLevel : regServiceLevels) {
 			String options;
 			options = String.format("--force --servicelevel=%s",serviceLevel); if (serviceLevel.contains(" ")) options = String.format("--force --servicelevel \"%s\"", serviceLevel);
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	options,	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	/* first 50 rhnAvailableChildChannels to avoid bug 818786 */ rhnAvailableChildChannels.subList(0,rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():rhnChildChannelSubSize),	options,	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
 			options = String.format("-f -s %s",randomizeCaseOfCharactersInString(serviceLevel)); if (serviceLevel.contains(" ")) options = String.format("-f -s \"%s\"", randomizeCaseOfCharactersInString(serviceLevel));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	options,	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	/* last 50 rhnAvailableChildChannels to avoid bug 818786 */ rhnAvailableChildChannels.subList(0>rhnAvailableChildChannels.size()-rhnChildChannelSubSize?rhnAvailableChildChannels.size()-rhnChildChannelSubSize:0,rhnAvailableChildChannels.size()),	options,	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));
 		}
 		
 		// attempt an unavailable servicelevel, then choose an available one from the index table
@@ -2237,9 +2237,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
-		// split rhnAvailableChildChannels into two parts to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
-		List<String> rhnAvailableChildChannelsPart1 = 	rhnAvailableChildChannels.subList(0, rhnAvailableChildChannels.size()/2);
-		List<String> rhnAvailableChildChannelsPart2 = 	rhnAvailableChildChannels.subList(rhnAvailableChildChannels.size()/2,rhnAvailableChildChannels.size());
+		int rhnChildChannelSubSize = 40;	// 50;	// used to break down rhnAvailableChildChannels into smaller sub-lists to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
 
 		String basicauthproxyUrl = String.format("%s:%s", sm_basicauthproxyHostname,sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", sm_noauthproxyHostname,sm_noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
@@ -2258,16 +2256,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	"http://"+sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
 		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
+			ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize),	"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		}
 		
 		// no auth proxy test data...
 		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	"http://"+sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
 		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-
+		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
+			ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize),	"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		}
+		
 		return ll;
 	}
 	
