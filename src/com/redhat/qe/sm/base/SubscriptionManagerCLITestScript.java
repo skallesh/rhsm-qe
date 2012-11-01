@@ -429,8 +429,23 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
-	protected int getRandInt(){
+	public static int getRandInt(){
 		return Math.abs(randomGenerator.nextInt());
+	}
+	
+	/**
+	 * @param list - the list from which to return a subset of its contents
+	 * @param subsetSize - specify the subset size desired 0<=subsetSize<=list.size();  if the value specified is outsize this range, it will be adjusted.
+	 * @return a random subset of the list
+	 * @throws Exception
+	 */
+	public static <T> List<T> getRandomSubsetOfList(List<T> list,int subsetSize) {
+		if (subsetSize > list.size()) subsetSize = list.size();	// limit subsetSize to the size of the list
+		if (subsetSize < 0) subsetSize = 0;
+		List<T> clonedList = new ArrayList<T>(list);
+		List<T> subsetList = new ArrayList<T>(subsetSize);
+		for (int i = 0; i < subsetSize; i++) subsetList.add(clonedList.remove(randomGenerator.nextInt(clonedList.size())));
+		return subsetList;
 	}
 	
 	/**
@@ -845,11 +860,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	@DataProvider(name="getRandomSubsetOfAvailableSubscriptionPoolsData")
 	public Object[][] getRandomSubsetOfAvailableSubscriptionPoolsDataAs2dArray() throws Exception {
 		int subMax = 3;	// maximum subset count of data rows to return
-		List<List<Object>> allData = getAvailableSubscriptionPoolsDataAsListOfLists();
-		if (allData.size() <= subMax) return TestNGUtils.convertListOfListsTo2dArray(allData);
-		List<List<Object>> subData = new ArrayList<List<Object>>();
-		for (int i = 0; i < subMax; i++) subData.add(allData.remove(randomGenerator.nextInt(allData.size())));
-		return TestNGUtils.convertListOfListsTo2dArray(subData);
+		return TestNGUtils.convertListOfListsTo2dArray(getRandomSubsetOfList(getAvailableSubscriptionPoolsDataAsListOfLists(),subMax));
 	}
 	/**
 	 * @return List of [SubscriptionPool pool]
