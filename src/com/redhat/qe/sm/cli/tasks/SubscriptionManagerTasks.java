@@ -363,7 +363,10 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public void removeRhnSystemIdFile() {
-		sshCommandRunner.runCommandAndWait("rm -rf "+rhnSystemIdFile);
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf "+rhnSystemIdFile, TestRecords.action());
+		
+		// also do a yum clean all to avoid rhnplugin message: This system may not be registered to RHN Classic or RHN Satellite. SystemId could not be acquired.
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "yum clean all", TestRecords.action());
 	}
 	
 	public void updateYumRepoParameter(String yumRepoFile, String repoid, String parameter, String value){
@@ -5067,6 +5070,49 @@ repolist: 3,394
 
 		// view /usr/share/rhsm/subscription_manager/branding/__init__.py and search for "self." to find branding message strings e.g. "REGISTERED_TO_OTHER_WARNING"
 		return sshCommandRunner.runCommandAndWait("cd "+brandingDir+"; python -c \"import __init__ as sm;brand=sm.Branding(sm.get_branding());print brand."+key+"\"").getStdout();
+	}
+	
+	
+	
+	
+	/**
+	 * Call rhnreg_ks and assert the existence of a systemid file afterwards.
+	 * @param rhnUsername
+	 * @param rhnPassword
+	 * @param rhnHostname
+	 * @return the rhn system_id value from the contents of the systemid file
+	 */
+	public String registerToRhnClassic(String rhnUsername, String rhnPassword, String rhnHostname) {
+		
+		// register to RHN Classic
+		// [root@jsefler-onprem-5server ~]# rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
+		//	ERROR: refreshing remote package list for System Profile
+		String command = String.format("rhnreg_ks --serverUrl=https://xmlrpc.%s/XMLRPC --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", rhnHostname, rhnUsername, rhnPassword, "rhsm-automation."+hostname);
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		
+		// assert result
+		Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to register to RHN Classic.");
+		Assert.assertEquals(result.getStderr(), "","Stderr from attempt to register to RHN Classic.");
+		if (!result.getStdout().trim().equals("")) log.warning("Ignoring result: "+result.getStdout().trim()); 		// <- IGNORE ERRORS LIKE THIS: ERROR: refreshing remote package list for System Profile
+		//Assert.assertEquals(result.getStdout(), "","Stdout from attempt to register to RHN Classic.");
+		
+		// assert existance of system id file
+		Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, rhnSystemIdFile),"The system id file '"+rhnSystemIdFile+"' exists.  This indicates this system is registered using RHN Classic.");
+		
+		// get the value of the systemid
+		// [root@jsefler-onprem-5server rhn]# grep ID- /etc/sysconfig/rhn/systemid
+		// <value><string>ID-1021538137</string></value>
+		command = String.format("grep ID- %s", rhnSystemIdFile);
+		return sshCommandRunner.runCommandAndWait(command).getStdout().trim().replaceAll("\\<.*?\\>", "").replaceFirst("ID-", "");		// return 1021538137
+	}
+
+
+
+
+	public boolean isRhnSystemIdRegistered(String rhnUsername, String rhnPassword,String rhnHostname, String systemId) {
+		String command = String.format("rhn-is-registered.py --username=%s --password=%s --server=%s  %s", rhnUsername, rhnPassword, rhnHostname, systemId);
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		return Boolean.valueOf(result.getStdout().trim());
 	}
 	
 	// protected methods ************************************************************

@@ -753,8 +753,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllFacts();
 		
 		// register to RHN Classic
-		String rhnSystemId = registerToRhnClassic(rhnUsername, rhnPassword, rhnHostname);
-		Assert.assertTrue(isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
+		String rhnSystemId = clienttasks.registerToRhnClassic(rhnUsername, rhnPassword, rhnHostname);
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
 		
 		// subscribe to more RHN Classic channels
 		if (rhnChannelsToAdd.size()>0) addRhnClassicChannels(rhnUsername, rhnPassword, rhnChannelsToAdd);
@@ -795,7 +795,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" requires --force to continue.");
 			
 			// assert that we are still registered to RHN
-			Assert.assertTrue(isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt requires --force to continue.");
+			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt requires --force to continue.");
 
 			return;
 		}
@@ -820,7 +820,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		expectedMsg = "System successfully unregistered from RHN Classic.";
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is abscent.  This indicates this system is not registered using RHN Classic.");
-		Assert.assertTrue(!isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered.");
+		Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered.");
 
 		// assert products are copied
 		expectedMsg = String.format("Product certificates copied successfully to %s !",	clienttasks.productCertDir);
@@ -966,8 +966,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 
 		// register to RHN Classic
-		String rhnSystemId = registerToRhnClassic(rhnUsername, rhnPassword, rhnHostname);
-		Assert.assertTrue(isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
+		String rhnSystemId = clienttasks.registerToRhnClassic(rhnUsername, rhnPassword, rhnHostname);
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
 
 		// assert that traffic to RHN is went through the proxy
 		String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
@@ -1007,7 +1007,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" requires --force to continue.");
 			
 			// assert that we are still registered to RHN
-			Assert.assertTrue(isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt requires --force to continue.");
+			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt requires --force to continue.");
 
 			return;
 		}
@@ -1028,7 +1028,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		expectedMsg = "System successfully unregistered from RHN Classic.";
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  This indicates this system is not registered using RHN Classic.");
-		Assert.assertTrue(!isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered.");
+		Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered.");
 
 		// assert that we are newly registered using rhsm
 		clienttasks.identity(null, null, null, null, null, null, null);
@@ -1333,8 +1333,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllFacts();
 		
 		// register to RHN Classic
-		String rhnSystemId = registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
-		Assert.assertTrue(isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
 		
 		// subscribe to more RHN Classic channels
 		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, rhnChannelsToAdd);
@@ -1354,7 +1354,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" was aborted.");
 		
 		// assert that we are still registered to RHN
-		Assert.assertTrue(isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered when '"+rhnMigrateTool+" was aborted.");
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered when '"+rhnMigrateTool+" was aborted.");
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classic.");
 	}
 	
@@ -1578,7 +1578,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sm_rhnHostname.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 
 		// get the base channel
-		registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		List<String> rhnChannels = getCurrentRhnClassicChannels();
 		Assert.assertEquals(rhnChannels.size(), 1, "The number of base RHN Classic base channels this system is consuming.");
 		rhnBaseChannel = getCurrentRhnClassicChannels().get(0);
@@ -1942,37 +1942,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 	
 	/**
-	 * Call rhnreg_ks and assert the existence of a systemid file afterwards.
-	 * @param rhnUsername
-	 * @param rhnPassword
-	 * @param rhnHostname
-	 * @return the rhn system_id value from the contents of the systemid file
-	 */
-	protected String registerToRhnClassic(String rhnUsername, String rhnPassword, String rhnHostname) {
-		
-		// register to RHN Classic
-		// [root@jsefler-onprem-5server ~]# rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
-		//	ERROR: refreshing remote package list for System Profile
-		String command = String.format("rhnreg_ks --serverUrl=https://xmlrpc.%s/XMLRPC --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", rhnHostname, rhnUsername, rhnPassword, "rhsm-automation."+clienttasks.hostname);
-		SSHCommandResult result = client.runCommandAndWait(command);
-		
-		// assert result
-		Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to register to RHN Classic.");
-		Assert.assertEquals(result.getStderr(), "","Stderr from attempt to register to RHN Classic.");
-		if (!result.getStdout().trim().equals("")) log.warning("Ignoring result: "+result.getStdout().trim()); 		// <- IGNORE ERRORS LIKE THIS: ERROR: refreshing remote package list for System Profile
-		//Assert.assertEquals(result.getStdout(), "","Stdout from attempt to register to RHN Classic.");
-		
-		// assert existance of system id file
-		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is registered using RHN Classic.");
-		
-		// get the value of the systemid
-		// [root@jsefler-onprem-5server rhn]# grep ID- /etc/sysconfig/rhn/systemid
-		// <value><string>ID-1021538137</string></value>
-		command = String.format("grep ID- %s", clienttasks.rhnSystemIdFile);
-		return client.runCommandAndWait(command).getStdout().trim().replaceAll("\\<.*?\\>", "").replaceFirst("ID-", "");		// return 1021538137
-	}
-	
-	/**
 	 * Call rhn-channel --list to get the currently consumed RHN channels.
 	 * @return
 	 */
@@ -2028,13 +1997,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to add RHN Classic channels.");
 			Assert.assertEquals(result.getStderr(), "","Stderr from attempt to add RHN Classic channel.");
 		}
-	}
-
-	protected boolean isRhnSystemIdRegistered(String rhnUsername, String rhnPassword, String rhnHostname, String systemId) {
-		
-		String command = String.format("rhn-is-registered.py --username=%s --password=%s --server=%s  %s", rhnUsername, rhnPassword, rhnHostname, systemId);
-		SSHCommandResult result = client.runCommandAndWait(command);
-		return Boolean.valueOf(result.getStdout().trim());
 	}
 
 	protected void iptablesRejectPort(String port) {

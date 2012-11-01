@@ -91,6 +91,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Interoperability Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.InteroperabilityTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: ActivationKey Tests">
 		<classes>
 			<class name="com.redhat.qe.sm.cli.tests.ActivationKeyTests" />
