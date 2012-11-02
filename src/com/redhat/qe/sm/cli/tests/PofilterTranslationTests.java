@@ -408,6 +408,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("825367");
 				// Bug 860084 - [ja_JP] two accelerators for msgid "Configure Pro_xy"
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("860084");
+				// Bug 872697 - [ja_JP] two accelerators for msgid "Configure Pro_xy"
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("872697");
 				
 				
 				// Bug 825397	Many translated languages fail the pofilter newlines test
