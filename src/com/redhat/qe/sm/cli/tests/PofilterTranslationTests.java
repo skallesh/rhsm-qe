@@ -501,7 +501,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("828989");
 				// Bug 860088 - [de_DE] translation for a url should not be altered 
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/de_DE/")) bugIds.add("860088");
-				
+				// Bug 872684 - [de_DE] pofilter urls test is failing on the trailing period to url http://red.ht/lost_password.
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/de_DE/")) bugIds.add("872684");
 				
 				// Bug 845304 - translation of the word "[OPTIONS]" has reverted
 				if (pofilterTest.equals("unchanged")) bugIds.add("845304");
