@@ -1082,70 +1082,6 @@ Expected Results:
 	
 	
 	
-	@Test(	description="User is warned when already registered using RHN Classic",
-			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018", "blockedByBug-755130", "blockedByBug-847795"},
-			enabled=true)
-	@ImplementsNitrateTest(caseId=75972)	
-	public void InteroperabilityRegister_Test() {
-
-		// interoperabilityWarningMessage is defined in /usr/share/rhsm/subscription_manager/branding/__init__.py self.REGISTERED_TO_OTHER_WARNING
-		String interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
-			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
-			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// after Bug 730018 - Warning text message is confusing
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
-			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
-			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// during rhel59, terminology changes were made for "RHN Certificate-Based technology"
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
-			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends (except in a few cases) that customers only register once. " +"\n\n"+
-			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// after Bug 847795 - String Update: redhat_branding.py Updates
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with Red Hat using RHN Classic technology." +"\n\n"+
-			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends that customers only register once. " +"\n\n"+
-			"To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// during RHEL58, DEV trimmed whitespace from strings...
-		interoperabilityWarningMessage = interoperabilityWarningMessage.replaceAll(" +(\n|$)", "$1"); 
-		
-		// query the branding python file directly to get the default interoperabilityWarningMessage (when the subscription-manager rpm came from a git build - this assumes that any build of subscription-manager must have a branding module e.g. redhat_branding.py)
-		/* TEMPORARILY COMMENTING OUT SINCE JBOWES IS INCLUDING THIS BRANDING FILE IN THE PUBLIC REPO - jsefler 9/15/2011
-		if (client.runCommandAndWait("rpm -q subscription-manager").getStdout().contains(".git.")) {
-			interoperabilityWarningMessage = clienttasks.getBrandingString("REGISTERED_TO_OTHER_WARNING");
-		}
-		*/
-		String interoperabilityWarningMessageRegex = "^"+interoperabilityWarningMessage.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)").replaceAll("\\.", "\\\\.");
-		Assert.assertTrue(interoperabilityWarningMessage.startsWith("WARNING"), "The expected interoperability message starts with \"WARNING\".");
-		
-		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
-		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
-		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
-		
-		log.info("Attempt to register while already registered via RHN Classic...");
-		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
-		//Assert.assertTrue(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
-//		Assert.assertContainsMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager warns the registerer when the system is already registered via RHN Classic with the expected message.");
-		Assert.assertTrue(result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
-
-		log.info("Now let's make sure we are NOT warned when we are NOT already registered via RHN Classic...");
-		RemoteFileTasks.runCommandAndWait(client, "rm -rf "+clienttasks.rhnSystemIdFile, TestRecords.action());
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is gone.");
-		result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
-		
-		//Assert.assertFalse(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is not already registered via RHN Classic.");
-//		Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
-		Assert.assertTrue(!result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
-	}
-	
-	
-	
 	@Test(	description="subscription-manager: attempt register to --environment when the candlepin server does not support environments should fail",
 			groups={},
 			enabled=true)
@@ -1370,7 +1306,7 @@ Expected Results:
 	
 	// Configuration methods ***********************************************************************
 
-	@AfterGroups(groups={"setup"}, value={"RegisterWithAutosubscribe_Test","InteroperabilityRegister_Test"})
+	@AfterGroups(groups={"setup"}, value={"RegisterWithAutosubscribe_Test"})
 	@AfterClass (alwaysRun=true)
 	public void cleaupAfterClass() {
 		if (clienttasks==null) return;
@@ -1380,7 +1316,6 @@ Expected Results:
 		
 		// delete temporary files and directories
 		client.runCommandAndWait("rm -rf "+tmpProductCertDir);
-		clienttasks.removeRhnSystemIdFile();
 	}
 
 	// Protected methods ***********************************************************************

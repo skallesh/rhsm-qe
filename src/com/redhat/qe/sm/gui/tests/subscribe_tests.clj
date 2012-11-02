@@ -72,10 +72,11 @@
         (verify (= false (tasks/ui rowexist? :my-subscriptions-view subscription)))
         (catch [:type :not-subscribed] _)))
 
-(defn ^{Test {:groups ["subscribe" "blockedByBug-703920"]
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-703920"
+                       "blockedByBug-869028"]
               :dataProvider "subscriptions"}}
   check_contract_selection_dates
-  "https://bugzilla.redhat.com/show_bug.cgi?id=703920"
   [_ subscription]
   (try+ (tasks/open-contract-selection subscription)
         (try
@@ -262,13 +263,6 @@
                       (catch Object e (:type e)))]
       (verify (= :date-error error)))
     (verify (= "" (tasks/ui gettextvalue :date-entry)))
-
-    (comment ;this is the old test after it autofilled the date
-      (let [date (tasks/ui gettextvalue :date-entry)
-            systemtime (.trim (.getStdout (.runCommandAndWait @clientcmd "date +%m/%d/%Y")))]
-        (verify (not (nil? (re-matches #"\d{2}/\d{2}/\d{4}" date))))
-        (verify (= date systemtime))))
-
     (finally (tasks/restart-app))))
 
 (defn ^{Test {:groups ["subscribe"
