@@ -43,7 +43,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
-			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test","blockedByBug-804227"},
+			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
@@ -586,7 +586,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 
 	@Test(	description="Verify that a 185 content set product subscription is always subscribable",
-			groups={"SubscribabilityOfContentSetProduct_Tests"},
+			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifySubscribabilityOf185ContentSetProduct_Test() {
@@ -654,7 +654,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Verify that a 186 content set product subscription is subscribable only when system.certificate_version >= 3.0",
-			groups={"SubscribabilityOfContentSetProduct_Tests"},
+			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifySubscribabilityOf186ContentSetProduct_Test() {
