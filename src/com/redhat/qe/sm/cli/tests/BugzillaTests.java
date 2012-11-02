@@ -403,7 +403,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId=50230)
 	public void UnsubscribeFromInvalidMultipleEntitlements() throws JSONException, Exception {
 		List<BigInteger> serialnums=new ArrayList<BigInteger>();
-		clienttasks.register_(sm_client2Username,sm_client2Password,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
 		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 			serialnums.add(consumed.serialNumber);
@@ -433,7 +433,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId=50230)
 	public void UnsubscribeFromMultipleEntitlements() throws JSONException, Exception {
 		List<BigInteger> serialnums=new ArrayList<BigInteger>();
-		clienttasks.register_(sm_client2Username,sm_client2Password,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
 		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 			serialnums.add(consumed.serialNumber);
