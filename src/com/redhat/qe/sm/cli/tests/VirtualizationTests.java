@@ -865,10 +865,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		boolean poolFound = false;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,pool.poolId,sm_serverUrl)) {
-				Assert.assertEquals(pool.machineType, "virtual", "MachineType:virtual should be displayed in the available Subscription Pool listing when the pool has a virt_only=true attribute.  Pool: "+pool);
+				//Assert.assertEquals(pool.machineType, "virtual", "MachineType:virtual should be displayed in the available Subscription Pool listing when the pool has a virt_only=true attribute.  Pool: "+pool);
+				Assert.assertEquals(pool.machineType, "Virtual", "MachineType: Virtual should be displayed in the available Subscription Pool listing when the pool has a virt_only=true attribute.  Pool: "+pool);	// updated after Bug 864184 - String Update: Capitalize Machine Type value from 'subscription-manager --available'
 				poolFound = true;
-			} else {
-				//Assert.assertEquals(pool.machineType, "physical", "MachineType:physical should be displayed in the available Subscription Pool listing when the pool has a virt_only=false attribute (or absense of a virt_only attribute).  Pool: "+pool);
 			}
 		}
 		if (!poolFound) throw new SkipException("Could not find an available pool with which to verify the MachineType:virtual is reported in the Subscription Pool listing.");
@@ -885,10 +884,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		boolean poolFound = false;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if (CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,pool.poolId,sm_serverUrl)) {
-				//Assert.assertEquals(pool.machineType, "virtual", "MachineType:virtual should be displayed in the available Subscription Pool listing when the pool has a virt_only=true attribute.  Pool: "+pool);
-			} else {
-				Assert.assertEquals(pool.machineType, "physical", "MachineType:physical should be displayed in the available Subscription Pool listing when the pool has a virt_only=false attribute (or absense of a virt_only attribute).  Pool: "+pool);
+			if (!CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,pool.poolId,sm_serverUrl)) {
+				//Assert.assertEquals(pool.machineType, "physical", "MachineType:physical should be displayed in the available Subscription Pool listing when the pool has a virt_only=false attribute (or absense of a virt_only attribute).  Pool: "+pool);
+				Assert.assertEquals(pool.machineType, "Physical", "MachineType: Physical should be displayed in the available Subscription Pool listing when the pool has a virt_only=false attribute (or absense of a virt_only attribute).  Pool: "+pool);	// updated after Bug 864184 - String Update: Capitalize Machine Type value from 'subscription-manager --available'
 				poolFound = true;
 			}
 		}

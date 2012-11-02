@@ -91,6 +91,7 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 
 		// assert that the quantity has decremented by one
 		if (cl1SubscriptionPool.quantity.equalsIgnoreCase("unlimited")) {
+			//Assert.assertEquals(cl2SubscriptionPool.quantity, "unlimited", "When the quantity of entitlements from subscription pool id '"+pool.poolId+"' is 'unlimited', then the available to consumer2 ("+sm_client2Username+") must remain 'unlimited' after consumer1 subscribed to the pool.");
 			Assert.assertEquals(cl2SubscriptionPool.quantity, "Unlimited", "When the quantity of entitlements from subscription pool id '"+pool.poolId+"' is 'Unlimited', then the available to consumer2 ("+sm_client2Username+") must remain 'Unlimited' after consumer1 subscribed to the pool.");		// altered after Bug 862885 - String Update: Capitalize unlimited in the All Available Subscriptions tab 
 		} else {
 			Assert.assertEquals(Integer.valueOf(cl2SubscriptionPool.quantity).intValue(), Integer.valueOf(cl1SubscriptionPool.quantity).intValue()-1, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+sm_client2Username+") has decremented by one.");
