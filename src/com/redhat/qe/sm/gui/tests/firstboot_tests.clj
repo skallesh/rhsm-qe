@@ -24,7 +24,7 @@
       (verify (tasks/fbshowing? :register-now))))
   (tasks/ui click :register-now)
   (tasks/ui click :firstboot-forward)
-  (assert ( = 1 (tasks/ui guiexist :firstboot-window "Choose Server"))))
+  (assert ( = 1 (tasks/ui guiexist :firstboot-window "Choose Service"))))
 
 (defn kill_firstboot []
   (.runCommand @clientcmd "killall -9 firstboot")
@@ -49,15 +49,17 @@
   (let [sysidpath "/etc/sysconfig/rhn/systemid"]
     (.runCommand @clientcmd (str "[ -f " sysidpath " ] && rm " sysidpath ))))
 
-(defn ^{AfterClass {:groups ["setup"]}}
+(defn ^{AfterClass {:groups ["setup"]
+                    :alwaysRun true}}
   firstboot_cleanup [_]
-  (kill_firstboot))
+  (kill_firstboot)
+  (.runCommand @clientcmd "subscription-manager clean")
+  (zero-proxy-values))
 
 (defn ^{Test {:groups ["firstboot"]}}
   firstboot_enable_proxy_auth [_]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
-  ;(tasks/ui uncheck :rhn-classic-mode)
   (let [hostname (@config :basicauth-proxy-hostname)
         port (@config :basicauth-proxy-port)
         username (@config :basicauth-proxy-username)
@@ -72,7 +74,6 @@
   firstboot_enable_proxy_noauth [_]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
-  ;(tasks/ui uncheck :rhn-classic-mode)
   (let [hostname (@config :noauth-proxy-hostname)
         port (@config :noauth-proxy-port)]
     (tasks/enableproxy hostname :port port :firstboot? true)
@@ -85,7 +86,6 @@
   firstboot_disable_proxy [_]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
-  ;(tasks/ui uncheck :rhn-classic-mode)
   (tasks/disableproxy true)
   (tasks/ui click :firstboot-forward)
   (tasks/checkforerror)
@@ -95,7 +95,6 @@
 (defn firstboot_register_invalid_user [user pass recovery]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
-  ;(tasks/ui uncheck :rhn-classic-mode)
   (tasks/ui click :firstboot-forward)
   (let [test-fn (fn [username password expected-error-type]
                   (try+
@@ -107,26 +106,25 @@
           expected-error recovery]
      (verify (= thrown-error expected-error))
      ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
-     (verify  (or (tasks/fbshowing? :firstboot-user)
-                  (= 1 (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration")))))))
+     (verify (tasks/fbshowing? :firstboot-user)))))
 
 (defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
   firstboot_check_back_button_state [_]
-  (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
-  ;(tasks/ui uncheck :rhn-classic-mode)
   (tasks/ui click :firstboot-forward)
   (tasks/firstboot-register (@config :username) (@config :password))
   (verify (= 1 (tasks/ui hasstate :firstboot-back "Sensitive"))))
 
-(defn ^{Test {:groups ["firstboot"]
+(defn ^{Test {:groups ["firstboot" "blockedByBug-872727"]
               :dependsOnMethods ["firstboot_check_back_button_state"]}}
   firstboot_check_back_button [_]
   (tasks/ui click :firstboot-back)
-  (verify (tasks/ui showing? :firstboot-user))
+  (verify (tasks/ui showing? :register-rhsm))
   (let [output (.getStdout (.runCommandAndWait @clientcmd "subscription-manager identity"))]
     (verify (tasks/substring? "This system is not yet registered" output))))
+;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=872727
+;; add section to check forward button
 
 (defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
   firstboot_skip_register [_]
@@ -145,14 +143,11 @@
                     "Your system was registered for updates during installation.")))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
-  [["sdf" "sdf" :invalid-credentials]
+  [^{Test {:groups ["blockedByBug-703491"]}}
+   ["sdf" "sdf" :invalid-credentials]
    ["" "" :no-username]
    ["" "password" :no-username]
    ["sdf" "" :no-password]])
-
-(data-driven firstboot_register_invalid_user {Test {:groups ["firstboot" "blockedByBug-703491"]}}
-  [["badusername" "badpassword" :invalid-credentials]])
-
 
 ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=742416
 ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=700601

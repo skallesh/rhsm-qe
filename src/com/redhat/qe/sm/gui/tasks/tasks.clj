@@ -138,6 +138,8 @@
   [k]
   (.getConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) k))
 
+(defn setchecked [needs-check?] (if needs-check? check uncheck))
+
 (defn unregister
   "Unregisters subscripton manager by clicking the 'unregister' button."
   []
@@ -199,9 +201,7 @@
   (ui settextvalue :password password)
   (when system-name-input
     (ui settextvalue :system-name system-name-input))
-  (if skip-autosubscribe
-    (ui check :skip-autobind)
-    (ui uncheck :skip-autobind))
+  (ui (setchecked skip-autosubscribe) :skip-autobind)
   (try+
    (ui click :register)
    (checkforerror 10)
@@ -243,32 +243,55 @@
      ;; since all items exist at all times in firstboot,
      ;;  we must poll the states and see if 'SHOWING' is among them
      ;; "SHOWING" == 24  on RHEL5
-     (= 24 (some #{24} (seq (ui getallstates item)))))
+     (or (= 24 (some #{24} (seq (ui getallstates item))))
+         (ui showing? item)))
   ([window_name component_name]
-     (if (some #(re-find (re-pattern (str ".*" component_name ".*")) %)
-               (seq (ui getobjectlist window_name)))
-    (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
-    false)))
+     (or
+      (if (some #(re-find (re-pattern (str ".*" component_name ".*")) %)
+                (seq (ui getobjectlist window_name)))
+        (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
+        false)
+      (ui showing? window_name component_name))))
 
 (defn firstboot-register
   "Subscribes subscription-manager from within firstboot."
-  [username password & {:keys [system-name-input, autosubscribe?, org]
-                          :or {system-name-input nil, autosubscribe? false, org nil}}]
-  (assert  (or (fbshowing? :firstboot-user)
-               (= 1 (ui guiexist :firstboot-window "Entitlement Platform Registration"))))
-  (ui settextvalue :firstboot-user username)
-  (ui settextvalue :firstboot-pass password)
-  (when system-name-input
-    (ui settextvalue :firstboot-system-name system-name-input))
-  (if autosubscribe?
-    (ui check :firstboot-autosubscribe)
-    (ui uncheck :firstboot-autosubscribe))
+  [username password & {:keys [server
+                               server-default?
+                               activation-key
+                               activation?
+                               system-name-input
+                               skip-autosubscribe?
+                               org]
+                        :or {server nil
+                             server-default? false
+                             activation-key nil
+                             activation? false
+                             system-name-input nil
+                             skip-autosubscribe? true
+                             org nil}}]
+  (assert  (or (fbshowing? :firstboot-server-entry)
+               (= 1 (ui guiexist :firstboot-window "Subscription Management Registration"))))
+  (when server (ui settextvalue :firstboot-server-entry server))
+  (if server-default? (ui click :firstboot-server-default))
+  (ui (setchecked (or activation-key activation?)) :firstboot-activation-checkbox)
   (ui click :firstboot-forward)
-  (checkforerror)
-  (if (ui showing? :firstboot-window "Organization Selection")
+  (if-not (or activation-key activation?)
     (do
-      (if org (ui selectrow :firstboot-owner-table org))
-      (ui click :firstboot-forward)))
+      (ui settextvalue :firstboot-user username)
+      (ui settextvalue :firstboot-pass password)
+      (when system-name-input
+        (ui settextvalue :firstboot-system-name system-name-input))
+      (ui (setchecked skip-autosubscribe?) :firstboot-autosubscribe)
+      (ui click :firstboot-forward)
+      (checkforerror)
+      (if (ui showing? :firstboot-window "org_selection_label")
+        (do
+          (if org (ui selectrow :firstboot-owner-table org))
+          (ui click :firstboot-forward)))
+      ;;TODO: write autosubscribe selection methods
+      )
+    ;;TODO: write activation key path
+    )
   (checkforerror))
 
 
@@ -280,7 +303,6 @@
   (checkforerror))
 
 ;; TODO: write this with better airities
-
 (defn search
   "Performs a subscription search within subscription-manager-gui."
   [& {:keys [match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
@@ -291,10 +313,9 @@
           active-on nil}}]
   (ui selecttab :all-available-subscriptions)
   (ui click :filters)
-  (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
-    (ui (setchecked match-system?) :match-system)
-    (ui (setchecked do-not-overlap?) :do-not-overlap)
-    (ui (setchecked match-installed?) :match-installed))
+  (ui (setchecked match-system?) :match-system)
+  (ui (setchecked do-not-overlap?) :do-not-overlap)
+  (ui (setchecked match-installed?) :match-installed)
   (if contain-text
     (ui settextvalue :contain-the-text contain-text)
     (ui settextvalue :contain-the-text ""))
@@ -303,33 +324,6 @@
     (ui settextvalue :date-entry active-on))
   (ui click :search)
   (wait-for-progress-bar))
-
-(comment
-  (defn search
-    "Performs a subscription search within subscription-manager-gui."
-    ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
-       (ui selecttab :all-available-subscriptions)
-       (ui click :more-search-options)
-       (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
-         (ui (setchecked match-system?) :match-system)
-         (ui (setchecked do-not-overlap?) :do-not-overlap)
-         (ui (setchecked match-installed?) :match-installed))
-       (ui click :more-search-options)
-       (if active-on ;BZ#675777
-         (ui settextvalue :date-entry active-on))
-       (if contain-text
-         (ui settextvalue :contains-the-text contain-text)
-         (ui settextvalue :contains-the-text ""))
-       (ui click :search)
-       (wait-for-progress-bar))
-    ([{:keys [match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
-       :or {match-system? true
-            do-not-overlap? true
-            match-installed? false
-            contain-text nil
-            active-on nil}}]
-       (search match-system?, do-not-overlap?, match-installed?, contain-text, active-on))
-    ([] (search {}))))
 
 (defn is-item?
   "Determines if an item in a table is a dropdown or an item."
@@ -416,7 +410,7 @@
                        auth? false
                        close? true
                        firstboot? false}}]
-  (assert (is-boolean? firstboot?))
+  (assert (every? #(is-boolean? %) (vector auth? close? firstboot?)))
   (if-not firstboot?
     (do (ui click :configure-proxy)
         (ui waittillwindowexist :proxy-config-dialog 60)
@@ -435,72 +429,24 @@
              (ui uncheck :authentication-checkbox))
            (if close? (ui click :close-proxy))
            (checkforerror))
-    ;write method here for firstboot
-    ))
-
-(comment
-  ;these are no longer used
-
-  (defn enableproxy-auth
-    "Configures a proxy that uses authentication through subscription-manager-gui."
-    ([proxy port user pass firstboot]
-       (assert (is-boolean? firstboot))
-       (if firstboot
-         (do (ui click :firstboot-proxy-config)
-             (ui waittillwindowexist :firstboot-proxy-dialog 60)
-             (ui check :firstboot-proxy-checkbox)
-             (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
-             (ui check :firstboot-auth-checkbox)
-             (ui settextvalue :firstboot-proxy-user user)
-             (ui settextvalue :firstboot-proxy-pass pass)
-             (ui click :firstboot-proxy-close)
-             (checkforerror))
-         (do (ui selecttab :my-installed-products)
-             (ui click :proxy-configuration)
-             (ui waittillwindowexist :proxy-config-dialog 60)
-             (ui check :proxy-checkbox)
-             (try
-               (ui settextvalue :proxy-location (str proxy ":" port))
-               (catch Exception e
-                 (if (substring? "not implemented" (.getMessage e))
-                   (do (sleep 2000)
-                       (ui generatekeyevent (str proxy ":" port)))
-                   (throw e))))
-             (ui check :authentication-checkbox)
-             (ui settextvalue :username-text user)
-             (ui settextvalue :password-text pass)
-             (ui click :close-proxy)
-             (checkforerror))))
-    ([proxy port user pass] (enableproxy-auth proxy port user pass false)))
-
-  (defn enableproxy-noauth
-    "Configures a proxy that does not use authentication through subscription-manager-gui."
-    ([proxy port firstboot]
-       (assert (is-boolean? firstboot))
-       (if firstboot
-         (do (ui click :firstboot-proxy-config)
-             (ui waittillwindowexist :firstboot-proxy-dialog 60)
-             (ui check :firstboot-proxy-checkbox)
-             (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
-             (ui uncheck :firstboot-auth-checkbox)
-             (ui click :firstboot-proxy-close)
-             (checkforerror))
-         (do (ui selecttab :my-installed-products)
-             (ui click :proxy-configuration)
-             (ui waittillwindowexist :proxy-config-dialog 60)
-             (ui check :proxy-checkbox)
-             (try
-               (ui settextvalue :proxy-location (str proxy ":" port))
-               (catch Exception e
-                 ;; yay rhel5
-                 (if (substring? "not implemented" (.getMessage e))
-                   (do (sleep 2000)
-                       (ui generatekeyevent (str proxy ":" port)))
-                   (throw e))))
-             (ui uncheck :authentication-checkbox)
-             (ui click :close-proxy)
-             (checkforerror))))
-    ([proxy port] (enableproxy-noauth proxy port false))))
+    ;;firstboot
+    (do (assert (ui showing? :firstboot-window "Choose Service"))
+        (ui click :firstboot-proxy-config)
+        (ui waittillwindowexist :firstboot-proxy-dialog 60)
+        (ui check :firstboot-proxy-checkbox)
+        (try
+             (ui settextvalue :firstboot-proxy-location (str server (when port (str ":" port))))
+             (catch Exception e
+               (if (substring? "not implemented" (.getMessage e))
+                 (do (sleep 2000)
+                     (ui generatekeyevent (str server (when port (str ":" port)))))
+                 (throw e))))
+        (if (or auth? user pass)
+          (do (ui check :firstboot-auth-checkbox)
+              (when user (ui settextvalue :firstboot-proxy-user user))
+              (when pass (ui settextvalue :firstboot-proxy-pass pass)))
+          (ui uncheck :firstboot-auth-checkbox))
+        (if close? (ui click :firstboot-proxy-close)))))
 
 (defn disableproxy
   "Disables any proxy settings through subscription-manager-gui."
