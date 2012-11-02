@@ -550,7 +550,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("864092");
 				// Bug 871163 - [mr_IN] translation for msgid "Org: " is unchanged
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/mr/")) bugIds.add("871163");
-				
+				// Bug 872704 - [es_ES] unchanged translation for msgid "Configure Proxy" 
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("872704");
+
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
 				// Bug 861095 - [hi_IN] duplicate words appear in two msgid translations 
