@@ -724,7 +724,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(guestPool,"Guest pool id '"+guestPoolId+"', derived from the virtualization-aware subscription id '"+subscriptionId+"', is listed in all available subscriptions: "+guestPool);
 
 			// assert guestPoolId quantity is unlimited
-			Assert.assertEquals(guestPool.quantity, "unlimited", "When the subscription product has a quantity attribute of '-1', then the guest pool's quantity viewed by within the list --all --available should be 'unlimited'.");
+			Assert.assertEquals(guestPool.quantity, "Unlimited", "When the subscription product has a quantity attribute of '-1', then the guest pool's quantity viewed by within the list --all --available should be 'Unlimited'.");	// altered after Bug 862885 - String Update: Capitalize unlimited in the All Available Subscriptions tab 
 			Assert.assertEquals(virtLimit, "unlimited", "When the subscription product has a quantity attribute of '-1', then the guest pool's virt_limit attribute should be 'unlimited'.");
 
 		} else if (jsonGuestPoolQuantityConsumed > jsonGuestPoolQuantity) {
