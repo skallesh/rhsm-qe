@@ -222,11 +222,10 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 
 	protected void assertServerVersion(String serverVersion, String serverType) {
 		// set the expected results
-		String expectedVersion;
+		String expectedVersion, expectedType;
 		expectedVersion = "remote entitlement server: "+serverVersion;	// original label
 		expectedVersion = "registered to: "+serverVersion;	// label changed by bug 846834
-		// TODO expectedVersion = "subscription management server: "+serverVersion;	// label changed by bug 862308
-		String expectedType;
+		expectedVersion = "subscription management server: "+serverVersion;	// label changed by bugs 862308 868347 
 		expectedType = "server type: "+serverType;
 		
 		// get the actual version results from subscription-manager
