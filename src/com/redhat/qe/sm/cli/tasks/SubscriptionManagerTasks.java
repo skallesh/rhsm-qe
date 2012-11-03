@@ -363,10 +363,12 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public void removeRhnSystemIdFile() {
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf "+rhnSystemIdFile, TestRecords.action());
+		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf "+rhnSystemIdFile, TestRecords.action());
+		sshCommandRunner.runCommandAndWait("rm -rf "+rhnSystemIdFile);
 		
 		// also do a yum clean all to avoid rhnplugin message: This system may not be registered to RHN Classic or RHN Satellite. SystemId could not be acquired.
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "yum clean all", TestRecords.action());
+		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "yum clean all", TestRecords.action());
+		sshCommandRunner.runCommandAndWait("yum clean all");
 	}
 	
 	public void updateYumRepoParameter(String yumRepoFile, String repoid, String parameter, String value){

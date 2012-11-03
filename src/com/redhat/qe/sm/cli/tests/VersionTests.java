@@ -128,8 +128,8 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null);
 		
 		String expectedType = "FIXME_TEST: UNKNOWN CANDLEPIN TYPE";
-		if (sm_serverType==CandlepinType.standalone)	expectedType = "subscription management service";
-		if (sm_serverType==CandlepinType.hosted)		expectedType = "subscription management service";	// TODO not sure if this is correct
+		if (sm_serverType==CandlepinType.standalone)	expectedType = "Red Hat Subscription Management";	// "subscription management service"; changed by bug 852328
+		if (sm_serverType==CandlepinType.hosted)		expectedType = "Red Hat Subscription Management";	// "subscription management service"; changed by bug 852328
 		if (sm_serverType==CandlepinType.sam)			expectedType = "SAM";		// TODO not sure if this is correct
 		if (sm_serverType==CandlepinType.katello)		expectedType = "Katello";	// TODO not sure if this is correct
 		assertServerVersion(servertasks.statusVersion, expectedType);
@@ -154,10 +154,11 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 		
-		assertServerVersion("Unknown","RHN Classic and subsciption management service");
+		//assertServerVersion("Unknown","RHN Classic and subsciption management service");	// changed by bug 852328
+		assertServerVersion(servertasks.statusVersion,"RHN Classic and Red Hat Subscription Management");	// changed by bug 852328
 	}
 	@Test(	description="assert the sever version and type when registered to RHN Classic (and simultaneously registered to Subscription Management)",
-			groups={"VersionOfServerWhenUsingRHNClassic_Test"},
+			groups={"blockedByBug-852328","VersionOfServerWhenUsingRHNClassic_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfServerWhenUnregisteredAndUsingRHNClassic_Test() {
@@ -167,7 +168,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		
 		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
 		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
-		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
+		client.runCommandAndWait("touch "+clienttasks.rhnSystemIdFile);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 		
 		assertServerVersion("Unknown","RHN Classic");
