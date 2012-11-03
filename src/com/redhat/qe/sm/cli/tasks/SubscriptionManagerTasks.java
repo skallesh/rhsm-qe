@@ -3878,8 +3878,10 @@ public class SubscriptionManagerTasks {
 			}
 			// END OF WORKAROUND
 						
-			Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
-				"Entitlement Certificate with serial "+serialNumber+" could not be removed since it was not found.");
+			//Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
+			//		"Stderr from an attempt to unsubscribe from Entitlement Certificate serial "+serialNumber+" that was not found in "+entitlementCertDir);
+			Assert.assertContainsMatch(result.getStdout(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
+					"Stdout from an attempt to unsubscribe from Entitlement Certificate serial "+serialNumber+" that was not found in "+entitlementCertDir);
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The unsubscribe should fail when its corresponding entitlement cert file ("+certFilePath+") does not exist.");
 			return false;
 		}
