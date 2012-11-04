@@ -302,7 +302,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: assert that the consumer cert is backed up when a server-side deletion is detected.",
-			groups={"AcceptanceTests","ConsumerDeletedServerSideTests","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706"},
+			groups={"AcceptanceTests","ConsumerDeletedServerSideTests","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706","blockedByBug-872847"},
 			dataProvider="getConsumerCertDirData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -455,7 +455,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@AfterGroups(groups={"setup"},value="RHNClassicTests")
-	public void removeRHNSystemIdFile() {
+	public void removeRHNSystemIdFileAfterGroups() {
 		if (clienttasks!=null) {
 			clienttasks.removeRhnSystemIdFile();
 		}

@@ -97,15 +97,10 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
 		Assert.assertTrue(!result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
 	}
-	@AfterGroups(groups={"setup"}, value={"InteroperabilityRegister_Test"})
-	public void afterInteroperabilityRegister_Test() {
-		if (clienttasks==null) return;
-		clienttasks.removeRhnSystemIdFile();
-	}
 	
 	
 	@Test(	description="When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin should inform that: The subscription for following product(s) has expired: etc.",
-			groups={"blockedByBug-818383","blockedByBug-832119","blockedByBug-871146"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-871146"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase0_Test() throws JSONException, Exception {
@@ -141,7 +136,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="When not registered to either RHN nor RHSM, the subscription-manager yum plugin should inform that: This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.",
-			groups={"blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase1_Test() {
@@ -155,7 +150,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="When registered to RHN but not RHSM, the subscription-manager yum plugin should inform that: This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.",
-			groups={"blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase2_Test() {
@@ -169,7 +164,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="When registered to RHSM (but not subscribed) but not RHN, the subscription-manager yum plugin should inform that: This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.",
-			groups={"blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase3A_Test() {
@@ -183,7 +178,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="When registered to RHSM (and subscribed) but not RHN, the subscription-manager yum plugin should inform that: This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.",
-			groups={"blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase3B_Test() throws JSONException, Exception {
@@ -198,7 +193,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="When registered to both RHN and RHSM (but not subscribed), the subscription-manager yum plugin should inform that: This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.",
-			groups={"blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-871146"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-871146"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase4A_Test() {
@@ -212,7 +207,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="When registered to both RHN and RHSM (and subscribed), the subscription-manager yum plugin should inform that: This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.",
-			groups={"blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase4B_Test() throws JSONException, Exception {
@@ -235,13 +230,18 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 	
+	@AfterGroups(groups={"setup"}, value={"InteroperabilityRegister_Test","YumPluginMessageCase_Tests"})
+	public void removeRhnSystemIdFileAfterGroups() {
+		if (clienttasks==null) return;
+		clienttasks.removeRhnSystemIdFile();
+	}
 	
-
+	
 	
 	// Protected methods ***********************************************************************
-
-
+	
+	
 	
 	// Data Providers ***********************************************************************
-
+	
 }

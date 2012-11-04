@@ -363,10 +363,12 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public void removeRhnSystemIdFile() {
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf "+rhnSystemIdFile, TestRecords.action());
+		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf "+rhnSystemIdFile, TestRecords.action());
+		sshCommandRunner.runCommandAndWait("rm -rf "+rhnSystemIdFile);
 		
 		// also do a yum clean all to avoid rhnplugin message: This system may not be registered to RHN Classic or RHN Satellite. SystemId could not be acquired.
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "yum clean all", TestRecords.action());
+		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "yum clean all", TestRecords.action());
+		sshCommandRunner.runCommandAndWait("yum clean all");
 	}
 	
 	public void updateYumRepoParameter(String yumRepoFile, String repoid, String parameter, String value){
@@ -3878,8 +3880,10 @@ public class SubscriptionManagerTasks {
 			}
 			// END OF WORKAROUND
 						
-			Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
-				"Entitlement Certificate with serial "+serialNumber+" could not be removed since it was not found.");
+			//Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
+			//		"Stderr from an attempt to unsubscribe from Entitlement Certificate serial "+serialNumber+" that was not found in "+entitlementCertDir);
+			Assert.assertContainsMatch(result.getStdout(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
+					"Stdout from an attempt to unsubscribe from Entitlement Certificate serial "+serialNumber+" that was not found in "+entitlementCertDir);
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The unsubscribe should fail when its corresponding entitlement cert file ("+certFilePath+") does not exist.");
 			return false;
 		}

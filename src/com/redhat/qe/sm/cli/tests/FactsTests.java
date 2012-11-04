@@ -393,20 +393,24 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		clienttasks.deleteFactsFileWithOverridingValues();
 		
 		// get the value of cpu_sockets as determined by subscription-manager facts
-		String cpu_sockets = clienttasks.getFactValue("cpu.cpu_socket(s)");
+		String cpuFact = "cpu.cpu_socket(s)";
+		String cpu_sockets = clienttasks.getFactValue(cpuFact);
 		
 		if (clienttasks.redhatRelease.contains("release 5")) {
-			//String sockets = clienttasks.sockets;
 			String sockets = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
-			Assert.assertEquals(cpu_sockets, sockets, "The fact 'cpu_socket(s)' value='"+cpu_sockets+"' should match the 'CPU socket(s)' value='"+sockets+"' as calculated above.");
-			return;
+			Assert.assertEquals(cpu_sockets, sockets, "The value of system fact '"+cpuFact+"' should match the value for 'CPU socket(s)' value='"+sockets+"' as calculated above.");
 		}
 		else /*if (clienttasks.redhatRelease.contains("release 6"))*/ {
 			client.runCommandAndWait("lscpu");
-			//String sockets = clienttasks.sockets;
-			String sockets = client.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
-			Assert.assertEquals(cpu_sockets, sockets, "The fact 'cpu_socket(s)' value='"+cpu_sockets+"' should match the 'CPU socket(s)' value='"+sockets+"' reported by lscpu.");
-			return;
+			// RHEL6.4+
+			// [root@rhsm-accept-rhel64 ~]# lscpu | grep -i 'socket(s)'
+			// Socket(s):             2
+			
+			// RHEL6.1+
+			// [root@rhsm-accept-rhel63 ~]# lscpu | grep -i 'socket(s)'
+			// CPU socket(s):         2
+			SSHCommandResult lspcuResult = client.runCommandAndWait("lscpu | grep -i 'socket(s)'");
+			Assert.assertEquals(cpu_sockets, lspcuResult.getStdout().split(":")[1].trim(), "The value of system fact '"+cpuFact+"' should match the value for '"+lspcuResult.getStdout().split(":")[0].trim()+"' as reported by lscpu.");
 		}
 	}
 

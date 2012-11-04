@@ -408,6 +408,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("825367");
 				// Bug 860084 - [ja_JP] two accelerators for msgid "Configure Pro_xy"
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("860084");
+				// Bug 872697 - [ja_JP] two accelerators for msgid "Configure Pro_xy"
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("872697");
 				
 				
 				// Bug 825397	Many translated languages fail the pofilter newlines test
@@ -501,7 +503,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("828989");
 				// Bug 860088 - [de_DE] translation for a url should not be altered 
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/de_DE/")) bugIds.add("860088");
-				
+				// Bug 872684 - [de_DE] pofilter urls test is failing on the trailing period to url http://red.ht/lost_password.
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/de_DE/")) bugIds.add("872684");
 				
 				// Bug 845304 - translation of the word "[OPTIONS]" has reverted
 				if (pofilterTest.equals("unchanged")) bugIds.add("845304");
@@ -547,7 +550,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("864092");
 				// Bug 871163 - [mr_IN] translation for msgid "Org: " is unchanged
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/mr/")) bugIds.add("871163");
-				
+				// Bug 872704 - [es_ES] unchanged translation for msgid "Configure Proxy" 
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("872704");
+
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
 				// Bug 861095 - [hi_IN] duplicate words appear in two msgid translations 
