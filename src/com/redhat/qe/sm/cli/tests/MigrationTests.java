@@ -2370,6 +2370,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 865566 - RHEL-5/channel-cert-mapping.txt is missing a mapping for two rhev debuginfo channels
 					bugIds.add("865566");
 				}
+				if (productId.equals("167") || productId.equals("155") || productId.equals("186") || productId.equals("191") || productId.equals("188") || productId.equals("172")) if (clienttasks.redhatReleaseX.equals("6")) {
+					// Bug 872959 - many product certs and their RHN Channel mappings are missing from the RHEL64 subscription-manager-migration-data
+					bugIds.add("872959");
+				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
