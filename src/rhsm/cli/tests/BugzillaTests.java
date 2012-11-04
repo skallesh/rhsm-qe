@@ -1425,7 +1425,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe_ all the available products ",
 			groups={"Verifyautosubscribe_Test"},
-			enabled=true)
+			enabled=false)
 	public void Verifyautosubscribe_Test() throws JSONException, Exception{
 
 		List<String> ProductIdBeforeAuto=new ArrayList<String>();
