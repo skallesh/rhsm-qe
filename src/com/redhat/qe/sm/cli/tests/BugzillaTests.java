@@ -212,7 +212,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Verify only One Cert is downloaded Per One Subscription",
 			groups={"VerifyOneCertPerOneSubscription"},
-			enabled=true)	
+			enabled=false)	
 	@ImplementsNitrateTest(caseId=50215)
 	public void VerifyOneCertPerOneSubscription() throws JSONException, Exception {
 		int expected=0;
@@ -222,9 +222,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		for(SubscriptionPool subscriptionpool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
+
 			clienttasks.subscribe_(null,null,subscriptionpool.poolId,null,null,"1",null,null,null,null,null);
 			expected=expected+1;
 			List<File> Cert =clienttasks.getCurrentEntitlementCertFiles();
+			List<String> providedProducts = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionpool.poolId);
+			if(providedProducts.size()>1){
+				expected=expected+providedProducts.size();
+
+			}else{
+			expected=expected+1;
+			}
+			clienttasks.subscribeToSubscriptionPool_(subscriptionpool);
+			Cert=clienttasks.getCurrentEntitlementCertFiles();
+
 			Assert.assertEquals(Cert.size(), expected);
 
 			}
@@ -239,7 +250,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify content set associated with product",
 			groups={"VerifyUnsubscribingCertV3"},
-			enabled=true)	
+			enabled=false)	
 	@ImplementsNitrateTest(caseId=50215)
 	public void VerifyUnsubscribingCertV3() throws JSONException, Exception {
 
