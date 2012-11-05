@@ -220,6 +220,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
+		
 		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
 		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
@@ -1475,7 +1476,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				}else{
 					socketvalue=0;
 				}
-
 			}
 			Map<String,String> factsMap = new HashMap<String,String>();
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum+2));
