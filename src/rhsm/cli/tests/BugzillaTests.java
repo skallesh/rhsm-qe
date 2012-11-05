@@ -745,9 +745,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 
 
-		sockets=1;
-		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
+		
+		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
 	}	
 
 
@@ -997,10 +996,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				if(product.equals(installedProduct.productId))
 					Assert.assertEquals(installedProduct.status, "Subscribed");
 			}}
-		moreSockets=1;
-		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
-		clienttasks.facts(null, true, null, null, null);
+		
+		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
+	
 
 
 	}
@@ -1102,9 +1100,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				Flag="true";
 			}
 		}
-		moreSockets = 1;
-		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues("/socket.facts",factsMap);
+		
+		clienttasks.deleteFactsFileWithOverridingValues("/socket.facts");
 		Assert.assertEquals(Flag, "true");
 	}
 
@@ -1489,9 +1486,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				if(installedProductsAfterAuto.productName.contains(pool))
 
 					if((installedProductsAfterAuto.status).equalsIgnoreCase("Subscribed")){
-						Map<String,String> factsMap = new HashMap<String,String>();
-						factsMap.put("cpu.cpu_socket(s)", String.valueOf(1));
-						clienttasks.createFactsFileWithOverridingValues(factsMap);
+						clienttasks.deleteFactsFileWithOverridingValues();
 						Assert.assertEquals("Subscribed", (installedProductsAfterAuto.status).trim(), "test  has failed");
 					}
 			}
