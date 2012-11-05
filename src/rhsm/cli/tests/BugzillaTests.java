@@ -1433,7 +1433,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		for(InstalledProduct installedProductsBeforeAuto : clienttasks.getCurrentlyInstalledProducts()){
 			if(installedProductsBeforeAuto.status.equals("Subscribed"))
 				ProductIdBeforeAuto.add(installedProductsBeforeAuto.productId);
