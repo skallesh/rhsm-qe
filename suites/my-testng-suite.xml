@@ -6,7 +6,7 @@
 	<!-- PLACE HOLDER FOR MY TESTS... -->
 	<test name="My Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -21,7 +21,7 @@
 	<!-- WORKING EXAMPLE: CleanTests... -->
 	<test name="CLI: Clean Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>

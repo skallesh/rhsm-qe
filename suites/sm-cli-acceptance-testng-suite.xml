@@ -15,7 +15,7 @@
 		
 	<test name="CLI: Help Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.HelpTests" />
+			<class name="rhsm.cli.tests.HelpTests" />
 		</classes>
 		<groups>
 			<run>
@@ -28,7 +28,7 @@
 	
 	<test name="CLI: General Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.GeneralTests" />
+			<class name="rhsm.cli.tests.GeneralTests" />
 		</classes>
 		<groups>
 			<run>
@@ -41,7 +41,7 @@
 	
 	<test name="CLI: Version Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.VersionTests" />
+			<class name="rhsm.cli.tests.VersionTests" />
 		</classes>
 		<groups>
 			<run>
@@ -54,7 +54,7 @@
 	
 	<test name="CLI: Translation Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.TranslationTests" />
+			<class name="rhsm.cli.tests.TranslationTests" />
 		</classes>
 		<groups>
 			<run>
@@ -67,7 +67,7 @@
 	
 	<test name="CLI: Pofilter Translation Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.PofilterTranslationTests" />
+			<class name="rhsm.cli.tests.PofilterTranslationTests" />
 		</classes>
 		<groups>
 			<run>
@@ -80,7 +80,7 @@
 	
 	<test name="CLI: Register Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.RegisterTests" />
+			<class name="rhsm.cli.tests.RegisterTests" />
 		</classes>
 		<groups>
 			<run>
@@ -93,7 +93,7 @@
 	
 	<test name="CLI: Interoperability Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.InteroperabilityTests" />
+			<class name="rhsm.cli.tests.InteroperabilityTests" />
 		</classes>
 		<groups>
 			<run>
@@ -106,7 +106,7 @@
 	
 	<test name="CLI: ActivationKey Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ActivationKeyTests" />
+			<class name="rhsm.cli.tests.ActivationKeyTests" />
 		</classes>
 		<groups>
 			<run>
@@ -119,7 +119,7 @@
 	
 	<test name="CLI: Proxy Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ProxyTests" />
+			<class name="rhsm.cli.tests.ProxyTests" />
 		</classes>
 		<groups>
 			<run>
@@ -132,7 +132,7 @@
 
 	<test name="CLI: Event Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.EventTests" />
+			<class name="rhsm.cli.tests.EventTests" />
 		</classes>
 		<groups>
 			<run>
@@ -145,7 +145,7 @@
 
 	<test name="CLI: Identity Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.IdentityTests" />
+			<class name="rhsm.cli.tests.IdentityTests" />
 		</classes>
 		<groups>
 			<run>
@@ -158,7 +158,7 @@
 	
 	<test name="CLI: List Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ListTests" />
+			<class name="rhsm.cli.tests.ListTests" />
 		</classes>
 		<groups>
 			<run>
@@ -171,7 +171,7 @@
 	
 	<test name="CLI: Repos Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ReposTests" />
+			<class name="rhsm.cli.tests.ReposTests" />
 		</classes>
 		<groups>
 			<run>
@@ -184,7 +184,7 @@
 	
 	<test name="CLI: Orgs Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.OrgsTests" />
+			<class name="rhsm.cli.tests.OrgsTests" />
 		</classes>
 		<groups>
 			<run>
@@ -197,7 +197,7 @@
 
 	<test name="CLI: Subscribe Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.SubscribeTests" />
+			<class name="rhsm.cli.tests.SubscribeTests" />
 		</classes>
 		<groups>
 			<run>
@@ -210,7 +210,7 @@
 	
 	<test name="CLI: ServiceLevel Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ServiceLevelTests" />
+			<class name="rhsm.cli.tests.ServiceLevelTests" />
 		</classes>
 		<groups>
 			<run>
@@ -223,7 +223,7 @@
 	
 	<test name="CLI: Release Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ReleaseTests" />
+			<class name="rhsm.cli.tests.ReleaseTests" />
 		</classes>
 		<groups>
 			<run>
@@ -236,7 +236,7 @@
 	
 	<test name="CLI: Stacking Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.StackingTests" />
+			<class name="rhsm.cli.tests.StackingTests" />
 		</classes>
 		<groups>
 			<run>
@@ -249,7 +249,7 @@
 	
 	<test name="CLI: Unsubscribe Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.UnsubscribeTests" />
+			<class name="rhsm.cli.tests.UnsubscribeTests" />
 		</classes>
 		<groups>
 			<run>
@@ -262,7 +262,7 @@
 	
 	<test name="CLI: Unregister Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.UnregisterTests" />
+			<class name="rhsm.cli.tests.UnregisterTests" />
 		</classes>
 		<groups>
 			<run>
@@ -275,7 +275,7 @@
 	
 	<test name="CLI: Multi-client Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.MultiClientTests" />
+			<class name="rhsm.cli.tests.MultiClientTests" />
 		</classes>
 		<groups>
 			<run>
@@ -288,7 +288,7 @@
 		
 	<test name="CLI: Management Add-On Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ManagementAddOnTests" />
+			<class name="rhsm.cli.tests.ManagementAddOnTests" />
 		</classes>
 		<groups>
 			<run>
@@ -301,7 +301,7 @@
 	
 	<test name="CLI: RHEL Personal Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.RHELPersonalTests" />
+			<class name="rhsm.cli.tests.RHELPersonalTests" />
 		</classes>
 		<groups>
 			<run>
@@ -314,7 +314,7 @@
 	
 	<test name="CLI: Facts Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.FactsTests" />
+			<class name="rhsm.cli.tests.FactsTests" />
 		</classes>
 		<groups>
 			<run>
@@ -327,7 +327,7 @@
 	
 	<test name="CLI: Clean Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.CleanTests" />
+			<class name="rhsm.cli.tests.CleanTests" />
 		</classes>
 		<groups>
 			<run>
@@ -340,7 +340,7 @@
 	
 	<test name="CLI: Refresh Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.RefreshTests" />
+			<class name="rhsm.cli.tests.RefreshTests" />
 		</classes>
 		<groups>
 			<run>
@@ -353,7 +353,7 @@
 	
 	<test name="CLI: Redeem Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.RedeemTests" />
+			<class name="rhsm.cli.tests.RedeemTests" />
 		</classes>
 		<groups>
 			<run>
@@ -366,7 +366,7 @@
 	
 	<test name="CLI: Environments Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.EnvironmentsTests" />
+			<class name="rhsm.cli.tests.EnvironmentsTests" />
 		</classes>
 		<groups>
 			<run>
@@ -379,7 +379,7 @@
 	
 	<test name="CLI: Import Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ImportTests" />
+			<class name="rhsm.cli.tests.ImportTests" />
 		</classes>
 		<groups>
 			<run>
@@ -392,7 +392,7 @@
 	
 	<test name="CLI: Subscription Expiration Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ExpirationTests" />
+			<class name="rhsm.cli.tests.ExpirationTests" />
 		</classes>
 		<groups>
 			<run>
@@ -405,7 +405,7 @@
 	
 	<test name="CLI: Certificate Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.CertificateTests" />
+			<class name="rhsm.cli.tests.CertificateTests" />
 		</classes>
 		<groups>
 			<run>
@@ -418,7 +418,7 @@
 	
 	<test name="CLI: Compliance Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ComplianceTests" />
+			<class name="rhsm.cli.tests.ComplianceTests" />
 		</classes>
 		<groups>
 			<run>
@@ -431,7 +431,7 @@
 	
 	<test name="CLI: Content Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ContentTests" />
+			<class name="rhsm.cli.tests.ContentTests" />
 		</classes>
 		<groups>
 			<run>
@@ -444,7 +444,7 @@
 	
 	<test name="CLI: Virtualization Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.VirtualizationTests" />
+			<class name="rhsm.cli.tests.VirtualizationTests" />
 		</classes>
 		<groups>
 			<run>
@@ -457,7 +457,7 @@
 	
 	<test name="CLI: Modifier Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ModifierTests" />
+			<class name="rhsm.cli.tests.ModifierTests" />
 		</classes>
 		<groups>
 			<run>
@@ -470,7 +470,7 @@
 	
 	<test name="CLI: Overconsumption Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.OverconsumptionTests" />
+			<class name="rhsm.cli.tests.OverconsumptionTests" />
 		</classes>
 		<groups>
 			<run>
@@ -483,7 +483,7 @@
 	
 	<test name="CLI: Certificate Revocation List (CRL) Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.CRLTests" />
+			<class name="rhsm.cli.tests.CRLTests" />
 		</classes>
 		<groups>
 			<run>
@@ -496,7 +496,7 @@
 	
 	<test name="CLI: Roles Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.RolesTests" />
+			<class name="rhsm.cli.tests.RolesTests" />
 		</classes>
 		<groups>
 			<run>
@@ -509,7 +509,7 @@
 	
 	<test name="CLI: Content Integration Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ContentIntegrationTests" />
+			<class name="rhsm.cli.tests.ContentIntegrationTests" />
 		</classes>
 		<groups>
 			<run>
@@ -522,7 +522,7 @@
 	
 	<test name="CLI: Healing Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.HealingTests" />
+			<class name="rhsm.cli.tests.HealingTests" />
 		</classes>
 		<groups>
 			<run>
@@ -535,7 +535,7 @@
 	
 	<test name="CLI: RHUI Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.RHUITests" />
+			<class name="rhsm.cli.tests.RHUITests" />
 		</classes>
 		<groups>
 			<run>
@@ -548,7 +548,7 @@
 	
 	<test name="CLI: Migration Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.MigrationTests" />
+			<class name="rhsm.cli.tests.MigrationTests" />
 		</classes>
 		<groups>
 			<run>
@@ -561,7 +561,7 @@
 	
 	<test name="CLI: Config Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ConfigTests" />
+			<class name="rhsm.cli.tests.ConfigTests" />
 		</classes>
 		<groups>
 			<run>
@@ -574,7 +574,7 @@
 	
 	<test name="CLI: Bugzilla Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.BugzillaTests" />
+			<class name="rhsm.cli.tests.BugzillaTests" />
 		</classes>
 		<groups>
 			<run>
@@ -587,7 +587,7 @@
 	
 	<test name="CLI: SELinux Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.SELinuxTests" />
+			<class name="rhsm.cli.tests.SELinuxTests" />
 		</classes>
 		<groups>
 			<run>

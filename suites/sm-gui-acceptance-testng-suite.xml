@@ -15,8 +15,8 @@
 
   <test name="GUI: Acceptance">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>
