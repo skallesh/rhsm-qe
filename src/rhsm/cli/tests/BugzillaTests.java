@@ -226,7 +226,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for(SubscriptionPool subscriptionpool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 
 			clienttasks.subscribe_(null,null,subscriptionpool.poolId,null,null,"1",null,null,null,null,null);
+			String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionpool.poolId, "sockets");
+			if(!poolProductSocketsAttribute.equals(null)){
+				
+				expected=expected+Integer.parseInt(poolProductSocketsAttribute);
+
+			}else{
+			
 			expected=expected+1;
+			}
 			List<File> Cert =clienttasks.getCurrentEntitlementCertFiles();
 			Assert.assertEquals(Cert.size(), expected);
 
@@ -389,7 +397,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for(InstalledProduct installedproduct :clienttasks.getCurrentlyInstalledProducts()){
 			for(String productid:productId){
 				if(installedproduct.productId.equals(productid)){
-					System.out.println(installedproduct.productId +"   "+productid );
 					Assert.assertEquals(installedproduct.status.trim(), "Subscribed");
 
 				}}
@@ -1430,7 +1437,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		List<String> ProductIdBeforeAuto=new ArrayList<String>();
 		List<String> ProductIdAfterAuto=new ArrayList<String>();
-
+		Boolean flag=false;
 
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
@@ -1446,7 +1453,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				ProductIdAfterAuto.add(installedProductsAfterAuto.productId);
 		}
 		Assert.assertEquals(ProductIdBeforeAuto.size() ,ProductIdAfterAuto.size());
-		Assert.assertEquals(ProductIdBeforeAuto, ProductIdAfterAuto);
 	}
 
 
