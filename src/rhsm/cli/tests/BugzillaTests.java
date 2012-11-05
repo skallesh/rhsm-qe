@@ -699,7 +699,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if stacking entitlements reports as distinct entries in cli list --installed",
 			groups={"VerifyDistinct","blockedByBug-733327"},
-			enabled=true)
+			enabled=false)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
@@ -1432,7 +1432,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		List<String> ProductIdBeforeAuto=new ArrayList<String>();
 		List<String> ProductIdAfterAuto=new ArrayList<String>();
-		Boolean flag=false;
 
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
