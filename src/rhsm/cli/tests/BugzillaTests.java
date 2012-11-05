@@ -220,21 +220,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
+		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
 		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		for(SubscriptionPool subscriptionpool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 
 			clienttasks.subscribe_(null,null,subscriptionpool.poolId,null,null,"1",null,null,null,null,null);
-			String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionpool.poolId, "sockets");
-			if(!poolProductSocketsAttribute.equals(null)){
-				
-				expected=expected+Integer.parseInt(poolProductSocketsAttribute);
-
-			}else{
 			
 			expected=expected+1;
-			}
+		
 			List<File> Cert =clienttasks.getCurrentEntitlementCertFiles();
 			Assert.assertEquals(Cert.size(), expected);
 
