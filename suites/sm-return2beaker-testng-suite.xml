@@ -13,7 +13,7 @@
 	
 	<test name="Clean Up">
 		<packages>
-			<package name="com.redhat.qe.sm.base"></package>
+			<package name="rhsm.base"></package>
 		</packages>		
 		<groups>
 			<run>

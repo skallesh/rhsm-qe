@@ -15,8 +15,8 @@
 
   <test name="GUI: Registration">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>
@@ -29,8 +29,8 @@
 
   <test name="GUI: Subscribe/Unsubscribe">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>
@@ -43,9 +43,9 @@
 
   <test name="GUI: Autosubscribe">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.cli.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.cli.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>
@@ -61,8 +61,8 @@
 <!--  this window got removed
   <test name="GUI: Subscription Assistant">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>
@@ -75,8 +75,8 @@
 
   <test name="GUI: Proxy">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>
@@ -89,8 +89,8 @@
 
   <test name="GUI: Facts">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>
@@ -102,8 +102,8 @@
 
   <test name="GUI: Interop">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>
@@ -116,8 +116,8 @@
 
   <test name="GUI: Firstboot">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>
@@ -130,8 +130,8 @@
 
   <test name="GUI: Import">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>
@@ -144,8 +144,8 @@
 
   <test name="GUI: System">
     <packages>
-      <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
     </packages>
     <groups>
       <run>

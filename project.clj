@@ -1,7 +1,7 @@
 (defproject org.clojars.jsefler/sm "1.0.0-SNAPSHOT"
   :description "Automated tests for Red Hat Subsciption Manager CLI and GUI"
   :java-source-path "src"
-  :aot [#"^com.redhat.qe.sm.gui.tests"] ;regex to find tests that testng will run
+  :aot [#"^rhsm.gui.tests"] ;regex to find tests that testng will run
   :keep-non-project-classes true
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
@@ -38,23 +38,23 @@
     (use '[clojure.pprint])
     (use '[slingshot.slingshot :only (try+ throw+)])
     (do
-      (require :reload-all '[com.redhat.qe.sm.gui.tasks.test-config :as config])
-      (require :reload-all '[com.redhat.qe.sm.gui.tasks.tasks :as tasks])
-      (require :reload-all '[com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks])
-      (require :reload-all '[com.redhat.qe.sm.gui.tasks.rest :as rest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.base :as base])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.subscribe-tests :as stest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.register-tests :as rtest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.proxy-tests :as ptest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.rhn-interop-tests :as ritest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.autosubscribe-tests :as atest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.firstboot-tests :as fbtest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.facts-tests :as ftest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.acceptance-tests :as actest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.import-tests :as itest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.system-tests :as systest])
+      (require :reload-all '[rhsm.gui.tasks.test-config :as config])
+      (require :reload-all '[rhsm.gui.tasks.tasks :as tasks])
+      (require :reload-all '[rhsm.gui.tasks.candlepin-tasks :as ctasks])
+      (require :reload-all '[rhsm.gui.tasks.rest :as rest])
+      (require :reload-all '[rhsm.gui.tests.base :as base])
+      (require :reload-all '[rhsm.gui.tests.subscribe-tests :as stest])
+      (require :reload-all '[rhsm.gui.tests.register-tests :as rtest])
+      (require :reload-all '[rhsm.gui.tests.proxy-tests :as ptest])
+      (require :reload-all '[rhsm.gui.tests.rhn-interop-tests :as ritest])
+      (require :reload-all '[rhsm.gui.tests.autosubscribe-tests :as atest])
+      (require :reload-all '[rhsm.gui.tests.firstboot-tests :as fbtest])
+      (require :reload-all '[rhsm.gui.tests.facts-tests :as ftest])
+      (require :reload-all '[rhsm.gui.tests.acceptance-tests :as actest])
+      (require :reload-all '[rhsm.gui.tests.import-tests :as itest])
+      (require :reload-all '[rhsm.gui.tests.system-tests :as systest])
 
-      (import '[com.redhat.qe.sm.base SubscriptionManagerCLITestScript])
+      (import '[rhsm.base SubscriptionManagerCLITestScript])
       )
 
     (let [cliscript (SubscriptionManagerCLITestScript.)]
@@ -67,5 +67,5 @@
     )     ;<< here for all of it
 
   ;not used
-  (require :reload-all '[com.redhat.qe.sm.gui.tests.subscription-assistant-tests :as satest])
+  (require :reload-all '[rhsm.gui.tests.subscription-assistant-tests :as satest])
 )

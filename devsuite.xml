@@ -1,8 +1,8 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="sm">
-  <test verbose="2" name="com.redhat.qe.sm.cli.tests.ExpirationTests" annotations="JDK">
+  <test verbose="2" name="rhsm.cli.tests.ExpirationTests" annotations="JDK">
     <classes>
-      <class name="com.redhat.qe.sm.cli.tests.ExpirationTests">
+      <class name="rhsm.cli.tests.ExpirationTests">
        </class>
     </classes>
     <groups>

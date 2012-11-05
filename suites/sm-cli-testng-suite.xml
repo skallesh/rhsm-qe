@@ -15,7 +15,7 @@
 		
 	<test name="CLI: Help Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -28,7 +28,7 @@
 	
 	<test name="CLI: General Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -41,7 +41,7 @@
 	
 	<test name="CLI: Version Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -54,7 +54,7 @@
 	
 	<test name="CLI: Translation Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -67,7 +67,7 @@
 	
 	<test name="CLI: Pofilter Translation Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -80,7 +80,7 @@
 	
 	<test name="CLI: Register Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -93,7 +93,7 @@
 	
 	<test name="CLI: Interoperability Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -106,7 +106,7 @@
 	
 	<test name="CLI: ActivationKey Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -119,7 +119,7 @@
 	
 	<test name="CLI: Proxy Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -132,7 +132,7 @@
 
 	<test name="CLI: Event Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -145,7 +145,7 @@
 
 	<test name="CLI: Identity Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -158,7 +158,7 @@
 	
 	<test name="CLI: List Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -171,7 +171,7 @@
 	
 	<test name="CLI: Repos Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -184,7 +184,7 @@
 	
 	<test name="CLI: Orgs Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -197,7 +197,7 @@
 
 	<test name="CLI: Subscribe Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -210,7 +210,7 @@
 	
 	<test name="CLI: ServiceLevel Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -223,7 +223,7 @@
 	
 	<test name="CLI: Release Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -236,7 +236,7 @@
 	
 	<test name="CLI: Stacking Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -249,7 +249,7 @@
 	
 	<test name="CLI: Unsubscribe Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -262,7 +262,7 @@
 	
 	<test name="CLI: Unregister Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -275,7 +275,7 @@
 	
 	<test name="CLI: Multi-client Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -288,7 +288,7 @@
 		
 	<test name="CLI: Management Add-On Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -301,7 +301,7 @@
 	
 	<test name="CLI: RHEL Personal Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -314,7 +314,7 @@
 	
 	<test name="CLI: Facts Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -327,7 +327,7 @@
 	
 	<test name="CLI: Clean Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -340,7 +340,7 @@
 	
 	<test name="CLI: Refresh Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -353,7 +353,7 @@
 	
 	<test name="CLI: Redeem Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -366,7 +366,7 @@
 	
 	<test name="CLI: Environments Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -379,7 +379,7 @@
 	
 	<test name="CLI: Import Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -392,7 +392,7 @@
 	
 	<test name="CLI: Subscription Expiration Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -405,7 +405,7 @@
 	
 	<test name="CLI: Certificate Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -418,7 +418,7 @@
 	
 	<test name="CLI: Compliance Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -431,7 +431,7 @@
 	
 	<test name="CLI: Content Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -444,7 +444,7 @@
 	
 	<test name="CLI: Virtualization Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -457,7 +457,7 @@
 	
 	<test name="CLI: Modifier Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -470,7 +470,7 @@
 	
 	<test name="CLI: Overconsumption Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -483,7 +483,7 @@
 	
 	<test name="CLI: Certificate Revocation List (CRL) Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -496,7 +496,7 @@
 	
 	<test name="CLI: Roles Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -509,7 +509,7 @@
 	
 	<test name="CLI: Content Integration Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -522,7 +522,7 @@
 	
 	<test name="CLI: Healing Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -535,7 +535,7 @@
 	
 	<test name="CLI: RHUI Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -548,7 +548,7 @@
 	
 	<test name="CLI: Migration Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -561,7 +561,7 @@
 		
 	<test name="CLI: Config Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -574,7 +574,7 @@
 	
 	<test name="CLI: Bugzilla Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
@@ -587,7 +587,7 @@
 	
 	<test name="CLI: SELinux Tests">
 		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
+			<package name="rhsm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
