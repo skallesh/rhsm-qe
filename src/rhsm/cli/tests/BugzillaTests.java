@@ -213,7 +213,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Verify only One Cert is downloaded Per One Subscription",
 			groups={"VerifyOneCertPerOneSubscription"},
-			enabled=false)	
+			enabled=true)	
 	@ImplementsNitrateTest(caseId=50215)
 	public void VerifyOneCertPerOneSubscription() throws JSONException, Exception {
 		int expected=0;
@@ -1425,7 +1425,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe_ all the available products ",
 			groups={"Verifyautosubscribe_Test"},
-			enabled=false)
+			enabled=true)
 	public void Verifyautosubscribe_Test() throws JSONException, Exception{
 
 		List<String> ProductIdBeforeAuto=new ArrayList<String>();
