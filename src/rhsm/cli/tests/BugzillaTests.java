@@ -226,12 +226,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		for(SubscriptionPool subscriptionpool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
+<<<<<<< HEAD:src/rhsm/cli/tests/BugzillaTests.java
 
 			clienttasks.subscribe_(null,null,subscriptionpool.poolId,null,null,"1",null,null,null,null,null);
 			
 			expected=expected+1;
 		
 			List<File> Cert =clienttasks.getCurrentEntitlementCertFiles();
+=======
+			List<String> providedProducts = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionpool.poolId);
+			if(providedProducts.size()>1){
+				expected=expected+providedProducts.size();
+
+			}else{
+			expected=expected+1;
+			}
+			clienttasks.subscribeToSubscriptionPool_(subscriptionpool);
+			Cert=clienttasks.getCurrentEntitlementCertFiles();
+>>>>>>> Merging skallesh with PULL:src/com/redhat/qe/sm/cli/tests/BugzillaTests.java
 			Assert.assertEquals(Cert.size(), expected);
 
 			}
