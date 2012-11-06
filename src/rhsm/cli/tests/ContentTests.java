@@ -748,7 +748,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// second, unregister client2 since it is a personal consumer
 		if (client2tasks!=null) {
 			client2tasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, personalConsumerId, null, null, null, (String)null, null, null, Boolean.TRUE, null, null, null, null);
-			client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
+			client2tasks.unsubscribe_(true,(BigInteger)null, null, null, null);
 			client2tasks.unregister_(null,null,null);
 		}
 	}

@@ -703,7 +703,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//  on the first call to this dataProvided test, unsubscribe all subscriptions OR just unregister to a clean state
 		// this will remove any prior subscribed modifier entitlements to avoid test logic errors in this test.
 		if (firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test) {
-			if (consumerId!=null) clienttasks.unsubscribe(true, null, null, null, null);	//OR clienttasks.unregister(null,null,null);
+			if (consumerId!=null) clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);	//OR clienttasks.unregister(null,null,null);
 			firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test = false;
 		}
 
@@ -1004,7 +1004,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
 				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, null, null, (String)null, null, null, Boolean.TRUE, null, null, null, null);
-				clienttasks.unsubscribe_(Boolean.TRUE, null, null, null, null);
+				clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 				clienttasks.unregister_(null, null, null);
 			}
 			systemConsumerIds.clear();

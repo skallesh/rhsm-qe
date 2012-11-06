@@ -1,6 +1,7 @@
 package rhsm.cli.tests;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,7 +70,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has been registered with autosubscribe specifying a common service level, then the consumer's service level prefernce should be set to that value.");
 	
 		// test autosubscribe (without service level) and assert that the consumed subscriptions provide the same service level as persisted during register
-		clienttasks.unsubscribe(true, null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"Before attempting to autosubscribe with a common servicelevel to become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
 		clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null);

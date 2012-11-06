@@ -503,7 +503,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		AutoSubscribeWithServiceLevel_Test(null,serviceLevel);
 
 		// return all entitlements
-		clienttasks.unsubscribe(true, null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		
 		// autosubscribe again without specifying a service level
 		clienttasks.subscribe(true,null,(String)null,(String)null,(String)null,null,null,null,null, null, null);

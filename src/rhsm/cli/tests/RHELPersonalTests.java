@@ -1,6 +1,7 @@
 package rhsm.cli.tests;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -330,7 +331,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		log.info("Assuming that multiple systems have subscribed to a personal subpool in prior testcase...");
 	
 		log.info("Now, attempt to unsubscribe the person on client 1 from the "+personSubscriptionName+" pool and assert the unsubscribe is blocked.");
-		SSHCommandResult result = client1tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
+		SSHCommandResult result = client1tasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 
 		/*
 		-Cannot unsubscribe entitlement {0} because:
@@ -773,7 +774,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"}, value={"EnsureSystemAutosubscribeConsumesSubPool_Test","EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test","EnsureSystemCannotSubscribeToPersonalPool_Test"}, alwaysRun=true)
 	public void unsubscribeAndUnregisterMultipleSystemsAfterGroups() {
 		if (client2tasks!=null) {
-			client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
+			client2tasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 			client2tasks.unregister_(null, null, null);
 		}
 
@@ -781,7 +782,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			
 			for (String systemConsumerId : systemConsumerIds) {
 				client1tasks.register_(username,password,null,null,null,null,systemConsumerId, null, null, null, (String)null, null, null, Boolean.TRUE, null, null, null, null);
-				client1tasks.unsubscribe_(Boolean.TRUE, null, null, null, null);
+				client1tasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 				client1tasks.unregister_(null, null, null);
 			}
 			systemConsumerIds.clear();
@@ -791,7 +792,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				//client1tasks.removeAllCerts(true, true);
 				client1tasks.register_(username,password,null,null,null,null,personConsumerId,null, null, null, (String)null, null, null, Boolean.TRUE, null, null, null, null);
 			}
-			client1tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
+			client1tasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 			client1tasks.unregister_(null, null, null);
 			personConsumerId=null;
 		}

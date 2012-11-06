@@ -1,5 +1,6 @@
 package rhsm.cli.tests;
 
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -642,7 +643,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups="setup",value="unsubscribeBeforeGroup")
 	public void unsubscribeBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		clienttasks.unsubscribe_(true, null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 	}
 	
 	@BeforeClass(groups="setup")

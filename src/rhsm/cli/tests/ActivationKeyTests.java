@@ -753,7 +753,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
 				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, null, null, (String)null, null, null, Boolean.TRUE, null, null, null, null);
-				clienttasks.unsubscribe_(Boolean.TRUE, null, null, null, null);
+				clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 				clienttasks.unregister_(null, null, null);
 			}
 			systemConsumerIds.clear();

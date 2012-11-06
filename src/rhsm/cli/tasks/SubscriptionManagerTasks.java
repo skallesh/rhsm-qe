@@ -3821,33 +3821,52 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * unsubscribe without asserting results
-	 * @param proxy TODO
-	 * @param proxyuser TODO
-	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult unsubscribe_(Boolean all, List<BigInteger> serials, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
-		String command = this.command;	command += " unsubscribe";
-		if (all!=null && all)			command += " --all";
-		if (serial!=null)				command += " --serial="+serial;
-		if (proxy!=null)				command += " --proxy="+proxy;
-		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
-		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		String command = this.command;							command += " unsubscribe";
+		if (all!=null && all)									command += " --all";
+		if (serials!=null)	for (BigInteger serial : serials)	command += " --serial="+serial;
+		if (proxy!=null)										command += " --proxy="+proxy;
+		if (proxyuser!=null)									command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)								command += " --proxypassword="+proxypassword;
 		
-		if (all!=null && all && serial==null) workaroundForBug844455();
+		if (all!=null && all && serials==null) workaroundForBug844455();
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
-	
-	public SSHCommandResult unsubscribe(Boolean all, BigInteger serial, String proxy, String proxyuser, String proxypassword) {
+	/**
+	 * unsubscribe without asserting results
+	 */
+	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial, String proxy, String proxyuser, String proxypassword) {
+		
+		List<BigInteger> serials = serial==null?null:Arrays.asList(new BigInteger[]{serial});
 
-		SSHCommandResult sshCommandResult = unsubscribe_(all, serial, proxy, proxyuser, proxypassword);
+		return unsubscribe_(all, serials, proxy, proxyuser, proxypassword);
+	}
+	
+	/**
+	 * unsubscribe and assert all results are successful
+	 */
+	public SSHCommandResult unsubscribe(Boolean all, List<BigInteger> serials, String proxy, String proxyuser, String proxypassword) {
+
+		SSHCommandResult sshCommandResult = unsubscribe_(all, serials, proxy, proxyuser, proxypassword);
 		
 		// assert results
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unsubscribe command indicates a success.");
 		return sshCommandResult;
+	}
+	
+	/**
+	 * unsubscribe and assert all results are successful
+	 */
+	public SSHCommandResult unsubscribe(Boolean all, BigInteger serial, String proxy, String proxyuser, String proxypassword) {
+		
+		List<BigInteger> serials = serial==null?null:Arrays.asList(new BigInteger[]{serial});
+		
+		return unsubscribe(all, serials, proxy, proxyuser, proxypassword);
 	}
 	
 	/**
@@ -3864,10 +3883,11 @@ public class SubscriptionManagerTasks {
 				"Entitlement Certificate file with serial '"+serialNumber+"' ("+certFilePath+") and corresponding key file ("+certKeyFilePath+") exist before unsubscribing.");
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 
-		log.info("Unsubscribing from certificate serial: "+ serialNumber);
-		SSHCommandResult result = unsubscribe_(Boolean.FALSE, serialNumber, null, null, null);
+		log.info("Attempting to unsubscribe from certificate serial: "+ serialNumber);
+		SSHCommandResult result = unsubscribe_(false, serialNumber, null, null, null);
 		
 		// assert the results
+		String expectedStdoutMsg;
 		if (!certFileExists) {
 			String regexForSerialNumber = serialNumber.toString();
 			
@@ -3882,9 +3902,15 @@ public class SubscriptionManagerTasks {
 						
 			//Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
 			//		"Stderr from an attempt to unsubscribe from Entitlement Certificate serial "+serialNumber+" that was not found in "+entitlementCertDir);
-			Assert.assertContainsMatch(result.getStdout(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
-					"Stdout from an attempt to unsubscribe from Entitlement Certificate serial "+serialNumber+" that was not found in "+entitlementCertDir);
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The unsubscribe should fail when its corresponding entitlement cert file ("+certFilePath+") does not exist.");
+			//Assert.assertContainsMatch(result.getStdout(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
+			//		"Stdout from an attempt to unsubscribe from Entitlement Certificate serial "+serialNumber+" that was not found in "+entitlementCertDir);
+			//Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The unsubscribe should fail when its corresponding entitlement cert file ("+certFilePath+") does not exist.");
+			expectedStdoutMsg = "Unsuccessfully unsubscribed serial numbers:";	// added by bug 867766
+			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
+			expectedStdoutMsg = "   Entitlement Certificate with serial number "+serialNumber+" could not be found.";
+			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
+			Assert.assertEquals(result.getStderr(),"", "Stderr from unsubscribe.");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from unsubscribe when the serial's entitlement cert file ("+certFilePath+") does not exist.");	// changed by bug 873791
 			return false;
 		}
 		
@@ -3913,6 +3939,14 @@ public class SubscriptionManagerTasks {
 		if (!beforeEntitlementCertFiles.remove(certFile)) Assert.fail("Failed to remove certFile '"+certFile+"' from list.  This could be an automation logic error.");
 		Assert.assertEquals(afterEntitlementCertFiles,beforeEntitlementCertFiles,"After unsubscribing from serial '"+serialNumber+"', the other entitlement cert serials remain unchanged");
 		*/
+		
+		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// added by bug 867766
+		Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
+		expectedStdoutMsg = "   "+serialNumber;	// added by bug 867766
+		Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
+		Assert.assertEquals(result.getStderr(),"", "Stderr from unsubscribe.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from unsubscribe when the serial's entitlement cert file ("+certFilePath+") does exist.");	// added by bug 873791
+
 		return true;
 	}
 	
@@ -3938,7 +3972,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
 
-		unsubscribe(Boolean.TRUE, null, null, null, null);
+		unsubscribe(true, (BigInteger)null, null, null, null);
 
 		// assert that there are no product subscriptions consumed
 		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),

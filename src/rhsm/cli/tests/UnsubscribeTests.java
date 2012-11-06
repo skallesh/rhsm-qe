@@ -3,6 +3,7 @@ package rhsm.cli.tests;
 import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -175,16 +176,26 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(description="Attempt to unsubscribe when from an invalid serial number",
-			groups={"blockedByBug-706889"},
+			groups={"blockedByBug-706889","blockedByBug-867766"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAnInvalidSerial_Test() {
-	
-		SSHCommandResult result = clienttasks.unsubscribe_(null, BigInteger.valueOf(-123), null, null, null);
+		SSHCommandResult result;
+		
+		BigInteger serial = BigInteger.valueOf(-123);
+		result = clienttasks.unsubscribe_(null, serial, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "Asserting exit code when attempting to unsubscribe from an invalid serial number.");
-		Assert.assertEquals(result.getStderr().trim(), "Error: '-123' is not a valid serial number");
-		Assert.assertEquals(result.getStdout().trim(), "");
-
+		//Assert.assertEquals(result.getStderr().trim(), "Error: '-123' is not a valid serial number");
+		//Assert.assertEquals(result.getStdout().trim(), "");
+		// stderr moved to stdout by Bug 867766 - [RFE] unsubscribe from multiple entitlement certificates using serial numbers 
+		Assert.assertEquals(result.getStdout().trim(), String.format("Error: '%s' is not a valid serial number",serial));
+		Assert.assertEquals(result.getStderr().trim(), "");
+		
+		List<BigInteger> serials = Arrays.asList(new BigInteger[]{BigInteger.valueOf(123),BigInteger.valueOf(-456),BigInteger.valueOf(789)});
+		result = clienttasks.unsubscribe_(null, serials, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "Asserting exit code when attempting to unsubscribe from an invalid serial number.");
+		Assert.assertEquals(result.getStdout().trim(), String.format("Error: '%s' is not a valid serial number",serials.get(1)));
+		Assert.assertEquals(result.getStderr().trim(), "");
 	}
 	
 	
@@ -198,11 +209,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		
 		// unsubscribe from all and assert # subscriptions are unsubscribed
-		SSHCommandResult result = clienttasks.unsubscribe(true, null, null, null, null);
+		SSHCommandResult result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",pools.size()),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
 		
 		// now attempt to unsubscribe from all again and assert 0 subscriptions are unsubscribed
-		result = clienttasks.unsubscribe(true, null, null, null, null);
+		result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",0),"Expected feedback when unsubscribing from all when no subscriptions are currently consumed.");
 
 	}
