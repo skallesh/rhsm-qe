@@ -1,26 +1,3 @@
-GUI DON:
-
-  https://bugzilla.redhat.com/show_bug.cgi?id=667991
-  https://bugzilla.redhat.com/show_bug.cgi?id=676371  < done but make this data driven
-  https://bugzilla.redhat.com/show_bug.cgi?id=683550
-  https://bugzilla.redhat.com/show_bug.cgi?id=691784
-  https://bugzilla.redhat.com/show_bug.cgi?id=691788
-  https://bugzilla.redhat.com/show_bug.cgi?id=712978
-  https://bugzilla.redhat.com/show_bug.cgi?id=705445
-  https://bugzilla.redhat.com/show_bug.cgi?id=702075
-  https://bugzilla.redhat.com/show_bug.cgi?id=723363
-  https://bugzilla.redhat.com/show_bug.cgi?id=712980
-  https://bugzilla.redhat.com/show_bug.cgi?id=656896
-  https://bugzilla.redhat.com/show_bug.cgi?id=706384
-  https://bugzilla.redhat.com/show_bug.cgi?id=703920 <  check_contract_selection_dates
-  https://bugzilla.redhat.com/show_bug.cgi?id=755861
-  https://bugzilla.redhat.com/show_bug.cgi?id=723248
-  https://bugzilla.redhat.com/show_bug.cgi?id=747014 < help button
-  https://bugzilla.redhat.com/show_bug.cgi?id=704408
-  https://bugzilla.redhat.com/show_bug.cgi?id=766778
-
-  https://tcms.engineering.redhat.com/case/70205/?from_plan=2110
-
 GUI LIMBO:
 
   https://bugzilla.redhat.com/show_bug.cgi?id=676377 < rhsm icon
@@ -67,6 +44,9 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=855257
   https://bugzilla.redhat.com/show_bug.cgi?id=869366
   https://bugzilla.redhat.com/show_bug.cgi?id=865702 < LANG test
+  https://bugzilla.redhat.com/show_bug.cgi?id=872727 < firstboot
+  https://bugzilla.redhat.com/show_bug.cgi?id=873418 < activation window
+
 
 KATELLO:
   https://bugzilla.redhat.com/show_bug.cgi?id=820294
