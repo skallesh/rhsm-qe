@@ -211,15 +211,17 @@
   (tasks/restart-app)
   (verify (= 1 (tasks/ui guiexist :main-window))))
 
-(comment
-  ;; TODO: depending on bug 748312
-  (defn ^{Test {:groups ["import"
-                         "blockedByBug-702075"
-                         "blockedByBug-748912"]}}
-    import_nonexistant [_]
-    (let [certlocation "/tmp/doesNotExist.pem"]
-      (import-cert certlocation)
-      )))
+(defn ^{Test {:groups ["import"
+                       "blockedByBug-702075"
+                       "blockedByBug-748912"]}}
+  import_nonexistant [_]
+  (verify
+   (not (tasks/substring?
+         "Traceback" (tasks/get-logging
+                      @clientcmd
+                      "/varlog/rhsm/rhsm.log"
+                      "import_nonexistant"
+                      (import-bad-cert "/this/does/not/exist.pem" :cert-does-not-exist))))))
 
 (gen-class-testng)
 
