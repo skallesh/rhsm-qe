@@ -221,7 +221,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
 		
-		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
 		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
 		clienttasks.unsubscribe_(true, null, null, null, null);
