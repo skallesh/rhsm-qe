@@ -215,11 +215,13 @@
                        "blockedByBug-702075"
                        "blockedByBug-748912"]}}
   import_nonexistant [_]
-  (verify )
-  (tasks/get-logging @clientcmd
-                     "/varlog/rhsm/rhsm.log"
-                     "import_nonexistant"
-                     (import-bad-cert "/this/does/not/exist.pem" :cert-does-not-exist)))
+  (verify
+   (not (tasks/substring?
+         "Traceback" (tasks/get-logging
+                      @clientcmd
+                      "/varlog/rhsm/rhsm.log"
+                      "import_nonexistant"
+                      (import-bad-cert "/this/does/not/exist.pem" :cert-does-not-exist))))))
 
 (gen-class-testng)
 
