@@ -697,7 +697,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if stacking entitlements reports as distinct entries in cli list --installed",
 			groups={"VerifyDistinct","blockedByBug-733327"},
-			enabled=false)
+			enabled=true)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
@@ -1425,7 +1425,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe_ all the available products ",
 			groups={"Verifyautosubscribe_Test"},
-			enabled=false)
+			enabled=true)
 	public void Verifyautosubscribe_Test() throws JSONException, Exception{
 
 		List<String> ProductIdBeforeAuto=new ArrayList<String>();
