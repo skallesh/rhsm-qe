@@ -770,8 +770,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	}	
 
-
-
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -791,7 +789,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId+"'cannot be deleted while subscriptions exist.\"}";
 						Assert.assertEquals(expect, jsonConsumer);				}
 				}
-
 			}}
 
 	}
