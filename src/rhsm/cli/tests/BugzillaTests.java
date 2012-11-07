@@ -725,9 +725,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		int sockets=4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
+		clienttasks.facts_(null, true, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 		String product=clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
-		System.out.println("product "+product);
 		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.status.equals("Partially Subscribed")){
 				productId=installed.productId;
@@ -745,6 +745,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		sockets=1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
+		clienttasks.facts_(null, true, null, null, null);
+
 	}	
 
 
@@ -1087,6 +1089,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Integer moreSockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
 		clienttasks.createFactsFileWithOverridingValues("/socket.facts",factsMap);
+		clienttasks.facts_(null, true, null, null, null);
 		for(SubscriptionPool SubscriptionPool: clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(!(SubscriptionPool.multiEntitlement)){
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId, "sockets");
@@ -1476,6 +1479,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			Map<String,String> factsMap = new HashMap<String,String>();
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum+2));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
+			clienttasks.facts_(null, true, null, null, null);
+
 
 		}
 		clienttasks.subscribe_(true,null,(String)null,null,null, null, null, null, null, null, null);
@@ -1487,6 +1492,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						Map<String,String> factsMap = new HashMap<String,String>();
 						factsMap.put("cpu.cpu_socket(s)", String.valueOf(1));
 						clienttasks.createFactsFileWithOverridingValues(factsMap);
+						clienttasks.facts_(null, true, null, null, null);
 						Assert.assertEquals("Subscribed", (installedProductsAfterAuto.status).trim(), "test  has failed");
 					}
 			}
