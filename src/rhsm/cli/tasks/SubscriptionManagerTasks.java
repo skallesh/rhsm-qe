@@ -817,6 +817,7 @@ public class SubscriptionManagerTasks {
 	public List<String> getCurrentlyAvailableReleases(String proxy, String proxyusername, String proxypassword) {
 		
 		SSHCommandResult result = release_(null,true,null,null,proxy, proxyusername, proxypassword);
+		String stdout = result.getStdout().trim();
 		
 		//	[root@jsefler-r63-workstation ~]# subscription-manager release --list
 		//	5.7
@@ -834,8 +835,22 @@ public class SubscriptionManagerTasks {
 		// FINE: Stderr: No release versions available, please check subscriptions.
 		// FINE: ExitCode: 255
 		
+		// Bug 808217 - [RFE] a textural output banner would be nice for subscription-manager release --list
+		//	[root@jsefler-6 ~]# subscription-manager release --list
+		//	+-------------------------------------------+
+		//	          Available Releases
+		//	+-------------------------------------------+
+		//	6.1
+		//	6.2
+		//	6.3
+		//	6Server
+		
+		// strip off the banner (added by bug 808217 in RHEL64)
+		String bannerRegex = "\\+-+\\+\\n\\s*Available Releases\\s*\\n\\+-+\\+";
+		stdout = stdout.replaceFirst(bannerRegex, "");
+
 		List<String> releases =  new ArrayList<String>();
-		for (String release : result.getStdout().trim().split("\\s*\\n\\s*")) {
+		for (String release : stdout.split("\\s*\\n\\s*")) {
 			if (!release.isEmpty())	releases.add(release);
 		}
 		
@@ -1845,17 +1860,17 @@ public class SubscriptionManagerTasks {
 		
 		// assemble the command
 		String command = this.command;											command += " register";
-		if (username!=null)														command += " --username="+String.format(username.contains(" ")?"\"%s\"":"%s", username);	// quote username containing spaces
-		if (password!=null)														command += " --password="+password;
+		if (username!=null)														command += " --username="+String.format(username.contains(" ")? "\"%s\"":"%s", username);	// quote username containing spaces
+		if (password!=null)														command += " --password="+String.format(password.contains("(")||password.contains(")")? "\"%s\"":"%s", password);	// quote password containing ()
 		if (org!=null)															command += " --org="+org;
 		if (environment!=null)													command += " --environment="+environment;
 		if (type!=null)															command += " --type="+type;
-		if (name!=null)															command += " --name="+String.format(name.contains("\"")?"'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
+		if (name!=null)															command += " --name="+String.format(name.contains("\"")? "'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
 		if (consumerid!=null)													command += " --consumerid="+consumerid;
 		if (autosubscribe!=null && autosubscribe)								command += " --autosubscribe";
-		if (servicelevel!=null)													command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
+		if (servicelevel!=null)													command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()? "\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
 		if (release!=null)														command += " --release="+release;
-		if (activationkeys!=null)	for (String activationkey : activationkeys)	command += " --activationkey="+String.format(activationkey.contains(" ")?"\"%s\"":"%s", activationkey);	// quote activationkey containing spaces
+		if (activationkeys!=null)	for (String activationkey : activationkeys)	command += " --activationkey="+String.format(activationkey.contains(" ")? "\"%s\"":"%s", activationkey);	// quote activationkey containing spaces
 		if (serverurl!=null)													command += " --serverurl="+serverurl;
 		if (baseurl!=null)														command += " --baseurl="+baseurl;
 		if (force!=null && force)												command += " --force";
