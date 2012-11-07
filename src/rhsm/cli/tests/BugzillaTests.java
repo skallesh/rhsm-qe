@@ -270,7 +270,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyRHSMCertdLogging() throws JSONException, Exception {
 		int certFrequency=1;
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		String Frequency=clienttasks.getConfFileParameter("rhsm.conf", "certFrequency");
+		String Frequency=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "certFrequency");
 		clienttasks.restart_rhsmcertd(certFrequency, null, false, null);
 		clienttasks.waitForRegexInRhsmcertdLog("update failed (255)", 1);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
