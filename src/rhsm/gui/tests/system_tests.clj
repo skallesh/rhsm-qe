@@ -65,7 +65,13 @@
   (let [exec-shortcut (fn [s] (tasks/ui generatekeyevent s))
         count-objects (fn [w] (count (tasks/ui getobjectlist w)))
         beforecount (do (exec-shortcut shortcut)
+                        ;sleeps are necessary because window doesn't instantly render
+                        (tasks/ui waittillwindowexist window 10)
+                        (tasks/sleep 3000)
                         (count-objects window))
+        ;this has to be here due to weird issues in RHEL5
+        ; where the objectlist was getting cached
+        ; creating a traceback dumps the cache and this works for a quick fix
         fuckcache (fn [] (try+ (tasks/ui getchild "blah")
                               (catch Exception e "")))]
     (fuckcache)
@@ -73,7 +79,10 @@
     (fuckcache)
     (exec-shortcut "<ESC>")
     (exec-shortcut shortcut)
-    (verify (= beforecount (count-objects window)))))
+    (tasks/ui waittillwindowexist window 10)
+    (tasks/sleep 3000)
+    (let [newcount (count-objects window)]
+      (verify (= beforecount newcount)))))
 
 (data-driven
  check_escape_window {Test {:groups ["system"
