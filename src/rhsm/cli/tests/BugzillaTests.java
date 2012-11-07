@@ -259,6 +259,27 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="verify  rhsmcertd is logging update failed (255)",
+			groups={"VerifyRHSMCertdLogging","blockedByBug-708512"},
+			enabled=true)	
+	public void VerifyRHSMCertdLogging() throws JSONException, Exception {
+		int certFrequency=1;
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		String Frequency=clienttasks.getConfFileParameter("rhsm.conf", "certFrequency");
+		clienttasks.restart_rhsmcertd(certFrequency, null, false, null);
+		clienttasks.waitForRegexInRhsmcertdLog("update failed (255)", 1);
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[]{"rhsmcertd","certFrequency".toLowerCase(), Frequency});
+		clienttasks.config_(null,null,true,listOfSectionNameValues);
+
+	}
+	
+	
 	
 	/**
 	 * @author skallesh
@@ -767,7 +788,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				for(SubscriptionPool AvailSub  : clienttasks.getCurrentlyAvailableSubscriptionPools()){
 					if(installed.productName.contains(AvailSub.subscriptionName)){
 						String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/"+AvailSub.productId);
-						String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId.trim()+"'cannot be deleted while subscriptions exist.\"}";
+						String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId+"'cannot be deleted while subscriptions exist.\"}";
 						Assert.assertEquals(expect, jsonConsumer);				}
 				}
 
