@@ -550,7 +550,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)	
 	@ImplementsNitrateTest(caseId=61115)
 	public void Verifycontentsetassociatedwithproduct() throws JSONException, Exception {
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister_(null,null,null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		List<SubscriptionPool> pools=clienttasks.getCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToSubscriptionPool_(pools.get(randomGenerator.nextInt(pools.size())));
@@ -767,7 +767,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				for(SubscriptionPool AvailSub  : clienttasks.getCurrentlyAvailableSubscriptionPools()){
 					if(installed.productName.contains(AvailSub.subscriptionName)){
 						String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/"+AvailSub.productId);
-						String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId+ "'cannot be deleted while subscriptions exist.\"}";
+						String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId+"'cannot be deleted while subscriptions exist.\"}";
 						Assert.assertEquals(expect, jsonConsumer);				}
 				}
 
@@ -1434,7 +1434,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String> ProductIdAfterAuto=new ArrayList<String>();
 		clienttasks.deleteFactsFileWithOverridingValues();
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		for(InstalledProduct installedProductsBeforeAuto : clienttasks.getCurrentlyInstalledProducts()){
 			if(installedProductsBeforeAuto.status.equals("Subscribed"))
 				ProductIdBeforeAuto.add(installedProductsBeforeAuto.productId);
