@@ -236,7 +236,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=false)	// old/disabled test from ssalevan
 	@Deprecated
 	public void SubscribeToASingleEntitlementByProductID_Test_DEPRECATED(){
-		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsIndividually();
 		SubscriptionPool MCT0696 = new SubscriptionPool("MCT0696", "696");
 		MCT0696.addProductID("Red Hat Directory Server");
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(MCT0696);
@@ -278,7 +278,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Deprecated
 	@ImplementsNitrateTest(caseId=41681)
 	public void SubscribeToRegToken_Test_DEPRECATED(){
-		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsIndividually();
 		clienttasks.subscribeToRegToken(sm_regtoken);
 	}
 	

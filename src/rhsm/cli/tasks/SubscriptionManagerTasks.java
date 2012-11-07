@@ -3856,6 +3856,7 @@ public class SubscriptionManagerTasks {
 		
 		// assert results
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unsubscribe command indicates a success.");
+		Assert.assertEquals(sshCommandResult.getStderr(), "", "Stderr from the unsubscribe.");
 		return sshCommandResult;
 	}
 	
@@ -3991,15 +3992,32 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * Individually unsubscribe from each of the currently consumed product subscriptions.
+	 * This will ultimately issue multiple calls to unsubscribe --serial SERIAL for each of the product subscriptions being consumed. 
 	 */
-	public void unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions() {
-		log.info("Unsubscribing from each of the currently consumed product subscriptions...");
+	public void unsubscribeFromTheCurrentlyConsumedProductSubscriptionsIndividually() {
+		log.info("Unsubscribing from each of the currently consumed product subscription serials one at a time...");
 		for(ProductSubscription sub : getCurrentlyConsumedProductSubscriptions())
 			unsubscribeFromProductSubscription(sub);
 		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
 				"Currently no product subscriptions are consumed.");
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0,
 				"This machine has no entitlement certificate files.");			
+	}
+	
+	/**
+	 * Collectively unsubscribe from all of the currently consumed product subscriptions.
+	 * This will ultimately issue a single call to unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 for each of the product subscriptions being consumed. 
+	 */
+	public SSHCommandResult unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively() {
+		log.info("Unsubscribing from all of the currently consumed product subscription serials in one collective call...");
+		List<BigInteger> serials = new ArrayList<BigInteger>();
+		for(ProductSubscription sub : getCurrentlyConsumedProductSubscriptions()) serials.add(sub.serialNumber);
+		SSHCommandResult result = unsubscribe(false,serials,null,null,null);
+		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
+				"Currently no product subscriptions are consumed.");
+		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0,
+				"This machine has no entitlement certificate files.");
+		return result;
 	}
 	
 	

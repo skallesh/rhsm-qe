@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
@@ -199,7 +200,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions",
+	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --all",
 			groups={"blockedByBug-812388","blockedByBug-844455"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -218,7 +219,104 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 
 	}
 	
+	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
+			groups={"blockedByBug-867766"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void UnsubscribeFromAllSerials_Test() {
 	
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true, null, null, null, null);
+		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		if (pools.isEmpty()) throw new SkipException("This test requires multiple available pools.");
+		
+		// unsubscribe from all serials in one call and assert the feedback
+		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		String expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
+		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+		SSHCommandResult result = clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
+		Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
+	}
+	
+	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions (including revoked serials) using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
+			groups={"blockedByBug-867766"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void UnsubscribeFromAllSerialsIncludingRevokedSerials_Test() {
+	
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true, null, null, null, null);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		if (pools.isEmpty()) throw new SkipException("This test requires multiple available pools.");
+		
+		// subscribe to all of the available pools
+		List<String> poolIds = new ArrayList<String>();
+		for (SubscriptionPool pool : pools) poolIds.add(pool.poolId);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
+
+		// unsubscribe from all serials in one call and assert the feedback;
+		List<BigInteger> serials = new ArrayList<BigInteger>();
+		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) serials.add(productSubscription.serialNumber);
+		SSHCommandResult result = clienttasks.unsubscribe(null,serials,null,null,null);
+		String expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
+		for (BigInteger serial : serials) expectedStdoutMsg+="\n   "+serial;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+		Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
+		
+		// remember the unsubscribed serials as revoked serials
+		List<BigInteger> revokedSerials = new ArrayList<BigInteger>();
+		for (BigInteger serial : serials) revokedSerials.add(serial);
+		
+		// subscribe to all the available pools again
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
+		
+		// now attempt to unsubscribe from both the current serials AND the previously consumed serials in one call and assert the feedback
+		serials.clear();
+		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		for (int i=0; i<productSubscriptions.size(); i++) {
+			serials.add(productSubscriptions.get(i).serialNumber);
+			serials.add(revokedSerials.get(i));
+		}
+		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
+		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+		expectedStdoutMsg +="\n";
+		expectedStdoutMsg += "Unsuccessfully unsubscribed serial numbers:";
+		for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+String.format("Entitlement Certificate with serial number %s could not be found.", revokedSerial);	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+		result = clienttasks.unsubscribe(null,serials,null,null,null);
+		Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions (including revoked serials).");
+	}
+//TOO MUCH LOGGING FROM TOO MANY ASSERTIONS;  DELETEME IF ABOVE TEST WORKS WELL
+//	public void UnsubscribeFromAllSerialsIncludingRevokedSerials_Test() {
+//		
+//		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true, null, null, null, null);
+//		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+//		if (pools.isEmpty()) throw new SkipException("This test requires multiple available pools.");
+//		
+//		// unsubscribe from all serials in one call and assert the feedback
+//		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+//		SSHCommandResult result = clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
+//		String expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
+//		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+//		Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
+//
+//		List<BigInteger> revokedSerials = new ArrayList<BigInteger>();
+//		for (ProductSubscription productSubscription : productSubscriptions) revokedSerials.add(productSubscription.serialNumber);
+//		
+//		// subscribe to all the available pools again
+//		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+//		
+//		// now attempt to unsubscribe from both the current serials AND the previously consumed serials in one call and assert the feedback
+//		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+//		List<BigInteger> serials = new ArrayList<BigInteger>();
+//		for (int i=0; i<productSubscriptions.size(); i++) {
+//			serials.add(productSubscriptions.get(i).serialNumber);
+//			serials.add(revokedSerials.get(i));
+//		}
+//		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
+//		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+//		expectedStdoutMsg +="\n";
+//		expectedStdoutMsg += "Unsuccessfully unsubscribed serial numbers:";
+//		for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+String.format("Entitlement Certificate with serial number %s could not be found.", revokedSerial);	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+//		result = clienttasks.unsubscribe(false,serials,null,null,null);
+//		Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions (including revoked serials).");
+//	}
 	
 	// Candidates for an automated Test:
 
