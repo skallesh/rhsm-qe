@@ -742,8 +742,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(installedProduct.status, "Subscribed");
 			}
 		}
-
-
 		sockets=1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
@@ -767,7 +765,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				for(SubscriptionPool AvailSub  : clienttasks.getCurrentlyAvailableSubscriptionPools()){
 					if(installed.productName.contains(AvailSub.subscriptionName)){
 						String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/"+AvailSub.productId);
-						String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId+ "' cannot be deleted while subscriptions exist.\"}";
+						String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId+ "'cannot be deleted while subscriptions exist.\"}";
 						Assert.assertEquals(expect, jsonConsumer);				}
 				}
 
