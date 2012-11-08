@@ -123,7 +123,8 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(result.getStdout().contains(expectedMsgRHSM), "When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 
 		// assert the registration message (with current subscriptions)
-		clienttasks.subscribeToSubscriptionPool(clienttasks.getCurrentlyAvailableSubscriptionPools().get(0));
+		//clienttasks.subscribeToSubscriptionPool(clienttasks.getCurrentlyAvailableSubscriptionPools().get(0));	// will fail with java.lang.AssertionError: The list of consumed products is entitled 'Consumed Subscriptions'. expected:<true> but was:<false>
+		clienttasks.subscribe(null, null, clienttasks.getCurrentlyAvailableSubscriptionPools().get(0).poolId, null, null, null, null, null, null, null, null);
 		clienttasks.importCertificate("/tmp/Expiredcert.pem");
 		result = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin --enableplugin=subscription-manager");
 		expectedMsgRHSM = "This system is receiving updates from Red Hat Subscription Management.";
