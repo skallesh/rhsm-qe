@@ -222,6 +222,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		List<String> options = new ArrayList<String>();
 		String module;
 		String modulesRegex = "^	[\\w-]+";
+		       modulesRegex = "^  [\\w-]+";	// valid after bug 848095
 		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*, --\\w+(=\\w+)*";
 		       optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.-]+)*|^  -[\\?\\w]( \\w+)*, --[\\w\\.-]+(=\\w+)*";
 		
@@ -543,7 +544,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--environment=ENVIRONMENT");
 		options.add("--autosubscribe");
 		options.add("--force");
-		options.add("--activationkey=ACTIVATION_KEYS");
+		options.add("--activationkey=ACTIVATION_KEYS");		// Bug 874755 - help message terminology for cli options that can be specified in multiplicity 
 		options.add("--servicelevel=SERVICE_LEVEL");
 		options.add("--release=RELEASE");
 		options.add("--proxy=PROXY_URL");
@@ -601,7 +602,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "unsubscribe";
 		options.clear();
 		options.add("-h, --help");
-		options.add("--serial=SERIAL");
+		options.add("--serial=SERIALS");	// Bug 874755 - help message terminology for cli options that can be specified in multiplicity 
 		options.add("--all");
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
@@ -692,8 +693,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			//  --display=DISPLAY           X display to use
 			command = "rhsm-icon";
 			List <String> rhsmIconOptions = new ArrayList<String>();
-			//rhsmIconOptions.add("-h, --help");	// rhel6
-			rhsmIconOptions.add("-?, --help");		// rhel5
+			if (clienttasks.redhatReleaseX.equals("5"))	rhsmIconOptions.add("-?, --help");	// rhel5
+			else										rhsmIconOptions.add("-h, --help");	// rhel6
 			rhsmIconOptions.add("--help-all");
 			rhsmIconOptions.add("--help-gtk");
 			rhsmIconOptions.add("-c, --check-period");
@@ -809,7 +810,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 
 		command = "rhsmcertd"; 
 		options.clear();
-		options.add("-?, --help");
+		if (clienttasks.redhatReleaseX.equals("5"))	options.add("-?, --help");	// rhel5
+		else										options.add("-h, --help");	// rhel6
 		//options.add("--help-all");		// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
 		//options.add("--help-rhsmcertd");	// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
 		options.add("-c, --cert-interval=MINUTES");
@@ -843,6 +845,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		command = "rct"; 
 		modules.clear();
 		modules.add("cat-cert");
+		modules.add("stat-cert");
 		for (String commandHelp : new String[]{command+" -h",command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s MODULE-NAME [MODULE-OPTIONS] [--help]",command);
@@ -853,15 +856,15 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		// rct cat-cert OPTIONS
 		
-		//[root@jsefler-rhel59 ~]# rct cat-cert --help
-		//Usage: rct cat-cert [OPTIONS] CERT_FILE
-		//
-		//Print certificate info to standard output.
-		//
-		//options:
-		//  -h, --help     show this help message and exit
-		//  --no-products  do not show the cert's product information
-		//  --no-content   do not show the cert's content info.
+		//	[root@jsefler-rhel59 ~]# rct cat-cert --help
+		//	Usage: rct cat-cert [OPTIONS] CERT_FILE
+		//	
+		//	Print certificate info to standard output.
+		//	
+		//	options:
+		//	  -h, --help     show this help message and exit
+		//	  --no-products  do not show the cert's product information
+		//	  --no-content   do not show the cert's content info.
 		module = "cat-cert";
 		options.clear();
 		options.add("-h, --help");
@@ -874,6 +877,34 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
 		}
+		
+		// rct stat-cert OPTIONS
+		
+		//	[root@jsefler-6 ~]# rct stat-cert --help
+		//	Usage: rct stat-cert [OPTIONS] CERT_FILE
+		//
+		//	Print certificate statistics and sizes
+		//
+		//	Options:
+		//	  -h, --help  show this help message and exit
+		//	[root@jsefler-6 ~]# rct stat-cert --help
+		//	Usage: rct stat-cert [OPTIONS] CERT_FILE
+		//
+		//	Print certificate statistics and sizes
+		//
+		//	Options:
+		//	  -h, --help  show this help message and exit
+		module = "stat-cert";
+		options.clear();
+		options.add("-h, --help");
+		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS] CERT_FILE",command,module);
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
 		
 		
 		return ll;
