@@ -738,7 +738,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 					poolId.add(pool.poolId);
 
-				}}}
+				}}
+			if(!(pool.quantity.equals("4")))throw new SkipException("Sufficient pools are not available"); 
+		}
 		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.status.equals("Not Subscribed"))	
 				moveProductCertFiles(installed.productId+".pem", true);
@@ -748,7 +750,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
 		clienttasks.facts_(null, true, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
-		String product=clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
+		clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
 		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.status.equals("Partially Subscribed")){
 				productId=installed.productId;
@@ -786,7 +788,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				for(SubscriptionPool AvailSub  : clienttasks.getCurrentlyAvailableSubscriptionPools()){
 					if(installed.productName.contains(AvailSub.subscriptionName)){
 						String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/"+AvailSub.productId);
-						String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId+"'cannot be deleted while subscriptions exist.\"}";
+						String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId+"'"+"cannot be deleted while subscriptions exist.\"}";
 						Assert.assertEquals(expect, jsonConsumer);				}
 				}
 			}}
@@ -920,6 +922,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyEntilementValidityInFactsList_Test() throws JSONException, Exception {
 		client.runCommandAndWait("mkdir -p "+"/etc/pki/faketmp");
 		client.runCommandAndWait("mv "+clienttasks.productCertDir+"/*_.pem"+" "+"/etc/pki/faketmp/");
+		clienttasks.deleteFactsFileWithOverridingValues();
 		List <String> productId =new ArrayList<String>();   
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
