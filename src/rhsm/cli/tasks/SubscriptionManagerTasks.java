@@ -5162,10 +5162,24 @@ repolist: 3,394
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
 		
 		// assert result
-		Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to register to RHN Classic.");
-		Assert.assertEquals(result.getStderr(), "","Stderr from attempt to register to RHN Classic.");
-		if (!result.getStdout().trim().equals("")) log.warning("Ignoring result: "+result.getStdout().trim()); 		// <- IGNORE ERRORS LIKE THIS: ERROR: refreshing remote package list for System Profile
-		//Assert.assertEquals(result.getStdout(), "","Stdout from attempt to register to RHN Classic.");
+		Integer exitCode = result.getExitCode();
+		String stdout = result.getStdout();
+		String stderr = result.getStderr();
+		if (stdout.contains("ERROR: refreshing remote package list for System Profile")) {
+			// ERROR: refreshing remote package list for System Profile
+			log.warning("Ignoring stdout result: "+"ERROR: refreshing remote package list for System Profile");
+			stdout = stdout.replaceAll("ERROR: refreshing remote package list for System Profile", "");
+		}
+		if (stderr.contains("forced skip_if_unavailable=True due to")) {
+			// Repo content-label-72 forced skip_if_unavailable=True due to: /etc/pki/entitlement/2114809071147763952.pem
+			String regex = "Repo .+ forced skip_if_unavailable=True due to: .+.pem";
+			log.warning("Ignoring stderr results matching: "+regex);
+			stderr = stderr.replaceAll(regex, "");
+		}
+		
+		Assert.assertEquals(exitCode, new Integer(0),"Exitcode from attempt to register to RHN Classic.");
+		Assert.assertEquals(stderr.trim(), "","Stderr from attempt to register to RHN Classic.");
+		Assert.assertEquals(stdout.trim(), "","Stdout from attempt to register to RHN Classic.");
 		
 		// assert existance of system id file
 		Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, rhnSystemIdFile),"The system id file '"+rhnSystemIdFile+"' exists.  This indicates this system is registered using RHN Classic.");
