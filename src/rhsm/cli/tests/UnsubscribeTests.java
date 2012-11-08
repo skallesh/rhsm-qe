@@ -32,7 +32,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 
 	@Test(description="subscription-manager-cli: unsubscribe consumer from an entitlement using product ID",
-			groups={"blockedByBug-584137", "blockedByBug-602852"},
+			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
 	@ImplementsNitrateTest(caseId=41688)
 	public void UnsubscribeFromValidProductIDs_Test(ProductSubscription productSubscription){
@@ -155,7 +155,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(description="Attempt to unsubscribe when not registered",
-			groups={"blockedByBug-735338","blockedByBug-838146","blockedByBug-865590"},
+			groups={"blockedByBug-735338","blockedByBug-838146","blockedByBug-865590","blockedByBug-873791"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromSerialWhenNotRegistered_Test() {
