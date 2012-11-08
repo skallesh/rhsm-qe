@@ -71,7 +71,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the candlepin sever version is reported by the version module (expect Unknown when not registered)",
-			groups={"blockedByBug-862308"},
+			groups={"blockedByBug-862308","blockedByBug-868347","blockedByBug-874623"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfCandlepinWhenUnregistered_Test() {
@@ -80,8 +80,8 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		String expectedType = "FIXME_TEST: UNKNOWN CANDLEPIN TYPE";
-		if (sm_serverType==CandlepinType.standalone)	expectedType = "subscription management service";
-		if (sm_serverType==CandlepinType.hosted)		expectedType = "subscription management service";	// TODO not sure if this is correct
+		if (sm_serverType==CandlepinType.standalone)	expectedType = "Red Hat Subscription Management";	// "subscription management service"; changed by bug 852328
+		if (sm_serverType==CandlepinType.hosted)		expectedType = "Red Hat Subscription Management";	// "subscription management service"; changed by bug 852328
 		if (sm_serverType==CandlepinType.sam)			expectedType = "SAM";		// TODO not sure if this is correct
 		if (sm_serverType==CandlepinType.katello)		expectedType = "Katello";	// TODO not sure if this is correct
 		assertServerVersion(servertasks.statusVersion, expectedType);
