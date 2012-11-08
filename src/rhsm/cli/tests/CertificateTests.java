@@ -20,6 +20,7 @@ import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.CertStatistics;
 import rhsm.data.ConsumerCert;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
@@ -299,9 +300,35 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(consumerCert.version, "1.0", "The rct cat-cert tool reports this consumer cert to be a V1 Certificate: "+consumerCert);
 	}
 	
+	@Test(	description="assert the statistic values reported by the rct stat-cert tool for the current consumer cert",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void assertConsumerCertStatistics_Test() {
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, false, null, null, null, null);
+		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		Assert.assertEquals(consumerCert.version, "1.0", "The rct cat-cert tool reports this consumer cert to be a V1 Certificate: "+consumerCert);
+
+		String rawStatistics = client.runCommandAndWait/*WithoutLogging*/("rct stat-cert "+consumerCert.file).getStdout();
+		CertStatistics certStatistics = CertStatistics.parse(rawStatistics);
+		
+		//	[root@jsefler-6 ~]# rct stat-cert /etc/pki/consumer/cert.pem 
+		//	Type: Identity Certificate
+		//	Version: 1.0
+		//	DER size: 925b
+		//	Subject Key ID size: 20b
+
+		Assert.assertEquals(certStatistics.type, "Identity Certificate","rct stat-cert reports this Type.");
+		Assert.assertEquals(certStatistics.version, consumerCert.version,"rct stat-cert reports this Version.");
+		Assert.assertNotNull(certStatistics.derSize, "rct stat-cert reports this DER size.");	// TODO assert something better than not null
+		Assert.assertNotNull(certStatistics.subjectKeyIdSize, "rct stat-cert reports this Subject Key ID size.");	// TODO assert something better than not null
+		Assert.assertNull(certStatistics.contentSets, "rct stat-cert does NOT report a number of Content sets.");
+	}
 	
+	// TODO implement assertEntitlementCertStatistics_Test()
 	
-	
+	// TODO implement assertProductCertStatistics_Test()	
 	
 	
 	// Candidates for an automated Test:
