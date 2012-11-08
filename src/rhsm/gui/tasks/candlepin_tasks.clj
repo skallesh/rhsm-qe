@@ -56,7 +56,6 @@
       (get-consumer-owner-key)
       (get-consumer-id))))
 
-
 (defn build-product-map
   [& {:keys [all?]
       :or {all? false}}]
@@ -77,6 +76,13 @@
                     (into (@productlist (:productName p)) [(:productName s)]))))))
     @productlist))
 
+(defn build-contract-map
+  [& {:keys [all?]
+      :or {all? false}}]
+  (let [x (map #(list (:productName %) (:contractNumber %))
+               (if all? (list-available true) (list-available false)))
+        y (group-by first x)]
+    (zipmap (keys y) (map #(map second %) (vals y)))))
 
 (defn get-owners
   "Given a username and password, this function returns a list

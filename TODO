@@ -46,7 +46,7 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=865702 < LANG test
   https://bugzilla.redhat.com/show_bug.cgi?id=872727 < firstboot
   https://bugzilla.redhat.com/show_bug.cgi?id=873418 < activation window
-
+  https://bugzilla.redhat.com/show_bug.cgi?id=874624 < stage env
 
 KATELLO:
   https://bugzilla.redhat.com/show_bug.cgi?id=820294
