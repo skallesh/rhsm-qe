@@ -27,6 +27,7 @@ import com.redhat.qe.jul.TestRecords;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.CertStatistics;
 import rhsm.data.ConsumerCert;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
@@ -1848,6 +1849,13 @@ public class SubscriptionManagerTasks {
 		return productCerts.get(0);
 	}
 	
+	public CertStatistics getCertStatisticsFromCertFile(File certPemFile) {
+		sshCommandRunner.runCommandAndWait/*WithoutLogging*/("rct stat-cert "+certPemFile.getPath());
+		String rawStatistics = sshCommandRunner.getStdout();
+		CertStatistics certStatistics = CertStatistics.parse(rawStatistics);
+
+		return certStatistics;
+	}
 	
 	
 	

@@ -289,6 +289,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
+	
 	@Test(	description="assert that the rct cat-cert tool reports the current consumer cert is a Certificate: Version: 1.0",
 			groups={"blockedByBug-863961"},
 			enabled=true)
@@ -300,18 +301,17 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(consumerCert.version, "1.0", "The rct cat-cert tool reports this consumer cert to be a V1 Certificate: "+consumerCert);
 	}
 	
+	
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for the current consumer cert",
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void assertConsumerCertStatistics_Test() {
+	public void AssertConsumerCertStatistics_Test() {
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, false, null, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		Assert.assertEquals(consumerCert.version, "1.0", "The rct cat-cert tool reports this consumer cert to be a V1 Certificate: "+consumerCert);
-
-		String rawStatistics = client.runCommandAndWait/*WithoutLogging*/("rct stat-cert "+consumerCert.file).getStdout();
-		CertStatistics certStatistics = CertStatistics.parse(rawStatistics);
+		CertStatistics certStatistics = clienttasks.getCertStatisticsFromCertFile(consumerCert.file);
 		
 		//	[root@jsefler-6 ~]# rct stat-cert /etc/pki/consumer/cert.pem 
 		//	Type: Identity Certificate
@@ -326,9 +326,46 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNull(certStatistics.contentSets, "rct stat-cert does NOT report a number of Content sets.");
 	}
 	
+	
+	@Test(	description="assert the statistic values reported by the rct stat-cert tool for currently installed product certs",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AssertProductCertStatistics_Test() {
+		
+		// get all the product certs on the system
+		List<ProductCert> productCerts = new ArrayList();
+		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		List<ProductCert> migrationProductCerts = clienttasks.getProductCerts("/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX);
+		productCerts.addAll(installedProductCerts);
+		productCerts.addAll(migrationProductCerts);
+		
+		// loop through all of the current product certs
+		if (productCerts.isEmpty()) throw new SkipException("There are currently no installed product certs to assert.");
+		for (ProductCert productCert : productCerts) {
+			CertStatistics certStatistics = clienttasks.getCertStatisticsFromCertFile(productCert.file);
+			if (productCert.file.toString().endsWith("_.pem")) continue; 	// skip the generated TESTDATA productCerts
+			
+			//	[root@jsefler-6 ~]# rct stat-cert /etc/pki/product/69.pem 
+			//	Type: Product Certificate
+			//	Version: 1.0
+			//	DER size: 1553b
+
+			Assert.assertEquals(certStatistics.type, "Product Certificate","rct stat-cert reports this Type.");
+			Assert.assertEquals(certStatistics.version, productCert.version,"rct stat-cert reports this Version.");
+			Assert.assertNotNull(certStatistics.derSize, "rct stat-cert reports this DER size.");	// TODO assert something better than not null
+			Assert.assertNull(certStatistics.subjectKeyIdSize, "rct stat-cert reports this Subject Key ID size.");
+			Assert.assertNull(certStatistics.contentSets, "rct stat-cert does NOT report a number of Content sets.");
+		}
+	}
+	
 	// TODO implement assertEntitlementCertStatistics_Test()
 	
-	// TODO implement assertProductCertStatistics_Test()	
+
+	
+	
+	
+	
 	
 	
 	// Candidates for an automated Test:
