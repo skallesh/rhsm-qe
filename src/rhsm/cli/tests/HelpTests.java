@@ -35,7 +35,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41697)
-	public void ManPageForCLI_Test() {
+	public void ManPageExistanceForCLI_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String cliCommand = clienttasks.command;
 		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+cliCommand,0);
@@ -47,7 +47,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPageForGUI_Test() {
+	public void ManPageExistanceForGUI_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String guiCommand = clienttasks.command+"-gui";
 		// is the guiCommand installed?
@@ -67,7 +67,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-771726"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPageForRhsmIcon_Test() {
+	public void ManPageExistanceForRhsmIcon_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = "rhsm-icon"; //iconCommand = "rhsm-compliance-icon"; // prior to bug 771726
 		// is the command installed?
@@ -87,7 +87,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPageForInstallNumMigrateToRhsm_Test() {
+	public void ManPageExistanceForInstallNumMigrateToRhsm_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = MigrationTests.installNumTool;
 		// is the command installed?
@@ -112,7 +112,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPageForRhnMigrateClassicToRhsm_Test() {
+	public void ManPagevForRhnMigrateClassicToRhsm_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = MigrationTests.rhnMigrateTool;
 		// is the command installed?
@@ -128,7 +128,17 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
-
+	@Test(	description="rct: man page",
+			groups={"blockedByBug-862909"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ManPageExistanceForRCT_Test() {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String rctCommand = "rct";
+		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+rctCommand,0);
+		RemoteFileTasks.runCommandAndAssert(client,"whatis "+rctCommand,0,"^"+rctCommand+" ",null);
+		log.warning("We only tested the existence of the man page; NOT the content.");
+	}
 	
 	
 	
