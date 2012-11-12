@@ -1448,8 +1448,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,sm_clientUsername,sm_clientPassword,sm_clientOrg,null);
 		}
 		String expectedStdout;
-		expectedStdout = "This machine appears to be already registered to Certificate-based RHN.  Exiting.\n\nPlease visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 847380
-		expectedStdout = "This machine appears to be already registered to Red Hat Subscription Management.  Exiting.\n\nPlease visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";
+		expectedStdout = "This machine appears to be already registered to Certificate-based RHN.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 847380
+		expectedStdout = "This machine appears to be already registered to Red Hat Subscription Management.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 874760
+		expectedStdout = "This system appears to be already registered to Red Hat Subscription Management.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' while already registered to RHSM ended with: "+expectedStdout);
 //		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
