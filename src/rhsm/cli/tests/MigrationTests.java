@@ -210,7 +210,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
-			groups={"AcceptanceTests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959"},
+			groups={"AcceptanceTests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test() {
@@ -357,7 +357,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// Special case for High Touch Beta productId 135  reference: https://bugzilla.redhat.com/show_bug.cgi?id=799152#c4
 		if (productBaselineProductId.equals("135")) {
-			log.warning("For product id 135 (Red Hat Enterprise Linux Server HTB), we actually do NOT want a channel cert mapping as instructed in https://bugzilla.redhat.com/show_bug.cgi?id=799152#c4");
+			log.warning("For product id "+productBaselineProductId+" (Red Hat Enterprise Linux Server HTB), we actually do NOT want a channel cert mapping as instructed in https://bugzilla.redhat.com/show_bug.cgi?id=799152#c4");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(productBaselineRhnChannel),
+					"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" was NOT mapped to a product certificate in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.  This is a special case (Bugzilla 799152#c4).");
+			return;
+		}
+		
+		// Special case for High Touch Beta productId 155  reference: https://bugzilla.redhat.com/show_bug.cgi?id=799152#c4
+		if (productBaselineProductId.equals("155")) {
+			log.warning("For product id "+productBaselineProductId+" (Red Hat Enterprise Linux Workstation HTB), we actually do NOT want a channel cert mapping as instructed in https://bugzilla.redhat.com/show_bug.cgi?id=799152#c4");
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(productBaselineRhnChannel),
 					"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" was NOT mapped to a product certificate in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.  This is a special case (Bugzilla 799152#c4).");
 			return;
@@ -2294,26 +2302,27 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 786140 - RHN Channels for "*debuginfo" are missing from the channel-cert-mapping.txt 
 					bugIds.add("786140");
 				}
-				if (rhnChannel.startsWith("rhel-x86_64-server-optional-6-htb") ||
-					rhnChannel.startsWith("rhel-x86_64-server-sfs-6-htb") ||
-					rhnChannel.startsWith("rhel-x86_64-server-ha-6-htb") ||
-					rhnChannel.startsWith("rhel-x86_64-server-rs-6-htb") ||
-					rhnChannel.startsWith("rhel-x86_64-server-6-htb") ||
-					rhnChannel.startsWith("rhel-x86_64-server-6-rhevh") ||
+				if (rhnChannel.startsWith("rhel-x86_64-server-6-rhevh") ||
 					rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3") ||
 					rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3-jboss-5") ||
 					rhnChannel.startsWith("rhel-x86_64-server-sjis-6") ||
 					rhnChannel.startsWith("rhel-x86_64-server-sap-6") ||
+					/*
+					rhnChannel.startsWith("rhel-x86_64-server-optional-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-sfs-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-ha-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-rs-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-htb") ||
 					rhnChannel.startsWith("rhel-x86_64-server-lb-6-htb") ||
 					rhnChannel.startsWith("rhel-x86_64-workstation-sfs-6-htb") ||
 					rhnChannel.startsWith("rhel-x86_64-workstation-6-htb") ||
 					rhnChannel.startsWith("rhel-x86_64-workstation-optional-6-htb") ||
+					*/
 					rhnChannel.startsWith("rhel-x86_64-rhev-mgmt-agent-6") ||
-					rhnChannel.startsWith("rhel-i386-server-6-cf-tools-1") ||
-					rhnChannel.startsWith("rhel-x86_64-server-6-cf-tools-1") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-cf-tools-1") || rhnChannel.startsWith("rhel-i386-server-6-cf-tools-1") ||
 					rhnChannel.startsWith("rhel-x86_64-server-6-cf-ae-1") ||
 					rhnChannel.startsWith("rhel-x86_64-server-6-cf-ce-1") ||
-					rhnChannel.startsWith("rhel-x86_64-server-6-cf-se-1") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-cf-se-1") ||	
 					rhnChannel.startsWith("sam-rhel-x86_64-server-6-htb") || rhnChannel.startsWith("sam-rhel-x86_64-server-6-beta")) { 
 					// Bug 799152 - subscription-manager-migration-data is missing some product certs for RHN Channels in product-baseline.json
 					bugIds.add("799152");
@@ -2345,9 +2354,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 852551 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
 					bugIds.add("852551");
 				}
-				if (productId.equals("195")) {
+				if (productId.equals("195")) if (clienttasks.redhatReleaseX.equals("5")) {
 					// Bug 869008 - mapping for productId 195 "Red Hat Developer Toolset (for RHEL for IBM POWER)" is missing
 					bugIds.add("869008");
+				}
+				if (productId.equals("195")) if (clienttasks.redhatReleaseX.equals("6")) {
+					// Bug 875802 - mapping for productId 195 "Red Hat Developer Toolset (for RHEL for IBM POWER)" is missing
+					bugIds.add("875802");
 				}
 				if (productId.equals("181")) {
 					// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
@@ -2374,6 +2387,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				if (productId.equals("167") || productId.equals("155") || productId.equals("186") || productId.equals("191") || productId.equals("188") || productId.equals("172")) if (clienttasks.redhatReleaseX.equals("6")) {
 					// Bug 872959 - many product certs and their RHN Channel mappings are missing from the RHEL64 subscription-manager-migration-data
 					bugIds.add("872959");
+				}
+				if (productId.equals("197") || productId.equals("198")) {
+					// Bug 875760 - some openshift product certs and their RHN Channel mappings are missing from the RHEL64 subscription-manager-migration-data
+					bugIds.add("875760");
 				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
