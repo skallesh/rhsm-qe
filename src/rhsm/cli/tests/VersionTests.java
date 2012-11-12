@@ -87,7 +87,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		assertServerVersion(servertasks.statusVersion, expectedType);
 	}
 	
-	protected String server_hostname;
+	
 	@Test(	description="assert that the candlepin sever version is reported as Unknown when not registered AND hostname is bogus",
 			groups={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test","blockedByBug-843191"},
 			enabled=true)
@@ -103,10 +103,29 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		
 		assertServerVersion("Unknown","Unknown");
 	}
-	@AfterGroups(value={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test"}, groups={"setup"})
-	public void afterVersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test() {
-		if (server_hostname!=null)	clienttasks.config(null,null,true,new String[]{"server","hostname",server_hostname});
+	
+	
+	@Test(	description="assert that the candlepin sever version is reported as Unknown when registered classically AND hostname is bogus",
+			groups={"VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test","blockedByBug-843191"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test() {
+
+		// make sure we are not registered
+		clienttasks.unregister(null, null, null);
+		
+		// invalidate the server hostname
+		server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
+		clienttasks.config(null, null, true, new String[]{"server","hostname","UNKNOWN"});
+		
+		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
+		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
+		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
+		
+		assertServerVersion("Unknown","RHN Classic");
 	}
+	
 	
 	
 	@Test(	description="assert that the candlepin sever version and type are reported by the subscription-manager version module",
@@ -171,7 +190,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("touch "+clienttasks.rhnSystemIdFile);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 		
-		assertServerVersion("Unknown","RHN Classic");
+		assertServerVersion(servertasks.statusVersion,"RHN Classic");
 	}
 	@AfterGroups(groups={"setup"},value="VersionOfServerWhenUsingRHNClassic_Test")
 	public void afterVersionOfServerWhenUsingRHNClassic_Test() {
@@ -216,8 +235,12 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Configuration methods ***********************************************************************
+	@AfterGroups(value={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test","VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test"}, groups={"setup"})
+	public void afterVersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test() {
+		if (server_hostname!=null)	clienttasks.config(null,null,true,new String[]{"server","hostname",server_hostname});
+	}
+	protected String server_hostname;
 
-	
 	
 	// Protected methods ***********************************************************************
 
