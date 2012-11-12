@@ -1041,6 +1041,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// Object blockedByBug, String username, String password, Sring org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex
+		
 		// basic auth proxy test data...
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
 //debugTesting if(true) return ll;
@@ -1221,7 +1222,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			//FIXME? if (l.get(3).equals(sm_clientOrg)) ll.add(l); continue;
 			
 			//	ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),	sm_clientUsername,	sm_clientPassword,	"bad-org",		basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		oErrMsg}));
-			if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
+		//	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
+			if (!sm_serverType.equals("katello") && (!l.get(1).equals(sm_clientUsername) || !l.get(2).equals(sm_clientPassword) || !l.get(3).equals(sm_clientOrg))) {
 				// subscription-manager environments --username=testuser1 --password=password --org=bad-org
 				// Stdout: This system does not support environments.
 				// Stderr:
@@ -1247,7 +1249,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			//FIXME? if (l.get(3).equals(sm_clientOrg)) ll.add(l); continue;
 			
 			// ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),	sm_clientUsername,	sm_clientPassword,	"bad-org",		null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		oErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
-			if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
+		//	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
+			if (!sm_serverType.equals("katello") && (!l.get(1).equals(sm_clientUsername) || !l.get(2).equals(sm_clientPassword) || !l.get(3).equals(sm_clientOrg))) {
 				// subscription-manager environments --username=testuser1 --password=password --org=bad-org --proxy=auto-services.usersys.redhat.com:3128 --proxyuser=redhat --proxypassword=redhat
 				// Stdout: This system does not support environments.
 				// Stderr:
