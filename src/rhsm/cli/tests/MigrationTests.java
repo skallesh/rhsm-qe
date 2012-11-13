@@ -2504,7 +2504,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-rhsclient-6(-.*|$)")) {	// rhel-x86_64-server-rhsclient-6 rhel-x86_64-server-rhsclient-6-debuginfo
 				// Bug 872980 - channels for rhel-<ARCH>-server-rhsclient-6* are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugIds.add("872980");
+				bugIds.add("872980");	// CLOSED DUPLICATE of bug 818202
+				bugIds.add("818202");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-6-ost-folsom(-.*|$)")) {	// rhel-x86_64-server-6-ost-folsom  rhel-x86_64-server-6-ost-folsom-debuginfo
 				// Bug 872983 - channels for rhel-<ARCH>-server-6-ost-folsom* are not yet mapped to product certs in rcm/rcm-metadata.git
