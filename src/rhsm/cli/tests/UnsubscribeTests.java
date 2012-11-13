@@ -231,7 +231,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// unsubscribe from all serials in one call and assert the feedback
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		String expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
+		String expectedStdoutMsg;
+		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
+		expectedStdoutMsg = "Successfully removed serial numbers:";	// changed by bug 874749
 		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		SSHCommandResult result = clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
 		Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
@@ -256,7 +258,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		List<BigInteger> serials = new ArrayList<BigInteger>();
 		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) serials.add(productSubscription.serialNumber);
 		SSHCommandResult result = clienttasks.unsubscribe(null,serials,null,null,null);
-		String expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
+		String expectedStdoutMsg;
+		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
+		expectedStdoutMsg = "Successfully removed serial numbers:";	// changed by bug 874749
 		for (BigInteger serial : serials) expectedStdoutMsg+="\n   "+serial;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
 		
@@ -274,10 +278,12 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			serials.add(productSubscriptions.get(i).serialNumber);
 			serials.add(revokedSerials.get(i));
 		}
-		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
+		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// added by bug 867766
+		expectedStdoutMsg = "Successfully removed serial numbers:";	// changed by bug 874749
 		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		expectedStdoutMsg +="\n";
-		expectedStdoutMsg += "Unsuccessfully unsubscribed serial numbers:";
+		//expectedStdoutMsg += "Unsuccessfully unsubscribed serial numbers:";	// added by bug 867766
+		expectedStdoutMsg += "Unsuccessfully removed serial numbers:";	// changed by bug 874749
 		for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+String.format("Entitlement Certificate with serial number %s could not be found.", revokedSerial);	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		result = clienttasks.unsubscribe(null,serials,null,null,null);
 		Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions (including revoked serials).");
