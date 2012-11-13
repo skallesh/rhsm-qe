@@ -259,7 +259,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		regexes.put("serviceType",				"Service Type:(.*)");
 		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");
 		regexes.put("endDate",					"Ends:(.*)");
-		regexes.put("machineType",				"Machine Type:(.*)");
+		regexes.put("machineType",				"System Type:(.*)");	// changed by bug 874760	"Machine Type:(.*)");
 	
 		List<Map<String,String>> listOfAvailableSubscriptionMaps = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
