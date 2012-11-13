@@ -67,7 +67,9 @@ public class SubscriptionManagerTasks {
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
 	public final String varLogMessagesFile	= "/var/log/messages";
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
-	public       String rhsmComplianceD		= null; // "/usr/libexec/rhsmd"; RHEL62 RHEL57		// /usr/libexec/rhsm-complianced; RHEL61
+	public final String rhsmCertD			= "rhsmcertd";
+	public final String rhsmCertDWorker		= "/usr/libexec/rhsmcertd-worker";
+	public final String rhsmComplianceD		= "/usr/libexec/rhsmd";	// /usr/libexec/rhsm-complianced; RHEL61
 	public final String rhnDefinitionsDir	= "/tmp/"+"rhnDefinitionsDir";
 
 	
@@ -112,7 +114,7 @@ public class SubscriptionManagerTasks {
 		ipaddr			= sshCommandRunner.runCommandAndWait("ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | sed s/'  Bcast'//g").getStdout().trim();
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
 		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release		// rpm -q --qf "%{VERSION}\n" --whatprovides /etc/redhat-release
-		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
+//		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
 		redhatReleaseXY = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
 		if (redhatRelease.contains("Server")) variant = "Server";	//69.pem

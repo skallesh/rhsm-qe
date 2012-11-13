@@ -686,21 +686,21 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// ========================================================================================
 		// rhsm-icon OPTIONS
 		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-gui").getStdout().contains("is not installed")) {	// test only when the rpm is installed
-			//[root@jsefler-onprem-5server ~]# rhsm-icon -?
-			//Usage:
-			//  rhsm-icon [OPTION...] rhsm icon
-			//
-			//Help Options:
-			//  -?, --help                  Show help options
-			//  --help-all                  Show all help options
-			//  --help-gtk                  Show GTK+ Options
-			//
-			//Application Options:
-			//  -c, --check-period          How often to check for validity (in seconds)
-			//  -d, --debug                 Show debug messages
-			//  -f, --force-icon=TYPE       Force display of the icon (expired, partial or warning)
-			//  -i, --check-immediately     Run the first status check right away
-			//  --display=DISPLAY           X display to use
+			//	[root@jsefler-onprem-5server ~]# rhsm-icon -?
+			//	Usage:
+			//	  rhsm-icon [OPTION...] rhsm icon
+			//	
+			//	Help Options:
+			//	  -?, --help                  Show help options
+			//	  --help-all                  Show all help options
+			//	  --help-gtk                  Show GTK+ Options
+			//	
+			//	Application Options:
+			//	  -c, --check-period          How often to check for validity (in seconds)
+			//	  -d, --debug                 Show debug messages
+			//	  -f, --force-icon=TYPE       Force display of the icon (expired, partial or warning)
+			//	  -i, --check-immediately     Run the first status check right away
+			//	  --display=DISPLAY           X display to use
 			command = "rhsm-icon";
 			List <String> rhsmIconOptions = new ArrayList<String>();
 			if (clienttasks.redhatReleaseX.equals("5"))	rhsmIconOptions.add("-?, --help");	// rhel5
@@ -744,16 +744,16 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// ========================================================================================
 		// rhn-migrate-classic-to-rhsm OPTIONS
 		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {	// test only when the rpm is installed
-			//[root@jsefler-onprem-5server ~]# rhn-migrate-classic-to-rhsm -h
-			//usage: /usr/sbin/rhn-migrate-classic-to-rhsm [--force|--cli-only|--help|--no-auto]
-			//
-			//options:
-			//  -f, --force     Ignore Channels not available on RHSM
-			//  -c, --cli-only  Don't launch the GUI tool to subscribe the system, just use
-			//                  the CLI tool which will do it automatically
-			//  -n, --no-auto   Don't launch subscription manager at end of process.
-			//  -h, --help      show this help message and exit
-
+			//	[root@jsefler-onprem-5server ~]# rhn-migrate-classic-to-rhsm -h
+			//	usage: /usr/sbin/rhn-migrate-classic-to-rhsm [--force|--cli-only|--help|--no-auto]
+			//	
+			//	options:
+			//	  -f, --force     Ignore Channels not available on RHSM
+			//	  -c, --cli-only  Don't launch the GUI tool to subscribe the system, just use
+			//	                  the CLI tool which will do it automatically
+			//	  -n, --no-auto   Don't launch subscription manager at end of process.
+			//	  -h, --help      show this help message and exit
+			
 			command = MigrationTests.rhnMigrateTool; 
 			options.clear();
 			options.add("-f, --force");
@@ -776,15 +776,15 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// install-num-migrate-to-rhsm OPTIONS
 		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {	// test only when the rpm is installed
 		if (clienttasks.redhatReleaseX.equals("5")) {	// test only on RHEL5
-			//[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --help
-			//usage: install-num-migrate-to-rhsm [options]
-			//
-			//options:
-			//  -h, --help            show this help message and exit
-			//  -i INSTNUMBER, --instnumber=INSTNUMBER
-			//                        Install number to run against
-			//  -d, --dryrun          Only print the files which would be copied over
-
+			//	[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --help
+			//	usage: install-num-migrate-to-rhsm [options]
+			//	
+			//	options:
+			//	  -h, --help            show this help message and exit
+			//	  -i INSTNUMBER, --instnumber=INSTNUMBER
+			//	                        Install number to run against
+			//	  -d, --dryrun          Only print the files which would be copied over
+			
 			command = MigrationTests.installNumTool; 
 			options.clear();
 			options.add("-h, --help");
@@ -802,23 +802,23 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		// ========================================================================================
 		// rhsmcertd OPTIONS
-
-		//[root@nec-em15 ~]# rhsmcertd -?
-		//Usage:
-		//  rhsmcertd [OPTION...] 
-		//
-		//Help Options:
-		//  -?, --help                      Show help options
-		//  --help-all                      Show all help options
-		//  --help-rhsmcertd                rhsmcertd
-		//
-		//Application Options:
-		//  -c, --cert-interval=MINUTES     Interval to run cert check (in minutes)
-		//  -i, --heal-interval=MINUTES     Interval to run healing (in minutes)
-		//  -n, --now                       Run the initial checks immediatly, with no delay.
-		//  -d, --debug                     Show debug messages
-
-		command = "rhsmcertd"; 
+		
+		//	[root@nec-em15 ~]# rhsmcertd -?
+		//	Usage:
+		//	  rhsmcertd [OPTION...] 
+		//	
+		//	Help Options:
+		//	  -?, --help                      Show help options
+		//	  --help-all                      Show all help options
+		//	  --help-rhsmcertd                rhsmcertd
+		//	
+		//	Application Options:
+		//	  -c, --cert-interval=MINUTES     Interval to run cert check (in minutes)
+		//	  -i, --heal-interval=MINUTES     Interval to run healing (in minutes)
+		//	  -n, --now                       Run the initial checks immediatly, with no delay.
+		//	  -d, --debug                     Show debug messages
+		
+		command = clienttasks.rhsmCertD; 
 		options.clear();
 		if (clienttasks.redhatReleaseX.equals("5"))	options.add("-?, --help");	// rhel5
 		else										options.add("-h, --help");	// rhel6
@@ -828,7 +828,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("-i, --heal-interval=MINUTES");
 		options.add("-n, --now");
 		options.add("-d, --debug");
-		for (String commandHelp : new String[]{command+" -?", command+" --help"}) {
+		for (String commandHelp : new String[]{command+" -?", command+" -h", command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = command+" [OPTIONS]";
 			usage = command+" [OPTION...]";
@@ -837,20 +837,76 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
 		}
 
+		
+		// ========================================================================================
+		// /usr/libexec/rhsmd OPTIONS
+		
+		//	[root@jsefler-6 ~]# /usr/libexec/rhsmd --help
+		//	Usage: rhsmd [options]
+		//
+		//	Options:
+		//	  -h, --help            show this help message and exit
+		//	  -d, --debug           Display debug messages
+		//	  -k, --keep-alive      Stay running (don't shut down after the first dbus
+		//	                        call)
+		//	  -s, --syslog          Run standalone and log result to syslog
+		//	  -f FORCE_SIGNAL, --force-signal=FORCE_SIGNAL
+		//	                        Force firing of a signal (valid, expired, warning,
+		//	                        partial, classic or registration_required)
+		//	  -i, --immediate       Fire forced signal immediately (requires --force-
+		//	                        signal)
+		
+		command = clienttasks.rhsmComplianceD; 
+		options.clear();
+		options.add("-h, --help");
+		options.add("-d, --debug");
+		options.add("-k, --keep-alive");
+		options.add("-s, --syslog");
+		options.add("-f FORCE_SIGNAL, --force-signal=FORCE_SIGNAL");
+		options.add("-i, --immediate");
+		for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s [options]",command.replaceFirst("/.+/", ""));
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
+		// ========================================================================================
+		// /usr/libexec/rhsmd OPTIONS
+		
+		//	[root@jsefler-6 ~]# /usr/libexec/rhsmcertd-worker --help
+		//	Usage: rhsmcertd-worker [options]
+		//
+		//	Options:
+		//	  -h, --help  show this help message and exit
+		//	  --autoheal  perform an autoheal check
+		
+		command = clienttasks.rhsmCertDWorker; 
+		options.clear();
+		options.add("-h, --help");
+		options.add("--autoheal");
+		for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s [options]",command.replaceFirst("/.+/", ""));
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
 		// ========================================================================================
 		// rct MODULES
 		
-		//[root@jsefler-rhel59 ~]# rct --help
-		//
-		//
-		//Usage: rct MODULE-NAME [MODULE-OPTIONS] [--help]
-		//
-		//
-		//Primary Modules:
-		//
-		//	cat-cert       Print certificate info to standard output.
-		//
-		//Other Modules (Please consult documentation):
+		//	[root@jsefler-rhel59 ~]# rct --help
+		//	
+		//	Usage: rct MODULE-NAME [MODULE-OPTIONS] [--help]
+		//	
+		//	
+		//	Primary Modules:
+		//	
+		//		cat-cert       Print certificate info to standard output.
+		//	
+		//	Other Modules (Please consult documentation):
 		
 		command = "rct"; 
 		modules.clear();
