@@ -33,7 +33,14 @@ import com.redhat.qe.tools.SSHCommandResult;
 /**
  * @author jsefler
  *
- *
+ *	back door to ALWAYS get certv3 entitlements, set fact system.testing: true
+ *  http://wiki.samat.org/CheatSheet/OpenSSL
+ *  
+ *  <jbowes> yeah. DER size is how many bytes the cert takes up 'on the wire' in communication
+ *  with the CDN subject key ID size is the size of the subject key id field, which is hacked
+ *  in hosted to hold a zipped representation of the content sets for certv1. that's the field
+ *  that the CDN sends from the edge server to the java app thingy that does auth so if DER size
+ *  is over 120kb or so you have a problem. if subject key id size is over 28kb or so you have a problem.
  */
 @Test(groups={"CertificateTests"})
 public class CertificateTests extends SubscriptionManagerCLITestScript {
@@ -319,7 +326,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	DER size: 925b
 		//	Subject Key ID size: 20b
 
-		String expectedDerSize = client.runCommandAndWait("openssl x509 -in "+consumerCert.file.getPath()+" -outform der -out /tmp/der.crt && du -b /tmp/der.crt | cut -f 1").getStdout().trim();
+		String expectedDerSize = client.runCommandAndWait("openssl x509 -in "+consumerCert.file.getPath()+" -outform der -out /tmp/cert.der && du -b /tmp/cert.der | cut -f 1").getStdout().trim();
 		expectedDerSize+="b";
 		
 		Assert.assertEquals(certStatistics.type, "Identity Certificate","rct stat-cert reports this Type.");
@@ -344,7 +351,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		productCerts.addAll(migrationProductCerts);
 		
 		// loop through all of the current product certs
-		if (productCerts.isEmpty()) throw new SkipException("There are currently no installed product certs to assert.");
+		if (productCerts.isEmpty()) throw new SkipException("There are currently no installed product certs to assert statistics.");
 		for (ProductCert productCert : productCerts) {
 			CertStatistics certStatistics = clienttasks.getCertStatisticsFromCertFile(productCert.file);
 			if (productCert.file.toString().endsWith("_.pem")) continue; 	// skip the generated TESTDATA productCerts
@@ -354,35 +361,51 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			//	Version: 1.0
 			//	DER size: 1553b
 			
-			String expectedDerSize = client.runCommandAndWait("openssl x509 -in "+productCert.file.getPath()+" -outform der -out /tmp/der.crt && du -b /tmp/der.crt | cut -f 1").getStdout().trim();
+			String expectedDerSize = client.runCommandAndWait("openssl x509 -in "+productCert.file.getPath()+" -outform der -out /tmp/cert.der && du -b /tmp/cert.der | cut -f 1").getStdout().trim();
 			expectedDerSize+="b";
 			
 			Assert.assertEquals(certStatistics.type, "Product Certificate","rct stat-cert reports this Type.");
 			Assert.assertEquals(certStatistics.version, productCert.version,"rct stat-cert reports this Version.");
 			Assert.assertEquals(certStatistics.derSize, expectedDerSize, "rct stat-cert reports this DER size.");
-			Assert.assertNull(certStatistics.subjectKeyIdSize, "rct stat-cert reports this Subject Key ID size.");
+			Assert.assertNull(certStatistics.subjectKeyIdSize, "rct stat-cert does NOT report a Subject Key ID size.");
 			Assert.assertNull(certStatistics.contentSets, "rct stat-cert does NOT report a number of Content sets.");
 		}
 	}
 	
-	// TODO implement assertEntitlementCertStatistics_Test()
-	/* NOTES ON: stat-cert
-	 * http://wiki.samat.org/CheatSheet/OpenSSL
-<jsefler> ah jbowes: I see DER size:  openssl x509 -in something-CA.crt.pem -outform der -out something-CA.crt
- the size of that^
-<jbowes> yeah. DER size is how many bytes the cert takes up 'on the wire' in communication with the CDN
- subject key ID size is the size of the subject key id field, which is hacked in hosted to hold a zipped representation of the content sets for certv1. that's the field that the CDN sends from the edge server to the java app thingy that does auth
- so if DER size is over 120kb or so you have a problem. if subject key id size is over 28kb or so you have a problem.
+	@Test(	description="assert the statistic values reported by the rct stat-cert tool for currently subscribed entitlements",
+			groups={"AcceptanceTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AssertEntitlementCertStatistics_Test() {
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, false, null, null, null, null);
 
-[root@jsefler-6 ~]# rct stat-cert /etc/pki/product/69.pem 
-Type: Product Certificate
-Version: 1.0
-DER size: 1553b
-[root@jsefler-6 ~]# openssl x509 -in /etc/pki/product/69.pem -outform der -out 69.crt
-[root@jsefler-6 ~]# du -b 69.crt | cut -f 1
-1553
+		// get some entitlements!
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		
+		// loop through all of the current entitlement certs
+		if (entitlementCerts.isEmpty()) throw new SkipException("There are currently no entitlement certs to assert statistics.");
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			CertStatistics certStatistics = clienttasks.getCertStatisticsFromCertFile(entitlementCert.file);
+			
+			//	[root@jsefler-6 ~]# rct stat-cert /etc/pki/entitlement/5254857399115244164.pem 
+			//	Type: Entitlement Certificate
+			//	Version: 3.0
+			//	DER size: 947b
+			//	Subject Key ID size: 20b
+			//	Content sets: 3
 
-	*/
+			String expectedDerSize = client.runCommandAndWait("openssl x509 -in "+entitlementCert.file.getPath()+" -outform der -out /tmp/cert.der && du -b /tmp/cert.der | cut -f 1").getStdout().trim();
+			expectedDerSize+="b";
+			
+			Assert.assertEquals(certStatistics.type, "Entitlement Certificate","rct stat-cert reports this Type.");
+			Assert.assertEquals(certStatistics.version, entitlementCert.version,"rct stat-cert reports this Version.");
+			Assert.assertEquals(certStatistics.derSize, expectedDerSize, "rct stat-cert reports this DER size.");
+			Assert.assertNotNull(certStatistics.subjectKeyIdSize, "rct stat-cert reports this Subject Key ID size.");	// TODO assert something better than not null
+			Assert.assertEquals(certStatistics.contentSets, Integer.valueOf(entitlementCert.contentNamespaces.size()), "rct stat-cert reports this number of Content sets.");
+		}
+	}
 	
 	
 	
