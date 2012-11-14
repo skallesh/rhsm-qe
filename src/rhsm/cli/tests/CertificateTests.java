@@ -319,9 +319,12 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	DER size: 925b
 		//	Subject Key ID size: 20b
 
+		String expectedDerSize = client.runCommandAndWait("openssl x509 -in "+consumerCert.file.getPath()+" -outform der -out /tmp/der.crt && du -b /tmp/der.crt | cut -f 1").getStdout().trim();
+		expectedDerSize+="b";
+		
 		Assert.assertEquals(certStatistics.type, "Identity Certificate","rct stat-cert reports this Type.");
 		Assert.assertEquals(certStatistics.version, consumerCert.version,"rct stat-cert reports this Version.");
-		Assert.assertNotNull(certStatistics.derSize, "rct stat-cert reports this DER size.");	// TODO assert something better than not null
+		Assert.assertEquals(certStatistics.derSize, expectedDerSize, "rct stat-cert reports this DER size.");
 		Assert.assertNotNull(certStatistics.subjectKeyIdSize, "rct stat-cert reports this Subject Key ID size.");	// TODO assert something better than not null
 		Assert.assertNull(certStatistics.contentSets, "rct stat-cert does NOT report a number of Content sets.");
 	}
@@ -350,10 +353,13 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			//	Type: Product Certificate
 			//	Version: 1.0
 			//	DER size: 1553b
-
+			
+			String expectedDerSize = client.runCommandAndWait("openssl x509 -in "+productCert.file.getPath()+" -outform der -out /tmp/der.crt && du -b /tmp/der.crt | cut -f 1").getStdout().trim();
+			expectedDerSize+="b";
+			
 			Assert.assertEquals(certStatistics.type, "Product Certificate","rct stat-cert reports this Type.");
 			Assert.assertEquals(certStatistics.version, productCert.version,"rct stat-cert reports this Version.");
-			Assert.assertNotNull(certStatistics.derSize, "rct stat-cert reports this DER size.");	// TODO assert something better than not null
+			Assert.assertEquals(certStatistics.derSize, expectedDerSize, "rct stat-cert reports this DER size.");
 			Assert.assertNull(certStatistics.subjectKeyIdSize, "rct stat-cert reports this Subject Key ID size.");
 			Assert.assertNull(certStatistics.contentSets, "rct stat-cert does NOT report a number of Content sets.");
 		}
@@ -361,6 +367,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	// TODO implement assertEntitlementCertStatistics_Test()
 	/* NOTES ON: stat-cert
+	 * http://wiki.samat.org/CheatSheet/OpenSSL
 <jsefler> ah jbowes: I see DER size:  openssl x509 -in something-CA.crt.pem -outform der -out something-CA.crt
  the size of that^
 <jbowes> yeah. DER size is how many bytes the cert takes up 'on the wire' in communication with the CDN
