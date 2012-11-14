@@ -360,9 +360,22 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	// TODO implement assertEntitlementCertStatistics_Test()
-	
+	/* NOTES ON: stat-cert
+<jsefler> ah jbowes: I see DER size:  openssl x509 -in something-CA.crt.pem -outform der -out something-CA.crt
+ the size of that^
+<jbowes> yeah. DER size is how many bytes the cert takes up 'on the wire' in communication with the CDN
+ subject key ID size is the size of the subject key id field, which is hacked in hosted to hold a zipped representation of the content sets for certv1. that's the field that the CDN sends from the edge server to the java app thingy that does auth
+ so if DER size is over 120kb or so you have a problem. if subject key id size is over 28kb or so you have a problem.
 
-	
+[root@jsefler-6 ~]# rct stat-cert /etc/pki/product/69.pem 
+Type: Product Certificate
+Version: 1.0
+DER size: 1553b
+[root@jsefler-6 ~]# openssl x509 -in /etc/pki/product/69.pem -outform der -out 69.crt
+[root@jsefler-6 ~]# du -b 69.crt | cut -f 1
+1553
+
+	*/
 	
 	
 	
