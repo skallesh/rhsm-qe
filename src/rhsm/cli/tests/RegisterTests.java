@@ -1286,6 +1286,31 @@ Expected Results:
 	}
 	
 	
+	@Test(	description="subscription-manager: register with --autosubscribe and --auto-attach can be used interchangably",
+			groups={"blockedByBug-874749","blockedByBug-874804"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithAutoattachDeprecatesAutosubscribe_Test() throws Exception {
+		SSHCommandResult result = client.runCommandAndWait(clienttasks.command+" register --help");
+		Assert.assertContainsMatch(result.getStdout(), "^\\s*--autosubscribe\\s+Deprecated, see --auto-attach$");
+		
+		clienttasks.unregister(null,null,null);
+		SSHCommandResult autosubscribeResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, false, null, null, null);
+		String autosubscribeResultAsString = autosubscribeResult.toString();
+		autosubscribeResultAsString = autosubscribeResultAsString.replaceAll("[a-f,0-9,\\-]{36}", "<UUID>");	// normalize the UUID so we can ignore it when asserting equal results
+		
+		clienttasks.unregister(null,null,null);
+		SSHCommandResult autoattachResult = client.runCommandAndWait(clienttasks.command+" register --auto-attach --username=\""+sm_clientUsername+"\" --password=\""+sm_clientPassword+"\" " + (sm_clientOrg==null?"":"--org="+sm_clientOrg));
+		String autoattachResultAsString = autoattachResult.toString();
+		autoattachResultAsString = autoattachResultAsString.replaceAll("[a-f,0-9,\\-]{36}", "<UUID>");	// normalize the UUID so we can ignore it when asserting equal results
+		Assert.assertEquals(autosubscribeResultAsString, autoattachResultAsString, "Results from register with '--autosubscribe' and '--auto-attach' options should be identical.");
+	}
+	
+	
+	
+	
+	
+	
 	
 	
 	// Candidates for an automated Test:

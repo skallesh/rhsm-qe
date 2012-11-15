@@ -980,7 +980,30 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(entitlementCert.validityNotBefore.after(now), "The newly granted EntitlementCert is not valid until the future.  EntitlementCert: "+entitlementCert);
 		Assert.assertTrue(entitlementCert.orderNamespace.startDate.after(now), "The newly granted EntitlementCert's OrderNamespace starts in the future.  OrderNamespace: "+entitlementCert.orderNamespace);	
 	}	
+	
+	
+	@Test(	description="subscription-manager: subscribe and attach can be used interchangably",
+			groups={"blockedByBug-874804"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttachDeprecatesSubscribe_Test() throws Exception {
+		SSHCommandResult result = client.runCommandAndWait(clienttasks.command+" --help");
+		Assert.assertContainsMatch(result.getStdout(), "^\\s*subscribe\\s+Deprecated, see attach$");
 		
+		SSHCommandResult subscribeResult;
+		SSHCommandResult attachResult;
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		subscribeResult = client.runCommandAndWait(clienttasks.command+" subscribe --pool=123");
+		attachResult = client.runCommandAndWait(clienttasks.command+" attach --pool=123");
+		Assert.assertEquals(subscribeResult.toString(), attachResult.toString(), "Results from 'subscribe' and 'attach' module commands should be identical.");
+		clienttasks.unregister(null,null,null);
+		subscribeResult = client.runCommandAndWait(clienttasks.command+" subscribe --pool=123");
+		attachResult = client.runCommandAndWait(clienttasks.command+" attach --pool=123");
+		Assert.assertEquals(subscribeResult.toString(), attachResult.toString(), "Results from 'subscribe' and 'attach' module commands should be identical.");
+	}
+	
+	
 	
 	// Candidates for an automated Test:
 	// TODO Bug 668032 - rhsm not logging subscriptions and products properly //done --shwetha

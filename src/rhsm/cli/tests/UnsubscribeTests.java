@@ -324,6 +324,43 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //		Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions (including revoked serials).");
 //	}
 	
+	
+	@Test(	description="subscription-manager: unsubscribe and remove can be used interchangably",
+			groups={"blockedByBug-874749"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void RemoveDeprecatesUnsubscribe_Test() throws Exception {
+		SSHCommandResult result = client.runCommandAndWait(clienttasks.command+" --help");
+		Assert.assertContainsMatch(result.getStdout(), "^\\s*unsubscribe\\s+Deprecated, see remove$");
+		
+		SSHCommandResult unsubscribeResult;
+		SSHCommandResult removeResult;
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		unsubscribeResult = client.runCommandAndWait(clienttasks.command+" unsubscribe --serial=123");
+		removeResult = client.runCommandAndWait(clienttasks.command+" remove --serial=123");
+		Assert.assertEquals(unsubscribeResult.toString(), removeResult.toString(), "Results from 'unsubscribe' and 'remove' module commands should be identical.");
+		unsubscribeResult = client.runCommandAndWait(clienttasks.command+" unsubscribe --all");
+		removeResult = client.runCommandAndWait(clienttasks.command+" remove --all");
+		Assert.assertEquals(unsubscribeResult.toString(), removeResult.toString(), "Results from 'unsubscribe' and 'remove' module commands should be identical.");
+
+		clienttasks.unregister(null,null,null);
+		unsubscribeResult = client.runCommandAndWait(clienttasks.command+" unsubscribe --serial=123");
+		removeResult = client.runCommandAndWait(clienttasks.command+" remove --serial=123");
+		Assert.assertEquals(unsubscribeResult.toString(), removeResult.toString(), "Results from 'unsubscribe' and 'remove' module commands should be identical.");
+		unsubscribeResult = client.runCommandAndWait(clienttasks.command+" unsubscribe --all");
+		removeResult = client.runCommandAndWait(clienttasks.command+" remove --all");
+		Assert.assertEquals(unsubscribeResult.toString(), removeResult.toString(), "Results from 'unsubscribe' and 'remove' module commands should be identical.");
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	// Candidates for an automated Test:
 
 
