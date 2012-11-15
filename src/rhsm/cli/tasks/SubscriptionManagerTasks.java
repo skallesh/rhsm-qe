@@ -4034,11 +4034,31 @@ public class SubscriptionManagerTasks {
 	/**
 	 * Collectively unsubscribe from all of the currently consumed product subscriptions.
 	 * This will ultimately issue a single call to unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 for each of the product subscriptions being consumed. 
+	 * @throws Exception 
 	 */
-	public SSHCommandResult unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively() {
+	public SSHCommandResult unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively() throws Exception {
 		log.info("Unsubscribing from all of the currently consumed product subscription serials in one collective call...");
 		List<BigInteger> serials = new ArrayList<BigInteger>();
-		for(ProductSubscription sub : getCurrentlyConsumedProductSubscriptions()) serials.add(sub.serialNumber);
+	
+		// THIS CREATES PROBLEMS WHEN MODIFIER ENTITLEMENTS ARE BEING CONSUMED; ENTITLEMENTS FROM MODIFIER POOLS COULD REMAIN AFTER THE COLLECTIVE UNSUBSCRIBE
+		//for(ProductSubscription productSubscription : getCurrentlyConsumedProductSubscriptions()) serials.add(sub.serialNumber);
+		
+		// THIS AVOIDS PROBLEMS WHEN MODIFIER ENTITLEMENTS ARE BEING CONSUMED
+		for(ProductSubscription productSubscription : getCurrentlyConsumedProductSubscriptions()) {
+			EntitlementCert entitlementCert = getEntitlementCertCorrespondingToProductSubscription(productSubscription);
+			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
+			String poolHref = jsonEntitlement.getJSONObject("pool").getString("href");
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,poolHref));
+			String poolId = jsonPool.getString("id");
+				
+			if (CandlepinTasks.isPoolAModifier(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, poolId,  SubscriptionManagerBaseTestScript.sm_serverUrl)) {
+				serials.add(0,productSubscription.serialNumber);	// serials to entitlements that modify others should be at the front of the list to be removed, otherwise they will get re-issued under a new serial number when the modified entitlement is removed first.
+			} else {
+				serials.add(productSubscription.serialNumber);
+			}
+		}
+		
+		// unsubscribe from all serials collectively
 		SSHCommandResult result = unsubscribe(false,serials,null,null,null);
 		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
 				"Currently no product subscriptions are consumed.");

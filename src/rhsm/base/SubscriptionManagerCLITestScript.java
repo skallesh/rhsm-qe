@@ -2465,8 +2465,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					// does this pool contain productContents that modify other products?
 					if (modifiedProductIds.size()>0) {
 						
-						List<SubscriptionPool> poolsModified = new ArrayList<SubscriptionPool>();
 						// yes, now its time to find the pools that provide the modifiedProductIds and therefore are considered to be the pools that provide products that are modified
+						List<SubscriptionPool> poolsModified = new ArrayList<SubscriptionPool>();
 						LOOP_FOR_ALL_AVAILABLE_POOLS: for (SubscriptionPool poolModified : allAvailablePools) {
 							JSONObject jsonPoolModified = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId));	
 							

@@ -15,9 +15,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -1964,7 +1966,12 @@ schema generation failed
 		virt_only = virt_only==null? false : virt_only;	// the absense of a "virt_only" attribute implies virt_only=false
 		return virt_only;
 	}
-
+	
+	public static boolean isPoolAModifier (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
+		
+		return !getPoolProvidedProductModifiedIds(authenticator, password, url, poolId).isEmpty();
+	}
+	
 	public static boolean isSubscriptionMultiEntitlement (String authenticator, String password, String url, String ownerKey, String subscriptionId) throws JSONException, Exception {
 
 		Boolean multi_entitlement = null;	// indicates that the subscription's product does NOT have the "multi-entitlement" attribute
@@ -2117,6 +2124,30 @@ schema generation failed
 		
 		// return the value for the named productAttribute
 		return providedProductIds;
+	}
+	public static Set<String> getPoolProvidedProductModifiedIds (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		Set<String> providedProductModifiedIds = new HashSet<String>();
+		
+		for (String providedProductId : getPoolProvidedProductIds(authenticator,password,url,poolId)) {
+			
+			// get the productContents
+			JSONObject jsonProduct = new JSONObject(getResourceUsingRESTfulAPI(authenticator,password,url,"/products/"+providedProductId));	
+			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
+			for (int j = 0; j < jsonProductContents.length(); j++) {
+				JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
+				JSONObject jsonContent = jsonProductContent.getJSONObject("content");
+				boolean    enabled = jsonProductContent.getBoolean("enabled");				
+
+				// get modifiedProductIds for each of the productContents
+				JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
+				for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
+					String modifiedProductId = (String) jsonModifiedProductIds.get(k);
+					/*TODO IS THIS CONDITION NEEDED? if (enabled)*/ providedProductModifiedIds.add(modifiedProductId);
+				}
+			}
+		}
+		
+		return providedProductModifiedIds;
 	}
 	
 	public static String getPoolAttributeValue (String authenticator, String password, String url, String poolId, String attributeName) throws JSONException, Exception {
@@ -2933,15 +2964,19 @@ schema generation failed
 	
 	
 	// FIXME DEPRECATED METHODS TO BE DELETED AFTER UPDATING CLOJURE TESTS
+	@Deprecated
 	public static List<String> getOrgsKeyValueForUser(String server, String port, String prefix, String username, String password, String key) throws JSONException, Exception {
 		return getOrgsKeyValueForUser(username, password, SubscriptionManagerCLITestScript.sm_serverUrl, key);
 	}
+	@Deprecated
 	public static String getOrgDisplayNameForOrgKey(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
 		return getOrgDisplayNameForOrgKey(authenticator, password, SubscriptionManagerCLITestScript.sm_serverUrl,orgKey);
 	}
+	@Deprecated
 	public static String getPoolIdFromProductNameAndContractNumber(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromProductName, String fromContractNumber) throws JSONException, Exception{
 		return getPoolIdFromProductNameAndContractNumber(authenticator, password, SubscriptionManagerCLITestScript.sm_serverUrl, ownerKey, fromProductName, fromContractNumber);
 	}
+	@Deprecated
 	public static boolean isPoolProductMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
 		return isPoolProductMultiEntitlement (authenticator, password, SubscriptionManagerCLITestScript.sm_serverUrl, poolId);
 	}

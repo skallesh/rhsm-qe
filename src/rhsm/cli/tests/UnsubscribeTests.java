@@ -223,7 +223,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-867766"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAllSerials_Test() {
+	public void UnsubscribeFromAllSerials_Test() throws Exception {
 	
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
