@@ -2998,7 +2998,7 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		
 		// assert the exit code was a success
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the environments list indicates a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list module indicates a success.");
 		
 		return sshCommandResult; // from the list command
 	}
