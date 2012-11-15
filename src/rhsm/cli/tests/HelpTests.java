@@ -207,9 +207,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	@BeforeClass(groups={"setup"})
 	public void makewhatisBeforeClass() {
-		// running makewhatis to ensure that the whatis database is built on Beaker provisioned systems
-//debugTesting if (true) return;
-		RemoteFileTasks.runCommandAndAssert(client,"makewhatis",0);
+		if (clienttasks==null) return;
+		// running makewhatis (when needed) to ensure that the whatis database is built on Beaker provisioned systems
+		if (client.runCommandAndWait("grep "+clienttasks.command+" /var/cache/man/whatis").getStdout().trim().isEmpty()) {
+			RemoteFileTasks.runCommandAndAssert(client,"makewhatis",0);
+		}
 	}
 	
 	
@@ -268,6 +270,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.add("service-level");
 		modules.add("release");
 		modules.add("version");
+		modules.add("attach");	// added by bug 874804
+		modules.add("remove");	// added by bug 874749
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s [options] MODULENAME --help",clienttasks.command);	// prior to Bug 796730 - subscription-manager usage statement
@@ -546,15 +550,16 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--baseurl=BASE_URL");
 		options.add("--serverurl=SERVER_URL");
 		options.add("--username=USERNAME");
-		options.add("--type=CONSUMERTYPE");
-		options.add("--name=CONSUMERNAME");
+		options.add("--type=UNITTYPE");					// changed by bug 874816	options.add("--type=CONSUMERTYPE");
+		options.add("--name=SYSTEMNAME");				// changed by bug 874816	options.add("--name=CONSUMERNAME");
 		options.add("--password=PASSWORD");
-		options.add("--consumerid=CONSUMERID");
+		options.add("--consumerid=SYSTEMID");			// changed by bug 874816	options.add("--consumerid=CONSUMERID");
 		options.add("--org=ORG");
 		options.add("--environment=ENVIRONMENT");
 		options.add("--autosubscribe");
+		options.add("--auto-attach");					// added by bug 876340
 		options.add("--force");
-		options.add("--activationkey=ACTIVATION_KEYS");		// Bug 874755 - help message terminology for cli options that can be specified in multiplicity 
+		options.add("--activationkey=ACTIVATION_KEYS");	// Bug 874755 - help message terminology for cli options that can be specified in multiplicity 
 		options.add("--servicelevel=SERVICE_LEVEL");
 		options.add("--release=RELEASE");
 		options.add("--proxy=PROXY_URL");
@@ -567,6 +572,22 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("628589"), smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
+		// subscription-manager unregister OPTIONS
+		module = "unregister";
+		options.clear();
+		options.add("-h, --help");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
+			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager subscribe OPTIONS
@@ -588,23 +609,30 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
+			String deprecation = "Deprecated, see attach";	// added by bug 874808
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, "^"+deprecation+"$", Arrays.asList(new String[]{deprecation})}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
-		// subscription-manager unregister OPTIONS
-		module = "unregister";
+		// subscription-manager attach OPTIONS	// added by bug 874804
+		module = "attach";
 		options.clear();
 		options.add("-h, --help");
+		options.add("--pool=POOL");
+		options.add("--quantity=QUANTITY");
+		options.add("--auto");
+		options.add("--servicelevel=SERVICE_LEVEL");
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
-			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
+			String deprecation = "Attach a specified subscription to the registered system";
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, "^"+deprecation+"$", Arrays.asList(new String[]{deprecation})}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -612,7 +640,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "unsubscribe";
 		options.clear();
 		options.add("-h, --help");
-		options.add("--serial=SERIALS");	// Bug 874755 - help message terminology for cli options that can be specified in multiplicity 
+		options.add("--serial=SERIAL");	// Bug 874755 - help message terminology for cli options that can be specified in multiplicity 
 		options.add("--all");
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
@@ -622,7 +650,28 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
+			String deprecation = "Deprecated, see remove";	// added by bug 874749
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, "^"+deprecation+"$", Arrays.asList(new String[]{deprecation})}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
+		// subscription-manager remove OPTIONS	// added by bug 874749
+		module = "remove";
+		options.clear();
+		options.add("-h, --help");
+		options.add("--serial=SERIAL");
+		options.add("--all");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
+			usages.add(usage);
+			String deprecation = "Remove all or specific subscriptions from this system";
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, "^"+deprecation+"$", Arrays.asList(new String[]{deprecation})}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
