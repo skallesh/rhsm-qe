@@ -593,7 +593,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if rhsmcertd process refresh the identity certificate after every restart",
 			groups={"VerifyrhsmcertdRefreshIdentityCert","blockedByBug-827034","blockedByBug-827035"},
-			enabled=true)	
+			enabled=false)
+/* FIXME disabling this test in need of further development
+ * As written, it is closing the existing SSHCommandRunners and causing all subsequent
+ * tests to stop and leaves the server and client dates set in the future.
+201211150545:58.600 - SEVERE: Test Failed: VerifyrhsmcertdRefreshIdentityCert (com.redhat.qe.auto.testng.TestNGListener.onTestFailure)
+java.lang.RuntimeException: java.io.IOException: Could not open channel (The connection is being shutdown)
+	at com.redhat.qe.tools.SSHCommandRunner.run(SSHCommandRunner.java:155)
+	at com.redhat.qe.tools.SSHCommandRunner.runCommand(SSHCommandRunner.java:282)
+	at com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait(SSHCommandRunner.java:319)
+	at com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait(SSHCommandRunner.java:286)
+	at com.redhat.qe.tools.RemoteFileTasks.testExists(RemoteFileTasks.java:217)
+	at rhsm.cli.tasks.SubscriptionManagerTasks.getCurrentConsumerCert(SubscriptionManagerTasks.java:1091)
+	at rhsm.cli.tests.BugzillaTests.VerifyrhsmcertdRefreshIdentityCert(BugzillaTests.java:611)
+ */
 
 	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
