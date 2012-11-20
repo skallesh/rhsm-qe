@@ -733,6 +733,30 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// ========================================================================================
+		// subscription-manager-gui OPTIONS
+		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-gui").getStdout().contains("is not installed")) {	// test only when the rpm is installed
+			//	[root@jsefler-6 ~]# subscription-manager-gui --help
+			//	Usage: subscription-manager-gui [OPTIONS]
+			//
+			//	Options:
+			//	  -h, --help  show this help message and exit
+			//	  --register  launches the registration dialog on startup.
+			
+			command = clienttasks.command+"-gui"; 
+			options.clear();
+			options.add("-h, --help");
+			options.add("--register");
+			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
+				commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;	// needed to avoid RuntimeError: could not open display
+				List <String> usages = new ArrayList<String>();
+				String usage = String.format("Usage: %s [OPTIONS]",command);
+				usages.add(usage);
+				ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
+				ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
+			}
+		}
+		
+		// ========================================================================================
 		// rhsm-icon OPTIONS
 		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-gui").getStdout().contains("is not installed")) {	// test only when the rpm is installed
 			//	[root@jsefler-onprem-5server ~]# rhsm-icon -?
@@ -842,6 +866,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();
 				String usage = String.format("usage: %s [options]",command);
+				usage = String.format("Usage: %s [OPTIONS]",command);	// changed by bug 876692
 				usages.add(usage);
 				ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
 				ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
@@ -874,7 +899,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		//options.add("--help-all");		// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
 		//options.add("--help-rhsmcertd");	// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
 		options.add("-c, --cert-interval=MINUTES");
-		options.add("-i, --heal-interval=MINUTES");
+		//options.add("-i, --heal-interval=MINUTES");		// removed by bug 876753
+		options.add("--heal-interval=MINUTES");				// added by bug 876753 as a deprecation
+		options.add("-i, --auto-attach-interval=MINUTES");	// added by bug 876753
 		options.add("-n, --now");
 		options.add("-d, --debug");
 		for (String commandHelp : new String[]{command+" -?", command+" -h", command+" --help"}) {
@@ -916,13 +943,14 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s [options]",command.replaceFirst("/.+/", ""));
+			usage = String.format("Usage: %s [OPTIONS]",command.replaceFirst("/.+/", ""));	// changed by bug 876692
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// ========================================================================================
-		// /usr/libexec/rhsmd OPTIONS
+		// /usr/libexec/rhsmcertd-worker OPTIONS
 		
 		//	[root@jsefler-6 ~]# /usr/libexec/rhsmcertd-worker --help
 		//	Usage: rhsmcertd-worker [options]
@@ -938,6 +966,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s [options]",command.replaceFirst("/.+/", ""));
+			usage = String.format("Usage: %s [OPTIONS]",command.replaceFirst("/.+/", ""));	// changed by bug 876692
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
