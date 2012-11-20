@@ -645,7 +645,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
-		Assert.assertEquals(entitlementCert.version,systemCertificateVersionFactValue,"The version of the entitlement certificate granted by candlepin matches its system.certificate_version.");
+		Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");
 		Assert.assertEquals(entitlementCert.contentNamespaces.size(), 185, "The number of content sets provided in this version '"+entitlementCert.version+"' entitlement cert parsed using the rct cat-cert tool.");
 		clienttasks.assertEntitlementCertsInYumRepolist(Arrays.asList(entitlementCert), true);
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -700,7 +700,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
-		Assert.assertEquals(entitlementCert.version,systemCertificateVersionFactValue,"The version of the entitlement certificate granted by candlepin matches its system.certificate_version.");
+		Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");
 		Assert.assertEquals(entitlementCert.contentNamespaces.size(), 186, "The number of content sets provided in this version '"+entitlementCert.version+"' entitlement cert parsed using the rct cat-cert tool.");
 		clienttasks.assertEntitlementCertsInYumRepolist(Arrays.asList(entitlementCert), true);
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
