@@ -160,7 +160,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field		regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("productName",	"^Product Name:(.*)");
+		regexes.put("productName",	"^Product Name:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// changed by bug 864177 to have a multi-line value; this regex assumes that productName is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value	// was a single line of data "^Product Name:(.*)");
 		regexes.put("productId",	"^Product ID:(.*)");
 		regexes.put("version",		"^Version:(.*)");
 		regexes.put("arch",			"^Arch:(.*)");
@@ -175,8 +175,16 @@ public class InstalledProduct extends AbstractCommandLineData {
 		}
 		
 		List<InstalledProduct> productCerts = new ArrayList<InstalledProduct>();
-		for(Map<String,String> prodCertMap : productCertList)
+		for(Map<String,String> prodCertMap : productCertList) {
+			// normalize newlines from productName when it spans multiple lines (introduced by bug 864177)
+			String key = "productName", productName = prodCertMap.get(key);
+			if (productName!=null) {
+				prodCertMap.remove(key);
+				productName = productName.replaceAll("\\s*\\n\\s*", " ");
+				prodCertMap.put(key, productName);
+			}
 			productCerts.add(new InstalledProduct(prodCertMap));
+		}
 		return productCerts;
 	}
 }
