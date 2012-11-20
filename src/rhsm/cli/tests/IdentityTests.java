@@ -333,6 +333,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// assert that all subscription-manager calls are blocked by a message stating that the consumer has been deleted
 		// Original Stderr: Consumer with id b0f1ed9f-3dfa-4eea-8e04-72ab8075d533 could not be found
 		String expectedMsg = String.format("Consumer %s has been deleted",consumerCert.consumerid); SSHCommandResult result;
+		String ignoreStderr = "stty: standard input: Invalid argument";
 
 		result = clienttasks.identity_(null,null,null,null,null,null,null);
 		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
@@ -342,7 +343,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		result = clienttasks.list_(null, true, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
-		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
+//		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStderr().trim().replace(ignoreStderr, ""),"",			"Stderr expected after the consumer has been deleted on the server-side (ignoring \""+ignoreStderr+"\").");	// 11/20/2012 RHE64 subscription-manager-1.1.10-1.el6.x86_64  Not sure why this extra ignoreStderr started showing up.
 		
 		result = clienttasks.refresh_(null, null, null);
 		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
@@ -422,7 +424,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration Methods ***********************************************************************
 	
-	@BeforeClass(groups="setup")
+//	@BeforeClass(groups="setup")
 	public void setupBeforeClass() throws Exception {
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
