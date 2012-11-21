@@ -57,7 +57,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
-			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986"},
+			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {

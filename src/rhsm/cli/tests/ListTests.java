@@ -243,7 +243,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	@Test(	description="subscription-manager: list of consumed entitlements should display the provided product marketing names",
-			groups={},
+			groups={"blockedByBug-878986"},
 			dataProvider="getAllEntitlementCertsData",
 			enabled=true)	// this new test implementation was implemented due to change in list of consumed product subscriptions (from many to one) - see bug 806986
 	@ImplementsNitrateTest(caseId=48092, fromPlan=2481)
