@@ -42,7 +42,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :firstboot-proxy-dialog "Proxy Configuration"
                 :import-dialog "Import Certificates"
                 :file-chooser "Select A File"
-                :subscribe-system-dialog "Subscribe System"
+                ;; does not exist anymore? part of the register-dialog
+                ;:subscribe-system-dialog "Subscribe System"
                 :system-preferences-dialog "System Preferences"
                 :help-dialog "Subscription Manager Manual"
                 :filter-dialog "Filter Options"}))
@@ -58,11 +59,15 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :my-subscriptions
                                     :my-installed-products
                                     :search
-                                    :subscribe
+                                    ;; now called attach
+                                        ;:subscribe
+                                    :attach
                                     :all-subscriptions-view
                                     :my-subscriptions-view
                                     :installed-view
-                                    :unsubscribe
+                                    ;; now called remove
+                                        ;:unsubscribe
+                                    :remove
                                     :system-preferences
                                     :configure-proxy
                                     :view-system-facts
@@ -77,7 +82,10 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :import-certificate "Import Cert"
                      :unregister-system "Unregister"
                      :update-certificates "Update"
-                     :autosubscribe "Auto-subscribe"}
+                     ;; now called auto-attach
+                     ;:autosubscribe "Auto-subscribe"
+                     :auto-attach "Auto-attach"
+                     }
                     ;dynamic text fields for details sections:
                     (text-field [:arch
                                  :certificate-status
@@ -112,12 +120,19 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :register-proxy-conf "proxy_button"
          :register-server "server_entry"
          :default-server "default_button"
+         ;; sla/auto-attach stuff below
+         :sla-attach "Attach"
+         :sla-forward "Forward"
+         :sla-next "Next"
+         :sla-cancel "Cancel"
+         :sla-back "Back"
          })
-    (define-elements (windows :subscribe-system-dialog)
-      {:sla-subscribe "Subscribe"
-       :sla-forward "Forward"
-       :sla-cancel "Cancel"
-       :sla-back "Back"})
+    (comment ;;this stuff is now part of the register-dialog
+      (define-elements (windows :subscribe-system-dialog)
+        {:sla-subscribe "Subscribe"
+         :sla-forward "Forward"
+         :sla-cancel "Cancel"
+         :sla-back "Back"}))
     (define-elements (windows :question-dialog)
       (same-name capitalize [:yes
                              :no ]))
@@ -131,7 +146,10 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :contract-selection-dialog)
       {:contract-selection-table "tbl0"
        :cancel-contract-selection "Cancel"
-       :subscribe-contract-selection "Subscribe"})
+       ;; now attach
+       ;:subscribe-contract-selection "Subscribe"
+       :attach-contract-selection "Attach"
+       })
     (define-elements (windows :proxy-config-dialog)
        (merge (same-name capitalize [:proxy-checkbox
                                      :authentication-checkbox

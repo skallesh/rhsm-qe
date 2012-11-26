@@ -221,16 +221,17 @@
            (checkforerror 10)))
        ;;(ui waittillnotshowing :registering 1800)  ;; 30 minutes
        ))
-   (if (= 1 (ui guiexist :subscribe-system-dialog))
+   (if ;(= 1 (ui guiexist :subscribe-system-dialog))
+       (= 1 (ui guiexist :register-dialog))
      (do
        (if auto-select-sla
          (do
-           (if (= 1 (ui guiexist :sla-forward)) ;; sla selection is presented
-             (do (when sla (ui click :subscribe-system-dialog sla))
-                 (ui click :sla-forward)))
-           (ui click :sla-subscribe))
+           (if (= 1 (ui guiexist :register-dialog "Confirm Subscriptions")) ;; sla selection is presented
+             (do (when sla (ui click :register-dialog sla))
+                 (ui click :register)))
+           (ui click :register))
          ;; else leave sla dialog open
-         (when sla (ui click :subscribe-system-dialog sla)))))
+         (when sla (ui click :register-dialog sla)))))
    (checkforerror)
    (catch Object e
      (if (substring? "No service levels" (:msg e))
@@ -365,7 +366,7 @@
   [s]
   (ui selecttab :all-available-subscriptions)
   (skip-dropdown :all-subscriptions-view s)
-  (ui click :subscribe)
+  (ui click :attach)
   (checkforerror)
   (if-not (= 1 (ui waittillwindowexist :contract-selection-dialog 5))
     (throw+ {:type :contract-selection-not-available
@@ -377,7 +378,7 @@
   [s]
   (ui selecttab :all-available-subscriptions)
   (skip-dropdown :all-subscriptions-view s)
-  (ui click :subscribe)
+  (ui click :attach)
   (checkforerror)
   (ui waittillwindowexist :contract-selection-dialog 5)
   (if (= 1 (ui guiexist :contract-selection-dialog))
@@ -397,7 +398,7 @@
              :name s
              :msg (str "Not found in 'My Subscriptions': " s)}))
   (ui selectrow :my-subscriptions-view s)
-  (ui click :unsubscribe)
+  (ui click :remove)
   (ui waittillwindowexist :question-dialog 60)
   (ui click :yes)
   (checkforerror))
@@ -500,14 +501,6 @@
   (if (= 1 (ui guiexist :subscription-assistant-dialog))
     (let [datelabel (ui getobjectproperty :subscription-assistant-dialog "*first date*" "label")]
       (.substring datelabel 0 10))))
-
-(defn assistant-subscribe
-  "Subscribes to a given subscription from within the subscription assistant."
-  [s]
-  (skip-dropdown :assistant-subscription-view s)
-  (ui click :assistant-subscribe)
-  (checkforerror)
-  (wait-for-progress-bar))
 
 (defn get-table-elements
   "Returns a vector containing all elements in a given table and column."
