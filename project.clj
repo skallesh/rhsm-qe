@@ -1,6 +1,7 @@
 (defproject org.clojars.jsefler/sm "1.0.0-SNAPSHOT"
   :description "Automated tests for Red Hat Subsciption Manager CLI and GUI"
-  :java-source-path "src"
+  :java-source-path "src" ;lein1
+  :java-source-paths ["src"]
   :aot [#"^rhsm.gui.tests"] ;regex to find tests that testng will run
   :keep-non-project-classes true
   :dependencies [[org.clojure/clojure "1.4.0"]
@@ -23,10 +24,15 @@
                  [test_clj.testng "1.0.1-SNAPSHOT"]
                  [clj-http "0.5.5"]
                  [matchure "0.10.1"]]
+  ;lein1
   :dev-dependencies [[slamhound "1.2.0"]
                      [fn.trace "1.3.2.0-SNAPSHOT"]
                      [lein-eclipse "1.0.0"]]
-  ;:plugins [[lein-eclipse "1.0.0"]]
+  ;lein2
+  :profiles {:dev {:dependencies
+                   [[slamhound "1.2.0"]
+                    [fn.trace "1.3.2.0-SNAPSHOT"]
+                    [lein-eclipse "1.0.0"]]}}
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
   :javac-options {:debug "on"})
