@@ -23,6 +23,39 @@ public class YumRepo extends AbstractCommandLineData {
 	public Boolean enabled;
 	public Boolean gpgcheck;
 	public String gpgkey;
+	public String sslcacert;
+	public Boolean sslverify;
+	public String sslclientcert;
+	public String sslclientkey;
+	public String metadata_expire;	
+	// more [repository] OPTIONS detailed at http://linux.die.net/man/5/yum.conf OR man yum.conf
+	public String metalink;
+	public String mirrorlist;
+	public Boolean repo_gpgcheck;
+	public String gpgcakey;
+	public String exclude;
+	public String includepkgs;
+	public Boolean enablegroups;
+	public String failovermethod;
+	public Boolean keepalive;
+	public String timeout;
+	public String http_caching;
+	public String retries;
+	public String throttle;
+	public String bandwidth;
+	public String mirrorlist_expire;
+	public String proxy;
+	public String proxy_username;
+	public String proxy_password;
+	public String username;
+	public String password;
+	public String cost;
+	public Boolean skip_if_unavailable;
+	
+	// http://wiki.centos.org/PackageManagement/Yum/Priorities
+	// http://docs.fedoraproject.org/en-US/Fedora/15/html/Musicians_Guide/sect-Musicians_Guide-CCRMA_Repository_Priorities.html
+	public Integer priority;
+
 	
 //	public String rawYumRepo;
 
@@ -40,12 +73,41 @@ public class YumRepo extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (id != null)			string += String.format(" %s='%s'", "id",id);
-		if (name != null)		string += String.format(" %s='%s'", "name",name);
-		if (baseurl != null)	string += String.format(" %s='%s'", "baseurl",baseurl);
-		if (enabled != null)	string += String.format(" %s='%s'", "enabled",enabled);
-		if (gpgcheck != null)	string += String.format(" %s='%s'", "gpgcheck",gpgcheck);
-		if (gpgkey != null)		string += String.format(" %s='%s'", "gpgkey",gpgkey);
+		if (id != null)						string += String.format(" %s='%s'", "id",id);
+		if (name != null)					string += String.format(" %s='%s'", "name",name);
+		if (baseurl != null)				string += String.format(" %s='%s'", "baseurl",baseurl);
+		if (enabled != null)				string += String.format(" %s='%s'", "enabled",enabled);
+		if (gpgcheck != null)				string += String.format(" %s='%s'", "gpgcheck",gpgcheck);
+		if (gpgkey != null)					string += String.format(" %s='%s'", "gpgkey",gpgkey);
+		if (sslcacert != null)				string += String.format(" %s='%s'", "sslcacert",sslcacert);
+		if (sslverify != null)				string += String.format(" %s='%s'", "sslverify",sslverify);
+		if (sslclientcert != null)			string += String.format(" %s='%s'", "sslclientcert",sslclientcert);
+		if (sslclientkey != null)			string += String.format(" %s='%s'", "sslclientkey",sslclientkey);
+		if (metadata_expire != null)		string += String.format(" %s='%s'", "metadata_expire",metadata_expire);
+		// more [repository] OPTIONS detailed at http://linux.die.net/man/5/yum.conf OR man yum.conf
+		if (metalink != null)				string += String.format(" %s='%s'", "metalink",metalink);
+		if (mirrorlist != null)				string += String.format(" %s='%s'", "mirrorlist",mirrorlist);
+		if (repo_gpgcheck != null)			string += String.format(" %s='%s'", "repo_gpgcheck",repo_gpgcheck);
+		if (gpgcakey != null)				string += String.format(" %s='%s'", "gpgcakey",gpgcakey);
+		if (exclude != null)				string += String.format(" %s='%s'", "exclude",exclude);
+		if (includepkgs != null)			string += String.format(" %s='%s'", "includepkgs",includepkgs);
+		if (enablegroups != null)			string += String.format(" %s='%s'", "enablegroups",enablegroups);
+		if (failovermethod != null)			string += String.format(" %s='%s'", "failovermethod",failovermethod);
+		if (keepalive != null)				string += String.format(" %s='%s'", "keepalive",keepalive);
+		if (timeout != null)				string += String.format(" %s='%s'", "timeout",timeout);
+		if (http_caching != null)			string += String.format(" %s='%s'", "http_caching",http_caching);
+		if (retries != null)				string += String.format(" %s='%s'", "retries",retries);
+		if (throttle != null)				string += String.format(" %s='%s'", "throttle",throttle);
+		if (bandwidth != null)				string += String.format(" %s='%s'", "bandwidth",bandwidth);
+		if (mirrorlist_expire != null)		string += String.format(" %s='%s'", "mirrorlist_expire",mirrorlist_expire);
+		if (proxy != null)					string += String.format(" %s='%s'", "proxy",proxy);
+		if (proxy_username != null)			string += String.format(" %s='%s'", "proxy_username",proxy_username);
+		if (proxy_password != null)			string += String.format(" %s='%s'", "proxy_password",proxy_password);
+		if (username != null)				string += String.format(" %s='%s'", "username",username);
+		if (password != null)				string += String.format(" %s='%s'", "password",password);
+		if (cost != null)					string += String.format(" %s='%s'", "cost",cost);
+		if (skip_if_unavailable != null)	string += String.format(" %s='%s'", "skip_if_unavailable",skip_if_unavailable);
+		if (priority != null)				string += String.format(" %s='%s'", "priority",priority);
 
 		return string.trim();
 	}
@@ -119,12 +181,41 @@ public class YumRepo extends AbstractCommandLineData {
 
 			// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
 			regexes.put("id",					"\\[(.*)\\]");
-			regexes.put("name",					"name = (.*)");
-			regexes.put("baseurl",				"baseurl = (.*)");
-			regexes.put("enabled",				"enabled = (.*)");
-			regexes.put("gpgcheck",				"gpgcheck = (.*)");
-			regexes.put("gpgkey",				"gpgkey = (.*)");
-
+			regexes.put("name",					"name\\s*=\\s*(.*)");
+			regexes.put("baseurl",				"baseurl\\s*=\\s*(.*)");
+			regexes.put("enabled",				"enabled\\s*=\\s*(.*)");
+			regexes.put("gpgcheck",				"gpgcheck\\s*=\\s*(.*)");
+			regexes.put("gpgkey",				"gpgkey\\s*=\\s*(.*)");
+			regexes.put("sslcacert",			"sslcacert\\s*=\\s*(.*)");
+			regexes.put("sslverify",			"sslverify\\s*=\\s*(.*)");
+			regexes.put("sslclientcert",		"sslclientcert\\s*=\\s*(.*)");
+			regexes.put("sslclientkey",			"sslclientkey\\s*=\\s*(.*)");
+			regexes.put("metadata_expire",		"metadata_expire\\s*=\\s*(.*)");
+			// more [repository] OPTIONS detailed at http://linux.die.net/man/5/yum.conf OR man yum.conf
+			regexes.put("metalink",				"metalink\\s*=\\s*(.*)");
+			regexes.put("mirrorlist",			"mirrorlist\\s*=\\s*(.*)");
+			regexes.put("repo_gpgcheck",		"repo_gpgcheck\\s*=\\s*(.*)");
+			regexes.put("gpgcakey",				"gpgcakey\\s*=\\s*(.*)");
+			regexes.put("exclude",				"exclude\\s*=\\s*(.*)");
+			regexes.put("includepkgs",			"includepkgs\\s*=\\s*(.*)");
+			regexes.put("enablegroups",			"enablegroups\\s*=\\s*(.*)");
+			regexes.put("failovermethod",		"failovermethod\\s*=\\s*(.*)");
+			regexes.put("keepalive",			"keepalive\\s*=\\s*(.*)");
+			regexes.put("timeout",				"timeout\\s*=\\s*(.*)");
+			regexes.put("http_caching",			"http_caching\\s*=\\s*(.*)");
+			regexes.put("retries",				"retries\\s*=\\s*(.*)");
+			regexes.put("throttle",				"throttle\\s*=\\s*(.*)");
+			regexes.put("bandwidth",			"bandwidth\\s*=\\s*(.*)");
+			regexes.put("mirrorlist_expire",	"mirrorlist_expire\\s*=\\s*(.*)");
+			regexes.put("proxy",				"proxy\\s*=\\s*(.*)");
+			regexes.put("proxy_username",		"proxy_username\\s*=\\s*(.*)");
+			regexes.put("proxy_password",		"proxy_password\\s*=\\s*(.*)");
+			regexes.put("username",				"username\\s*=\\s*(.*)");
+			regexes.put("cost",					"cost\\s*=\\s*(.*)");
+			regexes.put("skip_if_unavailable",	"skip_if_unavailable\\s*=\\s*(.*)");
+			regexes.put("priority",				"priority\\s*=\\s*(.*)");
+			
+			
 			List<Map<String,String>> yumRepoDataList = new ArrayList<Map<String,String>>();
 			for(String field : regexes.keySet()){
 				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);

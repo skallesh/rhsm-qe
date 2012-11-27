@@ -374,9 +374,72 @@ public class SubscriptionManagerTasks {
 		sshCommandRunner.runCommandAndWait("yum clean all");
 	}
 	
+	public void updateYumRepo(String yumRepoFile, YumRepo yumRepo){
+		log.info("Updating yumrepo file '"+yumRepoFile+"' repoid '"+yumRepo.id+"' to: "+yumRepo);
+		// first, empty the contents of the current yumRepo
+		// sed -i "/\[REPOID\]/,/\[/ s/^[^\[].*//" /etc/yum.repos.d/redhat.repo
+		String command = String.format("sed -i \"/\\[%s\\]/,/\\[/ s/^[^\\[].*//\" %s", yumRepo.id, yumRepoFile);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,Integer.valueOf(0));
+		// then, add all of the non-null yumRepo parameters
+		Map<String,String> parameterValueMap = new HashMap<String,String>();
+		if (yumRepo.name!=null)						parameterValueMap.put("name", yumRepo.name);
+		if (yumRepo.baseurl!=null)					parameterValueMap.put("baseurl", yumRepo.baseurl);
+		if (yumRepo.enabled!=null)					parameterValueMap.put("enabled", yumRepo.enabled.toString());
+		if (yumRepo.gpgcheck!=null)					parameterValueMap.put("gpgcheck", yumRepo.gpgcheck.toString());
+		if (yumRepo.gpgkey!=null)					parameterValueMap.put("gpgkey", yumRepo.gpgkey);
+		if (yumRepo.sslcacert!=null)				parameterValueMap.put("sslcacert", yumRepo.sslcacert);
+		if (yumRepo.sslverify!=null)				parameterValueMap.put("sslverify", yumRepo.sslverify.toString());
+		if (yumRepo.sslclientcert!=null)			parameterValueMap.put("sslclientcert", yumRepo.sslclientcert);
+		if (yumRepo.sslclientkey!=null)				parameterValueMap.put("sslclientkey", yumRepo.sslclientkey);
+		if (yumRepo.metadata_expire!=null)			parameterValueMap.put("metadata_expire", yumRepo.metadata_expire);
+		if (yumRepo.metalink!=null)					parameterValueMap.put("metalink", yumRepo.metalink);
+		if (yumRepo.mirrorlist!=null)				parameterValueMap.put("mirrorlist", yumRepo.mirrorlist);
+		if (yumRepo.repo_gpgcheck!=null)			parameterValueMap.put("repo_gpgcheck", yumRepo.repo_gpgcheck.toString());
+		if (yumRepo.gpgcakey!=null)					parameterValueMap.put("gpgcakey", yumRepo.gpgcakey);
+		if (yumRepo.exclude!=null)					parameterValueMap.put("exclude", yumRepo.exclude);
+		if (yumRepo.includepkgs!=null)				parameterValueMap.put("includepkgs", yumRepo.includepkgs);
+		if (yumRepo.enablegroups!=null)				parameterValueMap.put("enablegroups", yumRepo.enablegroups.toString());
+		if (yumRepo.failovermethod!=null)			parameterValueMap.put("failovermethod", yumRepo.failovermethod);
+		if (yumRepo.keepalive!=null)				parameterValueMap.put("keepalive", yumRepo.keepalive.toString());
+		if (yumRepo.timeout!=null)					parameterValueMap.put("timeout", yumRepo.timeout);
+		if (yumRepo.http_caching!=null)				parameterValueMap.put("http_caching", yumRepo.http_caching);
+		if (yumRepo.retries!=null)					parameterValueMap.put("retries", yumRepo.retries);
+		if (yumRepo.throttle!=null)					parameterValueMap.put("throttle", yumRepo.throttle);
+		if (yumRepo.bandwidth!=null)				parameterValueMap.put("bandwidth", yumRepo.bandwidth);
+		if (yumRepo.mirrorlist_expire!=null)		parameterValueMap.put("mirrorlist_expire", yumRepo.mirrorlist_expire);
+		if (yumRepo.proxy!=null)					parameterValueMap.put("proxy", yumRepo.proxy);
+		if (yumRepo.proxy_username!=null)			parameterValueMap.put("proxy_username", yumRepo.proxy_username);
+		if (yumRepo.proxy_password!=null)			parameterValueMap.put("proxy_password", yumRepo.proxy_password);
+		if (yumRepo.username!=null)					parameterValueMap.put("username", yumRepo.username);
+		if (yumRepo.password!=null)					parameterValueMap.put("password", yumRepo.password);
+		if (yumRepo.cost!=null)						parameterValueMap.put("cost", yumRepo.cost);
+		if (yumRepo.skip_if_unavailable!=null)		parameterValueMap.put("skip_if_unavailable", yumRepo.skip_if_unavailable.toString());
+		if (yumRepo.priority!=null)					parameterValueMap.put("priority", yumRepo.priority.toString());
+		addYumRepoParameters(yumRepoFile,yumRepo.id,parameterValueMap);
+	}
 	public void updateYumRepoParameter(String yumRepoFile, String repoid, String parameter, String value){
 		log.info("Updating yumrepo file '"+yumRepoFile+"' repoid '"+repoid+"' parameter '"+parameter+"' value to: "+value);
-		String command = "sed -i \"/\\["+repoid+"\\]/,/\\[/ s/^"+parameter+"\\s*=.*/"+parameter+"="+value+"/\" "+yumRepoFile;
+//		String command = "sed -i \"/\\["+repoid+"\\]/,/\\[/ s/^"+parameter+"\\s*=.*/"+parameter+"="+value+"/\" "+yumRepoFile;
+		String command = String.format("sed -i \"/\\[%s\\]/,/\\[/ s/^%s\\s*=.*/%s=%s/\" %s", repoid, parameter, parameter, value, yumRepoFile);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,Integer.valueOf(0));
+	}
+	public void addYumRepoParameter(String yumRepoFile, String repoid, String parameter, String value){
+		Map<String,String> parameterValueMap = new HashMap<String,String>();
+		parameterValueMap.put(parameter, value);
+		addYumRepoParameters(yumRepoFile,repoid,parameterValueMap);
+	}
+	public void addYumRepoParameters(String yumRepoFile, String repoid, Map<String,String> parameterValueMap){
+		
+		String a = "";
+		for (String parameter:parameterValueMap.keySet()) {
+			String value = parameterValueMap.get(parameter);
+			log.info("Adding yumrepo file '"+yumRepoFile+"' repoid '"+repoid+"' option: "+parameter+"="+value);
+			a += parameter+"="+value+"\\n";
+		}
+		if (parameterValueMap.size()>1) a = a.replaceFirst("\\\\n$", "");	// strip the trailing \n
+		
+		// sed  -i "/\[REPOID\]/ a F=bar\nG=tar\n" /etc/yum.repos.d/redhat.repo
+		String command = String.format("sed -i \"/\\[%s\\]/ a %s\" %s", repoid, a, yumRepoFile);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,Integer.valueOf(0));
 	}
 	
@@ -974,7 +1037,8 @@ public class SubscriptionManagerTasks {
 	public List<YumRepo> getCurrentlySubscribedYumRepos() {
 		// trigger a yum transaction so that subscription-manager plugin will refresh redhat.repo
 		//sshCommandRunner.runCommandAndWait("killall -9 yum"); // is this needed?
-		sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		//sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		sshCommandRunner.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		
 		return YumRepo.parse(sshCommandRunner.runCommandAndWait("cat "+redhatRepoFile).getStdout());
 	}
