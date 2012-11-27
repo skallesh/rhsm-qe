@@ -1197,10 +1197,10 @@ Expected Results:
 		// Object bugzilla, String baseurl, String baseurlConfigured, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
 		// positive tests
 		ll.add(Arrays.asList(new Object[] {	null,							"https://myhost.example.com:900/myapp/",	"https://myhost.example.com:900/myapp/",	new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842830"),	"http://myhost.example.com:900/myapp/",		"http://myhost.example.com:900/myapp/",		new Integer(0),		null,			null}));
+		// 842830 CLOSED WONTFIX ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842830"),	"http://myhost.example.com:900/myapp/",		"http://myhost.example.com:900/myapp/",		new Integer(0),		null,			null}));
 		ll.add(Arrays.asList(new Object[] {	null,							"https://https:900/myapp/",					"https://https:900/myapp/",					new Integer(0),		null,			null}));
 		ll.add(Arrays.asList(new Object[] {	null,							"https://http:900/myapp/",					"https://http:900/myapp/",					new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842830"),	"http://http:900/myapp/",					"http://http:900/myapp/",					new Integer(0),		null,			null}));
+		// 842830 CLOSED WONTFIX ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842830"),	"http://http:900/myapp/",					"http://http:900/myapp/",					new Integer(0),		null,			null}));
 		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900/myapp/",			"https://myhost.example.com:900/myapp/",	new Integer(0),		null,			null}));
 		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900/myapp",				"https://myhost.example.com:900/myapp",		new Integer(0),		null,			null}));
 		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900/",					/*"https://myhost.example.com:900/"*/"https://myhost.example.com:900",			new Integer(0),		null,			null}));
