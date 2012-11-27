@@ -721,7 +721,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com
 	// TODO Bug 806457 - If yum runs with no enabled or active repo's, we delete the product cert 
 	// TODO Bug 845349 - [RFE] As a Red Hat user, I would like to use the exclude line in the yum.repos.d files and not have them blown away
-	
+	// TODO Bug 879022: current candlepin in stage is NOT blocking delivery of large content sets (see comment 7)
 	
 	// Configuration Methods ***********************************************************************
 	
