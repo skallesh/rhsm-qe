@@ -589,7 +589,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySubscribabilityOf185ContentSetProduct_Test() {
+	public void VerifySubscribabilityOfSKUProvidingA185ContentSetProduct_Test() {
 
 		Map<String,String> factsMap = new HashMap<String,String>();
 		File entitlementCertFile;
@@ -597,8 +597,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		String systemCertificateVersionFactValue;
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
-		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", skuTo185ContentSetProduct, clienttasks.getCurrentlyAvailableSubscriptionPools());
-		Assert.assertNotNull(pool,"Found an available pool to subscribe to productId '"+skuTo185ContentSetProduct+"': "+pool);
+		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionSKUProvidingA185ContentSetProduct, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		Assert.assertNotNull(pool,"Found an available pool to subscribe to productId '"+subscriptionSKUProvidingA185ContentSetProduct+"': "+pool);
 		
 		// test that it IS subscribable when system.certificate_version: None
 		factsMap.put("system.certificate_version", null);
@@ -657,55 +657,27 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySubscribabilityOf186ContentSetProduct_Test() {
-		
-		Map<String,String> factsMap = new HashMap<String,String>();
-		File entitlementCertFile;
-		EntitlementCert entitlementCert;
-		String systemCertificateVersionFactValue;
-		SSHCommandResult sshCommandResult;
-		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
-		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", skuTo186ContentSetProduct, clienttasks.getCurrentlyAvailableSubscriptionPools());
-		Assert.assertNotNull(pool,"Found an available pool to subscribe to productId '"+skuTo186ContentSetProduct+"': "+pool);
-	
-		// test that it is NOT subscribable when system.certificate_version: None
-		factsMap.put("system.certificate_version", null);
-		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
-		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "None", "When the system.certificate_version fact is null, its fact value is reported as 'None'.");
-		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' that provides a product with too many content sets (>185) when system.certificate_version is null");
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "Too many content sets for certificate. Please upgrade to a newer client to use subscription: "+pool.subscriptionName, "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides a product with too many content sets (>185) when system.certificate_version is null");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' that provides a product with too many content sets (>185) when system.certificate_version is null");
-		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No entitlements should be consumed after attempt to subscribe to '"+pool.subscriptionName+"' that provides a product with too many content sets (>185) when system.certificate_version is null");
-		
-		// test that it is NOT subscribable when system.certificate_version: 1.0
-		factsMap.put("system.certificate_version", "1.0");
-		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
-		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "1.0", "When the system.certificate_version fact is 1.0, its fact value is reported as '1.0'.");
-		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' that provides a product with too many content sets (>185) when system.certificate_version is 1.0");
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "Too many content sets for certificate. Please upgrade to a newer client to use subscription: "+pool.subscriptionName, "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides a product with too many content sets (>185) when system.certificate_version is 1.0");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' that provides a product with too many content sets (>185) when system.certificate_version is 1.0");
-		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No entitlements should be consumed after attempt to subscribe to '"+pool.subscriptionName+"' that provides a product with too many content sets (>185) when system.certificate_version is 1.0");
-
-		// test that it is subscribable when system.certificate_version is the system's default value (should be >=3.0)
-		clienttasks.deleteFactsFileWithOverridingValues();
-		systemCertificateVersionFactValue = clienttasks.getFactValue("system.certificate_version");
-		Assert.assertTrue(Float.valueOf(systemCertificateVersionFactValue)>=3.0, "The actual default system.certificate_version fact '"+systemCertificateVersionFactValue+"' is >= 3.0.");
-		//entitlementCertFile = clienttasks.subscribeToProductId(skuTo185ContentSetProduct);
-		//entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
-		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
-		Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");
-		Assert.assertEquals(entitlementCert.contentNamespaces.size(), 186, "The number of content sets provided in this version '"+entitlementCert.version+"' entitlement cert parsed using the rct cat-cert tool.");
-		clienttasks.assertEntitlementCertsInYumRepolist(Arrays.asList(entitlementCert), true);
-		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
+	public void VerifySubscribabilityOfSKUProvidingA186ContentSetProduct_Test() {
+		VerifySubscribabilityOfSKUProvidingTooManyContentSets(subscriptionSKUProvidingA186ContentSetProduct,186);
 	}
+	
+	
+	@Test(	description="Verify that a subscription providing two 93 content set products is subscribable only when system.certificate_version >= 3.0",
+			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-879022"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifySubscribabilityOfSKUProvidingTwo93ContentSetProducts_Test() {
+		VerifySubscribabilityOfSKUProvidingTooManyContentSets(subscriptionSKUProvidingTwo93ContentSetProducts,93*2);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=654442
@@ -720,7 +692,16 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 705068 - product-id plugin displays "duration"
 	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com
 	// TODO Bug 806457 - If yum runs with no enabled or active repo's, we delete the product cert 
-	// TODO Bug 879022: current candlepin in stage is NOT blocking delivery of large content sets (see comment 7)
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	// Configuration Methods ***********************************************************************
 	
@@ -752,15 +733,12 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-
 	@AfterGroups(groups={"setup"},value="SubscribabilityOfContentSetProduct_Tests")
 	public void deleteFactsFileWithOverridingValuesAfterGroups() {
 		if (clienttasks==null) return;
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 	
-	protected String skuTo185ContentSetProduct = "mktProductId-185";
-	protected String skuTo186ContentSetProduct = "mktProductId-186";
 	@BeforeClass(groups="setup")
 	public void createSubscriptionsWithVariationsOnContentSizes() throws JSONException, Exception {
 		String marketingProductName,engineeringProductName,marketingProductId,engineeringProductId;
@@ -780,16 +758,16 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+contentLabel, "/gpg/path/to/"+contentLabel, "3600", null, null);
 		}
 	
-		// recreate Subscription and products providing a lot of content
+		// recreate Subscription SKUs: subscriptionSKUProvidingA185ContentSetProduct, subscriptionSKUProvidingA186ContentSetProduct
 		for (int N : new ArrayList<Integer>(Arrays.asList(185,186))) {	// 185 is the maximum number of content sets tolerated in a system.certificate_version < 3.0
-			marketingProductName = String.format("Subscription for a %s ContentSet Product",N);
+			marketingProductName = String.format("Subscription providing a %s ContentSet Product",N);
 			marketingProductId = "mktProductId-"+N;
 			engineeringProductName = String.format("%s ContentSet Product",N);
 			engineeringProductId = String.valueOf(N);	// must be numeric (and unique)
 			attributes.clear();
 			attributes.put("requires_consumer_type", "system");
 			//attributes.put("sockets", "0");
-			attributes.put("version", "3.0");
+			attributes.put("version", N+".0");
 			//attributes.put("variant", "server");
 			attributes.put("arch", "ALL");
 			//attributes.put("warning_period", "30");
@@ -809,6 +787,39 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), marketingProductId, Arrays.asList(engineeringProductId));
 		}
 		
+		// recreate Subscription SKU: subscriptionSKUProvidingTwo93ContentSetProducts
+		marketingProductName = "Subscription providing two 93 ContentSet Products";
+		marketingProductId = subscriptionSKUProvidingTwo93ContentSetProducts;
+		String engineeringProductNameA = "93 ContentSet Product A";
+		String engineeringProductNameB = "93 ContentSet Product B";
+		String engineeringProductIdA = "931";	// must be numeric (and unique)
+		String engineeringProductIdB = "932";	// must be numeric (and unique)
+		attributes.clear();
+		attributes.put("requires_consumer_type", "system");
+		//attributes.put("sockets", "0");
+		attributes.put("version", "93.0");
+		//attributes.put("variant", "server");
+		attributes.put("arch", "ALL");
+		//attributes.put("warning_period", "30");
+		// delete already existing subscription and products
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, marketingProductId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+marketingProductId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+engineeringProductIdA);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+engineeringProductIdB);
+		// create a new marketing product (MKT), engineering product (SVC), content for the engineering product, and a subscription to the marketing product that provides the engineering product
+		attributes.put("type", "MKT");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, marketingProductName, marketingProductId, 1, attributes, null);
+		attributes.put("type", "SVC");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductNameA, engineeringProductIdA, 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductNameB, engineeringProductIdB, 1, attributes, null);
+		for (int i = 1; i <= 93; i++) {
+			String contentId = String.format(contentIdStringFormat,i);	// must be numeric (and unique) defined above
+			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductIdA, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
+			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductIdB, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
+		}
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), marketingProductId, Arrays.asList(engineeringProductIdA,engineeringProductIdB));
+
+		
 		// NOTE: To get the product certs, use the CandlepinTasks REST API:
         //"url": "/products/{product_uuid}/certificate", 
         //"GET"
@@ -816,7 +827,58 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	// Protected Methods ***********************************************************************
 	protected String personalConsumerId = null;
+	protected String subscriptionSKUProvidingA185ContentSetProduct = "mktProductId-185";
+	protected String subscriptionSKUProvidingA186ContentSetProduct = "mktProductId-186";
+	protected String subscriptionSKUProvidingTwo93ContentSetProducts = "mktProductId-93x2";
+	
+	protected void VerifySubscribabilityOfSKUProvidingTooManyContentSets(String sku, int totalContentSets) {	//TODO remove parameter totalContentSets and make calls to CandepinTasks to find the totalContentSets from the sku
+		
+		Map<String,String> factsMap = new HashMap<String,String>();
+		File entitlementCertFile;
+		EntitlementCert entitlementCert;
+		String systemCertificateVersionFactValue;
+		SSHCommandResult sshCommandResult;
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sku, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		Assert.assertNotNull(pool,"Found an available pool to subscribe to productId '"+sku+"': "+pool);
+	
+		// test that it is NOT subscribable when system.certificate_version: None
+		factsMap.put("system.certificate_version", null);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null, true, null, null, null);
+		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "None", "When the system.certificate_version fact is null, its fact value is reported as 'None'.");
+		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "Too many content sets for certificate. Please upgrade to a newer client to use subscription: "+pool.subscriptionName, "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
+		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No entitlements should be consumed after attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
+		
+		// test that it is NOT subscribable when system.certificate_version: 1.0
+		factsMap.put("system.certificate_version", "1.0");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null, true, null, null, null);
+		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "1.0", "When the system.certificate_version fact is 1.0, its fact value is reported as '1.0'.");
+		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "Too many content sets for certificate. Please upgrade to a newer client to use subscription: "+pool.subscriptionName, "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
+		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No entitlements should be consumed after attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
 
+		// test that it is subscribable when system.certificate_version is the system's default value (should be >=3.0)
+		clienttasks.deleteFactsFileWithOverridingValues();
+		systemCertificateVersionFactValue = clienttasks.getFactValue("system.certificate_version");
+		Assert.assertTrue(Float.valueOf(systemCertificateVersionFactValue)>=3.0, "The actual default system.certificate_version fact '"+systemCertificateVersionFactValue+"' is >= 3.0.");
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
+		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
+		Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");
+		Assert.assertEquals(entitlementCert.contentNamespaces.size(), totalContentSets, "The number of content sets provided in this version '"+entitlementCert.version+"' entitlement cert parsed using the rct cat-cert tool.");
+		clienttasks.assertEntitlementCertsInYumRepolist(Arrays.asList(entitlementCert), true);
+		clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
+	}
+	
+	
 	
 	// Data Providers ***********************************************************************
 
