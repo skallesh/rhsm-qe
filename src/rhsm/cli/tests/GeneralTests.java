@@ -8,6 +8,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -44,7 +45,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: attempt to access functionality that does not exist",
 			groups={},
 			dataProvider="NegativeFunctionalityData")
-	public void AttemptingCommandsThatAreInvalid_Test(String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
+	public void AttemptingCommandsThatAreInvalid_Test(Object blockedByBug, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		log.info("Testing subscription-manager-cli command that is invalid, expecting it to fail: "+ command);
 		SSHCommandResult result = client.runCommandAndWait(command);
 		if (expectedExitCode!=null)	Assert.assertEquals(result.getExitCode(), expectedExitCode, "The expected exit code.");
@@ -113,19 +114,20 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		// negative tests that require the system to be unregistered first...
 		clienttasks.unregister(null,null,null);
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO",					new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO",				new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO",					new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --auto-attach with --servicelevel.", ""}));	// changed by bug 874804,876305		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --installed --servicelevel=foo",		new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe",									new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --product=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --regtoken=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --pool=FOO",								new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" register --servicelevel=foo",							new Integer(255),	"Error: Must use --auto-attach with --servicelevel.", ""}));	// changed by bug 874804,876305		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("856236"),	clienttasks.command+" register --activationkey=foo --org=foo --env=foo",	new Integer(255),	"Error: Activation keys do not allow environments to be specified.", ""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --installed --servicelevel=foo",					new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe",											new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 		
 		// negative tests that require the system to be registered first...
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+(sm_clientOrg==null?"":" --org "+sm_clientOrg),									new Integer(0),	null,	""}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe",									new Integer(255),	"Error: This command requires that you specify a pool with --pool or use --auto.",	""}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --auto",				new Integer(255),	"Error: Only one of --pool or --auto may be used with this command.", ""}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --servicelevel=foo",	new Integer(255),	"Error: Must use --auto with --servicelevel.", ""}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --servicelevel=foo",	new Integer(255),	"Error: Must use --auto with --servicelevel.", ""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+(sm_clientOrg==null?"":" --org "+sm_clientOrg),									new Integer(0),	null,	""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe",											new Integer(255),	"Error: This command requires that you specify a pool with --pool or use --auto.",	""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe --pool=123 --auto",							new Integer(255),	"Error: Only one of --pool or --auto may be used with this command.", ""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(255),	"Error: Must use --auto with --servicelevel.", ""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(255),	"Error: Must use --auto with --servicelevel.", ""}));
 
 		return ll;
 	}
