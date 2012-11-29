@@ -796,6 +796,73 @@ schema generation failed
 		return poolIds;
 	}
 	
+	public static List<String> getPoolIdsForProductId(String authenticator, String password, String url, String ownerKey, String forProductId) throws JSONException, Exception{
+		List<String> poolIds = new ArrayList<String>();
+		/* Example jsonPool:
+		  		{
+			    "id": "8a90f8b42e398f7a012e399000780147",
+			    "attributes": [
+			      {
+			        "name": "requires_consumer_type",
+			        "value": "system",
+			        "updated": "2011-02-18T16:17:42.008+0000",
+			        "created": "2011-02-18T16:17:42.008+0000"
+			      },
+			      {
+			        "name": "virt_limit",
+			        "value": "0",
+			        "updated": "2011-02-18T16:17:42.008+0000",
+			        "created": "2011-02-18T16:17:42.008+0000"
+			      },
+			      {
+			        "name": "virt_only",
+			        "value": "true",
+			        "updated": "2011-02-18T16:17:42.009+0000",
+			        "created": "2011-02-18T16:17:42.009+0000"
+			      }
+			    ],
+			    "owner": {
+			      "href": "/owners/admin",
+			      "id": "8a90f8b42e398f7a012e398f8d310005"
+			    },
+			    "providedProducts": [
+			      {
+			        "id": "8a90f8b42e398f7a012e39900079014b",
+			        "productName": "Awesome OS Server Bits",
+			        "productId": "37060",
+			        "updated": "2011-02-18T16:17:42.009+0000",
+			        "created": "2011-02-18T16:17:42.009+0000"
+			      }
+			    ],
+			    "endDate": "2012-02-18T00:00:00.000+0000",
+			    "startDate": "2011-02-18T00:00:00.000+0000",
+			    "productName": "Awesome OS with up to 4 virtual guests",
+			    "quantity": 20,
+			    "contractNumber": "39",
+			    "accountNumber": "12331131231",
+			    "consumed": 0,
+			    "subscriptionId": "8a90f8b42e398f7a012e398ff0ef0104",
+			    "productId": "awesomeos-virt-4",
+			    "sourceEntitlement": null,
+			    "href": "/pools/8a90f8b42e398f7a012e399000780147",
+			    "activeSubscription": true,
+			    "restrictedToUsername": null,
+			    "updated": "2011-02-18T16:17:42.008+0000",
+			    "created": "2011-02-18T16:17:42.008+0000"
+			  }
+		*/
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/pools"));	
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String poolId = jsonPool.getString("id");
+			String productId = jsonPool.getString("productId");
+			if (forProductId.equals(productId)) {
+				poolIds.add(poolId);
+			}
+		}
+		return poolIds;
+	}
+	
 	public static List<JSONObject> getPoolsForSubscriptionId(String authenticator, String password, String url, String ownerKey, String forSubscriptionId) throws JSONException, Exception{
 		List<JSONObject> pools = new ArrayList<JSONObject>();
 
@@ -2160,6 +2227,16 @@ schema generation failed
 		return getPoolAttributeValue(jsonPool,attributeName);
 	}
 	
+	public static Object getPoolValue (String authenticator, String password, String url, String poolId, String jsonName) throws JSONException, Exception {
+
+		// get the pool for the authenticator
+		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
+		
+		// return the value for the named json parameter
+		return getPoolValue(jsonPool,jsonName);
+	}
+	
 	/**
 	 * @param jsonPool
 	 * @param productAttributeName
@@ -2378,6 +2455,22 @@ schema generation failed
 			}
 		}
 		return attributeValue;
+	}
+	/**
+	 * @param jsonPool
+	 * @param jsonName - the name of the first level of json parameters (e.g. "productId", "productName", "consumed", "quantity", etc.)
+	 * @return the String "value" of the pool's first level "name" parameter.  If not found, then null is returned.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static Object getPoolValue (JSONObject jsonPool, String jsonName) throws JSONException, Exception {
+		String value = null;	// indicates that the pool does NOT have the "name" json parameter
+
+		// get the pool for the authenticator
+		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
+//		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
+	
+		return jsonPool.get(jsonName);
 	}
 	
 	/**
