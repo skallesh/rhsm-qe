@@ -231,12 +231,17 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// unsubscribe from all serials in one call and assert the feedback
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		String expectedStdoutMsg;
-		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";
-		expectedStdoutMsg = "Successfully removed serial numbers:";	// changed by bug 874749
-		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+		String expectedStdoutMsgLabel;
+		expectedStdoutMsgLabel = "Successfully unsubscribed serial numbers:";
+		expectedStdoutMsgLabel = "Successfully removed serial numbers:";	// changed by bug 874749
+		String expectedStdoutMsg = expectedStdoutMsgLabel;
+		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;
 		SSHCommandResult result = clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
-		Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
+		// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+		// NOTE: TIME TO FIX THIS ASSERTION... Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
+		List<String> expectedStdoutMsgAsList = new ArrayList<String>(Arrays.asList(expectedStdoutMsg.split("\n"))); expectedStdoutMsgAsList.remove(expectedStdoutMsgLabel);
+		List<String> actualStdoutMsgAsList = new ArrayList<String>(Arrays.asList(result.getStdout().trim().split("\n"))); actualStdoutMsgAsList.remove(expectedStdoutMsgLabel);
+		Assert.assertTrue(expectedStdoutMsgAsList.containsAll(actualStdoutMsgAsList) && actualStdoutMsgAsList.containsAll(expectedStdoutMsgAsList), "Stdout feedback when unsubscribing from all the currently consumed subscriptions contains all the expected serial numbers:"+expectedStdoutMsg.replace(expectedStdoutMsgLabel, ""));
 	}
 	
 	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions (including revoked serials) using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
