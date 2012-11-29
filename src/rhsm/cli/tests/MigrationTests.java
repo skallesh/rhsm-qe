@@ -1479,7 +1479,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 786450 - “Install-num-migrate-to-rhsm “ command not working as expected for ppc64 box (TODO FIGURE OUT IF EXISTING AUTOMATION ALREADY COVERS THIS ON PPC64)
 	// TODO Bug 863428 - Migration failed with message Organization A has more than one environment. 
 	// TODO Bug 866579 - rhn-migrate-classic-to-rhsm leaves system unregistered when a non-existant environment is specified/mistyped 
-
+	// TODO Bug 881952 - ssl.SSLError: The read operation timed out (during large rhn-migrate-classic-to-rhsm)
+	
 	// Configuration methods ***********************************************************************
 	
 
@@ -2112,7 +2113,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
 		
-		int rhnChildChannelSubSize = 40;	// 50;	// used to break down rhnAvailableChildChannels into smaller sub-lists to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
+		int rhnChildChannelSubSize = 40;	// 50;	// used to break down rhnAvailableChildChannels into smaller sub-lists to avoid bugs 818786 881952
 		
 		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
 		String regUsername=null, regPassword=null, regOrg=null;
