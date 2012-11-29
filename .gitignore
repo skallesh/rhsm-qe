@@ -1,6 +1,7 @@
 .project
 .classpath
 .lein-deps-sum
+.pydevproject
 pom.xml
 bin
 classes
