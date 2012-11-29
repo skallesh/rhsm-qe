@@ -162,7 +162,87 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	- Subscription: RAM Limiting Package (8GB)
 	 */
 	
-	
+	//[root@jsefler-6 ~]# curl --stderr /dev/null -k -u testuser1:password https://jsefler-f14-6candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f82e3b49b570013b49b691ba055b | python -msimplejson/tool
+	//{
+	//    "accountNumber": "12331131231", 
+	//    "activeSubscription": true, 
+	//    "attributes": [], 
+	//    "consumed": 0, 
+	//    "contractNumber": "133", 
+	//    "created": "2012-11-29T01:09:59.866+0000", 
+	//    "endDate": "2013-11-28T00:00:00.000+0000", 
+	//    "exported": 0, 
+	//    "href": "/pools/8a90f82e3b49b570013b49b691ba055b", 
+	//    "id": "8a90f82e3b49b570013b49b691ba055b", 
+	//    "owner": {
+	//        "displayName": "Admin Owner", 
+	//        "href": "/owners/admin", 
+	//        "id": "8a90f82e3b49b570013b49b58f170002", 
+	//        "key": "admin"
+	//    }, 
+	//    "productAttributes": [
+	//        {
+	//            "created": "2012-11-29T01:09:59.866+0000", 
+	//            "id": "8a90f82e3b49b570013b49b691ba055c", 
+	//            "name": "ram", 
+	//            "productId": "ram-8gb", 
+	//            "updated": "2012-11-29T01:09:59.866+0000", 
+	//            "value": "8"
+	//        }, 
+	//        {
+	//            "created": "2012-11-29T01:09:59.866+0000", 
+	//            "id": "8a90f82e3b49b570013b49b691bb055d", 
+	//            "name": "type", 
+	//            "productId": "ram-8gb", 
+	//            "updated": "2012-11-29T01:09:59.866+0000", 
+	//            "value": "MKT"
+	//        }, 
+	//        {
+	//            "created": "2012-11-29T01:09:59.867+0000", 
+	//            "id": "8a90f82e3b49b570013b49b691bb055e", 
+	//            "name": "arch", 
+	//            "productId": "ram-8gb", 
+	//            "updated": "2012-11-29T01:09:59.867+0000", 
+	//            "value": "ALL"
+	//        }, 
+	//        {
+	//            "created": "2012-11-29T01:09:59.867+0000", 
+	//            "id": "8a90f82e3b49b570013b49b691bb055f", 
+	//            "name": "version", 
+	//            "productId": "ram-8gb", 
+	//            "updated": "2012-11-29T01:09:59.867+0000", 
+	//            "value": "1.0"
+	//        }, 
+	//        {
+	//            "created": "2012-11-29T01:09:59.867+0000", 
+	//            "id": "8a90f82e3b49b570013b49b691bb0560", 
+	//            "name": "variant", 
+	//            "productId": "ram-8gb", 
+	//            "updated": "2012-11-29T01:09:59.867+0000", 
+	//            "value": "ALL"
+	//        }
+	//    ], 
+	//    "productId": "ram-8gb", 
+	//    "productName": "RAM Limiting Package (8GB)", 
+	//    "providedProducts": [
+	//        {
+	//            "created": "2012-11-29T01:09:59.867+0000", 
+	//            "id": "8a90f82e3b49b570013b49b691bb0561", 
+	//            "productId": "801", 
+	//            "productName": "RAM Limiting Product", 
+	//            "updated": "2012-11-29T01:09:59.867+0000"
+	//        }
+	//    ], 
+	//    "quantity": 10, 
+	//    "restrictedToUsername": null, 
+	//    "sourceEntitlement": null, 
+	//    "startDate": "2012-11-28T00:00:00.000+0000", 
+	//    "subscriptionId": "8a90f82e3b49b570013b49b67e6e023d", 
+	//    "subscriptionSubKey": "master", 
+	//    "updated": "2012-11-29T22:12:20.077+0000"
+	//}
+	//[root@jsefler-6 ~]# 
+
 	
 	
 	// Configuration methods ***********************************************************************
