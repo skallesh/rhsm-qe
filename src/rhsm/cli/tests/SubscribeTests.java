@@ -1039,7 +1039,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
 	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions // done --shwetha
 	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.//done --shwetha
-
+	// TODO Bug 878994 - 500 errors in stage on subscribe/unsubscribe - NEED TO INSTALL A PRODUCT CERTS FROM TESTDATA AND MAKE SURE THEY DO NOT TRIP UP THE IT PRODUCT ADAPTERS
 
 	
 	// Configuration Methods ***********************************************************************
