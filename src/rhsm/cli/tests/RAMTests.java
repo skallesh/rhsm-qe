@@ -6,10 +6,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
@@ -243,7 +246,29 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	//}
 	//[root@jsefler-6 ~]# 
 
-	
+//	@BeforeGroups(groups={"setup"}, value={"VerifyEntitlementCertContainsExpectedOIDs_Test"})
+//	public void createFactsFileWithOverridingValues() {
+//		Map<String,String> factsMap = new HashMap<String,String>();
+//		factsMap.put("system.certificate_version", "1.0");
+//		clienttasks.createFactsFileWithOverridingValues(factsMap);
+//	}
+//	@Test(	description="Make sure the entitlement cert contains all expected OIDs",
+//			groups={"debugTest","VerifyEntitlementCertContainsExpectedOIDs_Test","AcceptanceTests","blockedByBug-744259","blockedByBug-754426" },
+//			dataProvider="getAllAvailableSubscriptionPoolsData",
+//			enabled=true)
+//	//@ImplementsNitrateTest(caseId=)
+//	public void VerifyEntitlementCertContainsExpectedOIDs_Test(SubscriptionPool pool) throws JSONException, Exception {
+//		// skip RAM-based subscriptions
+//		if (CandlepinTasks.getPoolAttributeValue(sm_clientUsername, sm_clientPassword, sm_clientOrg, pool.poolId, "ram")!=null) {
+//			if (Float.valueOf(clienttasks.getFactValue("system.certificate_version")) < 3.1) {
+//				SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+//				Assert.assertEquals(subscribeResult.getStderr().trim(), "Please upgrade to a newer client to use subscription: "+pool.subscriptionName, "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
+//				Assert.assertEquals(subscribeResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
+//				Assert.assertEquals(subscribeResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
+//				throw new SkipException("This test is not designed for RAM-based subscriptions requiring system.certificate_version >= 3.1");
+//			}
+//		}
+//	}
 	
 	// Configuration methods ***********************************************************************
 
