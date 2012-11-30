@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
@@ -20,6 +21,7 @@ import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.CertStatistics;
 import rhsm.data.ConsumerCert;
 import rhsm.data.ContentNamespace;
@@ -160,7 +162,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyEntitlementCertContainsExpectedOIDs_Test(SubscriptionPool pool) {
+	public void VerifyEntitlementCertContainsExpectedOIDs_Test(SubscriptionPool pool) throws JSONException, Exception {
+		
+		// skip RAM-based subscriptions
+		if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "ram")!=null) {
+			if (Float.valueOf(clienttasks.getFactValue("system.certificate_version")) < 3.1) {
+				//SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+				//Assert.assertEquals(subscribeResult.getStderr().trim(), "Please upgrade to a newer client to use subscription: "+pool.subscriptionName, "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
+				//Assert.assertEquals(subscribeResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
+				//Assert.assertEquals(subscribeResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
+				throw new SkipException("This test is not designed for RAM-based product subscriptions requiring system.certificate_version >= 3.1");
+			}
+		}
 		
 		// subscribe to the pool and get the EntitlementCert
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
