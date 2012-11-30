@@ -760,6 +760,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false, false, true);
 		clienttasks.removeAllFacts();
 		
+		// make sure that rhnplugin is enabled /etc/yum/pluginconf.d/rhnplugin.conf
+		// NOT NECESSARY! enablement of rhnplugin.conf is done by rhnreg_ks
+		
 		// register to RHN Classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(rhnUsername, rhnPassword, rhnHostname);
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
@@ -804,7 +807,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			
 			// assert that we are still registered to RHN
 			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt requires --force to continue.");
-
+			
+			// assert that the rhnplugin is still enabled
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhnPluginConfFile, "enabled"),"1","The enabled yum plugin configuration for RHN.");
+			
 			return;
 		}
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when all of the channels are mapped.");
@@ -884,52 +890,54 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			// assert that we are NOT consuming any entitlements
 			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should NOT be consuming any RHSM entitlements after call to "+rhnMigrateTool+" with options ("+options+") that indicate no autosubscribe.");
 			
-			// since no autosubscribing took place, there is nothing left to assert, just return
-			return;
-		}
-
-		// assert that autosubscribe was attempted
-		Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeAttemptedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeAttemptedMsg);			
-
-		// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
-		// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
-		// FIXME if a service-level is provided that is not available, then this product may NOT be subscribed
-		/* DECIDED NOT TO FIXME SINCE THIS ASSERTION IS THE JOB OF DEDICATED AUTOSUBSCRIBE TESTS IN SubscribeTests.java
-		InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
-		Assert.assertEquals(installedProduct.status, "Subscribed","The migrated product cert corresponding to the RHN Classic base channel '"+rhnBaseChannel+"' was autosubscribed: "+installedProduct);
-		*/
-		
-		// assert that autosubscribe feedback was a success (or not)
-		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		if (consumedProductSubscriptions.isEmpty()) {
-			Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When no entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);			
 		} else {
-			Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When autosubscribe is successful and entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contains message: "+autosubscribeFailedMsg);				
-		}
-		
-		// assert that when no --servicelevel is specified, then no service level preference will be set on the registered consumer
-		if (!options.contains("-s ") && !options.contains("--servicelevel") && (serviceLevelExpected==null||serviceLevelExpected.isEmpty())) {
-			// assert no service level preference was set
-			Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "No servicelevel preference should be set on the consumer when no service level was requested.");
-		}
-		
-		// assert the service levels consumed from autosubscribe match the requested serviceLevel
-		if (serviceLevelExpected!=null && !serviceLevelExpected.isEmpty()) {
-
-			// when a valid servicelevel was either specified or chosen
-			expectedMsg = String.format("Service level set to: %s",serviceLevelExpected);
-			Assert.assertTrue(sshCommandResult.getStdout().toUpperCase().contains(expectedMsg.toUpperCase()), "Regardless of service level case, the stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 			
-			for (ProductSubscription productSubscription : consumedProductSubscriptions) {
-				Assert.assertNotNull(productSubscription.serviceLevel, "When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should not be null: "+productSubscription);
-				if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
-					log.info("Exempt service levels: "+sm_exemptServiceLevelsInUpperCase);
-					Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()),"This auto consumed product subscription's service level is among the exempt service levels: "+productSubscription);
-				} else {
-					Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(serviceLevelExpected),"When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should match: "+productSubscription);
+			// assert that autosubscribe was attempted
+			Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeAttemptedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeAttemptedMsg);			
+	
+			// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
+			// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
+			// FIXME if a service-level is provided that is not available, then this product may NOT be subscribed
+			/* DECIDED NOT TO FIXME SINCE THIS ASSERTION IS THE JOB OF DEDICATED AUTOSUBSCRIBE TESTS IN SubscribeTests.java
+			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
+			Assert.assertEquals(installedProduct.status, "Subscribed","The migrated product cert corresponding to the RHN Classic base channel '"+rhnBaseChannel+"' was autosubscribed: "+installedProduct);
+			*/
+			
+			// assert that autosubscribe feedback was a success (or not)
+			List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+			if (consumedProductSubscriptions.isEmpty()) {
+				Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When no entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);			
+			} else {
+				Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When autosubscribe is successful and entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contains message: "+autosubscribeFailedMsg);				
+			}
+			
+			// assert that when no --servicelevel is specified, then no service level preference will be set on the registered consumer
+			if (!options.contains("-s ") && !options.contains("--servicelevel") && (serviceLevelExpected==null||serviceLevelExpected.isEmpty())) {
+				// assert no service level preference was set
+				Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "No servicelevel preference should be set on the consumer when no service level was requested.");
+			}
+			
+			// assert the service levels consumed from autosubscribe match the requested serviceLevel
+			if (serviceLevelExpected!=null && !serviceLevelExpected.isEmpty()) {
+	
+				// when a valid servicelevel was either specified or chosen
+				expectedMsg = String.format("Service level set to: %s",serviceLevelExpected);
+				Assert.assertTrue(sshCommandResult.getStdout().toUpperCase().contains(expectedMsg.toUpperCase()), "Regardless of service level case, the stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
+				
+				for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+					Assert.assertNotNull(productSubscription.serviceLevel, "When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should not be null: "+productSubscription);
+					if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
+						log.info("Exempt service levels: "+sm_exemptServiceLevelsInUpperCase);
+						Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()),"This auto consumed product subscription's service level is among the exempt service levels: "+productSubscription);
+					} else {
+						Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(serviceLevelExpected),"When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should match: "+productSubscription);
+					}
 				}
 			}
 		}
+		
+		// assert that the rhnplugin has been disabled
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhnPluginConfFile, "enabled"),"0","The enabled yum plugin configuration for RHN.");
 	}
 	
 	
@@ -1046,7 +1054,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		expectedMsg = String.format("System '%s' successfully registered to Red Hat Subscription Management.",	clienttasks.hostname);
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 
-		log.info("No need to assert any more details of the migration since this test proxy test since they are covered in the non-proxy test.");
+		log.info("No need to assert any more details of the migration since they are covered in the non-proxy test.");
 	}
 	
 	
@@ -1610,7 +1618,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (!rhnChannel.equals(rhnBaseChannel)) rhnAvailableChildChannels.add(rhnChannel.trim()); 
 		}
 		Assert.assertTrue(rhnAvailableChildChannels.size()>0,"A positive number of child channels under the RHN Classic base channel '"+rhnBaseChannel+"' are available for consumption.");
-
 	}
 	
 	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test","RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test"})
