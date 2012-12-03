@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
@@ -300,13 +301,18 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		//	Starts:               	07/20/2012
 		//	Ends:                 	07/20/2013
 		
+		// adjust the expected entitlement dates for daylight savings time (changed by https://github.com/candlepin/subscription-manager/pull/385)
+		// now.get(Calendar.DST_OFFSET) will equal 0 in the winter StandardTime; will equal 1000*60*60 in the summer DaylightSavingsTime (when the local time zone observes DST)
+		Calendar now = Calendar.getInstance();
+		entitlementCert.orderNamespace.startDate.add(Calendar.MILLISECOND, now.get(Calendar.DST_OFFSET)-entitlementCert.orderNamespace.startDate.get(Calendar.DST_OFFSET));
+		entitlementCert.orderNamespace.endDate.add(Calendar.MILLISECOND, now.get(Calendar.DST_OFFSET)-entitlementCert.orderNamespace.endDate.get(Calendar.DST_OFFSET));
+		
 		// assert all of the product subscription's fields match the entitlement cert
 		Assert.assertEquals(productSubscription.productName, entitlementCert.orderNamespace.productName, "productName from ProductSubscription in list --consumed matches productName from OrderNamespace in this entitlementCert");
 		Assert.assertTrue(productSubscription.provides.containsAll(providedProductNames) && providedProductNames.containsAll(productSubscription.provides), "The consumed product subscription provides all the expected products "+providedProductNames+" from the provided ProductNamespaces in the entitlementCert.");
 		Assert.assertEquals(productSubscription.productId, entitlementCert.orderNamespace.productId, "productId from ProductSubscription in list --consumed matches productId from OrderNamespace in this entitlementCert");
 		Assert.assertEquals(productSubscription.contractNumber, entitlementCert.orderNamespace.contractNumber, "contractNumber from ProductSubscription in list --consumed matches contractNumber from OrderNamespace in this entitlementCert");
 		Assert.assertEquals(productSubscription.accountNumber, entitlementCert.orderNamespace.accountNumber, "accountNumber from ProductSubscription in list --consumed matches accountNumber from OrderNamespace in this entitlementCert");
-		Calendar now = Calendar.getInstance();
 		if (now.after(entitlementCert.orderNamespace.startDate) && now.before(entitlementCert.orderNamespace.endDate)) {
 			Assert.assertTrue(productSubscription.isActive, "isActive is True when the current time ("+EntitlementCert.formatDateString(now)+") is between the start/end dates in this entitlementCert");
 		} else {
