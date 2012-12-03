@@ -113,18 +113,19 @@
                                       subscription
                                       contract)
               usedmax (tasks/ui getcellvalue :contract-selection-table row 2)
-              default (tasks/ui getcellvalue :contract-selection-table row 6)
+              default (first (split (tasks/ui getcellvalue :contract-selection-table row 5) #"\s"))
               used (first (split usedmax #" / "))
               max (last (split usedmax #" / "))
               available (str (- (Integer. max) (Integer. used)))
               repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))
               enter-quantity (fn [num]
                                (tasks/ui generatekeyevent
-                                         (str (repeat-cmd 6 "<right> ")
+                                         (str (repeat-cmd 5 "<right> ")
                                               "<space>"
                                               (when num (str " " num " <enter>")))))
               get-quantity (fn []
-                             (tasks/ui getcellvalue :contract-selection-table row 6))
+                             (first
+                              (split (tasks/ui getcellvalue :contract-selection-table row 5) #"\s")))
               get-quantity-int (fn [] (Integer. (get-quantity)))]
           (if (ctasks/multi-entitlement? (@config :username) (@config :password) pool)
             (do
@@ -182,14 +183,14 @@
           repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))
           enter-quantity (fn [num]
                            (tasks/ui generatekeyevent
-                                     (str (repeat-cmd 6 "<right> ")
+                                     (str (repeat-cmd 5 "<right> ")
                                           "<space>"
                                           (when num (str " "
                                                          (repeat-cmd (.length max) "<backspace> ")
                                                          num " <enter>")))))]
       (enter-quantity available)
       (tasks/sleep 500)
-      (tasks/ui click :subscribe-contract-selection)
+      (tasks/ui click :attach-contract-selection)
       (tasks/checkforerror)
       (tasks/wait-for-progress-bar)
       (tasks/ui selecttab :my-subscriptions)
