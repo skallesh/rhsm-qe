@@ -758,7 +758,8 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 					poolId.add(pool.poolId);
 
 				}}
-			if(!(pool.quantity.equals("4")))throw new SkipException("Sufficient pools are not available"); 
+			int quantity=Integer.parseInt(pool.quantity);
+			if(quantity<4)throw new SkipException("Sufficient pools are not available"); 
 		}
 		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.status.equals("Not Subscribed"))	
