@@ -72,6 +72,7 @@
               :dependsOnMethods ["disable_proxy"]}}
   disable_proxy_connect [_]
   (disable_proxy nil)
+  ;; note: if this takes forever, blank out the proxy log file.
   (let [logoutput (tasks/get-logging @auth-proxyrunner
                                      auth-log
                                      "disabled-auth-connect"
