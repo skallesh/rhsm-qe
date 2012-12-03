@@ -443,7 +443,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		BigInteger serialOne=serialnums.get(i);
 		BigInteger serialTwo=serialnums.get(j);
 		String result=unsubscribeFromMultipleEntitlementsUsingSerialNumber(serialOne.multiply(serialTwo),serialTwo.multiply(serialOne)).getStdout();
-		String expected="Unsuccessfully unsubscribed serial numbers:"+"\n"+"   "+serialOne.multiply(serialTwo)+" is not a valid value for serial"+"\n"+"   "+serialTwo.multiply(serialOne)+" is not a valid value for serial";
+		String expected="Unsuccessfully removed serial numbers:"+"\n"+"   "+serialOne.multiply(serialTwo)+" is not a valid value for serial"+"\n"+"   "+serialTwo.multiply(serialOne)+" is not a valid value for serial";
 		Assert.assertEquals(result.trim(), expected);
 	}
 	
@@ -475,7 +475,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		BigInteger serialTwo=serialnums.get(j);
 		String result=unsubscribeFromMultipleEntitlementsUsingSerialNumber(serialOne,serialTwo).getStdout();
 		System.out.println(result);
-		String expected="Successfully unsubscribed serial numbers:"+"\n"+"   "+serialOne+"\n"+"   "+serialTwo;
+		String expected="Successfully removed serial numbers:"+"\n"+"   "+serialOne+"\n"+"   "+serialTwo;
 		Assert.assertEquals(result.trim(), expected);
 	}
 
