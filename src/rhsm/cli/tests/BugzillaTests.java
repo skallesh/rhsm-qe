@@ -101,7 +101,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 		SSHCommandResult result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, true, null, null,jsonActivationKey.get("name").toString(), null, null, true, null, null, null, null);
-		String expected_msg="Error: Activation keys cannot be used with --autosubscribe.";
+		String expected_msg="Error: Activation keys cannot be used with --auto-attach.";
 		Assert.assertEquals(result.getStdout().trim(), expected_msg);
 	}
 	
@@ -430,7 +430,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void UnsubscribeFromInvalidMultipleEntitlements() throws JSONException, Exception {
 		List<BigInteger> serialnums=new ArrayList<BigInteger>();
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 			serialnums.add(consumed.serialNumber);
 		}
@@ -461,7 +461,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<BigInteger> serialnums=new ArrayList<BigInteger>();
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
-		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 			serialnums.add(consumed.serialNumber);
 		}
@@ -659,7 +659,7 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 		Assert.assertTrue(!(consumed==null));
 		SSHCommandResult result=clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 		List<File> Entitlementcerts=clienttasks.getCurrentEntitlementCertFiles();
-		String expected="This machine has been unsubscribed from "+Entitlementcerts.size()+" subscriptions.";
+		String expected=Entitlementcerts.size()+" subscriptions removed from this system.";
 		Assert.assertEquals(result.getStdout().trim(), expected);
 
 	}
@@ -866,7 +866,7 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 		Assert.assertEquals(consumerCert.name, name);
 		name="";
 		SSHCommandResult result=clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,name,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		String expectedMsg = String.format("Error: consumer name can not be empty.");
+		String expectedMsg = String.format("Error: system name can not be empty.");
 		Assert.assertEquals(result.getExitCode(),new Integer(255));
 		Assert.assertEquals(result.getStdout().trim(),expectedMsg);
 		consumerCert = clienttasks.getCurrentConsumerCert();
@@ -1052,25 +1052,19 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		List<String> availableServiceLevelData = clienttasks.getCurrentlyAvailableServiceLevels();
 		String availableService = availableServiceLevelData.get(randomGenerator.nextInt(availableServiceLevelData.size()));	
-
 		clienttasks.subscribe_(true, availableService, (String)null, null, null,null, null, null, null, null, null);
-		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);		
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
-		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
 		if (certs.isEmpty()){
 			availableService = availableServiceLevelData.get(randomGenerator.nextInt(availableServiceLevelData.size()));	
-
 			clienttasks.subscribe_(true, availableService, (String)null, null, null,null, null, null, null, null, null);
-			clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);		
-			clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-			clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
-			SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		}
-
-		Assert.assertTrue(!(certs.isEmpty()),"autoheal is succesfull with Service level"+availableService); 
+		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);	
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
+		certs = clienttasks.getCurrentEntitlementCerts();
 		moveProductCertFiles(filename,false);
+		Assert.assertTrue(!(certs.isEmpty()),"autoheal is succesfull with Service level"+availableService); 
 
 	}
 
