@@ -385,6 +385,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	public void VerifyHealingForFuturesubscription() throws JSONException, Exception {
 		int healFrequency=2;
+		clienttasks.deleteFactsFileWithOverridingValues();
 		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null);
@@ -1402,6 +1403,11 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 		now.add(Calendar.YEAR, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.status.equals("Not Subscribed"))	
+				moveProductCertFiles(installed.productId+".pem", true);
+		}
 		for(SubscriptionPool availOnDate:getAvailableFutureSubscriptionsOndate(onDateToTest)){
 			clienttasks.subscribe_(null, null, availOnDate.poolId, null, null, null, null, null, null, null, null);
 		}
@@ -1425,6 +1431,8 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 					Assert.assertEquals(installedproduct.status.trim(), "Subscribed");
 
 				}}}
+		
+		moveProductCertFiles(null, false);
 	}
 
 
