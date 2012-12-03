@@ -999,7 +999,7 @@ Expected Results:
 	
 	
 	@Test(	description="register with interactive prompting for credentials",
-			groups={"blockedByBug-678151"},
+			groups={"blockedByBug-678151","blockedbyBug-878986"},
 			dataProvider = "getRegisterWithInteractivePromptingForCredentials_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

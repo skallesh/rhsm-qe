@@ -45,7 +45,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: run the environments module while prompting for user credentials interactively",
-			groups={},
+			groups={"blockedbyBug-878986"},
 			dataProvider = "getInteractiveCredentialsForNonSupportedEnvironmentsData",
 			dependsOnMethods={"VerifyThatCandlepinDoesNotSupportEnvironments_Test"},
 			enabled=true)

@@ -77,7 +77,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: run the orgs module while prompting for user credentials interactively",
-			groups={},
+			groups={"blockedbyBug-878986"},
 			dataProvider = "getInteractiveCredentialsForOrgsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
