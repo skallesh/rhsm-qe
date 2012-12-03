@@ -397,6 +397,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		now.add(Calendar.YEAR, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.status.equals("Not Subscribed")&& installed.status.equals("Partially Subscribed"))	
+				moveProductCertFiles(installed.productId+".pem", true);
+		}
 		for(SubscriptionPool availOnDate:getAvailableFutureSubscriptionsOndate(onDateToTest)){
 			System.out.println(availOnDate.poolId + " avail on date is");
 			clienttasks.subscribe_(null, null, availOnDate.poolId, null, null, null, null, null, null, null, null);
@@ -1405,14 +1410,15 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
 		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
 		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.status.equals("Not Subscribed"))	
+			if(installed.status.equals("Not Subscribed")&& installed.status.equals("Partially Subscribed"))	
 				moveProductCertFiles(installed.productId+".pem", true);
 		}
 		for(SubscriptionPool availOnDate:getAvailableFutureSubscriptionsOndate(onDateToTest)){
 			clienttasks.subscribe_(null, null, availOnDate.poolId, null, null, null, null, null, null, null, null);
 		}
 		for(InstalledProduct installedproduct :clienttasks.getCurrentlyInstalledProducts()){
-			if(installedproduct.status.equals("Future Subscription")){
+			if(installedproduct.status.equals("Future Subscription") ){
+				
 				productId.add(installedproduct.productId);
 			}
 		}
