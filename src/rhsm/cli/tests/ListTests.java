@@ -301,11 +301,19 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		//	Starts:               	07/20/2012
 		//	Ends:                 	07/20/2013
 		
-		// adjust the expected entitlement dates for daylight savings time (changed by https://github.com/candlepin/subscription-manager/pull/385)
-		// now.get(Calendar.DST_OFFSET) will equal 0 in the winter StandardTime; will equal 1000*60*60 in the summer DaylightSavingsTime (when the local time zone observes DST)
 		Calendar now = Calendar.getInstance();
-		entitlementCert.orderNamespace.startDate.add(Calendar.MILLISECOND, now.get(Calendar.DST_OFFSET)-entitlementCert.orderNamespace.startDate.get(Calendar.DST_OFFSET));
-		entitlementCert.orderNamespace.endDate.add(Calendar.MILLISECOND, now.get(Calendar.DST_OFFSET)-entitlementCert.orderNamespace.endDate.get(Calendar.DST_OFFSET));
+		
+		// TEMPORARY WORKAROUND FOR BUG	
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {String bugId = "883486"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("The workaround while this bug is open is to compensate the expected entitlement start/end dates for daylight savings.");
+			// adjust the expected entitlement dates for daylight savings time (changed by https://github.com/candlepin/subscription-manager/pull/385)
+			// now.get(Calendar.DST_OFFSET) will equal 0 in the winter StandardTime; will equal 1000*60*60 in the summer DaylightSavingsTime (when the local time zone observes DST)
+			entitlementCert.orderNamespace.startDate.add(Calendar.MILLISECOND, now.get(Calendar.DST_OFFSET)-entitlementCert.orderNamespace.startDate.get(Calendar.DST_OFFSET));
+			entitlementCert.orderNamespace.endDate.add(Calendar.MILLISECOND, now.get(Calendar.DST_OFFSET)-entitlementCert.orderNamespace.endDate.get(Calendar.DST_OFFSET));
+		}
+		// END OF WORKAROUND
 		
 		// assert all of the product subscription's fields match the entitlement cert
 		Assert.assertEquals(productSubscription.productName, entitlementCert.orderNamespace.productName, "productName from ProductSubscription in list --consumed matches productName from OrderNamespace in this entitlementCert");

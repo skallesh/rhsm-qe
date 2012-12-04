@@ -104,17 +104,16 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		try {String bugId="660713"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("The workaround while this bug is open is to skip the assertion that: The original end date for the subscribed product matches the end date of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
-		} else {
+		} else	// do the for (ProductSubscription originalProduct : originalProducts) loop
 		// END OF WORKAROUND
 		
-			for (ProductSubscription originalProduct : originalProducts) {
-				Assert.assertEquals(originalProduct.accountNumber,originalProducts.get(0).accountNumber,"All of the consumed product subscription from this pool '"+pool.poolId+"' should have the same accountNumber.");
-				Assert.assertEquals(originalProduct.contractNumber,originalProducts.get(0).contractNumber,"All of the consumed product subscription from this pool '"+pool.poolId+"' should have the same contractNumber.");
-				Assert.assertEquals(originalProduct.serialNumber,originalProducts.get(0).serialNumber,"All of the consumed product subscription from this pool '"+pool.poolId+"' should have the same serialNumber.");
-				Assert.assertEquals(originalProduct.isActive,originalProducts.get(0).isActive,"All of the consumed product subscription from this pool '"+pool.poolId+"' should have the same active status.");
-				Assert.assertTrue(originalProduct.startDate.compareTo(originalProducts.get(0).startDate)==0, "All of the consumed product subscription from this pool '"+pool.poolId+"' should have the same startDate.");
-				Assert.assertTrue(originalProduct.endDate.compareTo(pool.endDate)==0, "The original end date ("+ProductSubscription.formatDateString(originalProduct.endDate)+") for the subscribed product '"+originalProduct.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
-			}
+		for (ProductSubscription originalProduct : originalProducts) {
+			Assert.assertEquals(originalProduct.accountNumber,originalProducts.get(0).accountNumber,"All of the consumed product subscription from this pool '"+pool.poolId+"' should have the same accountNumber.");
+			Assert.assertEquals(originalProduct.contractNumber,originalProducts.get(0).contractNumber,"All of the consumed product subscription from this pool '"+pool.poolId+"' should have the same contractNumber.");
+			Assert.assertEquals(originalProduct.serialNumber,originalProducts.get(0).serialNumber,"All of the consumed product subscription from this pool '"+pool.poolId+"' should have the same serialNumber.");
+			Assert.assertEquals(originalProduct.isActive,originalProducts.get(0).isActive,"All of the consumed product subscription from this pool '"+pool.poolId+"' should have the same active status.");
+			Assert.assertTrue(originalProduct.startDate.compareTo(originalProducts.get(0).startDate)==0, "All of the consumed product subscription from this pool '"+pool.poolId+"' should have the same startDate.");
+			Assert.assertTrue(originalProduct.endDate.compareTo(pool.endDate)==0, "The original end date ("+ProductSubscription.formatDateString(originalProduct.endDate)+") for the subscribed product '"+originalProduct.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
 		}
 		
 		File originalEntitlementCertFile = entitlementCertFile; //new File(clienttasks.entitlementCertDir+"/"+products.get(0).serialNumber+".pem");
@@ -127,6 +126,19 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		Calendar newStartDate = (Calendar) originalStartDate.clone(); newStartDate.add(Calendar.MONTH, -1);
 		Calendar newEndDate = (Calendar) originalEndDate.clone(); newEndDate.add(Calendar.MONTH, 1);
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
+
+		// TEMPORARY WORKAROUND FOR BUG
+		invokeWorkaroundWhileBugIsOpen = true;
+		try {String bugId="883486"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("The workaround while this bug is open is to compensate the expected new start/end dates for daylight savings.");
+			Calendar now = Calendar.getInstance();
+			// adjust the expected entitlement dates for daylight savings time (changed by https://github.com/candlepin/subscription-manager/pull/385)
+			// now.get(Calendar.DST_OFFSET) will equal 0 in the winter StandardTime; will equal 1000*60*60 in the summer DaylightSavingsTime (when the local time zone observes DST)
+			newStartDate.add(Calendar.MILLISECOND, now.get(Calendar.DST_OFFSET)-newStartDate.get(Calendar.DST_OFFSET));
+			newEndDate.add(Calendar.MILLISECOND, now.get(Calendar.DST_OFFSET)-newEndDate.get(Calendar.DST_OFFSET));
+		}
+		// END OF WORKAROUND
 		
 		log.info("Now let's refresh the subscription pools...");
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
