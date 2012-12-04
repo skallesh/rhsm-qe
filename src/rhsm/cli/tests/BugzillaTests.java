@@ -758,9 +758,10 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 					poolId.add(pool.poolId);
 
 				}}
+			if(!(pool.quantity.equalsIgnoreCase("Unlimited"))){
 			int quantity=Integer.parseInt(pool.quantity);
 			if(quantity<4)throw new SkipException("Sufficient pools are not available"); 
-		}
+		}}
 		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.status.equals("Not Subscribed"))	
 				moveProductCertFiles(installed.productId+".pem", true);
@@ -1153,11 +1154,13 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 			enabled=true)
 
 	public void VerifyAutohealForExpiredSubscription() throws JSONException, Exception {
-		  int healFrequency=2;
+		  	int healFrequency=2;
 	        List<String> Expiredproductid=new ArrayList<String>();
 	        clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 	        String consumerId=clienttasks.getCurrentConsumerId();
-	        CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
+	        JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
+			Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value=true.");
+
 	        clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 	        clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null);
 	        File expectCertFile = new File(System.getProperty("automation.dir", null)+"/expiredcerts/Expiredcert.pem");
@@ -1170,7 +1173,7 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 	        if((Expiredproductid.size()==0)){
 	        	throw new SkipException ("No expired products are available for testing");  
 	        }else{
-	        clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
+	        clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 	        SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 	        for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
 	           for( int i=0;i<Expiredproductid.size();i++) {  
@@ -1192,18 +1195,17 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 			groups={"AutoHeal"},enabled=true)	
 	@ImplementsNitrateTest(caseId=119327)
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
-		int certfrequency=240;
 		Integer healFrequency=2;
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value=true.");
 		clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null);
-		clienttasks.restart_rhsmcertd(certfrequency, healFrequency, false, null);
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
-		log.info("Currently the Entitlement cert size is ." + certs.size());
-
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		log.info("Currently the consumed products are" + consumed.size());
 		Assert.assertTrue((!(certs.isEmpty())),"autoheal is successful"); 
 	}
 
