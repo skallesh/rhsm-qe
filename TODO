@@ -49,6 +49,9 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=874624 < stage env
   https://bugzilla.redhat.com/show_bug.cgi?id=865193
   https://bugzilla.redhat.com/show_bug.cgi?id=873418 < new locators
+  https://bugzilla.redhat.com/show_bug.cgi?id=801434 < new window locator
+  https://bugzilla.redhat.com/show_bug.cgi?id=877452 < Add blocker to import cert
+  https://bugzilla.redhat.com/show_bug.cgi?id=881117 < new locator
 
 KATELLO:
   https://bugzilla.redhat.com/show_bug.cgi?id=820294
