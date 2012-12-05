@@ -791,6 +791,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,regUsername,regPassword,regOrg,serviceLevelIndex);
 		
 		// assert the exit code
+		checkForKnownBug881952(sshCommandResult);
 		String expectedMsg;
 		if (!areAllChannelsMapped(rhnChannelsConsumed) && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
 			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
@@ -1013,6 +1014,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHN.");
 
 		// assert the exit code
+		checkForKnownBug881952(sshCommandResult);
 		String expectedMsg;
 		if (!areAllChannelsMapped(rhnChannelsConsumed) && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
 			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
@@ -2058,6 +2060,113 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		do {
 			client.runCommandAndWait(String.format("iptables -D OUTPUT -p tcp --dport %s -j REJECT",port));
 		} while (client.getExitCode()==0);
+	}
+	
+	protected void checkForKnownBug881952(SSHCommandResult sshCommandResult) {
+		
+		//	ssh root@jsefler-6server.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl '--no-auto --force' qa@redhat.com CHANGE-ME testuser1 password admin null
+		//	Stdout:
+		//	spawn rhn-migrate-classic-to-rhsm --no-auto --force
+		//	Red Hat account: qa@redhat.com
+		//	Password:
+		//	System Engine Username: testuser1
+		//	Password:
+		//	Org: admin
+		//
+		//	Retrieving existing RHN Classic subscription information ...
+		//
+		//			<--- CUT --->
+		
+		//			<--- CUT --->
+		//
+		//	Preparing to unregister system from RHN Classic ...
+		//	Traceback (most recent call last):
+		//	File "/usr/sbin/rhn-migrate-classic-to-rhsm", line 713, in <module>
+		//	main()
+		//	File "/usr/sbin/rhn-migrate-classic-to-rhsm", line 698, in main
+		//	unRegisterSystemFromRhnClassic(sc, sk)
+		//	File "/usr/sbin/rhn-migrate-classic-to-rhsm", line 378, in unRegisterSystemFromRhnClassic
+		//	result = sc.system.deleteSystems(sk, systemId)
+		//	File "/usr/lib64/python2.6/xmlrpclib.py", line 1199, in __call__
+		//	return self.__send(self.__name, args)
+		//	File "/usr/lib64/python2.6/xmlrpclib.py", line 1489, in __request
+		//	verbose=self.__verbose
+		//	File "/usr/lib64/python2.6/xmlrpclib.py", line 1237, in request
+		//	errcode, errmsg, headers = h.getreply()
+		//	File "/usr/lib64/python2.6/httplib.py", line 1064, in getreply
+		//	response = self._conn.getresponse()
+		//	File "/usr/lib64/python2.6/httplib.py", line 990, in getresponse
+		//	response.begin()
+		//	File "/usr/lib64/python2.6/httplib.py", line 391, in begin
+		//	version, status, reason = self._read_status()
+		//	File "/usr/lib64/python2.6/httplib.py", line 349, in _read_status
+		//	line = self.fp.readline()
+		//	File "/usr/lib64/python2.6/socket.py", line 433, in readline
+		//	data = recv(1)
+		//	socket.timeout: timed out
+		//	Stderr:
+		//	ExitCode: 1
+		
+		// OR 
+		
+		//	ssh root@jsefler-6server.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl '--no-auto --force' qa@redhat.com CHANGE-ME testuser1 password admin null
+		//	Stdout:
+		//	spawn rhn-migrate-classic-to-rhsm --no-auto --force
+		//	Red Hat account: qa@redhat.com
+		//	Password:
+		//	System Engine Username: testuser1
+		//	Password:
+		//	Org: admin
+		//
+		//	Retrieving existing RHN Classic subscription information ...
+		//
+		//			<--- CUT --->
+		
+		//			<--- CUT --->
+		//
+		//	Preparing to unregister system from RHN Classic ...
+		//	Traceback (most recent call last):
+		//	File "/usr/sbin/rhn-migrate-classic-to-rhsm", line 713, in <module>
+		//	main()
+		//	File "/usr/sbin/rhn-migrate-classic-to-rhsm", line 698, in main
+		//	unRegisterSystemFromRhnClassic(sc, sk)
+		//	File "/usr/sbin/rhn-migrate-classic-to-rhsm", line 378, in unRegisterSystemFromRhnClassic
+		//	result = sc.system.deleteSystems(sk, systemId)
+		//	File "/usr/lib64/python2.6/xmlrpclib.py", line 1199, in __call__
+		//	return self.__send(self.__name, args)
+		//	File "/usr/lib64/python2.6/xmlrpclib.py", line 1489, in __request
+		//	verbose=self.__verbose
+		//	File "/usr/lib64/python2.6/xmlrpclib.py", line 1237, in request
+		//	errcode, errmsg, headers = h.getreply()
+		//	File "/usr/lib64/python2.6/httplib.py", line 1064, in getreply
+		//	response = self._conn.getresponse()
+		//	File "/usr/lib64/python2.6/httplib.py", line 990, in getresponse
+		//	response.begin()
+		//	File "/usr/lib64/python2.6/httplib.py", line 391, in begin
+		//	version, status, reason = self._read_status()
+		//	File "/usr/lib64/python2.6/httplib.py", line 349, in _read_status
+		//	line = self.fp.readline()
+		//	File "/usr/lib64/python2.6/socket.py", line 433, in readline
+		//	data = recv(1)
+		//	File "/usr/lib64/python2.6/ssl.py", line 215, in recv
+		//	return self.read(buflen)
+		//	File "/usr/lib64/python2.6/ssl.py", line 136, in read
+		//	return self._sslobj.read(len)
+		//	ssl.SSLError: The read operation timed out
+		//	Stderr:
+		//	ExitCode: 1
+		
+		// detect bug 881952 and skip if not fixed in this release
+		// Bug 881952 	ssl.SSLError: The read operation timed out (during large rhn-migrate-classic-to-rhsm) 
+		String bugId = "881952";
+		if (sshCommandResult.getExitCode()==1) {
+			if (sshCommandResult.getStdout().trim().endsWith("timed out")) {
+				if (Integer.valueOf(clienttasks.redhatReleaseX)==6 && Float.valueOf(clienttasks.redhatReleaseXY)<=6.4) {
+					throw new SkipException("Caught an SSLError error that is fixed by bug "+bugId+" in a newer rhel release of subscription-manager-migration.");
+				}
+			}
+		}
+		// END OF WORKAROUND
 	}
 
 	// Data Providers ***********************************************************************
