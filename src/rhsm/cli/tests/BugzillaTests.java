@@ -82,7 +82,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// https://tcms.engineering.redhat.com/case/50215/?from_plan=2851
 	// https://tcms.engineering.redhat.com/case/50223/?from_plan=2851
 	//https://tcms.engineering.redhat.com/case/64181/?from_plan=2105
+	//https://tcms.engineering.redhat.com/case/68737/?from_plan=2477
 	//https://bugzilla.redhat.com/show_bug.cgi?id=869729
+	
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="verify Display hierarchy of owners",
+			groups={"VerifyHierarchyOfOwners"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=68737)
+
+	public void VerifyHierarchyOfOwners() throws JSONException, Exception {
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/"));
+		System.out.println(jsonActivationKey);
+	}
 	
 	
 	/**
