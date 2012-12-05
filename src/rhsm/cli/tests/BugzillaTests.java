@@ -102,7 +102,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if Repos List is empty for FutureSubscription", groups = { "EmptyReposListFOrFutureSubscription" }, enabled = true)
+	@Test(description = "verify if Repos List is empty for FutureSubscription", 
+			   groups = { "EmptyReposListFOrFutureSubscription" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 148534)
 	public void EmptyReposListFOrFutureSubscription() throws JSONException,
 			Exception {
@@ -1513,22 +1514,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId = 119327)
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
 		Integer healFrequency = 2;
-		clienttasks.register_(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, true, null, null, null, null);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, true, null, null, null, null);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String consumerId = clienttasks.getCurrentConsumerId();
-		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(
-				sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,
-				true);
-		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"),
-				"A consumer's autoheal attribute value=true.");
-		clienttasks.service_level_(null, null, null, true, null, null, null,
-				null, null, null, null);
+		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,true);
+		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"),"A consumer's autoheal attribute value=true.");
+		clienttasks.service_level_(null, null, null, true, null, null, null,null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
-		List<ProductSubscription> consumed = clienttasks
-				.getCurrentlyConsumedProductSubscriptions();
+		List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		log.info("Currently the consumed products are" + consumed.size());
 		Assert.assertTrue((!(certs.isEmpty())), "autoheal is successful");
 	}
