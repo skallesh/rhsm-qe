@@ -52,6 +52,7 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=801434 < new window locator
   https://bugzilla.redhat.com/show_bug.cgi?id=877452 < Add blocker to import cert
   https://bugzilla.redhat.com/show_bug.cgi?id=881117 < new locator
+  https://bugzilla.redhat.com/show_bug.cgi?id=839772
 
 KATELLO:
   https://bugzilla.redhat.com/show_bug.cgi?id=820294
