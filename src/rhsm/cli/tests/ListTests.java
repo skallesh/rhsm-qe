@@ -626,6 +626,62 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (expectedProductSubscriptions.isEmpty()) Assert.assertEquals(listResult.getStdout().trim(), "No consumed subscription pools to list","Expected message when no consumed subscriptions remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
 	}
 	
+	
+	protected String productIdForListSubscriptionContainingUTF8Character_Test = "utf8-subscription-sku";
+	@Test(	description="subscription-manager: subcription manager list consumed should filter by servicelevel when this option is passed.",
+			groups={"ListSubscriptionContainingUTF8Character_Test","blockedByBug-880070"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
+		
+		
+		String name = "Subscription name containing UTF–8 character \\u2013";	// the \u2013 character is between "UTF" and "8"
+		//name = "Subscription name NOT containing UTF8 character \\u2013";
+		String productId = productIdForListSubscriptionContainingUTF8Character_Test;
+		List<String> providedProductIds = new ArrayList<String>(); providedProductIds.clear();
+		Map<String,String> attributes = new HashMap<String,String>(); attributes.clear();
+		attributes.put("version", "2013");
+		// delete already existing subscription and products
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		// create a new engineering product, marketing product that provides the engineering product, and a subscription for the marketing product
+		attributes.put("type", "MKT");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+		
+		
+		//	201212051805:22.585 - FINE: ssh root@jsefler-6.usersys.redhat.com subscription-manager list --available (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201212051805:24.606 - FINE: Stdout: 
+		//	+-------------------------------------------+
+		//	    Available Subscriptions
+		//	+-------------------------------------------+
+		//	201212051805:24.770 - FINE: Stderr: 'ascii' codec can't encode character u'\u2013' in position 55: ordinal not in range(128) (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201212051805:24.773 - FINE: ExitCode: 255 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		
+		//	[root@jsefler-6 ~]# LANG=en_US subscription-manager list --avail
+		//	+-------------------------------------------+
+		//	    Available Subscriptions
+		//	+-------------------------------------------+
+		//	'latin-1' codec can't encode character u'\u2013' in position 55: ordinal not in range(256)
+		//	[root@jsefler-6 ~]# 
+		
+		
+		// register and list --available to find the subscription containing a \u2013 character
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		SubscriptionPool subscriptionPool = null;
+		subscriptionPool = SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		Assert.assertNotNull(subscriptionPool, "Found subscription product '"+productId+"' from the list of available subscriptions whose name contains a UTF8 character.");
+		Assert.assertEquals(subscriptionPool.subscriptionName, name, "asserting the subscription name.");
+	}
+	@AfterGroups(groups="setup",value="ListSubscriptionContainingUTF8Character_Test")
+	public void afterGroupForListSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForListSubscriptionContainingUTF8Character_Test);
+	}
+	
+	
+	
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 709412 - subscription manager cli uses product name comparisons in the list command
 	// TODO Bug 710141 - OwnerInfo needs to only show info for pools that are active right now, for all the stats
