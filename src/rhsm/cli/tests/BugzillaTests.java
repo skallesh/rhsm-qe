@@ -86,6 +86,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	//https://bugzilla.redhat.com/show_bug.cgi?id=869729
 	
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="verify if Repos List is empty for FutureSubscription",
+			groups={"EmptyReposListFOrFutureSubscription"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=148534)
+
+	public void EmptyReposListFOrFutureSubscription() throws JSONException, Exception {
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		Calendar now = new GregorianCalendar();
+		now.add(Calendar.YEAR, 1);
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		for(SubscriptionPool availOnDate:getAvailableFutureSubscriptionsOndate(onDateToTest)){
+			clienttasks.subscribe_(null, null, availOnDate.poolId, null, null, null, null, null, null, null, null);
+		}
+		List<YumRepo> repo=clienttasks.getCurrentlySubscribedYumRepos();
+		Assert.assertTrue(repo.isEmpty());
+		
+	}
+	
+	
 	
 	/**
 	 * @author skallesh
@@ -1393,7 +1418,7 @@ java.lang.RuntimeException: java.io.IOException: Could not open channel (The con
 	@Test(    description="Verify if rhsm not logging subscriptions and products properly ",
 			groups={"VerifyRhsmLogging_Test"},
 			enabled=true)	
-	public void VerifyRhsmLogging_Test() throws Exception{
+	public void VerifyRhsmLoggingTest() throws Exception{
 		Boolean actual=true;
 		int countBefore=0;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
