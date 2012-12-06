@@ -34,6 +34,7 @@ import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.OrderNamespace;
 import rhsm.data.ProductSubscription;
+import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -105,7 +106,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify if Repos List is empty for FutureSubscription", 
 			   groups = { "EmptyReposListFOrFutureSubscription" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 148534)
-	public void EmptyReposListFOrFutureSubscription() throws JSONException,
+	public void EmptyReposListForFutureSubscription() throws JSONException,
 			Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -123,7 +124,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			clienttasks.subscribe_(null, null, availOnDate.poolId, null, null,
 					null, null, null, null, null, null);
 		}
-		List<YumRepo> repo = clienttasks.getCurrentlySubscribedYumRepos();
+		List<Repo> repo = clienttasks.getCurrentlySubscribedRepos();
 		Assert.assertTrue(repo.isEmpty());
 
 	}
