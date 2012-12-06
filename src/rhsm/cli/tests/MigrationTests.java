@@ -1609,7 +1609,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		rhnAvailableChildChannels.clear();
 		String command = String.format("rhn-channels.py --username=%s --password=%s --server=%s --basechannel=%s --no-custom --available", sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnBaseChannel);
 		//debugTesting if (true) command = "echo rhel-x86_64-server-5 && echo rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 && echo rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5";
-//debugTesting if (true) return;
 		
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0));
 		rhnChannels = new ArrayList<String>();
@@ -2467,7 +2466,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				}
 				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("6")) { 
 					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
-					bugIds.add("820749");
+					//TODO UNCOMMENT AFTER BUG 884688 IS FIXED bugIds.add("820749");
 				}
 				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("5")) { 
 					// Bug 852551 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
@@ -2510,6 +2509,16 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				if (productId.equals("197") || productId.equals("198")) {
 					// Bug 875760 - some openshift product certs and their RHN Channel mappings are missing from the RHEL64 subscription-manager-migration-data
 					bugIds.add("875760");
+				}
+				if (rhnChannel.startsWith("rhel-x86_64-server-6-ost-folsom")) { 
+					// Bug 884657 - the server-6-ost-folsom channels need to be mapped into channel-cert-mapping.txt
+					bugIds.add("884657");
+				}
+				if (rhnChannel.equals("rhel-x86_64-hpc-node-dts-6") || rhnChannel.equals("rhel-x86_64-hpc-node-dts-6-debuginfo")) {
+					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
+					bugIds.add("820749");
+					// Bug 884688 - RHN channel "rhel-x86_64-hpc-node-dts-6" is mapped to 177, but the product cert 177.pem is missing 
+					bugIds.add("884688");
 				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
