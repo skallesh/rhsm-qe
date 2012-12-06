@@ -45,15 +45,19 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=869366
   https://bugzilla.redhat.com/show_bug.cgi?id=865702 < LANG test
   https://bugzilla.redhat.com/show_bug.cgi?id=872727 < firstboot
-  https://bugzilla.redhat.com/show_bug.cgi?id=873418 < activation window
   https://bugzilla.redhat.com/show_bug.cgi?id=874624 < stage env
   https://bugzilla.redhat.com/show_bug.cgi?id=865193
+  https://bugzilla.redhat.com/show_bug.cgi?id=877452 < Add blocker to import cert
+  https://bugzilla.redhat.com/show_bug.cgi?id=839772
+  https://bugzilla.redhat.com/show_bug.cgi?id=884259 < redeem blocker
+  
+GUI DONE:
   https://bugzilla.redhat.com/show_bug.cgi?id=873418 < new locators
   https://bugzilla.redhat.com/show_bug.cgi?id=801434 < new window locator
-  https://bugzilla.redhat.com/show_bug.cgi?id=877452 < Add blocker to import cert
   https://bugzilla.redhat.com/show_bug.cgi?id=881117 < new locator
-  https://bugzilla.redhat.com/show_bug.cgi?id=839772
-
+  
+  
+  
 KATELLO:
   https://bugzilla.redhat.com/show_bug.cgi?id=820294
 
