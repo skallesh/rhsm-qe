@@ -28,25 +28,28 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 
 (def windows (define-windows
 	       {:main-window "Subscription Manager"
-                :register-dialog "register_dialog"
-                :error-dialog "Error"
-                :question-dialog "Question"
-                :facts-dialog "facts_dialog"
-                :progress-dialog "Progress Dialog"
                 :contract-selection-dialog "Contract Selection"
-                :proxy-config-dialog "Proxy Configuration"
-                :subscription-assistant-dialog "Subscription Assistant"
-                :information-dialog "Information"
-                :warning-dialog "Warning"
-                :firstboot-window "frm0"
-                :firstboot-proxy-dialog "Proxy Configuration"
-                :import-dialog "Import Certificates"
+                :date-selection-dialog "Date Selection"
+                :error-dialog "Error"
+                :facts-dialog "facts_dialog"
                 :file-chooser "Select A File"
+                :filter-dialog "Filter Options"
+                :firstboot-proxy-dialog "Proxy Configuration"
+                :firstboot-window "frm0"
+                :help-dialog "Subscription Manager Manual"
+                :import-dialog "Import Certificates"
+                :information-dialog "Information"
+                :progress-dialog "Progress Dialog"
+                :proxy-config-dialog "Proxy Configuration"
+                :question-dialog "Question"
                 ;; does not exist anymore? part of the register-dialog
                 ;:subscribe-system-dialog "Subscribe System"
+                :register-dialog "register_dialog"
+                ;;also does not exist anymore > tests have been moved to oldtests folder
+                ;:subscription-assistant-dialog "Subscription Assistant"
+                :subscription-redemption-dialog "Subscription Redemption"
                 :system-preferences-dialog "System Preferences"
-                :help-dialog "Subscription Manager Manual"
-                :filter-dialog "Filter Options"}))
+                :warning-dialog "Warning"}))
 
 
 (def elements
@@ -120,6 +123,10 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :register-proxy-conf "proxy_button"
          :register-server "server_entry"
          :default-server "default_button"
+         ;;activation-key section
+         :organization "organization_entry"
+         :activation-key "activation_key_entry"
+         :activation-system-name "consumer_entry"
          ;; sla/auto-attach stuff below
          :sla-attach "Attach"
          :sla-forward "Forward"
@@ -207,7 +214,13 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :file-cancel "Cancel"
          :file-open "Open"}))
     (define-elements (windows :system-preferences-dialog)
-      {:close-system-prefs "Close"}) ))
+      {:close-system-prefs "Close"})
+    (define-elements (windows :date-selection-dialog)
+      {:today "Today"})
+    (define-elements (windows :subscription-redemption-dialog)
+      {:email-address "Email Address Text"
+       :redeem-cancel "Cancel"
+       :redeem "Redeem"})))
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
