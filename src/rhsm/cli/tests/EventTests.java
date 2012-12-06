@@ -2,6 +2,7 @@ package rhsm.cli.tests;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +25,7 @@ import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.ConsumerCert;
+import rhsm.data.EntitlementCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -225,13 +227,15 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// get the number of subscriptions this owner owns
 		//JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
-			
-        // find the first pool id of a currently consumed product
-        List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-        ProductSubscription originalConsumedProductSubscription = consumedProductSubscriptions.get(0);
+		
+		// find the first pool id of a currently consumed product
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		ProductSubscription originalConsumedProductSubscription = consumedProductSubscriptions.get(0);
 		testPool = clienttasks.getSubscriptionPoolFromProductSubscription(originalConsumedProductSubscription,sm_clientUsername,sm_clientPassword);
 		Calendar originalStartDate = (Calendar) originalConsumedProductSubscription.startDate.clone();
-
+		EntitlementCert originalEntitlementCert = clienttasks.getEntitlementCertCorrespondingToProductSubscription(originalConsumedProductSubscription);
+		originalStartDate = (Calendar) originalEntitlementCert.validityNotBefore.clone();
+		
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
@@ -276,6 +280,19 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         newEventTitles.remove("POOL MODIFIED");
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 
+		// TEMPORARY WORKAROUND FOR BUG	
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		Calendar now = Calendar.getInstance();
+		try {String bugId = "883486"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("The workaround while this bug is open is to compensate the expected consumed product subscription start date for daylight savings.");
+			// adjust the expected entitlement dates for daylight savings time (changed by https://github.com/candlepin/subscription-manager/pull/385)
+			// now.get(Calendar.DST_OFFSET) will equal 0 in the winter StandardTime; will equal 1000*60*60 in the summer DaylightSavingsTime (when the local time zone observes DST)
+			newStartDate.add(Calendar.MILLISECOND, now.get(Calendar.DST_OFFSET)-newStartDate.get(Calendar.DST_OFFSET));
+			newStartDate.add(Calendar.MILLISECOND, now.get(Calendar.DST_OFFSET)-newStartDate.get(Calendar.DST_OFFSET));
+		}
+		// END OF WORKAROUND
+        
         //ProductSubscription newConsumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", originalConsumedProductSubscription.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());	// can't do this because the serialNumber changes after the pool and entitlement have been modified
         ProductSubscription newConsumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", originalConsumedProductSubscription.productId, clienttasks.getCurrentlyConsumedProductSubscriptions());
         //AN org.xmlpull.v1.XmlPullParserException IS THROWN WHEN THIS FAILS: Assert.assertEquals(newConsumedProductSubscription.startDate, newStartDate, "After modifing pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
@@ -630,7 +647,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
-		assertTheNewFeed(oldFeed, newEventTitles);
+		assertTheNewFeed(oldFeed, newEventTitles);	// TODO 12/6/2012 several POOL MODIFIED may occur between new events POOL CREATED and SUBSCRIPTION CREATED.  Seems to happen when re-running the script after hours of other troubleshooting runs.  Redeploying candlepin and running EventTests does NOT encounter the extraneous POOL MODIFIED event.  We may want change this to...  assertTheNewFeedContains(oldFeed, Arrays.asList(newEventTitles));
 	}
 	
 	
@@ -757,12 +774,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	// Configuration Methods ***********************************************************************
 	
-	@BeforeClass(groups="setup")
+	/*debugTesting*/	@BeforeClass(groups="setup")
 	public void setupBeforeClass() throws Exception {
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.
-// debugTesting if (true) return;
 		RegisterWithCredentials_Test(); // needed to populate registrationDataList
 	}
 	
