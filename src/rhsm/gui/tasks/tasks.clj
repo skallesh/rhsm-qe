@@ -7,7 +7,8 @@
         [slingshot.slingshot :only [throw+ try+]]
         [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (split
-                               split-lines)]
+                               split-lines
+                               trim)]
         matchure
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
@@ -72,15 +73,18 @@
   ([url] (set-url url))
   ([] (connect (@config :ldtp-url))))
 
+(defn get-default-locale
+  [] (trim (.getStdout (.runCommandAndWait @clientcmd "echo $LANG"))))
+
 (defn start-app
   "starts the subscription-manager-gui
   @path: lauch the application at [path]"
   ([]
-     (start-app (@config :binary-path) :main-window))
+     (start-app (@config :binary-path) :main-window (get-default-locale)))
   ([path]
-     (ui launchapp path [] 10))
-  ([path window]
-     (ui launchapp path [] 10)
+     (ui launchapp path [] 10 1 (get-default-locale)))
+  ([path window lang]
+     (ui launchapp path [] 10 1 lang)
      (ui waittillwindowexist window 30)
      (sleep 1000)
      (ui maximizewindow window)))
@@ -659,7 +663,7 @@
                                   (= s "%Y") "\\\\d{4}"))]
        (re-pattern (clojure.string/replace pyformat #"%\w{1}" #(transform %1)))))
   ([]
-     (get-locale-regex nil)))
+     (get-locale-regex (get-default-locale))))
 
 (comment
   (defn build-installed-product-map
