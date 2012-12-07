@@ -120,8 +120,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		now.add(Calendar.YEAR, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
-		for (SubscriptionPool availOnDate : getAvailableFutureSubscriptionsOndate(onDateToTest)) {
-			clienttasks.subscribe_(null, null, availOnDate.poolId, null, null,
+		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
+		if(availOnDate.size()==0) throw new SkipException(
+				"Sufficient future pools are not available");
+		for (SubscriptionPool subscriptions : availOnDate) {
+			clienttasks.subscribe_(null, null, subscriptions.poolId, null, null,
 					null, null, null, null, null, null);
 		}
 		List<Repo> repo = clienttasks.getCurrentlySubscribedRepos();
