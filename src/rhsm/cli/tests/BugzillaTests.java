@@ -103,6 +103,27 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@Test(description = "verify if register to a deleted owner", 
+			   groups = { "RegisterToDeletedOwner" }, enabled = true)
+	@ImplementsNitrateTest(caseId = 148534)
+	public void RegisterToDeletedOwner() throws JSONException,Exception {
+		String orgname="testOwner1";
+		servertasks.createOwnerUsingCPC(orgname);
+		clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword,
+				orgname, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
+		SSHCommandResult result=clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword,orgname, null, null, null, null, null, null, null,(String) null, null, null, true, null, null, null, null);
+		String expected="Organization "+orgname+" does not exist.";
+		Assert.assertEquals(result.getStdout(), expected);
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
 	@Test(description = "verify if Repos List is empty for FutureSubscription", 
 			   groups = { "EmptyReposListFOrFutureSubscription" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 148534)
