@@ -277,8 +277,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	//      TODO NESTED LANG LOOP...  for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do for C in list refresh register subscribe unregister unsubscribe clean config environments facts identity import orgs redeem repos; do echo ""; echo "# LANG=$L.UTF8 subscription-manager $C --help | grep OPTIONS"; LANG=$L.UTF8 subscription-manager $C --help | grep OPTIONS; done; done;
 	// TODO Create an equivalent test for candlepin    VerifyOnlyExpectedTranslationFilesAreInstalled_Test
 	// TODO Create an equivalent test for candlepin    VerifyTranslationFileContainsAllMsgids_Test
-
-	
+	// TODO Bug 856419 - [ALL LANG][RHSM CLI] Unlocalized strings for Subscription Manager CLI 
+	// TODO Bug 885145 - some langs are missing a translations for "The system is unable to redeem the requested subscription: %s"
 	// Configuration Methods ***********************************************************************
 	@BeforeClass (groups="setup")
 	public void buildTranslationFileMapForSubscriptionManagerBeforeClass() {
