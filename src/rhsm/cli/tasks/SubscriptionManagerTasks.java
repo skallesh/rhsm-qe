@@ -1232,7 +1232,7 @@ public class SubscriptionManagerTasks {
 	 * @return The fact value that subscription-manager lists for factName is returned.  If factName is not listed, null is returned.
 	 */
 	public String getFactValue(String factName) {
-		Map<String,String> factsMap = getFacts();
+		Map<String,String> factsMap = getFacts(factName);
 		if (!factsMap.containsKey(factName)) {
 			log.warning("Did not find fact '"+factName+"' in the facts list on system '"+hostname+"'.");
 			return null;
@@ -1244,10 +1244,18 @@ public class SubscriptionManagerTasks {
 	 * @return Map of the system's facts
 	 */
 	public Map<String,String> getFacts() {
+		return getFacts(null);
+	}
+	/**
+	 * @param grepFilter
+	 * @return Map of the system's facts filtered by grepping for specific values
+	 */
+	public Map<String,String> getFacts(String grepFilter) {
 		Map<String,String> factsMap = new HashMap<String,String>();
 		List<String> factNames = new ArrayList<String>();
 
-		SSHCommandResult factsList = facts_(true, false, null, null, null);
+		//SSHCommandResult factsList = facts_(true, false, null, null, null);
+		SSHCommandResult factsList = sshCommandRunner.runCommandAndWait(this.command+" facts --list" + (grepFilter==null? "":" | grep \""+grepFilter+"\""));
 		String factsListAsString = factsList.getStdout().trim();
 		// # subscription-manager facts --list
 		// cpu.architecture: x86_64
@@ -3365,6 +3373,7 @@ public class SubscriptionManagerTasks {
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed") ||	// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
 			sshCommandResult.getStdout().startsWith("No entitlements are available") ||			// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.   (Bug 719743)
 			sshCommandResult.getStdout().startsWith("Pool is restricted") ||					// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
+			sshCommandResult.getStdout().startsWith("All installed products are covered") ||	// All installed products are covered by valid entitlements. No need to update subscriptions at this time.
 			sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) {			// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
 																								// Unable to entitle consumer to the pool with id '8a90f85734160df3013417ac68bb7108'.: Entitlements for awesomeos-virt-4 expired on: 12/7/11 3:43 AM
 			log.warning(sshCommandResult.getStdout().trim());
