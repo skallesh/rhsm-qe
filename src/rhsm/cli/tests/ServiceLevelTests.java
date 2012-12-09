@@ -303,10 +303,25 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
-		// subscribe with each service level and assert that the current service level persists the requested service level
+		// subscribe with each service level and assert that it persists as the system preference
+		String currentServiceLevel = clienttasks.getCurrentServiceLevel();
 		for (String serviceLevel : serviceLevelsExpected) {
+			
+			// the following if block was added after implementation of Bug 864207 - 'subscription-manager subscribe --auto' should be smart enough to not run when all products are subscribed already
+			// when the system is already valid (all of the currently installe products are subscribed), then auto-subscribe will do nothing and the service level will remain
+			if (clienttasks.getFactValue("system.entitlements_valid").equalsIgnoreCase("valid")) {
+				// verify that auto-subscribe will throw a blocker message and the current service level will remain
+				SSHCommandResult result = clienttasks.subscribe_(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null);
+				String expectedStdout = "All installed products are covered by valid entitlements. No need to update subscriptions at this time.";
+				Assert.assertTrue(result.getStdout().trim().startsWith(expectedStdout), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+expectedStdout);
+				Assert.assertEquals(clienttasks.getCurrentServiceLevel(), currentServiceLevel, "When the system is already compliant, an attempt to auto-subscribe with a servicelevel should NOT alter the current service level: "+currentServiceLevel);
+				clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+			}
+			
+			// auto-subscribe and assert that the requested service level is persisted
 			clienttasks.subscribe_(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null);
-			Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "When the system is auto subscribed with the service level option, the service level should be persisted as the new preference.");
+			currentServiceLevel = clienttasks.getCurrentServiceLevel();
+			Assert.assertEquals(currentServiceLevel, serviceLevel, "When the system is auto subscribed with the service level option, the service level should be persisted as the new preference.");
 		}
 	}
 		
