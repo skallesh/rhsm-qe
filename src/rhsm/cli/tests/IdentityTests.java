@@ -329,6 +329,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// do a server-side consumer deletion 
 		// # curl -k -u testuser1:password --request DELETE https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/8511a2a6-c2ec-4612-8186-af932a3b97cf
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerCert.consumerid);
+		sleep(10000);	// give the server a chance to complete the job request	// TODO change this hard sleep to wait for a finished job status
 		
 		// assert that all subscription-manager calls are blocked by a message stating that the consumer has been deleted
 		// Original Stderr: Consumer with id b0f1ed9f-3dfa-4eea-8e04-72ab8075d533 could not be found
