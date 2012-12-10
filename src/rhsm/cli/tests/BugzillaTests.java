@@ -97,6 +97,28 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// https://tcms.engineering.redhat.com/case/64181/?from_plan=2105
 	// https://tcms.engineering.redhat.com/case/68737/?from_plan=2477
 	// https://bugzilla.redhat.com/show_bug.cgi?id=869729
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if register to a deleted owner", 
+			   groups = { "RegisterWithConsumeridOfDeletedOwner" }, enabled = true)
+	@ImplementsNitrateTest(caseId = 148216)
+	public void RegisterWithConsumeridOfDeletedOwner() throws JSONException,Exception {
+		String orgname="testOwner1";
+		servertasks.createOwnerUsingCPC(orgname);
+		clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword,
+				orgname, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		String consumerId=clienttasks.getCurrentConsumerId();
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
+		clienttasks.clean_(null, null, null);
+		SSHCommandResult result=clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword, orgname, null, null, null, consumerId, null, null, null,(String)null, null, null, null, null, null, null, null);
+		System.out.println(result.getStdout());
+	
+	}
 
 	/**
 	 * @author skallesh
@@ -104,14 +126,32 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if register to a deleted owner", 
-			   groups = { "RegisterToDeletedOwner" }, enabled = true)
-	@ImplementsNitrateTest(caseId = 148534)
-	public void RegisterToDeletedOwner() throws JSONException,Exception {
+			   groups = { "DeletedOwnerInRegisteredState" }, enabled = true)
+	@ImplementsNitrateTest(caseId = 148216)
+	public void DeletedOwnerInRegisteredState() throws JSONException,Exception {
 		String orgname="testOwner1";
 		servertasks.createOwnerUsingCPC(orgname);
 		clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword,
 				orgname, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		String jsonActivationKey=CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
+		
+		System.out.println(jsonActivationKey);
+	
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if register to a deleted owner", 
+			   groups = { "RegisterToDeletedOwner" }, enabled = true)
+	@ImplementsNitrateTest(caseId = 148216)
+	public void RegisterToDeletedOwner() throws JSONException,Exception {
+		String orgname="testOwner1";
+		servertasks.createOwnerUsingCPC(orgname);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
 		SSHCommandResult result=clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword,orgname, null, null, null, null, null, null, null,(String) null, null, null, true, null, null, null, null);
 		String expected="Organization "+orgname+" does not exist.";
