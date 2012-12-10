@@ -8,6 +8,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -24,15 +25,21 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
+import com.redhat.qe.auto.testng.TestNGUtils;
+
+import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.ConsumerCert;
+import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.OrderNamespace;
+import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
@@ -116,8 +123,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
 		clienttasks.clean_(null, null, null);
 		SSHCommandResult result=clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword, orgname, null, null, null, consumerId, null, null, null,(String)null, null, null, null, null, null, null, null);
-		System.out.println(result.getStdout());
-
+		String expected="Consumer "+consumerId+" has been deleted";
+		Assert.assertEquals(result.getStderr().trim(), expected);
 	}
 
 	/**
@@ -126,18 +133,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if register to a deleted owner", 
-			groups = { "DeletedOwnerInRegisteredState" }, enabled = true)
+			groups = { "DeletedOwnerInRegisteredState" },dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData", enabled = false)
 	@ImplementsNitrateTest(caseId = 148216)
-	public void DeletedOwnerInRegisteredState() throws JSONException,Exception {
+	public void DeletedOwnerInRegisteredState(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException,Exception {
 		String orgname="testOwner1";
 		servertasks.createOwnerUsingCPC(orgname);
 		clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword,
 				orgname, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-		String jsonActivationKey=CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
-
-		System.out.println(jsonActivationKey);
+		
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
+		String result=clienttasks.yumInstallPackageFromRepo(pkg, repoLabel, null).getStderr();
+		System.out.println(result);
 
 	}
 
@@ -779,7 +787,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, true, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks
 				.getCurrentlyAvailableSubscriptionPools();
-		clienttasks.subscribeToSubscriptionPool_(pools.get(randomGenerator
+		clienttasks.subscribeToSubscriptionPool(pools.get(randomGenerator
 				.nextInt(pools.size())));
 		List<File> certs = clienttasks.getCurrentEntitlementCertFiles();
 		RemoteFileTasks.runCommandAndAssert(
@@ -1498,7 +1506,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 								SubscriptionPool.poolId, "sockets");
 				if ((!(poolProductSocketsAttribute == null))
 						&& (poolProductSocketsAttribute.equals("2"))) {
-					clienttasks.subscribeToSubscriptionPool_(SubscriptionPool);
+					clienttasks.subscribeToSubscriptionPool(SubscriptionPool);
 				}
 			}
 		}
@@ -2227,6 +2235,50 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return PoolId;
 	}
 
+	@DataProvider(name="getPackageFromEnabledRepoAndSubscriptionPoolData")
+	public Object[][] getPackageFromEnabledRepoAndSubscriptionPoolDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getPackageFromEnabledRepoAndSubscriptionPoolDataAsListOfLists());
+	}
+	
+	protected List<List<Object>> getPackageFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		if (clienttasks==null) return ll;
+		if (sm_clientUsername==null) return ll;
+		if (sm_clientPassword==null) return ll;
+		
+		// get the currently installed product certs to be used when checking for conditional content tagging
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
+		
+		// assure we are freshly registered and process all available subscription pools
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, Boolean.TRUE, false, null, null, null);
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			
+			File entitlementCertFile = 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
+				if (contentNamespace.enabled && clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
+					String repoLabel = contentNamespace.label;
+					
+					// find an available package that is uniquely provided by repo
+					String pkg = clienttasks.findUniqueAvailablePackageFromRepo(repoLabel);
+					if (pkg==null) {
+						log.warning("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
+					}
+
+					// String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool
+					ll.add(Arrays.asList(new Object[]{pkg, repoLabel, pool}));
+				}
+			}
+			clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
+
+			// minimize the number of dataProvided rows (useful during automated testcase development)
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
+		}
+		
+		return ll;
+	}
 	@BeforeClass(groups = "setup")
 	protected void moveFakeProductCertFilesToFakeTmp() {
 		client.runCommandAndWait("mkdir -p " + "/etc/pki/faketmp");
