@@ -620,7 +620,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 		for (ProductSubscription consumed : clienttasks
 				.getCurrentlyConsumedProductSubscriptions()) {
 			serialnums.add(consumed.serialNumber);
@@ -659,7 +659,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 		for (ProductSubscription consumed : clienttasks
 				.getCurrentlyConsumedProductSubscriptions()) {
 			serialnums.add(consumed.serialNumber);
@@ -968,7 +968,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 		List<YumRepo> repos = clienttasks.getCurrentlySubscribedYumRepos();
 		Assert.assertFalse(repos.isEmpty());
 		clienttasks.unregister_(null, null, null);
@@ -2031,7 +2031,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 		String subscribeResult = getEntitlementCertFilesWithPermissions();
 		Pattern p = Pattern.compile("[,\\s]+");
 		String[] result = p.split(subscribeResult);
