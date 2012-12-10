@@ -163,7 +163,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
 		SSHCommandResult result=clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword,orgname, null, null, null, null, null, null, null,(String) null, null, null, true, null, null, null, null);
 		String expected="Organization "+orgname+" does not exist.";
-		Assert.assertEquals(result.getStdout(), expected);
+		Assert.assertEquals(result.getStderr().trim(), expected);
 	}
 
 
@@ -628,7 +628,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
+		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		for (ProductSubscription consumed : clienttasks
 				.getCurrentlyConsumedProductSubscriptions()) {
 			serialnums.add(consumed.serialNumber);
@@ -667,7 +668,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		for (ProductSubscription consumed : clienttasks
 				.getCurrentlyConsumedProductSubscriptions()) {
 			serialnums.add(consumed.serialNumber);
