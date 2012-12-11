@@ -792,6 +792,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks
 				.getCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToSubscriptionPool(pools.get(randomGenerator
@@ -983,6 +984,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, true, null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		List<YumRepo> repos = clienttasks.getCurrentlySubscribedYumRepos();
 		Assert.assertFalse(repos.isEmpty());
@@ -1209,6 +1211,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks
 				.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty())
@@ -1738,6 +1741,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(
 					sm_clientUsername, sm_clientPassword, sm_serverUrl,"/pools/" + pool.poolId));
@@ -1958,6 +1962,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		for (InstalledProduct installedProductsBeforeAuto : clienttasks
 				.getCurrentlyInstalledProducts()) {
