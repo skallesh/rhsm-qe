@@ -357,7 +357,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String availList = clienttasks.listAllAvailableSubscriptionPools()
 				.getStdout();
 		Assert.assertNotNull(availList);
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister_(null, null, null);
 		availList = clienttasks.list_(true, true, null, null, null, null, null,
 				null, null).getStdout();
 		String expected = "This system is not yet registered. Try 'subscription-manager register --help' for more information.";
@@ -983,7 +983,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		List<YumRepo> repos = clienttasks.getCurrentlySubscribedYumRepos();
 		Assert.assertFalse(repos.isEmpty());
 		clienttasks.unregister_(null, null, null);
@@ -1958,8 +1958,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks
-		.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		for (InstalledProduct installedProductsBeforeAuto : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			if (installedProductsBeforeAuto.status.equals("Subscribed"))
@@ -1990,8 +1989,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		for (SubscriptionPool SubscriptionPool : clienttasks
-				.getCurrentlyAllAvailableSubscriptionPools()) {
+		for (SubscriptionPool SubscriptionPool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 			if (!(SubscriptionPool.multiEntitlement)) {
 				SubscriptionId.add(SubscriptionPool.subscriptionName);
 				String poolProductSocketsAttribute = CandlepinTasks
@@ -2046,7 +2044,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		String subscribeResult = getEntitlementCertFilesWithPermissions();
 		Pattern p = Pattern.compile("[,\\s]+");
 		String[] result = p.split(subscribeResult);
