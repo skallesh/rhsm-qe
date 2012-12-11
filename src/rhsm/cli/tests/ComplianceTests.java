@@ -92,6 +92,18 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test();
 	}
 	
+	@Test(	description="when all installed products are subscribable by more than one common service level and system is compliant, auto-subscribe should abort",
+			groups={"cli.tests","blockedByBug-864207"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
+		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
+	}
+	
+	
+	
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by one common service level",
@@ -110,6 +122,18 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByOneCommonServiceLevel_Test() {
 		VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test();
 	}
+	
+	@Test(	description="when all installed products are subscribable by one common service level and system is compliant, auto-subscribe should abort",
+			groups={"cli.tests","blockedByBug-864207"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByOneCommonServiceLevel_Test() {
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
+		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
+	}
+	
+	
 	
 	
 	
@@ -145,6 +169,22 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		sleep(100);	// give the message thread time to be logged
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
 	}
+	
+	@Test(	description="when some installed products are subscribable and system is NOT compliant, auto-subscribing again should try but not get any new entitlements",
+			groups={"cli.tests","blockedByBug-723044"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyAutoSubscribeAttemptsWhenNotCompliantAndSomeProductsAreSubscribable_Test() {
+		List <EntitlementCert> entitlementCertsBefore = clienttasks.getCurrentEntitlementCerts();
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
+		Assert.assertTrue(!result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is not compliant, an attempt to auto-subscribe should NOT inform us with this message: "+autosubscribeCompliantMessage);
+		List <EntitlementCert> entitlementCertsAfter = clienttasks.getCurrentEntitlementCerts();
+		Assert.assertTrue(entitlementCertsBefore.containsAll(entitlementCertsAfter)&&entitlementCertsAfter.containsAll(entitlementCertsBefore),"The entitlement certs have not changed after an attempt to autosubscribe a second time.");
+		Assert.assertEquals(entitlementCertsBefore.size(), entitlementCertsAfter.size(), "The number of entitlement certs did not change after an attempt to autosubscribe a second time.");
+	}
+	
+	
 	
 	
 	
@@ -183,6 +223,18 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
+	@Test(	description="when all installed products are subscribable and system in compliant, auto-subscribe should abort",
+			groups={"cli.tests","blockedByBug-864207"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsAreSubscribable_Test() {
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
+		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
+	}
+	
+	
+	
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when no installed products are subscribable",
@@ -219,6 +271,22 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		sleep(100);	// give the message thread time to be logged
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
 	}
+	
+	@Test(	description="when no installed products are subscribable and system is NOT compliant, auto-subscribing again should try but not get any new entitlements",
+			groups={"cli.tests","blockedByBug-723044"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyAutoSubscribeAttemptsWhenNotCompliantAndNoProductsAreSubscribable_Test() {
+		List <EntitlementCert> entitlementCertsBefore = clienttasks.getCurrentEntitlementCerts();
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
+		Assert.assertTrue(!result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is not compliant, an attempt to auto-subscribe should NOT inform us with this message: "+autosubscribeCompliantMessage);
+		List <EntitlementCert> entitlementCertsAfter = clienttasks.getCurrentEntitlementCerts();
+		Assert.assertTrue(entitlementCertsBefore.containsAll(entitlementCertsAfter)&&entitlementCertsAfter.containsAll(entitlementCertsBefore),"The entitlement certs have not changed after an attempt to autosubscribe a second time.");
+		Assert.assertEquals(entitlementCertsBefore.size(), entitlementCertsAfter.size(), "The number of entitlement certs did not change after an attempt to autosubscribe a second time.");
+	}
+	
+	
 	
 	
 	
@@ -273,6 +341,18 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 	}
 	
+	@Test(	description="when no products are installed, auto-subscribe should abort",
+			groups={"cli.tests","blockedByBug-864207"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyAutoSubscribeAbortsWhenNoProductsAreInstalled_Test() {
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
+		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
+	}
+	
+	
+	
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact when system is already registered to RHN Classic",
@@ -311,6 +391,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// verify the stdout message
 		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic, null);
 	}
+	
+	
 	
 	
 	
@@ -378,6 +460,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public static final String factValueForSystemCompliance = "valid"; 			// "True"; RHEL62
 	public static final String factValueForSystemNonCompliance = "invalid"; 	// "False"; RHEL62
 	public static final String factValueForSystemPartialCompliance = "partial";	// "False"; RHEL62
+	public static final String autosubscribeCompliantMessage = "All installed products are covered by valid entitlements. No need to update subscriptions at this time.";
 
 	public static final String productCertDirForSomeProductsSubscribable = "/tmp/sm-someProductsSubscribable";
 	public static final String productCertDirForAllProductsSubscribable = "/tmp/sm-allProductsSubscribable";
