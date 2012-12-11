@@ -629,11 +629,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
-		for (ProductSubscription consumed : clienttasks
-				.getCurrentlyConsumedProductSubscriptions()) {
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		}
+		if(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty())throw new SkipException(
+				"Sufficient pools are not available");
+		for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 			serialnums.add(consumed.serialNumber);
 		}
+		
 		int i = randomGenerator.nextInt(serialnums.size());
 		int j = randomGenerator.nextInt(serialnums.size());
 		if (i == j) {
@@ -668,7 +672,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		}
 		for (ProductSubscription consumed : clienttasks
 				.getCurrentlyConsumedProductSubscriptions()) {
 			serialnums.add(consumed.serialNumber);
