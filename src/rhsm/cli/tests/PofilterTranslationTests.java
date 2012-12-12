@@ -54,8 +54,30 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nBugReportingProcess
  *   
  *   Contacts:
- *   hi_IN: aalam@redhat.com
- *   or_IN: Manoj Giri <mgiri@redhat.com> <qe-india@redhat.com>
+ *   https://engineering.redhat.com/rt/Ticket/Display.html?id=180955
+    (Hedda Peters) Subscription Manager Translations for 6.4
+    
+    (Runa Bhattacharjee) subscription-manager/candlepin updates for RHEL 6.4 (bn-IN)
+    (Hedda Peters) subscription-manager/candlepin updates for RHEL 6.4 (de)
+    (Angela Garcia) subscription-manager/candlepin updates for RHEL 6.4 (es)
+    (Sam Friedmann) subscription-manager/candlepin updates for RHEL 6.4 (fr)
+    (Nobody in particular) subscription-manager/candlepin updates for RHEL 6.4 (gu)
+    (aalam@redhat.com) subscription-manager/candlepin updates for RHEL 6.4 (hi)
+    (Francesco Valente) subscription-manager/candlepin updates for RHEL 6.4 (it)
+    (Noriko Mizumoto) subscription-manager/candlepin updates for RHEL 6.4 (ja)
+    (Prasad Shankar) subscription-manager/candlepin updates for RHEL 6.4 (kn)
+    (Eun Ju Kim) subscription-manager/candlepin updates for RHEL 6.4 (ko)
+    (Ani Peter) subscription-manager/candlepin updates for RHEL 6.4 (ml)
+    (Manoj Giri) subscription-manager/candlepin updates for RHEL 6.4 (or)
+    (Jaswinder Singh) subscription-manager/candlepin updates for RHEL 6.4 (pa)
+    (Glaucia Cintra de Freitas) subscription-manager/candlepin updates for RHEL 6.4 (pt-BR)
+    (Yulia Poyarkova) subscription-manager/candlepin updates for RHEL 6.4 (ru)
+    (Krishnababu Krothap) subscription-manager/candlepin updates for RHEL 6.4 (te)
+    (Leah Liu) subscription-manager/candlepin updates for RHEL 6.4 (zh-CN)
+    (Terry Chuang) subscription-manager/candlepin updates for RHEL 6.4 (zh-TW)
+    (Nilamdyuti Goswami) subscription-manager/candlepin updates for RHEL 6.4 (as)
+    (Sandeep Shedmake) subscription-manager and candlepin updates for RHEL 6.4 (mr)
+    (Shantha Kumar) subscription-manager/candlepin updates for RHEL 6.4 (ta)
  *   
  **/
 @Test(groups={"PofilterTranslationTests"})
