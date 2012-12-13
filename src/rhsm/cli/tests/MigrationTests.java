@@ -2638,6 +2638,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-6-ost-folsom(-.*|$)")) {	// rhel-x86_64-server-6-ost-folsom  rhel-x86_64-server-6-ost-folsom-debuginfo
 				// Bug 872983 - channels for rhel-<ARCH>-server-6-ost-folsom* are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("872983");
+				// Bug 884657 - the server-6-ost-folsom channels need to be mapped into channel-cert-mapping.txt
+				bugIds.add("884657");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
