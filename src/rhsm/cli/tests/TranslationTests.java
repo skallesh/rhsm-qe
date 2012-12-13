@@ -65,8 +65,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-756156"},
 			dataProvider="getTranslatedCommandLineHelpData")
 	//@ImplementsNitrateTest(caseId=)
-	public void TranslatedCommandLineHelp_Test(Object meta, String lang, String command, List<String> stdoutRegexs) {
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,"LANG="+lang+".UTF-8 "+command,0,stdoutRegexs,null);
+	public void TranslatedCommandLineHelp_Test(Object bugzilla, String lang, String command, List<String> stdoutRegexs) {
+		clienttasks.runCommandWithLangAndAssert(lang,command,0,stdoutRegexs,null);
 	}
 	
 	
@@ -80,8 +80,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		log.info("Attempting to register to a candlepin server using invalid credentials and expecting output in language "+(lang==null?"DEFAULT":lang));
-		String command = String.format("%s %s register --username=%s --password=%s", lang==null?"":"LANG="+lang, clienttasks.command, username, password);
-		RemoteFileTasks.runCommandAndAssert(client, command, exitCode, stdoutRegex, stderrRegex);
+		String command = String.format("%s register --username=%s --password=%s", clienttasks.command, username, password);
+		clienttasks.runCommandWithLangAndAssert(lang,command,exitCode, stdoutRegex, stderrRegex);
 		
 		// assert that the consumer cert and key have NOT been dropped
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerKeyFile()), "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with invalid credentials.");
@@ -500,7 +500,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			lang = "hi_IN"; usage = "प्रयोग: subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"839807","845304"}), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[(.+)\\]", "\\\\[($1|OPTIONS)\\\\]")+"$")}));
 			lang = "mr_IN"; usage = "वापर: subscription-manager register [पर्याय]";						ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"839807","845304"}), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[(.+)\\]", "\\\\[($1|OPTIONS)\\\\]")+"$")}));
 			lang = "gu_IN"; usage = "વપરાશ: subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"839807","845304"}), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[(.+)\\]", "\\\\[($1|OPTIONS)\\\\]")+"$")}));
-			lang = "kn_IN"; usage = "ಬಳಕೆ: subscription-manager register [ಆಯ್ಕೆಗಳು]";					ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"811294","839807","845304"}), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[(.+)\\]", "\\\\[($1|OPTIONS)\\\\]")+"$")}));
+			lang = "kn_IN"; usage = "ಬಳಕೆ: subscription-manager register [ಆಯ್ಕೆಗಳು]";					ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"811294","839807","845304","886901"}), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[(.+)\\]", "\\\\[($1|OPTIONS)\\\\]")+"$")}));
 			lang = "ml_IN"; usage = "ഉപയോഗിയ്ക്കേണ്ട വിധം: subscription-manager register [ഐച്ഛികങ്ങള്‍]";	ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"839807","845304"}), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[(.+)\\]", "\\\\[($1|OPTIONS)\\\\]")+"$")}));
 			lang = "or_IN"; usage = "ଉପଯୋଗ: subscription-manager register [ବିକଳ୍ପଗୁଡ଼ିକ]";				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"839807","845304"}), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[(.+)\\]", "\\\\[($1|OPTIONS)\\\\]")+"$")}));
 			lang = "pa_IN"; usage = "ਵਰਤੋਂ: subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"839807","845304"}), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[(.+)\\]", "\\\\[($1|OPTIONS)\\\\]")+"$")}));

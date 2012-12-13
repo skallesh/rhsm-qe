@@ -5318,7 +5318,28 @@ repolist: 3,394
 	public SSHCommandResult runCommandWithLang(String lang,String rhsmCall){
 		return sshCommandRunner.runCommandAndWait("LANG="+lang+" " + rhsmCall);
 	}
-	
+	public SSHCommandResult runCommandWithLangAndAssert(String lang, String rhsmCommand, Integer exitCode, String stdoutRegex, String stderrRegex){
+		List<String> stdoutRegexs = null;
+		if (stdoutRegex!=null) {
+			stdoutRegexs = new ArrayList<String>();	stdoutRegexs.add(stdoutRegex);
+		}
+		List<String> stderrRegexs = null;
+		if (stderrRegex!=null) {
+			stderrRegexs = new ArrayList<String>();	stderrRegexs.add(stderrRegex);
+		}
+		return runCommandWithLangAndAssert(lang, rhsmCommand, exitCode, stdoutRegexs, stderrRegexs);
+	}
+	public SSHCommandResult runCommandWithLangAndAssert(String lang, String rhsmCommand, Integer exitCode, List<String> stdoutRegexs, List<String> stderrRegexs){
+		if (lang==null) {
+			lang="";
+		} else {
+			if (!lang.toUpperCase().contains(".UTF")) lang=lang+".UTF-8";
+			lang="LANG="+lang;
+		}
+		String command = lang+" "+rhsmCommand;
+		command = "PYTHONIOENCODING=ascii "+command;	// THIS WORKAROUND IS NEEDED AFTER master commit 056e69dc833919709bbf23d8a7b73a5345f77fdf RHEL6.4 commit 1bc25596afaf294cd217200c605737a43112a378 for bug 800323
+		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command.trim(), exitCode, stdoutRegexs, stderrRegexs);
+	}
 	
 	public void setLanguage(String lang){
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
