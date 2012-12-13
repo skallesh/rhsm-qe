@@ -478,6 +478,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	// Candidates for an automated Test:
 	// TODO Bug 797243 - manual changes to redhat.repo are too sticky
 	// TODO	Bug 846207 - multiple specifications of --enable doesnot throw error when repo id is invalid
+	// TODO Bug 886604 - etc/yum.repos.d/ does not exist, turning manage_repos off.
+	//      Bug 886992 - redhat.repo is not being created
 	
 	
 	
