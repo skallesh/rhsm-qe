@@ -337,6 +337,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				if (contentNamespace.enabled) {
 					if (!clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) continue;
 					YumRepo yumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id"/*label*/, contentNamespace.label, yumRepos);
+					Assert.assertNotNull(yumRepo, "Found the yum repo within '"+clienttasks.redhatRepoFile+"' corresponding to the entitled content namespace label '"+contentNamespace.label+"'.");
 					
 					// case 1: contentNamespace.gpgKeyUrl==null
 					if (contentNamespace.gpgKeyUrl==null) {
