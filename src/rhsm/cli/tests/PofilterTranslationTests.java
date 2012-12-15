@@ -464,7 +464,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/hi/")) bugIds.add("827085");
 				// Bug 827089 	[hi] translation fails for printf test
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/te/")) bugIds.add("827089");
-				
+				// Bug 887431 - [pt_BR] pofilter variables (and printf) test is failing on a missing %s in the msgstr
+				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887431");
+
 				
 				// Bug 827113 	Many Translated languages fail the pofilter tabs test
 				if (pofilterTest.equals("tabs") && !(translationFile.getPath().contains("/pa/")||translationFile.getPath().contains("/mr/")||translationFile.getPath().contains("/de_DE/")||translationFile.getPath().contains("/bn_IN/"))) bugIds.add("825397");
