@@ -348,6 +348,20 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		
 		if (pofilterTest.equals("urls")) {
 			if(translationFile.getPath().contains("/zh_CN/")) ignorableMsgIds.addAll(Arrays.asList("Server URL has an invalid scheme. http:// and https:// are supported"));
+			
+			// search for failed pofilter urls translation for the following msgid and then ignore the translations that "correctly" excluded the trailing grammar period from the url
+			//	msgid ""
+			//	"Did not receive a completed unregistration message from RHN Classic for system %s.\n"
+			//	"Please investigate on the Customer Portal at https://access.redhat.com."
+			for (Translation failedTranslation : pofilterFailedTranslations) {
+				if (failedTranslation.msgid.contains("https://access.redhat.com.") && failedTranslation.msgstr.contains("https://access.redhat.com")) {
+					ignorableMsgIds.add(failedTranslation.msgid);
+				}
+			}
+			
+			
+			
+			
 		}
 		
 		// pluck out the ignorable pofilter test results
@@ -496,8 +510,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/hi/")) bugIds.add("828821");
 				// Bug 828867 - [te] failed pofilter varialbes tests for subscription-manager translations
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/te/")) bugIds.add("828867");
-				
-				
+				// Bug 887431 - [pt_BR] pofilter variables test is failing on a missing %s in the msgstr
+				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887431");
+			
 				// Bug 828903 - [bn_IN] failed pofilter options tests for subscription-manager translations 
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/bn_IN/")) bugIds.add("828903");
 				// Bug 828930 - [as] failed pofilter options tests for subscription-manager translations
@@ -520,7 +535,11 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/it/")) bugIds.add("842898");
 				// Bug 886917 - [or_IN] bad translation for msgid "Error: Must use --auto-attach with --servicelevel." 
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/or/")) bugIds.add("886917");
-			
+				// Bug 887433 - [es_ES] pofilter options test failed on the translation of --auto-attach to --auto-adjuntar
+				if (pofilterTest.equals("options") && translationFile.getPath().contains("/es_ES/")) bugIds.add("887433");
+				// Bug 887434 - [ru] pofilter options test failed on incorrect translation of commandline option "--list"
+				if (pofilterTest.equals("options") && translationFile.getPath().contains("/ru/")) bugIds.add("887434");
+				
 				
 				// Bug 828985 - [ml] failed pofilter urls test for subscription manager translations
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ml/")) bugIds.add("828985");
@@ -530,7 +549,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/de_DE/")) bugIds.add("860088");
 				// Bug 872684 - [de_DE] pofilter urls test is failing on the trailing period to url http://red.ht/lost_password.
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/de_DE/")) bugIds.add("872684");
-				
+				// Bug 887429 - [pt_BR] failed pofilter urls test
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887429");
+			
 				// Bug 845304 - translation of the word "[OPTIONS]" has reverted
 				if (pofilterTest.equals("unchanged")) bugIds.add("845304");
 				// Bug 829459 - [bn_IN] failed pofilter unchanged option test for subscription-manager translations
