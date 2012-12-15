@@ -2160,11 +2160,25 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String bugId = "881952";
 		if (sshCommandResult.getExitCode()==1) {
 			if (sshCommandResult.getStdout().trim().endsWith("timed out")) {
-				if (Integer.valueOf(clienttasks.redhatReleaseX)==6 && Float.valueOf(clienttasks.redhatReleaseXY)<=6.4) {
+				if (Integer.valueOf(clienttasks.redhatReleaseX)==6 && Float.valueOf(clienttasks.redhatReleaseXY)<6.4) {
+					throw new SkipException("Caught an SSLError error that is fixed by bug "+bugId+" in a newer rhel release of subscription-manager-migration.");
+				}
+				if (Integer.valueOf(clienttasks.redhatReleaseX)==5 && Float.valueOf(clienttasks.redhatReleaseXY)<5.10) {
 					throw new SkipException("Caught an SSLError error that is fixed by bug "+bugId+" in a newer rhel release of subscription-manager-migration.");
 				}
 			}
 		}
+		
+		// fix...
+		
+		//	Preparing to unregister system from RHN Classic ...
+		//	Did not receive a completed unregistration message from RHN Classic for system 1023878699.
+		//	Please investigate on the Customer Portal at https://access.redhat.com.
+		//	
+		//	Attempting to register system to Red Hat Subscription Management ...
+		//	The system has been registered with id: 9909bb77-d56e-4784-a16f-d4509fd252ce 
+		//	System 'dhcp193-87.pnq.redhat.com' successfully registered to Red Hat Subscription Management.
+		
 		// END OF WORKAROUND
 	}
 
