@@ -326,7 +326,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if((translationFile.getPath().contains("/pa/"))) ignorableMsgIds.addAll(Arrays.asList("Server URL can not be None"));
 			if((translationFile.getPath().contains("/hi/"))) ignorableMsgIds.addAll(Arrays.asList("Server URL can not be None"));	// more info in bug 861095
 			if((translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("The Subscription Management Service you register with will provide your system with updates and allow additional management."));	// msgstr "Le service de gestion des abonnements « Subscription Management » avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."
-			if((translationFile.getPath().contains("/or/"))) ignorableMsgIds.addAll(Arrays.asList("Run the initial checks immediately, with no delay.","Run the initial checks immediatly, with no delay."));
+			if((translationFile.getPath().contains("/or/"))) ignorableMsgIds.addAll(Arrays.asList("Run the initial checks immediately, with no delay.","Run the initial checks immediatly, with no delay.","run the initial checks immediately, with no delay"));
 		}
 		
 		if (pofilterTest.equals("unchanged")) {
