@@ -192,20 +192,40 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		if (pofilterTest.equals("accelerators")) {
 			if (translationFile.getPath().contains("/hi/")) ignorableMsgIds = Arrays.asList("proxy url in the form of proxy_hostname:proxy_port");
 			if (translationFile.getPath().contains("/ru/")) ignorableMsgIds = Arrays.asList("proxy url in the form of proxy_hostname:proxy_port","%%prog %s [OPTIONS] CERT_FILE");
+			if (translationFile.getPath().contains("/it/")) ignorableMsgIds = Arrays.asList("activation_key_entry"); // msgid "activation_key_entry"; msgstr "voce chiave di attivazione"
 		}
 		
 		if (pofilterTest.equals("newlines")) {
-			ignorableMsgIds = Arrays.asList(
-					"Optional language to use for email notification when subscription redemption is complete. Examples: en-us, de-de",
-					"\n"+"Unable to register.\n"+"For further assistance, please contact Red Hat Global Support Services.",
-					"Tip: Forgot your login or password? Look it up at http://red.ht/lost_password",
-					"Unable to perform refresh due to the following exception: %s",
-					""+"This migration script requires the system to be registered to RHN Classic.\n"+"However this system appears to be registered to '%s'.\n"+"Exiting.",
-					"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once.",
-					// bug 825397	""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete.",	// the Subscription Redemption dialog actually expands to accommodate the message, therefore we could ignore it	// bug 825397 should fix this
-					// bug 825388	""+"We have detected that you have multiple service level\n"+"agreements on various products. Please select how you\n"+"want them assigned.", // bug 825388 or 825397 should fix this
-					"\n"+"This machine appears to be already registered to Certificate-based RHN.  Exiting.",
-					"\n"+"This machine appears to be already registered to Red Hat Subscription Management.  Exiting.");	
+//			ignorableMsgIds.addAll(Arrays.asList(
+//					"Optional language to use for email notification when subscription redemption is complete. Examples: en-us, de-de",
+//					"\n"+"Unable to register.\n"+"For further assistance, please contact Red Hat Global Support Services.",
+//					"Tip: Forgot your login or password? Look it up at http://red.ht/lost_password",
+//					"Unable to perform refresh due to the following exception: %s",
+//					""+"This migration script requires the system to be registered to RHN Classic.\n"+"However this system appears to be registered to '%s'.\n"+"Exiting.",
+//					"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once.",
+//					// bug 825397	""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete.",	// the Subscription Redemption dialog actually expands to accommodate the message, therefore we could ignore it	// bug 825397 should fix this
+//					// bug 825388	""+"We have detected that you have multiple service level\n"+"agreements on various products. Please select how you\n"+"want them assigned.", // bug 825388 or 825397 should fix this
+//					"\n"+"This machine appears to be already registered to Certificate-based RHN.  Exiting.",
+//					"\n"+"This machine appears to be already registered to Red Hat Subscription Management.  Exiting."));
+			
+			// common newlines msgid translations to ignore for all langs
+			ignorableMsgIds.add(""+"\n"+"This software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n");
+			ignorableMsgIds.add("We have detected that you have multiple service levels on various products. Please select how you\n"+"want them assigned.");
+
+			// newlines translations to ignore for specific langs
+			if (translationFile.getPath().contains("/zh_CN/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Did not receive a completed unregistration message from RHN Classic for system %s.\n"+"Please investigate on the Customer Portal at https://access.redhat.com."));
+			if (translationFile.getPath().contains("/ru/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Did not receive a completed unregistration message from RHN Classic for system %s.\n"+"Please investigate on the Customer Portal at https://access.redhat.com."));
+			if (translationFile.getPath().contains("/te/"))		ignorableMsgIds.addAll(Arrays.asList(""+"We have detected that you have multiple service levels on various products. Please select how you\n"+"want them assigned."));
+			if (translationFile.getPath().contains("/ta_IN/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));
+			if (translationFile.getPath().contains("/zh_TW/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));
+			if (translationFile.getPath().contains("/bn_IN/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));
+			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));
+			if (translationFile.getPath().contains("/ko/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));
+			if (translationFile.getPath().contains("/hi/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));
+			if (translationFile.getPath().contains("/gu/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));
+			if (translationFile.getPath().contains("/bn_IN/"))	ignorableMsgIds.addAll(Arrays.asList("Tip: Forgot your login or password? Look it up at http://red.ht/lost_password"));
+			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("\n"+"Unable to register.\n"+"For further assistance, please contact Red Hat Global Support Services."));
+			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("Unable to perform refresh due to the following exception: %s"));
 		}
 		
 		if (pofilterTest.equals("xmltags")) { 
@@ -315,35 +335,47 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		
 		if (pofilterTest.equals("short")) {
 			// common short msgid translations to ignore for all langs
-			ignorableMsgIds = Arrays.asList("No","Yes","Key","Value","N/A","None","Number"," and");
+			ignorableMsgIds.addAll(Arrays.asList("No", "Yes", "Key", "Value", "N/A", "None", "Number", " and"));
+			
+			// short msgids to ignore for specific langs
+			if((translationFile.getPath().contains("/zh_TW/"))) ignorableMsgIds.addAll(Arrays.asList("automatically attach compatible subscriptions to this system","automatically attach compatible                                subscriptions to this system"));
 		}
 		
 		if (pofilterTest.equals("doublewords")) {
 			// common doublewords in the translation to ignore for all langs
-			ignorableMsgIds.addAll(Arrays.asList("Subscription Subscriptions Box","Subscription Subscriptions Label"));
+			ignorableMsgIds.addAll(Arrays.asList("Subscription Subscriptions Box", "Subscription Subscriptions Label"));
 
 			// doublewords in the translation to ignore for specific langs
 			if((translationFile.getPath().contains("/pa/"))) ignorableMsgIds.addAll(Arrays.asList("Server URL can not be None"));
 			if((translationFile.getPath().contains("/hi/"))) ignorableMsgIds.addAll(Arrays.asList("Server URL can not be None"));	// more info in bug 861095
-			if((translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("The Subscription Management Service you register with will provide your system with updates and allow additional management."));	// msgstr "Le service de gestion des abonnements « Subscription Management » avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."
+			if((translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("The Subscription Management Service you register with will provide your system with updates and allow additional management.","The subscription management service you register with will provide your system with updates and allow additional management."));	// msgstr "Le service de gestion des abonnements « Subscription Management » avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."
 			if((translationFile.getPath().contains("/or/"))) ignorableMsgIds.addAll(Arrays.asList("Run the initial checks immediately, with no delay.","Run the initial checks immediatly, with no delay.","run the initial checks immediately, with no delay"));
 		}
 		
 		if (pofilterTest.equals("unchanged")) {
 			// common unchanged translations to ignore for all langs
-			ignorableMsgIds.addAll(Arrays.asList("activation_key_entry","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","hostname[:port][/prefix]","default_button","choose_server_label","<b>SKU:</b>","%prog [options]","%prog [OPTIONS]","%%prog %s [OPTIONS]","%%prog %s [OPTIONS] CERT_FILE"/*SEE BUG 845304*/,"<b>HTTP Proxy</b>","<b>python-rhsm version:</b> %s","<b>python-rhsm Version:</b> %s","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8","%s of %s","floating-point","integer","long integer","Copyright (c) 2012 Red Hat, Inc.","RHN Classic","env_select_vbox_label","environment_treeview","no_subs_label","org_selection_label","org_selection_scrolledwindow","owner_treeview","progress_label","subscription-manager: %s","python-rhsm: %s","register_details_label","register_progressbar","system_instructions_label","system_name_label","connectionStatusLabel",""+"\n"+"This software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n","progress_label","Red Hat Subscription Manager", "Red Hat Subscription Validity Applet"));
+			ignorableMsgIds.addAll(Arrays.asList(
+						"connectionStatusLabel","progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label",
+						"hostname[:port][/prefix]",
+						"python-rhsm: %s","subscription-manager: %s", "python-rhsm: %s", "%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE"/*SEE BUG 845304*/, "%s of %s",
+						"<b>SKU:</b>", "<b>HTTP Proxy</b>", "<b>python-rhsm version:</b> %s", "<b>python-rhsm Version:</b> %s",
+						"prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8",
+						"RHN Classic", "Red Hat Subscription Manager", "Red Hat Subscription Management", "Red Hat Subscription Validity Applet",
+						"floating-point", "integer", "long integer",
+						"Copyright (c) 2012 Red Hat, Inc.",
+						"\nThis software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n"));
 
 			// unchanged translations to ignore for specific langs
-			if (translationFile.getPath().contains("/bn_IN/")) ignorableMsgIds.addAll(Arrays.asList("Red Hat Subscription Validity Applet","Subscription Validity Applet"));
+			if (translationFile.getPath().contains("/bn_IN/")) ignorableMsgIds.addAll(Arrays.asList("Subscription Validity Applet","Auto-attach"));
 			if (translationFile.getPath().contains("/ta_IN/")) ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","Repo Id:              \\t%s","Repo Url:             \\t%s","Auto-attach"));
-			if (translationFile.getPath().contains("/pt_BR/")) ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","Login:","Virtual","_Help","hostname[:port][/prefix]","virtual"));
-			if (translationFile.getPath().contains("/de_DE/")) ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","Red Hat Subscription Management","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Name","Name:                 \\t%s","Status","<b>Status:</b>","Status:               \\t%s","Version: %s","Version","Version:              \\t%s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: "));
+			if (translationFile.getPath().contains("/pt_BR/")) ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","<b>Status:</b>","Login:","Virtual","_Help","virtual"));
+			if (translationFile.getPath().contains("/de_DE/")) ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Name","Name:                 \\t%s","Status","<b>Status:</b>","Status:               \\t%s","Version: %s","Version","Version:              \\t%s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: "));
 			if (translationFile.getPath().contains("/es_ES/")) ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","No","%s: error: %s"));
 			if (translationFile.getPath().contains("/te/"))    ignorableMsgIds.addAll(Arrays.asList("page 2"));
 			if (translationFile.getPath().contains("/pa/"))    ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
-			if (translationFile.getPath().contains("/fr/"))    ignorableMsgIds.addAll(Arrays.asList("Options","options","Type","Arch","Version","page 2"));
-			if (translationFile.getPath().contains("/it/"))    ignorableMsgIds.addAll(Arrays.asList("Org: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch","Login:","No","Password:","Release: %s","Password: "));
-			
+			if (translationFile.getPath().contains("/fr/"))    ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Version","page 2"));
+			if (translationFile.getPath().contains("/it/"))    ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch","Login:","No","Password:","Release: %s","Password: "));
+			if (translationFile.getPath().contains("/zh_TW/")) ignorableMsgIds.addAll(Arrays.asList("Auto-attach"));
 		}
 		
 		if (pofilterTest.equals("urls")) {
@@ -358,11 +390,10 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 					ignorableMsgIds.add(failedTranslation.msgid);
 				}
 			}
-			
-			
-			
-			
 		}
+		
+		
+		
 		
 		// pluck out the ignorable pofilter test results
 		for (String msgid : ignorableMsgIds) {
@@ -449,11 +480,22 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("872697");
 				
 				
-				// Bug 825397	Many translated languages fail the pofilter newlines test
-				if (pofilterTest.equals("newlines") && !(translationFile.getPath().contains("/zh_CN/")||translationFile.getPath().contains("/ru/")||translationFile.getPath().contains("/ja/"))) bugIds.add("825397");			
-				// Bug 825393	[ml_IN][es_ES] translations should not use character ¶ for a new line. 
-				if (pofilterTest.equals("newlines") && translationFile.getPath().contains("/ml/")) bugIds.add("825393");
-				if (pofilterTest.equals("newlines") && translationFile.getPath().contains("/es_ES/")) bugIds.add("825393");
+//				// Bug 825397	Many translated languages fail the pofilter newlines test
+//				if (pofilterTest.equals("newlines") && !(translationFile.getPath().contains("/zh_CN/")||translationFile.getPath().contains("/ru/")||translationFile.getPath().contains("/ja/"))) bugIds.add("825397");			
+				// Bug 887957 	[ml_IN] pofilter newlines test failed for msgid="Redeeming the subscription may take..." 
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/ml/"))) {bugIds.add("887957"); bugIds.add("825393");}
+				// Bug 887966 - [es_ES] pofilter newlines test failed for msgid="Redeeming the subscription may take..."
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/es_ES/"))) {bugIds.add("887966"); bugIds.add("825393");}
+				// Bug 887989 - [de_DE] pofilter newlines test failed on msgid "Redeeming the subscription may take..."
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/de_DE/"))) {bugIds.add("887989");}
+				// Bug 887995 - [fr_FR] pofilter newlines test failed for msgid "Redeeming the subscription..." 
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/fr/"))) {bugIds.add("887995");}
+				// Bug 887997 - [it] pofilter newlines test failed om msgid="Error subscribing: %s"
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/it/"))) {bugIds.add("887997");}
+				// Bug 888006 - [kn] pofilter newlines test failed on a few msgids
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/kn/"))) {bugIds.add("888006");}
+				// Bug 888010 - [te] pofilter newlines test failed on msgid="Redeeming the subscription may take a few..."
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/te/"))) {bugIds.add("888010");}
 				
 				
 				// Bug 827059	[kn] translation fails for printf test
@@ -514,7 +556,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/te/")) bugIds.add("828867");
 				// Bug 887431 - [pt_BR] pofilter variables test is failing on a missing %s in the msgstr
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887431");
-			
+				
+				
 				// Bug 828903 - [bn_IN] failed pofilter options tests for subscription-manager translations 
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/bn_IN/")) bugIds.add("828903");
 				// Bug 828930 - [as] failed pofilter options tests for subscription-manager translations
@@ -553,7 +596,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/de_DE/")) bugIds.add("872684");
 				// Bug 887429 - [pt_BR] failed pofilter urls test
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887429");
-			
+				
+				
 				// Bug 845304 - translation of the word "[OPTIONS]" has reverted
 				if (pofilterTest.equals("unchanged")) bugIds.add("845304");
 				// Bug 829459 - [bn_IN] failed pofilter unchanged option test for subscription-manager translations
@@ -600,11 +644,16 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/mr/")) bugIds.add("871163");
 				// Bug 872704 - [es_ES] unchanged translation for msgid "Configure Proxy" 
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("872704");
-
+				// Bug 887890 - [pa_IN] polfilter unchanged test failed for msgid "Activation Keys are alphanumeric strings that..."
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pa/")) bugIds.add("887890");
+				
+				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
 				// Bug 861095 - [hi_IN] duplicate words appear in two msgid translations 
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/hi/")) bugIds.add("861095");
+				// Bug 887923 - [gu] pofilter doublewords test failed on msgid=""The subscription management service you register with..."
+				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/gu/")) bugIds.add("887923");
 				
 				
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
