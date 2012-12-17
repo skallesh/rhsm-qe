@@ -986,10 +986,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
-		List<YumRepo> repos = clienttasks.getCurrentlySubscribedYumRepos();
+		List<Repo> repos = clienttasks.getCurrentlySubscribedRepos();
 		Assert.assertFalse(repos.isEmpty());
 		clienttasks.unregister_(null, null, null);
-		List<YumRepo> repo = clienttasks.getCurrentlySubscribedYumRepos();
+		List<Repo> repo = clienttasks.getCurrentlySubscribedRepos();
 		Assert.assertTrue(repo.isEmpty());
 	}
 
