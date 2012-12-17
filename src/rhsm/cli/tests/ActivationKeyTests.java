@@ -45,16 +45,23 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)	
 	public void AttemptRegisterWithUnknownActivationKey_Test(Object blockedByBug, String unknownActivationKeyName, String org) {
 		
-		SSHCommandResult sshCommandResult = clienttasks.register_(null, null, org, null, null, null, null, null, null, null, unknownActivationKeyName, null, null, true, null, null, null, null);
-		// FIXME isSimpleASCII is a really crappy workaround for this case which I don't know how to fix properly:
-		// ACTUAL Stderr: Activation key 'ak_na_testov�n�' not found for organization 'admin'.
-		// EDXPECTED Stderr: Activation key 'ak_na_testování' not found for organization 'admin'.
-		//Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format("Activation key '%s' not found for organization '%s'.",unknownActivationKeyName, org), "Stderr message from an attempt to register with an unknown activation key.");
+		//SSHCommandResult sshCommandResult = clienttasks.register_(null, null, org, null, null, null, null, null, null, null, unknownActivationKeyName, null, null, true, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(null,String.format("%s register --force --org=%s --activationkey=\"%s\"", clienttasks.command, org, unknownActivationKeyName));
+		
+		/* FIXME isSimpleASCII is a really crappy workaround for this case which I don't know how to fix properly:
+		 * ACTUAL Stderr: Activation key 'ak_na_testov�n�' not found for organization 'admin'.
+		 * EXPECTED Stderr: Activation key 'ak_na_testování' not found for organization 'admin'.
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format("Activation key '%s' not found for organization '%s'.",unknownActivationKeyName, org), "Stderr message from an attempt to register with an unknown activation key.");
+		 */
+		/* 
 		if (isStringSimpleASCII(unknownActivationKeyName)) {
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format("Activation key '%s' not found for organization '%s'.",unknownActivationKeyName, org), "Stderr message from an attempt to register with an unknown activation key.");
 		} else {
 			Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), String.format("Activation key '%s' not found for organization '%s'.",".*", org), "Stderr message from an attempt to register with an unknown activation key.");
 		}
+		FIXME UPDATE: THE CRAPPY WORKAROUND ABOVE APPEARS TO HAVE BEEN FIXED (BY BUG 800323 ?), REVERTING BACK TO ORIGINAL ASSERT... */
+		
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format("Activation key '%s' not found for organization '%s'.",unknownActivationKeyName, org), "Stderr message from an attempt to register with an unknown activation key.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255));
 	}
 	

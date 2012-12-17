@@ -5315,8 +5315,16 @@ repolist: 3,394
 		return true;
 	}
 	
-	public SSHCommandResult runCommandWithLang(String lang,String rhsmCall){
-		return sshCommandRunner.runCommandAndWait("LANG="+lang+" " + rhsmCall);
+	public SSHCommandResult runCommandWithLang(String lang, String rhsmCommand){
+		if (lang==null) {
+			lang="";
+		} else {
+			if (!lang.toUpperCase().contains(".UTF")) lang=lang+".UTF-8";	// append ".UTF-8" when not already there
+			lang="LANG="+lang;
+		}
+		String command = lang+" "+rhsmCommand;
+		command = "PYTHONIOENCODING=ascii "+command;	// THIS WORKAROUND IS NEEDED AFTER master commit 056e69dc833919709bbf23d8a7b73a5345f77fdf RHEL6.4 commit 1bc25596afaf294cd217200c605737a43112a378 for bug 800323
+		return sshCommandRunner.runCommandAndWait(command);
 	}
 	public SSHCommandResult runCommandWithLangAndAssert(String lang, String rhsmCommand, Integer exitCode, String stdoutRegex, String stderrRegex){
 		List<String> stdoutRegexs = null;
@@ -5333,12 +5341,12 @@ repolist: 3,394
 		if (lang==null) {
 			lang="";
 		} else {
-			if (!lang.toUpperCase().contains(".UTF")) lang=lang+".UTF-8";
+			if (!lang.toUpperCase().contains(".UTF")) lang=lang+".UTF-8";	// append ".UTF-8" when not already there
 			lang="LANG="+lang;
 		}
 		String command = lang+" "+rhsmCommand;
 		command = "PYTHONIOENCODING=ascii "+command;	// THIS WORKAROUND IS NEEDED AFTER master commit 056e69dc833919709bbf23d8a7b73a5345f77fdf RHEL6.4 commit 1bc25596afaf294cd217200c605737a43112a378 for bug 800323
-		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command.trim(), exitCode, stdoutRegexs, stderrRegexs);
+		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, exitCode, stdoutRegexs, stderrRegexs);
 	}
 	
 	public void setLanguage(String lang){
