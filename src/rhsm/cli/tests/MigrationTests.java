@@ -2534,6 +2534,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 884688 - RHN channel "rhel-x86_64-hpc-node-dts-6" is mapped to 177, but the product cert 177.pem is missing 
 					bugIds.add("884688");
 				}
+				if (rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3.1")) { 
+					// Bug 888791 - product cert mappings for RHN Channels rhel-x86_64-server-6-rhevm-3.1* are missing
+					bugIds.add("888791");
+				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
