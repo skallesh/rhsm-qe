@@ -839,6 +839,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		EntitlementCert entitlementCert;
 		String systemCertificateVersionFactValue;
 		SSHCommandResult sshCommandResult;
+		String tooManyContentSetsMsgFormat = "Too many content sets for certificate. Please upgrade to a newer client to use subscription: %s";	// this msgid comes from Candlepin
+		tooManyContentSetsMsgFormat = "Too many content sets for certificate %s. A newer client may be available to address this problem. See kbase https://access.redhat.com/knowledge/node/129003 for more information.";
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sku, clienttasks.getCurrentlyAvailableSubscriptionPools());
@@ -850,7 +852,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.facts(null, true, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "None", "When the system.certificate_version fact is null, its fact value is reported as 'None'.");
 		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "Too many content sets for certificate. Please upgrade to a newer client to use subscription: "+pool.subscriptionName, "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format(tooManyContentSetsMsgFormat, pool.subscriptionName), "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No entitlements should be consumed after attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
@@ -861,7 +863,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.facts(null, true, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "1.0", "When the system.certificate_version fact is 1.0, its fact value is reported as '1.0'.");
 		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "Too many content sets for certificate. Please upgrade to a newer client to use subscription: "+pool.subscriptionName, "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format(tooManyContentSetsMsgFormat, pool.subscriptionName), "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No entitlements should be consumed after attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
