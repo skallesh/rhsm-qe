@@ -5315,6 +5315,15 @@ repolist: 3,394
 		return true;
 	}
 	
+	/**
+	 * This command is very useful to run an rhsm cli command in a specific language.<p>
+	 * It is also very useful to run an rhsm cli command in the native local (with lang=nul)
+	 * when the normal sshCommandRunner encounters:<br>
+	 * Stderr: 'ascii' codec can't decode byte 0xe2 in position 55: ordinal not in range(128)
+	 * @param lang
+	 * @param rhsmCommand
+	 * @return
+	 */
 	public SSHCommandResult runCommandWithLang(String lang, String rhsmCommand){
 		if (lang==null) {
 			lang="";
