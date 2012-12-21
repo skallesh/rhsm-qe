@@ -832,10 +832,31 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(systemTimeInSeconds-tol < migratTimeInSeconds && migratTimeInSeconds < systemTimeInSeconds+tol, "The migration date fact '"+factMap.get(migrationDateFact)+"' was set within the last '"+tol+"' seconds.");
 		
 		// assert we are no longer registered to RHN Classic
-		expectedMsg = "System successfully unregistered from RHN Classic.";
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is abscent.  This indicates this system is not registered using RHN Classic.");
-		Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered.");
+		// Two possible results can occur when the rhn-migrate-classic-to-rhsm script attempts to unregister from RHN Classic.  We need to tolerate both cases... 
+		String successfulUnregisterMsg = "System successfully unregistered from RHN Classic.";
+		String unsuccessfulUnregisterMsg = "Did not receive a completed unregistration message from RHN Classic for system "+rhnSystemId+"."+"\n"+"Please investigate on the Customer Portal at https://access.redhat.com.";
+		if (sshCommandResult.getStdout().contains(successfulUnregisterMsg)) {
+			// Case 1: number of subscribed channels is low and all communication completes in a timely fashion.  Here is a snippet from stdout:
+			//		Preparing to unregister system from RHN Classic ...
+			//		System successfully unregistered from RHN Classic.
+			Assert.assertTrue(sshCommandResult.getStdout().contains(successfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+successfulUnregisterMsg);
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+unsuccessfulUnregisterMsg);
+			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
+		} else {
+			// Case 2: number of subscribed channels is high and communication fails in a timely fashion (see bug 881952).  Here is a snippet from stdout:	
+			//		Preparing to unregister system from RHN Classic ...
+			//		Did not receive a completed unregistration message from RHN Classic for system 1023722557.
+			//		Please investigate on the Customer Portal at https://access.redhat.com.
+			log.warning("Did not detect expected message '"+successfulUnregisterMsg+"' from "+rhnMigrateTool+" stdout.  Nevertheless, the tool should inform us and continue the migration process.");
+			Assert.assertTrue(sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+unsuccessfulUnregisterMsg);
+			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			if (!clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId)) {
+				Assert.assertFalse(false, "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
+			} else {
+				log.warning("The RHN Classic server believes that this system is still registered.  SystemId '"+rhnSystemId+"' should be manually deleted on the Customer Portal.");
+			}
+		}
 
 		// assert products are copied
 		expectedMsg = String.format("Product certificates copied successfully to %s !",	clienttasks.productCertDir);
@@ -1045,11 +1066,32 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// assert we are no longer registered to RHN Classic
-		expectedMsg = "System successfully unregistered from RHN Classic.";
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  This indicates this system is not registered using RHN Classic.");
-		Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered.");
-
+		// Two possible results can occur when the rhn-migrate-classic-to-rhsm script attempts to unregister from RHN Classic.  We need to tolerate both cases... 
+		String successfulUnregisterMsg = "System successfully unregistered from RHN Classic.";
+		String unsuccessfulUnregisterMsg = "Did not receive a completed unregistration message from RHN Classic for system "+rhnSystemId+"."+"\n"+"Please investigate on the Customer Portal at https://access.redhat.com.";
+		if (sshCommandResult.getStdout().contains(successfulUnregisterMsg)) {
+			// Case 1: number of subscribed channels is low and all communication completes in a timely fashion.  Here is a snippet from stdout:
+			//		Preparing to unregister system from RHN Classic ...
+			//		System successfully unregistered from RHN Classic.
+			Assert.assertTrue(sshCommandResult.getStdout().contains(successfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+successfulUnregisterMsg);
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+unsuccessfulUnregisterMsg);
+			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
+		} else {
+			// Case 2: number of subscribed channels is high and communication fails in a timely fashion (see bug 881952).  Here is a snippet from stdout:	
+			//		Preparing to unregister system from RHN Classic ...
+			//		Did not receive a completed unregistration message from RHN Classic for system 1023722557.
+			//		Please investigate on the Customer Portal at https://access.redhat.com.
+			log.warning("Did not detect expected message '"+successfulUnregisterMsg+"' from "+rhnMigrateTool+" stdout.  Nevertheless, the tool should inform us and continue the migration process.");
+			Assert.assertTrue(sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+unsuccessfulUnregisterMsg);
+			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			if (!clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId)) {
+				Assert.assertFalse(false, "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
+			} else {
+				log.warning("The RHN Classic server believes that this system is still registered.  SystemId '"+rhnSystemId+"' should be manually deleted on the Customer Portal.");
+			}
+		}
+		
 		// assert that we are newly registered using rhsm
 		clienttasks.identity(null, null, null, null, null, null, null);
 		Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
@@ -2340,7 +2382,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
-		int rhnChildChannelSubSize = 40;	// 50;	// used to break down rhnAvailableChildChannels into smaller sub-lists to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
+		int rhnChildChannelSubSize = 40;	// 50;	// used to break down rhnAvailableChildChannels into smaller sub-lists to avoid bugs 818786 881952
 
 		String basicauthproxyUrl = String.format("%s:%s", sm_basicauthproxyHostname,sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", sm_noauthproxyHostname,sm_noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
