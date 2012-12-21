@@ -54,6 +54,10 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   https://engineering.redhat.com/trac/LocalizationServices
  *   https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nRHEL6LanguageSupportCriteria
  *   
+ *   
+ *   Sample for loop through the translation files:
+ *   [root@jsefler-6 ~]# for L in `rpm -ql subscription-manager | grep rhsm.mo`; do echo ""; echo "LOOKING FOR MSGID 'Product ID:' IN LANG FILE $L..."; msgunfmt $L | grep -i 'Product ID:' -A1; done;
+ *   
  **/
 @Test(groups={"TranslationTests"})
 public class TranslationTests extends SubscriptionManagerCLITestScript {
@@ -449,7 +453,6 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		List<String> helpOptions = Arrays.asList(new String[]{" -h"," --help"});
 		
 		// [root@jsefler-r63-server ~]# for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do echo ""; echo "# LANG=$L.UTF-8 subscription-manager --help | grep -- --help"; LANG=$L.UTF-8 subscription-manager  --help | grep -- --help; done;
-		
 		// subscription-manager (-h or --help option is randomly chosen for each lang)
 		command = clienttasks.command;
 		lang = "en_US"; usage = "Usage: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";				ll.add(Arrays.asList(new Object[] {null, lang, command+helpOptions.get(randomGenerator.nextInt(helpOptions.size())), newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
