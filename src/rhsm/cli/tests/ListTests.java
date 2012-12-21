@@ -6,7 +6,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +16,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
@@ -627,28 +627,27 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	protected String productIdForListSubscriptionContainingUTF8Character_Test = "utf8-subscription-sku";
-	@Test(	description="subscription-manager: subcription manager list consumed should filter by servicelevel when this option is passed.",
-			groups={"ListSubscriptionContainingUTF8Character_Test","blockedByBug-880070"},
-			enabled=true)
-			//@ImplementsNitrateTest(caseId=)
-	public void ListSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
-		
-		
-		String name = "Subscription name containing UTF–8 character \\u2013";	// the \u2013 character is between "UTF" and "8"
-		//name = "Subscription name NOT containing UTF8 character \\u2013";
-		String productId = productIdForListSubscriptionContainingUTF8Character_Test;
+    protected String subscriptionNameForSubscriptionContainingUTF8Character = "Subscription name containing UTF–8 character \\u2013";	// the \u2013 character is between "UTF" and "8"
+	protected String productIdForSubscriptionContainingUTF8Character = "utf8-subscription-sku";
+	protected SubscriptionPool poolForSubscriptionContainingUTF8Character = null;
+	@BeforeGroups(groups={"setup"},value="SubscriptionContainingUTF8CharacterTests")
+	public void beforeGroupForSubscriptionContainingUTF8CharacterTests() throws JSONException, Exception {
 		List<String> providedProductIds = new ArrayList<String>(); providedProductIds.clear();
 		Map<String,String> attributes = new HashMap<String,String>(); attributes.clear();
 		attributes.put("version", "2013");
 		// delete already existing subscription and products
-		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForSubscriptionContainingUTF8Character);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productIdForSubscriptionContainingUTF8Character);
 		// create a new engineering product, marketing product that provides the engineering product, and a subscription for the marketing product
 		attributes.put("type", "MKT");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
-		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
-		
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, subscriptionNameForSubscriptionContainingUTF8Character, productIdForSubscriptionContainingUTF8Character, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productIdForSubscriptionContainingUTF8Character, providedProductIds);
+	}
+	@Test(	description="subscription-manager: subcription manager list available should display subscriptions containing UTF-8 character(s)",
+			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-880070"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
 		
 		//	201212051805:22.585 - FINE: ssh root@jsefler-6.usersys.redhat.com subscription-manager list --available (com.redhat.qe.tools.SSHCommandRunner.run)
 		//	201212051805:24.606 - FINE: Stdout: 
@@ -668,14 +667,42 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// register and list --available to find the subscription containing a \u2013 character
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
-		SubscriptionPool subscriptionPool = null;
-		subscriptionPool = SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
-		Assert.assertNotNull(subscriptionPool, "Found subscription product '"+productId+"' from the list of available subscriptions whose name contains a UTF8 character.");
-		Assert.assertEquals(subscriptionPool.subscriptionName, name, "asserting the subscription name.");
+		
+		//List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.runCommandWithLang(null, clienttasks.command+" list --available").getStdout());
+		poolForSubscriptionContainingUTF8Character = SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", productIdForSubscriptionContainingUTF8Character, availableSubscriptionPools);
+		Assert.assertNotNull(poolForSubscriptionContainingUTF8Character, "Found subscription product '"+productIdForSubscriptionContainingUTF8Character+"' from the list of available subscriptions whose name contains a UTF8 character.");
+		Assert.assertEquals(poolForSubscriptionContainingUTF8Character.subscriptionName, subscriptionNameForSubscriptionContainingUTF8Character, "asserting the subscription name.");
 	}
-	@AfterGroups(groups="setup",value="ListSubscriptionContainingUTF8Character_Test")
-	public void afterGroupForListSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
-		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForListSubscriptionContainingUTF8Character_Test);
+	@Test(	description="subscription-manager: subcription manager attach a subscription containing UTF-8 character(s)",
+			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204"},
+			dependsOnMethods={"ListSubscriptionContainingUTF8Character_Test"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttachSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
+		SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(null, clienttasks.command+" attach --pool "+poolForSubscriptionContainingUTF8Character.poolId);
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Successfully attached a subscription for: %s",subscriptionNameForSubscriptionContainingUTF8Character), "Stdout from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
+	}
+	@Test(	description="subscription-manager: subcription manager remove a consumed subscription containing UTF-8 character(s)",
+			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204"},
+			dependsOnMethods={"AttachSubscriptionContainingUTF8Character_Test"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void RemoveSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
+		//List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.runCommandWithLang(null, clienttasks.command+" list --consumed").getStdout());
+		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(client.runCommandAndWait(clienttasks.command+" list --consumed").getStdout());
+		ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", productIdForSubscriptionContainingUTF8Character, consumedProductSubscriptions);
+		Assert.assertNotNull(consumedProductSubscription, "Found subscription product '"+productIdForSubscriptionContainingUTF8Character+"' from the list of consumed subscriptions whose name contains a UTF8 character.");
+		Assert.assertEquals(consumedProductSubscription.productName, subscriptionNameForSubscriptionContainingUTF8Character, "asserting the consumed subscription name.");
+		clienttasks.unsubscribeFromSerialNumber(consumedProductSubscription.serialNumber);
+	}
+	@AfterClass(groups={"setup"})	// needed since @AfterGroups will skip when some of the tests within the group are skipped even when alwaysRun=true
+	@AfterGroups(groups={"setup"},value="SubscriptionContainingUTF8CharacterTests"/*,alwaysRun=true HAS NO EFFECT*/)
+	public void afterGroupForSubscriptionContainingUTF8CharacterTests() throws JSONException, Exception {
+		clienttasks.unregister_(null, null, null);	// to return any consumed subscriptions containing UTF8 characters
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForSubscriptionContainingUTF8Character);
 	}
 	
 	
