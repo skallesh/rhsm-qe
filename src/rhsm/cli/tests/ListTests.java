@@ -72,7 +72,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that satisfy the system hardware are listed as available",
-			groups={"AcceptanceTests", "blockedByBugzilla-712502","unsubscribeBeforeGroup"},
+			groups={"AcceptanceTests", "blockedByBug-712502","unsubscribeBeforeGroup"},
 			dataProvider="getAvailableSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
@@ -95,7 +95,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that do NOT satisfy the hardware are NOT listed as available",
-			groups={"AcceptanceTests", "blockedByBugzilla-712502","unsubscribeBeforeGroup"},
+			groups={"AcceptanceTests", "blockedByBug-712502","unsubscribeBeforeGroup"},
 			dataProvider="getNonAvailableSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
@@ -645,9 +645,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	@Test(	description="subscription-manager: subcription manager list available should display subscriptions containing UTF-8 character(s)",
 			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-880070"},
+			priority=110,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void ListSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
+	public void ListSubscriptionContainingUTF8Character_Test() {
 		
 		//	201212051805:22.585 - FINE: ssh root@jsefler-6.usersys.redhat.com subscription-manager list --available (com.redhat.qe.tools.SSHCommandRunner.run)
 		//	201212051805:24.606 - FINE: Stdout: 
@@ -677,9 +678,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: subcription manager attach a subscription containing UTF-8 character(s)",
 			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204"},
 			dependsOnMethods={"ListSubscriptionContainingUTF8Character_Test"},
+			priority=120,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttachSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
+	public void AttachSubscriptionContainingUTF8Character_Test() {
 		SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(null, clienttasks.command+" attach --pool "+poolForSubscriptionContainingUTF8Character.poolId);
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Successfully attached a subscription for: %s",subscriptionNameForSubscriptionContainingUTF8Character), "Stdout from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
@@ -688,10 +690,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: subcription manager remove a consumed subscription containing UTF-8 character(s)",
 			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204"},
 			dependsOnMethods={"AttachSubscriptionContainingUTF8Character_Test"},
+			priority=130,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RemoveSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
-		//List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.runCommandWithLang(null, clienttasks.command+" list --consumed").getStdout());
+	public void RemoveSubscriptionContainingUTF8Character_Test() {
+		// SURPRISED THAT THIS DID NOT WORK List AND THE FOLLOWING DOES <ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.runCommandWithLang(null, clienttasks.command+" list --consumed").getStdout());
 		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(client.runCommandAndWait(clienttasks.command+" list --consumed").getStdout());
 		ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", productIdForSubscriptionContainingUTF8Character, consumedProductSubscriptions);
 		Assert.assertNotNull(consumedProductSubscription, "Found subscription product '"+productIdForSubscriptionContainingUTF8Character+"' from the list of consumed subscriptions whose name contains a UTF8 character.");
