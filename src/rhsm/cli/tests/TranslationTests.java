@@ -284,6 +284,29 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	// TODO Create an equivalent test for candlepin    VerifyTranslationFileContainsAllMsgids_Test
 	// TODO Bug 856419 - [ALL LANG][RHSM CLI] Unlocalized strings for Subscription Manager CLI 
 	// TODO Bug 885145 - some langs are missing a translations for "The system is unable to redeem the requested subscription: %s"
+	
+	// TODO NEED TO FIGURE OUT HOW TO TEST msgid_plural.  THIS SEESM TO BREAK AFTER RUNNING THROUGH msgunfmt
+	// LANG FILE /usr/share/locale/ko/LC_MESSAGES/rhsm.mo...
+	//		msgid "Covered by contract %s through %s"
+	//		msgid_plural "Covered by contracts %s through %s"
+	//		msgstr[0] "契約 %s で %s まで適用"
+	//	LANG FILE /usr/share/locale/ru/LC_MESSAGES/rhsm.mo...
+	//		msgid "Covered by contract %s through %s"
+	//		msgid_plural "Covered by contracts %s through %s"
+	//		msgstr[0] "По контракту %s до %s"
+	//		msgstr[1] "По контрактам %s до %s"
+	//		msgstr[2] "По контрактам %s до %s"
+	//	LANG FILE /usr/share/locale/zh_CN/LC_MESSAGES/rhsm.mo...
+	//		msgid "Covered by contract %s through %s"
+	//		msgid_plural "Covered by contracts %s through %s"
+	//		msgstr[0] "由合同 %s 到 %s 覆盖"
+	//	LANG FILE /usr/share/locale/zh_TW/LC_MESSAGES/rhsm.mo...
+	//		msgid "Covered by contract %s through %s"
+	//		msgid_plural "Covered by contracts %s through %s"
+	//		msgstr[0] "合約有效日期乃 %s 至 %s"
+	
+	
+	
 	// Configuration Methods ***********************************************************************
 	@BeforeClass (groups="setup")
 	public void buildTranslationFileMapForSubscriptionManagerBeforeClass() {
