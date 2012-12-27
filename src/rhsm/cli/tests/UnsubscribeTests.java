@@ -172,8 +172,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// now unsubscribe from the serial number (while not registered)
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "We should be consuming an entitlement (even while not registered)");
-		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
-		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(), 0, "We should not be consuming any entitlements after unsubscribing (while not registered)");
+		//clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);	// this will assert a different stdout message, instead call unsubscribe manually and assert results
+		SSHCommandResult result = clienttasks.unsubscribe(null,entitlementCert.serialNumber,null,null,null);
+		Assert.assertEquals(result.getStdout().trim(), "Subscription with serial number "+entitlementCert.serialNumber+" removed from this system", "We should always be able to remove a subscription (even while not registered).");
+		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(), 0, "We should not be consuming any entitlements after unsubscribing (while not registered).");
 	}
 	
 	@Test(description="Attempt to unsubscribe when from an invalid serial number",
