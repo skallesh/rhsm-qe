@@ -50,6 +50,9 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=877452 < Add blocker to import cert
   https://bugzilla.redhat.com/show_bug.cgi?id=839772
   https://bugzilla.redhat.com/show_bug.cgi?id=884259 < redeem blocker
+  https://bugzilla.redhat.com/show_bug.cgi?id=877579
+  https://bugzilla.redhat.com/show_bug.cgi?id=877579
+  https://bugzilla.redhat.com/show_bug.cgi?id=863572 < firstboot
   
 GUI DONE:
   https://bugzilla.redhat.com/show_bug.cgi?id=873418 < new locators
