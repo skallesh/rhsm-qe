@@ -615,7 +615,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Import Created is sent over an RSS atom feed.",
-			groups={"ImportCreated_Test"}, dependsOnGroups={"ExportCreated_Test","OwnerCreated_Test"},
+			groups={/*"blockedByBug-891334",*/"ImportCreated_Test"}, dependsOnGroups={"ExportCreated_Test","OwnerCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ImportCreated_Test() throws Exception {
@@ -773,14 +773,15 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Configuration Methods ***********************************************************************
-	
-	/*debugTesting*/	@BeforeClass(groups="setup")
-	public void setupBeforeClass() throws Exception {
-		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
-		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
-		// This also allows us to individually run this Test Class on Hudson.
-		RegisterWithCredentials_Test(); // needed to populate registrationDataList
-	}
+
+// TODO I DON'T THINK THIS CONFIGURATION METHOD IS NEEDED ANYMORE, AND I DON'T REMEMBER WHY IT WAS ORIGINALLY NEEDED.  1/2/2013 jsefler
+//	@BeforeClass(groups="setup")
+//	public void setupBeforeClass() throws Exception {
+//		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
+//		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
+//		// This also allows us to individually run this Test Class on Hudson.
+//		RegisterWithCredentials_Test(); // needed to populate registrationDataList
+//	}
 	
 	
 	
