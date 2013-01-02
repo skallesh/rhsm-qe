@@ -133,12 +133,26 @@ public class Translation extends AbstractCommandLineData {
 		msgstr "Fakten_Ansicht"
 		*/
 		
+		/*
+		msgid "Could not read installation number from /etc/sysconfig/rhn/install-num.  Aborting."
+		msgstr " /etc/sysconfig/rhn/install-num থেকে ইনস্টলেশন সংখ্যা পড়া যায়নি। কর্ম পরিত্যাগ করা হচ্ছে।"
+
+		msgid "Covered by contract %s through %s"
+		msgid_plural "Covered by contracts %s through %s"
+		msgstr[0] "%s চুক্তি দ্বারা %s অব্দি সুরক্ষিত"
+		msgstr[1] "%s চুক্তিগুলি দ্বারা %s অব্দি সুরক্ষিত"
+
+		msgid "Current identity is: %s"
+		msgstr "বর্তমানে ব্যবহৃত পরিচিতি: %s"
+		*/
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field	regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		regexes.put("msgid",	"msgid (\".*\"(\\n\".*\")*)");
-		regexes.put("msgstr",	"msgstr (\".*\"(\\n\".*\")*)");
+		regexes.put("msgstr",	"(?:msgstr|msgstr\\[0\\]) (\".*\"(\\n\".*\")*)");		//"msgstr (\".*\"(\\n\".*\")*)"); THIS FAILED TO CAPTURE THE msgstr[0] WHEN THERE WAS A PLURAL
+		
+		// TODO CURRENTLY THIS ROUTINE FAILS TO FIND THE msgid_plural AND msgstr[1]
 		
 		List<Map<String,String>> translationMapList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

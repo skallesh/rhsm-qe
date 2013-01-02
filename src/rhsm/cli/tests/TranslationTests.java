@@ -273,8 +273,29 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(pofilterFailedTranslations.size(),0, "Discounting the ignored test results, the number of failed pofilter '"+pofilterTest+"' tests for translation file '"+translationFile+"'.");
 	}
 	
+	@Test(	description="verify that msgid \"Deprecated, see attach\" did NOT translate the command line module \"attach\" for all languages",
+			groups={"blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyMsdIdDeprecatedSeeAttach() {
+		verifyTranslatedMsdIdContainsSubStringForAllLangs("Deprecated, see attach","attach");
+	}
 	
+	@Test(	description="verify that msgid \"Deprecated, see remove\" did NOT translate the command line module \"remove\" for all languages",
+			groups={"blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyMsdIdDeprecatedSeeRemove() {
+		verifyTranslatedMsdIdContainsSubStringForAllLangs("Deprecated, see remove","remove");
+	}
 	
+	@Test(	description="verify that msgid \"deprecated, see auto-attach-interval\" did NOT translate the command line option \"auto-attach-interval\" for all languages",
+			groups={"blockedByBug-891375","blockedByBug-891434"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyMsdIdDeprecatedSeeAutoAttachInterval() {
+		verifyTranslatedMsdIdContainsSubStringForAllLangs("deprecated, see auto-attach-interval","auto-attach-interval");
+	}
 	
 	
 	// Candidates for an automated Test:
@@ -351,7 +372,20 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	protected File localeFile(String locale) {
 		return new File("/usr/share/locale/"+locale+"/LC_MESSAGES/rhsm.mo");
 	}
-	
+	protected void verifyTranslatedMsdIdContainsSubStringForAllLangs(String msgid, String subString) {
+		if (!translationMsgidSet.contains(msgid)) Assert.fail("Could not find expected msgid \""+msgid+"\".  Has this msgid changed?");
+		boolean warningsFound = false;
+		for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {
+			Translation translation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgid, translationFileMapForSubscriptionManager.get(translationFile));
+			if (translation.msgstr.contains(subString)) {
+				Assert.assertTrue(translation.msgstr.contains(subString),"\""+subString+"\" remains correctly untranslated in "+translationFile+" translation: "+translation);
+			} else {
+				log.warning("Expected \""+subString+"\" to remain untranslated in "+translationFile+" translation: "+translation);
+				warningsFound = true;
+			}
+		}
+		Assert.assertFalse(warningsFound,"No errors were found in the translations for msgid \""+msgid+"\".");
+	}
 	
 	
 	// Data Providers ***********************************************************************
