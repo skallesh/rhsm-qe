@@ -319,6 +319,7 @@
           active-on nil}}]
   (ui selecttab :all-available-subscriptions)
   (ui click :filters)
+  (ui waittillwindowexist :filter-dialog 5)
   (ui (setchecked match-system?) :match-system)
   (ui (setchecked do-not-overlap?) :do-not-overlap)
   (ui (setchecked match-installed?) :match-installed)
@@ -387,7 +388,7 @@
   (ui waittillwindowexist :contract-selection-dialog 5)
   (if (= 1 (ui guiexist :contract-selection-dialog))
     (do (ui selectrowindex :contract-selection-table 0)  ;;pick first contract for now
-        (ui click :subscribe-contract-selection)))
+        (ui click :attach-contract-selection)))
   (checkforerror)
   (wait-for-progress-bar))
 
