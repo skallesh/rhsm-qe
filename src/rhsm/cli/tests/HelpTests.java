@@ -747,12 +747,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			options.add("-h, --help");
 			options.add("--register");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
-				commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;	// needed to avoid RuntimeError: could not open display
+				
+				// attempt to avoid bug 881095 RuntimeError: could not open display
+				if ((Integer.valueOf(clienttasks.redhatReleaseX)==6 && Float.valueOf(clienttasks.redhatReleaseXY)<6.4) || 
+					(Integer.valueOf(clienttasks.redhatReleaseX)==5 && Float.valueOf(clienttasks.redhatReleaseXY)<5.10)){
+					commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
+				}
+				
 				List <String> usages = new ArrayList<String>();
 				String usage = String.format("Usage: %s [OPTIONS]",command);
 				usages.add(usage);
-				ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
-				ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
+				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("881095"), commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
+				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("881095"), commandHelp, optionsRegex, new ArrayList<String>(options)}));
 			}
 		}
 		
