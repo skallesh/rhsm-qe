@@ -57,7 +57,7 @@
                    :error-updating #"Error updating system data*"
                    :date-error #"Invalid date format. Please re-enter a valid date*"
                    :invalid-cert #"The following files are not valid certificates and were not imported"
-                   :cert-does-not-exist #"The following certficate files did not exist"
+                   :cert-does-not-exist #"The following certificate files did not exist"
                    :no-sla-available #"No service level will cover all installed products"
                    })
 

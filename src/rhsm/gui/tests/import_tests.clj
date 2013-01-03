@@ -215,7 +215,8 @@
 
 (defn ^{Test {:groups ["import"
                        "blockedByBug-702075"
-                       "blockedByBug-748912"]}}
+                       "blockedByBug-748912"
+                       "blockedByBug-877452"]}}
   import_nonexistant [_]
   (verify
    (not (tasks/substring?
