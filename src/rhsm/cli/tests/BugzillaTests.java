@@ -371,7 +371,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify only One Cert is downloaded Per One Subscription", groups = { "VerifyOneCertPerOneSubscription" }, enabled = true)
+	@Test(description = "Verify only One Cert is downloaded Per One Subscription", groups = {"VerifyOneCertPerOneSubscription"}, enabled = true)
 	@ImplementsNitrateTest(caseId = 50215)
 	public void VerifyOneCertPerOneSubscription() throws JSONException,
 	Exception {
@@ -985,7 +985,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 		List<Repo> repos = clienttasks.getCurrentlySubscribedRepos();
 		Assert.assertFalse(repos.isEmpty());
 		clienttasks.unregister_(null, null, null);
@@ -1504,8 +1504,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Map<String, String> factsMap = new HashMap<String, String>();
 		Integer moreSockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues("/socket.facts",
-				factsMap);
+		clienttasks.createFactsFileWithOverridingValues("/socket.facts",factsMap);
 		clienttasks.facts_(null, true, null, null, null);
 		for (SubscriptionPool SubscriptionPool : clienttasks
 				.getCurrentlyAllAvailableSubscriptionPools()) {
@@ -1516,7 +1515,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 								SubscriptionPool.poolId, "sockets");
 				if ((!(poolProductSocketsAttribute == null))
 						&& (poolProductSocketsAttribute.equals("2"))) {
-					clienttasks.subscribeToSubscriptionPool(SubscriptionPool);
+					clienttasks.subscribeToSubscriptionPool_(SubscriptionPool);
 				}
 			}
 		}
@@ -1963,7 +1962,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 		for (InstalledProduct installedProductsBeforeAuto : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			if (installedProductsBeforeAuto.status.equals("Subscribed"))
@@ -2049,7 +2048,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 		String subscribeResult = getEntitlementCertFilesWithPermissions();
 		Pattern p = Pattern.compile("[,\\s]+");
 		String[] result = p.split(subscribeResult);
