@@ -615,7 +615,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Import Created is sent over an RSS atom feed.",
-			groups={/*"blockedByBug-891334",*/"ImportCreated_Test"}, dependsOnGroups={"ExportCreated_Test","OwnerCreated_Test"},
+			groups={"blockedByBug-891334","ImportCreated_Test"}, dependsOnGroups={"ExportCreated_Test","OwnerCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ImportCreated_Test() throws Exception {
