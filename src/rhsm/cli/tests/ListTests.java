@@ -1,5 +1,6 @@
 package rhsm.cli.tests;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -699,9 +700,61 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
 	}
+	@Test(	description="rct: cat-cert an entitlement containing UTF-8 character(s)",
+			groups={"SubscriptionContainingUTF8CharacterTests"/*,"blockedByBug-890296" TODO UNCOMMENT AFTER BUG IS FIXED AND REMOVE WORKAROUND FOR BUG 890296 */},
+			dependsOnMethods={"AttachSubscriptionContainingUTF8Character_Test"},
+			priority=120,
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void CatCertContainingUTF8Character_Test() throws JSONException, Exception {
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId="890296"; 
+		Boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			// must cleanup utf8-subscription-sku to avoid contaminating other tests; then skip this test
+			afterGroupForSubscriptionContainingUTF8CharacterTests();
+			// Bug 890296 - 'ascii' codec can't encode character u'\u2013'.
+			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
+		
+		List<File> entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
+		Assert.assertEquals(entitlementCertFiles.size(), 1, "Expecting only one entitlement cert being consumed.");
+		
+		//	[root@jsefler-6 ~]# rct cat-cert /etc/pki/entitlement/6487424643396210003.pem 
+		//	Traceback (most recent call last):
+		//	  File "/usr/bin/rct", line 44, in <module>
+		//	    sys.exit(abs(main() or 0))
+		//	  File "/usr/bin/rct", line 39, in main
+		//	    return RctCLI().main()
+		//	  File "/usr/share/rhsm/subscription_manager/cli.py", line 156, in main
+		//	    return cmd.main()
+		//	  File "/usr/share/rhsm/rct/commands.py", line 44, in main
+		//	    return_code = self._do_command()
+		//	  File "/usr/share/rhsm/rct/commands.py", line 92, in _do_command
+		//	    skip_products=self.options.no_products)
+		//	  File "/usr/share/rhsm/rct/printing.py", line 196, in printc
+		//	    printer.printc(cert)
+		//	  File "/usr/share/rhsm/rct/printing.py", line 105, in printc
+		//	    print self.cert_to_str(cert)
+		//	  File "/usr/share/rhsm/rct/printing.py", line 166, in cert_to_str
+		//	    order_printer.as_str(cert.order), "\n".join(s))
+		//	  File "/usr/share/rhsm/rct/printing.py", line 47, in as_str
+		//	    s.append("\t%s: %s" % (_("Name"), xstr(order.name)))
+		//	  File "/usr/share/rhsm/rct/printing.py", line 26, in xstr
+		//	    return str(value)
+		//	UnicodeEncodeError: 'ascii' codec can't encode character u'\u2013' in position 32: ordinal not in range(128)
+		//	[root@jsefler-6 ~]# echo $?
+		//	1
+		
+		SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(null, "rct cat-cert "+entitlementCertFiles.get(0));
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from an attempt to run rct cat-cert on an entitlement containing UTF-8 character(s)");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from an attempt to run rct cat-cert on an entitlement containing UTF-8 character(s)");
+	}
 	@Test(	description="subscription-manager: subcription manager remove a consumed subscription containing UTF-8 character(s)",
 			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204"},
-			dependsOnMethods={"AttachSubscriptionContainingUTF8Character_Test"},
+			dependsOnMethods={"CatCertContainingUTF8Character_Test"},
 			priority=130,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
@@ -745,11 +798,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
 	public void createFutureSubscriptionPoolBeforeClass() throws Exception {
 		// don't bother attempting to create a subscription unless onPremises
-//		if (!sm_serverType.equals(CandlepinType.standalone)) return;
+		//if (!sm_serverType.equals(CandlepinType.standalone)) return;
 		if (server==null) {
 			log.warning("Skipping createFutureSubscriptionPoolBeforeClass() when server is null.");
 			return;	
 		}
+//debugTesting if (true) return;
 		
 		// find a randomly available product id
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
