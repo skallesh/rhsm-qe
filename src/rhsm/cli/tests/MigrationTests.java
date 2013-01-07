@@ -2701,6 +2701,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				// Bug 884657 - the server-6-ost-folsom channels need to be mapped into channel-cert-mapping.txt
 				bugIds.add("884657");
 			}
+			if (rhnAvailableChildChannel.startsWith("rhel-i386-server-sjis-6")) {	// rhel-i386-server-sjis-6 rhel-i386-server-sjis-6-debuginfo rhel-i386-server-sjis-6-beta rhel-i386-server-sjis-6-beta-debuginfo
+				// Bug 892711 - rhel-i386-server-sjis-6 channels are available, but not accounted for in product-baseline.json
+				bugIds.add("892711");
+			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
