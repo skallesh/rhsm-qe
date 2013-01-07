@@ -58,7 +58,9 @@
   (verify (= (count @cli-facts)
              (count @gui-facts))))
 
-(defn ^{Test {:groups ["facts" "blockedByBug-683550"]
+(defn ^{Test {:groups ["facts"
+                       "blockedByBug-683550"
+                       "blockedByBug-825309"]
               :dataProvider "installed-products"}}
   check_version_arch [_ product index]
   (let [version (:version (@installed-certs product))

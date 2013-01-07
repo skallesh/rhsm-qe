@@ -24,7 +24,6 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=825737
   https://bugzilla.redhat.com/show_bug.cgi?id=817938
   https://bugzilla.redhat.com/show_bug.cgi?id=818282 < waiting on virt testdata
-  https://bugzilla.redhat.com/show_bug.cgi?id=825309
   https://bugzilla.redhat.com/show_bug.cgi?id=829900
   https://bugzilla.redhat.com/show_bug.cgi?id=785203
   https://bugzilla.redhat.com/show_bug.cgi?id=806993
@@ -55,6 +54,7 @@ GUI DONE:
   https://bugzilla.redhat.com/show_bug.cgi?id=818397 < sm-gui binary name change
   https://bugzilla.redhat.com/show_bug.cgi?id=817901 < no search results test
   https://bugzilla.redhat.com/show_bug.cgi?id=826735 < start end date text locator
+  https://bugzilla.redhat.com/show_bug.cgi?id=825309 < new locator for arch text
 
 KATELLO:
   https://bugzilla.redhat.com/show_bug.cgi?id=820294
