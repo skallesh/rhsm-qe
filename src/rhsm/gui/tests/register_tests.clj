@@ -56,6 +56,43 @@
   (tasks/unregister)
   (verify (action exists? :register-system)))
 
+(data-driven register_bad_credentials {Test {:groups ["registration"]}}
+  [^{Test {:groups ["blockedByBug-718045"]}}
+   ["sdf" "sdf" :invalid-credentials]
+   ;need to add a case with a space in the middle re: 719378
+   ;^{Test {:groups ["blockedByBug-719378"]}}
+   ;["test user" :invalid-credentials]
+   ["" "" :no-username]
+   ["" "password" :no-username]
+   ["sdf" "" :no-password]])
+
+(comment  ;now using testNG dataproviders
+(data-driven simple_register {Test {:groups ["registration"]}}
+  [[(@config :username) (@config :password) "Admin Owner"]
+   [(@config :username) (@config :password) "Snow White"]
+   [(@config :username1) (@config :password1) nil]
+   ^{Test {:groups ["blockedByBug-719378"]}}
+   [(str (@config :username) "   ") (@config :password) nil]
+   ^{Test {:groups ["blockedByBug-719378"]}}
+   [(str "   " (@config :username)) (@config :password) nil]])
+)
+
+(defn ^{Test {:groups ["registration"
+                       "blockedByBug-822706"]
+              ;:dependsOnMethods ["simple_register"]
+              }}
+  check_auto_to_register_button [_]
+  (tasks/restart-app :unregister? true)
+  (verify (and (tasks/ui showing? :register-system)
+               (not (tasks/ui showing? :auto-attach))))
+  (tasks/register-with-creds)
+  (verify (and (tasks/ui showing? :auto-attach)
+               (not (tasks/ui showing? :register-system)))))
+
+;;;;;;;;;;;;;;;;;;;;
+;; DATA PROVIDERS ;;
+;;;;;;;;;;;;;;;;;;;;
+
 (defn ^{DataProvider {:name "userowners"}}
   get_userowners [_]
   (to-array-2d
@@ -73,27 +110,6 @@
      (if (and (@config :username) (@config :password))
        [(str "   " (@config :username)) (@config :password) nil])))))
 
-
-(data-driven register_bad_credentials {Test {:groups ["registration"]}}
-  [^{Test {:groups ["blockedByBug-718045"]}}
-   ["sdf" "sdf" :invalid-credentials]
-   ;need to add a case with a space in the middle re: 719378
-   ;^{Test {:groups ["blockedByBug-719378"]}}
-   ;["test user" :invalid-credentials]
-   ["" "" :no-username]
-   ["" "password" :no-username]
-   ["sdf" "" :no-password]])
-
-(comment
-(data-driven simple_register {Test {:groups ["registration"]}}
-  [[(@config :username) (@config :password) "Admin Owner"]
-   [(@config :username) (@config :password) "Snow White"]
-   [(@config :username1) (@config :password1) nil]
-   ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str (@config :username) "   ") (@config :password) nil]
-   ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str "   " (@config :username)) (@config :password) nil]])
-)
 
 (gen-class-testng)
 
