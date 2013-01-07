@@ -106,6 +106,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                  :all-available-support-level
                                  :all-available-subscription])
                     {:product-id "Product ID Text"
+                     ;;stacking id removed in BZ 821544
                      :stacking-id "Stacking ID Text"
                      :contract-number "Contract Number"
                      :bundled-products "Bundeled Products Table"

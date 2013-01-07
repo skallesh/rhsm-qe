@@ -23,7 +23,6 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=827173
   https://bugzilla.redhat.com/show_bug.cgi?id=825737
   https://bugzilla.redhat.com/show_bug.cgi?id=817938
-  https://bugzilla.redhat.com/show_bug.cgi?id=821544
   https://bugzilla.redhat.com/show_bug.cgi?id=822706
   https://bugzilla.redhat.com/show_bug.cgi?id=818238
   https://bugzilla.redhat.com/show_bug.cgi?id=818397
@@ -58,6 +57,7 @@ GUI DONE:
   https://bugzilla.redhat.com/show_bug.cgi?id=873418 < new locators
   https://bugzilla.redhat.com/show_bug.cgi?id=801434 < new window locator
   https://bugzilla.redhat.com/show_bug.cgi?id=881117 < new locator
+  https://bugzilla.redhat.com/show_bug.cgi?id=821544 < stacking id removed
   
   
   
