@@ -23,8 +23,7 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=827173
   https://bugzilla.redhat.com/show_bug.cgi?id=825737
   https://bugzilla.redhat.com/show_bug.cgi?id=817938
-  https://bugzilla.redhat.com/show_bug.cgi?id=818282
-  https://bugzilla.redhat.com/show_bug.cgi?id=817901
+  https://bugzilla.redhat.com/show_bug.cgi?id=818282 < waiting on virt testdata
   https://bugzilla.redhat.com/show_bug.cgi?id=826735
   https://bugzilla.redhat.com/show_bug.cgi?id=825309
   https://bugzilla.redhat.com/show_bug.cgi?id=829900
@@ -55,6 +54,7 @@ GUI DONE:
   https://bugzilla.redhat.com/show_bug.cgi?id=822706 < auto-attach button
   https://bugzilla.redhat.com/show_bug.cgi?id=818238 < searching dialog locator  
   https://bugzilla.redhat.com/show_bug.cgi?id=818397 < sm-gui binary name change
+  https://bugzilla.redhat.com/show_bug.cgi?id=817901 < no search results test
 
 KATELLO:
   https://bugzilla.redhat.com/show_bug.cgi?id=820294

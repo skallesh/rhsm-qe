@@ -291,6 +291,29 @@
   check_subscribe_greyout [_]
   ))
 
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-817901"]}}
+  check_no_search_results_message [_]
+  (tasks/restart-app :reregister? true)
+  (tasks/ui selecttab :all-available-subscriptions)
+  (tasks/search :contain-text "DOESNOTEXIST")
+  (let [label "No subscriptions match current filters."]
+    (verify (tasks/ui showing? :no-subscriptions-label))
+    (verify (= label (tasks/ui gettextvalue :no-subscriptions-label))))
+  (tasks/search)
+  (verify (not (tasks/ui showing? :no-subscriptions-label))))
+
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-817901"]}}
+  check_please_search_message [_]
+  (tasks/restart-app :reregister? true)
+  (tasks/ui selecttab :all-available-subscriptions)
+  (let [label "Press Update to search for subscriptions."]
+    (verify (tasks/ui showing? :no-subscriptions-label))
+    (verify (= label (tasks/ui gettextvalue :no-subscriptions-label))))
+  (tasks/search)
+  (verify (not (tasks/ui showing? :no-subscriptions-label))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

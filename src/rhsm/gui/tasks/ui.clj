@@ -87,6 +87,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :import-certificate "Import Cert"
                      :unregister-system "Unregister"
                      :update-certificates "Update"
+                     :no-subscriptions-label "no_subs_label"
                      ;; now called auto-attach
                      ;:autosubscribe "Auto-subscribe"
                      :auto-attach "Auto-attach"
