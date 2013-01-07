@@ -28,6 +28,7 @@
 (defn get-properties []
   (let [m (property-map {:binary-path (DefaultMapKey.
                                         "sm.gui.binary"
+                                        ;; rename to *-gui in 818397
                                         "subscription-manager-gui")
                          :firstboot-binary-path (DefaultMapKey.
                                                   "sm.firstboot.binary"
