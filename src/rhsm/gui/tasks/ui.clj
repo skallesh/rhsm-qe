@@ -102,8 +102,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                  :support-level
                                  :provides-management
                                  :account
-                                 :start-date
-                                 :end-date
+                                 ;; changed BZ 826735
+                                 :start-end-date
                                  :subscription
                                  :all-available-support-type
                                  :all-available-support-level
