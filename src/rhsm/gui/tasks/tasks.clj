@@ -304,8 +304,11 @@
 (defn wait-for-progress-bar
   "Waits for a progress bar to finish."
   []
-  (ui waittillwindowexist :progress-dialog 1)
-  (ui waittillwindownotexist :progress-dialog 30)
+  (ui waittillwindowexist :search-dialog 1)
+  (ui waittillwindownotexist :search-dialog 30)
+  (comment ;; removed in BZ 818238
+    (ui waittillwindowexist :progress-dialog 1)
+    (ui waittillwindownotexist :progress-dialog 30))
   (checkforerror))
 
 ;; TODO: write this with better airities

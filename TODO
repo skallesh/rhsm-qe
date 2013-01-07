@@ -23,7 +23,6 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=827173
   https://bugzilla.redhat.com/show_bug.cgi?id=825737
   https://bugzilla.redhat.com/show_bug.cgi?id=817938
-  https://bugzilla.redhat.com/show_bug.cgi?id=818238
   https://bugzilla.redhat.com/show_bug.cgi?id=818397
   https://bugzilla.redhat.com/show_bug.cgi?id=818282
   https://bugzilla.redhat.com/show_bug.cgi?id=817901
@@ -35,7 +34,6 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=821544
   https://bugzilla.redhat.com/show_bug.cgi?id=833578
   https://bugzilla.redhat.com/show_bug.cgi?id=753057
-  https://bugzilla.redhat.com/show_bug.cgi?id=818238
   https://bugzilla.redhat.com/show_bug.cgi?id=810998
   https://bugzilla.redhat.com/show_bug.cgi?id=812903
   https://bugzilla.redhat.com/show_bug.cgi?id=855257
@@ -48,7 +46,6 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=839772
   https://bugzilla.redhat.com/show_bug.cgi?id=884259 < redeem blocker
   https://bugzilla.redhat.com/show_bug.cgi?id=877579
-  https://bugzilla.redhat.com/show_bug.cgi?id=877579
   https://bugzilla.redhat.com/show_bug.cgi?id=863572 < firstboot
   
 GUI DONE:
@@ -57,7 +54,7 @@ GUI DONE:
   https://bugzilla.redhat.com/show_bug.cgi?id=881117 < new locator
   https://bugzilla.redhat.com/show_bug.cgi?id=821544 < stacking id removed
   https://bugzilla.redhat.com/show_bug.cgi?id=822706 < auto-attach button
-  
+  https://bugzilla.redhat.com/show_bug.cgi?id=818238 < searching dialog locator  
   
 KATELLO:
   https://bugzilla.redhat.com/show_bug.cgi?id=820294
