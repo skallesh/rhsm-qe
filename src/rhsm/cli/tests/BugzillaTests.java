@@ -104,7 +104,71 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// https://tcms.engineering.redhat.com/case/64181/?from_plan=2105
 	// https://tcms.engineering.redhat.com/case/68737/?from_plan=2477
 	// https://bugzilla.redhat.com/show_bug.cgi?id=869729
+	// TODO Bug 746241 - UEPConnection.updateConsumer will not allow passing [] for facts, installed_products, or guest_uuids
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify rhsm log for Update With No Installed Products", 
+			groups = { "UpdateWithNoInstalledProducts","blockedByBug-746241" }, enabled = true)
+	public void UpdateWithNoInstalledProducts() throws JSONException,Exception {
+		Boolean actual = false;
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		clienttasks.restart_rhsmcertd(null, null, false, null);
+		moveProductCertFiles("*.pem", true);
+		String InstalledProducts=clienttasks.listInstalledProducts().getStdout();
+		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
+		
+		int countBefore = Integer
+				.parseInt(client
+						.runCommandAndWait(
+								"wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1")
+								.getStdout().trim());
+		clienttasks.restart_rhsmcertd(null, null, false, null);
+	if (countBefore != 0) {
+		int countAfter = Integer
+				.parseInt(client
+						.runCommandAndWait(
+								"wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1")
+								.getStdout().trim());
 
+		Boolean flag = waitForRegexInRhsmLog("Error",
+				countAfter - countBefore);
+		Assert.assertEquals(flag, actual);
+		actual=true;
+		flag = waitForRegexInRhsmLog("Installed product IDs: []",
+				countAfter - countBefore);
+		Assert.assertEquals(flag, actual);
+				
+	}
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify Facts Update For Deleted Consumer", 
+			groups = { "FactsUpdateForDeletedConsumer" }, enabled = true)
+	@ImplementsNitrateTest(caseId = 148216)
+	public void FactsUpdateForDeletedConsumer() throws JSONException,Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,
+				sm_serverAdminPassword, sm_serverUrl, "/consumers/"
+						+ consumerId);
+		String result=clienttasks.facts_(null, true, null, null, null).getStderr();
+		String ExpectedMsg="Consumer "+consumerId+" has been deleted";
+		Assert.assertEquals(result.trim(), ExpectedMsg);
+	}
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -127,27 +191,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), expected);
 	}
 
-	/**
-	 * @author skallesh
-	 * @throws Exception
-	 * @throws JSONException
-	 */
-	@Test(description = "verify if register to a deleted owner", 
-			groups = { "DeletedOwnerInRegisteredState" },dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData", enabled = false)
-	@ImplementsNitrateTest(caseId = 148216)
-	public void DeletedOwnerInRegisteredState(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException,Exception {
-		String orgname="testOwner1";
-		servertasks.createOwnerUsingCPC(orgname);
-		clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword,
-				orgname, null, null, null, null, null, null, null,
-				(String) null, null, null, true, null, null, null, null);
-		
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
-		String result=clienttasks.yumInstallPackageFromRepo(pkg, repoLabel, null).getStderr();
-		System.out.println(result);
-
-	}
+	
 
 	/**
 	 * @author skallesh

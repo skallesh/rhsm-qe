@@ -520,7 +520,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//	The Dell service tag: CNZFGH1, has already been used to activate a subscription
 	//	[root@jsefler-onprem-workstation facts]# 
 
-	// TODO Bug 746241 - UEPConnection.updateConsumer will not allow passing [] for facts, installed_products, or guest_uuids
+	
 	
 	
 	
