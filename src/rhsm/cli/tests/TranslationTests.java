@@ -316,6 +316,25 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertFalse(warningsFound,"No translations found containing unexpected paragraph character \""+paragraphChar+"\".");
 	}
 	
+	@Test(	description="verify that translation msgstr does NOT contain over-escaped newline character \\n (should be \n)",
+			groups={},
+			dataProvider="getTranslationFileData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test(Object bugzilla, File translationFile) {
+		boolean warningsFound = false;
+		String overEscapedNewlineChar = "\\\n";
+		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
+			for (Translation translation: translationFileMapForSubscriptionManager.get(translationFile)) {
+				if (translation.msgstr.contains(overEscapedNewlineChar) && !translation.msgid.contains(overEscapedNewlineChar)) {
+					log.warning("Over-escaped newline character \""+overEscapedNewlineChar.replaceAll("\\n", "\\\\n")+"\" should not be used in the "+translationFile+" translation: "+translation);
+					warningsFound = true;
+				}
+			}
+		//}
+		Assert.assertFalse(warningsFound,"No translations found containing over-escaped newline character \""+overEscapedNewlineChar+"\".");
+	}
+	
 	
 	
 	
@@ -482,10 +501,15 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("844369");
 			
 			// Bug 893120 - [hi][it][ml][ru] character ¶ should not appear in translated msgstr
+			// blocks VerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test
 			if (translationFile.getPath().contains("/hi/")) bugIds.add("893120");
 			if (translationFile.getPath().contains("/it/")) bugIds.add("893120");
 			if (translationFile.getPath().contains("/ml/")) bugIds.add("893120");
 			if (translationFile.getPath().contains("/ru/")) bugIds.add("893120");
+			
+			// Bug 888971 - [pt_BR] pofilter newlines test failed
+			// blocks VerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("888971");
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
