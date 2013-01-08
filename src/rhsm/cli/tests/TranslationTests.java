@@ -277,7 +277,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMsdIdDeprecatedSeeAttach() {
+	public void VerifyMsdIdDeprecatedSeeAttach_Test() {
 		verifyTranslatedMsdIdContainsSubStringForAllLangs("Deprecated, see attach","attach");
 	}
 	
@@ -285,7 +285,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMsdIdDeprecatedSeeRemove() {
+	public void VerifyMsdIdDeprecatedSeeRemove_Test() {
 		verifyTranslatedMsdIdContainsSubStringForAllLangs("Deprecated, see remove","remove");
 	}
 	
@@ -293,9 +293,36 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-891375","blockedByBug-891434"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMsdIdDeprecatedSeeAutoAttachInterval() {
+	public void VerifyMsdIdDeprecatedSeeAutoAttachInterval_Test() {
 		verifyTranslatedMsdIdContainsSubStringForAllLangs("deprecated, see auto-attach-interval","auto-attach-interval");
 	}
+	
+	@Test(	description="verify that translation msgstr does NOT contain paragraph character ¶ unless also in msgid",
+			groups={},
+			dataProvider="getTranslationFileData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyTranslationsDoNotUseParagraphCharacter_Test(Object bugzilla, File translationFile) {
+		boolean warningsFound = false;
+		String paragraphChar = "¶";
+		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
+			for (Translation translation: translationFileMapForSubscriptionManager.get(translationFile)) {
+				if (translation.msgstr.contains(paragraphChar) && !translation.msgid.contains(paragraphChar)) {
+					log.warning("Paragraph character \""+paragraphChar+"\" should not be used in the "+translationFile+" translation: "+translation);
+					warningsFound = true;
+				}
+			}
+		//}
+		Assert.assertFalse(warningsFound,"No translations found containing unexpected paragraph character \""+paragraphChar+"\".");
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	// Candidates for an automated Test:
@@ -325,6 +352,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	//		msgid "Covered by contract %s through %s"
 	//		msgid_plural "Covered by contracts %s through %s"
 	//		msgstr[0] "合約有效日期乃 %s 至 %s"
+	
+	
 	
 	
 	
@@ -417,35 +446,49 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (translationFileMapForSubscriptionManager==null) return ll;
 		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
-			BlockedByBzBug bugzilla = null;
-			// Bug 824100 - pt_BR translations are outdated for subscription-manager 
-			if (translationFile.getPath().contains("/pt_BR/")) bugzilla = new BlockedByBzBug("824100");
-			// Bug 824184 - [ta_IN] translations for subscription-manager are missing (95% complete)
-			if (translationFile.getPath().contains("/ta/") ||
-				translationFile.getPath().contains("/ta_IN/")) bugzilla = new BlockedByBzBug("824184");
-			// Bug 844369 - msgids translations are missing for several languages
-			if (translationFile.getPath().contains("/es_ES/") ||
-				translationFile.getPath().contains("/ja/") ||
-				translationFile.getPath().contains("/as/") ||
-				translationFile.getPath().contains("/it/") ||
-				translationFile.getPath().contains("/ru/") ||
-				translationFile.getPath().contains("/zh_TW/") ||
-				translationFile.getPath().contains("/de_DE/") ||
-				translationFile.getPath().contains("/mr/") ||
-				translationFile.getPath().contains("/ko/") ||
-				translationFile.getPath().contains("/fr/") ||
-				translationFile.getPath().contains("/or/") ||
-				translationFile.getPath().contains("/te/") ||
-				translationFile.getPath().contains("/zh_CN/") ||
-				translationFile.getPath().contains("/hi/") ||
-				translationFile.getPath().contains("/gu/") ||
-				translationFile.getPath().contains("/pt_BR/") ||
-				translationFile.getPath().contains("/pa/") ||
-				translationFile.getPath().contains("/ml/") ||
-				translationFile.getPath().contains("/bn_IN/") ||
-				translationFile.getPath().contains("/kn/")) bugzilla = new BlockedByBzBug("844369");
+			Set<String> bugIds = new HashSet<String>();
 			
-			ll.add(Arrays.asList(new Object[] {bugzilla,	translationFile}));
+			// Bug 824100 - pt_BR translations are outdated for subscription-manager 
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("824100");
+			
+			// Bug 824184 - [ta_IN] translations for subscription-manager are missing (95% complete)
+			if (translationFile.getPath().contains("/ta/")) bugIds.add("824184");
+			if (translationFile.getPath().contains("/ta_IN/")) bugIds.add("824184");
+			
+			// Bug 844369 - msgids translations are missing for several languages
+			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/ja/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/as/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/it/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/ru/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/zh_TW/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/de_DE/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/mr/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/ko/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/fr/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/or/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/te/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/hi/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/gu/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/pa/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/ml/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/bn_IN/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/kn/")) bugIds.add("844369");
+			
+			// Bug 825393 - [ml_IN][es_ES] translations should not use character ¶ for a new line.
+			if (translationFile.getPath().contains("/ml/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("844369");
+			
+			// Bug 893120 - [hi][it][ml][ru] character ¶ should not appear in translated msgstr
+			if (translationFile.getPath().contains("/hi/")) bugIds.add("893120");
+			if (translationFile.getPath().contains("/it/")) bugIds.add("893120");
+			if (translationFile.getPath().contains("/ml/")) bugIds.add("893120");
+			if (translationFile.getPath().contains("/ru/")) bugIds.add("893120");
+			
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
 		}
 		return ll;
 	}
