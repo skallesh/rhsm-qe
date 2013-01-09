@@ -112,6 +112,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+			groups = { "YumReposListAfterSubscription","blockedByBug-696786" }, enabled = true)
+	public void YumReposListAfterSubscription() throws JSONException,Exception {
+		Boolean pattern=false;
+		Boolean Flag=false;
+		String yum_cmd="yum repolist enabled --disableplugin=rhnplugin";
+		String result=client.runCommandAndWait(yum_cmd).getStdout();
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		result=client.runCommandAndWait(yum_cmd).getStdout();
+		Pattern p = Pattern.compile(result);
+		Matcher matcher = p.matcher("Traceback (most recent call last):");
+		while (matcher.find()) {
+			 pattern = matcher.find();
+
+		}
+		Assert.assertEquals(Flag, pattern);
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
 	@Test(description = "verify rhsm log for Update With No Installed Products", 
 			groups = { "UpdateWithNoInstalledProducts","blockedByBug-746241" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException,Exception {
@@ -130,13 +155,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 								"wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1")
 								.getStdout().trim());
 		clienttasks.restart_rhsmcertd(null, null, false, null);
+		SubscriptionManagerCLITestScript.sleep(2 * 60 * 1000);
+
 	if (countBefore != 0) {
 		int countAfter = Integer
 				.parseInt(client
 						.runCommandAndWait(
 								"wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1")
 								.getStdout().trim());
-
+		moveProductCertFiles(null, false);
 		Boolean flag = waitForRegexInRhsmLog("Error",
 				countAfter - countBefore);
 		Assert.assertEquals(flag, actual);
@@ -148,6 +175,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 		
 	}
+	
+	
 	
 	/**
 	 * @author skallesh
@@ -174,7 +203,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if register to a deleted owner", 
+	@Test(description = "verify if you can register using consumer id of a deleted owner", 
 			groups = { "RegisterWithConsumeridOfDeletedOwner" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 148216)
 	public void RegisterWithConsumeridOfDeletedOwner() throws JSONException,Exception {
