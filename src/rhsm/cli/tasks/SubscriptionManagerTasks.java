@@ -951,7 +951,18 @@ public class SubscriptionManagerTasks {
 									//	6.1
 									//	6.2
 									//	6Server
-									expectedReleaseSet.addAll(Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*")));
+									
+									//	[root@jsefler-6 ~]# curl --stderr /dev/null --insecure --tlsv1 --cert /etc/pki/entitlement/3360706382464344965.pem --key /etc/pki/entitlement/3360706382464344965-key.pem https://cdn.redhat.com/content/dist/rhel/server/6/listing
+									//	<HTML><HEAD>
+									//	<TITLE>Access Denied</TITLE>
+									//	</HEAD><BODY>
+									//	<H1>Access Denied</H1>
+									if (result.getStdout().toUpperCase().contains("<HTML>")) {
+										log.warning("curl result: "+result);	// or should this be a failure?
+										Assert.fail("Expected to retrieve a list of available release versions. (eg. 6.1, 6.2, 6Server)");
+									} else {
+										expectedReleaseSet.addAll(Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*")));
+									}
 								}
 							}
 						}
