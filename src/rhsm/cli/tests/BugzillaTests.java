@@ -141,7 +141,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				countAfter - countBefore);
 		Assert.assertEquals(flag, actual);
 		actual=true;
-		flag = waitForRegexInRhsmLog("Installed product IDs: []",
+		flag = waitForRegexInRhsmLog("Installed product IDs: \\[(.*?)\\]",
 				countAfter - countBefore);
 		Assert.assertEquals(flag, actual);
 				
@@ -155,7 +155,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify Facts Update For Deleted Consumer", 
-			groups = { "FactsUpdateForDeletedConsumer" }, enabled = true)
+			groups = { "FactsUpdateForDeletedConsumer","blockedByBug-798788" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 148216)
 	public void FactsUpdateForDeletedConsumer() throws JSONException,Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
@@ -2092,7 +2092,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		String subscribeResult = getEntitlementCertFilesWithPermissions();
 		Pattern p = Pattern.compile("[,\\s]+");
 		String[] result = p.split(subscribeResult);
