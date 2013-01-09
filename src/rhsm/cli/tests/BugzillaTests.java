@@ -141,7 +141,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				countAfter - countBefore);
 		Assert.assertEquals(flag, actual);
 		actual=true;
-		flag = waitForRegexInRhsmLog("Installed product IDs: \\[(.*?)\\]",
+		flag = waitForRegexInRhsmLog("Installed product IDs: \\[\\]",
 				countAfter - countBefore);
 		Assert.assertEquals(flag, actual);
 				
@@ -1029,7 +1029,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		List<Repo> repos = clienttasks.getCurrentlySubscribedRepos();
 		Assert.assertFalse(repos.isEmpty());
 		clienttasks.unregister_(null, null, null);
