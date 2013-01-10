@@ -87,6 +87,11 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_rhuiRepoIdForIsos			= getProperty("sm.rhui.repoIdForIsos", "");
 	public String sm_rhuiDownloadIso			= getProperty("sm.rhui.downloadIso", "");
 	
+	public String sm_haUsername					= getProperty("sm.ha.username", "");
+	public String sm_haPassword					= getProperty("sm.ha.password", "");
+	public String sm_haOrg						= getProperty("sm.ha.org", null);
+	public String sm_haSku						= getProperty("sm.ha.sku", "");
+	
 	public String sm_usernameWithUnacceptedTC	= getProperty("sm.client.username.unacceptedTC","");
 	public String sm_passwordWithUnacceptedTC	= getProperty("sm.client.password.unacceptedTC","");
 	
@@ -135,6 +140,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected List<String> sm_rpmInstallUrls					= new ArrayList<String>();
 	protected List<String> sm_rpmUpdateUrls						= new ArrayList<String>();
 	protected List<String> sm_repoCaCertUrls					= new ArrayList<String>();
+	protected List<String> sm_haPackages						= new ArrayList<String>();
 
 //	protected JSONArray systemSubscriptionPoolProductData = null;
 	protected JSONArray sm_personSubscriptionPoolProductData = null;
@@ -155,7 +161,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		if (!getProperty("sm.rpm.installurls", "").equals("")) 					sm_rpmInstallUrls					= Arrays.asList(getProperty("sm.rpm.installurls", "").trim().split(" *, *"));
 		if (!getProperty("sm.rpm.updateurls", "").equals("")) 					sm_rpmUpdateUrls					= Arrays.asList(getProperty("sm.rpm.updateurls", "").trim().split(" *, *"));
 		if (!getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))				sm_repoCaCertUrls					= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
-		
+		if (!getProperty("sm.ha.packages", "").equals(""))						sm_haPackages						= Arrays.asList(getProperty("sm.ha.packages", "").trim().split(" *, *"));
+
 				
 		if (sm_serverUrl==null)
 			sm_serverUrl					= getProperty("sm.server.url","");

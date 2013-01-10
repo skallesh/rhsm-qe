@@ -60,6 +60,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 	public final String rhnPluginConfFile	= "/etc/yum/pluginconf.d/rhnplugin.conf";
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
+	public final String productIdJsonFile	= "/var/lib/rhsm/productid.js";	// maps a product id to the repository from which it came; managed by subscription-manager's ProductDatabase python class
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String rhnUp2dateFile		= "/etc/sysconfig/rhn/up2date";
 	public final String factsDir			= "/etc/rhsm/facts";
