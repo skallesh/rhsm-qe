@@ -639,7 +639,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,
 				null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
