@@ -1105,9 +1105,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if (!(pool.quantity.equalsIgnoreCase("Unlimited"))) {
 				int quantity = Integer.parseInt(pool.quantity);
 				if (quantity < 4)
-					throw new SkipException(
-							"Sufficient pools are not available");
-			}
+					throw new SkipException("Sufficient pools are not available");
+			
 		}
 		for (InstalledProduct installed : clienttasks
 				.getCurrentlyInstalledProducts()) {
@@ -1147,7 +1146,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				factsMap);
 		clienttasks.facts_(null, true, null, null, null);
 
-	}
+	}}
 
 	/**
 	 * @author skallesh
