@@ -959,7 +959,7 @@ public class SubscriptionManagerTasks {
 									//	<H1>Access Denied</H1>
 									if (result.getStdout().toUpperCase().contains("<HTML>")) {
 										log.warning("curl result: "+result);	// or should this be a failure?
-										Assert.fail("Expected to retrieve a list of available release versions. (eg. 6.1, 6.2, 6Server)");
+										Assert.fail("Expected to retrieve a list of available release versions. (Example: 6.1, 6.2, 6Server)");
 									} else {
 										expectedReleaseSet.addAll(Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*")));
 									}

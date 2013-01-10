@@ -31,6 +31,27 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 //	# the sm.ha.packages comes from http://download.devel.redhat.com/nightly/latest-RHEL6.4/6.4/Server/x86_64/os/HighAvailability/listing
 //	sm.ha.packages = ccs, cluster-cim, cluster-glue, cluster-glue-libs, cluster-glue-libs-devel, cluster-snmp, clusterlib, clusterlib-devel, cman, corosync, corosynclib, corosynclib-devel, fence-virt, fence-virtd-checkpoint, foghorn, libesmtp-devel, libqb, libqb-devel, libtool-ltdl-devel, luci, modcluster, omping, openais, openaislib, openaislib-devel, pacemaker, pacemaker-cli, pacemaker-cluster-libs, pacemaker-cts, pacemaker-doc, pacemaker-libs, pacemaker-libs-devel, pcs, python-repoze-what-plugins-sql, python-repoze-what-quickstart, python-repoze-who-friendlyform, python-repoze-who-plugins-sa, python-tw-forms, resource-agents, rgmanager, ricci
 
+//	https://bugzilla.redhat.com/show_bug.cgi?id=859197#c7
+//	Consistent reproducer, start with a plain RHEL Server system, and copy /etc/pki/product/69.pem as well as /var/lib/rhsm/productid.js somewhere safe.
+//
+//	productid.js should look something like this:
+//
+//	[root@localhost ~]# cat /var/lib/rhsm/productid.js 
+//	{
+//	  "69": "anaconda-RedHatEnterpriseLinux-201211201732.x86_64"
+//	}
+//
+//	Now reproduce using steps above.
+//
+//	To reset the machine:
+//
+//	1. unregister
+//	2. Remove any product certs in /etc/pki/product.
+//	3. Restore the two files you backed up.
+//	4. Make sure ccs is uninstalled.
+//	5. yum clean all
+//
+//	You should now be able to re-try the scenario above and get the same errors.
 	
 	@Test(	description="register to the stage/prod environment and subscribe to the expected HighAvialability product subscription",
 			groups={"blockedByBug-885325"},
