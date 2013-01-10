@@ -653,12 +653,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		now.add(Calendar.YEAR, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
-	
+		clienttasks.subscribe_(true, null, (String) null, null, null, null,
+				null, null, null, null, null);
 		for (InstalledProduct installed : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			if (installed.status.equals("Not Subscribed")
 					&& installed.status.equals("Partially Subscribed"))
 				moveProductCertFiles(installed.productId + ".pem", true);
+				moveProductCertFiles(installed.productId + "._pem", true);
 		}
 		for (SubscriptionPool availOnDate : getAvailableFutureSubscriptionsOndate(onDateToTest)) {
 			System.out.println(availOnDate.poolId + " avail on date is");
@@ -1950,6 +1952,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if (installed.status.equals("Not Subscribed")
 					&& installed.status.equals("Partially Subscribed"))
 				moveProductCertFiles(installed.productId + ".pem", true);
+			moveProductCertFiles(installed.productId + "_.pem", true);
 		}
 		for (SubscriptionPool availOnDate : getAvailableFutureSubscriptionsOndate(onDateToTest)) {
 			clienttasks.subscribe_(null, null, availOnDate.poolId, null, null,
