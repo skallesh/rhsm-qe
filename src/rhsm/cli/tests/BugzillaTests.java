@@ -684,6 +684,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
+		
+		moveProductCertFiles(null, false);
+
 
 	}
 
@@ -1365,8 +1368,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(List<String>) null, null, null, true, null, null, null, null);
-		clienttasks.facts_(true, null, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
+		clienttasks.facts_(true, null, null, null, null);
 		String result = clienttasks.getFactValue("system.entitlements_valid");
 		Assert.assertEquals(result.trim(), "invalid");
 		clienttasks.subscribe_(true, null, null, (String) null, null, null,
