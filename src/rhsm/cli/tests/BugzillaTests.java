@@ -138,7 +138,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify rhsm log for Update With No Installed Products", 
-			groups = { "UpdateWithNoInstalledProducts","blockedByBug-746241" }, enabled = true)
+			groups = {"UpdateWithNoInstalledProducts","blockedByBug-746241" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException,Exception {
 		Boolean actual = false;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
@@ -1074,7 +1074,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "Verify if stacking entitlements reports as distinct entries in cli list --installed", groups = {
-			"VerifyDistinct", "blockedByBug-733327" }, enabled = true)
+			"VerifyDistinct", "blockedByBug-733327" }, enabled = false)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
@@ -1359,6 +1359,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("mkdir -p " + "/etc/pki/faketmp");
 		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/*_.pem"
 				+ " " + "/etc/pki/faketmp/");
+		moveProductCertFiles(null, false);
 		clienttasks.deleteFactsFileWithOverridingValues();
 		List<String> productId = new ArrayList<String>();
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
