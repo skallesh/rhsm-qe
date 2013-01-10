@@ -639,7 +639,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, null, null, null, null);
+				(String) null, null, null, true, null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,
 				null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -653,8 +653,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		now.add(Calendar.YEAR, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
-		clienttasks.subscribe_(true, null, (String) null, null, null, null,
-				null, null, null, null, null);
+	
 		for (InstalledProduct installed : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			if (installed.status.equals("Not Subscribed")
