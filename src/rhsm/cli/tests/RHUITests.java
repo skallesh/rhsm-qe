@@ -116,7 +116,7 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="download an expected RHUI iso from an expected file repoUrl",
-			groups={"blockedByBug-860516"},
+			groups={"blockedByBug-860516","blockedByBug-894184"},
 			dependsOnMethods={"ConsumeRHUISubscriptionProduct_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
