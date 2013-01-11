@@ -2169,7 +2169,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 	@BeforeGroups(groups = "setup", value = { "autohealPartial", "AutoHeal",
-			"heal", "BugzillaTests", "AutoHealFailForSLA", "AutohealForExpired" }, enabled = true)
+			"heal", "BugzillaTests", "AutoHealFailForSLA", "AutohealForExpired" }, enabled = false)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test()
 			throws Exception {
 
