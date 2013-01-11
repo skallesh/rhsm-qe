@@ -455,12 +455,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"healFrequency".toLowerCase(), "1440" });
-
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"certFrequency".toLowerCase(), "1440" });
 		clienttasks.config_(null, null, true, listOfSectionNameValues);
 		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
 		for (SubscriptionPool subscriptionpool : clienttasks
-				.getCurrentlyAllAvailableSubscriptionPools()) {
+				.getCurrentlyAvailableSubscriptionPools()) {
 
 			clienttasks.subscribe_(null, null, subscriptionpool.poolId, null,
 					null, "1", null, null, null, null, null);
