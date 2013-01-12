@@ -4592,6 +4592,7 @@ repolist: 3,394
 	public ArrayList<String> getYumListAvailable (String options) {
 		ArrayList<String> packages = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		if (options==null) options="";
 
 //		String							command  = "yum list available";
 //		if (disableplugin!=null)		command += " --disableplugin="+disableplugin;
@@ -4620,16 +4621,37 @@ repolist: 3,394
 		//  No plugin match for: rhnplugin
 		//  Updating certificate-based repositories.
 		//  Available Packages
-		//	xmltex.noarch                             20020625-16.el6                      red-hat-enterprise-linux-6-entitlement-alpha-rpms
-		//	xmlto.x86_64                              0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
-		//	xmlto-tex.noarch                          0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
-		//	xorg-x11-apps.x86_64                      7.4-10.el6                           red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//	xmltex.noarch                 20020625-16.el6     red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//	xmlto.x86_64                  0.0.23-3.el6        red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//	xmlto-tex.noarch              0.0.23-3.el6        red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//	xorg-x11-apps.x86_64          7.4-10.el6          red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//	pacemaker-libs-devel.i686     1.1.7-6.el6         rhel-ha-for-rhel-6-server-rpms
+		//	pacemaker-libs-devel.x86_64   1.1.7-6.el6         rhel-ha-for-rhel-6-server-rpms
+		//	perl-Net-Telnet.noarch        3.03-11.el6         rhel-ha-for-rhel-6-server-rpms
+		//	pexpect.noarch                2.3-6.el6           rhel-ha-for-rhel-6-server-rpms
+		//	python-repoze-what-plugins-sql.noarch
+		//	                              1.0-0.6.rc1.el6     rhel-ha-for-rhel-6-server-rpms
+		//	python-repoze-what-quickstart.noarch
+		//	                              1.0.1-1.el6         rhel-ha-for-rhel-6-server-rpms
+		//	python-repoze-who-friendlyform.noarch
+		//	                              1.0-0.3.b3.el6      rhel-ha-for-rhel-6-server-rpms
+		//	python-repoze-who-plugins-sa.noarch
+		//	                              1.0-0.4.rc1.el6     rhel-ha-for-rhel-6-server-rpms
+		//	python-suds.noarch            0.4.1-3.el6         rhel-ha-for-rhel-6-server-rpms
+		//	python-tw-forms.noarch        0.9.9-1.el6         rhel-ha-for-rhel-6-server-rpms
+		//	resource-agents.x86_64        3.9.2-12.el6_3.2    rhel-ha-for-rhel-6-server-rpms
+
+		String availablePackadesTable = result.getStdout();	String prefix = "Available Packages";
+		if (availablePackadesTable.contains(prefix)) {
+			availablePackadesTable = availablePackadesTable.substring(availablePackadesTable.indexOf(prefix)+prefix.length(), availablePackadesTable.length()).trim();	// strip leading info before the list of "Availabile Packages"
+		}
+		
 		//if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
 		//String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
-		String regex="^(\\S+) +(\\S+) +(\\S+)$";	// assume all the packages are on a line with three words
+		//String regex="^(\\S+) +(\\S+) +(\\S+)$";	// assume all the packages are on a line with three words
+		String regex="^(\\S+)(?:\\n)? +(\\S+) +(\\S+)$";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-		String stdout = result.getStdout().replaceAll("Updating certificate-based repositories.", "").replaceAll("Loaded plugins:", "Loaded list of yum plugins:");	// strip these messages from stdout since they could break the three word regex assumption for packages.
-		Matcher matcher = pattern.matcher(stdout);
+		Matcher matcher = pattern.matcher(availablePackadesTable);
 		if (!matcher.find()) {
 			log.info("Did NOT find any available packages from: "+command);
 			return packages;
@@ -4847,8 +4869,10 @@ repolist: 3,394
 	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
 		
 		// install the package with repoLabel enabled
-		if (installOptions==null) installOptions=""; installOptions += " -y";
-		String command = "yum install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		String command = "yum install "+pkg+" -y";
+		command += " --disableplugin=rhnplugin";	// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		if (repoLabel!=null) command += " --enablerepo="+repoLabel;
+		if (installOptions!=null) command += " "+installOptions; 
 		//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
 		Assert.assertTrue(!result.getStderr().toLowerCase().contains("error"), "Stderr from command '"+command+"' did not report an error.");
@@ -5177,12 +5201,17 @@ repolist: 3,394
 		// assert the installed package came from repoLabel
 		//	spice-server     x86_64     0.7.3-2.el6      rhel-6-server-beta-rpms     245 k
 		//  cman x86_64 3.0.12.1-19.el6 beaker-HighAvailability 427 k
-		regex=pkg.split("\\.")[0]+"\\n? +(\\w*) +([\\w\\.-]*) +"+repoLabel;
+		if (repoLabel==null) {
+			regex=pkg.split("\\.")[0]+"\\n? +(\\w+) +([\\w\\.-]+) +([\\w-]+)";		
+		} else {
+			regex=pkg.split("\\.")[0]+"\\n? +(\\w+) +([\\w\\.-]+) +("+repoLabel+")";
+		}
 		pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		matcher = pattern.matcher(sshCommandRunner.getStdout());
-		Assert.assertTrue(matcher.find(), "Package '"+pkg+"' appears to have been installed from repository '"+repoLabel+"'.");
+		Assert.assertTrue(matcher.find(), "Package '"+pkg+"' appears to have been installed"+(repoLabel==null?"":" from repository '"+repoLabel+"'")+".");
 		String arch = matcher.group(1);
 		String version = matcher.group(2);
+		String repo = matcher.group(3);
 		
 
 		// finally assert that the package is actually installed
@@ -5210,12 +5239,14 @@ repolist: 3,394
 		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
 		//	201104051839:16.453 - FINE: Stderr: INFO:rhsm-app.repolib:repos updated: 63	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
 		//	201104051839:16.455 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg.split("\\.")[0]+"."+arch+" +"+version+" +(installed|@"+repoLabel+")$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg.split("\\.")[0]+"."+arch+" +"+version+" +(installed|@"+repo+")$",null);
 		
 		return result;
 	}
 	
-	
+	public SSHCommandResult yumInstallPackage (String pkg) {
+		return yumInstallPackageFromRepo(pkg,null,null);
+	}
 	
 	public SSHCommandResult yumRemovePackage (String pkg) {
 		String command = "yum -y remove "+pkg+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
