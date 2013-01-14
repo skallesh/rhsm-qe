@@ -3,7 +3,9 @@ package rhsm.cli.tests;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
+import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -15,6 +17,7 @@ import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
@@ -41,6 +44,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="make sure there are no high availability packages installed",
 			groups={},
+			priority=10,
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -72,17 +76,95 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="register to the stage/prod environment and subscribe to the expected HighAvialability product subscription",
+	@Test(	description="verify product database and installed products are in sync",
 			groups={},
-			dependsOnMethods={"VerifyHighAvailabilityIsNotInstalled_Test"},
+			priority=12,
+			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterAndSubscribeToHighAvailabilitySKU_Test() {
+	public void VerifyProductDatabaseIsInSyncWithInstalledProducts_Test() throws JSONException {
 		
+		// get the installed products and product database map
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		Map<String,String> productIdRepoMap = clienttasks.getProductIdRepoMap();
+		
+		// assert that product database and installed products are in sync
+		for (InstalledProduct installedProduct: installedProducts) {
+			Assert.assertTrue(productIdRepoMap.containsKey(installedProduct.productId), "Database '"+clienttasks.productIdJsonFile+"' contains installed product id: "+installedProduct.productId);
+			log.info("Database '"+clienttasks.productIdJsonFile+"' maps installed product id '"+installedProduct.productId+"' to repo '"+productIdRepoMap.get(installedProduct.productId)+"'.");
+		}
+		for (String productId : productIdRepoMap.keySet()) {
+			Assert.assertNotNull(InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, installedProducts), "Database '"+clienttasks.productIdJsonFile+"' product id '"+productId+"' is among the installed products.");
+		}
+		Assert.assertEquals(productIdRepoMap.keySet().size(), installedProducts.size(), "The product id database size matches the number of installed products.");
+	}
+	
+	
+	@Test(	description="register to the stage/prod environment with credentials to access HighAvailability product subscription",
+			groups={},
+			priority=14,
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterToHighAvailabilityAccount_Test() {
 		if (sm_haUsername.equals("")) throw new SkipException("Skipping this test when no value was given for the High Availability Username");
+
 		// register the to an account that offers High Availability subscriptions
 		clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, true, null, null, null, null);
+	}
+	
+	
+	@Test(	description="verify that a local yum install will not delete the product database when repolist is empty",
+			groups={"blockedByBug-806457"},
+			priority=16,
+			dependsOnMethods={"RegisterToHighAvailabilityAccount_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyLocalYumInstallAndRemoveDoesNotAlterInstalledProducts_Test() throws JSONException {
+		List<InstalledProduct> originalInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		String originalProductIdJSONString = client.runCommandAndWait("cat "+clienttasks.productIdJsonFile).getStdout();
+		
+		// assert that there are no active repos
+		Assert.assertEquals(clienttasks.getYumRepolist("enabled").size(), 0, "Expected number of enabled yum repositories.");
+		
+		// get an rpm to perform a local yum install
+		String localRpmFile =  String.format("/tmp/%s.rpm",haPackage1);
+		RemoteFileTasks.runCommandAndAssert(client, String.format("wget -O %s %s",localRpmFile,haPackage1Fetch), new Integer(0));
+		
+		// do a yum local install and assert
+		SSHCommandResult yumInstallResult = client.runCommandAndWait(String.format("yum -q -y localinstall %s",localRpmFile));
+		Assert.assertTrue(clienttasks.isPackageInstalled(haPackage1),"Local install of package '"+haPackage1+"' completed successfully.");
+		
+		// verify that installed products remains unchanged
+		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertTrue(currentlyInstalledProducts.containsAll(originalInstalledProducts) && originalInstalledProducts.containsAll(currentlyInstalledProducts), "The installed products remains unchanged after a yum local install of package '"+haPackage1+"'.");
+		
+		// verify that the current product id database was unchanged
+		String currentProductIdJSONString = client.runCommandAndWait("cat "+clienttasks.productIdJsonFile).getStdout();
+		Assert.assertEquals(currentProductIdJSONString, originalProductIdJSONString, "The product id to repos JSON database file remains unchanged after a yum local install of package '"+haPackage1+"'.");
 
+		// finally remove the locally installed rpm
+		clienttasks.yumRemovePackage(haPackage1);
+		
+		// verify that installed products remains unchanged
+		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertTrue(currentlyInstalledProducts.containsAll(originalInstalledProducts) && originalInstalledProducts.containsAll(currentlyInstalledProducts), "The installed products remains unchanged after a yum removal of locally installed package '"+haPackage1+"'.");
+
+		// verify that the current product id database was unchanged
+		currentProductIdJSONString = client.runCommandAndWait("cat "+clienttasks.productIdJsonFile).getStdout();
+		Assert.assertEquals(currentProductIdJSONString, originalProductIdJSONString, "The product id to repos JSON database file remains unchanged after a yum removal of locally installed package '"+haPackage1+"'.");
+	}
+	
+	
+	
+	@Test(	description="subscribe to the expected HighAvialability product subscription",
+			groups={},
+			priority=20,
+			//dependsOnMethods={"VerifyHighAvailabilityIsNotInstalled_Test"},
+			dependsOnMethods={"VerifyLocalYumInstallAndRemoveDoesNotAlterInstalledProducts_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SubscribeToHighAvailabilitySKU_Test() {
+		
 		// assert that the High Availability subscription SKU is found in the all available list
 		List<SubscriptionPool> allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, allAvailableSubscriptionPools), "High Availability subscription SKU '"+sm_haSku+"' is available for consumption when the client arch is ignored.");
@@ -104,7 +186,8 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="verify the expected HighAvialability packages are availabile for yum install",
 			groups={"blockedByBug-894184"},
-			dependsOnMethods={"RegisterAndSubscribeToHighAvailabilitySKU_Test"},
+			priority=30,
+			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyHighAvailabilityPackagesAreAvailabile_Test() {
@@ -130,7 +213,9 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="yum install a high availalability package ccs and assert installed products",
 			groups={"blockedByBug-859197"},
-			dependsOnMethods={"VerifyHighAvailabilityPackagesAreAvailabile_Test"},
+			priority=40,
+			//dependsOnMethods={"VerifyHighAvailabilityPackagesAreAvailabile_Test"},
+			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void YumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test() {
@@ -152,7 +237,9 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="yum install a second high availalability package cman and assert installed products",
 			groups={},
-			dependsOnMethods={"YumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
+			priority=50,
+			//dependsOnMethods={"YumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
+			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void YumInstallSecondHighAvailabilityPackageAndAssertInstalledProductCerts_Test() {
@@ -174,6 +261,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="yum remove second high availalability package cman and assert installed products",
 			groups={},
+			priority=60,
 			dependsOnMethods={"YumInstallSecondHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -196,7 +284,9 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="yum remove first high availalability package cman and assert installed products",
 			groups={"blockedByBug-859197"},
-			dependsOnMethods={"YumRemoveSecondHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
+			priority=70,
+			dependsOnMethods={"YumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
+			//dependsOnMethods={"YumRemoveSecondHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void YumRemoveFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test() {
@@ -225,7 +315,6 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 705068 - product-id plugin displays "duration"
 	// TODO Bug 706265 - product cert is not getting removed after removing all the installed packages from its repo using yum
 	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com
-	// TODO Bug 806457 - If yum runs with no enabled or active repo's, we delete the product cert 
 	
 	
 	
@@ -295,6 +384,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	protected final String haProductId				= "83";	// Red Hat Enterprise Linux High Availability (for RHEL Server)
 	protected final String serverProductId			= "69";	// Red Hat Enterprise Linux Server
 	protected final String haPackage1				= "ccs";
+	protected final String haPackage1Fetch			= "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/x86_64/os/Packages/ccs-0.16.2-35.el6.x86_64.rpm";	// released RHEL61 package to wget for testing bug 806457
 	protected final String haPackage2				= "cluster-glue-libs";
 	File haEntitlementCertFile = null;
 	
