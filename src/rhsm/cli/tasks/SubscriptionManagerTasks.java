@@ -9,6 +9,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -1346,6 +1347,26 @@ public class SubscriptionManagerTasks {
 		String deleteCommand = String.format("rm -f %s", (factsDir+"/"+factsFilename).replaceAll("/{2,}", "/"));
 		sshCommandRunner.runCommandAndWait(deleteCommand);
 	}
+	
+	
+	/**
+	 * @return a Map equivalent to the contents of "/var/lib/rhsm/productid.js"
+	 * @throws JSONException
+	 */
+	public Map<String,String> getProductIdRepoMap() throws JSONException {
+		Map<String,String> productIdToRepoMap = new HashMap<String,String>();
+		sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cat "+productIdJsonFile);
+		JSONObject productIdToRepoJSON = new JSONObject(sshCommandRunner.getStdout());
+
+		Iterator<String> productIdKeysIter = productIdToRepoJSON.keys();
+		while (productIdKeysIter.hasNext()) {
+			String productId = productIdKeysIter.next();
+			String repo = productIdToRepoJSON.getString(productId);
+			productIdToRepoMap.put(productId, repo);
+		}
+		return productIdToRepoMap;
+	}
+	
 	
 	/**
 	 * @return a map of serialNumber to SubscriptionPool pairs.  The SubscriptionPool is the source from where the serialNumber for the currentlyConsumedProductSubscriptions came from.
@@ -4869,7 +4890,7 @@ repolist: 3,394
 	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
 		
 		// install the package with repoLabel enabled
-		String command = "yum install "+pkg+" -y";
+		String command = "yum -y install "+pkg;
 		command += " --disableplugin=rhnplugin";	// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		if (repoLabel!=null) command += " --enablerepo="+repoLabel;
 		if (installOptions!=null) command += " "+installOptions; 
@@ -5244,10 +5265,22 @@ repolist: 3,394
 		return result;
 	}
 	
+	/**
+	 * yum -y install pkg<br>
+	 * Assert the install is Complete! and pkg is installed.
+	 * @param pkg
+	 * @return
+	 */
 	public SSHCommandResult yumInstallPackage (String pkg) {
 		return yumInstallPackageFromRepo(pkg,null,null);
 	}
 	
+	/**
+	 * yum -y remove pkg<br>
+	 * Assert the removal is Complete! and no longer installed.
+	 * @param pkg
+	 * @return
+	 */
 	public SSHCommandResult yumRemovePackage (String pkg) {
 		String command = "yum -y remove "+pkg+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
