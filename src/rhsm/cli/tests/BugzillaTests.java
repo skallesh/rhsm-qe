@@ -478,7 +478,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify content set associated with product", groups = { "VerifyUnsubscribingCertV3" }, enabled = false)
+	@Test(description = "verify content set associated with product", groups = { "VerifyUnsubscribingCertV3","blockedByBug-895447" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 50215)
 	public void VerifyUnsubscribingCertV3() throws JSONException, Exception {
 
