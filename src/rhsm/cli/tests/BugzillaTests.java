@@ -489,7 +489,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null) + "/expiredcerts/CertV3.pem");
 		RemoteFileTasks.putFile(client.getConnection(),
 				expectCertFile.toString(), "/root/", "0755");
-		clienttasks.importCertificate_("/root/CertV3.pem");
+		clienttasks.importCertificate_("/root/certV3.pem");
 		String expected = "This machine has been unsubscribed from 1 subscriptions";
 		String result = clienttasks.unsubscribe_(true, (BigInteger) null, null,
 				null, null).getStdout();
