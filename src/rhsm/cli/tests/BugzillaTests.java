@@ -253,15 +253,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"healFrequency".toLowerCase(), "1440" });
 		clienttasks.config_(null, null, true, listOfSectionNameValues);
+		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
 		Calendar now = new GregorianCalendar();
 		now.add(Calendar.YEAR, 1);
+		now.add(Calendar.DATE, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		System.out.println(onDateToTest+ "onDateToTest  ");
 		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
 		if(availOnDate.size()==0) throw new SkipException(
 				"Sufficient future pools are not available");
