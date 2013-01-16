@@ -316,8 +316,13 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 706265 - product cert is not getting removed after removing all the installed packages from its repo using yum
 	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com
 	
-	
-	
+	/* Test Notes from alikins
+	summary: if you register, and subscribe to say, openshift
+	(but not rhel), and install something from openshift, you
+	can have your productid deleted as inactive. This doesn't
+	seem to be a new behaviour. If you are subscribe to rhel
+	(even with no rhel packages installed), you seem to be okay.
+	*/
 	
 	
 	
