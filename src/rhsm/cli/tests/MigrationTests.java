@@ -2589,6 +2589,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 888791 - product cert mappings for RHN Channels rhel-x86_64-server-6-rhevm-3.1* are missing
 					bugIds.add("888791");
 				}
+				if (rhnChannel.startsWith("rhel-i386-server-sjis-6")) {	// rhel-i386-server-sjis-6 rhel-i386-server-sjis-6-debuginfo rhel-i386-server-sjis-6-beta rhel-i386-server-sjis-6-beta-debuginfo
+					// Bug 896195 - rhel-i386-server-sjis-6 channels are not yet mapped in channel-cert-mapping.txt
+					bugIds.add("896195");
+				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
