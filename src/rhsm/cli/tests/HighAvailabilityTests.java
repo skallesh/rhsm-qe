@@ -42,7 +42,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	
-	@Test(	description="make sure there are no high availability packages installed",
+	@Test(	description="make sure there are no High Availability packages installed",
 			groups={},
 			priority=10,
 			dependsOnMethods={},
@@ -58,7 +58,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		for (String pkg: sm_haPackages) {
 			if (clienttasks.isPackageInstalled(pkg)) {
 				haPackagesInstalled = true;
-				log.warning("Did not expect HighAvailability package '"+pkg+"' to be instaled.");				
+				log.warning("Did not expect High Availability package '"+pkg+"' to be instaled.");				
 			}
 		}
 		Assert.assertTrue(!haPackagesInstalled,"There should NOT be any packages from HighAvialability installed on a fresh install of RHEL '"+clienttasks.releasever+"'.");
@@ -100,7 +100,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="register to the stage/prod environment with credentials to access HighAvailability product subscription",
+	@Test(	description="register to the stage/prod environment with credentials to access High Availability product subscription",
 			groups={},
 			priority=14,
 			enabled=true)
@@ -156,7 +156,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@Test(	description="subscribe to the expected HighAvialability product subscription",
+	@Test(	description="subscribe to the expected High Availability product subscription",
 			groups={},
 			priority=20,
 			//dependsOnMethods={"VerifyHighAvailabilityIsNotInstalled_Test"},
@@ -184,8 +184,8 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="verify the expected HighAvialability packages are availabile for yum install",
-			groups={"blockedByBug-894184"},
+	@Test(	description="verify the expected High Availability packages are availabile for yum install",
+			groups={},
 			priority=30,
 			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
 			enabled=true)
@@ -211,7 +211,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="yum install a high availalability package ccs and assert installed products",
+	@Test(	description="yum install a High Availability package ccs and assert installed products",
 			groups={"blockedByBug-859197"},
 			priority=40,
 			//dependsOnMethods={"VerifyHighAvailabilityPackagesAreAvailabile_Test"},
@@ -235,8 +235,8 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="yum install a second high availalability package cman and assert installed products",
-			groups={},
+	@Test(	description="yum install a second High Availability package cman and assert installed products",
+			groups={"blockedByBug-859197"},
 			priority=50,
 			//dependsOnMethods={"YumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
 			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
@@ -259,7 +259,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="yum remove second high availalability package cman and assert installed products",
+	@Test(	description="yum remove second High Availability package cman and assert installed products",
 			groups={},
 			priority=60,
 			dependsOnMethods={"YumInstallSecondHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
@@ -282,7 +282,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="yum remove first high availalability package cman and assert installed products",
+	@Test(	description="yum remove first High Availability package cman and assert installed products",
 			groups={"blockedByBug-859197"},
 			priority=70,
 			dependsOnMethods={"YumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
