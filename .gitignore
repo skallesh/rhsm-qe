@@ -11,8 +11,12 @@ target
 lib
 tmp/*
 
-# editor files
+## editor files
 *~
 \#*
 *.swp
 *.swo
+
+## ssh key files
+.ssh/id_auto_dsa
+.ssh/id_auto_dsa.pub
