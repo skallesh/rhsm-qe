@@ -429,6 +429,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: HighAvailability Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="HighAvailabilityTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Content Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
