@@ -939,7 +939,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (consumedProductSubscriptions.isEmpty()) {
 				Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When no entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);			
 			} else {
-				Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When autosubscribe is successful and entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contains message: "+autosubscribeFailedMsg);				
+				Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When autosubscribe is successful and entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);				
 			}
 			
 			// assert that when no --servicelevel is specified, then no service level preference will be set on the registered consumer
