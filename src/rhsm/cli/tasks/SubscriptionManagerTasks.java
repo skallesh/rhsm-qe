@@ -4695,8 +4695,18 @@ repolist: 3,394
 	 * NOTE: On RHEL5, yum-utils must be installed first.
 	 */
 	public void yumDisableAllRepos() {
-		for (String repo : getYumRepolist("enabled")) {
-			String command = "yum-config-manager --disable "+repo;
+		yumDisableAllRepos(null);
+	}
+	
+	/**
+	 * Disable all of the repos in /etc/yum.repos.d
+	 * NOTE: On RHEL5, yum-utils must be installed first.
+	 * @param options - any additional options that you want appended when calling "yum repolist enabled" and "yum-config-manager --disable REPO"
+	 */
+	public void yumDisableAllRepos(String options) {
+		if (options==null) options="";
+		for (String repo : getYumRepolist(("enabled"+" "+options).trim())) {
+			String command = ("yum-config-manager --disable "+repo+" "+options).trim();
 			SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'.");
 		}

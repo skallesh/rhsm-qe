@@ -355,6 +355,13 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client,"cat "+clienttasks.productIdJsonFile+" > "+backupProductIdJsonFile, Integer.valueOf(0));
 	}
 	
+	@BeforeClass(groups={"setup"},dependsOnMethods={"backupProductIdJsonFileBeforeClass","configProductCertDirBeforeClass"})
+	public void disableAllRepos() {
+		// by default on Beaker provisioned hardware, there are numerous beaker-* enabled repos that interfere with this test class
+		clienttasks.yumDisableAllRepos("--disableplugin=product-id --disableplugin=subscription-manager");	// disabling these plugins as insurance to avoid product-id contamination before the tests run
+	}
+	
+	
 	
 	@AfterClass(groups="setup")
 	public void unregisterAfterClass() {
