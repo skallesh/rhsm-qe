@@ -86,6 +86,41 @@
                                      (register))]
     (verify (clojure.string/blank? logoutput))))
 
+(defn test_proxy [expected-message]
+  (tasks/ui click :configure-proxy)
+  (tasks/ui click :test-connection)
+  (try+
+   (let [message (tasks/ui gettextvalue :connection-status)]
+     (verify (= expected-message message)))
+   (finally (tasks/ui click :close-proxy))))
+
+(defn ^{Test {:groups ["proxy"]
+              :dependsOnMethods ["enable_proxy_auth"]}}
+  test_auth_proxy [_]
+  (test_proxy "Proxy connection succeeded"))
+
+(defn ^{Test {:groups ["proxy"]
+              :dependsOnMethods ["enable_proxy_noauth"]}}
+  test_noauth_proxy [_]
+  (test_proxy "Proxy connection succeeded"))
+
+(defn ^{Test {:groups ["proxy"]
+              :dependsOnMethods ["disable_proxy"]}}
+  test_disabled_proxy [_]
+  (tasks/ui click :configure-proxy)
+  (tasks/ui click :test-connection)
+  (try+ (verify (not (some #(= "sensitive" %)
+                           (tasks/ui getallstates :test-connection))))
+        (verify (= "" (tasks/ui gettextvalue :connection-status)))
+        (finally (tasks/ui click :close-proxy))))
+
+(defn ^{Test {:groups ["proxy"]}}
+  test_bad_proxy [_]
+  (try+
+   (tasks/enableproxy "doesnotexist.redhat.com")
+   (test_proxy "Proxy connection failed")
+   (finally (tasks/disableproxy))))
+
 (defn ^{Test {:groups ["proxy"]}}
   bad_proxy [_]
   (try+ (tasks/unregister)

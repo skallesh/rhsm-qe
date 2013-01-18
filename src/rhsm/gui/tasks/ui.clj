@@ -2,7 +2,7 @@
   (:use  [clojure.string :only [join split capitalize]])
   (:require [gnome.ldtp :as ldtp])
   (:import java.util.NoSuchElementException
-	   [gnome.ldtp Element Tab Window TabGroup]))
+           [gnome.ldtp Element Tab Window TabGroup]))
 
 (defn same-name "takes a collection of keywords like :registration-settings
 and returns a mapping like :registration-settings -> 'Registration Settings'"
@@ -10,7 +10,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
      (same-name identity coll))
   ([word-fn coll]
      (zipmap coll
-	     (for [keyword coll] (->> (split (name keyword) #"-") (map word-fn) (join " "))))))
+             (for [keyword coll] (->> (split (name keyword) #"-") (map word-fn) (join " "))))))
 
 (defn text-field [coll]
   (zipmap coll
@@ -27,7 +27,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
   (zipmap (keys m) (for [v (vals m)] (Window. v))))
 
 (def windows (define-windows
-	       {:main-window "Subscription Manager"
+               {:main-window "Subscription Manager"
                 :contract-selection-dialog "Contract Selection"
                 :date-selection-dialog "Date Selection"
                 :error-dialog "Error"
@@ -81,7 +81,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :online-documentation
                                     :filters
                                     :calendar])
-		    {:date-entry "date-entry"
+                    {:date-entry "date-entry"
                      :register-system "Register System"
                      :redeem "Redeem a Subscription"
                      :import-certificate "Import Cert"
@@ -114,7 +114,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :contract-number "Contract Number"
                      :bundled-products "Bundeled Products Table"
                      :all-available-bundled-products "All Available Bundled Products Table"}))
-		    {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
+                    {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
     (define-elements (windows :register-dialog)
         {:redhat-login "account_login"
          :password "account_password"
@@ -167,8 +167,10 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                      :proxy-text
                                      :password-text
                                      :username-text])
-             {:close-proxy "Close Button"
-              :proxy-location "Proxy Location:"}))
+              {:close-proxy "Close Button"
+               :test-connetion "Test Connection Button"
+               :connection-status "connectionStatusLabel"
+               :proxy-location "Proxy Location:"}))
     (define-elements (windows :information-dialog)
       {:info-ok "OK"})
     (define-elements (windows :warning-dialog)
@@ -228,9 +230,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
-	    (same-name capitalize [:all-available-subscriptions
-				   :my-subscriptions
-				   :my-installed-products])))
+            (same-name capitalize [:all-available-subscriptions
+                                   :my-subscriptions
+                                   :my-installed-products])))
 
 
 (def all-elements (merge windows elements tabs))
@@ -242,10 +244,6 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (extend-protocol ldtp/LDTPLocatable
   clojure.lang.Keyword
   (locator [this] (let [locatable (all-elements this)]
-		    (if-not locatable
-		      (throw (IllegalArgumentException. (str "Key not found in UI mapping: " this))))
-		    (ldtp/locator locatable))))
-
-
-
-
+                    (if-not locatable
+                      (throw (IllegalArgumentException. (str "Key not found in UI mapping: " this))))
+                    (ldtp/locator locatable))))
