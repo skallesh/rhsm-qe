@@ -80,7 +80,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// create SSHCommandRunners to connect to the subscription-manager clients
 		File sshKeyPrivateKeyFile = new File(System.getProperty("automation.dir", null)+"/"+sm_sshKeyPrivate);
-		if (!sshKeyPrivateKeyFile.exists()) Assert.fail("Expected automation private key to be localling placed to '"+sshKeyPrivateKeyFile+"'.  Ask the RHSM Automation Administrator for a copy.");
+		if (!sshKeyPrivateKeyFile.exists()) Assert.fail("Expected to find the private ssh key for automation testing at '"+sshKeyPrivateKeyFile+"'.  Ask the RHSM Automation Administrator for a copy.");
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		clienttasks = new SubscriptionManagerTasks(client);
 		client1 = client;
