@@ -13,6 +13,7 @@ import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.InstalledProduct;
+import rhsm.data.ProductCert;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
@@ -87,16 +88,24 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		// get the installed products and product database map
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		Map<String,String> productIdRepoMap = clienttasks.getProductIdRepoMap();
+		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
 		
 		// assert that product database and installed products are in sync
-		for (InstalledProduct installedProduct: installedProducts) {
-			Assert.assertTrue(productIdRepoMap.containsKey(installedProduct.productId), "Database '"+clienttasks.productIdJsonFile+"' contains installed product id: "+installedProduct.productId);
-			log.info("Database '"+clienttasks.productIdJsonFile+"' maps installed product id '"+installedProduct.productId+"' to repo '"+productIdRepoMap.get(installedProduct.productId)+"'.");
+		int installedProductCertCount=0;
+		for (ProductCert installedProductCert: installedProductCerts) {
+			// skip productCerts from TESTDATA
+			if (installedProductCert.file.getName().endsWith("_.pem")) {
+				log.info("Skipping assertion that product cert '"+installedProductCert.file+"' (manually installed from generated candlepin TESTDATA) is accounted for in the product database '"+clienttasks.productIdJsonFile+"'.");
+				continue;
+			}
+			installedProductCertCount++;
+			Assert.assertTrue(productIdRepoMap.containsKey(installedProductCert.productId), "Database '"+clienttasks.productIdJsonFile+"' contains installed product id: "+installedProductCert.productId);
+			log.info("Database '"+clienttasks.productIdJsonFile+"' maps installed product id '"+installedProductCert.productId+"' to repo '"+productIdRepoMap.get(installedProductCert.productId)+"'.");
 		}
 		for (String productId : productIdRepoMap.keySet()) {
 			Assert.assertNotNull(InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, installedProducts), "Database '"+clienttasks.productIdJsonFile+"' product id '"+productId+"' is among the installed products.");
 		}
-		Assert.assertEquals(productIdRepoMap.keySet().size(), installedProducts.size(), "The product id database size matches the number of installed products.");
+		Assert.assertEquals(productIdRepoMap.keySet().size(), installedProductCertCount, "The product id database size matches the number of installed products (excluding TESTDATA products).");
 	}
 	
 	
