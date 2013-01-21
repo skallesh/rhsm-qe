@@ -325,16 +325,82 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 706265 - product cert is not getting removed after removing all the installed packages from its repo using yum
 	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com
 	
-	/* Test Notes from alikins
+	/* 
+	------------------------------------------------------------
+	Notes from alikins
 	summary: if you register, and subscribe to say, openshift
 	(but not rhel), and install something from openshift, you
 	can have your productid deleted as inactive. This doesn't
 	seem to be a new behaviour. If you are subscribe to rhel
 	(even with no rhel packages installed), you seem to be okay.
+	
+	The openshift guys have ran into this with 6.3, and I belive 6.4 betas.
+	There scenario was:
+	
+	install rhel
+	register
+	subscribe to rhel (I belive...)
+	subscribe to openshift
+	yum install something from openshift
+	*boom* rhel product id goes away
+	
+	MUST WE BE SUBSCRIBED TO RHEL?
+	> Testing this, it seems that if rhel is just subscribe to (no packages
+	> installed or updated) it seems to be okay.
+	>
+	> However, I'm not really sure I understand why...
+	> Adrian
+	>
+	>
+	
+	Our logic is this:
+	
+	if you have a subscription, and if you have a product id which is not
+	backed by a susbcription repo hen we should remove it. I think we need
+	to change this logic. Is there a bug open for this? If not, I will.
+	-- bk
+
+	----------------------------------------------------------------------
+	A couple of thoughts from dgregor regarding bug 859197:
+
+	* A product cert should only be removed when there are no packages left
+	on the system that came from the corresponding repo.  So, in the above
+	example, as long as there are packages on the system that came from
+	anaconda-RedHatEnterpriseLinux-201211201732.x86_64, the product cert
+	should stay regardless of whether
+	anaconda-RedHatEnterpriseLinux-201211201732.x86_64 is still a defined
+	repository.
+
+	* Do we ever associate a product cert with multiple repos?  Let's say I
+	install a package from rhel-ha-for-rhel-6-server-beta-rpms and that
+	pulls in product cert 83.  I then install a second package from
+	rhel-ha-for-rhel-6-server-rpms, which is also mapped to cert 83.  If I
+	remove that first package, we still want cert 83 on disk.
+
+	-- Dennis
+	HOW TO DETERMINE WHAT REPO A PACKAGE CAME FROM
+
+	# yum history package-info filesystem
+	Transaction ID : 1
+	Begin time     : Sat Oct 13 19:38:17 2012
+	Package        : filesystem-2.4.30-3.el6.x86_64
+	State          : Install
+	Size           : 0
+	Build host     : x86-004.build.bos.redhat.com
+	Build time     : Tue Jun 28 10:13:32 2011
+	Packager       : Red Hat, Inc. <http://bugzilla.redhat.com/bugzilla>
+	Vendor         : Red Hat, Inc.
+	License        : Public Domain
+	URL            : https://fedorahosted.org/filesystem
+	Source RPM     : filesystem-2.4.30-3.el6.src.rpm
+	Commit Time    : Tue Jun 28 08:00:00 2011
+	Committer      : Ondrej Vasik <ovasik@redhat.com>
+	Reason         : user
+	>From repo      : anaconda-RedHatEnterpriseLinux-201206132210.x86_64
+	Installed by   : System <unset>
+	
+	
 	*/
-	
-	
-	
 	
 	// Configuration methods ***********************************************************************
 	
