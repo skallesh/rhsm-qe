@@ -37,10 +37,11 @@ import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
- * @author jsefler
+ * @author skallesh
  *
  *
  */
+
 @Test(groups={"RAMTests"})
 public class RAMTests extends SubscriptionManagerCLITestScript {
 	
@@ -54,6 +55,91 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		
 	}
 	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = true)
+	public void DisableCertV3ForRamBasedSubscription() throws JSONException,Exception {
+		
+		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "false");
+		servertasks.restartTomcat();
+		clienttasks.restart_rhsmcertd(null,null,false, null);
+		SubscriptionManagerCLITestScript.sleep(2 * 60 * 1000);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		System.out.println(	clienttasks.getFactValue("system.certificate_version"));
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+			groups = { "AutoHealRamBasedSubscription"}, enabled = true)
+	public void AutoHealRamBasedSubscription() throws JSONException,Exception {
+		int healFrequency=2;
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Subscribed");
+		}}
+		
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+			groups = { "AutoSubscribeRamBasedSubscription"}, enabled = true)
+	public void AutoSubscribeRamBasedSubscription() throws JSONException,Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		
+		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+					if(installed.productId.contains("ram")){
+
+						Assert.assertEquals(installed.status.trim(), "Subscribed");
+				}else throw new SkipException(
+					"Couldnot auto-subscribe ram based subscription");
+	}
+	}
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+			groups = { "RamBasedSubscriptionInfoInEntitlementCert"}, enabled = true)
+	public void RamBasedSubscriptionInfoInEntitlementCert() throws JSONException,Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		
+		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		}
+		System.out.println(clienttasks.getCurrentEntitlementCerts());
+		
+	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -62,18 +148,27 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
 			groups = { "SubscribeToRamBasedSubscription"}, enabled = true)
 	public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
+		int expected=1;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		String factsList=clienttasks.facts_(true, null, null, null, null).getStdout();
-		int ramvalue=KBToGBConverter(Integer.parseInt(parse(factsList)));
+		clienttasks.facts_(true, null, null, null, null).getStdout();
+		String factsList=clienttasks.getFactValue("memory.memtotal");
+		int ramvalue=KBToGBConverter(Integer.parseInt(factsList));
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
-			System.out.println(pool);
-			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 		}
 		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 			int quantity=consumed.quantityUsed;
-			Assert.assertEquals(quantity, ramvalue);
+			if(ramvalue<=4){
+			Assert.assertEquals(quantity, expected);
+		}else if(ramvalue>4 && ramvalue<=8){
+			expected=2;
+			Assert.assertEquals(quantity, expected);
+		}else if(ramvalue>8 && ramvalue<=12){
+			expected=3;
+			Assert.assertEquals(quantity, expected++);
+		}
 		}
 		
 	}
@@ -86,7 +181,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	 public List<SubscriptionPool> getRamBasedSubscriptions() {
-		 List<SubscriptionPool> RAMBasedPools= new ArrayList();
+		 List<SubscriptionPool> RAMBasedPools= new ArrayList<SubscriptionPool>();
 		 for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			 if(pools.subscriptionName.contains("RAM")){
 				 RAMBasedPools.add(pools) ;
@@ -97,48 +192,8 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	static public String parse(String FactsList) {
 
-	Map<String,String> regexes = new HashMap<String,String>();
-	regexes.put("memory","memory.memtotal:(.*)");
-	List<Map<String,String>> factsList = new ArrayList<Map<String,String>>();
-	for(String field : regexes.keySet()){
-		Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-		addRegexMatchesToList(pat, FactsList, factsList, field);
-	}
-	
-	String facts = null;
-	for(Map<String,String> factsMap : factsList) {
-		String key = "memory", memory = factsMap.get(key);
-		if (memory!=null) {
-			factsMap.remove(key);
-			memory = memory.replaceAll("\\s*\\n\\s*", " ");
-			factsMap.put(key, memory);
-		}
-		facts=factsMap.get(key);
-	}
-	return facts;
-	
-}
 
-	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {
-		boolean foundMatches = false;
-		Matcher matcher = regex.matcher(to_parse);
-		int currListElem=0;
-		while (matcher.find()){
-			if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
-			Map<String,String> matchMap = matchList.get(currListElem);
-			matchMap.put(sub_key, matcher.group(1).trim());
-			matchList.set(currListElem, matchMap);
-			currListElem++;
-			foundMatches = true;
-		}
-        if (!foundMatches) {
-        	//log.warning("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
-        	log.finer("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
-        }
-		return foundMatches;
-	}
 	// Candidates for an automated Test:
 	// TODO http://qe-india.pad.engineering.redhat.com/48?
 	/*
