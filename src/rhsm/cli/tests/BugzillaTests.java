@@ -61,50 +61,92 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir"
 			.toLowerCase();
 
-	// Bugzilla Healing Test methods
-	// ***********************************************************************
-
-	// Healing Candidates for an automated Test:
-	// TODO Cases in Bug 710172 - [RFE] Provide automated healing of expiring
-	// subscriptions//working on
-	// TODO subcase Bug 746088 - autoheal is not super-subscribing on the day
-	// the current entitlement cert expires //done
-	// TODO subcase Bug 746218 - auto-heal isn't working for partial
-	// subscription //done
-	// TODO Cases in Bug 726411 - [RFE] Support for certificate healing
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=627665 //done
-	// TODO Bug 669395 - gui defaults to consumer name of the hostname and
-	// doesn't let you set it to empty string. cli defaults to username, and
-	// does let you set it to empty string
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669513//done
-	// TODO Bug 803386 - display product ID in product details pane on sm-gui
-	// and cli
-	// https://bugzilla.redhat.com/show_bug.cgi?id=733327
-	// TODO Bug 674652 - Subscription Manager Leaves Broken Yum Repos After
-	// Unregister//done
-	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update
-	// with incorrect proxy url produces traceback.//done
-	// TODO Bug 806958 - One empty certificate file in /etc/rhsm/ca causes
-	// registration failure//done
-	// https://bugzilla.redhat.com/show_bug.cgi?id=700821
-	// TODO Bug 827034 - Teach rhsmcertd to refresh the identity
-	// certificate//done
-	// https://bugzilla.redhat.com/show_bug.cgi?id=607162//done
-	// https://tcms.engineering.redhat.com/case/50235/?from_plan=2105
-	// https://tcms.engineering.redhat.com/case/50215/?from_plan=2851
-	// https://tcms.engineering.redhat.com/case/50238/?from_plan=2851
-	// https://tcms.engineering.redhat.com/case/56897/?from_plan=2681
-	// https://tcms.engineering.redhat.com/case/61710/?from_plan=2476
-	// https://tcms.engineering.redhat.com/case/50230/?from_plan=2477
-	// https://tcms.engineering.redhat.com/case/50215/?from_plan=2851
-	// https://tcms.engineering.redhat.com/case/50238/?from_plan=2851
-	// https://tcms.engineering.redhat.com/case/214136/?from_plan=5846
-	// https://tcms.engineering.redhat.com/case/50215/?from_plan=2851
-	// https://tcms.engineering.redhat.com/case/50223/?from_plan=2851
-	// https://tcms.engineering.redhat.com/case/64181/?from_plan=2105
-	// https://tcms.engineering.redhat.com/case/68737/?from_plan=2477
-	// https://bugzilla.redhat.com/show_bug.cgi?id=869729
-	// TODO Bug 746241 - UEPConnection.updateConsumer will not allow passing [] for facts, installed_products, or guest_uuids
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+			groups = { "VerifyipV4Facts","blockedByBug-874147"}, enabled = true)
+	public void VerifyipV4Facts() throws JSONException,Exception {
+		Boolean pattern=false;
+		Boolean Flag=false;
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		String result=clienttasks.facts(true, null, null, null, null).getStdout();
+		Pattern p = Pattern.compile(result);
+		Matcher matcher = p.matcher("Unknown");
+		while (matcher.find()) {
+			 pattern = matcher.find();
+	}
+		Assert.assertEquals(pattern, Flag);
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+			groups = { "VerifyRepoFileExistance","blockedByBug-886604"}, enabled = true)
+	public void VerifyRepoFileExistance() throws JSONException,Exception {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsm",
+				"manage_repos", "1" });
+		clienttasks.config_(null, null, true, listOfSectionNameValues);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		clienttasks.repos_(true,(String)null, null, null, null, null);
+		String result=client.runCommandAndWait("yum repolist").getStdout();
+		System.out.println(result);
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+			groups = { "AddingVirtualPoolToActivationKey"}, enabled = true)
+	public void AddingVirtualPoolToActivationKey() throws JSONException,Exception {
+		Integer addQuantity=1;
+		int count =0;
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
+				sm_clientOrg, System.currentTimeMillis());
+		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
+		mapActivationKeyRequest.put("name", name);
+		JSONObject jsonActivationKeyRequest = new JSONObject(
+				mapActivationKeyRequest);
+		JSONObject jsonActivationKey = new JSONObject(
+				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
+						sm_clientPassword, sm_serverUrl, "/owners/"
+								+ sm_clientOrg + "/activation_keys",
+								jsonActivationKeyRequest.toString()));
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"healFrequency".toLowerCase(), "1440" });
+		clienttasks.config_(null, null, true, listOfSectionNameValues);
+		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
+		for (SubscriptionPool availList : clienttasks
+				.getCurrentlyAllAvailableSubscriptionPools()) {
+			if(availList.subscriptionName.contains("unlimited")){
+				count++;
+				JSONObject jsonAddedPool = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +availList.poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
+			}
+		}
+		clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, true, null, null, null, null);
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(consumed.size(), count);
+		JSONObject delete = new JSONObject(CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_clientUsername,
+				sm_clientPassword, sm_serverUrl,"/activation_keys/"+name));
+	}
+	
 	
 	
 	/**

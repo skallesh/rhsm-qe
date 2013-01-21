@@ -9,6 +9,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,9 +30,11 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
+import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
  * @author jsefler
@@ -49,11 +54,91 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		
 	}
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+			groups = { "SubscribeToRamBasedSubscription"}, enabled = true)
+	public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		String factsList=clienttasks.facts_(true, null, null, null, null).getStdout();
+		int ramvalue=KBToGBConverter(Integer.parseInt(parse(factsList)));
+		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+			System.out.println(pool);
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		}
+		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
+			int quantity=consumed.quantityUsed;
+			Assert.assertEquals(quantity, ramvalue);
+		}
+		
+	}
+	
+	static public int KBToGBConverter(int memory) {
+		int value=(int) 1.049e+6;
+		int result=(memory/value);
+		return result;
+
+	}
+	
+	 public List<SubscriptionPool> getRamBasedSubscriptions() {
+		 List<SubscriptionPool> RAMBasedPools= new ArrayList();
+		 for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			 if(pools.subscriptionName.contains("RAM")){
+				 RAMBasedPools.add(pools) ;
+			 }
+		 }
+		 
+		return RAMBasedPools;
+	}
 	
 	
+	static public String parse(String FactsList) {
+
+	Map<String,String> regexes = new HashMap<String,String>();
+	regexes.put("memory","memory.memtotal:(.*)");
+	List<Map<String,String>> factsList = new ArrayList<Map<String,String>>();
+	for(String field : regexes.keySet()){
+		Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+		addRegexMatchesToList(pat, FactsList, factsList, field);
+	}
 	
+	String facts = null;
+	for(Map<String,String> factsMap : factsList) {
+		String key = "memory", memory = factsMap.get(key);
+		if (memory!=null) {
+			factsMap.remove(key);
+			memory = memory.replaceAll("\\s*\\n\\s*", " ");
+			factsMap.put(key, memory);
+		}
+		facts=factsMap.get(key);
+	}
+	return facts;
 	
-	
+}
+
+	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {
+		boolean foundMatches = false;
+		Matcher matcher = regex.matcher(to_parse);
+		int currListElem=0;
+		while (matcher.find()){
+			if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
+			Map<String,String> matchMap = matchList.get(currListElem);
+			matchMap.put(sub_key, matcher.group(1).trim());
+			matchList.set(currListElem, matchMap);
+			currListElem++;
+			foundMatches = true;
+		}
+        if (!foundMatches) {
+        	//log.warning("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
+        	log.finer("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
+        }
+		return foundMatches;
+	}
 	// Candidates for an automated Test:
 	// TODO http://qe-india.pad.engineering.redhat.com/48?
 	/*
