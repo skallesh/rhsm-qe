@@ -168,7 +168,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                      :password-text
                                      :username-text])
               {:close-proxy "Close Button"
-               :test-connetion "Test Connection Button"
+               :test-connection "Test Connection Button"
                :connection-status "connectionStatusLabel"
                :proxy-location "Proxy Location:"}))
     (define-elements (windows :information-dialog)
