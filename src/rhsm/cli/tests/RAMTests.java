@@ -67,14 +67,20 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		
 		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "false");
 		servertasks.restartTomcat();
-		clienttasks.restart_rhsmcertd(null,null,false, null);
-		SubscriptionManagerCLITestScript.sleep(2 * 60 * 1000);
+		SubscriptionManagerCLITestScript.sleep( 1*60 * 1000);
+		clienttasks.restart_rhsmcertd(null, null, false, null);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		System.out.println(	clienttasks.getFactValue("system.certificate_version"));
-		
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Not Subscribed");
+		}
 	}
+		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "true");
+		servertasks.restartTomcat();
+ }
 	
 	/**
 	 * @author skallesh
@@ -134,7 +140,9 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, true, null, null, null, null);
 		
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
-			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			System.out.println(pool.poolId);
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			
 		}
 		System.out.println(clienttasks.getCurrentEntitlementCerts());
 		
