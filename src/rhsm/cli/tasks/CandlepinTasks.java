@@ -86,6 +86,7 @@ public class CandlepinTasks {
 	public static HttpClient client;
 	CandlepinType serverType = CandlepinType.hosted;
 	public String branch = "";
+	public Integer redhatReleaseX = new Integer(0);
 	
 	// populated from curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/status | python -mjson.tool
 	public String statusRelease = "";
@@ -125,6 +126,17 @@ public class CandlepinTasks {
 		this.serverImportDir = serverImportDir;
 		this.serverType = serverType;
 		this.branch = branch;
+		
+		// OS release detection
+		String redhatRelease = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
+		// [root@fsharath-candlepin ~]# cat /etc/redhat-release 
+		// Fedora release 16 (Verne)
+		// [root@rhsm-compat-rhel64 ~]# cat /etc/redhat-release 
+		// Red Hat Enterprise Linux Server release 6.4 Beta (Santiago)
+		Pattern pattern = Pattern.compile("\\d+");
+		Matcher matcher = pattern.matcher(redhatRelease);
+		Assert.assertTrue(matcher.find(),"Extracted redhatReleaseX '"+matcher.group()+"' from '"+redhatRelease+"'");
+		redhatReleaseX = Integer.valueOf(matcher.group());
 	}
 	
 	
@@ -195,16 +207,8 @@ public class CandlepinTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 
 		
-		// TODO cleanup this messy os version detection
-		String redhatRelease = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
-		// [root@fsharath-candlepin ~]# cat /etc/redhat-release 
-		// Fedora release 16 (Verne)
-		Pattern pattern = Pattern.compile("\\d+");
-		Matcher matcher = pattern.matcher(redhatRelease);
-		Assert.assertTrue(matcher.find(),"Extracted redhatReleaseX '"+matcher.group()+"' from '"+redhatRelease+"'");
-		Integer redhatReleaseX = Integer.valueOf(matcher.group());
-		
 		// restart some services
+		// TODO fix this logic for candlepin running on rhel7 which is based on f18
 		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl start ntpd.service", Integer.valueOf(0));	// Stdout: 24 May 17:53:28 ntpdate[20993]: adjust time server 66.187.233.4 offset -0.000287 sec
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop postgresql.service && systemctl start postgresql.service", Integer.valueOf(0));
@@ -2553,7 +2557,12 @@ schema generation failed
 
 	
 	public void restartTomcat() {
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
+		// TODO fix this logic for candlepin running on rhel7 which is based on f18
+		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop tomcat6.service && systemctl start tomcat6.service", Integer.valueOf(0));
+		} else {	// the old Fedora way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
+		}
 	}
 	
 	public List<RevokedCert> getCurrentlyRevokedCerts() {
