@@ -532,37 +532,97 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	// Protected Methods ***********************************************************************
 
 	protected boolean doSystemFactsMatchConsumerFacts(String consumerId, Map<String,String> systemFactsMap, Map<String,String> consumerFactsMap) {
+		// the following list of system facts will be dropped by the remote candlepin API when they are NOT integers >= 0.
+		// this is defined in candlepin file src/main/java/org/candlepin/config/ConfigProperties.java and was introduced by candlepin commit 5d4d30753ab209b82181c267a94dd833f24b24c9
+		//	private static final String NON_NEG_INTEGER_FACT_LIST =
+		//        "cpu.core(s)_per_socket," +
+		//        "cpu.cpu(s)," +
+		//        "cpu.cpu_socket(s)," +
+		//        "lscpu.core(s)_per_socket," +
+		//        "lscpu.cpu(s)," +
+		//        "lscpu.numa_node(s)," +
+		//        "lscpu.numa_node0_cpu(s)," +
+		//        "lscpu.socket(s)," +
+		//        "lscpu.thread(s)_per_core";
+		List<String> NON_NEG_INTEGER_FACT_LIST = Arrays.asList("cpu.core(s)_per_socket","cpu.cpu(s)","cpu.cpu_socket(s)","lscpu.core(s)_per_socket","lscpu.cpu(s)","lscpu.numa_node(s)","lscpu.numa_node0_cpu(s)","lscpu.socket(s)","lscpu.thread(s)_per_core");
 		boolean mapsAreEqual=true;
+
 		for (Map<String,String> m : Arrays.asList(systemFactsMap,consumerFactsMap)) {	// normalize boolean facts
 			for (String k : m.keySet()) {
 				if (m.get(k).equalsIgnoreCase(Boolean.TRUE.toString())) m.put(k,Boolean.TRUE.toString());
 				if (m.get(k).equalsIgnoreCase(Boolean.FALSE.toString())) m.put(k,Boolean.FALSE.toString());
 			}
 		}
+		
+		// asserting all of the facts known by the remote candlepin API are accounted for by the facts known by the local system
 		for (String key : consumerFactsMap.keySet()) {
-			if (key.equals("system.name") || key.equals("system.uuid")) {log.info("Skipping comparison of extended fact '"+key+"'.");continue;}
+			// special skip case
+			if (key.equals("system.name") || key.equals("system.uuid")) {
+				log.info("Skipping comparison of extended fact '"+key+"'.");
+				continue;
+			}
+			
 			if (systemFactsMap.containsKey(key) && !systemFactsMap.get(key).equals(consumerFactsMap.get(key))) {
 				log.warning("Consumer '"+consumerId+"' on client "+client1tasks.hostname+" has a local system fact '"+key+"' value '"+systemFactsMap.get(key)+"' which does not match value '"+consumerFactsMap.get(key)+"' from the remote candlepin API.");
-				if (key.equals("net.interface.sit0.mac_address")) {log.warning("Skipping comparison of fact '"+key+"'.  The local system value appears to change unpredictably.  The current value on the system '"+systemFactsMap.get(key)+"' may be acceptably different than the value on the consumer '"+consumerFactsMap.get(key)+"';  see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=838123");continue;}
-				if (systemFactsMap.get(key).equals("Unknown") && consumerFactsMap.get(key).trim().equals("")) {log.info("Ignoring mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=722248");continue;}
+				
+				// special skip case
+				if (key.equals("net.interface.sit0.mac_address")) {
+					log.warning("Skipping comparison of fact '"+key+"'.  The local system value appears to change unpredictably.  The current value on the system '"+systemFactsMap.get(key)+"' may be acceptably different than the value on the consumer '"+consumerFactsMap.get(key)+"';  see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=838123");
+					continue;
+				}
+				
+				// special ignore case
+				if (systemFactsMap.get(key).equals("Unknown") && consumerFactsMap.get(key).trim().equals("")) {
+					log.info("Ignoring mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=722248");
+					continue;
+				}
+				
 				mapsAreEqual=false;
 			} else if (!systemFactsMap.containsKey(key)) {
 				log.warning("Consumer '"+consumerId+"' from the remote candlepin API has a fact '"+key+"' which is absent from the local system facts on client "+client1tasks.hostname+".");
 				mapsAreEqual=false;	
 			}
 		}
+		
+		// asserting all of the facts known by the local system are accounted for by the facts known by the remote candlepin API
 		for (String key : systemFactsMap.keySet()) {
-			if (key.equals("system.name") || key.equals("system.uuid")) {log.info("Skipping comparison of extended fact '"+key+"'.");continue;}
+			// special skip case
+			if (key.equals("system.name") || key.equals("system.uuid")) {
+				log.info("Skipping comparison of extended fact '"+key+"'.");
+				continue;
+			}
+			
 			if (consumerFactsMap.containsKey(key) && !consumerFactsMap.get(key).equals(systemFactsMap.get(key))) {
 				log.warning("Consumer '"+consumerId+"' from the remote candlepin API has a system fact '"+key+"' value '"+consumerFactsMap.get(key)+"' which does not match value '"+systemFactsMap.get(key)+"' from the local system fact on client "+client1tasks.hostname+".");
-				if (key.equals("net.interface.sit0.mac_address")) {log.warning("Skipping comparison of fact '"+key+"'.  The local system value appears to change unpredictably.  The current value on the system '"+systemFactsMap.get(key)+"' may be acceptably different than the value on the consumer '"+consumerFactsMap.get(key)+"';  see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=838123");continue;}
-				if (systemFactsMap.get(key).equals("Unknown") && consumerFactsMap.get(key).trim().equals("")) {log.info("Ignoring mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=722248");continue;}
+				
+				// special skip case
+				if (key.equals("net.interface.sit0.mac_address")) {
+					log.warning("Skipping comparison of fact '"+key+"'.  The local system value appears to change unpredictably.  The current value on the system '"+systemFactsMap.get(key)+"' may be acceptably different than the value on the consumer '"+consumerFactsMap.get(key)+"';  see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=838123");
+					continue;
+				}
+				
+				// special ignore case
+				if (systemFactsMap.get(key).equals("Unknown") && consumerFactsMap.get(key).trim().equals("")) {
+					log.info("Ignoring mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=722248");
+					continue;
+				}
+				
 				mapsAreEqual=false;
 			} else if (!consumerFactsMap.containsKey(key)) {
-				log.warning("Consumer '"+consumerId+"' on client "+client1tasks.hostname+" has a fact '"+key+"' which is absent from the remote candlepin API.");
+				log.warning("Consumer '"+consumerId+"' on client "+client1tasks.hostname+" has a local system fact '"+key+"' which is absent from the remote candlepin API.");
+				
+				// special ignore case
+				if (NON_NEG_INTEGER_FACT_LIST.contains(key)) {
+					if (!isInteger(systemFactsMap.get(key)) || Integer.valueOf(systemFactsMap.get(key))<0) {
+						log.info("Ignoring absent fact '"+key+"' from the remote candlepin API because its value '"+systemFactsMap.get(key)+"' is NOT an integer>=0; see Candlepin commit 5d4d30753ab209b82181c267a94dd833f24b24c9 https://github.com/candlepin/candlepin/pull/157");
+						continue;
+					}
+				}
+				
 				mapsAreEqual=false;	
 			}
 		}
+		
 		return mapsAreEqual;
 	}
 
