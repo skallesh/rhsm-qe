@@ -91,8 +91,18 @@
   [:import-dialog "<CTRL>i"]])
 
 
-;; TODO
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-785203"]}}
+  check_close_button [_]
+  (tasks/restart-app)
+  (try
+    (tasks/ui selectmenuitem :main-window "System")
+    (tasks/ui selectmenuitem :main-window "Quit")
+    (tasks/ui waittillwindownotexist :main-window 5)
+    (verify (= 0 (tasks/ui guiexist :main-window)))
+    (finally (tasks/restart-app))))
 
+;; TODO
 
 (gen-class-testng)
 
