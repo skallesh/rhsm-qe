@@ -532,8 +532,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	// Protected Methods ***********************************************************************
 
 	protected boolean doSystemFactsMatchConsumerFacts(String consumerId, Map<String,String> systemFactsMap, Map<String,String> consumerFactsMap) {
-		// the following list of system facts will be dropped by the remote candlepin API when they are NOT integers >= 0.
-		// this is defined in candlepin file src/main/java/org/candlepin/config/ConfigProperties.java and was introduced by candlepin commit 5d4d30753ab209b82181c267a94dd833f24b24c9
+		// The following list of system facts will be dropped by the remote candlepin API when they are NOT integers >= 0.
+		// This is defined in candlepin file src/main/java/org/candlepin/config/ConfigProperties.java and was introduced by candlepin commit 5d4d30753ab209b82181c267a94dd833f24b24c9
+		// This was inspired by bugzillas 803757 858286
+		//  public static final String NON_NEG_INTEGER_FACTS = "candlepin.positive_integer_facts";
 		//	private static final String NON_NEG_INTEGER_FACT_LIST =
 		//        "cpu.core(s)_per_socket," +
 		//        "cpu.cpu(s)," +
@@ -544,6 +546,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		//        "lscpu.numa_node0_cpu(s)," +
 		//        "lscpu.socket(s)," +
 		//        "lscpu.thread(s)_per_core";
+		// This list is configurable in /etc/candlpin/candlepin.conf by including a line like this:  candlepin.positive_integer_facts = "cpu.core(s)_per_socket,cpu.cpu(s)"
 		List<String> NON_NEG_INTEGER_FACT_LIST = Arrays.asList("cpu.core(s)_per_socket","cpu.cpu(s)","cpu.cpu_socket(s)","lscpu.core(s)_per_socket","lscpu.cpu(s)","lscpu.numa_node(s)","lscpu.numa_node0_cpu(s)","lscpu.socket(s)","lscpu.thread(s)_per_core");
 		boolean mapsAreEqual=true;
 
@@ -560,6 +563,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			if (key.equals("system.name") || key.equals("system.uuid")) {
 				log.info("Skipping comparison of extended fact '"+key+"'.");
 				continue;
+			}
+			
+			// special assert case
+			if (NON_NEG_INTEGER_FACT_LIST.contains(key)) {
+				Assert.assertTrue(isInteger(consumerFactsMap.get(key)) && Integer.valueOf(consumerFactsMap.get(key))>=0, "Consumer fact '"+key+"' value '"+consumerFactsMap.get(key)+"' is a non-negative integer.  ( If this test fails, then the remote candlepin API is failing to drop the fact entirely from the consumer when the system uploads this fact; see Candlepin commit 5d4d30753ab209b82181c267a94dd833f24b24c9 https://github.com/candlepin/candlepin/pull/157; see Bugzillas https://bugzilla.redhat.com/buglist.cgi?bug_id=803757%2C858286 )");
 			}
 			
 			if (systemFactsMap.containsKey(key) && !systemFactsMap.get(key).equals(consumerFactsMap.get(key))) {
