@@ -14,8 +14,12 @@ tmp/*
 ## editor files
 *~
 \#*
+.\#*
 *.swp
 *.swo
+
+## for plugin settings like counter-clockwise
+.settings
 
 ## ssh key files
 .ssh/id_auto_dsa
