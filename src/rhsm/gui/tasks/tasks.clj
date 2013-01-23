@@ -575,13 +575,15 @@
     :or {re-register? true}}]
   (let [ownername (ctasks/get-owner-display-name (@config :username)
                                                  (@config :password)
-                                                 (@config :owner-key))]
+                                                 (@config :owner-key))
+        server (ctasks/server-url)]
     (if re-register?
       ;re-register with handlers
       (try+
        (register (@config :username)
                  (@config :password)
-                 :owner ownername)
+                 :owner ownername
+                 :server server)
        (catch
            [:type :already-registered]
            {:keys [unregister-first]}
@@ -589,7 +591,8 @@
       ;else just attempt a register
       (register (@config :username)
                 (@config :password)
-                :owner ownername))))
+                :owner ownername
+                :server server))))
 
 (defn restart-app
   "Restarts subscription-manager-gui"
