@@ -407,8 +407,24 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups="setup")
 	public void assertRhelServerBeforeClass() {
 		if (clienttasks==null) return;
-		if (!clienttasks.releasever.contains("Server")) {
-			throw new SkipException("High Availability tests are only executable against a RHEL Server.");
+		if (!clienttasks.releasever.contains("Server")) {	// "5Server" or "6Server"
+			throw new SkipException("High Availability tests are only executable on a RHEL Server.");
+		}
+		if (clienttasks.arch.startsWith("ppc")) {		// ppc ppc64
+			serverProductId = "74";	// Red Hat Enterprise Linux for IBM POWER
+			throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
+		}
+		else if (clienttasks.arch.startsWith("s390")) {	// s390 s390x
+			serverProductId = "72";	// Red Hat Enterprise Linux for IBM System z
+			throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
+		}
+		else { 											// i386 x86_64
+			serverProductId = "69";	// Red Hat Enterprise Linux Server
+			if (clienttasks.arch.startsWith("i")) {
+				haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/i386/os/Packages/ccs-0.16.2-35.el6.i686.rpm";
+			} else {
+				haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/x86_64/os/Packages/ccs-0.16.2-35.el6.x86_64.rpm";
+			}
 		}
 	}
 
@@ -469,9 +485,9 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	protected final String haProductCertDir			= "/tmp/sm-haProductCertDir";
 	protected final String backupProductIdJsonFile	= "/tmp/sm-productIdJsonFile";
 	protected final String haProductId				= "83";	// Red Hat Enterprise Linux High Availability (for RHEL Server)
-	protected final String serverProductId			= "69";	// Red Hat Enterprise Linux Server
+	protected /*final*/ String serverProductId		= null;	// set in assertRhelServerBeforeClass()
 	protected final String haPackage1				= "ccs";
-	protected final String haPackage1Fetch			= "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/x86_64/os/Packages/ccs-0.16.2-35.el6.x86_64.rpm";	// released RHEL61 package to wget for testing bug 806457
+	protected /*final*/ String haPackage1Fetch		= null;	// set in assertRhelServerBeforeClass()	// released RHEL61 package to wget for testing bug 806457
 	protected final String haPackage2				= "cluster-glue-libs";
 	File haEntitlementCertFile = null;
 	
