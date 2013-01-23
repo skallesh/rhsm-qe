@@ -128,15 +128,17 @@ public class CandlepinTasks {
 		this.branch = branch;
 		
 		// OS release detection
-		String redhatRelease = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
-		// [root@fsharath-candlepin ~]# cat /etc/redhat-release 
-		// Fedora release 16 (Verne)
-		// [root@rhsm-compat-rhel64 ~]# cat /etc/redhat-release 
-		// Red Hat Enterprise Linux Server release 6.4 Beta (Santiago)
-		Pattern pattern = Pattern.compile("\\d+");
-		Matcher matcher = pattern.matcher(redhatRelease);
-		Assert.assertTrue(matcher.find(),"Extracted redhatReleaseX '"+matcher.group()+"' from '"+redhatRelease+"'");
-		redhatReleaseX = Integer.valueOf(matcher.group());
+		if (sshCommandRunner!=null) {
+			String redhatRelease = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
+			// [root@fsharath-candlepin ~]# cat /etc/redhat-release 
+			// Fedora release 16 (Verne)
+			// [root@rhsm-compat-rhel64 ~]# cat /etc/redhat-release 
+			// Red Hat Enterprise Linux Server release 6.4 Beta (Santiago)
+			Pattern pattern = Pattern.compile("\\d+");
+			Matcher matcher = pattern.matcher(redhatRelease);
+			Assert.assertTrue(matcher.find(),"Extracted redhatReleaseX '"+matcher.group()+"' from '"+redhatRelease+"'");
+			redhatReleaseX = Integer.valueOf(matcher.group());
+		}
 	}
 	
 	
