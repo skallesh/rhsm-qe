@@ -1,16 +1,24 @@
 (ns rhsm.gui.tasks.candlepin-tasks
   (:use [rhsm.gui.tasks.test-config :only (config
                                                        clientcmd)]
-        [clojure.string :only (trim)])
+        [clojure.string :only (trim blank?)])
   (:require [rhsm.gui.tasks.rest :as rest])
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [rhsm.cli.tasks CandlepinTasks]
            [rhsm.base SubscriptionManagerBaseTestScript]))
 
 (defn server-url
-  "Returns the server url as used by the automation."
+  "Returns the server url as used by the automation. As used by API calls."
   []
   (SubscriptionManagerBaseTestScript/sm_serverUrl))
+
+(defn server-path
+  "Returns the full server path as used by the register dialog."
+  []
+  (let [hostname (SubscriptionManagerBaseTestScript/sm_serverHostname)
+        port (SubscriptionManagerBaseTestScript/sm_serverPort)
+        prefix(SubscriptionManagerBaseTestScript/sm_serverPrefix)]
+    (str hostname (if-not (blank? port) (str ":" port))  prefix)))
 
 ; Not a candlepin task, but sticking this here.
 (defn get-consumer-id

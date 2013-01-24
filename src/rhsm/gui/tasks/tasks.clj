@@ -576,7 +576,7 @@
   (let [ownername (ctasks/get-owner-display-name (@config :username)
                                                  (@config :password)
                                                  (@config :owner-key))
-        server (ctasks/server-url)]
+        server (ctasks/server-path)]
     (if re-register?
       ;re-register with handlers
       (try+
