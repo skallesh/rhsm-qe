@@ -212,10 +212,14 @@ public class SubscriptionManagerTasks {
 	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions) {
 
 		// make sure the client's time is accurate
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
-
+		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl status ntpd.service | grep \"Active\"", Integer.valueOf(0), "\\(running\\)", null);
+		} else {
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
+		}
+				
 		// yum clean all
-		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("yum clean all");
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("yum clean all --disableplugin=rhnplugin");
 		if (sshCommandResult.getExitCode().equals(1)) {
 			sshCommandRunner.runCommandAndWait("rm -f "+redhatRepoFile);
 		}
