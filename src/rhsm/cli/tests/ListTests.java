@@ -902,7 +902,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		bugId = "858286";	// Bug 858286 - Runtime Error For input string: "zero" at java.lang.NumberFormatException.forInputString:65
 		invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
+		BUG_858286:	if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the creation of product: "+name);
 		} else {
 		// END OF WORKAROUND
@@ -912,7 +912,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
 		// create a new engineering product, marketing product that provides the engineering product, and a subscription for the marketing product
 		attributes.put("type", "SVC");
+		
+		// after the fix for bug 858286, the sockets attribute value MUST be a non-negative attribute	// 1/25/2013 TODO move this block of code to create 'Awesome OS for "zero" sockets' to its own testcase
+		try {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", providedProductIds.get(0), 1, attributes, null);
+		} catch (java.lang.AssertionError ae) {
+			String expectedProductCreationErrorMsg = "The attribute 'sockets' must be an integer value.";
+			Assert.assertTrue(ae.getMessage().contains(expectedProductCreationErrorMsg), ae.getMessage()+" contains expected product creation failure message '"+expectedProductCreationErrorMsg+"'.");
+			break BUG_858286; 
+		}
+				
 		attributes.put("type", "MKT");
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
