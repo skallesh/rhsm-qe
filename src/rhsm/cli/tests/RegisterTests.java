@@ -1109,8 +1109,10 @@ Expected Results:
 	public void AttemptRegisterToEnvironmentWithoutOrg_Test() throws JSONException, Exception {
 		// ask the candlepin server if it supports environment
 		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
-
-		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,null,"foo",null,null,null,null,null,null,(String)null,null, null, true, null, null, null, null);
+		
+		// This test implementation was valid prior to rhel7.0 (WHEN THE MISSING ORG WAS NOT INTERACTIVELY PROMPTED)
+		if (false) {
+		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,null,"foo_env",null,null,null,null,null,null,(String)null,null, null, true, null, null, null, null);
 
 		// skip this test when candlepin does not support environments
 		if (!supportsEnvironments) {
@@ -1121,6 +1123,33 @@ Expected Results:
 		}
 
 		// assert results when candlepin supports environments
+		Assert.assertEquals(result.getStdout().trim(), "Error: Must specify --org to register to an environment.","Registering to an environment requires that the org be specified.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register with environment option and without org option.");
+		}
+		
+		// This test implementation is valid for rhel7.0+ (WHERE THE MISSING ORG IS NOW INTERACTIVELY PROMPTED)
+		// [root@10-16-120-133 ~]# expect -c "spawn subscription-manager register --username=testuser1 --password=password --environment=foo_env; expect \"Organization:\"; send foo_org\r; expect eof; catch wait reason; exit [lindex \$reason 3]"
+		String command = String.format("expect -c \"spawn %s register %s %s %s; %s expect eof; catch wait reason; exit [lindex \\$reason 3]\"",
+				clienttasks.command,
+				"--username="+sm_clientUsername,
+				"--password="+sm_clientPassword,
+				"--environment="+"foo_env",
+				"expect \\\"Organization:\\\"; send "+"foo_org"+"\\\r;");
+		
+		// attempt to register to environment without an org; expect interactive prompting for an organization
+		SSHCommandResult result = client.runCommandAndWait(command);
+
+		// skip this test when candlepin does not support environments
+		if (!supportsEnvironments) {
+			// but before we skip, we can verify that environments are unsupported by this server
+			String expectedErrorMsg = "Error: Server does not support environments.";
+			Assert.assertTrue(result.getStdout().trim().endsWith(expectedErrorMsg),"An attempt to register to an environment on a server that does not support environments report: "+expectedErrorMsg);
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from an attempt to register to an environment on a server that does not support environments.");
+			throw new SkipException("Candlepin server '"+sm_serverHostname+"' does not support environments, therefore this test is not applicable.");
+		}
+
+		// assert results when candlepin supports environments
+		// TODO These assertions are wrong for rhel7;  01/26/2013 jsefler
 		Assert.assertEquals(result.getStdout().trim(), "Error: Must specify --org to register to an environment.","Registering to an environment requires that the org be specified.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register with environment option and without org option.");
 	}
