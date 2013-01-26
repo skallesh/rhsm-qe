@@ -1997,7 +1997,11 @@ public class SubscriptionManagerTasks {
 		if (proxy!=null)														command += " --proxy="+proxy;
 		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)												command += " --proxypassword="+proxypassword;
-
+		
+		// workaround for bug 800323 after master commit 1bc25596afaf294cd217200c605737a43112a378 to avoid stderr: 'ascii' codec can't decode byte 0xe5 in position 13: ordinal not in range(128)
+		// TODO copy this to all of the task_ methods
+		if (!SubscriptionManagerCLITestScript.isStringSimpleASCII(command)) command = "PYTHONIOENCODING=ascii "+command;
+		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
 		
