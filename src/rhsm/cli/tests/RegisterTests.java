@@ -188,7 +188,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing registration to a Candlepin using various options and data and asserting various expected results.");
 		
 		// ensure we are unregistered
-//DO NOT		clienttasks.unregister();
+		//DO NOT clienttasks.unregister();
 		
 		// attempt the registration
 		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, owner, null, type, name, consumerId, autosubscribe, null, null, (String)null, null, null, force, null, null, null, null);
@@ -208,15 +208,15 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
-		String randomString = String.valueOf(getRandInt());
 
 		// Object bugzilla, String username, String password, String owner, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
 		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
 		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername+getRandInt(),		sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
 		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername+getRandInt(),		String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"You must specify an organization/owner for new consumers."*/"You must specify an organization for new consumers."}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				randomString,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+randomString+" does not exist."*/"Organization "+randomString+" does not exist."}));
+		// THIS TEST ROW IS DEPRECATED BY INTERACTIVE PROMPTING FOR REGISTRATION ORG IN RHEL7+ ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"You must specify an organization/owner for new consumers."*/"You must specify an organization for new consumers."}));
+		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				"foobar",						null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foobar"+" does not exist."*/"Organization "+"foobar"+" does not exist."}));
 		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),	sm_clientUsername,					sm_clientPassword,				"\"foo bar\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foo bar"+" does not exist."*/"Organization "+"foo bar"+" does not exist."}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),	sm_clientUsername,					sm_clientPassword,				"\"富 酒吧\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"富 酒吧"+" does not exist."*/"Organization "+"富 酒吧"+" does not exist."}));
 
 		// force a successful registration, and then...
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"616065","669395"}),
