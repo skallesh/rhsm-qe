@@ -219,15 +219,13 @@ public class SubscriptionManagerTasks {
 		}
 				
 		// yum clean all
-		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("yum clean all --disableplugin=rhnplugin");
+		SSHCommandResult sshCommandResult = yumClean("all");
+		// this if block was written 2010-10-25 but I cannot remember why I did it - 01/26/2013 jsefler
 		if (sshCommandResult.getExitCode().equals(1)) {
 			sshCommandRunner.runCommandAndWait("rm -f "+redhatRepoFile);
 		}
-//FIXME Failing on client2 with: [Errno 2] No such file or directory: '/var/cache/yum/x86_64/6Server'
-//		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum clean all").getExitCode(),Integer.valueOf(0),"yum clean all was a success");
-		sshCommandRunner.runCommandAndWait("yum clean all");
 		
-		// uninstall current rpms
+		// remove current rpms
 		// http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/python-rhsm.noarch.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-gnome.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-firstboot.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-migration.x86_64.rpm,     http://gibson.usersys.redhat.com/latestrpm/?arch=noarch&version=1&rpmname=subscription-manager-migration-data
 		List<String> rpmUrlsReversed = new ArrayList<String>();
 		for (String rpmUrl : rpmInstallUrls) rpmUrlsReversed.add(0,rpmUrl);
@@ -377,8 +375,7 @@ public class SubscriptionManagerTasks {
 		sshCommandRunner.runCommandAndWait("rm -rf "+rhnSystemIdFile);
 		
 		// also do a yum clean all to avoid rhnplugin message: This system may not be registered to RHN Classic or RHN Satellite. SystemId could not be acquired.
-		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "yum clean all", TestRecords.action());
-		sshCommandRunner.runCommandAndWait("yum clean all");
+		yumClean("all");
 	}
 	
 	public void updateYumRepo(String yumRepoFile, YumRepo yumRepo){
@@ -3042,18 +3039,26 @@ public class SubscriptionManagerTasks {
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getExitCode()==0) {
+			String unregisterSuccessMsg = "System has been unregistered.";
+			
 			// TEMPORARY WORKAROUND FOR BUG
 			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="878657"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) unregisterSuccessMsg = "System has been un-registered.";
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			invokeWorkaroundWhileBugIsOpen = true;
 			try {String bugId="800121"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("If 'NoneType' object message was thrown to stdout during unregister, we will ignore it while this bug is open.");
-				Assert.assertTrue(sshCommandResult.getStdout().trim().contains("System has been un-registered."), "The unregister command was a success.");
+				Assert.assertTrue(sshCommandResult.getStdout().trim().contains(unregisterSuccessMsg), "The unregister command was a success.");
 			} else
 			// END OF WORKAROUND
-			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("System has been un-registered."), "The unregister command was a success.");
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unregister command indicates a success.");
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals(unregisterSuccessMsg), "Stdout from an attempt to unregister contains successful message '"+unregisterSuccessMsg+"'.");
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "Exit code from an attempt to unregister");
 		} else if (sshCommandResult.getExitCode()==1) {
-			Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is currently not registered."),"The unregister command was not necessary.  It was already unregistered");
+			Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is currently not registered."), "The unregister command was not necessary.  The stdout message indicates it was already unregistered.");
 		} else {
 			Assert.fail("An unexpected exit code ("+sshCommandResult.getExitCode()+") was returned when attempting to unregister.");		
 		}
@@ -3062,12 +3067,13 @@ public class SubscriptionManagerTasks {
 		Assert.assertTrue(!RemoteFileTasks.testExists(sshCommandRunner,this.consumerKeyFile()), "Consumer key file '"+this.consumerKeyFile()+"' does NOT exist after unregister.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(sshCommandRunner,this.consumerCertFile()), "Consumer cert file '"+this.consumerCertFile()+" does NOT exist after unregister.");
 		
-		// assert that all of the entitlement certs have been removed (Actually, the entitlementCertDir should get removed)
+		// assert that all of the entitlement certs have been removed
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement certificates have been removed after unregister.");
-// FIXME UNCOMMENT SOMETIME IN THE FUTURE.  DOES NOT SEEM TO BE ACCURATE AT THIS TIME 10/25/2010
-//		// Bug 852685 - Folder "/etc/pki/entitlement/" cannot be removed after unregistering with subscription-manager via CLI
-//		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, entitlementCertDir),0,"Entitlement Cert directory '"+entitlementCertDir+"' should not exist after unregister.");
-
+		
+		// assert the entitlementCertDir is removed
+		// CLOSED WONTFIX Bug 852685 - Folder "/etc/pki/entitlement/" cannot be removed after unregistering with subscription-manager via CLI
+		// Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, entitlementCertDir),0,"Entitlement Cert directory '"+entitlementCertDir+"' should not exist after unregister.");
+		
 		return sshCommandResult; // from the unregister command
 	}
 	
@@ -5320,10 +5326,14 @@ repolist: 3,394
 		return result;
 	}
 	
+	/**
+	 * @param option [headers|packages|metadata|dbcache|plugins|expire-cache|all]
+	 * @return
+	 */
 	public SSHCommandResult yumClean (String option) {
 		String command = "yum clean \""+option+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Cleaning",null);
-		return result;
+		//return RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Cleaning",null);	// don't bother asserting results anymore since rhel7 exitCode is 1 when "There are no enabled repos."	// jsefler 1/26/2013
+		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
 	public String getRedhatRelease() {
