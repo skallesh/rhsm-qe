@@ -67,9 +67,6 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify subscription of Ram/socket based subscription", 
 			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = true)
 	public void RamSocketSubscription() throws JSONException,Exception {
-		
-		
-		
 		factsMap.put("memory.memtotal", String.valueOf(value*10));
 		Integer sockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
