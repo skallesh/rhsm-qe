@@ -40,7 +40,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		String cliCommand = clienttasks.command;
 		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+cliCommand,0);
 		RemoteFileTasks.runCommandAndAssert(client,"whatis "+cliCommand,0,"^"+cliCommand+" ",null);
-		log.warning("We only tested the existence of the man page; NOT the content.");
+		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
 	
 	@Test(	description="subscription-manager-gui: man page",
@@ -54,12 +54,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (client.runCommandAndWait("rpm -q "+guiCommand).getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,1,null,"^No manual entry for "+guiCommand);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+": nothing appropriate",null);
-			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
+			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 			throw new SkipException(guiCommand+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+" ",null);
-			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
+			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
 	
@@ -74,12 +74,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gui").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
-			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
+			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
-			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
+			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
 	
@@ -94,7 +94,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
-			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
+			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 			throw new SkipException(command+" is not installed and therefore its man page cannot be installed.");
 		} else if (!clienttasks.redhatReleaseX.equals("5")) {
 			log.info("The man page for '"+command+"' should only be installed on RHEL5.");
@@ -104,7 +104,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
-			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
+			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
 	
@@ -119,12 +119,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
-			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
+			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
-			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
+			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
 	
@@ -137,7 +137,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		String rctCommand = "rct";
 		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+rctCommand,0);
 		RemoteFileTasks.runCommandAndAssert(client,"whatis "+rctCommand,0,"^"+rctCommand+" ",null);
-		log.warning("We only tested the existence of the man page; NOT the content.");
+		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
 	
 	
@@ -208,10 +208,16 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@BeforeClass(groups={"setup"})
 	public void makewhatisBeforeClass() {
 		if (clienttasks==null) return;
-		// running makewhatis (when needed) to ensure that the whatis database is built on Beaker provisioned systems
-		if (client.runCommandAndWait("grep "+clienttasks.command+" /var/cache/man/whatis").getStdout().trim().isEmpty()) {
-			RemoteFileTasks.runCommandAndAssert(client,"makewhatis",0);
-		}
+		
+		// ensure that the whatis database is built (often needed on Beaker provisioned systems)
+		SSHCommandResult whatisResult = client.runCommandAndWait("whatis "+clienttasks.command);
+		if ((whatisResult.getStdout()+whatisResult.getStderr()).toLowerCase().contains("nothing appropriate")) {
+			if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) {
+				RemoteFileTasks.runCommandAndAssert(client,"mandb -q",0);	// mandb replaced makewhatis in f14
+			} else {
+				RemoteFileTasks.runCommandAndAssert(client,"makewhatis",0);
+			}
+		}	
 	}
 	
 	
