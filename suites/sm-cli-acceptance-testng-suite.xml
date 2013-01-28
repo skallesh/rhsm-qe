@@ -598,6 +598,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: RAM Tests">
+		<classes>
+			<class name="rhsm.cli.tests.RAMTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: SELinux Tests">
 		<classes>
 			<class name="rhsm.cli.tests.SELinuxTests" />
