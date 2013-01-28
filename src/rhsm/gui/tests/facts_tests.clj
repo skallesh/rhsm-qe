@@ -4,7 +4,7 @@
                                                        clientcmd
                                                        cli-tasks)]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.string :only (split-lines split)]
+        [clojure.string :only (split-lines split trim)]
         clojure.pprint
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
@@ -78,6 +78,20 @@
 
 ;; run ^^this^^ in the console with:
 ;; (doseq [[p i] (ftest/get_installed_products nil :debug true)] (ftest/check_version_arch nil p i))
+
+(defn ^{Test {:groups ["facts"
+                       "blockedByBug-905136"]}}
+  check_org_id [_]
+  (try
+    (tasks/ui click :view-system-facts)
+    (tasks/ui waittillwindowexist :facts-dialog 10)
+    (let [cli-raw (.getStdout
+                   (.runCommandAndWait @clientcmd
+                                       "subscription-manager identity | grep 'org id'"))
+          cli-val (trim (last (split cli-raw #":")))
+          gui-val (tasks/ui gettextvalue :facts-org-id)]
+      (verify (= gui-val cli-val)))
+    (finally (tasks/ui click :close-facts))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
