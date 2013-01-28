@@ -44,7 +44,10 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 @Test(groups={"RAMTests"})
 public class RAMTests extends SubscriptionManagerCLITestScript {
-	
+	Map<String, String> factsMap = new HashMap<String, String>();
+	int value=(int) 1.049e+6;
+
+
 	// Test methods ***********************************************************************
 
 	@Test(	description="",
@@ -61,7 +64,40 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+	@Test(description = "verify subscription of Ram/socket based subscription", 
+			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = true)
+	public void RamSocketSubscription() throws JSONException,Exception {
+		
+		
+		
+		factsMap.put("memory.memtotal", String.valueOf(value*10));
+		Integer sockets = 4;
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			
+		}clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+		}
+	}
+		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
+
+	
+ }
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify Ram Subscription with disabled certv3 from candlepin ", 
 			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = true)
 	public void DisableCertV3ForRamBasedSubscription() throws JSONException,Exception {
 		
@@ -87,7 +123,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+	@Test(description = "verify Auto Heal for Ram subscription .", 
 			groups = { "AutoHealRamBasedSubscription"}, enabled = true)
 	public void AutoHealRamBasedSubscription() throws JSONException,Exception {
 		int healFrequency=2;
@@ -111,7 +147,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+	@Test(description = "verify Auto-attach for Ram based subscription", 
 			groups = { "AutoSubscribeRamBasedSubscription"}, enabled = true)
 	public void AutoSubscribeRamBasedSubscription() throws JSONException,Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
@@ -132,7 +168,40 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+	@Test(description = "verify Partial subscription of Ram subscription. ", 
+			groups = { "PartailSubscriptionOfRamBasedSubscription"}, enabled = true)
+	public void PartailSubscriptionOfRamBasedSubscription() throws JSONException,Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		
+		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			
+		}clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Subscribed");
+		}
+			factsMap.put("memory.memtotal", String.valueOf(value*10));
+			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+		}
+		
+		clienttasks.facts_(true, null, null, null, null);
+		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+			}}
+	}
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify Ram info in product and entitlement certificate", 
 			groups = { "RamBasedSubscriptionInfoInEntitlementCert"}, enabled = true)
 	public void RamBasedSubscriptionInfoInEntitlementCert() throws JSONException,Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
@@ -153,7 +222,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
+	@Test(description = "verify subscription of Ram based subscription", 
 			groups = { "SubscribeToRamBasedSubscription"}, enabled = true)
 	public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
 		int expected=1;
