@@ -36,6 +36,7 @@
         (verify (= 1 result))))))
 
 (defn register_bad_credentials [user pass recovery]
+  (try+ (tasks/unregister) (catch [:type :not-registered] _))
   (let [test-fn (fn [username password expected-error-type]
                   (try+ (tasks/register username password)
                         (catch
