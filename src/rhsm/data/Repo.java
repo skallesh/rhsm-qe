@@ -104,8 +104,8 @@ public class Repo extends AbstractCommandLineData {
 		
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		regexes.put("repoName",				"Repo Name:(.*)");
-		regexes.put("repoId",				"Repo Id:(.*)");
-		regexes.put("repoUrl",				"Repo Url:(.*)");
+		regexes.put("repoId",				"Repo ID:(.*)");	// "Repo Id:(.*)"); changed by Bug 878634
+		regexes.put("repoUrl",				"Repo URL:(.*)");	// "Repo Url:(.*)"); changed by Bug 878634
 		regexes.put("enabled",				"Enabled:(.*)");
 		
 		List<Map<String,String>> reposList = new ArrayList<Map<String,String>>();

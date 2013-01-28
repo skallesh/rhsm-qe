@@ -364,7 +364,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable an invalid-repo-id.");	// valid in RHEL59
 		//Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to enable an invalid-repo-id.");	// valid in RHEL59
 		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to enable an invalid-repo-id.");
-		Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo id. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to enable an invalid-repo-id.");
+		//Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo id. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to enable an invalid-repo-id.");	// changed by bug 878634
+		Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo ID. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to enable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to enable an invalid-repo-id.");
 	}
 	
@@ -379,7 +380,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to disable an invalid-repo-id.");	// valid in RHEL59
 		//Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to disable an invalid-repo-id.");	// valid in RHEL59
 		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to disable an invalid-repo-id.");
-		Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo id. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to disable an invalid-repo-id.");
+		//Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo id. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to disable an invalid-repo-id.");	// changed by bug 878634
+		Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo ID. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to disable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
 	}
 	

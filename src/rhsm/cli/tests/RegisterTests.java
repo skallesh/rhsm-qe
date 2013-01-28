@@ -1225,38 +1225,38 @@ Expected Results:
 
 		// Object bugzilla, String baseurl, String baseurlConfigured, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
 		// positive tests
-		ll.add(Arrays.asList(new Object[] {	null,							"https://myhost.example.com:900/myapp/",	"https://myhost.example.com:900/myapp/",	new Integer(0),		null,			null}));
-		// 842830 CLOSED WONTFIX ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842830"),	"http://myhost.example.com:900/myapp/",		"http://myhost.example.com:900/myapp/",		new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"https://https:900/myapp/",					"https://https:900/myapp/",					new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"https://http:900/myapp/",					"https://http:900/myapp/",					new Integer(0),		null,			null}));
-		// 842830 CLOSED WONTFIX ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842830"),	"http://http:900/myapp/",					"http://http:900/myapp/",					new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900/myapp/",			"https://myhost.example.com:900/myapp/",	new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900/myapp",				"https://myhost.example.com:900/myapp",		new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900/",					/*"https://myhost.example.com:900/"*/"https://myhost.example.com:900",			new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900",					"https://myhost.example.com:900",			new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com/",						/*"https://myhost.example.com/"*/"https://myhost.example.com",					new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com/myapp",					"https://myhost.example.com/myapp",			new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com/myapp/",				"https://myhost.example.com/myapp/",		new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com",						"https://myhost.example.com",				new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"myhost-examp_e.com",						"https://myhost-examp_e.com",				new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"myhost",									"https://myhost",							new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"/myapp",									"https://"+defaultHostname+"/myapp",		new Integer(0),		null,			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							":900/myapp",								"https://"+defaultHostname+":900/myapp",	new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"https://myhost.example.com:900/myapp/",	"https://myhost.example.com:900/myapp/",	new Integer(0),		null,			null}));
+		// 842830 CLOSED WONTFIX ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("842830"),	"http://myhost.example.com:900/myapp/",		"http://myhost.example.com:900/myapp/",		new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"https://https:900/myapp/",					"https://https:900/myapp/",					new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"https://http:900/myapp/",					"https://http:900/myapp/",					new Integer(0),		null,			null}));
+		// 842830 CLOSED WONTFIX ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("842830"),	"http://http:900/myapp/",					"http://http:900/myapp/",					new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"myhost.example.com:900/myapp/",			"https://myhost.example.com:900/myapp/",	new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"myhost.example.com:900/myapp",				"https://myhost.example.com:900/myapp",		new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"myhost.example.com:900/",					/*"https://myhost.example.com:900/"*/"https://myhost.example.com:900",			new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"myhost.example.com:900",					"https://myhost.example.com:900",			new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"myhost.example.com/",						/*"https://myhost.example.com/"*/"https://myhost.example.com",					new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"myhost.example.com/myapp",					"https://myhost.example.com/myapp",			new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"myhost.example.com/myapp/",				"https://myhost.example.com/myapp/",		new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"myhost.example.com",						"https://myhost.example.com",				new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"myhost-examp_e.com",						"https://myhost-examp_e.com",				new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"myhost",									"https://myhost",							new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"/myapp",									"https://"+defaultHostname+"/myapp",		new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													":900/myapp",								"https://"+defaultHostname+":900/myapp",	new Integer(0),		null,			null}));
 
 		// ignored tests
-		ll.add(Arrays.asList(new Object[] {	null,							"",											ll.get(ll.size()-1).get(2)/* last set */,	new Integer(0),		null,			null}));	
+		ll.add(Arrays.asList(new Object[] {	null,													"",											ll.get(ll.size()-1).get(2)/* last set */,	new Integer(0),		null,			null}));	
 	
 		// negative tests
-		ll.add(Arrays.asList(new Object[] {	null,							"https:/hostname",							null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"https:hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"http//hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"http/hostname/prefix",						null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"ftp://hostname",							null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"git://hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"https://hostname:/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server url port could not be parsed",											null}));
-		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842845"),	"https://hostname:PORT/prefix",				null,			new Integer(255),	"Error parsing baseurl: Server url port should be numeric",												null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"https://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
-		ll.add(Arrays.asList(new Object[] {	null,							"http://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"https:/hostname",							null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"https:hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"http//hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"http/hostname/prefix",						null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"ftp://hostname",							null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"git://hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"878634"}),				"https://hostname:/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL port could not be parsed",											null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"878634","842845"}),	"https://hostname:PORT/prefix",				null,			new Integer(255),	"Error parsing baseurl: Server URL port should be numeric",												null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"https://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
+		ll.add(Arrays.asList(new Object[] {	null,													"http://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
 		return ll;
 	}
 	

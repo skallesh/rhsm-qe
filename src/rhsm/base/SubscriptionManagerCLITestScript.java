@@ -2561,44 +2561,44 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		// Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdout, String expectedStderr
 		// positive tests
-		serverurl= server_hostname+(server_port.isEmpty()?"":":"+server_port)+server_prefix;			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
-		serverurl= "https://"+serverurl;																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+		serverurl= server_hostname+(server_port.isEmpty()?"":":"+server_port)+server_prefix;			ll.add(Arrays.asList(new Object[] {	null,													serverurl,	server_hostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+		serverurl= "https://"+serverurl;																ll.add(Arrays.asList(new Object[] {	null,													serverurl,	server_hostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
 		
 		if (server_port.equals(defaultPort)) {
-			serverurl= server_hostname+server_prefix;													ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	defaultPort,	server_prefix,		new Integer(0),	null,			null}));
-			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	defaultPort,	server_prefix,		new Integer(0),	null,			null}));
+			serverurl= server_hostname+server_prefix;													ll.add(Arrays.asList(new Object[] {	null,													serverurl,	server_hostname,	defaultPort,	server_prefix,		new Integer(0),	null,			null}));
+			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,													serverurl,	server_hostname,	defaultPort,	server_prefix,		new Integer(0),	null,			null}));
 		}
 		if (server_prefix.equals(defaultPrefix)) {
-			serverurl= server_hostname+(server_port.isEmpty()?"":":"+server_port);						ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	defaultPrefix,		new Integer(0),	null,			null}));
-			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	defaultPrefix,		new Integer(0),	null,			null}));
+			serverurl= server_hostname+(server_port.isEmpty()?"":":"+server_port);						ll.add(Arrays.asList(new Object[] {	null,													serverurl,	server_hostname,	server_port,	defaultPrefix,		new Integer(0),	null,			null}));
+			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,													serverurl,	server_hostname,	server_port,	defaultPrefix,		new Integer(0),	null,			null}));
 		}
 		if (server_hostname.equals(defaultHostname)) {
-			serverurl= (server_port.isEmpty()?"":":"+server_port);										ll.add(Arrays.asList(new Object[] {	null,							serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
-			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+			serverurl= (server_port.isEmpty()?"":":"+server_port);										ll.add(Arrays.asList(new Object[] {	null,													serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,													serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
 		}
 		// TODO add a case for the ipaddress of hostname
 		
 		// ignored tests
-		serverurl="";																					ll.add(Arrays.asList(new Object[] {	null,							serverurl,	/* last set */ ll.get(ll.size()-1).get(2),	ll.get(ll.size()-1).get(3),	ll.get(ll.size()-1).get(4),	new Integer(0),		null,			null}));	
+		serverurl="";																					ll.add(Arrays.asList(new Object[] {	null,													serverurl,	/* last set */ ll.get(ll.size()-1).get(2),	ll.get(ll.size()-1).get(3),	ll.get(ll.size()-1).get(4),	new Integer(0),		null,			null}));	
 	
 		// negative tests
-//		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+":PORT"+server_prefix,													null}));
-		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842845"),	serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port should be numeric",															null}));
-		serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842885"),	serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX",		null}));
-		serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:"+defaultPort+defaultPrefix,													null}));
-		serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900"+defaultPrefix,																null}));
-		serverurl= "hostname:900/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900/prefix",																	null}));
-		serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("830767"),	serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+defaultHostname+":"+defaultPort+"/",													null}));
-		serverurl= "https:/hostname/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "https:hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "https//hostname/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "https/hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "ftp://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "git://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "https://hostname:/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port could not be parsed",					null}));
-		serverurl= "https://hostname:PORT/prefix";														ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842845"),	serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port should be numeric",					null}));
-		serverurl= "https://";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
-		serverurl= "http://";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
+//		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+":PORT"+server_prefix,													null}));
+		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"878634","842845"}),	serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL port should be numeric",															null}));
+		serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842885"),							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX",		null}));
+		serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:"+defaultPort+defaultPrefix,													null}));
+		serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900"+defaultPrefix,																null}));
+		serverurl= "hostname:900/prefix";																ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900/prefix",																	null}));
+		serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("830767"),							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+defaultHostname+":"+defaultPort+"/",													null}));
+		serverurl= "https:/hostname/prefix";															ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https:hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https//hostname/prefix";															ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https/hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "ftp://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "git://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https://hostname:/prefix";															ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"878634"}),				serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL port could not be parsed",					null}));
+		serverurl= "https://hostname:PORT/prefix";														ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"878634","842845"}),	serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL port should be numeric",					null}));
+		serverurl= "https://";																			ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
+		serverurl= "http://";																			ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
 		return ll;
 	}
 }
