@@ -212,8 +212,8 @@ public class CandlepinTasks {
 		// restart some services
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
 		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl start ntpd.service", Integer.valueOf(0));	// Stdout: 24 May 17:53:28 ntpdate[20993]: adjust time server 66.187.233.4 offset -0.000287 sec
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop postgresql.service && systemctl start postgresql.service", Integer.valueOf(0));
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl start ntpd.service && systemctl status ntpd.service | grep 'Active'", null, "\\(running\\)", null);	// Stdout: 24 May 17:53:28 ntpdate[20993]: adjust time server 66.187.233.4 offset -0.000287 sec
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop postgresql.service && systemctl start postgresql.service && systemctl status postgresql.service", null, "\\(running\\)", null);
 		} else {	// the old Fedora way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop && ntpdate clock.redhat.com && service ntpd start && chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd(.*?):\\s+\\[  OK  \\]", null);	// Starting ntpd:  [  OK  ]		// Starting ntpd (via systemctl):  [  OK  ]
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql stop && service postgresql start", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql(.*?):\\s+\\[  OK  \\]", null);	// Starting postgresql service: [  OK  ]	// Starting postgresql (via systemctl):  [  OK  ]
@@ -2561,7 +2561,7 @@ schema generation failed
 	public void restartTomcat() {
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
 		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop tomcat6.service && systemctl start tomcat6.service", Integer.valueOf(0));
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart tomcat6.service && systemctl status tomcat6.service | grep 'Active'", null, "\\(running\\)", null);
 		} else {	// the old Fedora way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
 		}

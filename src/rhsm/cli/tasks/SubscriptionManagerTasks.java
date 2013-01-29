@@ -216,7 +216,7 @@ public class SubscriptionManagerTasks {
 
 		// make sure the client's time is accurate
 		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl status ntpd.service | grep \"Active\"", Integer.valueOf(0), "\\(running\\)", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl status ntpd.service | grep 'Active'", null, "\\(running\\)", null);
 		} else {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
 		}
@@ -644,20 +644,24 @@ public class SubscriptionManagerTasks {
 		 */
 		}
 		
-		// NEW SERVICE RESTART FEEDBACK AFTER IMPLEMENTATION OF Bug 818978 - Missing systemD unit file
-		//	[root@jsefler-59server ~]# service rhsmcertd restart
-		//	Stopping rhsmcertd...                                      [  OK  ]
-		//	Starting rhsmcertd...                                      [  OK  ]
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd\\.\\.\\.\\[  OK  \\]$",null);	
-
+		// restart rhsmcertd service
+		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart rhsmcertd.service && systemctl status rhsmcertd.service | grep 'Active'", null, "\\(running\\)", null);
+		} else {
+			// NEW SERVICE RESTART FEEDBACK AFTER IMPLEMENTATION OF Bug 818978 - Missing systemD unit file
+			//	[root@jsefler-59server ~]# service rhsmcertd restart
+			//	Stopping rhsmcertd...                                      [  OK  ]
+			//	Starting rhsmcertd...                                      [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd\\.\\.\\.\\[  OK  \\]$",null);	
+			
+			// # service rhsmcertd restart
+			// rhsmcertd (pid 10172 10173) is running...
+			
+			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62 branch
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
+			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
+		}
 		
-		// # service rhsmcertd restart
-		// rhsmcertd (pid 10172 10173) is running...
-		
-		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62 branch
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
-		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
-
 		// # tail -f /var/log/rhsm/rhsmcertd.log
 		// Wed Nov  9 15:21:54 2011: started: interval = 1440 minutes
 		// Wed Nov  9 15:21:54 2011: started: interval = 240 minutes
@@ -780,9 +784,11 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public void stop_rhsmcertd (){
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd stop",Integer.valueOf(0));
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd is stopped$",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(3),"^rhsmcertd is stopped$",null);  // exit code 3 = program not running		// reference Bug 232163; Bug 679812
+		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7+ / Fedora16+ way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop rhsmcertd.service && systemctl status rhsmcertd.service | grep 'Active'", null, "\\(dead\\)", null);
+		} else {
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service rhsmcertd stop && service rhsmcertd status",Integer.valueOf(3), "^rhsmcertd is stopped$", null);  // exit code 3 = program not running		// reference Bug 232163; Bug 679812
+		}
 	}
 	
 	public void waitForRegexInRhsmcertdLog(String logRegex, int timeoutMinutes) {
