@@ -54,6 +54,17 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="assert the exit code from service rhsmcertd status when running and stopped",
+			groups={"blockedByBug-895263","blockedByBug-824680","blockedByBug-842464"})
+	public void VerifyExitCodeStatusForRhmscertd_Test() {
+		Integer expectedStoppedStatus = new Integer(3);
+		Integer expectedRunningStatus = new Integer(0);
+		log.info("When service "+clienttasks.rhsmCertD+" is stopped, the expected service status exit code is: "+expectedStoppedStatus);
+		log.info("When service "+clienttasks.rhsmCertD+" is running, the expected service status exit code is: "+expectedRunningStatus);
+		RemoteFileTasks.runCommandAndAssert(client, "service "+clienttasks.rhsmCertD+" stop  && service "+clienttasks.rhsmCertD+" status", new Integer(3));
+		RemoteFileTasks.runCommandAndAssert(client, "service "+clienttasks.rhsmCertD+" start && service "+clienttasks.rhsmCertD+" status", new Integer(0));
+	}
+	
 	
 	
 	
@@ -63,9 +74,14 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 629708 - import/export validation error wrapped
 	// TODO Bug 744536 - [ALL LANG] [RHSM CLI] unsubscribe module _unexpected 'ascii' code can't decode ...message.
 	
+	
+	
+	
+	
+	
 	// Data Providers ***********************************************************************
 	
-
+	
 	
 	@DataProvider(name="UnregisteredCommandData")
 	public Object[][] getUnregisteredCommandDataAs2dArray() {
