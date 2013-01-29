@@ -4482,27 +4482,38 @@ repolist: 3,394
 	 */
 	public ArrayList<String> getYumRepolist(String options){
 		if (options==null) options="";
-		ArrayList<String> repos = new ArrayList<String>();
+		ArrayList<String> repoList = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 				
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=697087 - jsefler 04/27/2011
-		if (this.redhatRelease.contains("release 5")) {
+		// TEMPORARY WORKAROUND FOR BUG
+		if (this.redhatReleaseX.equals("5")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="697087"; 
+			String bugId="697087"; // Bug 697087 - yum repolist is not producing a list when one of the repo baseurl causes a forbidden 403
 			try {if (invokeWorkaroundWhileBugIsOpen && BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				
 				// avoid "yum repolist" and assemble the list of repos directly from the redhat repo file
 				List<YumRepo> yumRepoList =   getCurrentlySubscribedYumRepos();
 				for (YumRepo yumRepo : yumRepoList) {
-					if		(options.startsWith("all"))													repos.add(yumRepo.id);
-					else if (options.startsWith("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
-					else if (options.startsWith("disabled")	&& yumRepo.enabled.equals(Boolean.FALSE))	repos.add(yumRepo.id);
-					else if (options.equals("")				&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
+					if		(options.startsWith("all"))													repoList.add(yumRepo.id);
+					else if (options.startsWith("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repoList.add(yumRepo.id);
+					else if (options.startsWith("disabled")	&& yumRepo.enabled.equals(Boolean.FALSE))	repoList.add(yumRepo.id);
+					else if (options.equals("")				&& yumRepo.enabled.equals(Boolean.TRUE))	repoList.add(yumRepo.id);
 				}
 				sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-				return repos;
+				return repoList;
+			}
+		}
+		// END OF WORKAROUND
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (this.redhatReleaseX.equals("7") && (options.startsWith("all") || options.startsWith("disabled"))) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="905546"; // Bug 905546 - yum repolist all|disabled is throwing a traceback 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("There is no workaround for yum repolist "+options+" bug "+bugId+".");
 			}
 		}
 		// END OF WORKAROUND
@@ -4533,10 +4544,8 @@ repolist: 3,394
 		//	repolist: 0
 		
 		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
-		
 		int repolistStartLn = 0;
 		int repolistEndLn = 0;
-		
 		for(int i=0;i<availRepos.length;i++)
 			if (availRepos[i].startsWith("repo id"))
 				repolistStartLn = i + 1;
@@ -4544,9 +4553,13 @@ repolist: 3,394
 				repolistEndLn = i;
 		if (repolistStartLn>0)
 			for(int i=repolistStartLn;i<repolistEndLn;i++)
-				repos.add(availRepos[i].split(" ")[0]);
+				repoList.add(availRepos[i].split(" ")[0]);
 		
-		return repos;
+		// the repo id may be appended with a /$releasever/$basearch suffix on RHEL7; strip it off!
+		// see Bug 905544 - yum repolist is including /$releasever/$basearch as a suffix to the repo id
+		for (int i=0; i<repoList.size(); i++) repoList.set(i, repoList.get(i).split("/")[0]);
+		
+		return repoList;
 	}
 	
 
