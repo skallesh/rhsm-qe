@@ -32,6 +32,15 @@ import com.redhat.qe.tools.SSHCommandResult;
  * 
  * References:
  * https://engineering.redhat.com/trac/Entitlement/wiki/ReleaseVer
+ * 
+ * Note: To see all of the yum vars values, run this:
+[root@jsefler-7 ~]#  python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar, width=1)'
+Loaded plugins: product-id
+{'arch': 'amd64',
+ 'basearch': 'x86_64',
+ 'releasever': '6.92Server',
+ 'uuid': '2c985181-c84e-43bf-a913-b240973feead'}
+
  */
 
 @Test(groups={"ReleaseTests","AcceptanceTest"})
