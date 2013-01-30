@@ -763,8 +763,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				List <String> usages = new ArrayList<String>();
 				String usage = String.format("Usage: %s [OPTIONS]",command);
 				usages.add(usage);
-				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("881095"), commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
-				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("881095"), commandHelp, optionsRegex, new ArrayList<String>(options)}));
+				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"881095","905649"}), commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
+				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"881095","905649"}), commandHelp, optionsRegex, new ArrayList<String>(options)}));
 			}
 		}
 		
