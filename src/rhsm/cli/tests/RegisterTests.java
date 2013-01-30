@@ -210,20 +210,19 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
 		// Object bugzilla, String username, String password, String owner, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername+getRandInt(),		sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername+getRandInt(),		String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername,					String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername+getRandInt(),		sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername+getRandInt(),		String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
 		// THIS TEST ROW IS DEPRECATED BY INTERACTIVE PROMPTING FOR REGISTRATION ORG IN RHEL7+ ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"You must specify an organization/owner for new consumers."*/"You must specify an organization for new consumers."}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				"foobar",						null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foobar"+" does not exist."*/"Organization "+"foobar"+" does not exist."}));
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),	sm_clientUsername,					sm_clientPassword,				"\"foo bar\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foo bar"+" does not exist."*/"Organization "+"foo bar"+" does not exist."}));
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),	sm_clientUsername,					sm_clientPassword,				"\"富 酒吧\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"富 酒吧"+" does not exist."*/"Organization "+"富 酒吧"+" does not exist."}));
+		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername,					sm_clientPassword,				"foobar",						null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foobar"+" does not exist."*/"Organization "+"foobar"+" does not exist."}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),						sm_clientUsername,					sm_clientPassword,				"\"foo bar\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foo bar"+" does not exist."*/"Organization "+"foo bar"+" does not exist."}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"734114","906000"}),	sm_clientUsername,					sm_clientPassword,				"\"富 酒吧\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"富 酒吧"+" does not exist."*/"Organization "+"富 酒吧"+" does not exist."}));
 
 		// force a successful registration, and then...
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"616065","669395"}),
-													sm_clientUsername,		sm_clientPassword,					sm_clientOrg,	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",					null}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"616065","669395"}),	sm_clientUsername,					sm_clientPassword,				sm_clientOrg,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",					null}));
 
 		// ... try to register again even though the system is already registered
-		ll.add(Arrays.asList(new Object[] {null,	sm_clientUsername,		sm_clientPassword,					null,			null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
+		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
 
 		return ll;
 	}
