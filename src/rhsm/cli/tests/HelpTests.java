@@ -283,8 +283,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s [options] MODULENAME --help",clienttasks.command);	// prior to Bug 796730 - subscription-manager usage statement
 			usage = String.format("Usage: %s MODULE-NAME [MODULE-OPTIONS] [--help]",clienttasks.command);
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("796730"), smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, new ArrayList<String>(modules)}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"906124","796730"}),	smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"906124"}),			smHelpCommand, modulesRegex, new ArrayList<String>(modules)}));
 		}
 		
 		
@@ -1006,8 +1006,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s MODULE-NAME [MODULE-OPTIONS] [--help]",command);
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, commandHelp, modulesRegex, new ArrayList<String>(modules)}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("906124"), commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("906124"), commandHelp, modulesRegex, new ArrayList<String>(modules)}));
 		}
 		
 		// rct cat-cert OPTIONS
