@@ -43,7 +43,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
-			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146"},
+			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
@@ -587,7 +587,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 
 	@Test(	description="Verify that a 185 content set product subscription is always subscribable",
-			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146"},
+			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifySubscribabilityOfSKUProvidingA185ContentSetProduct_Test() {
@@ -655,7 +655,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Verify that a 186 content set product subscription is subscribable only when system.certificate_version >= 3.0",
-			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146"},
+			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifySubscribabilityOfSKUProvidingA186ContentSetProduct_Test() {
@@ -664,7 +664,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Verify that a subscription providing two 93 content set products is subscribable only when system.certificate_version >= 3.0",
-			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-879022"},
+			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-879022","blockedByBug-905546"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifySubscribabilityOfSKUProvidingTwo93ContentSetProducts_Test() {

@@ -146,7 +146,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that manual edits to enable repos in redhat.repo are preserved.",
-			groups={},
+			groups={"blockedByBug-905546"},
 			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -156,7 +156,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 
 	
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options) to repos in redhat.repo are preserved.",
-			groups={},
+			groups={"blockedByBug-905546"},
 			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

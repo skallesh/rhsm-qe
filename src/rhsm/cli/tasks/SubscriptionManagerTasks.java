@@ -4507,16 +4507,16 @@ repolist: 3,394
 		}
 		// END OF WORKAROUND
 		
-		// TEMPORARY WORKAROUND FOR BUG
-		if (this.redhatReleaseX.equals("7") && (options.startsWith("all") || options.startsWith("disabled"))) {
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="905546"; // Bug 905546 - yum repolist all|disabled is throwing a traceback 
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				throw new SkipException("There is no workaround for yum repolist "+options+" bug "+bugId+".");
-			}
-		}
-		// END OF WORKAROUND
+//		// TEMPORARY WORKAROUND FOR BUG
+//		if (this.redhatReleaseX.equals("7") && (options.startsWith("all") || options.startsWith("disabled"))) {
+//			boolean invokeWorkaroundWhileBugIsOpen = true;
+//			String bugId="905546"; // Bug 905546 - yum repolist all|disabled is throwing a traceback 
+//			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//			if (invokeWorkaroundWhileBugIsOpen) {
+//				throw new SkipException("There is no workaround for yum repolist "+options+" bug "+bugId+".");
+//			}
+//		}
+//		// END OF WORKAROUND
 		
 		// WARNING: DO NOT MAKE ANYMORE CALLS TO sshCommandRunner.runCommand* DURING EXECUTION OF THE REMAINDER OF THIS METHOD.
 		// getYumRepolistPackageCount() ASSUMES sshCommandRunner.getStdout() CAME FROM THE CALL TO yum repolist

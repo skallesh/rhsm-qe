@@ -132,7 +132,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="verify the CDN provides packages for the default enabled content set after subscribing to a product subscription",
-			groups={"VerifyPackagesAreAvailable"},
+			groups={"VerifyPackagesAreAvailable","blockedByBug-905546"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dataProvider="getDefaultEnabledContentNamespaceData",
 			enabled=true)
