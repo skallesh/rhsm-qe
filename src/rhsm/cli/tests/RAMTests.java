@@ -86,7 +86,6 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	}
 		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
 
-	
  }
 	
 	/**
