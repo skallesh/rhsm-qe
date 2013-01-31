@@ -102,6 +102,22 @@
     (verify (= 0 (tasks/ui guiexist :main-window)))
     (finally (tasks/restart-app))))
 
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-833578"]}}
+  check_online_documentation [_]
+  (try
+    (tasks/restart-app)
+    (let [output (tasks/get-logging @clientcmd
+                            ldtpd-log
+                            "check_online_documentation"
+                            nil
+                            (tasks/ui click :online-documentation)
+                            (tasks/ui waittillguiexist :firefox-help-window 10))]
+       (verify (= 1 (tasks/ui guiexist :firefox-help-window)))
+       (verify (not (tasks/substring? "Traceback" output))))
+    (finally    (tasks/ui closewindow :firefox-help-window)
+                (tasks/restart-app))))
+
 ;; TODO
 
 (gen-class-testng)
