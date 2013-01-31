@@ -313,7 +313,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		//}
-		Assert.assertFalse(warningsFound,"No translations found containing unexpected paragraph character \""+paragraphChar+"\".");
+		Assert.assertTrue(!warningsFound,"No translations found containing unexpected paragraph character \""+paragraphChar+"\".");
 	}
 	@DataProvider(name="getTranslationFileDataForVerifyTranslationsDoNotUseParagraphCharacter_Test")
 	public Object[][] getTranslationFileDataForVerifyTranslationsDoNotUseParagraphCharacter_TestAs2dArray() {
@@ -358,7 +358,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		//}
-		Assert.assertFalse(warningsFound,"No translations found containing over-escaped newline character \""+overEscapedNewlineChar+"\".");
+		Assert.assertTrue(!warningsFound,"No translations found containing over-escaped newline character \""+overEscapedNewlineChar+"\".");
 	}
 	@DataProvider(name="getTranslationFileDataForVerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test")
 	public Object[][] getTranslationFileDataForVerifyTranslationsDoNotContainOverEscapedNewlineCharacter_TestAs2dArray() {
@@ -381,14 +381,14 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="verify that some strategic strings (e.g. 'Red Hat') contained in a msgid remain untranslated in the corresponding msgstr",
-			groups={"debugTest"},
+			groups={},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationsDoNotTranslateSubStrings_Test(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
-		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
-
+		List<String> doNotTranslateSubStrings = Arrays.asList("RHN","Red Hat","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
+		// TODO: Add "RHN" and "RHN Classic" to the list?
 		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
 			for (Translation translation: translationFileMapForSubscriptionManager.get(translationFile)) {
 				for (String subString : doNotTranslateSubStrings) {
@@ -399,7 +399,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		//}
-		Assert.assertFalse(warningsFound,"No translations found with substrings that should remain untranslated.");
+		Assert.assertTrue(!warningsFound,"No translations found with substrings that should remain untranslated.");
 	}
 	@DataProvider(name="getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_Test")
 	public Object[][] getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_TestAs2dArray() {
@@ -411,9 +411,23 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
 			Set<String> bugIds = new HashSet<String>();
 			
-			// Bug 00000 - description 
-			if (translationFile.getPath().contains("/xx_XX/")) bugIds.add("00000");
-
+			// Bug 906567 - [hi][zh_CN][ru][ko]msgids containing "Red Hat" should NOT translate this substring
+			if (translationFile.getPath().contains("/hi/")) bugIds.add("906567");
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("906567");
+			if (translationFile.getPath().contains("/ru/")) bugIds.add("906567");
+			if (translationFile.getPath().contains("/ko/")) bugIds.add("906567");
+			
+			// Bug 906552 - [es_ES][gu][kn][or][pa][pt_BR][ta_IN][te][zh_CN] msgids containing "subscription-manager" should NOT translate this substring
+			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("906552");
+			if (translationFile.getPath().contains("/gu/")) bugIds.add("906552");
+			if (translationFile.getPath().contains("/kn/")) bugIds.add("906552");
+			if (translationFile.getPath().contains("/or/")) bugIds.add("906552");
+			if (translationFile.getPath().contains("/pa/")) bugIds.add("906552");
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("906552");
+			if (translationFile.getPath().contains("/ta_IN/")) bugIds.add("906552");
+			if (translationFile.getPath().contains("/te/")) bugIds.add("906552");
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("906552");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
 		}

@@ -55,31 +55,31 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   
  *   Contacts:
  *   https://engineering.redhat.com/rt/Ticket/Display.html?id=180955
-    (Hedda Peters) Subscription Manager Translations for 6.4
-    
-    (Runa Bhattacharjee) subscription-manager/candlepin updates for RHEL 6.4 (bn-IN)
-    (Hedda Peters) subscription-manager/candlepin updates for RHEL 6.4 (de)
-    (Angela Garcia) subscription-manager/candlepin updates for RHEL 6.4 (es)
-    (Sam Friedmann) subscription-manager/candlepin updates for RHEL 6.4 (fr)
-    (Nobody in particular) subscription-manager/candlepin updates for RHEL 6.4 (gu)
-    (aalam@redhat.com) subscription-manager/candlepin updates for RHEL 6.4 (hi)
-    (Francesco Valente) subscription-manager/candlepin updates for RHEL 6.4 (it)
-    (Noriko Mizumoto) subscription-manager/candlepin updates for RHEL 6.4 (ja)
-    (Prasad Shankar) subscription-manager/candlepin updates for RHEL 6.4 (kn)
-    (Eun Ju Kim) subscription-manager/candlepin updates for RHEL 6.4 (ko)
-    (Ani Peter) subscription-manager/candlepin updates for RHEL 6.4 (ml)
-    (Manoj Giri) subscription-manager/candlepin updates for RHEL 6.4 (or)
-    (Jaswinder Singh) subscription-manager/candlepin updates for RHEL 6.4 (pa)
-    (Glaucia Cintra de Freitas) subscription-manager/candlepin updates for RHEL 6.4 (pt-BR)
-    (Yulia Poyarkova) subscription-manager/candlepin updates for RHEL 6.4 (ru)
-    (Krishnababu Krothap) subscription-manager/candlepin updates for RHEL 6.4 (te)
-    (Leah Liu) subscription-manager/candlepin updates for RHEL 6.4 (zh-CN)
-    (Terry Chuang) subscription-manager/candlepin updates for RHEL 6.4 (zh-TW)
-    (Nilamdyuti Goswami) subscription-manager/candlepin updates for RHEL 6.4 (as)
-    (Sandeep Shedmake) subscription-manager and candlepin updates for RHEL 6.4 (mr)
-    (Shantha Kumar) subscription-manager/candlepin updates for RHEL 6.4 (ta)
+			as		[ngoswami@redhat.com]	(Nilamdyuti Goswami)
+			bn-IN	[runab@redhat.com]		(Runa Bhattacharjee)
+			de		[hpeters@redhat.com]	(Hedda Peters)
+			es		[agarcia@redhat.com]	(Angela Garcia)
+			fr		[sfriedma@redhat.com]	(Sam Friedmann)
+			gu		[swkothar@redhat.com]	(Sweta Kothari)
+			hi		[rranjan@redhat.com]	(Rajesh Ranjan)
+			it		[fvalen@redhat.com]		(Francesco Valente)
+			ja		[noriko@redhat.com]		(Noriko Mizumoto)
+			kn		[svenkate@redhat.com]	(Prasad Shankar)
+			ko		[eukim@redhat.com]		(Eun Ju Kim)
+			ml		[apeter@redhat.com]		(Ani Peter)
+			mr		[sshedmak@redhat.com]	(Sandeep Shedmake)
+			or		[mgiri@redhat.com]		(Manoj Giri)
+			pa		[jsingh@redhat.com]		(Jaswinder Singh)
+			pt-BR	[gcintra@redhat.com]	(Glaucia Cintra de Freitas)
+			ru		[ypoyarko@redhat.com]	(Yulia Poyarkova)
+			ta		[shkumar@redhat.com]	(Shantha Kumar)
+			te		[kkrothap@redhat.com]	(Krishnababu Krothap)
+			zh-CN	[lliu@redhat.com]		(Leah Liu)
+			zh-TW	[tchuang@redhat.com]	(Terry Chuang)
  *   
  **/
+
+
 @Test(groups={"PofilterTranslationTests"})
 public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 	
