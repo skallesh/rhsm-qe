@@ -159,17 +159,13 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		final String notranslateFile = "/tmp/notranslatefile";
 		if (pofilterTest.equals("notranslatewords")) {
 			
-			// The words that need not be translated can be added this list
-			List<String> notranslateWords = Arrays.asList("Red Hat","subscription-manager","python-rhsm");
+			// append words that should not be translated to this list
+			// CAUTION: the pofilter notranslatewords work ONLY when the noTranslateWords does not contain spaces or non-alphabetic chars such as "Red Hat" and "subscription-manager".  Alternatively, please use VerifyTranslationsDoNotTranslateSubStrings_Test for these types of "words"
+			List<String> noTranslateWords = Arrays.asList(/*"Red Hat","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port" MOVED TO VerifyTranslationsDoNotTranslateSubStrings_Test */);
 			
-			// remove former notranslate file
-			sshCommandRunner.runCommandAndWait("rm -f "+notranslateFile);
-					
 			// echo all of the notranslateWords to the notranslateFile
-			for(String str : notranslateWords) {
-				String echoCommand = "echo \""+str+"\" >> "+notranslateFile;
-				sshCommandRunner.runCommandAndWait(echoCommand);
-			}
+			sshCommandRunner.runCommandAndWait("rm -f "+notranslateFile);	// remove the old one from the last run
+			for(String noTranslateWord : noTranslateWords) sshCommandRunner.runCommandAndWait("echo \""+noTranslateWord+"\" >> "+notranslateFile);
 			Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, notranslateFile),"The pofilter notranslate file '"+notranslateFile+"' has been created on the client.");
 		}
 		
@@ -705,6 +701,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		for (File translationFile : translationFileMapForCandlepin.keySet()) {
 			for (String pofilterTest : pofilterTests) {
 				BlockedByBzBug bugzilla = null;
+				
+				// skip the accelerators test since there are gnome gui menu items generated from the candlepin msgids
+				if (pofilterTest.equals("accelerators")) continue;
 				
 				// Bug 842450 - [ja_JP] failed pofilter newlines option test for candlepin translations
 				if (pofilterTest.equals("newlines") && translationFile.getName().equals("ja.po")) bugzilla = new BlockedByBzBug("842450");

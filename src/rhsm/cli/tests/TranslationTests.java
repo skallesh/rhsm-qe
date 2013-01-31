@@ -299,7 +299,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="verify that translation msgstr does NOT contain paragraph character ¶ unless also in msgid",
 			groups={},
-			dataProvider="getTranslationFileData",
+			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotUseParagraphCharacter_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationsDoNotUseParagraphCharacter_Test(Object bugzilla, File translationFile) {
@@ -315,10 +315,36 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		//}
 		Assert.assertFalse(warningsFound,"No translations found containing unexpected paragraph character \""+paragraphChar+"\".");
 	}
+	@DataProvider(name="getTranslationFileDataForVerifyTranslationsDoNotUseParagraphCharacter_Test")
+	public Object[][] getTranslationFileDataForVerifyTranslationsDoNotUseParagraphCharacter_TestAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getTranslationFileDataForVerifyTranslationsDoNotUseParagraphCharacter_TestAsListOfLists());
+	}
+	protected List<List<Object>> getTranslationFileDataForVerifyTranslationsDoNotUseParagraphCharacter_TestAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (translationFileMapForSubscriptionManager==null) return ll;
+		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
+			Set<String> bugIds = new HashSet<String>();
+			
+			// Bug 825393 - [ml_IN][es_ES] translations should not use character ¶ for a new line.
+			if (translationFile.getPath().contains("/ml/")) bugIds.add("844369");
+			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("844369");
+			
+			// Bug 893120 - [hi][it][ml][ru] character ¶ should not appear in translated msgstr
+			// blocks VerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test
+			if (translationFile.getPath().contains("/hi/")) bugIds.add("893120");
+			if (translationFile.getPath().contains("/it/")) bugIds.add("893120");
+			if (translationFile.getPath().contains("/ml/")) bugIds.add("893120");
+			if (translationFile.getPath().contains("/ru/")) bugIds.add("893120");
+			
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
+		}
+		return ll;
+	}
 	
 	@Test(	description="verify that translation msgstr does NOT contain over-escaped newline character \\n (should be \n)",
 			groups={},
-			dataProvider="getTranslationFileData",
+			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test(Object bugzilla, File translationFile) {
@@ -334,9 +360,65 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		//}
 		Assert.assertFalse(warningsFound,"No translations found containing over-escaped newline character \""+overEscapedNewlineChar+"\".");
 	}
+	@DataProvider(name="getTranslationFileDataForVerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test")
+	public Object[][] getTranslationFileDataForVerifyTranslationsDoNotContainOverEscapedNewlineCharacter_TestAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getTranslationFileDataForVerifyTranslationsDoNotContainOverEscapedNewlineCharacter_TestAsListOfLists());
+	}
+	protected List<List<Object>> getTranslationFileDataForVerifyTranslationsDoNotContainOverEscapedNewlineCharacter_TestAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (translationFileMapForSubscriptionManager==null) return ll;
+		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
+			Set<String> bugIds = new HashSet<String>();
+			
+			// Bug 888971 - [pt_BR] pofilter newlines test failed
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("888971");
+			
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
+		}
+		return ll;
+	}
 	
 	
-	
+	@Test(	description="verify that some strategic strings (e.g. 'Red Hat') contained in a msgid remain untranslated in the corresponding msgstr",
+			groups={"debugTest"},
+			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_Test",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyTranslationsDoNotTranslateSubStrings_Test(Object bugzilla, File translationFile) {
+		boolean warningsFound = false;
+		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
+
+		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
+			for (Translation translation: translationFileMapForSubscriptionManager.get(translationFile)) {
+				for (String subString : doNotTranslateSubStrings) {
+					if (translation.msgid.contains(subString) && !translation.msgstr.contains(subString)) {
+						log.warning("Substring \""+subString+"\" should remain untranslated in the "+translationFile+" translation: "+translation);
+						warningsFound = true;
+					}
+				}
+			}
+		//}
+		Assert.assertFalse(warningsFound,"No translations found with substrings that should remain untranslated.");
+	}
+	@DataProvider(name="getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_Test")
+	public Object[][] getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_TestAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_TestAsListOfLists());
+	}
+	protected List<List<Object>> getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_TestAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (translationFileMapForSubscriptionManager==null) return ll;
+		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
+			Set<String> bugIds = new HashSet<String>();
+			
+			// Bug 00000 - description 
+			if (translationFile.getPath().contains("/xx_XX/")) bugIds.add("00000");
+
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
+		}
+		return ll;
+	}
 	
 	
 	
@@ -495,21 +577,6 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/ml/")) bugIds.add("844369");
 			if (translationFile.getPath().contains("/bn_IN/")) bugIds.add("844369");
 			if (translationFile.getPath().contains("/kn/")) bugIds.add("844369");
-			
-			// Bug 825393 - [ml_IN][es_ES] translations should not use character ¶ for a new line.
-			if (translationFile.getPath().contains("/ml/")) bugIds.add("844369");
-			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("844369");
-			
-			// Bug 893120 - [hi][it][ml][ru] character ¶ should not appear in translated msgstr
-			// blocks VerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test
-			if (translationFile.getPath().contains("/hi/")) bugIds.add("893120");
-			if (translationFile.getPath().contains("/it/")) bugIds.add("893120");
-			if (translationFile.getPath().contains("/ml/")) bugIds.add("893120");
-			if (translationFile.getPath().contains("/ru/")) bugIds.add("893120");
-			
-			// Bug 888971 - [pt_BR] pofilter newlines test failed
-			// blocks VerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test
-			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("888971");
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
