@@ -302,7 +302,7 @@ schema generation failed
 		log.info("Cloning Translate Toolkit...");
 		final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+translateToolkitDir+" && mkdir "+translateToolkitDir, new Integer(0));
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "git clone "+gitRepository+" "+translateToolkitDir, new Integer(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "git clone -q "+gitRepository+" "+translateToolkitDir, new Integer(0));
 		sshCommandRunner.runCommandAndWaitWithoutLogging("cd "+translateToolkitDir+" && ./setup.py install --force");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", new Integer(0));
 	}

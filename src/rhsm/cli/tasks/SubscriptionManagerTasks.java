@@ -311,7 +311,7 @@ public class SubscriptionManagerTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "git clone "+gitRepository+" "+rhnDefinitionsDir, new Integer(0));
 		*/
 		sshCommandRunner.runCommandAndWait("rm -rf "+rhnDefinitionsDir+" && mkdir "+rhnDefinitionsDir);
-		sshCommandRunner.runCommandAndWait("git clone "+gitRepository+" "+rhnDefinitionsDir);
+		sshCommandRunner.runCommandAndWait("git clone -q "+gitRepository+" "+rhnDefinitionsDir);
 		if (sshCommandRunner.getExitCode()!=0) log.warning("Encountered problems while cloning "+gitRepository+"; dependent tests will likely fail or skip.");
 		
 	}
@@ -328,7 +328,7 @@ public class SubscriptionManagerTasks {
 		sshCommandRunner.runCommandAndWaitWithoutLogging("cd "+translateToolkitDir+" && ./setup.py install --force");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", new Integer(0));
 		*/
-		sshCommandRunner.runCommandAndWait("git clone "+gitRepository+" "+translateToolkitDir);
+		sshCommandRunner.runCommandAndWait("git clone -q "+gitRepository+" "+translateToolkitDir);
 		sshCommandRunner.runCommandAndWait("cd "+translateToolkitDir+" && ./setup.py install --force");
 		sshCommandRunner.runCommandAndWait("which pofilter");
 		if (sshCommandRunner.getExitCode()!=0) log.warning("Encountered problems while installing pofilter; related tests will likely fail or skip.");
