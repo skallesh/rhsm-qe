@@ -153,7 +153,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
 				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 					if(installed.productId.contains("RAM")){
-
+						System.out.println(installed.productId);
 						Assert.assertEquals(installed.status.trim(), "Subscribed");
 				}else throw new SkipException(
 					"Couldnot auto-subscribe ram based subscription");
