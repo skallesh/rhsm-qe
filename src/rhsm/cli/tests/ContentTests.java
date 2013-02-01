@@ -510,16 +510,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// adding the following call to login and yum repolist to compensate for change of behavior introduced by Bug 781510 - 'subscription-manager clean' should delete redhat.repo
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(List<String>)null, null, null, null, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
-		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError			
+		client.runCommandAndWait("yum --quiet repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError			
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to exist after unregistering.");
 		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside "+clienttasks.redhatRepoFile);
 	
 	    // check for excessive blank lines after unregister
 	    clienttasks.unregister(null,null,null);
-	    client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-	    //TODO 8/9/2012 FIGURE OUT IF THIS EXPECTED OUTPUT WAS SUPPOSE TO CHANGE: Assert.assertTrue(client.getStderr().contains("Unable to read consumer identity"),"Yum repolist should not touch redhat.repo when there is no consumer and state in stderr 'Unable to read consumer identity'.");
-	    Assert.assertEquals(client.getStderr().trim(),"","Stderr from prior command");
+	    client.runCommandAndWait("yum --quiet repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+	    //Assert.assertTrue(client.getStderr().contains("Unable to read consumer identity"),"Yum repolist should not touch redhat.repo when there is no consumer and state in stderr 'Unable to read consumer identity'.");	// TODO 8/9/2012 FIND OUT WHAT BUG CAUSED THIS CHANGE IN EXPECTED STDERR
+	    //Assert.assertEquals(client.getStderr().trim(),"","Stderr from prior command");	// changed by Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.
+	    Assert.assertEquals(client.getStdout().trim(),"","Stdout from prior command should be blank due to --quiet option.");
+	    Assert.assertEquals(client.getStderr().trim(),"This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.","Stderr from prior command should show subscription-manager plugin warnings.  See https://bugzilla.redhat.com/show_bug.cgi?id=901612 ");
 	    Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to exist after unregistering.");
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside '"+clienttasks.redhatRepoFile+"' after unregistering.");
@@ -528,9 +530,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		client.runCommandAndWait("for i in `seq 1 10`; do echo \"\" >> "+clienttasks.redhatRepoFile+"; done; echo \"# test for bug 737145\" >> "+clienttasks.redhatRepoFile);
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsMatch(redhatRepoFileContents,regex,null,"File "+clienttasks.redhatRepoFile+" has been infiltrated with excessive blank lines.");
-	    client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-	    //TODO 8/9/2012 FIGURE OUT IF THIS EXPECTED OUTPUT WAS SUPPOSE TO CHANGE: Assert.assertTrue(client.getStderr().contains("Unable to read consumer identity"),"Yum repolist should not touch redhat.repo when there is no consumer and state in stderr 'Unable to read consumer identity'.");
-	    Assert.assertEquals(client.getStderr().trim(),"","Stderr from prior command");
+	    client.runCommandAndWait("yum --quiet repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+	    //Assert.assertTrue(client.getStderr().contains("Unable to read consumer identity"),"Yum repolist should not touch redhat.repo when there is no consumer and state in stderr 'Unable to read consumer identity'.");	// TODO 8/9/2012 FIND OUT WHAT BUG CAUSED THIS CHANGE IN EXPECTED STDERR
+	    //Assert.assertEquals(client.getStderr().trim(),"","Stderr from prior command");	// changed by Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.
+	    Assert.assertEquals(client.getStdout().trim(),"","Stdout from prior command should be blank due to --quiet option.");
+	    Assert.assertEquals(client.getStderr().trim(),"This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.","Stderr from prior command should show subscription-manager plugin warnings.  See https://bugzilla.redhat.com/show_bug.cgi?id=901612 ");
 		String redhatRepoFileContents2 = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsMatch(redhatRepoFileContents2,regex,null,"File "+clienttasks.redhatRepoFile+" is still infiltrated with excessive blank lines.");
 		Assert.assertEquals(redhatRepoFileContents2, redhatRepoFileContents,"File "+clienttasks.redhatRepoFile+" remains unchanged when there is no consumer.");
@@ -538,7 +542,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// trigger the yum plugin for subscription-manager (after registering again)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(List<String>)null, null, null, null, null, null, null, null);
 		log.info("Triggering the yum plugin for subscription-manager which will purge the blank lines from redhat.repo...");
-	    client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+	    client.runCommandAndWait("yum --quiet repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside '"+clienttasks.redhatRepoFile+"' after reregistering.");
 		
