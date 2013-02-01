@@ -19,7 +19,7 @@
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
                  [org.uncommons/reportng "1.1.3"]
-                 [gnome.ldtp "1.1.0-SNAPSHOT"
+                 [gnome.ldtp "1.2.0-SNAPSHOT"
                   :exclusions [org.clojure/clojure]]
                  [test_clj.testng "1.0.1-SNAPSHOT"]
                  [clj-http "0.5.5"]
