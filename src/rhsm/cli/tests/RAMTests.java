@@ -65,7 +65,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify subscription of Ram/socket based subscription", 
-			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = true)
+			groups = { "RamSocketSubscription"}, enabled = true)
 	public void RamSocketSubscription() throws JSONException,Exception {
 		factsMap.put("memory.memtotal", String.valueOf(value*10));
 		Integer sockets = 4;
@@ -221,7 +221,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(description = "verify subscription of Ram based subscription", 
 			groups = { "SubscribeToRamBasedSubscription"}, enabled = true)
-	public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
+	/*public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
 		int expected=1;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -245,7 +245,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		}
 		}
 		
-	}
+	}*/
 	
 	static public int KBToGBConverter(int memory) {
 		int value=(int) 1.049e+6;
