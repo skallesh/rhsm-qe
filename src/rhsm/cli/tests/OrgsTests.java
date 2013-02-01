@@ -44,7 +44,8 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		
 		// when the expectedOrgs is empty, there is a special message, assert it
 		if (expectedOrgs.isEmpty()) {
-			Assert.assertEquals(orgsResult.getStdout().trim(),username+" cannot register to any organizations.","Special message when the expectedOrgs is empty.");
+			//Assert.assertEquals(String.format("%s cannot register to any organizations.", username), orgsResult.getStdout().trim(),"Special message when the expectedOrgs is empty.");	// Bug 903298 - String Update: "Register to" -> "Register with" 
+			Assert.assertEquals(String.format("%s cannot register with any organizations.", username), orgsResult.getStdout().trim(),"Special message when the expectedOrgs is empty.");
 		}
 		
 		// parse the actual Orgs from the orgsResult

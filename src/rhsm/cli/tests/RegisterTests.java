@@ -120,7 +120,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			}
 			// END OF WORKAROUND
 			
-			Assert.assertEquals(registerResult.getStderr().trim(), username+" cannot register to any organizations.", "Error message when READ_ONLY user attempts to register.");
+			//Assert.assertEquals(registerResult.getStderr().trim(), String.format("%s cannot register to any organizations.", username), "Error message when READ_ONLY user attempts to register.");	// Bug 903298 - String Update: "Register to" -> "Register with"
+			Assert.assertEquals(registerResult.getStderr().trim(), String.format("%s cannot register with any organizations.", username), "Error message when READ_ONLY user attempts to register.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
 			return;
 		}
