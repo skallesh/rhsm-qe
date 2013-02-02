@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,6 +28,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.ConsumerType;
@@ -302,12 +304,23 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNull(CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId),"The current consumer has not been granted any entitlements from pool '"+pool.poolId+"'.");
 		Assert.assertNotNull(clienttasks.subscribeToSubscriptionPool_(pool),"Authenticator '"+sm_clientUsername+"' has been granted an entitlement from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
 		BigInteger serial1 = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId);
-		SSHCommandResult result = clienttasks.subscribe_(null,null,pool.poolId,null,null, null, null, null, null, null, null);
-
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null,null,pool.poolId,null,null, null, null, null, null, null, null);
+		String subscribeStdout = subscribeResult.getStdout().trim();
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			String subString = "Any local-only certificates have been deleted.";
+			log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
+			subscribeStdout = subscribeStdout.replace(subString, "").trim();
+		}
+		// END OF WORKAROUND
+		
 		if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
-//			Assert.assertEquals(result.getStdout().trim(), String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId),	// Bug 812410 - Subscription-manager subscribe CLI feedback 
-//			Assert.assertEquals(result.getStdout().trim(), String.format("Successfully consumed a subscription for: %s",pool.subscriptionName),	// changed by Bug 874804 Subscribe -> Attach
-			Assert.assertEquals(result.getStdout().trim(), String.format("Successfully attached a subscription for: %s",pool.subscriptionName),
+//			Assert.assertEquals(subscribeStdout, String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId),	// Bug 812410 - Subscription-manager subscribe CLI feedback 
+//			Assert.assertEquals(subscribeStdout, String.format("Successfully consumed a subscription for: %s",pool.subscriptionName),	// changed by Bug 874804 Subscribe -> Attach
+			Assert.assertEquals(subscribeStdout, String.format("Successfully attached a subscription for: %s",pool.subscriptionName),
 				"subscribe command allows multi-entitlement pools to be subscribed to by the same consumer more than once.");
 			BigInteger serial2 = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId);
 			Assert.assertNotSame(serial1,serial2,
@@ -317,7 +330,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.entitlementCertDir+File.separator+serial2+".pem"),
 				"After subscribing to multi-entitlement pool '"+pool.poolId+"' for the second time, the second granted entilement cert file exists.");
 		} else {
-			Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'.",
+			Assert.assertEquals(subscribeStdout, "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'.",
 				"subscribe command returns proper message when the same consumer attempts to subscribe to a non-multi-entitlement pool more than once.");
 			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.entitlementCertDir+File.separator+serial1+".pem"),
 				"After attempting to subscribe to pool '"+pool.poolId+"' for the second time, the first granted entilement cert file still exists.");
