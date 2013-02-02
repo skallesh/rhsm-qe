@@ -380,15 +380,16 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="verify that some strategic strings (e.g. 'Red Hat') contained in a msgid remain untranslated in the corresponding msgstr",
+	@Test(	description="verify that Red Hat product names (e.g. 'Red Hat','RHN Classic') remain untranslated",
 			groups={},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationsDoNotTranslateSubStrings_Test(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
-		List<String> doNotTranslateSubStrings = Arrays.asList("RHN","Red Hat","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
-		// TODO: Add "RHN" and "RHN Classic" to the list?
+		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat","RHN","RHN Classic","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
+		// TODO ADD THESE TOO List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Management");
+		
 		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
 			for (Translation translation: translationFileMapForSubscriptionManager.get(translationFile)) {
 				for (String subString : doNotTranslateSubStrings) {
@@ -428,6 +429,23 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/te/")) bugIds.add("906552");
 			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("906552");
 			
+			// Bug 906967 - [as][or][ta_IN][ml][pt_BR][gu][kn][mr][it][hi][zh_CN][te][ru][pa][ko] msgids containing "RHN", "RHN Classic" should NOT translate this substring
+			if (translationFile.getPath().contains("/as/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/or/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/ta_IN/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/ml/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/gu/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/kn/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/mr/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/it/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/hi/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/te/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/ru/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/pa/")) bugIds.add("906967");
+			if (translationFile.getPath().contains("/ko/")) bugIds.add("906967");
+				
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
 		}
@@ -447,7 +465,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	// TODO Create an equivalent test for candlepin    VerifyTranslationFileContainsAllMsgids_Test
 	// TODO Bug 856419 - [ALL LANG][RHSM CLI] Unlocalized strings for Subscription Manager CLI 
 	// TODO Bug 885145 - some langs are missing a translations for "The system is unable to redeem the requested subscription: %s"
-	
+	// TODO Create an equivalent test for candlepin VerifyTranslationsDoNotTranslateSubStrings_Test
 	// TODO NEED TO FIGURE OUT HOW TO TEST msgid_plural.  THIS SEESM TO BREAK AFTER RUNNING THROUGH msgunfmt
 	// LANG FILE /usr/share/locale/ko/LC_MESSAGES/rhsm.mo...
 	//		msgid "Covered by contract %s through %s"

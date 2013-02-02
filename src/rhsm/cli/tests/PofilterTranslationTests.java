@@ -72,7 +72,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 			pa		[jsingh@redhat.com]		(Jaswinder Singh)
 			pt-BR	[gcintra@redhat.com]	(Glaucia Cintra de Freitas)
 			ru		[ypoyarko@redhat.com]	(Yulia Poyarkova)
-			ta		[shkumar@redhat.com]	(Shantha Kumar)
+			ta_IN	[shkumar@redhat.com]	(Shantha Kumar)
 			te		[kkrothap@redhat.com]	(Krishnababu Krothap)
 			zh-CN	[lliu@redhat.com]		(Leah Liu)
 			zh-TW	[tchuang@redhat.com]	(Terry Chuang)
