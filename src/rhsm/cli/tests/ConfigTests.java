@@ -42,6 +42,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: use config to set each of the rhsm.conf parameter values and verify it is persisted to /etc/rhsm.rhsm.conf",
 			groups={"AcceptanceTests"},
 			dataProvider="getConfigSectionNameData",
+			priority=10,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ConfigSetSectionNameValue_Test(Object bugzilla, String section, String name, String setValue) {
@@ -58,7 +59,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: use config module to list all of the currently set rhsm.conf parameter values",
 			groups={},
 			dataProvider="getConfigSectionNameData",
-			dependsOnMethods={"ConfigSetSectionNameValue_Test"}, alwaysRun=true,
+			//dependsOnMethods={"ConfigSetSectionNameValue_Test"}, alwaysRun=true,
+			priority=20,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ConfigGetSectionNameValue_Test(Object bugzilla, String section, String name, String expectedValue) {
@@ -132,7 +134,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: use config module to remove each of the rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
 			groups={},
 			dataProvider="getConfigSectionNameData",
-			dependsOnMethods={"ConfigGetSectionNameValue_Test"}, alwaysRun=true,
+			//dependsOnMethods={"ConfigGetSectionNameValue_Test"}, alwaysRun=true,
+			priority=30,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ConfigRemoveSectionNameValue_Test(Object bugzilla, String section, String name, String value) {
@@ -156,7 +159,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: after having removed all the config parameters using the config module, assert that the config list shows the default values in use by wrapping them in [] and the others are simply blanked.",
 			groups={},
 			dataProvider="getConfigSectionNameData",
-			dependsOnMethods={"ConfigRemoveSectionNameValue_Test"}, alwaysRun=true,
+			//dependsOnMethods={"ConfigRemoveSectionNameValue_Test"}, alwaysRun=true,
+			priority=40,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ConfigGetSectionNameValueAndVerifyDefault_Test(Object bugzilla, String section, String name, String ignoreValue) {
@@ -214,14 +218,15 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 	@Test(	description="subscription-manager: use config module to simultaneously remove multiple rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
 			groups={"blockedByBug-735695"},
-			dependsOnMethods={"ConfigGetSectionNameValueAndVerifyDefault_Test"}, alwaysRun=true,
+			//dependsOnMethods={"ConfigGetSectionNameValueAndVerifyDefault_Test"}, alwaysRun=true,
+			priority=50,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ConfigRemoveMultipleSectionNameValues_Test() {
 		
 		// not necessary but adds a little more to the test
 		// restore the backup rhsm.conf file
-		if (RemoteFileTasks.testFileExists(client,rhsmConfigBackupFile.getPath())==1) {
+		if (RemoteFileTasks.testExists(client,rhsmConfigBackupFile.getPath())) {
 			log.info("Restoring the original rhsm config file...");
 			client.runCommandAndWait("cat "+rhsmConfigBackupFile+" | tee "+clienttasks.rhsmConfFile);
 		}
@@ -367,7 +372,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		if (client==null) return;
 		
 		// restore the backup rhsm.conf file
-		if (RemoteFileTasks.testFileExists(client,rhsmConfigBackupFile.getPath())==1) {
+		if (RemoteFileTasks.testExists(client,rhsmConfigBackupFile.getPath())) {
 			log.info("Restoring the original rhsm config file...");
 			client.runCommandAndWait("cat "+rhsmConfigBackupFile+" | tee "+clienttasks.rhsmConfFile+"; rm -f "+rhsmConfigBackupFile);
 		}
