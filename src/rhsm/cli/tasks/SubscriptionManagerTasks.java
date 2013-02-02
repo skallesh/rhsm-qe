@@ -489,7 +489,6 @@ public class SubscriptionManagerTasks {
 	 */
 	public String getConfFileParameter(String confFile, String parameter){
 		// Note: parameter can be case insensitive
-//		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -iE ^"+parameter+" "+confFile, 0/*, "^"+parameter, null*/);
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, String.format("grep -iE \"^%s *(=|:)\" %s",parameter,confFile), 0);	// tolerates = or : assignment character
 		String value = result.getStdout().split("=|:",2)[1];
 		return value.trim();
@@ -497,13 +496,23 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @param confFile
 	 * @param section
-	 * @param parameter
+	 * @param parameter - case insensitive matching will be used
 	 * @return value of the section.parameter config (null when not found)
 	 */
 	public String getConfFileParameter(String confFile, String section, String parameter){
+		String confFileContents = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "egrep -v  \"^\\s*(#|$)\" "+confFile, 0).getStdout();
+		String value = getSectionParameterFromConfigFileContents(section, parameter, confFileContents);
+		if (value==null) log.warning("Did not find section '"+section+"' parameter '"+parameter+"' in conf file '"+confFile+"'.");
+		return value;
+	}
+	/**
+	 * @param confFileContents - stdout from egrep -v  "^\s*(#|$)" /etc/rhsm/rhsm.conf
+	 * @param section
+	 * @param parameter - case insensitive matching will be used
+	 * @return value of the section.parameter config (null when not found)
+	 */
+	protected String getSectionParameterFromConfigFileContents(String section, String parameter, String confFileContents){
 
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "egrep -v  \"^\\s*(#|$)\" "+confFile, 0);
-		
 		//	[root@jsefler-onprem-62server ~]# egrep -v  "^\s*(#|$)" /etc/rhsm/rhsm.conf
 		//	[server]
 		//	hostname=jsefler-onprem-62candlepin.usersys.redhat.com
@@ -527,63 +536,27 @@ public class SubscriptionManagerTasks {
 		//	[rhsmcertd]
 		//	certFrequency=240
 		
-		// ^\[rhsm\](?:\n[^\[]*?)+^(?:consumerCertDir|consumercertdir)\s*[=:](.*)
-		String parameterRegex = "(?:"+parameter+"|"+parameter.toLowerCase()+")";	// note: python may write and tolerate all lowercase parameter names
+		// ^\[rhsm\](?:\n[^\[]*?)+^(?:[c|C][o|O][n|N][s|S][u|U][m|M][e|E][r|R][C|c][e|E][r|R][t|T][d|D][i|I][r|R])\s*[=:](.*)
+		// Note: parameterRegex needs to be case insensitive since python will write all lowercase parameter names but read parameter names in mixed case 
+		String parameterRegex = "";
+		for (int i=0; i<parameter.length(); i++) parameterRegex += "["+parameter.toLowerCase().charAt(i)+"|"+parameter.toUpperCase().charAt(i)+"]";
+		parameterRegex = "(?:"+parameterRegex+")";
 		String regex = "^\\["+section+"\\](?:\\n[^\\[]*?)+^"+parameterRegex+"\\s*[=:](.*)";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-		Matcher matcher = pattern.matcher(result.getStdout());
+		Matcher matcher = pattern.matcher(confFileContents);
 		if (!matcher.find()) {
-			log.warning("Did not find section '"+section+"' parameter '"+parameter+"' in conf file '"+confFile+"'.");
+			//log.warning("Did not find section '"+section+"' parameter '"+parameter+"'.");
 			return null;
 		}
-
-//		log.fine("Matches: ");
-//		do {
-//			log.fine(matcher.group());
-//		} while (matcher.find());
+		/*
+		log.fine("Matches: ");
+		do {
+			log.fine(matcher.group());
+		} while (matcher.find());
+		*/
 		return matcher.group(1).trim();	// return the contents of the first capturing group
 	}
 	
-//	public void updateSMConfigFile(String hostname, String port){
-//		Assert.assertEquals(
-//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^hostname\\s*=.*$", "hostname="+hostname),
-//				0,"Updated rhsm config hostname to point to:" + hostname);
-//		Assert.assertEquals(
-//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^port\\s*=.*$", "port="+port),
-//				0,"Updated rhsm config port to point to:" + port);
-//		
-//		// jsefler - 7/21/2010
-//		// FIXME DELETEME AFTER FIX FROM <alikins> so, just talked to jsefler and nadathur, we are going to temporarily turn ca verification off, till we get a DEV ca or whatever setup, so we don't break QA at the moment
-//		// TEMPORARY WORK AROUND TO AVOID ISSUES:
-//		// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
-//		// https://bugzilla.redhat.com/show_bug.cgi?id=617303
-//		/*
-//		if (isServerOnPremises) {
-//
-//			log.warning("TEMPORARY WORKAROUND...");
-//			sshCommandRunner.runCommandAndWait("echo \"candlepin_ca_file = /tmp/candlepin-ca.crt\"  >> "+defaultConfigFile);
-//		}
-//		*/
-//		/* Hi,
-//		Insecure mode option moved to /etc/rhsm/rhsm.conf file after commandline option(-k, --insecure) failed to gather the popularity votes.
-//
-//		To enable insecure mode, add the following as a new line to rhsm.conf file
-//		insecure_mode=t
-//    
-//
-//		To disable insecure mode, either remove 'insecure_mode' or set it to any value
-//		other than 't', 'True', 'true', 1.
-//
-//		thanks,
-//		Ajay
-//		*/
-//		log.warning("WORKAROUND FOR INSECURITY...");
-//		//sshCommandRunner.runCommandAndWait("echo \"insecure_mode = true\"  >> "+defaultConfigFile);	// prior workaround
-//		Assert.assertEquals(
-//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^insecure\\s*=.*$", "insecure=1"),
-//				0,"Updated rhsm config insecure to: 1");
-//
-//	}
 	
 	
 
@@ -2776,6 +2749,9 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult config(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
 		
+		// store what is currently configured to assist during assertion of remove stdout
+		String rhsmConfFileContents = sshCommandRunner.runCommandAndWaitWithoutLogging("egrep -v  \"^\\s*(#|$)\" "+rhsmConfFile).getStdout();
+		
 		SSHCommandResult sshCommandResult = config_(list, remove, set, listOfSectionNameValues);
 		
 		// assert results...
@@ -2849,13 +2825,21 @@ public class SubscriptionManagerTasks {
 			for (String[] section_name_value : listOfSectionNameValues) {
 				String section	= section_name_value[0];
 				String name		= section_name_value[1];
-				String value	= section_name_value[2];
-				//# subscription-manager config --remove rhsmcertd.port
-				//You have removed the value for section rhsmcertd and name port.
-				//The default value for port will now be used.
-				//Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+".\nThe default value for "+name+" will now be used."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
-				Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name.toLowerCase()+"."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
-				Assert.assertEquals(sshCommandResult.getStdout().contains("The default value for "+name.toLowerCase()+" will now be used."), defaultConfFileParameterNames(true).contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
+				//String value	= section_name_value[2];
+				
+				//	[root@jsefler-6 ~]# subscription-manager config --remove=server.repo_ca_cert
+				//	You have removed the value for section server and name repo_ca_cert.
+				//	The default value for repo_ca_cert will now be used.
+				//OR
+				//	[root@jsefler-7 ~]# subscription-manager config --remove=server.repo_ca_cert
+				//	Section server and name repo_ca_cert cannot be removed.
+				String value = getSectionParameterFromConfigFileContents(section, name, rhsmConfFileContents);
+				if (value!=null) {
+					Assert.assertTrue(sshCommandResult.getStdout().contains(String.format("You have removed the value for section %s and name %s.",section,name.toLowerCase())), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
+					Assert.assertEquals(sshCommandResult.getStdout().contains(String.format("The default value for %s will now be used.",name.toLowerCase())), defaultConfFileParameterNames(true).contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
+				} else {
+					Assert.assertTrue(sshCommandResult.getStdout().contains(String.format("Section %s and name %s cannot be removed.",section,name.toLowerCase())), "The stdout indicates that config parameter name '"+name+"' from section '"+section+" cannot be removed since it is not set.");
+				}
 			}
 		}
 
