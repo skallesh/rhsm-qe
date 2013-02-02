@@ -2346,10 +2346,21 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult refresh(String proxy, String proxyuser, String proxypassword) {
 		
 		SSHCommandResult sshCommandResult = refresh_(proxy, proxyuser, proxypassword);
+		String actualStdoutMsg = sshCommandResult.getStdout().trim();
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			String subString = "Any local-only certificates have been deleted.";
+			log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
+			actualStdoutMsg = actualStdoutMsg.replace(subString, "").trim();
+		}
+		// END OF WORKAROUND
 		
 		// assert results for a successful clean
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the refresh command indicates a success.");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "All local data refreshed");
+		Assert.assertEquals(actualStdoutMsg, "All local data refreshed");
 		
 		return sshCommandResult; // from the refresh command
 	}
