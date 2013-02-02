@@ -972,7 +972,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //				Assert.assertTrue(subscribeResult.getStdout().contains(String.format("Successfully consumed a subscription for: %s",pool.subscriptionName)),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");	// changed by Bug 874804 Subscribe -> Attach
 				Assert.assertTrue(subscribeResult.getStdout().contains(String.format("Successfully attached a subscription for: %s",pool.subscriptionName)),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
 			} else {
-				Assert.assertTrue(subscribeResult.getStdout().contains("No entitlements are available from the pool with id '"+pool.poolId+"'."),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
+//				Assert.assertTrue(subscribeResult.getStdout().contains("No entitlements are available from the pool with id '"+pool.poolId+"'."),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");	// expected string changed by bug 876758
+				Assert.assertTrue(subscribeResult.getStdout().contains("No subscriptions are available from the pool with id '"+pool.poolId+"'."),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
 			}
 		}
 	}
@@ -1174,8 +1175,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));	// Bug 812410 - Subscription-manager subscribe CLI feedback 
 //			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));	// changed by Bug 874804 Subscribe -> Attach
 			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+String.format("No entitlements are available from the pool with id '%s'.",pool.poolId)+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(1),		"^"+String.format("No entitlements are available from the pool with id '%s'.",pool.poolId)+"$",	null}));
+//			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+String.format("No entitlements are available from the pool with id '%s'.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId)+"$",	null}));	// expected string changed by bug 876758
+//			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(1),		"^"+String.format("No entitlements are available from the pool with id '%s'.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(1),		"^"+String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId)+"$",	null}));	// expected string changed by bug 876758
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to yes."}));
 		}

@@ -86,7 +86,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.
 		Assert.assertNull(client1tasks.subscribeToSubscriptionPool(testPool),"No entitlement cert is granted when the pool is already fully subscribed.");
 		// try again
-		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),"No entitlements are available from the pool with id '"+testPool.poolId+"'.");
+		//Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),"No entitlements are available from the pool with id '"+testPool.poolId+"'.");	// expected string changed by bug 876758
+		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),"No subscriptions are available from the pool with id '"+testPool.poolId+"'.");
 		// assert the consumed quantity again
 		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),
@@ -258,7 +259,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 //		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt was handled gracefully.");	// assertion valid prior to RHEL63 fix for bug 689608
 		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt successfully granted an entitlement.");
 		log.info("SSHCommandResult from '"+smtLoser.hostname+"': "+sshLoser);
-		Assert.assertEquals(sshLoser.getStdout().trim(), "No entitlements are available from the pool with id '"+testPool.poolId+"'.", "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left from poolId '"+testPool.poolId+"'.");
+//		Assert.assertEquals(sshLoser.getStdout().trim(), "No entitlements are available from the pool with id '"+testPool.poolId+"'.", "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left from poolId '"+testPool.poolId+"'.");	// expected string changed by bug 876758
+		Assert.assertEquals(sshLoser.getStdout().trim(), "No subscriptions are available from the pool with id '"+testPool.poolId+"'.", "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left from poolId '"+testPool.poolId+"'.");
 		Assert.assertEquals(sshLoser.getStderr().trim(), "","No stderr information is expected on '"+smtLoser.hostname+"'.");
 //		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt was handled gracefully.");	// assertion valid prior to RHEL63 fix for bug 689608
 		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(1),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt did not grant an entitlement.");
