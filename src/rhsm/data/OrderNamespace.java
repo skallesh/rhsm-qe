@@ -123,10 +123,18 @@ public class OrderNamespace extends AbstractCommandLineData {
 	
 	@Override
 	public boolean equals(Object obj){
-		// FIXME: Not sure if this is sufficient:
-		return	//((OrderNamespace)obj).productName.equals(this.productName) &&
-				((OrderNamespace)obj).orderNumber.equals(this.orderNumber) &&
-				((OrderNamespace)obj).productId.equals(this.productId);
+		// FIXME: Not sure if these two field comparisons is sufficient to say that these are the same orders:
+		OrderNamespace that = (OrderNamespace) obj;
+		
+		if (this.orderNumber==null)	log.warning("Null orderNumber found in orderNamespace: "+this);
+		if (that.orderNumber!=null && !that.orderNumber.equals(this.orderNumber)) return false;
+		if (this.orderNumber!=null && !this.orderNumber.equals(that.orderNumber)) return false;
+		
+		if (this.productId==null)	log.warning("Null productId found in orderNamespace: "+this);
+		if (that.productId!=null && !that.productId.equals(this.productId)) return false;
+		if (this.productId!=null && !this.productId.equals(that.productId)) return false;
+		
+		return true;
 	}
 	
 	/**
