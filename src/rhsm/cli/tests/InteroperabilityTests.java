@@ -145,6 +145,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase1_Test() {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) throw new SkipException("With RHEL7 (and beyond), registration to RHN Classic is no longer supported; however RHN Satellite registration is supported.  See bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=906875 ");	// TODO: setup a dedicated Satellite server for this test
 		clienttasks.unregister(null,null,null);
 		clienttasks.removeRhnSystemIdFile();
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
@@ -159,6 +160,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase2_Test() {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) throw new SkipException("With RHEL7 (and beyond), registration to RHN Classic is no longer supported; however RHN Satellite registration is supported.  See bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=906875 ");	// TODO: setup a dedicated Satellite server for this test
 		clienttasks.unregister(null,null,null);
 		clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
@@ -173,6 +175,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase3A_Test() {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) throw new SkipException("With RHEL7 (and beyond), registration to RHN Classic is no longer supported; however RHN Satellite registration is supported.  See bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=906875 ");	// TODO: setup a dedicated Satellite server for this test
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,false,null,null,null);
 		clienttasks.removeRhnSystemIdFile();
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
@@ -187,6 +190,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase3B_Test() throws JSONException, Exception {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) throw new SkipException("With RHEL7 (and beyond), registration to RHN Classic is no longer supported; however RHN Satellite registration is supported.  See bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=906875 ");	// TODO: setup a dedicated Satellite server for this test
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,false,null,null,null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		clienttasks.removeRhnSystemIdFile();
@@ -202,6 +206,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase4A_Test() {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) throw new SkipException("With RHEL7 (and beyond), registration to RHN Classic is no longer supported; however RHN Satellite registration is supported.  See bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=906875 ");	// TODO: setup a dedicated Satellite server for this test
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,false,null,null,null);
 		clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
@@ -216,6 +221,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase4B_Test() throws JSONException, Exception {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) throw new SkipException("With RHEL7 (and beyond), registration to RHN Classic is no longer supported; however RHN Satellite registration is supported.  See bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=906875 ");	// TODO: setup a dedicated Satellite server for this test
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,false,null,null,null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
