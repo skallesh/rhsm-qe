@@ -461,6 +461,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			// get all of the product certs from the subscription-manager-migration-data
 			SSHCommandResult result = client.runCommandAndWait("rpm -ql subscription-manager-migration-data | grep .pem");
 			for (String productCertFilePath : result.getStdout().split("\n")) {
+				if (productCertFilePath.isEmpty()) continue;
 				ll.add(Arrays.asList(new Object[]{new File(productCertFilePath)}));
 			}
 		}
