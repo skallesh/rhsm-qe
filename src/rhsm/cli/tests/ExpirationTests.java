@@ -34,7 +34,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscribe to a pool that will expire soon and assert the entitlements are removed after it expires",
-			groups={"blockedByBug-660713","blockedByBug-854312"}, dependsOnGroups={},
+			groups={"blockedByBug-660713","blockedByBug-854312","blockedByBug-907638"}, dependsOnGroups={},
 			enabled=true)
 	public void VerifyEntitlementsAreRemovedAfterSubscriptionExpires_Test() throws Exception{
 

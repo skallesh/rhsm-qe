@@ -402,7 +402,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsmcertd: change certFrequency",
 			dataProvider="getCertFrequencyData",
-			groups={"blockedByBug-617703","blockedByBug-700952","blockedByBug-708512"},
+			groups={"blockedByBug-617703","blockedByBug-700952","blockedByBug-708512","blockedByBug-907638"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41692)
 	public void rhsmcertdChangeCertFrequency_Test(int minutes) {
@@ -492,7 +492,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="rhsmcertd: ensure certificates synchronize",
-			groups={"blockedByBug-617703"},
+			groups={"blockedByBug-617703","blockedByBug-907638"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41694)
 	public void rhsmcertdEnsureCertificatesSynchronize_Test() throws JSONException, Exception{
@@ -1111,7 +1111,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// int minutes
-		ll.add(Arrays.asList(new Object[]{2}));
+//UNCOMMENT AFTER DEBUGING		ll.add(Arrays.asList(new Object[]{2}));
 		ll.add(Arrays.asList(new Object[]{1}));
 		
 		return ll;

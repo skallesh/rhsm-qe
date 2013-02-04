@@ -28,7 +28,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager-cli: refresh and verify entitlements are updated",
-			groups={"AcceptanceTests","RefreshEntitlements_Test"},
+			groups={"AcceptanceTests","RefreshEntitlements_Test","blockedByBug-907638"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64182)	// http://gibson.usersys.redhat.com/agilo/ticket/4022
 	public void RefreshEntitlements_Test() {
@@ -71,7 +71,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="[abrt] subscription-manager-0.95.17-1.el6_1: Process /usr/bin/rhsmcertd was killed by signal 11 (SIGSEGV)",
-			groups={"blockedByBug-725535","VerificationFixForBug725535_Test"},
+			groups={"blockedByBug-725535","blockedByBug-907638","VerificationFixForBug725535_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	// http://gibson.usersys.redhat.com/agilo/ticket/4022
 	public void VerificationFixForBug725535_Test() {
@@ -86,12 +86,8 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		// mark the /var/log/messages so we can search for an abrt afterwards
 		String marker = "SM TestClass marker "+String.valueOf(System.currentTimeMillis());	// using a timestamp on the class marker will help identify the test class during which a denial is logged
 		RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, marker);
-		//clienttasks.rhsmcertdServiceRestart(null,null,false);
-		//RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd \\d+ \\d+\\[  OK  \\]$",null);		// RHEL63
-		RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd\\.\\.\\.\\[  OK  \\]$",null);	
-		//RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62
-		RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// RHEL62 or RHEL58
-		
+		clienttasks.restart_rhsmcertd(null,null,false, null);
+
 		/* # tail /var/log/rhsm/rhsmcertd.log
 		Tue Sep 27 17:36:32 2011: started: interval = 240 minutes
 		Tue Sep 27 17:36:32 2011: started: interval = 1440 minutes
@@ -133,7 +129,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -f "+clienttasks.rhsmUpdateFile+"; rmdir "+clienttasks.rhsmUpdateFile);
 		//client.runCommandAndWait("rm -f "+clienttasks.rhsmUpdateFile);
 		//client.runCommandAndWait("rmdir "+clienttasks.rhsmUpdateFile);
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmUpdateFile)==0, "rhsm update file '"+clienttasks.rhsmUpdateFile+"' has been removed.");
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhsmUpdateFile), "rhsm update file '"+clienttasks.rhsmUpdateFile+"' has been removed.");
 	}
 	
 	@AfterClass(groups={"setup"})
