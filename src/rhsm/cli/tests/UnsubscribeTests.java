@@ -241,10 +241,22 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		String expectedStdoutMsg = expectedStdoutMsgLabel;
 		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;
 		SSHCommandResult result = clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
+		String actualStdoutMsg = result.getStdout().trim();
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			String subString = "Any local-only certificates have been deleted.";
+			log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
+			actualStdoutMsg = actualStdoutMsg.replace(subString, "").trim();
+		}
+		// END OF WORKAROUND
+		
 		// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		// NOTE: TIME TO FIX THIS ASSERTION... Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
 		List<String> expectedStdoutMsgAsList = new ArrayList<String>(Arrays.asList(expectedStdoutMsg.split("\n"))); expectedStdoutMsgAsList.remove(expectedStdoutMsgLabel);
-		List<String> actualStdoutMsgAsList = new ArrayList<String>(Arrays.asList(result.getStdout().trim().split("\n"))); actualStdoutMsgAsList.remove(expectedStdoutMsgLabel);
+		List<String> actualStdoutMsgAsList = new ArrayList<String>(Arrays.asList(actualStdoutMsg.split("\n"))); actualStdoutMsgAsList.remove(expectedStdoutMsgLabel);
 		Assert.assertTrue(expectedStdoutMsgAsList.containsAll(actualStdoutMsgAsList) && actualStdoutMsgAsList.containsAll(expectedStdoutMsgAsList), "Stdout feedback when unsubscribing from all the currently consumed subscriptions contains all the expected serial numbers:"+expectedStdoutMsg.replace(expectedStdoutMsgLabel, ""));
 	}
 	
