@@ -114,7 +114,7 @@ public class SubscriptionManagerTasks {
 		super();
 		sshCommandRunner = runner;
 		hostname		= sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
-		ipaddr			= sshCommandRunner.runCommandAndWait("ip addr show eth0 | grep 'scope global eth0' | cut -d/ -f1 | sed s/inet//g").getStdout().trim();
+		ipaddr			= sshCommandRunner.runCommandAndWait("ip addr show | grep 'scope global eth' | cut -d/ -f1 | sed s/inet//g").getStdout().trim();
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
 		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release		// rpm -q --qf "%{VERSION}\n" --whatprovides /etc/redhat-release
 //		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
