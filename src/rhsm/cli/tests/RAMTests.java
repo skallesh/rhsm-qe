@@ -219,7 +219,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify subscription of Ram based subscription", 
-			groups = { "SubscribeToRamBasedSubscription"}, enabled = true)
+			groups = { "SubscribeToRamBasedSubscription","blockedByBug-907315"}, enabled = true)
 	public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
 		int expected=1;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
