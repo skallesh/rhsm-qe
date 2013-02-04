@@ -22,7 +22,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -221,14 +220,14 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(description = "verify subscription of Ram based subscription", 
 			groups = { "SubscribeToRamBasedSubscription"}, enabled = true)
-	/*public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
+	public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
 		int expected=1;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, true, null, null, null, null);
-		clienttasks.facts_(true, null, null, null, null).getStdout();
-		String factsList=clienttasks.getFactValue("memory.memtotal");
-		int ramvalue=KBToGBConverter(Integer.parseInt(factsList));
+		factsMap.put("memory.memtotal", String.valueOf(value*1));
+		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+		int ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
 			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 		}
@@ -236,16 +235,22 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 			int quantity=consumed.quantityUsed;
 			if(ramvalue<=4){
 			Assert.assertEquals(quantity, expected);
+			factsMap.put("memory.memtotal", String.valueOf(value*5));
+			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+			ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
 		}else if(ramvalue>4 && ramvalue<=8){
 			expected=2;
 			Assert.assertEquals(quantity, expected);
+			factsMap.put("memory.memtotal", String.valueOf(value*9));
+			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+			ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
 		}else if(ramvalue>8 && ramvalue<=12){
 			expected=3;
 			Assert.assertEquals(quantity, expected++);
 		}
 		}
 		
-	}*/
+	}
 	
 	static public int KBToGBConverter(int memory) {
 		int value=(int) 1.049e+6;
