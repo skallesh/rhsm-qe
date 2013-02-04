@@ -142,6 +142,12 @@ public class SubscriptionManagerTasks {
 			sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'Socket(s)'").getStdout().split(":")[1].trim();	// Socket(s):             2
 		}
 		
+		// copy RHNS-CA-CERT to RHN-ORG-TRUSTED-SSL-CERT on RHEL7 as a workaround for Bug 906875 ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT 
+		if (Integer.valueOf(redhatReleaseX)>=7) {
+			log.info("Invoking the following suggestion to enable this rhel7 system to use rhn-client-tools https://bugzilla.redhat.com/show_bug.cgi?id=906875#c2 ");
+			sshCommandRunner.runCommandAndWait("cp -n /usr/share/rhn/RHNS-CA-CERT /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"); 
+		}
+		
 		// assert some properties for this instance
 		Assert.assertTrue(ipaddr.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"), "Detected ip address '"+ipaddr+"' for client '"+hostname+"' which appears successful.");
 	}
@@ -152,7 +158,7 @@ public class SubscriptionManagerTasks {
 	 * Must be called after installSubscriptionManagerRPMs(...)
 	 */
 	public void initializeFieldsFromConfigFile() {
-		if (RemoteFileTasks.testFileExists(sshCommandRunner, rhsmConfFile)==1) {
+		if (RemoteFileTasks.testExists(sshCommandRunner, rhsmConfFile)) {
 			this.consumerCertDir	= getConfFileParameter(rhsmConfFile, "consumerCertDir").replaceFirst("/$", "");
 			this.entitlementCertDir	= getConfFileParameter(rhsmConfFile, "entitlementCertDir").replaceFirst("/$", "");
 			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir").replaceFirst("/$", "");
@@ -4932,7 +4938,7 @@ repolist: 3,394
 		File pkgFile = new File(rpm);
 		
 		// assert the downloaded file exists
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,pkgFile.getPath()),1,"Package '"+pkg+"' exists in destdir '"+destdir+"' after yumdownloading.");
+		Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner,pkgFile.getPath()),"Package '"+pkg+"' exists in destdir '"+destdir+"' after yumdownloading.");
 		
 		return pkgFile;
 	}
@@ -5357,7 +5363,7 @@ repolist: 3,394
 	 * @return
 	 */
 	public SSHCommandResult yumClean (String option) {
-		String command = "yum clean \""+option+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		String command = "yum clean "+option;	//+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//return RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Cleaning",null);	// don't bother asserting results anymore since rhel7 exitCode is 1 when "There are no enabled repos."	// jsefler 1/26/2013
 		return sshCommandRunner.runCommandAndWait(command);
 	}
@@ -5401,16 +5407,30 @@ repolist: 3,394
 		Integer exitCode = result.getExitCode();
 		String stdout = result.getStdout();
 		String stderr = result.getStderr();
-		if (stdout.contains("ERROR: refreshing remote package list for System Profile")) {
+		String msg;
+		
+		msg = "ERROR: refreshing remote package list for System Profile";
+		if (stdout.contains(msg)) {
 			// ERROR: refreshing remote package list for System Profile
-			log.warning("Ignoring stdout result: "+"ERROR: refreshing remote package list for System Profile");
-			stdout = stdout.replaceAll("ERROR: refreshing remote package list for System Profile", "");
+			log.warning("Ignoring stdout result: "+msg);
+			stdout = stdout.replaceAll(msg, "");
 		}
-		if (stderr.contains("forced skip_if_unavailable=True due to")) {
+		
+		msg = "forced skip_if_unavailable=True due to";
+		if (stderr.contains(msg)) {
 			// Repo content-label-72 forced skip_if_unavailable=True due to: /etc/pki/entitlement/2114809071147763952.pem
-			String regex = "Repo .+ forced skip_if_unavailable=True due to: .+.pem";
+			String regex = "Repo .+ "+msg+": .+.pem";
 			log.warning("Ignoring stderr results matching: "+regex);
 			stderr = stderr.replaceAll(regex, "");
+		}
+		
+		// this will occur on rhel7+ where there is no RHN Classic support.  See bugzilla 906875
+		msg = "This system is not subscribed to any channels.\nRHN channel support will be disabled.";
+		if (stderr.contains(msg)) {
+			// This system is not subscribed to any channels.
+			// RHN channel support will be disabled.
+			log.warning("Ignoring stderr result: "+msg);
+			stderr = stderr.replaceAll(msg, "");
 		}
 		
 		Assert.assertEquals(exitCode, new Integer(0),"Exitcode from attempt to register to RHN Classic.");
