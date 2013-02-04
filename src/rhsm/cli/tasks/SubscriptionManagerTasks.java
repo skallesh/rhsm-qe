@@ -3288,7 +3288,8 @@ public class SubscriptionManagerTasks {
 		if (manage_repos.equals("0")) {
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.","Stdout when rhsm.manage_repos is configured to 0.");
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThe system is not entitled to use any repositories.","Stdout when rhsm.manage_repos is configured to 0.");
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThis system has no repositories available through subscriptions.","Stdout when rhsm.manage_repos is configured to 0.");
+			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThis system has no repositories available through subscriptions.","Stdout when rhsm.manage_repos is configured to 0.");	// changed by bug 895462
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.","Stdout when rhsm.manage_repos is configured to 0.");
 			return sshCommandResult;
 		}
 		
