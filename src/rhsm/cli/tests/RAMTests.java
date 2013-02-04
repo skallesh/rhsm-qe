@@ -129,8 +129,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
 		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.productId.contains("ram")){
-
+			if(installed.productName.contains("RAM")){
 				Assert.assertEquals(installed.status.trim(), "Subscribed");
 		}}
 		
@@ -151,8 +150,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		
 		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
 				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-					if(installed.productId.contains("RAM")){
-						System.out.println(installed.productId);
+					if(installed.productName.contains("RAM")){
 						Assert.assertEquals(installed.status.trim(), "Subscribed");
 				}else throw new SkipException(
 					"Couldnot auto-subscribe ram based subscription");
