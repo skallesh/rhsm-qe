@@ -43,6 +43,7 @@
     (use '[clojure.repl])
     (use '[clojure.pprint])
     (use '[slingshot.slingshot :only (try+ throw+)])
+    (require '[clojure.tools.logging :as log])
     (do
       (require :reload-all '[rhsm.gui.tasks.test-config :as config])
       (require :reload-all '[rhsm.gui.tasks.tasks :as tasks])
@@ -70,6 +71,7 @@
       (config/init)
       (tasks/connect)
       (use 'gnome.ldtp))
+    (log/info "INITIALIZATION COMPLETE!!")
     )     ;<< here for all of it
 
   ;not used
