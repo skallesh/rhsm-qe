@@ -330,11 +330,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("844369");
 			
 			// Bug 893120 - [hi][it][ml][ru] character ¶ should not appear in translated msgstr
-			// blocks VerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test
-			if (translationFile.getPath().contains("/hi/")) bugIds.add("893120");
-			if (translationFile.getPath().contains("/it/")) bugIds.add("893120");
-			if (translationFile.getPath().contains("/ml/")) bugIds.add("893120");
-			if (translationFile.getPath().contains("/ru/")) bugIds.add("893120");
+			// Bug 908037 - [hi][it][ml][ru] character ¶ should not appear in translated msgstr
+			if (translationFile.getPath().contains("/hi/")) bugIds.addAll(Arrays.asList("893120","908037"));
+			if (translationFile.getPath().contains("/it/")) bugIds.addAll(Arrays.asList("893120","908037"));
+			if (translationFile.getPath().contains("/ml/")) bugIds.addAll(Arrays.asList("893120","908037"));
+			if (translationFile.getPath().contains("/ru/")) bugIds.addAll(Arrays.asList("893120","908037"));
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
