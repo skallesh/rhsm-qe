@@ -93,8 +93,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: attempt environments without --org option",
 			groups={"blockedByBug-849105"},
-			//dependsOnMethods={"VerifyThatCandlepinDoesNotSupportEnvironments_Test"},	// TODO 08/07/2012 I don't think this method dependency is necessary
-			enabled=true)
+			enabled=false)	// 2/5/2013 this test is obsoleted by implementation of Bug 727092 - [RFE]: Enhance subscription-manager to prompt the user for an Org Name.
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptEnvironmentsWithoutOrg_Test() {
 		
@@ -109,7 +108,6 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organization with --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getExitCode(), Integer.valueOf(255),"Exit code from environments when executed without an org option.");
-
 	}
 	
 	
