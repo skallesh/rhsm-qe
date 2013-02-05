@@ -108,13 +108,16 @@
      ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
      (verify (tasks/fbshowing? :firstboot-user)))))
 
-(defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
-  firstboot_check_back_button_state [_]
+(defn ^{Test {:groups ["firstboot"
+                       "blockedByBug-642660"
+                       "blockedByBug-863572"]}}
+  firstboot_check_back_and_forward_button_state [_]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
   (tasks/firstboot-register (@config :username) (@config :password))
-  (verify (= 1 (tasks/ui hasstate :firstboot-back "Sensitive"))))
+  (verify (= 1 (tasks/ui hasstate :firstboot-back "Sensitive")))
+  (verify (= 1 (tasks/ui hasstate :firstboot-registration-forward "Sensitive"))))
 
 (defn ^{Test {:groups ["firstboot" "blockedByBug-872727"]
               :dependsOnMethods ["firstboot_check_back_button_state"]}}
