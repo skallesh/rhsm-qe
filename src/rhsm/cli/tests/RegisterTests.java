@@ -1102,15 +1102,15 @@ Expected Results:
 	
 	
 	
-	@Test(	description="subscription-manager: attempt register to --environment without --org option should fail",
-			groups={},
+	@Test(	description="subscription-manager: attempt register to --environment without --org option should block on missing org",
+			groups={"blockedByBug-727092"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRegisterToEnvironmentWithoutOrg_Test() throws JSONException, Exception {
 		// ask the candlepin server if it supports environment
 		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
 		
-		// This test implementation was valid prior to rhel7.0 (WHEN THE MISSING ORG WAS NOT INTERACTIVELY PROMPTED)
+		// This test implementation was valid prior to the implementation of Bug 727092 - [RFE]: Enhance subscription-manager to prompt the user for an Org Name.
 		if (false) {
 		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,null,"foo_env",null,null,null,null,null,null,(String)null,null, null, true, null, null, null, null);
 
@@ -1125,9 +1125,10 @@ Expected Results:
 		// assert results when candlepin supports environments
 		Assert.assertEquals(result.getStdout().trim(), "Error: Must specify --org to register to an environment.","Registering to an environment requires that the org be specified.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register with environment option and without org option.");
+		return;
 		}
 		
-		// This test implementation is valid for rhel7.0+ (WHERE THE MISSING ORG IS NOW INTERACTIVELY PROMPTED)
+		// This test implementation is valid after the implementation of Bug 727092 - [RFE]: Enhance subscription-manager to prompt the user for an Org Name.
 		// [root@10-16-120-133 ~]# expect -c "spawn subscription-manager register --username=testuser1 --password=password --environment=foo_env; expect \"Organization:\"; send foo_org\r; expect eof; catch wait reason; exit [lindex \$reason 3]"
 		String command = String.format("expect -c \"spawn %s register %s %s %s; %s expect eof; catch wait reason; exit [lindex \\$reason 3]\"",
 				clienttasks.command,
