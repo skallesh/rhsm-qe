@@ -109,8 +109,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(installed.status.trim(), "Not Subscribed");
 		}
 	}
-		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "true");
-		servertasks.restartTomcat();
+		
  }
 	
 	/**
@@ -267,8 +266,11 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		 
 		return RAMBasedPools;
 	}
-	
-	
+	 @AfterGroups(groups="setup",value={"DisableCertV3ForRamBasedSubscription"})
+	 public void restartTomcatWithCertV3Enabled() {
+	 servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "true");
+	 servertasks.restartTomcat();
+	 }
 
 
 	// Candidates for an automated Test:
