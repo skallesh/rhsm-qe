@@ -194,17 +194,6 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		if (pofilterTest.equals("newlines")) {
-//			ignorableMsgIds.addAll(Arrays.asList(
-//					"Optional language to use for email notification when subscription redemption is complete. Examples: en-us, de-de",
-//					"\n"+"Unable to register.\n"+"For further assistance, please contact Red Hat Global Support Services.",
-//					"Tip: Forgot your login or password? Look it up at http://red.ht/lost_password",
-//					"Unable to perform refresh due to the following exception: %s",
-//					""+"This migration script requires the system to be registered to RHN Classic.\n"+"However this system appears to be registered to '%s'.\n"+"Exiting.",
-//					"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once.",
-//					// bug 825397	""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete.",	// the Subscription Redemption dialog actually expands to accommodate the message, therefore we could ignore it	// bug 825397 should fix this
-//					// bug 825388	""+"We have detected that you have multiple service level\n"+"agreements on various products. Please select how you\n"+"want them assigned.", // bug 825388 or 825397 should fix this
-//					"\n"+"This machine appears to be already registered to Certificate-based RHN.  Exiting.",
-//					"\n"+"This machine appears to be already registered to Red Hat Subscription Management.  Exiting."));
 			
 			// common newlines msgid translations to ignore for all langs
 			ignorableMsgIds.add(""+"\n"+"This software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n");
@@ -212,16 +201,23 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			ignorableMsgIds.add(""+"Did not receive a completed unregistration message from RHN Classic for system %s.\n"+"Please investigate on the Customer Portal at https://access.redhat.com.");	// ignorable because the message is printed on the CLI terminal and not rendered in the GUI
 
 			// newlines translations to ignore for specific langs
-			if (translationFile.getPath().contains("/ta_IN/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
-			if (translationFile.getPath().contains("/zh_TW/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
-			if (translationFile.getPath().contains("/bn_IN/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
-			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
-			if (translationFile.getPath().contains("/ko/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
-			if (translationFile.getPath().contains("/hi/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
-			if (translationFile.getPath().contains("/gu/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
+// 2/5/2013 TODO WORK IN PROGRESS OPENING BUGS FOR THESE CASES
+//			if (translationFile.getPath().contains("/zh_TW/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
+//			if (translationFile.getPath().contains("/bn_IN/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
+//			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
+//			if (translationFile.getPath().contains("/hi/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
+//			if (translationFile.getPath().contains("/gu/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
 			if (translationFile.getPath().contains("/bn_IN/"))	ignorableMsgIds.addAll(Arrays.asList("Tip: Forgot your login or password? Look it up at http://red.ht/lost_password"));
 			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("\n"+"Unable to register.\n"+"For further assistance, please contact Red Hat Global Support Services."));
 			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("Unable to perform refresh due to the following exception: %s"));
+			
+			// newlines translations to ignore for specific langs
+			String msgId = ""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete.";
+			Translation failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
+			if (translationFile.getPath().contains("/ko/") && failedTranslation!=null && failedTranslation.msgstr.equals("서브스크립션 교환에는 시간이 몇 분 소요될 수 있습니다. \n"+"완료 시 통지를 받기 위한 이메일 주소를 알려주십시오. ")) ignorableMsgIds.add(msgId);
+			if (translationFile.getPath().contains("/ru/") && failedTranslation!=null && failedTranslation.msgstr.equals("Получение подписки может занять несколько минут.\n"+"Укажите электронный адрес для получения \n"+"уведомления об завершении операции.")) ignorableMsgIds.add(msgId);
+			if (translationFile.getPath().contains("/ta_IN/") && failedTranslation!=null && failedTranslation.msgstr.equals("சந்தாவை மீட்டெடுப்பதற்கு சில நிமிடங்கள் எடுக்கலாம்.\n"+"மீட்டெடுத்தல் முடிந்ததும் அறிவிப்பை பெற ஒரு மின்னஞ்சல் முகவரியை கொடுக்கவும்.")) ignorableMsgIds.add(msgId);
+
 		}
 		
 		if (pofilterTest.equals("xmltags")) { 
@@ -502,7 +498,12 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/pt_BR/"))) {bugIds.add("888971");}
 				// Bug 888979 - [te] pofilter newlines test failed
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/te/"))) {bugIds.add("888979");}
-
+				// Bug 908108 - [ru][ta_IN] pofilter newlines test failed on msgid="Redeeming the subscription may take a few..." 
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/ru/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/ta_IN/"))) {bugIds.add("908108");}
+				// Bug 908037 - [hi][it][ml][ru] character ¶ should not appear in translated msgstr
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/ml/"))) {bugIds.add("908037");}
+				
 				
 				// Bug 827059	[kn] translation fails for printf test
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/kn/")) bugIds.add("827059");
@@ -620,6 +621,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/de_DE/")) bugIds.add("872684");
 				// Bug 887429 - [pt_BR] failed pofilter urls test
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887429");
+				// Bug 908059 - [pt-BR] pofilter urls test is failing against subscription-manager 1.8.X
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("908059");
+				
 				
 				
 				// Bug 845304 - translation of the word "[OPTIONS]" has reverted
