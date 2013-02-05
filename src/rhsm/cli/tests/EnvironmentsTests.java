@@ -92,7 +92,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt environments without --org option",
-			groups={"debugTest","blockedByBug-849105"},
+			groups={"blockedByBug-849105"},
 			enabled=false)	// 2/5/2013 this test is obsoleted by implementation of Bug 727092 - [RFE]: Enhance subscription-manager to prompt the user for an Org Name.
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptEnvironmentsWithoutOrg_Test() {
