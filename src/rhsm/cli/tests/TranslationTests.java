@@ -66,7 +66,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	// Test Methods ***********************************************************************
 	
 	@Test(	description="subscription-manager-cli: assert help commands return translated text",
-			groups={"blockedByBug-756156"},
+			groups={"blockedByBug-756156","blockedByBug-906124"},
 			dataProvider="getTranslatedCommandLineHelpData")
 	//@ImplementsNitrateTest(caseId=)
 	public void TranslatedCommandLineHelp_Test(Object bugzilla, String lang, String command, List<String> stdoutRegexs) {
