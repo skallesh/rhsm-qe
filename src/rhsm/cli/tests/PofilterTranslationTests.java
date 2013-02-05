@@ -12,6 +12,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -160,12 +161,13 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		if (pofilterTest.equals("notranslatewords")) {
 			
 			// append words that should not be translated to this list
-			// CAUTION: the pofilter notranslatewords work ONLY when the noTranslateWords does not contain spaces or non-alphabetic chars such as "Red Hat" and "subscription-manager".  Alternatively, please use VerifyTranslationsDoNotTranslateSubStrings_Test for these types of "words"
+			// CAUTION: the pofilter notranslatewords work ONLY when the noTranslateWords does not contain spaces or non-alphabetic chars such as "Red Hat" and "subscription-manager".  Alternatively, use VerifyTranslationsDoNotTranslateSubStrings_Test for these types of "words"
 			List<String> noTranslateWords = Arrays.asList(/*"Red Hat","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port" MOVED TO VerifyTranslationsDoNotTranslateSubStrings_Test */);
 			
 			// echo all of the notranslateWords to the notranslateFile
 			sshCommandRunner.runCommandAndWait("rm -f "+notranslateFile);	// remove the old one from the last run
 			for(String noTranslateWord : noTranslateWords) sshCommandRunner.runCommandAndWait("echo \""+noTranslateWord+"\" >> "+notranslateFile);
+			if (noTranslateWords.isEmpty()) throw new SkipException("Skipping this test since the list of noTranslateWords is empty.");
 			Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, notranslateFile),"The pofilter notranslate file '"+notranslateFile+"' has been created on the client.");
 		}
 		
