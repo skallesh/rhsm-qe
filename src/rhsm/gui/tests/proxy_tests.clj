@@ -159,6 +159,19 @@
        (tasks/ui click :close-facts))
      (disable_proxy nil))))
 
+(defn ^{Test {:groups ["proxy" "blockedByBug-806993"]}}
+  test_proxy_formatting [_]
+  (try+
+   (tasks/enableproxy "http://some.host.name:1337")
+   (tasks/ui click :configure-proxy)
+   (tasks/ui waittillwindowexist :proxy-config-dialog 60)
+   (let [location (tasks/ui gettextvalue :proxy-location)]
+     (verify (not (tasks/substring? "http://" location)))
+     (verify (= 2 (count (clojure.string/split location #":")))))
+   (finally
+     (tasks/ui click :close-proxy)
+     (disable_proxy nil))))
+
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   cleanup [_]
