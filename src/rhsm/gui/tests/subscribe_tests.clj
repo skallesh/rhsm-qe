@@ -97,7 +97,8 @@
 
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-766778"
-                       "blockedByBug-723248"]
+                       "blockedByBug-723248"
+                       "blockedByBug-855257"]
               :dataProvider "subscriptions"}}
   check_quantity_scroller
   "https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3"
@@ -127,6 +128,8 @@
                              (first
                               (split (tasks/ui getcellvalue :contract-selection-table row 5) #"\s")))
               get-quantity-int (fn [] (Integer. (get-quantity)))]
+          ;verify that the default quantity is sane for BZ: 855257
+          (verify (<= (Integer. default) (- (Integer. max) (Integer. used))))
           (if (ctasks/multi-entitlement? (@config :username) (@config :password) pool)
             (do
               ;verify that the quantity can be changed
