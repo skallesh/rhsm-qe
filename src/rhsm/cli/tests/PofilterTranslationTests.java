@@ -59,7 +59,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 			as		[ngoswami@redhat.com]	(Nilamdyuti Goswami)
 			bn-IN	[runab@redhat.com]		(Runa Bhattacharjee)
 			de		[hpeters@redhat.com]	(Hedda Peters)
-			es		[agarcia@redhat.com]	(Angela Garcia)
+			es_ES	[agarcia@redhat.com]	(Angela Garcia)		[gguerrer@redhat.com]	(Gladys Guerrero-Lozan)
 			fr		[sfriedma@redhat.com]	(Sam Friedmann)
 			gu		[swkothar@redhat.com]	(Sweta Kothari)
 			hi		[rranjan@redhat.com]	(Rajesh Ranjan)
@@ -197,19 +197,12 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			
 			// common newlines msgid translations to ignore for all langs
 			ignorableMsgIds.add(""+"\n"+"This software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n");
-//			ignorableMsgIds.add("We have detected that you have multiple service levels on various products. Please select how you\n"+"want them assigned.");
 			ignorableMsgIds.add(""+"Did not receive a completed unregistration message from RHN Classic for system %s.\n"+"Please investigate on the Customer Portal at https://access.redhat.com.");	// ignorable because the message is printed on the CLI terminal and not rendered in the GUI
 
 			// newlines translations to ignore for specific langs
-// 2/5/2013 TODO WORK IN PROGRESS OPENING BUGS FOR THESE CASES
-//			if (translationFile.getPath().contains("/zh_TW/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
-//			if (translationFile.getPath().contains("/bn_IN/"))	ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
-//			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
-//			if (translationFile.getPath().contains("/hi/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
-//			if (translationFile.getPath().contains("/gu/"))		ignorableMsgIds.addAll(Arrays.asList(""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete."));	// ignorable because the actual translation for this lang is shorter than a GUI screenwidth
 			if (translationFile.getPath().contains("/bn_IN/"))	ignorableMsgIds.addAll(Arrays.asList("Tip: Forgot your login or password? Look it up at http://red.ht/lost_password"));
-			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("\n"+"Unable to register.\n"+"For further assistance, please contact Red Hat Global Support Services."));
-			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("Unable to perform refresh due to the following exception: %s"));
+//bug 908488		if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("\n"+"Unable to register.\n"+"For further assistance, please contact Red Hat Global Support Services."));
+//bug 908488		if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("Unable to perform refresh due to the following exception: %s"));
 			
 			// newlines translations to ignore for specific langs
 			String msgId = ""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete.";
@@ -217,7 +210,13 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/ko/") && failedTranslation!=null && failedTranslation.msgstr.equals("서브스크립션 교환에는 시간이 몇 분 소요될 수 있습니다. \n"+"완료 시 통지를 받기 위한 이메일 주소를 알려주십시오. ")) ignorableMsgIds.add(msgId);
 			if (translationFile.getPath().contains("/ru/") && failedTranslation!=null && failedTranslation.msgstr.equals("Получение подписки может занять несколько минут.\n"+"Укажите электронный адрес для получения \n"+"уведомления об завершении операции.")) ignorableMsgIds.add(msgId);
 			if (translationFile.getPath().contains("/ta_IN/") && failedTranslation!=null && failedTranslation.msgstr.equals("சந்தாவை மீட்டெடுப்பதற்கு சில நிமிடங்கள் எடுக்கலாம்.\n"+"மீட்டெடுத்தல் முடிந்ததும் அறிவிப்பை பெற ஒரு மின்னஞ்சல் முகவரியை கொடுக்கவும்.")) ignorableMsgIds.add(msgId);
-
+			if (translationFile.getPath().contains("/te/") && failedTranslation!=null && failedTranslation.msgstr.equals("సబ్‌స్క్రిప్షన్‌ను వెచ్చించుటకు కొంత సమయం పట్టవచ్చును.\n"+"వెచ్చింపు పూర్తవగానే నోటీసును స్వీకరించుటకు వొక ఈమెయిల్ చిరునామాను అందించుము.")) ignorableMsgIds.add(msgId);
+			if (translationFile.getPath().contains("/zh_CN/") && failedTranslation!=null && failedTranslation.msgstr.equals("兑换订阅可能需要几分钟的时间。\n"+"请提供电子邮件以在兑换完成时接收通知。")) ignorableMsgIds.add(msgId);
+			if (translationFile.getPath().contains("/hi/") && failedTranslation!=null && failedTranslation.msgstr.equals("सदस्यता रिडीम करना कुछ समय ले सकता है.\n"+"कृपया अधिसूचना पाने के लिए कोई ईमेल पता दाखिल करें जब रिडेप्शन पूरा होता है.")) ignorableMsgIds.add(msgId);
+			if (translationFile.getPath().contains("/zh_TW/") && failedTranslation!=null && failedTranslation.msgstr.equals("兌換訂閱服務可能會花上幾分鐘。\n"+"請提供電子郵件信箱，好在兌換服務完成時通知您。")) ignorableMsgIds.add(msgId);
+			if (translationFile.getPath().contains("/as/") && failedTranslation!=null && failedTranslation.msgstr.equals("স্বাক্ষৰণ ঘুৰাই নিয়ায় কিছু সময় লব পাৰে। ঘুৰাই নিয়া সম্পূৰ্ণ হলে \n"+"অধিসূচনা গ্ৰহণ কৰিবলে এটা ই-মেইল ঠিকনা প্ৰদান কৰক।")) ignorableMsgIds.add(msgId);
+			if (translationFile.getPath().contains("/bn_IN/") && failedTranslation!=null && failedTranslation.msgstr.equals("সাবস্ক্রিপশন ব্যবহার করতে কয়েক মিনিট ব্যয় হতে পারে।\n"+"প্রয়োগ সম্পূর্ণ হওয়ার পরে সূচনা প্রদানের উদ্দেশ্যে অনুগ্রহ করে একটি ই-মেইল ঠিকানা উল্লেখ করুন।")) ignorableMsgIds.add(msgId);
+			if (translationFile.getPath().contains("/kn/") && failedTranslation!=null && failedTranslation.msgstr.equals("ಚಂದಾದಾರಿಕೆಯನ್ನು ಹಿಂದಕ್ಕೆ ಪಡೆಯುವಿಕೆ ಕೆಲಹೊತ್ತು ಹಿಡಿಯಬಹುದು.\n"+"ಹಿಂದಕ್ಕೆ ಪಡೆಯುವಿಕೆಯು ಪೂರ್ಣಗೊಂಡ ನಂತರ ಸೂಚಿಸಲು ಒಂದು ಇಮೈಲ್ ವಿಳಾಸವನ್ನು ಒದಗಿಸಿ.")) ignorableMsgIds.add(msgId);
 		}
 		
 		if (pofilterTest.equals("xmltags")) { 
@@ -471,7 +470,6 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 872697 - [ja_JP] two accelerators for msgid "Configure Pro_xy"
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("872697");
 				
-				
 //				// Bug 825397	Many translated languages fail the pofilter newlines test
 //				if (pofilterTest.equals("newlines") && !(translationFile.getPath().contains("/zh_CN/")||translationFile.getPath().contains("/ru/")||translationFile.getPath().contains("/ja/"))) bugIds.add("825397");			
 				// Bug 887957 	[ml_IN] pofilter newlines test failed for msgid="Redeeming the subscription may take..." 
@@ -498,12 +496,23 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/pt_BR/"))) {bugIds.add("888971");}
 				// Bug 888979 - [te] pofilter newlines test failed
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/te/"))) {bugIds.add("888979");}
-				// Bug 908108 - [ru][ta_IN] pofilter newlines test failed on msgid="Redeeming the subscription may take a few..." 
+				// Bug 908108 - [ru][ta_IN][te][zh_CN][es_ES][fr][de_DE][gu][zh_TW][kn] pofilter newlines test failed on msgid="Redeeming the subscription may take a few..." 
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/ru/"))) {bugIds.add("908108");}
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/ta_IN/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/te/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/zh_CN/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/es_ES/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/fr/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/de_DE/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/gu/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/zh_TW/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/kn/"))) {bugIds.add("908108");}
 				// Bug 908037 - [hi][it][ml][ru] character ¶ should not appear in translated msgstr
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/ml/"))) {bugIds.add("908037");}
-				
+				// Bug 908434 - [it] pofilter newlines test failed on msgid="Error subscribing: %s"
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/it/"))) {bugIds.add("908434");}
+				// Bug 908488 - [or] pofilter newlines test failed
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/or/"))) {bugIds.add("908488");}
 				
 				// Bug 827059	[kn] translation fails for printf test
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/kn/")) bugIds.add("827059");
@@ -515,7 +524,6 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/te/")) bugIds.add("827089");
 				// Bug 887431 - [pt_BR] pofilter variables (and printf) test is failing on a missing %s in the msgstr
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887431");
-
 				
 //				// Bug 827113 	Many Translated languages fail the pofilter tabs test
 //				if (pofilterTest.equals("tabs") && !(translationFile.getPath().contains("/pa/")||translationFile.getPath().contains("/mr/")||translationFile.getPath().contains("/de_DE/")||translationFile.getPath().contains("/bn_IN/"))) bugIds.add("825397");
@@ -538,7 +546,6 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 888928 - [ja] pofilter tabs test failed
 				if (pofilterTest.equals("tabs") && translationFile.getPath().contains("/ja/")) bugIds.add("888928");
 				
-				
 				// Bug 827161 	[bn_IN] failed pofilter xmltags tests for subscription-manager translations
 				if (pofilterTest.equals("xmltags") && translationFile.getPath().contains("/bn_IN/")) bugIds.add("827161");
 				// Bug 827208	[or] failed pofilter xmltags tests for subscription-manager translations
@@ -555,7 +562,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("xmltags") && translationFile.getPath().contains("/ru/")) bugIds.add("828416");
 				// Bug 843113 - [ta_IN] failed pofilter xmltags test for subscription-manager translations
 				if (pofilterTest.equals("xmltags") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("843113");
-				
+				// Bug 908511 - [es_ES] pofilter xmltags test is failing against subscription-manager 1.8.X
+				if (pofilterTest.equals("xmltags") && translationFile.getPath().contains("/es_ES/")) bugIds.add("908511");
 				
 				// Bug 828566	[bn-IN] cosmetic bug for subscription-manager translations
 				if (pofilterTest.equals("filepaths") && translationFile.getPath().contains("/bn_IN/")) bugIds.add("828566");
@@ -569,7 +577,10 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("filepaths") && translationFile.getPath().contains("/mr/")) bugIds.add("828580");
 				// Bug 828583 - [ko] failed pofilter filepaths tests for subscription-manager translations
 				if (pofilterTest.equals("filepaths") && translationFile.getPath().contains("/ko/")) bugIds.add("828583");
-				
+				// Bug 908521 - [mr][ta_IN][ml] pofilter filepaths test failed for subscription-manager 1.8.X
+				if (pofilterTest.equals("filepaths") && translationFile.getPath().contains("/mr/")) bugIds.add("908521");
+				if (pofilterTest.equals("filepaths") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("908521");
+				if (pofilterTest.equals("filepaths") && translationFile.getPath().contains("/ml/")) bugIds.add("908521");
 				
 				// Bug 828810 - [kn] failed pofilter varialbes tests for subscription-manager translations
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/kn/")) bugIds.add("828810");
@@ -581,7 +592,6 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/te/")) bugIds.add("828867");
 				// Bug 887431 - [pt_BR] pofilter variables test is failing on a missing %s in the msgstr
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887431");
-				
 				
 				// Bug 828903 - [bn_IN] failed pofilter options tests for subscription-manager translations 
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/bn_IN/")) bugIds.add("828903");
@@ -610,7 +620,6 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 887434 - [ru] pofilter options test failed on incorrect translation of commandline option "--list"
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/ru/")) bugIds.add("887434");
 				
-				
 				// Bug 828985 - [ml] failed pofilter urls test for subscription manager translations
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ml/")) bugIds.add("828985");
 				// Bug 828989 - [pt_BR] failed pofilter urls test for subscription-manager translations
@@ -623,8 +632,6 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887429");
 				// Bug 908059 - [pt-BR] pofilter urls test is failing against subscription-manager 1.8.X
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("908059");
-				
-				
 				
 				// Bug 845304 - translation of the word "[OPTIONS]" has reverted
 				if (pofilterTest.equals("unchanged")) bugIds.add("845304");
@@ -674,7 +681,6 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("872704");
 				// Bug 887890 - [pa_IN] polfilter unchanged test failed for msgid "Activation Keys are alphanumeric strings that..."
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pa/")) bugIds.add("887890");
-				
 				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
