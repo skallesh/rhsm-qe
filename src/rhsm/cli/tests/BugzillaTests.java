@@ -1009,7 +1009,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyEmptyCertCauseRegistrationFailure_Test()
 			throws JSONException, Exception {
 		clienttasks.unregister_(null, null, null);
-		String FilePath = "/etc/rhsm/ca/myemptycert.pem";
+		String FilePath = myEmptyCaCertFile;
 		String command = "touch " + FilePath;
 		client.runCommandAndWait(command);
 		String result = clienttasks.register_(sm_clientUsername,
@@ -1028,6 +1028,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"The system has been registered with id: [a-f,0-9,\\-]{36}");
 
 	}
+	// ensure the empty ca cert is removed after VerifyEmptyCertCauseRegistrationFailure_Test to avoid subsequent test failures due to "Bad CA certificate: /etc/rhsm/ca/myemptycert.pem" 
+	@AfterGroups(groups = {"setup"}, value = {"VerifyEmptyCertCauseRegistrationFailure_Test"})
+	public void removeMyEmptyCaCertFile() {
+		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
+	}
+	protected final String myEmptyCaCertFile = "/etc/rhsm/ca/myemptycert.pem";
 
 	/**
 	 * @author skallesh
