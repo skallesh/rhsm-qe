@@ -67,6 +67,40 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@Test(description = "verify if refresh Pools w/ Auto-Create Owner Fails", 
+			groups = { "RefreshPoolsWithAutoCreate","blockedByBug-720487"}, enabled = true)
+	public void RegenerateIdenityCert() throws JSONException,Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if refresh Pools w/ Auto-Create Owner Fails", 
+			groups = { "RefreshPoolsWithAutoCreate","blockedByBug-720487"}, enabled = true)
+	public void RefreshPoolsWithAutoCreate() throws JSONException,Exception {
+		String org="newowner";
+		JSONObject jsonActivationKey = new JSONObject(
+				CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+org));
+		Assert.assertEquals(jsonActivationKey.getString("displayMessage"), "Organization with id newowner could not be found.");
+		new JSONObject(CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/"+org+"/subscriptions?auto_create_owner=true" ));
+		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+org));
+		Assert.assertNotNull(jsonActivationKey.get("created")); 
+		jsonActivationKey= new JSONObject(CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/AnotherOwner/subscriptions?auto_create_owner=false" ));
+		Assert.assertEquals(jsonActivationKey.getString("displayMessage"),"owner with key: AnotherOwner was not found.");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+org);
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
 	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
 			groups = { "VerifyipV4Facts","blockedByBug-874147"}, enabled = true)
 	public void VerifyipV4Facts() throws JSONException,Exception {
@@ -1478,7 +1512,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(description = "Auto-heal for partial subscription", groups = {
-			"autohealPartial", "blockedByBug-746218" }, enabled = true)
+			"autohealPartial", "blockedByBug-746218,907638" }, enabled = true)
 	public void VerifyAutohealForPartialSubscription() throws Exception {
 		Integer healFrequency = 3;
 		Integer moreSockets = 0;
@@ -1550,7 +1584,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@Test(description = "Auto-heal with SLA", groups = { "AutoHealWithSLA" }, enabled = true)
+	@Test(description = "Auto-heal with SLA", groups = { "AutoHealWithSLA","blockedByBug-907638" }, enabled = true)
 	public void VerifyAutohealWithSLA() throws JSONException, Exception {
 		Integer healFrequency = 2;
 		String filename = null;
@@ -1668,7 +1702,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "Auto-heal for Expired subscription", groups = {
-			"AutohealForExpired", "blockedByBug-746088" }, enabled = true)
+			"AutohealForExpired", "blockedByBug-746088,907638" }, enabled = true)
 	public void VerifyAutohealForExpiredSubscription() throws JSONException,
 	Exception {
 		int healFrequency = 2;
@@ -1719,7 +1753,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Auto-heal for subscription", groups = { "AutoHeal" }, enabled = true)
+	@Test(description = "Auto-heal for subscription", groups = { "AutoHeal","blockedByBug-907638" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 119327)
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
 		Integer healFrequency = 2;
