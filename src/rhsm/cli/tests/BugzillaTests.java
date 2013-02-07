@@ -1512,7 +1512,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(description = "Auto-heal for partial subscription", groups = {
-			"autohealPartial", "blockedByBug-746218,907638" }, enabled = true)
+			"autohealPartial", "blockedByBug-746218","blockedByBug-907638" }, enabled = true)
 	public void VerifyAutohealForPartialSubscription() throws Exception {
 		Integer healFrequency = 3;
 		Integer moreSockets = 0;
