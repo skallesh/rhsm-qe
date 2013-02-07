@@ -849,7 +849,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				serialOne, serialTwo).getStdout();
 		System.out.println(result);
 		String expected = "Successfully removed serial numbers:" + "\n" + "   "
-				+ serialOne + "\n" + "   " + serialTwo;
+				+ serialOne + "\n" + "   " + serialTwo+"\n"+"Any local-only certificates have been deleted.";
 		Assert.assertEquals(result.trim(), expected);
 	}
 
@@ -1702,7 +1702,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "Auto-heal for Expired subscription", groups = {
-			"AutohealForExpired", "blockedByBug-746088,907638" }, enabled = true)
+			"AutohealForExpired", "blockedByBug-746088","blockedByBug-907638" }, enabled = true)
 	public void VerifyAutohealForExpiredSubscription() throws JSONException,
 	Exception {
 		int healFrequency = 2;
