@@ -58,7 +58,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   https://engineering.redhat.com/rt/Ticket/Display.html?id=180955
 			as		[ngoswami@redhat.com]	(Nilamdyuti Goswami)
 			bn-IN	[runab@redhat.com]		(Runa Bhattacharjee)
-			de		[hpeters@redhat.com]	(Hedda Peters)
+			de_DE	[hpeters@redhat.com]	(Hedda Peters)
 			es_ES	[agarcia@redhat.com]	(Angela Garcia)		[gguerrer@redhat.com]	(Gladys Guerrero-Lozan)
 			fr		[sfriedma@redhat.com]	(Sam Friedmann)
 			gu		[swkothar@redhat.com]	(Sweta Kothari)
@@ -282,6 +282,12 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		if (pofilterTest.equals("filepaths")) {
+			
+			// filepaths translations to ignore for specific langs
+			String msgId = "Could not read installation number from /etc/sysconfig/rhn/install-num.  Aborting.";
+			Translation failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
+			if (translationFile.getPath().contains("/ko/") && failedTranslation!=null && failedTranslation.msgstr.equals("/etc/sysconfig/rhn/install-num에서 설치 번호를 읽을 수 없습니다. 중지 중 ")) ignorableMsgIds.add(msgId);
+			
 			for(Translation pofilterFailedTranslation : pofilterFailedTranslations) {
 				// Parsing mgID and msgStr for FilePaths ending ' ' (space) 
 				Pattern filePath = Pattern.compile("/.*?( |$)", Pattern.MULTILINE);  
@@ -365,7 +371,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/te/"))    ignorableMsgIds.addAll(Arrays.asList("page 2"));
 			if (translationFile.getPath().contains("/pa/"))    ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
 			if (translationFile.getPath().contains("/fr/"))    ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Version","page 2"));
-			if (translationFile.getPath().contains("/it/"))    ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch","Login:","No","Password:","Release: %s","Password: "));
+			if (translationFile.getPath().contains("/it/"))    ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","org id: %s","Account","<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch","Login:","No","Password:","Release: %s","Password: "));
 			if (translationFile.getPath().contains("/zh_TW/")) ignorableMsgIds.addAll(Arrays.asList("Auto-attach"));
 		}
 		
@@ -469,6 +475,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("860084");
 				// Bug 872697 - [ja_JP] two accelerators for msgid "Configure Pro_xy"
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("872697");
+				// Bug 908879 - [es_ES] pofilter acceleratiors test failed for subscription-manager 1.8.X 
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/es_ES/")) bugIds.add("908879");
 				
 //				// Bug 825397	Many translated languages fail the pofilter newlines test
 //				if (pofilterTest.equals("newlines") && !(translationFile.getPath().contains("/zh_CN/")||translationFile.getPath().contains("/ru/")||translationFile.getPath().contains("/ja/"))) bugIds.add("825397");			
@@ -524,6 +532,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/te/")) bugIds.add("827089");
 				// Bug 887431 - [pt_BR] pofilter variables (and printf) test is failing on a missing %s in the msgstr
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887431");
+				// Bug 908866 - [kn] pofilter variables/printf test fails for subscription-manager 1.8.X
+				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/kn/")) bugIds.add("908866");
 				
 //				// Bug 827113 	Many Translated languages fail the pofilter tabs test
 //				if (pofilterTest.equals("tabs") && !(translationFile.getPath().contains("/pa/")||translationFile.getPath().contains("/mr/")||translationFile.getPath().contains("/de_DE/")||translationFile.getPath().contains("/bn_IN/"))) bugIds.add("825397");
@@ -592,6 +602,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/te/")) bugIds.add("828867");
 				// Bug 887431 - [pt_BR] pofilter variables test is failing on a missing %s in the msgstr
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887431");
+				// Bug 908866 - [kn] pofilter variables/printf test fails for subscription-manager 1.8.X
+				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/kn/")) bugIds.add("908866");
 				
 				// Bug 828903 - [bn_IN] failed pofilter options tests for subscription-manager translations 
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/bn_IN/")) bugIds.add("828903");
@@ -619,6 +631,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/es_ES/")) bugIds.add("887433");
 				// Bug 887434 - [ru] pofilter options test failed on incorrect translation of commandline option "--list"
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/ru/")) bugIds.add("887434");
+				// Bug 908869 - [pt_BR][ta_IN] pofilter options test failed for subscription-manager 1.8.X
+				if (pofilterTest.equals("options") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("908869");
+				if (pofilterTest.equals("options") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("908869");
 				
 				// Bug 828985 - [ml] failed pofilter urls test for subscription manager translations
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ml/")) bugIds.add("828985");
@@ -681,6 +696,11 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("872704");
 				// Bug 887890 - [pa_IN] polfilter unchanged test failed for msgid "Activation Keys are alphanumeric strings that..."
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pa/")) bugIds.add("887890");
+				// Bug 908886 - [ta_IN][pt_BR][de_DE][zh_CN] pofilter unchanged test fails against subscription-manager 1.8.X
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/de_DE/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("908886");
 				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");

@@ -388,7 +388,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	public void VerifyTranslationsDoNotTranslateSubStrings_Test(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
 		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat","RHN","RHN Classic","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
-		// TODO ADD THESE TOO List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Management");
+		// TODO ADD THESE TOO List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Management", "Red Hat Global Support Services" "Red Hat Customer Portal", "RHN Satellite");
 		
 		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
 			for (Translation translation: translationFileMapForSubscriptionManager.get(translationFile)) {
