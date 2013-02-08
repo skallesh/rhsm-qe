@@ -40,7 +40,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing subscription-manager orgs module using username="+username+" password="+password+" and expecting orgs="+expectedOrgs+" ...");
 		
 		// use subscription-manager to get the organizations for which the user has access
-		SSHCommandResult orgsResult = clienttasks.orgs_(username, password, null, null, null, null);
+		SSHCommandResult orgsResult = clienttasks.orgs_(username, password, null, null, null, null, null);
 		
 		// when the expectedOrgs is empty, there is a special message, assert it
 		if (expectedOrgs.isEmpty()) {
@@ -68,7 +68,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing subscription-manager orgs module using username="+username+" password="+password+" ...");
 		
 		// use subscription-manager to get the organizations for which the user has access
-		SSHCommandResult sshCommandResult = clienttasks.orgs_(username, password, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.orgs_(username, password, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The expected exit code from the orgs attempt.");
@@ -146,7 +146,6 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 //		2011-08-10 18:00:31,154 INFO  [STDOUT] Aug 10 18:00:31 [http-10.7.13.82-8080-1] DEBUG org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter - {"displayMessage":"Insufficient permissions"}
 	}
 	
-	
 		
 	protected String server_hostname = null;
 	protected String server_port = null;
@@ -170,7 +169,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		String prefixBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
 		
 		// orgs with a serverurl
-		SSHCommandResult sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword,serverurl, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword,serverurl, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null)	Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --serverurl="+serverurl+" and other options:");
@@ -194,13 +193,48 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), expectedPrefix, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix has been updated from the specified --serverurl "+serverurl);
 	}
 	@AfterGroups(value={"OrgsWithServerurl_Test"},groups={"setup"})
-	public void afterRegisterWithServerurl_Test() {
+	public void afterOrgsWithServerurl_Test() {
 		if (server_hostname!=null)	clienttasks.config(null,null,true,new String[]{"server","hostname",server_hostname});
 		if (server_port!=null)		clienttasks.config(null,null,true,new String[]{"server","port",server_port});
 		if (server_prefix!=null)	clienttasks.config(null,null,true,new String[]{"server","prefix",server_prefix});
 	}
 	
-
+	
+	protected String server_ca_cert_dir = null;
+	@BeforeGroups(value={"OrgsWithInsecure_Test"}, groups={"setup"})
+	public void beforeOrgsWithInsecure_Test() {
+		if (clienttasks==null) return;
+		server_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "ca_cert_dir");
+	}
+	@Test(	description="subscription-manager: orgs with --insecure",
+			groups={"OrgsWithInsecure_Test","blockedByBug-844411"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void OrgsWithInsecure_Test() {
+		SSHCommandResult sshCommandResult;
+		
+		// calling orgs without insecure should pass
+		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, false, null, null, null);
+		
+		// change the server.ca_cert_dir configuration to simulate a missing candlepin ca cert
+		sshCommandResult = clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir","/tmp"});
+		
+		// calling orgs without insecure should now fail (throwing stderr "certificate verify failed")
+		sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword, null, false, null, null, null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the orgs command when configuration server.ca_cert_dir has been falsified");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the orgs command when configuration server.ca_cert_dir has been falsified");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the orgs command when configuration server.ca_cert_dir has been falsified");
+		
+		// calling orgs with insecure should now pass
+		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, true, null, null, null);
+		
+		// assert that option --insecure did NOT persist to rhsm.conf
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure"), "0", "Expected value of "+clienttasks.rhsmConfFile+" server.insecure configuration.");
+	}
+	@AfterGroups(value={"OrgsWithInsecure_Test"},groups={"setup"})
+	public void afterOrgsWithInsecure_Test() {
+		clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir",server_ca_cert_dir});
+	}
 	
 	
 	

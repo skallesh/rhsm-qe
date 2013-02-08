@@ -408,6 +408,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--serverurl=SERVER_URL");
 		options.add("--username=USERNAME");
 		options.add("--password=PASSWORD");
+		options.add("--insecure");		// added by bug 844411
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");

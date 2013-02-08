@@ -1196,7 +1196,7 @@ public class SubscriptionManagerTasks {
 //		if (orgs.size()>0) orgs.remove(0); // exclude the first title line of output...  orgs:
 //		return orgs;
 		
-		return Org.parse(orgs(username, password, null, null, null, null).getStdout());
+		return Org.parse(orgs(username, password, null, null, null, null, null).getStdout());
 	}
 	
 	/**
@@ -2456,15 +2456,17 @@ public class SubscriptionManagerTasks {
 	 * @param username
 	 * @param password
 	 * @param serverurl TODO
+	 * @param insecure TODO
 	 * @return
 	 */
-	public SSHCommandResult orgs_(String username, String password, String serverurl, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult orgs_(String username, String password, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " orgs";
 		if (username!=null)				command += " --username="+username;
 		if (password!=null)				command += " --password="+password;
 		if (serverurl!=null)			command += " --serverurl="+serverurl;
+		if (insecure!=null && insecure)	command += " --insecure";
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
@@ -2478,11 +2480,12 @@ public class SubscriptionManagerTasks {
 	 * @param username
 	 * @param password
 	 * @param serverurl TODO
+	 * @param insecure TODO
 	 * @return
 	 */
-	public SSHCommandResult orgs(String username, String password, String serverurl, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult orgs(String username, String password, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = orgs_(username, password, serverurl, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = orgs_(username, password, serverurl, insecure, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		/*
