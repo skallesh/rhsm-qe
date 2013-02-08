@@ -9,6 +9,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,7 +22,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -27,18 +29,24 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
+import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
- * @author jsefler
+ * @author skallesh
  *
  *
  */
+
 @Test(groups={"RAMTests"})
 public class RAMTests extends SubscriptionManagerCLITestScript {
-	
+	Map<String, String> factsMap = new HashMap<String, String>();
+	int value=(int) 1.049e+6;
+
+
 	// Test methods ***********************************************************************
 
 	@Test(	description="",
@@ -50,10 +58,306 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify subscription of Ram/socket based subscription", 
+			groups = { "RamSocketSubscription"}, enabled = true)
+	public void RamSocketSubscription() throws JSONException,Exception {
+		factsMap.put("memory.memtotal", String.valueOf(value*10));
+		Integer sockets = 4;
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			
+		}clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+		}
+	}
+		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
+
+ }
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify healing of partially subscribed Ram/socket based subscription", 
+			groups = { "RamSocketSubscription","blockedByBug-907638"}, enabled = true)
+	public void HealingPartialRamSocketSubscription() throws JSONException,Exception {
+		factsMap.put("memory.memtotal", String.valueOf(value*10));
+		Integer sockets = 4;
+		int healFrequency=2;
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			
+		}clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+		}
+	}clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+	SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+	for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+		if(installed.productName.contains("RAM")){
+			Assert.assertEquals(installed.status.trim(), "Subscribed");
+	}}
+		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
+
+ }
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify Ram Subscription with disabled certv3 from candlepin ", 
+			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = true)
+	public void DisableCertV3ForRamBasedSubscription() throws JSONException,Exception {
+		
+		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "false");
+		servertasks.restartTomcat();
+		SubscriptionManagerCLITestScript.sleep( 1*60 * 1000);
+		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Not Subscribed");
+		}
+	}
+		
+ }
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify Auto Heal for Ram subscription .", 
+			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638"}, enabled = true)
+	public void AutoHealRamBasedSubscription() throws JSONException,Exception {
+		int healFrequency=2;
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productName.contains("RAM")){
+				Assert.assertEquals(installed.status.trim(), "Subscribed");
+		}}
+		
+		
+	}
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify Auto-attach for Ram based subscription", 
+			groups = { "AutoSubscribeRamBasedSubscription"}, enabled = true)
+	public void AutoSubscribeRamBasedSubscription() throws JSONException,Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		
+		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+					if(installed.productName.contains("RAM")){
+						Assert.assertEquals(installed.status.trim(), "Subscribed");
+				}else throw new SkipException(
+					"Couldnot auto-subscribe ram based subscription");
+	}
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify Partial subscription of Ram subscription. ", 
+			groups = { "PartailSubscriptionOfRamBasedSubscription"}, enabled = true)
+	public void PartailSubscriptionOfRamBasedSubscription() throws JSONException,Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		
+		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			
+		}clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Subscribed");
+		}
+			factsMap.put("memory.memtotal", String.valueOf(value*10));
+			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+		}
+		
+		clienttasks.facts_(true, null, null, null, null);
+		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+			}}
+	}
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify Ram info in product and entitlement certificate", 
+			groups = { "RamBasedSubscriptionInfoInEntitlementCert"}, enabled = true)
+	public void RamBasedSubscriptionInfoInEntitlementCert() throws JSONException,Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, false, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		
+		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		}
+		client.runCommandAndWaitWithoutLogging("find "+clienttasks.entitlementCertDir+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
+		String certificates = client.getStdout();
+		List<EntitlementCert> ramInfo =parseRamInfo(certificates);
+		Assert.assertNotNull(ramInfo.size());
+	}
+		
+		
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify subscription of Ram based subscription", 
+			groups = { "SubscribeToRamBasedSubscription","blockedByBug-907315"}, enabled = true)
+	public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
+		int expected=1;
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		factsMap.put("memory.memtotal", String.valueOf(value*1));
+		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+		int ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
+		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		}
+		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
+			int quantity=consumed.quantityUsed;
+			if(ramvalue<=4){
+			Assert.assertEquals(quantity, expected);
+			factsMap.put("memory.memtotal", String.valueOf(value*5));
+			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+			ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
+		}else if(ramvalue>4 && ramvalue<=8){
+			expected=2;
+			Assert.assertEquals(quantity, expected);
+			factsMap.put("memory.memtotal", String.valueOf(value*9));
+			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+			ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
+		}else if(ramvalue>8 && ramvalue<=12){
+			expected=3;
+			Assert.assertEquals(quantity, expected++);
+		}
+		}
+		
+	}
+	
+	static public int KBToGBConverter(int memory) {
+		int value=(int) 1.049e+6;
+		int result=(memory/value);
+		return result;
+
+	}
+	
+	 public List<SubscriptionPool> getRamBasedSubscriptions() {
+		 List<SubscriptionPool> RAMBasedPools= new ArrayList<SubscriptionPool>();
+		 for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			 if(pools.subscriptionName.contains("RAM")){
+				 RAMBasedPools.add(pools) ;
+			 }
+		 }
+		 
+		return RAMBasedPools;
+	}
+	 @AfterGroups(groups="setup",value={"DisableCertV3ForRamBasedSubscription"})
+	 public void restartTomcatWithCertV3Enabled() {
+	 servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "true");
+	 servertasks.restartTomcat();
+	 }
+
+	 
+		static public List<EntitlementCert> parseRamInfo(String rawCertificates) {
+			Map<String,String> regexes = new HashMap<String,String>();
+			List certData = new ArrayList();
+			regexes.put("RAM LIMIT",			"Order:(?:(?:\\n.+)+)RAM Limit: (.+)");
+
+			// split the rawCertificates process each individual rawCertificate
+			String rawCertificateRegex = "\\+-+\\+\\n\\s+Entitlement Certificate\\n\\+-+\\+";
+			List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+			for (String rawCertificate : rawCertificates.split(rawCertificateRegex)) {
+				
+				// strip leading and trailing blank lines and skip blank rawCertificates
+				rawCertificate = rawCertificate.replaceAll("^\\n*","").replaceAll("\\n*$", "");
+				if (rawCertificate.length()==0) continue;
+				List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+				for(String field : regexes.keySet()){
+					Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+					addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+				}
+				
+				// assert that there is only one group of certData found in the list
+				if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificate.  Expected to parse only one group of certificate data.");
+				certData.add(certDataList.get(0));
+				
+				// create a new EntitlementCert
+			}
+			return certData;
+		}
+
+				
+		
+		static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {
+			boolean foundMatches = false;
+			Matcher matcher = regex.matcher(to_parse);
+			int currListElem=0;
+			while (matcher.find()){
+				if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
+				Map<String,String> matchMap = matchList.get(currListElem);
+				matchMap.put(sub_key, matcher.group(1).trim());
+				matchList.set(currListElem, matchMap);
+				currListElem++;
+				foundMatches = true;
+			}
+	        if (!foundMatches) {
+	        	//log.warning("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
+	        	log.finer("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
+	        }
+			return foundMatches;
+		}
 	// Candidates for an automated Test:
 	// TODO http://qe-india.pad.engineering.redhat.com/48?
 	/*
