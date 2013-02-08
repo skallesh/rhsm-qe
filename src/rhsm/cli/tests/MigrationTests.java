@@ -2048,8 +2048,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (result.getExitCode()==1 && result.getStderr().trim().equals(tolerateStderrMsg)) {
 			log.warning(tolerateStderrMsg);
 		} else {
-			Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to list currently consumed RHN Classic channels.");
-			Assert.assertEquals(result.getStderr(), "","Stderr from attempt to list currently consumed RHN Classic channels.");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "Exitcode from attempt to list currently consumed RHN Classic channels.");
+			Assert.assertEquals(result.getStderr(), "", "Stderr from attempt to list currently consumed RHN Classic channels.");
 		}
 		
 		// parse the rhnChannels from stdout 
