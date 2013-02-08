@@ -92,6 +92,41 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@Test(description = "verify healing of partially subscribed Ram/socket based subscription", 
+			groups = { "RamSocketSubscription","blockedByBug-907638"}, enabled = true)
+	public void HealingPartialRamSocketSubscription() throws JSONException,Exception {
+		factsMap.put("memory.memtotal", String.valueOf(value*10));
+		Integer sockets = 4;
+		int healFrequency=2;
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, true, null, null, null, null);
+		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			
+		}clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+			if(installed.productId.contains("ram")){
+
+				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+		}
+	}clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+	SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+	for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+		if(installed.productName.contains("RAM")){
+			Assert.assertEquals(installed.status.trim(), "Subscribed");
+	}}
+		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
+
+ }
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
 	@Test(description = "verify Ram Subscription with disabled certv3 from candlepin ", 
 			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = true)
 	public void DisableCertV3ForRamBasedSubscription() throws JSONException,Exception {
@@ -198,17 +233,19 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 			groups = { "RamBasedSubscriptionInfoInEntitlementCert"}, enabled = true)
 	public void RamBasedSubscriptionInfoInEntitlementCert() throws JSONException,Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
+				sm_clientOrg, null, null, null, null, false, null, null,
 				(String) null, null, null, true, null, null, null, null);
 		
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
-			System.out.println(pool.poolId);
 			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-			
 		}
-		System.out.println(clienttasks.getCurrentEntitlementCerts());
-		
+		client.runCommandAndWaitWithoutLogging("find "+clienttasks.entitlementCertDir+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
+		String certificates = client.getStdout();
+		List<EntitlementCert> ramInfo =parseRamInfo(certificates);
+		Assert.assertNotNull(ramInfo.size());
 	}
+		
+		
 	
 	/**
 	 * @author skallesh
@@ -273,16 +310,11 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 }
 
 	 
-		static public List<EntitlementCert> parseStdoutFromOpensslX509(String rawCertificates) {
+		static public List<EntitlementCert> parseRamInfo(String rawCertificates) {
 			Map<String,String> regexes = new HashMap<String,String>();
-			//regexes.put("issuer",				"Issuer:\\s*(.*)");
-			regexes.put("serialString",			"Certificate:(?:(?:\\n.+)+)Serial: (.+)");
-			regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
-			regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
-			regexes.put("file",					"Certificate:(?:(?:\\n.+)+)Path: (.+)");
-			regexes.put("version",				"Certificate:(?:(?:\\n.+)+)Version: (.+)");
-			regexes.put("RAM LIMIT",			"Product:(?:(?:\\n.+)+)Version: (.+)");
-			
+			List certData = new ArrayList();
+			regexes.put("RAM LIMIT",			"Order:(?:(?:\\n.+)+)RAM Limit: (.+)");
+
 			// split the rawCertificates process each individual rawCertificate
 			String rawCertificateRegex = "\\+-+\\+\\n\\s+Entitlement Certificate\\n\\+-+\\+";
 			List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
@@ -299,12 +331,11 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 				
 				// assert that there is only one group of certData found in the list
 				if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificate.  Expected to parse only one group of certificate data.");
-				Map<String,String> certData = certDataList.get(0);
+				certData.add(certDataList.get(0));
 				
 				// create a new EntitlementCert
-				entitlementCerts.add(new EntitlementCert(rawCertificate, certData));
 			}
-			return entitlementCerts;
+			return certData;
 		}
 
 				
