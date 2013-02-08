@@ -90,6 +90,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	public void ManPageExistanceForInstallNumMigrateToRhsm_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = MigrationTests.installNumTool;
+		SSHCommandResult result;
 		// is the command installed?
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
@@ -98,8 +99,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			throw new SkipException(command+" is not installed and therefore its man page cannot be installed.");
 		} else if (!clienttasks.redhatReleaseX.equals("5")) {
 			log.info("The man page for '"+command+"' should only be installed on RHEL5.");
-			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
+			//RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);		// exit codes changed on RHEL7
+			result = client.runCommandAndWait("man -P cat "+command);
+			Assert.assertEquals(result.getStdout()+result.getStderr().trim(),"No manual entry for "+command);
+			//RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);		// exit codes changed on RHEL7
+			result = client.runCommandAndWait("whatis "+command);
+			Assert.assertEquals(result.getStdout()+result.getStderr().trim(),command+": nothing appropriate"+(Integer.valueOf(clienttasks.redhatReleaseX)>=7?".":""));	// the expected message is appended with a period on RHEL7+
 			throw new SkipException("The migration tool '"+command+"' and its man page is only applicable on RHEL5.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
