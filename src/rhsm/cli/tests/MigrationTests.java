@@ -143,7 +143,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","blockedByBug-799103","blockedByBug-849274"},
+			groups={"AcceptanceTests","blockedByBug-799103","blockedByBug-849274","blockedByBug-909436"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -151,6 +151,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// get a list of all the existing product cert files
 		SSHCommandResult result = client.runCommandAndWait("ls "+baseProductsDir+"/*.pem");
+		Assert.assertEquals(result.getExitCode(), new Integer(0), "Exit code from a list of all migration data product certs.");
 		List<String> existingProductCertFiles = Arrays.asList(result.getStdout().split("\\n"));
 		boolean allExitingProductCertFilesAreMapped = true;
 		for (String existingProductCertFile : existingProductCertFiles) {
@@ -822,6 +823,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhnPluginConfFile, "enabled"),"1","The enabled yum plugin configuration for RHN.");
 			
 			return;
+		} else if (rhnChannelsConsumed.isEmpty()) {
+			log.warning("Modifying expected results when the current RHN Classically registered system is not consuming any RHN channels.");
+			String expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";
+			Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' when no RHN Classic channels are being consumed: "+expectedStdout);
+			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' when no RHN Classic channels are being consumed.");
+			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered after '"+rhnMigrateTool+"' exits due to: "+expectedStdout);
+			return;
 		}
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when all of the channels are mapped.");
 		
@@ -1482,8 +1490,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,regUsername,regPassword,regOrg,null);
 		String expectedStdout = "Unable to locate SystemId file. Is this system registered?";
-		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' without having registered to RHN Classic ended with: "+expectedStdout);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without having registered to RHN Classic.");
+		
+		if (rhnBaseChannel==null) {
+			log.warning("Modifying expected results when the current RHN Classically registered system has no base channel.");
+			expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";
+		}
+		
+		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file ended with: "+expectedStdout);
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file.");
 	}
 	
 	
@@ -1653,7 +1667,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// get the base channel
 		clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		List<String> rhnChannels = getCurrentRhnClassicChannels();
-		Assert.assertEquals(rhnChannels.size(), 1, "The number of base RHN Classic base channels this system is consuming.");
+		//Assert.assertEquals(rhnChannels.size(), 1, "The number of base RHN Classic base channels this system is consuming.");
+		if (rhnChannels.isEmpty()) {
+			log.warning("When no RHN channels are available to this classically registered system, no product certs will be migrated to RHSM.");
+			return; 
+		}
 		rhnBaseChannel = getCurrentRhnClassicChannels().get(0);
 
 		// get all of the available RHN Classic child channels available for consumption under this base channel
@@ -2026,9 +2044,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = client.runCommandAndWait(command);
 		
 		// assert result
-		Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to list currently consumed RHN Classic channels.");
-		Assert.assertEquals(result.getStderr(), "","Stderr from attempt to list currently consumed RHN Classic channels.");
+		String tolerateStderrMsg = "This system is not associated with any channel.";
+		if (result.getExitCode()==1 && result.getStderr().trim().equals(tolerateStderrMsg)) {
+			log.warning(tolerateStderrMsg);
+		} else {
+			Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to list currently consumed RHN Classic channels.");
+			Assert.assertEquals(result.getStderr(), "","Stderr from attempt to list currently consumed RHN Classic channels.");
+		}
 		
+		// parse the rhnChannels from stdout 
 		List<String> rhnChannels = new ArrayList<String>();
 		if (!result.getStdout().trim().equals("")) {
 			rhnChannels	= Arrays.asList(result.getStdout().trim().split("\\n"));
