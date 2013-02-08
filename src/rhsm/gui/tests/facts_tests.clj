@@ -93,6 +93,23 @@
       (verify (= gui-val cli-val)))
     (finally (tasks/ui click :close-facts))))
 
+(defn ^{Test {:groups ["facts"
+                       "blockedByBug-909294"
+                       "blockedByBug-839772"]}}
+  check_available_service_levels [_]
+  (try
+    (let [rawlevels (.getStdout
+                     (.runCommandAndWait @clientcmd
+                                         "subscription-manager service-level --list"))
+          cli-levels (drop 3 (split-lines rawlevels))
+          expected-levels (sort (conj cli-levels "Not Set"))]
+      (tasks/ui click :preferences)
+      (tasks/ui waittillwindowexist :system-preferences-dialog 10)
+      (let [gui-levels (sort (tasks/ui getallitem :service-level-dropdown))]
+        (verify (= expected-levels gui-levels))
+        (verify (not (nil? (some #{"Not Set"} gui-levels))))))
+    (finally (tasks/ui click :close-system-prefs))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

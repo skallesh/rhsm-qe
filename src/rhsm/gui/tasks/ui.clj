@@ -74,7 +74,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     ;; now called remove
                                         ;:unsubscribe
                                     :remove
-                                    :system-preferences
+                                    :preferences
                                     :configure-proxy
                                     :view-system-facts
                                     :help
@@ -222,7 +222,10 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :file-cancel "Cancel"
          :file-open "Open"}))
     (define-elements (windows :system-preferences-dialog)
-      {:close-system-prefs "Close"})
+      {:close-system-prefs "Close"
+       ;; these are bullshit, change for bug 909294
+       :service-level-dropdown "cboNotSet"
+       :release-dropdown "cboNotSet1"})
     (define-elements (windows :date-selection-dialog)
       {:today "Today"})
     (define-elements (windows :subscription-redemption-dialog)
