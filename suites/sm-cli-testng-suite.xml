@@ -585,18 +585,6 @@
 		</groups>
 	</test>
 	
-	<test name="CLI: RAM Tests">
-		<packages>
-			<package name="rhsm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="RAMTests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
 	<test name="CLI: Bugzilla Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />

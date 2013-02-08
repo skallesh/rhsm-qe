@@ -272,7 +272,61 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 servertasks.restartTomcat();
 	 }
 
+	 
+		static public List<EntitlementCert> parseStdoutFromOpensslX509(String rawCertificates) {
+			Map<String,String> regexes = new HashMap<String,String>();
+			//regexes.put("issuer",				"Issuer:\\s*(.*)");
+			regexes.put("serialString",			"Certificate:(?:(?:\\n.+)+)Serial: (.+)");
+			regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
+			regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
+			regexes.put("file",					"Certificate:(?:(?:\\n.+)+)Path: (.+)");
+			regexes.put("version",				"Certificate:(?:(?:\\n.+)+)Version: (.+)");
+			regexes.put("RAM LIMIT",			"Product:(?:(?:\\n.+)+)Version: (.+)");
+			
+			// split the rawCertificates process each individual rawCertificate
+			String rawCertificateRegex = "\\+-+\\+\\n\\s+Entitlement Certificate\\n\\+-+\\+";
+			List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+			for (String rawCertificate : rawCertificates.split(rawCertificateRegex)) {
+				
+				// strip leading and trailing blank lines and skip blank rawCertificates
+				rawCertificate = rawCertificate.replaceAll("^\\n*","").replaceAll("\\n*$", "");
+				if (rawCertificate.length()==0) continue;
+				List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+				for(String field : regexes.keySet()){
+					Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+					addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+				}
+				
+				// assert that there is only one group of certData found in the list
+				if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificate.  Expected to parse only one group of certificate data.");
+				Map<String,String> certData = certDataList.get(0);
+				
+				// create a new EntitlementCert
+				entitlementCerts.add(new EntitlementCert(rawCertificate, certData));
+			}
+			return entitlementCerts;
+		}
 
+				
+		
+		static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {
+			boolean foundMatches = false;
+			Matcher matcher = regex.matcher(to_parse);
+			int currListElem=0;
+			while (matcher.find()){
+				if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
+				Map<String,String> matchMap = matchList.get(currListElem);
+				matchMap.put(sub_key, matcher.group(1).trim());
+				matchList.set(currListElem, matchMap);
+				currListElem++;
+				foundMatches = true;
+			}
+	        if (!foundMatches) {
+	        	//log.warning("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
+	        	log.finer("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
+	        }
+			return foundMatches;
+		}
 	// Candidates for an automated Test:
 	// TODO http://qe-india.pad.engineering.redhat.com/48?
 	/*
