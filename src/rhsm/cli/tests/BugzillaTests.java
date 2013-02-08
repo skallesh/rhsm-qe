@@ -214,7 +214,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify rhsm log for Update With No Installed Products", 
-			groups = {"UpdateWithNoInstalledProducts","blockedByBug-746241" }, enabled = true)
+			groups = {"UpdateWithNoInstalledProducts","blockedByBug-746241","blockedByBug-907638" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException,Exception {
 		Boolean actual = false;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
@@ -821,7 +821,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "Verify unsubscribe from multiple subscriptions", groups = {
-			"UnsubscribeFromMultipleEntitlementsTest", "blockedByBug-867766" }, enabled = true)
+			"UnsubscribeFromMultipleEntitlementsTest", "blockedByBug-867766","blockedByBug-906550" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 50230)
 	public void UnsubscribeFromMultipleEntitlements() throws JSONException,
 	Exception {
@@ -849,7 +849,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				serialOne, serialTwo).getStdout();
 		System.out.println(result);
 		String expected = "Successfully removed serial numbers:" + "\n" + "   "
-				+ serialOne + "\n" + "   " + serialTwo+"\n"+"Any local-only certificates have been deleted.";
+				+ serialOne + "\n" + "   " + serialTwo;
 		Assert.assertEquals(result.trim(), expected);
 	}
 
@@ -1048,7 +1048,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder", groups = {
-			"VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630" }, enabled = true)
+			"VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630","blockedByBug-906550" }, enabled = true)
 	public void VerifyUnsubscribeAllForExpiredSubscription()
 			throws JSONException, Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
