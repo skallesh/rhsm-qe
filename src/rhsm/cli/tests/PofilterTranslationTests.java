@@ -51,11 +51,20 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   
  *   https://github.com/translate/translate
  *   
- *   Translation Bug Reporting Process
- *   https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nBugReportingProcess
+ *   Translation Bug Reporting Process:
+ *   	https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nBugReportingProcess
  *   
- *   Contacts:
- *   https://engineering.redhat.com/rt/Ticket/Display.html?id=180955
+ *   Translation Ticket Requests:
+ *   	Subscription Manger 1.1.X Translation Request
+ *   	https://engineering.redhat.com/rt/Ticket/Display.html?id=180955
+ *   	https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.1.X
+ *   
+ *   	Subscription Manger 1.8.X Translation Request
+ *   	https://engineering.redhat.com/rt/Ticket/Display.html?id=187204
+ *   	https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.8.X
+ *   
+ *   Translators:
+ *   
 			as		[ngoswami@redhat.com]	(Nilamdyuti Goswami)
 			bn-IN	[runab@redhat.com]		(Runa Bhattacharjee)
 			de_DE	[hpeters@redhat.com]	(Hedda Peters)
@@ -77,6 +86,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 			te		[kkrothap@redhat.com]	(Krishnababu Krothap)
 			zh-CN	[lliu@redhat.com]		(Leah Liu)
 			zh-TW	[tchuang@redhat.com]	(Terry Chuang)
+			
  *   
  **/
 
