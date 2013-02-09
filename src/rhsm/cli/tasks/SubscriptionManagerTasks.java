@@ -2967,9 +2967,10 @@ public class SubscriptionManagerTasks {
 	 * @param password
 	 * @param org
 	 * @param serverurl TODO
+	 * @param insecure TODO
 	 * @return
 	 */
-	public SSHCommandResult environments_(String username, String password, String org, String serverurl, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult environments_(String username, String password, String org, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " environments";
@@ -2977,6 +2978,7 @@ public class SubscriptionManagerTasks {
 		if (password!=null)				command += " --password="+password;
 		if (org!=null)					command += " --org="+org;
 		if (serverurl!=null)			command += " --serverurl="+serverurl;
+		if (insecure!=null && insecure)	command += " --insecure";
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
@@ -2991,11 +2993,12 @@ public class SubscriptionManagerTasks {
 	 * @param password
 	 * @param org
 	 * @param serverurl TODO
+	 * @param insecure TODO
 	 * @return
 	 */
-	public SSHCommandResult environments(String username, String password, String org, String serverurl, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult environments(String username, String password, String org, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = environments_(username, password, org, serverurl, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = environments_(username, password, org, serverurl, insecure, proxy, proxyuser, proxypassword);
 		
 		// TODO assert results...
 		

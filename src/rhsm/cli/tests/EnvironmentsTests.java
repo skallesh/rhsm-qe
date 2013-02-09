@@ -97,13 +97,13 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptEnvironmentsWithoutOrg_Test() {
 		
-		SSHCommandResult environmentsResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,null,null,null,null, null);
+		SSHCommandResult environmentsResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,null,null,null,null, null, null);
 		Assert.assertEquals(environmentsResult.getStderr().trim(), "", "Stderr from environments without specifying the --org option.");
 		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organization with --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getExitCode(), Integer.valueOf(255),"Exit code from environments when executed without an org option.");
 
-		environmentsResult = clienttasks.environments_(null,null,null,null,null,null, null);
+		environmentsResult = clienttasks.environments_(null,null,null,null,null,null, null, null);
 		Assert.assertEquals(environmentsResult.getStderr().trim(), "", "Stderr from environments without specifying the --org option.");
 		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organization with --org", "Stdout from environments without specifying the --org option.");
@@ -136,7 +136,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		String prefixBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
 		
 		// environments with a serverurl
-		SSHCommandResult sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,clientOrg,serverurl, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,clientOrg,serverurl, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null)	Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --serverurl="+serverurl+" and other options:");
@@ -165,6 +165,46 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		if (server_port!=null)		clienttasks.config(null,null,true,new String[]{"server","port",server_port});
 		if (server_prefix!=null)	clienttasks.config(null,null,true,new String[]{"server","prefix",server_prefix});
 	}
+	
+	
+	
+	protected String server_ca_cert_dir = null;
+	@BeforeGroups(value={"EnvironmentsWithInsecure_Test"}, groups={"setup"})
+	public void beforeEnvironmentsWithInsecure_Test() {
+		if (clienttasks==null) return;
+		server_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "ca_cert_dir");
+	}
+	@Test(	description="subscription-manager: orgs with --insecure",
+			groups={"EnvironmentsWithInsecure_Test","blockedByBug-844411"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void EnvironmentsWithInsecure_Test() {
+		SSHCommandResult sshCommandResult;
+		
+		// calling environments without insecure should pass
+		sshCommandResult = clienttasks.environments(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, false, null, null, null);
+		
+		// change the server.ca_cert_dir configuration to simulate a missing candlepin ca cert
+		sshCommandResult = clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir","/tmp"});
+		
+		// calling environments without insecure should now fail (throwing stderr "certificate verify failed")
+		sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, false, null, null, null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the environments command when configuration server.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the environments command when configuration server.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the environments command when configuration server.ca_cert_dir has been falsified.");
+		
+		// calling environments with insecure should now pass
+		sshCommandResult = clienttasks.environments(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, true, null, null, null);
+		
+		// assert that option --insecure did NOT persist to rhsm.conf
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure"), "0", "Expected value of "+clienttasks.rhsmConfFile+" server.insecure configuration.  Use of the --insecure option when calling the environments module should NOT be persisted to rhsm.conf.");
+	}
+	@AfterGroups(value={"EnvironmentsWithInsecure_Test"},groups={"setup"})
+	public void afterEnvironmentsWithInsecure_Test() {
+		clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir",server_ca_cert_dir});
+	}
+	
+	
 	
 	
 	
