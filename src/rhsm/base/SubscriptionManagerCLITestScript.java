@@ -245,7 +245,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// rhsm.conf [rhsmcertd] configurations
 		//if (!sm_rhsmcertdCertFrequency.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", sm_rhsmcertdCertFrequency);				else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");	// name changed by bug 882459
 		//if (!sm_rhsmcertdHealFrequency.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "healFrequency", sm_rhsmcertdHealFrequency);				else sm_rhsmcertdHealFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "healFrequency");	// name changed by bug 882459
-		if (!sm_rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", sm_rhsmcertdCertFrequency);				else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certCheckInterval");
+		if (!sm_rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certCheckInterval", sm_rhsmcertdCertFrequency);			else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certCheckInterval");
 		if (!sm_rhsmcertdHealFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "autoAttachInterval", sm_rhsmcertdHealFrequency);			else sm_rhsmcertdHealFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "autoAttachInterval");
 	
 		smt.initializeFieldsFromConfigFile();

@@ -2948,8 +2948,10 @@ public class SubscriptionManagerTasks {
 		defaultNames.add("productCertDir");
 		defaultNames.add("entitlementCertDir");
 		defaultNames.add("consumerCertDir");
-		defaultNames.add("certFrequency");
-		defaultNames.add("healFrequency");
+		//defaultNames.add("certFrequency");	// obsoleted by bug 882459
+		//defaultNames.add("healFrequency");	// obsoleted by bug 882459
+		defaultNames.add("certCheckInterval");
+		defaultNames.add("autoAttachInterval");
 		
 		// lowercase all of the defaultNames when requested
 		if (toLowerCase) for (String defaultName : defaultNames) {
