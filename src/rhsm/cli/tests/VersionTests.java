@@ -147,7 +147,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		
 		// make sure we are registered
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null);
 		
 		String expectedType = "FIXME_TEST: UNKNOWN CANDLEPIN TYPE";
 		if (sm_serverType==CandlepinType.standalone)	expectedType = "Red Hat Subscription Management";	// "subscription management service"; changed by bug 852328
@@ -169,7 +169,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		}
 
 		// make sure we are registered
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null);
 		
 		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
 		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
@@ -224,7 +224,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!versionResult.getStderr().contains(error),"Stderr from the version report does NOT contain an '"+error+"' message (while unregistered).");
 		
 		// assert results from version do not contain an error (while registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null);
 		versionResult = clienttasks.version();
 		Assert.assertTrue(!versionResult.getStdout().contains(error),"Stdout from the version report does NOT contain an '"+error+"' message (while registered).");
 		Assert.assertTrue(!versionResult.getStderr().contains(error),"Stderr from the version report does NOT contain an '"+error+"' message (while registered).");

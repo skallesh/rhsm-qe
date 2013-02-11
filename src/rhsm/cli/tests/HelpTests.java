@@ -571,6 +571,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--environment=ENVIRONMENT");
 		options.add("--autosubscribe");
 		options.add("--auto-attach");					// added by bug 876340
+		options.add("--insecure");						// added by bug 844411
 		options.add("--force");
 		options.add("--activationkey=ACTIVATION_KEYS");	// Bug 874755 - help message terminology for cli options that can be specified in multiplicity 
 		options.add("--servicelevel=SERVICE_LEVEL");

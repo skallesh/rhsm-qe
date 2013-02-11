@@ -72,7 +72,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
-				(String) null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
 			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 			
@@ -102,7 +102,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
-				(String) null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
 			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 			
@@ -137,7 +137,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
-				(String) null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.productId.contains("ram")){
 
@@ -158,7 +158,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		int healFrequency=2;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
@@ -180,7 +180,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	public void AutoSubscribeRamBasedSubscription() throws JSONException,Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		
 		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
 				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
@@ -201,7 +201,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	public void PartailSubscriptionOfRamBasedSubscription() throws JSONException,Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
 			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
@@ -234,7 +234,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	public void RamBasedSubscriptionInfoInEntitlementCert() throws JSONException,Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, false, null, null,
-				(String) null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
 			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
@@ -258,7 +258,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		int expected=1;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		factsMap.put("memory.memtotal", String.valueOf(value*1));
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
 		int ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));

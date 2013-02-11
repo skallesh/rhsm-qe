@@ -1524,7 +1524,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
 		clienttasks.removeRhnSystemIdFile();
-		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, true, null, null, null, null));
+		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, null, null, null));
 		SSHCommandResult sshCommandResult;
 		if (isCurrentlyConfiguredServerTypeHosted()) {
 			// note that the validity of the username and password really do not matter for this test
@@ -2328,7 +2328,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// predict the valid service levels that will be available to the migrated consumer
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(regUsername==null?sm_rhnUsername:regUsername, regPassword==null?sm_rhnPassword:regPassword, regOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(regUsername==null?sm_rhnUsername:regUsername, regPassword==null?sm_rhnPassword:regPassword, regOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
 		String orgKey = CandlepinTasks.getOwnerKeyOfConsumerId(regUsername==null?sm_rhnUsername:regUsername, regPassword==null?sm_rhnPassword:regPassword, sm_serverUrl, consumerId);
 		List<String> regServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(regUsername==null?sm_rhnUsername:regUsername, regPassword==null?sm_rhnPassword:regPassword, sm_serverUrl, orgKey);	
 		clienttasks.unregister(null, null, null);

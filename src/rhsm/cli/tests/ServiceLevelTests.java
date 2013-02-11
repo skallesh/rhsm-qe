@@ -203,7 +203,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 
 		// test while registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null, null, null, null);
 		result = clienttasks.service_level_(null, true, null, null, sm_clientUsername, sm_clientPassword+x, sm_clientOrg, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid credentials");
 		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(), "Stderr from service-level --list with invalid credentials");
@@ -228,7 +228,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 
 		// test while registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null, null, null, null);
 		result = clienttasks.service_level_(null, true, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
 		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found.",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
@@ -245,7 +245,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result;
 				
 		// register with no service-level
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true, null, null, null, null));
 		
 		// get the current consumer object and assert that the serviceLevel persisted
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
@@ -264,7 +264,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	public void ServiceLevelShowAvailable_Test(String username, String password, String org) throws JSONException, Exception  {
 				
 		// register with no service-level
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(username,password,org,null,null,null,null,null,null,null,(List<String>)null,null,null,true,null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(username,password,org,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true, null, null, null, null));
 		
 		// get the current consumer object and assert that the serviceLevel is empty (value is "")
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,sm_serverUrl,"/consumers/"+consumerId));
@@ -337,7 +337,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 		// attempt the registration
 		String unavailableServiceLevel = "FOO";
-		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, unavailableServiceLevel, null, (String)null, null, null, true, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, unavailableServiceLevel, null, (String)null, null, null, null, true, null, null, null, null);
 		String msg = "Cannot set a service level for a consumer that is not available to its organization."; // before Bug 795798 - Cannot set a service level for a consumer that is not available to its organization.
 		//msg = String.format("Service level %s is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);
 		msg = String.format("Service level '%s' is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);
@@ -362,7 +362,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 
 		// register with autosubscribe specifying a valid service level
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, serviceLevel, null, (String)null, null, null, true, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, serviceLevel, null, (String)null, null, null, null, true, null, null, null, null));
 		
 		// get the current consumer object and assert that the serviceLevel persisted
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
@@ -399,11 +399,11 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		
 		// register with autosubscribe specifying a valid service level and get the installed product status
-		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithServiceLevel= InstalledProduct.parse(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, serviceLevel, null, (String)null, null, null, true, null, null, null, null).getStdout());
+		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithServiceLevel= InstalledProduct.parse(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, serviceLevel, null, (String)null, null, null, null, true, null, null, null, null).getStdout());
 		
 		// register with autosubscribe specifying a mixed case service level and get the installed product status
 		String mixedCaseServiceLevel = randomizeCaseOfCharactersInString(serviceLevel);
-		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel= InstalledProduct.parse(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, mixedCaseServiceLevel, null, (String)null, null, null, true, null, null, null, null).getStdout());
+		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel= InstalledProduct.parse(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, mixedCaseServiceLevel, null, (String)null, null, null, null, true, null, null, null, null).getStdout());
 
 		// assert that the two lists are identical (independent of the serviceLevel case specified during registration)
 		Assert.assertEquals(installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel.size(), clienttasks.getCurrentProductCertFiles().size(), "The registration output displayed the same number of installed product status's as the number of installed product certs.");
@@ -437,7 +437,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	public void AutoSubscribeWithUnavailableServiceLevel_Test() {
 		
 		// register with force
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
 		// subscribe with auto specifying an unavailable service level
 		SSHCommandResult result = clienttasks.subscribe_(true,"FOO",(String)null,null,null,null,null,null,null, null, null);
@@ -458,7 +458,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 		
 		// ensure system is registered
-		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "AutoSubscribeWithServiceLevelConsumer", null, null, null, null, (String)null, null, null, null, false, null, null, null);
+		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "AutoSubscribeWithServiceLevelConsumer", null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
 		
 		// remember this initial service level preference for this consumer
 		String initialConsumerServiceLevel = clienttasks.getCurrentServiceLevel();
@@ -574,7 +574,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// system was already registered by dataProvider="getSubscribeWithAutoAndServiceLevelData"
 		if (clienttasks.getCurrentConsumerId()==null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
 		}
 		
 		// start fresh by returning all entitlements
@@ -635,7 +635,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		
 		// register with autosubscribe and a randomize case serviceLevel
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, seRvICElevEl, null, (List<String>)null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, seRvICElevEl, null, (List<String>)null, null, null, null, true, false, null, null, null);
 		
 		// assert that the installed ProductId is "Subscribed"
 		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", installedProductId, clienttasks.getCurrentlyInstalledProducts());
@@ -669,7 +669,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(jsonOrg.get("defaultServiceLevel"), defaultServiceLevel, "The defaultServiceLevel update to org '"+org+"' appears successful on the candlepin server.");
 		
 		// register and assert the consumer's service level is set to the new org default
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), defaultServiceLevel, "Immediately upon registering, the consumer's service level preference was set to the org's default.");
 	}
 	
@@ -686,7 +686,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(jsonOrg.get("defaultServiceLevel"), JSONObject.NULL, "The defaultServiceLevel update to the org appears successful on the candlepin server.");
 		
 		// register and assert the consumer's service level is not set
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "Immediately upon registering, the consumer's service level preference was set to the org's default (which was unset).");
 	}
 	
@@ -719,7 +719,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	public void ServiceLevelSetWithExemptServiceLevel_Test() {
 			
 		// test while registered
-		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null, null, null);
+		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null, null, null, null);
 		
 		String exemptSericeLevel = sm_exemptServiceLevelsInUpperCase.get(SubscriptionManagerCLITestScript.randomGenerator.nextInt(sm_exemptServiceLevelsInUpperCase.size()));
 		SSHCommandResult result = clienttasks.service_level_(null, null, exemptSericeLevel, null, null, null, null, null, null, null, null);
@@ -794,7 +794,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelListIsUnique_Test(String username, String password, String org) {
 		
-		clienttasks.register(username, password, org,null,null,null,null,null,null,null,(String)null,null,null,true,null,null,null,null);
+		clienttasks.register(username, password, org,null,null,null,null,null,null,null,(String)null,null,null,null,true,null,null,null, null);
 		
 		List<String> availServiceLevels = clienttasks.getCurrentlyAvailableServiceLevels();
 		Set<String> uniqueServiceLevels = new HashSet<String>();

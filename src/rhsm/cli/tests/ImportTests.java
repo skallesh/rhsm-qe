@@ -607,7 +607,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		
 		// register
 		//clienttasks.unregister(null,null,null);	// avoid Bug 733525 - [Errno 2] No such file or directory: '/etc/pki/entitlement'
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 
 		// change the entitlementCertDir to a temporary location to store all of the entitlements that will be used for importing
 		originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
@@ -674,7 +674,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 
 		// change the entitlementCertDir to a temporary location to store all of the entitlements that will be used for importing
 		originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");

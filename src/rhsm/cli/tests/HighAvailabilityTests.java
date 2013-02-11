@@ -118,7 +118,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		if (sm_haUsername.equals("")) throw new SkipException("Skipping this test when no value was given for the High Availability Username");
 
 		// register the to an account that offers High Availability subscriptions
-		clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, true, null, null, null, null);
+		clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null);
 	}
 	
 	

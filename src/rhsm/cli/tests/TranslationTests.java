@@ -126,7 +126,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutEmailUsingLang_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		//SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null)
 		String lang = "de_DE";
 		log.info("Attempting to redeem without specifying email expecting output in language "+(lang==null?"DEFAULT":lang));

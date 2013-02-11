@@ -316,7 +316,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyConsumerCertsAreV1Certificates_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		Assert.assertEquals(consumerCert.version, "1.0", "The rct cat-cert tool reports this consumer cert to be a V1 Certificate: "+consumerCert);
 	}
@@ -328,7 +328,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertConsumerCertStatistics_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, false, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		Assert.assertEquals(consumerCert.version, "1.0", "The rct cat-cert tool reports this consumer cert to be a V1 Certificate: "+consumerCert);
 		CertStatistics certStatistics = clienttasks.getCertStatisticsFromCertFile(consumerCert.file);
@@ -391,7 +391,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertEntitlementCertStatistics_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, false, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
 
 		// get some entitlements!
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();

@@ -163,7 +163,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	public void UnsubscribeFromSerialWhenNotRegistered_Test() {
 	
 		// first make sure we are subscribed to a pool
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(0);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
@@ -210,7 +210,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAll_Test() {
 	
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		
 		// unsubscribe from all and assert # subscriptions are unsubscribed
@@ -229,7 +229,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAllSerials_Test() throws Exception {
 	
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		if (pools.isEmpty()) throw new SkipException("This test requires multiple available pools.");
 		
@@ -266,7 +266,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAllSerialsIncludingRevokedSerials_Test() {
 	
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("This test requires multiple available pools.");
 		
@@ -377,7 +377,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult unsubscribeResult;
 		SSHCommandResult removeResult;
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		unsubscribeResult = client.runCommandAndWait(clienttasks.command+" unsubscribe --serial=123");
 		removeResult = client.runCommandAndWait(clienttasks.command+" remove --serial=123");
 		Assert.assertEquals(unsubscribeResult.toString(), removeResult.toString(), "Results from 'unsubscribe' and 'remove' module commands should be identical.");
