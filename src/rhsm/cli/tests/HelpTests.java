@@ -467,7 +467,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--serverurl=SERVER_URL");
 		options.add("--username=USERNAME");
 		options.add("--password=PASSWORD");
-		options.add("--org=ORG");
+		options.add("--org=ORG_KEY");					// changed by bug 878097	options.add("--org=ORG");
 		options.add("--insecure");		// added by bug 844411
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
@@ -697,7 +697,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--serverurl=SERVER_URL");
 		options.add("--username=USERNAME");
 		options.add("--password=PASSWORD");
-		options.add("--org=ORG");
+		options.add("--org=ORG_KEY");					// changed by bug 878097	options.add("--org=ORG");
 		options.add("--show");
 		options.add("--list");
 		options.add("--set=SERVICE_LEVEL");
@@ -919,10 +919,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		else										options.add("-h, --help");	// rhel6
 		//options.add("--help-all");		// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
 		//options.add("--help-rhsmcertd");	// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
-		options.add("-c, --cert-interval=MINUTES");
-		//options.add("-i, --heal-interval=MINUTES");		// removed by bug 876753
-		options.add("--heal-interval=MINUTES");				// added by bug 876753 as a deprecation
-		options.add("-i, --auto-attach-interval=MINUTES");	// added by bug 876753
+		options.add("-c, --cert-check-interval=MINUTES"); 		// updated by bug 882459	options.add("-c, --cert-interval=MINUTES");
+		options.add("--cert-interval=MINUTES");					// added by bug 882459 as a deprecated, see --cert-check-interval
+		options.add("-i, --auto-attach-interval=MINUTES");		// updated by bug 876753	options.add("-i, --heal-interval=MINUTES");
+		options.add("--heal-interval=MINUTES");					// added by bug 876753 as a deprecated, see --auto-attach-interval
 		options.add("-n, --now");
 		options.add("-d, --debug");
 		for (String commandHelp : new String[]{command+" -?", command+" -h", command+" --help"}) {
@@ -931,7 +931,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			usage = command+" [OPTION...]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"876753","882459"}), commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
 		}
 
 		
