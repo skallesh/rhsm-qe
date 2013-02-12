@@ -10,6 +10,7 @@ test-output
 target
 lib
 tmp/*
+*.pyc
 
 ## editor files
 *~
