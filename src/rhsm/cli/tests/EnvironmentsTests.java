@@ -174,7 +174,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return;
 		server_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "ca_cert_dir");
 	}
-	@Test(	description="subscription-manager: orgs with --insecure",
+	@Test(	description="subscription-manager: environments with --insecure",
 			groups={"EnvironmentsWithInsecure_Test","blockedByBug-844411"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -197,7 +197,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		sshCommandResult = clienttasks.environments(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, true, null, null, null);
 		
 		// assert that option --insecure did NOT persist to rhsm.conf
-		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure"), "0", "Expected value of "+clienttasks.rhsmConfFile+" server.insecure configuration.  Use of the --insecure option when calling the environments module should NOT be persisted to rhsm.conf.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure"), "0", "Expected value of "+clienttasks.rhsmConfFile+" server.insecure configuration.  Use of the --insecure option when calling the environments module should NOT be persisted to rhsm.conf as true.");
 	}
 	@AfterGroups(value={"EnvironmentsWithInsecure_Test"},groups={"setup"})
 	public void afterEnvironmentsWithInsecure_Test() {

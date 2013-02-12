@@ -229,7 +229,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, true, null, null, null);
 		
 		// assert that option --insecure did NOT persist to rhsm.conf
-		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure"), "0", "Expected value of "+clienttasks.rhsmConfFile+" server.insecure configuration.  Use of the --insecure option when calling the orgs module should NOT be persisted to rhsm.conf.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure"), "0", "Expected value of "+clienttasks.rhsmConfFile+" server.insecure configuration.  Use of the --insecure option when calling the orgs module should NOT be persisted to rhsm.conf as true.");
 	}
 	@AfterGroups(value={"OrgsWithInsecure_Test"},groups={"setup"})
 	public void afterOrgsWithInsecure_Test() {

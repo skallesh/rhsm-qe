@@ -1367,7 +1367,7 @@ Expected Results:
 		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,true,null,null,null,null,null,null);
 		
 		// assert that option --insecure did persist to rhsm.conf
-		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure"), "1", "Expected value of "+clienttasks.rhsmConfFile+" server.insecure configuration.  Use of the --insecure option when calling the register module should be persisted to rhsm.conf.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure"), "1", "Expected value of "+clienttasks.rhsmConfFile+" server.insecure configuration.  Use of the --insecure option when calling the register module should be persisted to rhsm.conf as true.");
 		clienttasks.unregister(null, null, null);
 	}
 	@AfterGroups(value={"RegisterWithInsecure_Test"},groups={"setup"})

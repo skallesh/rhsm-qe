@@ -702,6 +702,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--list");
 		options.add("--set=SERVICE_LEVEL");
 		options.add("--unset");
+		options.add("--insecure");		// added by bug 844411
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");

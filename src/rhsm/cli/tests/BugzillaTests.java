@@ -722,7 +722,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,
-				null, null, null, null);
+				null, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(
 				sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,
@@ -1415,7 +1415,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(List<String>) null, null, null, null, true, null, null, null, null);
 		result = clienttasks.service_level_(null, false, null, null,
 				sm_clientUsername, sm_clientPassword, "MyOrg", null, null,
-				null, null);
+				null, null, null);
 		Assert.assertEquals(result.getStdout().trim(),
 				"Error: --org is only supported with the --list option");
 	}
@@ -1605,7 +1605,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					null, null, null, null, null, null, null);
 		}
 		clienttasks.service_level_(null, null, null, null, null,
-				availableService, null, null, null, null, null);
+				availableService, null, null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
@@ -1719,7 +1719,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,
-				null, null, null, null);
+				null, null, null, null, null);
 		File expectCertFile = new File(System.getProperty("automation.dir",
 				null) + "/expiredcerts/Expiredcert.pem");
 		RemoteFileTasks.putFile(client.getConnection(),
@@ -1762,7 +1762,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"),"A consumer's autoheal attribute value=true.");
-		clienttasks.service_level_(null, null, null, true, null, null, null,null, null, null, null);
+		clienttasks.service_level_(null, null, null, true, null, null, null,null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
@@ -1791,7 +1791,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String availableService = availableServiceLevelData.get(randomGenerator
 				.nextInt(availableServiceLevelData.size()));
 		clienttasks.service_level_(null, null, null, null, null, null, null,
-				null, null, null, null);
+				null, null, null, null, null);
 		clienttasks.subscribe_(true, availableService, (String) null, null,
 				null, null, null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks
@@ -2237,7 +2237,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"autohealPartial", "BugzillaTests" }, enabled = true)
 	public void unsetServicelevelBeforeGroup() {
 		clienttasks.service_level_(null, null, null, true, null, null, null,
-				null, null, null, null);
+				null, null, null, null, null);
 	}
 
 	@BeforeGroups(groups = "setup", value = { "VerifyDistinct", "AutoHeal",
