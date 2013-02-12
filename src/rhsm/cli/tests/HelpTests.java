@@ -300,6 +300,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("-h, --help");
 		options.add("--list");
 		options.add("--remove=REMOVE");
+		/*
+		// THIS HARD-CODED LIST IS NOT REALLY THE CORRECT TEST APPROACH BECAUSE THIS LIST IS
+		// ACTUALLY GENERATED DYNAMICALLY FROM THE UNION OF THE ACTUAL VALUES IN rhsm.conf
+		// AND THE DEFAULT VALUES IN defaultConfFileParameterNames().  THIS TEST SHOULD ONLY
+		// FAIL WHEN A NEW DEFAULT VALUE IS ADDED OR REMOVED THE SUBSCRIPTION MANAGER DEVELOPERS.
 		options.add("--server.ca_cert_dir=SERVER.CA_CERT_DIR");
 		options.add("--server.hostname=SERVER.HOSTNAME");
 		options.add("--server.insecure=SERVER.INSECURE");
@@ -355,6 +360,24 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--rhsmcertd.baseurl=RHSMCERTD.BASEURL");
 		options.add("--rhsmcertd.productcertdir=RHSMCERTD.PRODUCTCERTDIR");
 		options.add("--rhsmcertd.consumercertdir=RHSMCERTD.CONSUMERCERTDIR");
+		*/
+		// add the expected default configurations
+		for (String section : new String[]{"server","rhsm","rhsmcertd"}) {
+			for (String confFileParameterName : clienttasks.defaultConfFileParameterNames(null)) {
+				options.add(String.format("--%s.%s=%s.%s",section.toLowerCase(),confFileParameterName.toLowerCase(),section.toUpperCase(),confFileParameterName.toUpperCase()));
+			}
+		}
+		// add the unexpected configurations that were  added manually or remain as deprecated configurations from a subscription-manager upgrade
+		String confFileContents = RemoteFileTasks.runCommandAndAssert(client, "egrep -v  \"^\\s*(#|$)\" "+clienttasks.rhsmConfFile, 0).getStdout();
+		String section=null;
+		for (String line : confFileContents.split("\n")) {
+			line = line.trim();
+			if (line.isEmpty()) continue;
+			if (line.matches("\\[\\w+\\]")) {section=line.replaceFirst("\\[","").replaceFirst("\\]",""); continue;}
+			String parameterName = line.split("=|:",2)[0].trim();
+			if (clienttasks.defaultConfFileParameterNames(true).contains(parameterName.toLowerCase())) continue;
+			options.add(String.format("--%s.%s=%s.%s",section.toLowerCase(),parameterName.toLowerCase(),section.toUpperCase(),parameterName.toUpperCase()));
+		}
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
