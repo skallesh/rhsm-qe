@@ -567,7 +567,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--name=SYSTEMNAME");				// changed by bug 874816	options.add("--name=CONSUMERNAME");
 		options.add("--password=PASSWORD");
 		options.add("--consumerid=SYSTEMID");			// changed by bug 874816	options.add("--consumerid=CONSUMERID");
-		options.add("--org=ORG");
+		options.add("--org=ORG_KEY");					// changed by bug 878097	options.add("--org=ORG");
 		options.add("--environment=ENVIRONMENT");
 		options.add("--autosubscribe");
 		options.add("--auto-attach");					// added by bug 876340
