@@ -1382,12 +1382,12 @@ Expected Results:
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 627685 - subscription-manager-cli reregister without specifying consumerid may unintentionally remove entitlements
-	// TODO Bug 627665 - subscription-manager-cli reregister should not allow a --username to reregister using a --consumerid that belongs to someone else
-	// TODO Bug 668814 - firstboot and subscription-manager display "network error" on server 500
-	// TODO Bug 669395 - gui defaults to consumer name of the hostname and doesn't let you set it to empty string. cli defaults to username, and does let you set it to empty string
-	// TODO Bug 693896 - subscription-manager does not always reload dbus scripts automatically //done
-	// TODO Bug 719378 - White space in user name causes error //done
+	// TODO Bug 627685 - subscription-manager-cli reregister without specifying consumerid may unintentionally remove entitlements https://github.com/RedHatQE/rhsm-qe/issues/181
+	// TODO Bug 627665 - subscription-manager-cli reregister should not allow a --username to reregister using a --consumerid that belongs to someone else https://github.com/RedHatQE/rhsm-qe/issues/182
+	// TODO Bug 668814 - firstboot and subscription-manager display "network error" on server 500 https://github.com/RedHatQE/rhsm-qe/issues/183
+	// TODO Bug 669395 - gui defaults to consumer name of the hostname and doesn't let you set it to empty string. cli defaults to username, and does let you set it to empty string https://github.com/RedHatQE/rhsm-qe/issues/184
+	// TODO Bug 693896 - subscription-manager does not always reload dbus scripts automatically //done https://github.com/RedHatQE/rhsm-qe/issues/185
+	// TODO Bug 719378 - White space in user name causes error //done https://github.com/RedHatQE/rhsm-qe/issues/186
 	
 	
 	// Protected Class Variables ***********************************************************************

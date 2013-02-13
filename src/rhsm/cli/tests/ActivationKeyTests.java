@@ -748,9 +748,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 755677 - failing to add a virt unlimited pool to an activation key  (SHOULD CREATE AN UNLIMITED POOL IN A BEFORE CLASS FOR THIS BUG TO AVOID RESTARTING CANDLEPIN IN standalone=false)
-	// TODO Bug 749636 - subscription-manager register fails with consumerid and activationkey specified 
-	// TODO Bug 803814 - Registering with an activation key which has run out of susbcriptions results in a system in SAM, but no identity certificate 
+	// TODO Bug 755677 - failing to add a virt unlimited pool to an activation key  (SHOULD CREATE AN UNLIMITED POOL IN A BEFORE CLASS FOR THIS BUG TO AVOID RESTARTING CANDLEPIN IN standalone=false) https://github.com/RedHatQE/rhsm-qe/issues/113
+	// TODO Bug 749636 - subscription-manager register fails with consumerid and activationkey specified https://github.com/RedHatQE/rhsm-qe/issues/114
+	// TODO Bug 803814 - Registering with an activation key which has run out of susbcriptions results in a system in SAM, but no identity certificate https://github.com/RedHatQE/rhsm-qe/issues/115
 	
 	
 	

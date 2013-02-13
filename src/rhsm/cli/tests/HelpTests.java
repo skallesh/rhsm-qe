@@ -201,11 +201,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 694662 - the whitespace in the title line of man subscription-manager-gui is completely consumed
-	// TODO Bug 765905 - add man pages for subscription-manager-migration
-	// TODO Bug 812104 - Unable to tab complete new subscription-manager modules (release and service-level)
-	// TODO Bug 817117 - bash-completion of subscription-manager environments --<TAB><TAB> is not working
-	// TODO Bug 817390 - bash-completion of subscription-manager subscribe --<TAB><TAB> is not finding --servicelevel option
+	// TODO Bug 694662 - the whitespace in the title line of man subscription-manager-gui is completely consumed https://github.com/RedHatQE/rhsm-qe/issues/151
+	// TODO Bug 765905 - add man pages for subscription-manager-migration https://github.com/RedHatQE/rhsm-qe/issues/152
+	// TODO Bug 812104 - Unable to tab complete new subscription-manager modules (release and service-level) https://github.com/RedHatQE/rhsm-qe/issues/153
+	// TODO Bug 817117 - bash-completion of subscription-manager environments --<TAB><TAB> is not working https://github.com/RedHatQE/rhsm-qe/issues/154
+	// TODO Bug 817390 - bash-completion of subscription-manager subscribe --<TAB><TAB> is not finding --servicelevel option https://github.com/RedHatQE/rhsm-qe/issues/155
 	
 	
 	// Configuration Methods ***********************************************************************

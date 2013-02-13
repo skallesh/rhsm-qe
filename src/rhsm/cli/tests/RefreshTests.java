@@ -116,7 +116,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 665118 - Refresh pools will not notice change in provided products 
+	// TODO Bug 665118 - Refresh pools will not notice change in provided products https://github.com/RedHatQE/rhsm-qe/issues/180
 	
 	
 	

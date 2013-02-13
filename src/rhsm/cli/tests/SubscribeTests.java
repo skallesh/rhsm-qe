@@ -1037,23 +1037,23 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 668032 - rhsm not logging subscriptions and products properly //done --shwetha
-	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date //Done --shwetha
-	// TODO Bug 664847 - Autobind logic should respect the architecture attribute //working on
-	// TODO Bug 676377 - rhsm-compliance-icon's status can be a day out of sync - could use dbus-monitor to assert that the dbus message is sent on the expected compliance changing events
-	// TODO Bug 739790 - Product "RHEL Workstation" has a valid stacking_id but its socket_limit is 0
-	// TODO Bug 707641 - CLI auto-subscribe tries to re-use basic auth credentials.
+	// TODO Bug 668032 - rhsm not logging subscriptions and products properly //done --shwetha https://github.com/RedHatQE/rhsm-qe/issues/198
+	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date //Done --shwetha https://github.com/RedHatQE/rhsm-qe/issues/199
+	// TODO Bug 664847 - Autobind logic should respect the architecture attribute //working on https://github.com/RedHatQE/rhsm-qe/issues/200
+	// TODO Bug 676377 - rhsm-compliance-icon's status can be a day out of sync - could use dbus-monitor to assert that the dbus message is sent on the expected compliance changing events https://github.com/RedHatQE/rhsm-qe/issues/201
+	// TODO Bug 739790 - Product "RHEL Workstation" has a valid stacking_id but its socket_limit is 0 https://github.com/RedHatQE/rhsm-qe/issues/202
+	// TODO Bug 707641 - CLI auto-subscribe tries to re-use basic auth credentials. https://github.com/RedHatQE/rhsm-qe/issues/203
 	
 	// TODO Write an autosubscribe bug... 1. Subscribe to all avail and note the list of installed products (Subscribed, Partially, Not) 
-	//									  2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)//done --shwetha
-	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed //working on
-	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it
-	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions //done --shwetha
+	//									  2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)//done --shwetha https://github.com/RedHatQE/rhsm-qe/issues/204
+	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed //working on https://github.com/RedHatQE/rhsm-qe/issues/205
+	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it https://github.com/RedHatQE/rhsm-qe/issues/206
+	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions //done --shwetha https://github.com/RedHatQE/rhsm-qe/issues/207
 	// TODO Bug 740788 - Getting error with quantity subscribe using subscription-assistance page 
-	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
-	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions // done --shwetha
-	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.//done --shwetha
-	// TODO Bug 878994 - 500 errors in stage on subscribe/unsubscribe - NEED TO INSTALL A PRODUCT CERTS FROM TESTDATA AND MAKE SURE THEY DO NOT TRIP UP THE IT PRODUCT ADAPTERS
+	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12 https://github.com/RedHatQE/rhsm-qe/issues/208
+	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions // done --shwetha https://github.com/RedHatQE/rhsm-qe/issues/209
+	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.//done --shwetha https://github.com/RedHatQE/rhsm-qe/issues/211
+	// TODO Bug 878994 - 500 errors in stage on subscribe/unsubscribe - NEED TO INSTALL A PRODUCT CERTS FROM TESTDATA AND MAKE SURE THEY DO NOT TRIP UP THE IT PRODUCT ADAPTERS https://github.com/RedHatQE/rhsm-qe/issues/212
 
 	
 	// Configuration Methods ***********************************************************************

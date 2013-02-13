@@ -464,8 +464,8 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 
 	// Candidates for an automated Test:
-	// TODO Bug 861151 - subscription-manager release doesn't take variant into account (SORT OF DONE ALREADY)
-	// TODO	Bug 829111 - Release list command doesn't compare platform between content requried tag and product provided tag (REALLY A DUP OF 861151)
+	// TODO Bug 861151 - subscription-manager release doesn't take variant into account (SORT OF DONE ALREADY) https://github.com/RedHatQE/rhsm-qe/issues/187
+	// TODO	Bug 829111 - Release list command doesn't compare platform between content requried tag and product provided tag (REALLY A DUP OF 861151) https://github.com/RedHatQE/rhsm-qe/issues/187
 	
 	// Configuration methods ***********************************************************************
 	@BeforeClass (groups="setup")

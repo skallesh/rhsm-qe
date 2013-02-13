@@ -685,9 +685,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process 
-	// TODO Bug 701425 - NSS issues with more than one susbcription 
-	// TODO Bug 687970 - Currently no way to delete a content source from a product
+	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process https://github.com/RedHatQE/rhsm-qe/issues/127
+	// TODO Bug 701425 - NSS issues with more than one susbcription https://github.com/RedHatQE/rhsm-qe/issues/128
+	// TODO Bug 687970 - Currently no way to delete a content source from a product https://github.com/RedHatQE/rhsm-qe/issues/129
 	// how to create content (see Bug 687970): [jsefler@jsefler ~]$ curl -u admin:admin -k --request POST https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/content --header "Content-type: application/json" -d '{"contentUrl":"/foo/path","label":"foolabel","type":"yum","gpgUrl":"/foo/path/gpg","id":"fooid","name":"fooname","vendor":"Foo Vendor"}' | python -m json.tool
 	// how to delete content (see Bug 687970): [jsefler@jsefler ~]$ curl -u admin:admin -k --request DELETE https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/content/fooid
 	// how to get content    (see Bug 687970): [jsefler@jsefler ~]$ curl -u admin:admin -k --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/content/fooid

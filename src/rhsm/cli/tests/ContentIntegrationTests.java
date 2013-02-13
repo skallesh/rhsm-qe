@@ -358,9 +358,10 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 //	public void Test300() {}
 
 	// Candidates for an automated Test:
-	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process 
-	// TODO Bug 738517 - yum issuing a GET HTTPS request instead of CONNECT HTTPS request when accessing the CDN via HTTP proxy 
+	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process https://github.com/RedHatQE/rhsm-qe/issues/123
+	// TODO Bug 738517 - yum issuing a GET HTTPS request instead of CONNECT HTTPS request when accessing the CDN via HTTP proxy https://github.com/RedHatQE/rhsm-qe/issues/124
 	/* TODO
+	 * https://github.com/RedHatQE/rhsm-qe/issues/125
 	[Bug 756737] RC4.0 content testing: package conflict and/or content missing on RHEL Server - x86_64
 	[Bug 756752] RC4.0 content testing: package conflict and/or content missing on RHEL Server - i386
 	[Bug 756753] RC4.0 content testing: package conflict and/or content missing on RHEL Client - x86_64
@@ -372,7 +373,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	[Bug 756757] RC4.0 content testing: package conflict and/or content missing on RHEL Server for HPC Compute Node - x86_64
 	*/
 
-	/* TODO Bug 768012 - manifest import fails - 404 Resource Not Found 
+	/* TODO Bug 768012 - manifest import fails - 404 Resource Not Found https://github.com/RedHatQE/rhsm-qe/issues/126
 	 * On Fri, 2011-12-16 at 11:05 -0500, Keqin Hong wrote:
 > Hi Bryan and Dennis,
 > No problem we will add this check to our content testing.

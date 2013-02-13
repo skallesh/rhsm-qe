@@ -251,7 +251,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	// Candidates for an automated Test:
 	
 	// All of these are the same...
-	// TODO Bug 872310 - yum plugins subscription-manger and rhnplugin should agree to print to stdout or stderr	// when this bug is fixed, simply update the YumPluginMessageCase*_Tests
+	// TODO Bug 872310 - yum plugins subscription-manger and rhnplugin should agree to print to stdout or stderr	// when this bug is fixed, simply update the YumPluginMessageCase*_Tests  https://github.com/RedHatQE/rhsm-qe/issues/165
 	
 	
 	// Configuration methods ***********************************************************************

@@ -449,8 +449,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Candidates for an automated Test:
-	// TODO INVERSE OF VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test - should not be compliant for an expired subscription
-	// TODO Bug 727967 - Compliance Assistant Valid Until Date Detection Not Working
+	// TODO INVERSE OF VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test - should not be compliant for an expired subscription https://github.com/RedHatQE/rhsm-qe/issues/120
+	// TODO Bug 727967 - Compliance Assistant Valid Until Date Detection Not Working https://github.com/RedHatQE/rhsm-qe/issues/119
 	
 	
 	

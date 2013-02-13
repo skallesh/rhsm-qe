@@ -338,8 +338,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 744654 - [ALL LANG] [RHSM CLI]config module_ config Server port with balnk or incorrect text produces traceback.
-	// TODO Bug 807721 - upgrading subscription-manager to rhel63 does not set a default rhsm.manage_repos configuration
+	// TODO Bug 744654 - [ALL LANG] [RHSM CLI]config module_ config Server port with balnk or incorrect text produces traceback. https://github.com/RedHatQE/rhsm-qe/issues/121
+	// TODO Bug 807721 - upgrading subscription-manager to rhel63 does not set a default rhsm.manage_repos configuration https://github.com/RedHatQE/rhsm-qe/issues/122
 	
 	
 	// Protected Class Variables ***********************************************************************

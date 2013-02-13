@@ -69,10 +69,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 688469 - subscription-manager <module> --help does not work in localized environment.
-	// TODO Bug 684941 - Deleting a product with a subscription gives ugly error
-	// TODO Bug 629708 - import/export validation error wrapped
-	// TODO Bug 744536 - [ALL LANG] [RHSM CLI] unsubscribe module _unexpected 'ascii' code can't decode ...message.
+	// TODO Bug 688469 - subscription-manager <module> --help does not work in localized environment. https://github.com/RedHatQE/rhsm-qe/issues/144
+	// TODO Bug 684941 - Deleting a product with a subscription gives ugly error https://github.com/RedHatQE/rhsm-qe/issues/145
+	// TODO Bug 629708 - import/export validation error wrapped https://github.com/RedHatQE/rhsm-qe/issues/146
+	// TODO Bug 744536 - [ALL LANG] [RHSM CLI] unsubscribe module _unexpected 'ascii' code can't decode ...message. https://github.com/RedHatQE/rhsm-qe/issues/147
 	
 	
 	

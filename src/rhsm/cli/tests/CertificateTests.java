@@ -426,8 +426,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=659735
-	// TODO Bug 805690 - gpgcheck for repo metadata is ignored 
-	// TODO Bug 806958 - One empty certificate file in /etc/rhsm/ca causes registration failure
+	// TODO Bug 805690 - gpgcheck for repo metadata is ignored https://github.com/RedHatQE/rhsm-qe/issues/117
+	// TODO Bug 806958 - One empty certificate file in /etc/rhsm/ca causes registration failure https://github.com/RedHatQE/rhsm-qe/issues/118
 	
 	// Configuration methods ***********************************************************************
 	

@@ -123,12 +123,12 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	// Candidates for an automated Test:
-	// TODO Bug 733327 - stacking entitlements reports as distinct entries in cli list --installed 
-	// TODO Bug 740377 - Stacking Partially Compliant / Yellow State is Broken
-	// TODO Bug 743710 - Subscription manager displays incorrect status for partially subscribed subscription
+	// TODO Bug 733327 - stacking entitlements reports as distinct entries in cli list --installed https://github.com/RedHatQE/rhsm-qe/issues/193
+	// TODO Bug 740377 - Stacking Partially Compliant / Yellow State is Broken https://github.com/RedHatQE/rhsm-qe/issues/194
+	// TODO Bug 743710 - Subscription manager displays incorrect status for partially subscribed subscription https://github.com/RedHatQE/rhsm-qe/issues/195
 	//      MAYBE THIS ONE BELONGS IN COMPLIANCE TESTS?
-	// TODO Bug 726409 - [RFE] Support for certificate stacking 
-	// TODO Bug 845126 - system.entitlements_valid goes from valid to partial after oversubscribing 
+	// TODO Bug 726409 - [RFE] Support for certificate stacking https://github.com/RedHatQE/rhsm-qe/issues/196
+	// TODO Bug 845126 - system.entitlements_valid goes from valid to partial after oversubscribing https://github.com/RedHatQE/rhsm-qe/issues/197
 		
 	// Configuration methods ***********************************************************************
 

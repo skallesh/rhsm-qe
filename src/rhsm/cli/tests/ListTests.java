@@ -778,11 +778,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 709412 - subscription manager cli uses product name comparisons in the list command
-	// TODO Bug 710141 - OwnerInfo needs to only show info for pools that are active right now, for all the stats
-	// TODO Bug 734880 - subscription-manager list --installed reports differently between LEGACY vs NEW SKU subscriptions  (Note: Bryan says that this had nothing to do with Legacy vs Non Legacy - it was simply a regression in bundled products when stacking was introduced)
-	// TODO Bug 803386 - display product ID in product details pane on sm-gui and cli
-	// TODO Bug 805415 - s390x Partially Subscribed  (THIS IS EFFECTIVELY A COMPLIANCE TEST ON A 0 SOCKET SUBSCRIPTION/PRODUCT)
+	// TODO Bug 709412 - subscription manager cli uses product name comparisons in the list command https://github.com/RedHatQE/rhsm-qe/issues/166
+	// TODO Bug 710141 - OwnerInfo needs to only show info for pools that are active right now, for all the stats https://github.com/RedHatQE/rhsm-qe/issues/167
+	// TODO Bug 734880 - subscription-manager list --installed reports differently between LEGACY vs NEW SKU subscriptions  (Note: Bryan says that this had nothing to do with Legacy vs Non Legacy - it was simply a regression in bundled products when stacking was introduced) https://github.com/RedHatQE/rhsm-qe/issues/168
+	// TODO Bug 803386 - display product ID in product details pane on sm-gui and cli https://github.com/RedHatQE/rhsm-qe/issues/169
+	// TODO Bug 805415 - s390x Partially Subscribed  (THIS IS EFFECTIVELY A COMPLIANCE TEST ON A 0 SOCKET SUBSCRIPTION/PRODUCT) https://github.com/RedHatQE/rhsm-qe/issues/170
 	
 	
 	// Configuration methods ***********************************************************************

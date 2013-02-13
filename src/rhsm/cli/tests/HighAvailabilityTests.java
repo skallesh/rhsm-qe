@@ -320,10 +320,10 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 654442 - pidplugin and rhsmplugin should add to the yum "run with pkgs. list"
-	// TODO Bug 705068 - product-id plugin displays "duration"
-	// TODO Bug 706265 - product cert is not getting removed after removing all the installed packages from its repo using yum
-	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com
+	// TODO Bug 654442 - pidplugin and rhsmplugin should add to the yum "run with pkgs. list" https://github.com/RedHatQE/rhsm-qe/issues/156
+	// TODO Bug 705068 - product-id plugin displays "duration" https://github.com/RedHatQE/rhsm-qe/issues/157
+	// TODO Bug 706265 - product cert is not getting removed after removing all the installed packages from its repo using yum https://github.com/RedHatQE/rhsm-qe/issues/158
+	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com https://github.com/RedHatQE/rhsm-qe/issues/159
 	
 	/* 
 	------------------------------------------------------------

@@ -148,8 +148,8 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 655835 - Pools are no longer removed after their expiration date 
-	// TODO Bug 852630 - subscription-manager unsubscribe -all on expired subscriptions says "[Errno 2] No such file or directory: '/etc/pki/entitlement/1364069144416875315.pem'"	// DONE by skallesh
+	// TODO Bug 655835 - Pools are no longer removed after their expiration date https://github.com/RedHatQE/rhsm-qe/issues/132
+	// TODO Bug 852630 - subscription-manager unsubscribe -all on expired subscriptions says "[Errno 2] No such file or directory: '/etc/pki/entitlement/1364069144416875315.pem'"	// DONE by skallesh https://github.com/RedHatQE/rhsm-qe/issues/133
 	
 	
 

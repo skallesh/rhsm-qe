@@ -1547,14 +1547,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Candidates for an automated Test:
-	// TODO Bug 789007 - Migrate with normal user (non org admin) user .
-	// TODO https://tcms.engineering.redhat.com/case/130762/?from_plan=5223
-	// TODO Bug 816377 - rhn-migrate-classic-to-rhsm throws traceback when subscription-manager-migration-data is not installed
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=816364#c6
-	// TODO Bug 786450 - “Install-num-migrate-to-rhsm “ command not working as expected for ppc64 box (TODO FIGURE OUT IF EXISTING AUTOMATION ALREADY COVERS THIS ON PPC64)
-	// TODO Bug 863428 - Migration failed with message Organization A has more than one environment. 
-	// TODO Bug 866579 - rhn-migrate-classic-to-rhsm leaves system unregistered when a non-existant environment is specified/mistyped 
-	// TODO Bug 881952 - ssl.SSLError: The read operation timed out (during large rhn-migrate-classic-to-rhsm)
+	// TODO Bug 789007 - Migrate with normal user (non org admin) user . https://github.com/RedHatQE/rhsm-qe/issues/171
+	// TODO Bug 816377 - rhn-migrate-classic-to-rhsm throws traceback when subscription-manager-migration-data is not installed https://github.com/RedHatQE/rhsm-qe/issues/172
+	// TODO Bug 786450 - “Install-num-migrate-to-rhsm “ command not working as expected for ppc64 box (TODO FIGURE OUT IF EXISTING AUTOMATION ALREADY COVERS THIS ON PPC64) https://github.com/RedHatQE/rhsm-qe/issues/173
+	// TODO Bug 863428 - Migration failed with message Organization A has more than one environment. https://github.com/RedHatQE/rhsm-qe/issues/174
+	// TODO Bug 866579 - rhn-migrate-classic-to-rhsm leaves system unregistered when a non-existant environment is specified/mistyped https://github.com/RedHatQE/rhsm-qe/issues/175
+	// TODO Bug 881952 - ssl.SSLError: The read operation timed out (during large rhn-migrate-classic-to-rhsm) https://github.com/RedHatQE/rhsm-qe/issues/176
 	
 	// Configuration methods ***********************************************************************
 	

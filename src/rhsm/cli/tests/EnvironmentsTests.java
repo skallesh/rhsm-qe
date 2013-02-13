@@ -239,8 +239,8 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 734474 - better error message for missing enviroment on katello
-	// TODO Bug 738322 - Katello returning inaccurate message via subscription-manager when user has incorrect credentials 
+	// TODO Bug 734474 - better error message for missing enviroment on katello https://github.com/RedHatQE/rhsm-qe/issues/130
+	// TODO Bug 738322 - Katello returning inaccurate message via subscription-manager when user has incorrect credentials https://github.com/RedHatQE/rhsm-qe/issues/131
 	
 	// Configuration methods ***********************************************************************
 	

@@ -71,11 +71,11 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 744654 - [ALL LANG] [RHSM CLI]config module_ config Server port with blank or incorrect text produces traceback.
-	// TODO Cases in Bug 710172 - [RFE] Provide automated healing of expiring subscriptions//done
+	// TODO Bug 744654 - [ALL LANG] [RHSM CLI]config module_ config Server port with blank or incorrect text produces traceback. https://github.com/RedHatQE/rhsm-qe/issues/148
+	// TODO Cases in Bug 710172 - [RFE] Provide automated healing of expiring subscriptions//done https://github.com/RedHatQE/rhsm-qe/issues/149
 	// TODO   subcase Bug 746088 - autoheal is not super-subscribing on the day the current entitlement cert expires //done
 	// TODO   subcase Bug 746218 - auto-heal isn't working for partial subscription //done
-	// TODO Cases in Bug 726411 - [RFE] Support for certificate healing
+	// TODO Cases in Bug 726411 - [RFE] Support for certificate healing https://github.com/RedHatQE/rhsm-qe/issues/150
 	
 	
 	// Configuration methods ***********************************************************************

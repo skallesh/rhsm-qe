@@ -485,12 +485,12 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669513
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=664847#2
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=629670
-	// TODO Bug 706552 - Wrong DMI structures length: 3263 bytes announced, structures occupy 3265 bytes.
-	// TODO Bug 707525 - Facts update command displays consumed uuid
-	// TODO Bug 722239 - subscription-manager cli does not show all facts
-	// TODO Bug 700821 - Update of consumer facts does not update the update timestamp
-	// TODO Bug 866645 - [RFE] Omit interfaces from facts based on their type. 
-	// TODO Bug 874147 - python-ethtool api changed causing facts to list ipv4 address as "unknown"
+	// TODO Bug 706552 - Wrong DMI structures length: 3263 bytes announced, structures occupy 3265 bytes. https://github.com/RedHatQE/rhsm-qe/issues/137
+	// TODO Bug 707525 - Facts update command displays consumed uuid https://github.com/RedHatQE/rhsm-qe/issues/138
+	// TODO Bug 722239 - subscription-manager cli does not show all facts https://github.com/RedHatQE/rhsm-qe/issues/139
+	// TODO Bug 700821 - Update of consumer facts does not update the update timestamp https://github.com/RedHatQE/rhsm-qe/issues/140
+	// TODO Bug 866645 - [RFE] Omit interfaces from facts based on their type. https://github.com/RedHatQE/rhsm-qe/issues/141
+	// TODO Bug 874147 - python-ethtool api changed causing facts to list ipv4 address as "unknown" https://github.com/RedHatQE/rhsm-qe/issues/142
 	
 	// TODO create tests that overrides the facts, for example....  and the uses getSystemSubscriptionPoolProductDataAsListOfLists()
 	// see TODO MOVE THIS BLOCK OF TESTING INTO ITS OWN "RULES CHECK TEST" from SubscribeTests
@@ -507,7 +507,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	// [root@jsefler-onprem-server facts]# cat /etc/rhsm/facts/activator.facts 
 	// {"dmi.system.manufacturer": "MyDELLManfacturer","dmi.system.serial_number":"CNZFGH6"}
 	// https://engineering.redhat.com/trac/Entitlement/wiki/DellActivation
-	// TODO Bug 701458 - "We are currently processing your subscription activation, please check back later." should not render as an "Error activating subscription:"
+	// TODO Bug 701458 - "We are currently processing your subscription activation, please check back later." should not render as an "Error activating subscription:" https://github.com/RedHatQE/rhsm-qe/issues/143
 	// TODO activate test:
 	// against QA or Stage env...
 	// [root@jsefler-onprem-workstation facts]# subscription-manager activate --email=jsefler@redhat.com
