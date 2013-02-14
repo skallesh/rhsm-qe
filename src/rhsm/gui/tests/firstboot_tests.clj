@@ -108,13 +108,16 @@
      ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
      (verify (tasks/fbshowing? :firstboot-user)))))
 
-(defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
+(defn ^{Test {:groups ["firstboot"
+                       "blockedByBug-642660"
+                       "blockedByBug-863572"]}}
   firstboot_check_back_button_state [_]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
   (tasks/firstboot-register (@config :username) (@config :password))
-  (verify (= 1 (tasks/ui hasstate :firstboot-back "Sensitive"))))
+  (verify (= 1 (tasks/ui hasstate :firstboot-back "Sensitive")))
+  (verify (= 1 (tasks/ui hasstate :firstboot-forward "Sensitive"))))
 
 (defn ^{Test {:groups ["firstboot" "blockedByBug-872727"]
               :dependsOnMethods ["firstboot_check_back_button_state"]}}
@@ -123,13 +126,13 @@
   (verify (tasks/ui showing? :register-rhsm))
   (let [output (.getStdout (.runCommandAndWait @clientcmd "subscription-manager identity"))]
     (verify (tasks/substring? "This system is not yet registered" output))))
-;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=872727
-;; add section to check forward button
 
+;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
 (defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
   firstboot_skip_register [_]
   (kill_firstboot)
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (.runCommandAndWait @clientcmd "subscritption-manager clean")
   (.runCommandAndWait @clientcmd (str "subscription-manager register"
                                       " --username " (@config :username)
                                       " --password " (@config :password)
@@ -142,6 +145,20 @@
                     :firstboot-window
                     "Your system was registered for updates during installation.")))
 
+;; https://tcms.engineering.redhat.com/case/72670/?from_plan=2806
+(defn ^{Test {:groups ["firstboot"]}}
+ firstboot_check_register_sm_unregistered [_]
+  (kill_firstboot)
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (reset_firstboot)
+  (tasks/ui click :register-rhsm)
+  (tasks/ui click :firstboot-forward)
+  (verify (tasks/fbshowing? :firstboot-server-entry))
+  (tasks/ui click :firstboot-forward)
+  (verify (tasks/fbshowing? :firstboot-user)))
+
+
+
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
    ["sdf" "sdf" :invalid-credentials]
@@ -149,9 +166,8 @@
    ["" "password" :no-username]
    ["sdf" "" :no-password]])
 
-;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=742416
 ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=700601
-;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=705170
+
 
 (gen-class-testng)
 
