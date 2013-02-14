@@ -92,6 +92,24 @@
         y (group-by first x)]
     (zipmap (keys y) (map #(map second %) (vals y)))))
 
+(defn build-service-map
+  [& {:keys [all?]
+      :or {all? false}}]
+  (let [fil (fn [pool]
+              (into {}
+                    (map (fn [i] {(keyword (:name i)) (:value i)})
+                         (filter (fn [attr]
+                                   (if (or (= "support_type" (:name attr))
+                                           (= "support_level" (:name attr)))
+                                     true
+                                     false))
+                                 (:productAttributes pool)))))
+        x (map #(list (:productName %) (fil %))
+               (if all? (list-available true) (list-available false)))
+        y (group-by first x)
+        z (zipmap (keys y) (map #(map second %) (vals y)))]
+    (zipmap (keys z) (map first (vals z)))))
+
 (defn get-owners
   "Given a username and password, this function returns a list
   of owners associated with that user"
@@ -126,5 +144,3 @@
                                                 password
                                                 (server-url)
                                                 pool))
-
-

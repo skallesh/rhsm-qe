@@ -157,8 +157,6 @@
   (tasks/ui click :firstboot-forward)
   (verify (tasks/fbshowing? :firstboot-user)))
 
-
-
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
    ["sdf" "sdf" :invalid-credentials]
@@ -168,6 +166,4 @@
 
 ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=700601
 
-
 (gen-class-testng)
-

@@ -12,6 +12,7 @@
   (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]))
 
 (def productlist (atom {}))
+(def servicelist (atom {}))
 
 (defn build-subscription-map
   []
@@ -27,7 +28,8 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
-  (tasks/register-with-creds))
+  (tasks/register-with-creds)
+  (reset! servicelist (ctasks/build-service-map :all? true)))
 
 (defn subscribe_all
   "Subscribes to everything available"
@@ -316,6 +318,18 @@
     (verify (= label (tasks/ui gettextvalue :no-subscriptions-label))))
   (tasks/search)
   (verify (not (tasks/ui showing? :no-subscriptions-label))))
+
+;;https://tcms.engineering.redhat.com/case/77359/?from_plan=2110
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-911386"]
+              :dataProvider "subscriptions"}}
+  check_service_levels [_ subscription]
+  (tasks/ui selecttab :all-available-subscriptions)
+  (tasks/skip-dropdown :all-subscriptions-view subscription)
+  (let [guiservice (tasks/ui gettextvalue :all-available-support-level-and-type)
+        rawservice (get @servicelist subscription)
+        service (str (or (:support_level rawservice) "Not Set") ", " (:support_type rawservice))]
+    (verify (= guiservice service))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS

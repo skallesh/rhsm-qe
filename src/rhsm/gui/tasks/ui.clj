@@ -99,15 +99,13 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                  :installed-subscription
                                  :product
                                  :support-type
-                                 :support-type
                                  :support-level
                                  :provides-management
                                  :account
                                  ;; changed BZ 826735
                                  :start-end-date
                                  :subscription
-                                 :all-available-support-type
-                                 :all-available-support-level
+                                 :all-available-support-level-and-type
                                  :all-available-subscription])
                     {:product-id "Product ID Text"
                      ;;stacking id removed in BZ 821544
