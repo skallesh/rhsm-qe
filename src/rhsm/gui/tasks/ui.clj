@@ -222,8 +222,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :system-preferences-dialog)
       {:close-system-prefs "Close"
        ;; these are bullshit, change for bug 909294
-       :service-level-dropdown "cboNotSet"
-       :release-dropdown "cboNotSet1"})
+       :service-level-dropdown "sla_selection_combobox"
+       :release-dropdown "release_selection_combobox"})
     (define-elements (windows :date-selection-dialog)
       {:today "Today"})
     (define-elements (windows :subscription-redemption-dialog)
