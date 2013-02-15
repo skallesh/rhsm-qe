@@ -580,10 +580,10 @@ public class SubscriptionManagerTasks {
 		//updateConfFileParameter(rhsmConfFile, "healFrequency", String.valueOf(healFrequency));
 		// do it in one ssh call
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		if (certFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", "certFrequency".toLowerCase(), String.valueOf(certFrequency)});
-		else certFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "certFrequency"));
-		if (healFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", "healFrequency".toLowerCase(), String.valueOf(healFrequency)});
-		else healFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "healFrequency"));
+		if (certFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", /*"certFrequency" was renamed by bug 882459 to*/"certCheckInterval".toLowerCase(), String.valueOf(certFrequency)});
+		else certFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", /*"certFrequency" was renamed by bug 882459 to*/"certCheckInterval"));
+		if (healFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", /*"healFrequency" was renamed by bug 882459 to*/"autoAttachInterval".toLowerCase(), String.valueOf(healFrequency)});
+		else healFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", /*"healFrequency" was renamed by bug 882459 to*/"autoAttachInterval"));
 		if (listOfSectionNameValues.size()>0) config(null,null,true,listOfSectionNameValues);
 		
 		// mark the rhsmcertd log file before restarting the deamon
@@ -724,7 +724,8 @@ public class SubscriptionManagerTasks {
 		Integer hardWaitForFirstUpdateCheck = 120; // this is a dev hard coded wait (seconds) before the first check for updates is attempted  REFERENCE BUG 818978#c2
 		String rhsmcertdLogResultExpected;
 		rhsmcertdLogResultExpected = String.format(" Starting rhsmcertd...");																										Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
-		rhsmcertdLogResultExpected = String.format(" Healing interval: %.1f minute(s) [%d second(s)]",healFrequency*1.0,healFrequency*60);											Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
+		//rhsmcertdLogResultExpected = String.format(" Healing interval: %.1f minute(s) [%d second(s)]",healFrequency*1.0,healFrequency*60);/* msg was changed by bug 882459*/		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
+		rhsmcertdLogResultExpected = String.format(" Auto-attach interval: %.1f minute(s) [%d second(s)]",healFrequency*1.0,healFrequency*60);										Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
 		rhsmcertdLogResultExpected = String.format(" Cert check interval: %.1f minute(s) [%d second(s)]",certFrequency*1.0,certFrequency*60);										Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
 		rhsmcertdLogResultExpected = String.format(" Waiting %d second(s) [%.1f minute(s)] before running updates.",hardWaitForFirstUpdateCheck,hardWaitForFirstUpdateCheck/60.0 );	Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
 
@@ -740,7 +741,8 @@ public class SubscriptionManagerTasks {
 			SubscriptionManagerCLITestScript.sleep(hardWaitForFirstUpdateCheck*1000);
 			
 			// assert these cert and heal update/fail messages are logged (but give the system up to a minute to do it)
-			String healMsg = assertCertificatesUpdate? "(Healing) Certificates updated.":"(Healing) Update failed (255), retry will occur on next run.";
+			//String healMsg = assertCertificatesUpdate? "(Healing) Certificates updated.":"(Healing) Update failed (255), retry will occur on next run.";	// msg was changed by bug 882459
+			String healMsg = assertCertificatesUpdate? "(Auto-attach) Certificates updated.":"(Auto-attach) Update failed (255), retry will occur on next run.";
 			String certMsg = assertCertificatesUpdate? "(Cert Check) Certificates updated.":"(Cert Check) Update failed (255), retry will occur on next run.";
 			int i=0, delay=10;
 			do {	// retry every 10 seconds (up to a minute) for the expected update messages in the rhsmcertd log
