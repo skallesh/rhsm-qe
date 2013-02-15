@@ -2960,6 +2960,7 @@ public class SubscriptionManagerTasks {
 		//defaultNames.add("healFrequency");	// obsoleted by bug 882459
 		defaultNames.add("certCheckInterval");
 		defaultNames.add("autoAttachInterval");
+		defaultNames.add("report_package_profile");
 		
 		// lowercase all of the defaultNames when requested
 		if (toLowerCase) for (String defaultName : defaultNames) {

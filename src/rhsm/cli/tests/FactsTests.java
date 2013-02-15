@@ -11,6 +11,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -23,6 +25,8 @@ import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.SubscriptionPool;
+
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
@@ -479,6 +483,60 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
+	
+	protected String rhsm_report_package_profile = null;
+	@BeforeGroups(value={"EnablementOfReportPackageProfile_Test"}, groups={"setup"})
+	public void beforeEnablementOfReportPackageProfile_Test() {
+		if (clienttasks==null) return;
+		rhsm_report_package_profile	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "report_package_profile");
+	}
+	@Test(	description="subscription-manager: assert the ability to enable/disable the reporting of the consumers package profile",
+			groups={"EnablementOfReportPackageProfile_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void EnablementOfReportPackageProfile_Test() throws JSONException, Exception {
+		boolean isPackagesSupported = servertasks.isPackagesSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
+		String packagesNotSupportedLogMsg = "Server does not support packages, skipping profile upload.";
+		String reportPackageProfileOffLogMsg = "Skipping package profile upload due to report_package_profile setting.";
+		String rhsmLogMarker;
+		SSHCommandResult sshCommandResult;
+		
+		// turn on the rhsm.report_package_profile configuration and assert the rhsm logging based on isPackagesSupported on the server during a registration
+		sshCommandResult = clienttasks.config(null, null, true, new String[]{"rhsm","report_package_profile","1"});
+		rhsmLogMarker = System.currentTimeMillis()+" Testing EnablementOfReportPackageProfile_Test during a register...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
+		client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		if (isPackagesSupported) {
+			Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, packagesNotSupportedLogMsg).trim().isEmpty(), "When the entitlements server supports package upload, this message should NOT be logged to "+clienttasks.rhsmLogFile+": "+packagesNotSupportedLogMsg);
+			Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, reportPackageProfileOffLogMsg).trim().isEmpty(), "When the entitlements server supports package upload and rhsm.report_package_profile is turned on , this message should NOT be logged to "+clienttasks.rhsmLogFile+": "+reportPackageProfileOffLogMsg);
+		} else {
+			Assert.assertTrue(!RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, packagesNotSupportedLogMsg).trim().isEmpty(), "Regardless of the rhsm.report_package_profile value, when the entitlements server does not support package upload, this expected message is logged to "+clienttasks.rhsmLogFile+": "+packagesNotSupportedLogMsg);
+		}
+		
+		// turn off the rhsm.report_package_profile configuration and assert the rhsm logging based on isPackagesSupported on the server during a registration
+		sshCommandResult = clienttasks.config(null, null, true, new String[]{"rhsm","report_package_profile","0"});
+		rhsmLogMarker = System.currentTimeMillis()+" Testing DisablementOfReportPackageProfile_Test during a register...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
+		client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		if (isPackagesSupported) {
+			Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, packagesNotSupportedLogMsg).trim().isEmpty(), "When the entitlements server supports package upload, this message should NOT be logged to "+clienttasks.rhsmLogFile+": "+packagesNotSupportedLogMsg);
+			Assert.assertTrue(!RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, reportPackageProfileOffLogMsg).trim().isEmpty(), "When the entitlements server supports package upload and rhsm.report_package_profile is turned off , this expected message should be logged to "+clienttasks.rhsmLogFile+": "+reportPackageProfileOffLogMsg);
+		} else {
+			Assert.assertTrue(!RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, packagesNotSupportedLogMsg).trim().isEmpty(), "Regardless of the rhsm.report_package_profile value, when the entitlements server does not support package upload, this expected message is logged to "+clienttasks.rhsmLogFile+": "+packagesNotSupportedLogMsg);
+		}
+		
+		if (!isPackagesSupported) throw new SkipException("Only limited testing of the rhsm.report_package_profile enablement parameter can be achieved when the entitlement server does not support uploading the package profile of a consumer.  This testing should be done against a Katello server.");
+		
+		// TODO when the server is a katello server that supports packages, we should also test these scenarios
+		// 1. register with report_package_profile=1 and call http://www.katello.org/apidoc/ GET /api/systems/:id/packages and assert the list matches all the rpms installed
+		// 2. register with report_package_profile=0 and call http://www.katello.org/apidoc/ GET /api/systems/:id/packages and assert the list is empty
+		// 3. after registered with report_package_profile=1, add a package and remove a package, call facts update (or rhsm check) and verify GET /api/systems/:id/packages and assert the list matches the new rpms installed
+		// 4. after registered with report_package_profile=0, add a package and remove a package, call facts update (or rhsm check) and verify GET /api/systems/:id/packages and assert the list was unchanged
+	}
+	@AfterGroups(value={"EnablementOfReportPackageProfile_Test"},groups={"setup"})
+	public void afterEnablementOfReportPackageProfile_Test() {
+		clienttasks.config(null, null, true, new String[]{"rhsm","report_package_profile",rhsm_report_package_profile});
+	}
 
 	
 	// Candidates for an automated Test:

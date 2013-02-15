@@ -1914,16 +1914,42 @@ schema generation failed
 		JSONArray jsonResources = new JSONArray(getResourceUsingRESTfulAPI(authenticator, password, url, "/"));
 		for (int i = 0; i < jsonResources.length(); i++) {
 			JSONObject jsonResource = (JSONObject) jsonResources.get(i);
-			// {
+			//	{
 			//		"href": "/environments", 
 			//		"rel": "environments"
-			// }, 
-	
+			//	}, 
+			
+			//# curl --stderr /dev/null -k -u admin:admin https://SERVER:PORT/katello/api | python -m simplejson/tool | grep environments
+			//    "href": "/api/environments/",
+			//    "rel": "environments"
+			
 			String rel = jsonResource.getString("rel");
 			if (rel.equals("environments")) supportsEnvironments=true;
 		}
 		
 		return supportsEnvironments;
+	}
+	
+	public static boolean isPackagesSupported (String authenticator, String password, String url) throws JSONException, Exception {
+		
+		// ask the candlepin server for all of its resources and search for a match to "packages"
+		boolean supportsPackages = false;  // assume not
+		JSONArray jsonResources = new JSONArray(getResourceUsingRESTfulAPI(authenticator, password, url, "/"));
+		for (int i = 0; i < jsonResources.length(); i++) {
+			JSONObject jsonResource = (JSONObject) jsonResources.get(i);
+			
+			//# curl --stderr /dev/null -k -u admin:admin https://SERVER:PORT/katello/api | python -m simplejson/tool | grep packages
+			//    "href": "/api/packages/",
+			//    "rel": "packages"
+
+			// Reference http://www.katello.org/apidoc/
+			//     to actually get the packages of a consumer: GET /api/systems/:id/packages
+	
+			String rel = jsonResource.getString("rel");
+			if (rel.equals("packages")) supportsPackages=true;
+		}
+		
+		return supportsPackages;
 	}
 	
 	public static boolean isPoolVirtOnly (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
