@@ -221,9 +221,9 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		
 		// calling orgs without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword, null, false, null, null, null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the orgs command when configuration server.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the orgs command when configuration server.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the orgs command when configuration server.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the orgs command when configuration server.ca_cert_dir has been falsified.");
 		
 		// calling orgs with insecure should now pass
 		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, true, null, null, null);
