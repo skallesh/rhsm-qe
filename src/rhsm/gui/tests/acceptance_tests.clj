@@ -1,7 +1,8 @@
 (ns rhsm.gui.tests.acceptance-tests
-  (:use [test-clj.testng :only [gen-class-testng data-driven]]
+  (:use [test-clj.testng :only [gen-class-testng
+                                data-driven]]
         [rhsm.gui.tasks.test-config :only (config
-                                                       clientcmd)]
+                                           clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
@@ -63,4 +64,3 @@
   (tasks/restart-app))
 
 (gen-class-testng)
-

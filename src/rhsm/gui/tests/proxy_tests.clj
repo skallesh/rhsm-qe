@@ -1,14 +1,18 @@
 (ns rhsm.gui.tests.proxy-tests
   (:use [test-clj.testng :only (gen-class-testng)]
         [rhsm.gui.tasks.test-config :only (config
-                                                       clientcmd
-                                                       auth-proxyrunner
-                                                       noauth-proxyrunner)]
-        [slingshot.slingshot :only (try+ throw+)]
+                                           clientcmd
+                                           auth-proxyrunner
+                                           noauth-proxyrunner)]
+        [slingshot.slingshot :only (try+
+                                    throw+)]
         [com.redhat.qe.verify :only (verify)]
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks])
-  (:import [org.testng.annotations Test BeforeClass AfterClass]))
+  (:import [org.testng.annotations
+            Test
+            BeforeClass
+            AfterClass]))
 
 (def auth-log "/var/log/squid/access.log")
 (def noauth-log "/var/log/tinyproxy.log")

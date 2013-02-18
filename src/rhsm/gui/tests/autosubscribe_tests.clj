@@ -1,9 +1,11 @@
 (ns rhsm.gui.tests.autosubscribe-tests
   (:use [test-clj.testng :only (gen-class-testng)]
-        [rhsm.gui.tasks.test-config :only (config clientcmd)]
+        [rhsm.gui.tasks.test-config :only (config
+                                           clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (trim split)]
-        [slingshot.slingshot :only [throw+ try+]]
+        [slingshot.slingshot :only [throw+
+                                    try+]]
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]

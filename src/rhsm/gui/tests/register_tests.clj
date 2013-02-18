@@ -1,12 +1,17 @@
 (ns rhsm.gui.tests.register-tests
-  (:use [test-clj.testng :only [gen-class-testng data-driven]]
+  (:use [test-clj.testng :only [gen-class-testng
+                                data-driven]]
         [rhsm.gui.tasks.test-config :only (config)]
         [com.redhat.qe.verify :only (verify)]
-        [slingshot.slingshot :only (try+ throw+)]
+        [slingshot.slingshot :only (try+
+                                    throw+)]
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks])
-  (:import [org.testng.annotations Test BeforeClass DataProvider]))
+  (:import [org.testng.annotations
+            Test
+            BeforeClass
+            DataProvider]))
 
 (defn get-userlists [username password]
   (let [owners (ctasks/get-owners username password)]
@@ -113,4 +118,3 @@
 
 
 (gen-class-testng)
-

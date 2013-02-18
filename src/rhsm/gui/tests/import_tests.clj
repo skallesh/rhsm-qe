@@ -1,8 +1,10 @@
 (ns rhsm.gui.tests.import-tests
-  (:use [test-clj.testng :only (gen-class-testng data-driven)]
+  (:use [test-clj.testng :only (gen-class-testng
+                                data-driven)]
         [rhsm.gui.tasks.test-config :only (config
-                                                       clientcmd)]
-        [slingshot.slingshot :only (try+ throw+)]
+                                           clientcmd)]
+        [slingshot.slingshot :only (try+
+                                    throw+)]
         [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (split
                                split-lines
@@ -10,11 +12,12 @@
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
              rhsm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass
-                                   BeforeGroups
-                                   Test
-                                   DataProvider
-                                   AfterClass]
+  (:import [org.testng.annotations
+            BeforeClass
+            BeforeGroups
+            Test
+            DataProvider
+            AfterClass]
            [rhsm.cli.tests ImportTests]
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
@@ -239,4 +242,3 @@
     (.setupBeforeClass @importtests))
 
   )
-

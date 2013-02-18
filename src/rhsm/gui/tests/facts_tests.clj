@@ -1,15 +1,22 @@
 (ns rhsm.gui.tests.facts-tests
-  (:use [test-clj.testng :only (gen-class-testng data-driven)]
+  (:use [test-clj.testng :only (gen-class-testng
+                                data-driven)]
         [rhsm.gui.tasks.test-config :only (config
-                                                       clientcmd
-                                                       cli-tasks)]
+                                           clientcmd
+                                           cli-tasks)]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.string :only (split-lines split trim)]
+        [clojure.string :only (split-lines
+                               split
+                               trim)]
         clojure.pprint
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             rhsm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]))
+  (:import [org.testng.annotations
+            BeforeClass
+            BeforeGroups
+            Test
+            DataProvider]))
 
 (def gui-facts (atom nil))
 (def cli-facts (atom nil))

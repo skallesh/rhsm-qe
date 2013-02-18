@@ -1,15 +1,21 @@
 (ns rhsm.gui.tests.subscribe-tests
-  (:use [test-clj.testng :only (gen-class-testng data-driven)]
+  (:use [test-clj.testng :only (gen-class-testng
+                                data-driven)]
         [rhsm.gui.tasks.test-config :only (config
-                                                       clientcmd)]
+                                           clientcmd)]
         [com.redhat.qe.verify :only (verify)]
-        [slingshot.slingshot :only (try+ throw+)]
+        [slingshot.slingshot :only (try+
+                                    throw+)]
         [clojure.string :only (split)]
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
              rhsm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]))
+  (:import [org.testng.annotations
+            BeforeClass
+            BeforeGroups
+            Test
+            DataProvider]))
 
 (def productlist (atom {}))
 (def servicelist (atom {}))

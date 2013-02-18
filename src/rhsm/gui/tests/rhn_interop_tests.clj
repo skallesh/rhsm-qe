@@ -1,11 +1,16 @@
 (ns rhsm.gui.tests.rhn-interop-tests
   (:use [test-clj.testng :only (gen-class-testng)]
-        [rhsm.gui.tasks.test-config :only (config clientcmd)]
+        [rhsm.gui.tasks.test-config :only (config
+                                           clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
              rhsm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass AfterClass BeforeGroups Test]))
+  (:import [org.testng.annotations
+            BeforeClass
+            AfterClass
+            BeforeGroups
+            Test]))
 
 (def systemid "/etc/sysconfig/rhn/systemid")
 
@@ -72,4 +77,3 @@
 )
 
 (gen-class-testng)
-

@@ -1,18 +1,21 @@
 (ns rhsm.gui.tests.system-tests
-  (:use [test-clj.testng :only (gen-class-testng data-driven)]
+  (:use [test-clj.testng :only (gen-class-testng
+                                data-driven)]
         [rhsm.gui.tasks.test-config :only (config
-                                                       clientcmd)]
+                                           clientcmd)]
         [com.redhat.qe.verify :only (verify)]
-        [slingshot.slingshot :only [throw+ try+]]
+        [slingshot.slingshot :only [throw+
+                                    try+]]
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [clojure.tools.logging :as log]
              rhsm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass
-                                   BeforeGroups
-                                   Test
-                                   DataProvider
-                                   AfterClass]))
+  (:import [org.testng.annotations
+            BeforeClass
+            BeforeGroups
+            Test
+            DataProvider
+            AfterClass]))
 
 (def ldtpd-log "/var/log/ldtpd/ldtpd.log")
 
@@ -121,4 +124,3 @@
 ;; TODO
 
 (gen-class-testng)
-

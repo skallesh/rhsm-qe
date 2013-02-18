@@ -1,12 +1,19 @@
 (ns rhsm.gui.tests.firstboot-tests
-  (:use [test-clj.testng :only (gen-class-testng data-driven)]
-        [rhsm.gui.tasks.test-config :only (config clientcmd)]
+  (:use [test-clj.testng :only (gen-class-testng
+                                data-driven)]
+        [rhsm.gui.tasks.test-config :only (config
+                                           clientcmd)]
         [com.redhat.qe.verify :only (verify)]
-        [slingshot.slingshot :only (try+ throw+)]
+        [slingshot.slingshot :only (try+
+                                    throw+)]
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
              rhsm.gui.tasks.ui)
-  (:import [org.testng.annotations AfterClass BeforeClass BeforeGroups Test]))
+  (:import [org.testng.annotations
+            AfterClass
+            BeforeClass
+            BeforeGroups
+            Test]))
 
 (defn start_firstboot []
   (tasks/start-firstboot)
