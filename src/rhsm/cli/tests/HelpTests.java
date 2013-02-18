@@ -1035,6 +1035,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.clear();
 		modules.add("cat-cert");
 		modules.add("stat-cert");
+//uncomment after automated		modules.add("cat-manifest");
+//uncomment after automated		modules.add("dump-manifest");
 		for (String commandHelp : new String[]{command+" -h",command+" --help"}) {
 			Integer exitCode = commandHelp.contains("--help")?0:1;		// coverage for bug 906124; the usage statement permits only "--help" and therefore any differing option (including "-h") should return non-zero exit code
 			List <String> usages = new ArrayList<String>();
@@ -1077,13 +1079,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		//
 		//	Options:
 		//	  -h, --help  show this help message and exit
-		//	[root@jsefler-6 ~]# rct stat-cert --help
-		//	Usage: rct stat-cert [OPTIONS] CERT_FILE
-		//
-		//	Print certificate statistics and sizes
-		//
-		//	Options:
-		//	  -h, --help  show this help message and exit
 		module = "stat-cert";
 		options.clear();
 		options.add("-h, --help");
@@ -1095,7 +1090,48 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
+		// rct cat-manifest OPTIONS
 		
+		//	[root@jsefler-7 ~]# rct cat-manifest --help
+		//	Usage: rct cat-manifest [OPTIONS] MANIFEST_FILE
+		//	
+		//	Print manifest information
+		//	
+		//	Options:
+		//	  -h, --help  show this help message and exit
+		module = "cat-manifest";
+		options.clear();
+		options.add("-h, --help");
+		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS] MANIFEST_FILE",command,module);
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
+		// rct dump-manifest OPTIONS
+		
+		//	[root@jsefler-7 ~]# rct dump-manifest --help
+		//	Usage: rct dump-manifest [OPTIONS] MANIFEST_FILE
+		//
+		//	Dump the contents of a manifest
+		//
+		//	Options:
+		//	  -h, --help            show this help message and exit
+		//	  --destination=DESTINATION
+		//	                        directory to extract the manifest to
+		module = "dump-manifest";
+		options.clear();
+		options.add("-h, --help");
+//uncomment after automated				options.add("--destination=DESTINATION");
+		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS] MANIFEST_FILE",command,module);
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
+		}
 		
 		return ll;
 	}
