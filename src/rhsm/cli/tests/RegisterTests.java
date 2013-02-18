@@ -1338,10 +1338,12 @@ Expected Results:
 	
 	
 	protected String server_ca_cert_dir = null;
+	protected String server_insecure = null;
 	@BeforeGroups(value={"RegisterWithInsecure_Test"}, groups={"setup"})
 	public void beforeRegisterWithInsecure_Test() {
 		if (clienttasks==null) return;
 		server_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "ca_cert_dir");
+		server_insecure		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure");
 	}
 	@Test(	description="subscription-manager: register with --insecure",
 			groups={"RegisterWithInsecure_Test","blockedByBug-844411"},
@@ -1373,6 +1375,7 @@ Expected Results:
 	@AfterGroups(value={"RegisterWithInsecure_Test"},groups={"setup"})
 	public void afterRegisterWithInsecure_Test() {
 		clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir",server_ca_cert_dir});
+		clienttasks.config(null, null, true, new String[]{"server","insecure",server_insecure});
 	}
 	
 	
