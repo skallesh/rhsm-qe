@@ -827,7 +827,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			log.warning("Modifying expected results when the current RHN Classically registered system is not consuming any RHN channels.");
 			String expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";
 			Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' when no RHN Classic channels are being consumed: "+expectedStdout);
-			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' when no RHN Classic channels are being consumed.");
+			//Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' when no RHN Classic channels are being consumed.");		// the exitCode can be altered by the expect script rhn-migrate-classic-to-rhsm.tcl when the final arg slaIndex is non-null; therefore don't bother asserting exitCode; asserting stdout is sufficient
 			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered after '"+rhnMigrateTool+"' exits due to: "+expectedStdout);
 			return;
 		}
@@ -981,7 +981,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="With a proxy configured in rhn/up2date, register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015","blockedbyBug-861693","blockedbyBug-878986"},
+			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015","blockedbyBug-861693","blockedbyBug-878986","blockedbyBug-912776"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmUsingProxyServerData",
 			enabled=true)
