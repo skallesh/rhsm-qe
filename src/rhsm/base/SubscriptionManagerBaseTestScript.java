@@ -127,6 +127,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_rhnUsername				= getProperty("sm.rhn.username","");
 	public String sm_rhnPassword				= getProperty("sm.rhn.password","");
 	public String sm_rhnHostname				= getProperty("sm.rhn.hostname","");
+	
+	public String sm_manifestsUrl				= getProperty("sm.manifests.url","");
 
 	//public String sm_cdnProductBaselineUrl			= getProperty("sm.cdn.productBaselineUrl","");
 	public String sm_rhnDefinitionsGitRepository		= getProperty("sm.rhn.definitionsGitRepository","");

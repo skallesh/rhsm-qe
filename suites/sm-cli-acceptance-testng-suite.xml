@@ -416,6 +416,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Manifest Tests">
+		<classes>
+			<class name="rhsm.cli.tests.ManifestTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Compliance Tests">
 		<classes>
 			<class name="rhsm.cli.tests.ComplianceTests" />
