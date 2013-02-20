@@ -1035,8 +1035,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.clear();
 		modules.add("cat-cert");
 		modules.add("stat-cert");
-//uncomment after automated		modules.add("cat-manifest");
-//uncomment after automated		modules.add("dump-manifest");
+		modules.add("cat-manifest");
+		modules.add("dump-manifest");
 		for (String commandHelp : new String[]{command+" -h",command+" --help"}) {
 			Integer exitCode = commandHelp.contains("--help")?0:1;		// coverage for bug 906124; the usage statement permits only "--help" and therefore any differing option (including "-h") should return non-zero exit code
 			List <String> usages = new ArrayList<String>();
@@ -1124,7 +1124,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "dump-manifest";
 		options.clear();
 		options.add("-h, --help");
-//uncomment after automated				options.add("--destination=DESTINATION");
+		options.add("--destination=DESTINATION");
 		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS] MANIFEST_FILE",command,module);
