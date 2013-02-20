@@ -115,27 +115,30 @@
       (let [gui-levels (sort (tasks/ui getallitem :service-level-dropdown))]
         (verify (= expected-levels gui-levels))
         (verify (not (nil? (some #{"Not Set"} gui-levels))))))
-    (finally (tasks/ui click :close-system-prefs))))
+    (finally (if (= 1 (tasks/ui guiexist :system-preferences-dialog))
+               (tasks/ui click :close-system-prefs)))))
 
-(comment ;; saving this for when stage is up and I can test it
-  (defn ^{Test {:groups ["facts"
-                         "blockedByBug-909294"
-                         "blockedByBug-839772"]}}
-    check_available_releases [_]
-    (try
-      (let [result (.runCommandAndWait @clientcmd
-                                       "subscription-manager release --list")
-            stdout (.getStdout result)
-            cli-releases  (if (clojure.string/blank? stdout)
-                            []
-                            (drop 3 (split-lines stdout)))
-            expected-releases (sort (conj cli-releases "Not Set"))]
-        (tasks/ui click :preferences)
-        (tasks/ui waittillwindowexist :system-preferences-dialog 10)
-        (let [gui-releases (sort (tasks/ui getallitem :release-dropdown))]
-          (verify (= expected-releases gui-releases))
-          (verify (not (nil? (some #{"Not Set"} gui-releases))))))
-      (finally (tasks/ui click :close-system-prefs)))))
+(defn ^{Test {:groups ["facts"
+                       "blockedByBug-909294"
+                       "blockedByBug-839772"]}}
+  check_available_releases [_]
+  (try
+    (.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively @cli-tasks)
+    (let [result (.runCommandAndWait @clientcmd
+                                     "subscription-manager release --list")
+          stdout (.getStdout result)
+          cli-releases  (if (clojure.string/blank? stdout)
+                          []
+                          (drop 3 (split-lines stdout)))
+          expected-releases (sort (conj cli-releases "Not Set"))]
+      (tasks/ui click :preferences)
+      (tasks/ui waittillwindowexist :system-preferences-dialog 10)
+      (let [gui-releases (sort (tasks/ui getallitem :release-dropdown))]
+        (verify (= expected-releases gui-releases))
+        (verify (not (nil? (some #{"Not Set"} gui-releases))))))
+    (finally (if (= 1 (tasks/ui guiexist :system-preferences-dialog))
+               (tasks/ui click :close-system-prefs))
+             (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS

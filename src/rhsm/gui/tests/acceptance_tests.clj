@@ -8,7 +8,8 @@
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.register-tests :as rtest]
             [rhsm.gui.tests.subscribe-tests :as stest]
-            [rhsm.gui.tests.autosubscribe-tests :as atest])
+            [rhsm.gui.tests.autosubscribe-tests :as atest]
+            [rhsm.gui.tests.facts-tests :as ftest])
   (:import [org.testng.annotations
             Test
             BeforeClass
@@ -62,5 +63,17 @@
   cleanup [_]
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app))
+
+(defn ^{Test {:groups ["acceptance"]}}
+  check_releases [_]
+  (check-register)
+  (let [certdir (tasks/conf-file-value "productCertDir")
+        rhelcerts ["68" "69" "71" "72" "74" "76"]
+        certlist (map #(str certdir "/" % ".pem") rhelcerts)
+        certexist? (map #(= 0 (.getExitCode
+                               (.runCommandAndWait @clientcmd (str "test -f " %))))
+                        certlist)]
+    (verify (some true? certexist?)))
+  (ftest/check_available_releases nil))
 
 (gen-class-testng)
