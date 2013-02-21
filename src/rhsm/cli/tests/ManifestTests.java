@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -16,6 +15,7 @@ import org.testng.annotations.Test;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.EntitlementCert;
 import rhsm.data.Manifest;
+import rhsm.data.ManifestSubscription;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
@@ -27,8 +27,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  * Manifest Creation Instructions:
- *   go to rhsm-web for stage, login as a stage_test_# user and create a SAM distributor.
- *   attach subscriptions and then export the manifest.zip to /tmp/manifest.zip
+ *   go to http://access.stage.redhat.com/management/distributors/ for stage, login as a stage_test_# user
+ *   navigate to Subscriptions/Subscription Management Applications
+ *   click "Register a Subscription Asset Manager Organization" (if not already done)
+ *   click "Register a subscription management application" (aka distributor)
+ *     give it a name indicative of the subscriptions added and then
+ *     attach subscriptions with a low quantity
+ *     click "Download manifest" to /tmp/manifest.zip
  *   copy the manifest.zip to the sm_manifestsUrl so it will be included in these tests
  */
 @Test(groups={"ManifestTests"})
@@ -116,47 +121,119 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		// execute and assert rct cat-manifest MANIFEST_FILE
 		SSHCommandResult catManifestResult = RemoteFileTasks.runCommandAndAssert(client, "rct cat-manifest "+manifestFile, 0);
 		
-		// assert the presence of a banner
-		String bannerRegex = "\\+-+\\+\\n\\s*Manifest\\s*\\n\\+-+\\+";
-		Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(catManifestResult.getStdout()).matches(), "stdout from rct cat-manifest contains a banner matching regex '"+bannerRegex+"'.");
+		// parse the output from catManifestResult into a Manifest object
+		List<Manifest> catManifests = Manifest.parse(catManifestResult.getStdout());
+		Assert.assertEquals(catManifests.size(),1,"Parsed one manifest from '"+manifestFile+"'.");
+		Manifest catManifest = catManifests.get(0);
 		
-		
-		// create EntitlementCert objects for all of the entitlements provided by this manifest
-		client.runCommandAndWaitWithoutLogging("find "+manifestFileContentMap.get(manifestFile).get(0).getParent()+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
+		// create EntitlementCert objects representing the source for all of the entitlements provided by this manifest
+		client.runCommandAndWaitWithoutLogging("find "+manifestFileContentMap.get(manifestFile).get(0).getParent()+"/export/entitlement_certificates"+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
 		String rawCertificates = client.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(rawCertificates);
 		if (entitlementCerts.isEmpty()) Assert.fail("Manifest file '"+manifestFile+"' does not provide any entitlements.");
 		
-		// parse the output from catManifestResult into a Manifest object
-		List<Manifest> manifests = Manifest.parse(catManifestResult.getStdout());
-		Assert.assertEquals(manifests.size(),1,"Parsed one manifest from '"+manifestFile+"'.");
+		// loop through the manifest's entitlement certs and assert as much as possible...
+		//	[root@jsefler-7 test-manifests]# rct cat-manifest manifest_SYS0395_RH0197181.zip
+		//	
+		//	+-------------------------------------------+
+		//		Manifest
+		//	+-------------------------------------------+
+		String bannerRegex = "\\+-+\\+\\n\\s*Manifest\\s*\\n\\+-+\\+";
+		Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(catManifestResult.getStdout()).matches(), "stdout from rct cat-manifest contains a banner matching regex '"+bannerRegex+"'.");
+		if (catManifest.server==null) {log.warning("Skipping assertion of non-null General and Consumer for what appears to be a manifest from an older candlepin server");} else {
+		//
+		//	General:
+		//		Server: access.stage.redhat.com/management/distributors/
+		//		Server Version: 0.7.13.10-1
+		//		Date Created: 2013-01-21T21:24:16.193+0000
+		//		Creator: qa@redhat.com
+		Assert.assertNotNull(catManifest.server, "General Server value is not null.");
+		Assert.assertNotNull(catManifest.serverVersion, "General Server Version value is not null.");
+		Assert.assertNotNull(catManifest.dateCreated, "General Date Created value is not null.");
+		Assert.assertNotNull(catManifest.creator, "General Creator value is not null.");
+		//
+		//	Consumer:
+		//		Name: jsefler
+		//		UUID: b2837b9a-d2d9-4b41-acd9-34bdcf72af66
+		//		Type: sam
+		Assert.assertNotNull(catManifest.consumerName, "Consumer Name value is not null.");
+		Assert.assertNotNull(catManifest.consumerUUID, "Consumer UUID value is not null.");
+		String consumerUUIDRegex = "[a-f,0-9,\\-]{36}";
+		Assert.assertTrue(Pattern.compile(consumerUUIDRegex/*,Pattern.DOTALL*/).matcher(catManifest.consumerUUID).matches(),"Consumer UUID format matches the expected regex '"+consumerUUIDRegex+"'.");
+		Assert.assertNotNull(catManifest.consumerType, "Consumer Type value is not null.");
+		Assert.assertEquals(catManifest.consumerType,"sam", "Consumer Type value.");
+		}
+		//	
+		//	Subscription:
+		//		Name: Red Hat Enterprise Linux Server, Self-support (1-2 sockets) (Up to 1 guest)
+		//		Quantity: 2
+		//		Created: 2013-01-21T21:22:57.000+0000
+		//		Start Date: 2012-12-31T05:00:00.000+0000
+		//		End Date: 2013-12-31T04:59:59.000+0000
+		//		Suport Level: Self-support
+		//		Suport Type: L1-L3
+		//		Architectures: x86,x86_64,ia64,s390x,ppc,s390,ppc64
+		//		Product Id: RH0197181
+		//		Contract: 
+		//		Subscription Id: 2677511
+		//		Entitlement File: export/entitlements/8a99f9843c401207013c5efe1e1931ce.json
+		//		Certificate File: export/entitlement_certificates/4134818306731067736.pem
+		//		Certificate Version: 1.0
+		//		Provided Products:
+		//			69: Red Hat Enterprise Linux Server
+		//			180: Red Hat Beta
+		//		Content Sets:
+		//			/content/beta/rhel/server/5/$releasever/$basearch/cf-tools/1/os
+		//			/content/beta/rhel/server/5/$releasever/$basearch/cf-tools/1/source/SRPMS
+		//			/content/beta/rhel/server/5/$releasever/$basearch/debug
+		//			/content/beta/rhel/server/5/$releasever/$basearch/iso
+		//	
+		//	Subscription:
+		//		Name: Red Hat Employee Subscription
+		//		Quantity: 2
+		//		Created: 2013-01-21T21:22:56.000+0000
+		//		Start Date: 2011-10-08T04:00:00.000+0000
+		//		End Date: 2022-01-01T04:59:59.000+0000
+		//		Suport Level: None
+		//		Suport Type: None
+		//		Architectures: x86,x86_64,ia64,s390x,ppc,s390,ppc64
+		//		Product Id: SYS0395
+		//		Contract: 2596950
+		//		Subscription Id: 2252576
+		//		Entitlement File: export/entitlements/8a99f9833c400fa5013c5efe1a5a4683.json
+		//		Certificate File: export/entitlement_certificates/2571369151493658952.pem
+		//		Certificate Version: 1.0
+		//		Provided Products:
+		//			69: Red Hat Enterprise Linux Server
+		//			71: Red Hat Enterprise Linux Workstation
+		//			83: Red Hat Enterprise Linux High Availability (for RHEL Server)
+		//			85: Red Hat Enterprise Linux Load Balancer (for RHEL Server)
+		//			90: Red Hat Enterprise Linux Resilient Storage (for RHEL Server)
+		//			180: Red Hat Beta
+		//		Content Sets:
+		//			/content/beta/rhel/power/5/$releasever/$basearch/highavailability/debug
+		//			/content/beta/rhel/power/5/$releasever/$basearch/highavailability/os
+		//			/content/beta/rhel/power/5/$releasever/$basearch/highavailability/source/SRPMS
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			ManifestSubscription manifestSubscription = ManifestSubscription.findFirstInstanceWithMatchingFieldFromList("certificateFile", entitlementCert.file.toString().replace(manifestFileContentMap.get(manifestFile).get(0).getParent()+File.separator, ""), catManifest.subscriptions);
+			if (manifestSubscription==null) Assert.fail("Could not find the ManifestSubscription corresponding to Entitlement '"+entitlementCert.file+"'.");
 
-throw new SkipException("THIS TEST IS STILL UNDER CONSTRUCTION");
-//		// prepare a destination to dump the manifest to
-//		String destination = "/tmp/sm-rctDumpManifest";
-//		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+destination, Integer.valueOf(0));
-//		destination += "/destination";	// append another subdirectory
-//		
-//		// execute and assert rct dump-manifest --destination=/tmp/sm-rctDumpManifestDestination MANIFEST_FILE
-//		SSHCommandResult dumpResult = RemoteFileTasks.runCommandAndAssert(client, "rct dump-manifest --destination="+destination+" "+manifestFile, 0);
-//		Assert.assertEquals(dumpResult.getStdout().trim(), String.format("The manifest has been dumped to the %s directory",destination), "stdout from rct dump-manifest with destination");
-//		
-//		// get a listing of the files
-//		List<File> manifestContents = new ArrayList<File>();
-//		SSHCommandResult findResult = RemoteFileTasks.runCommandAndAssert(client, "find "+destination, 0);
-//		for (String manifestContent : findResult.getStdout().split("\\s*\\n\\s*")) {
-//			if (manifestContent.isEmpty())  continue;
-//			if (manifestContent.equals(destination)) continue;
-//			manifestContents.add(new File(manifestContent));
-//		}
-//		
-//		// assert the presence of a signature file
-//		File expectedSignatureFile = new File(destination+File.separator+"signature");
-//		Assert.assertTrue(manifestContents.contains(expectedSignatureFile),"The contents of the rct dump-manifest --destination="+destination+" includes a signature file '"+expectedSignatureFile+"'.");
-//		
-//		// assert the presence of an export directory 
-//		File expectedExportDirectory = new File(destination+File.separator+"export");
-//		Assert.assertTrue(manifestContents.contains(expectedExportDirectory),"The contents of the rct dump-manifest --destination="+destination+" includes an export directory '"+expectedExportDirectory+"'.");
+			Assert.assertEquals(manifestSubscription.name,entitlementCert.orderNamespace.productName, "Subscription Name value comes from entitlementCert.orderNamespace.productName");
+			Assert.assertEquals(manifestSubscription.quantity,entitlementCert.orderNamespace.quantityUsed, "Subscription Quantity value comes from entitlementCert.orderNamespace.quantityUsed (ASSUMING NO OTHER UPSTREAM CONSUMERS)");
+			// TODO assert Created:
+			// TODO assert Start Date:
+			// TODO assert End Date:
+			Assert.assertEquals(manifestSubscription.supportLevel,entitlementCert.orderNamespace.supportLevel, "Subscription Support Level value comes from entitlementCert.orderNamespace.supportLevel");
+			Assert.assertEquals(manifestSubscription.supportType,entitlementCert.orderNamespace.supportType, "Subscription Support Type value comes from entitlementCert.orderNamespace.supportType");
+			// TODO assert Architectures:
+			Assert.assertEquals(manifestSubscription.productId,entitlementCert.orderNamespace.productId, "Subscription Product Id value comes from entitlementCert.orderNamespace.productId");
+			Assert.assertEquals(manifestSubscription.contract,entitlementCert.orderNamespace.contractNumber, "Subscription Contract value comes from entitlementCert.orderNamespace.contractNumber");
+			// TODO assert Entitlement File
+			// TODO assert Certificate File:
+			Assert.assertEquals(manifestSubscription.certificateVersion,entitlementCert.version, "Subscription Certificate Version value comes from entitlementCert.version");
+			// TODO assert Provided Products:
+			// TODO assert Content Sets:
+		}
 	}
 	
 	
@@ -210,7 +287,11 @@ throw new SkipException("THIS TEST IS STILL UNDER CONSTRUCTION");
 		
 		for (File manifestFile : manifestFiles) {
 			BlockedByBzBug blockedByBug = null;
+			
+			// Bug 913187 - rct cat-manifest throws Traceback: KeyError: 'webAppPrefix'
 			if (manifestFile.getName().equals("stageSamTest20Nov2011.zip")) blockedByBug = new BlockedByBzBug("913187");
+			if (manifestFile.getName().equals("fake-manifest-syncable.zip")) blockedByBug = new BlockedByBzBug("913187");
+			if (manifestFile.getName().equals("manifest-0219-131433-939.zip")) blockedByBug = new BlockedByBzBug("913187");
 			ll.add(Arrays.asList(new Object[] {blockedByBug, manifestFile}));				
 		}
 		

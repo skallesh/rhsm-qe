@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.redhat.qe.Assert;
@@ -28,6 +29,7 @@ public class ManifestSubscription extends AbstractCommandLineData {
 	public String supportType;
 	public String architectures;	// comma separated list: x86,x86_64,ia64,s390x,ppc,s390,ppc64
 	public String productId;
+	public Integer contract;
 	public String subscriptionId;
 	public String entitlementFile;
 	public String certificateFile;
@@ -172,26 +174,27 @@ public class ManifestSubscription extends AbstractCommandLineData {
 		//		/content/beta/rhel/power/5/$releasever/$basearch/highavailability/source/SRPMS
 		//		/content/beta/rhel/power/5/$releasever/$basearch/resilientstorage/debug
 		//		/content/beta/rhel/power/5/$releasever/$basearch/resilientstorage/os
-		
+		//
 		
 		Map<String,String> regexes = new HashMap<String,String>();
-		
+/*		
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("name",					"Subscription:(?:(?:\\n.+)+)Name: (.+)");
-		regexes.put("quantity",				"Subscription:(?:(?:\\n.+)+)Quantity: (.+)");
+		regexes.put("name",					"Subscription:(?:(?:\\n.+)+)Name: (.*)");
+		regexes.put("quantity",				"Subscription:(?:(?:\\n.+)+)Quantity: (.*)");
 		regexes.put("created",				"Subscription:(?:(?:\\n.+)+)Created: (.+)");
 		regexes.put("startDate",			"Subscription:(?:(?:\\n.+)+)Start Date: (.+)");
 		regexes.put("endDate",				"Subscription:(?:(?:\\n.+)+)End Date: (.+)");
-		regexes.put("supportLevel",			"Subscription:(?:(?:\\n.+)+)Suport Level: (.+)");		// Bug 913302 - typo in msgid "Suport Level" and msgid "Suport Type"
-		regexes.put("supportType",			"Subscription:(?:(?:\\n.+)+)Suport Type: (.+)");		// Bug 913302 - typo in msgid "Suport Level" and msgid "Suport Type"
-		regexes.put("architectures",		"Subscription:(?:(?:\\n.+)+)Architectures: (.+)");
-		regexes.put("productId",			"Subscription:(?:(?:\\n.+)+)Product Id: (.+)");			// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
-		regexes.put("subscriptionId",		"Subscription:(?:(?:\\n.+)+)Subscription Id: (.+)");	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
+		regexes.put("supportLevel",			"Subscription:(?:(?:\\n.+)+)Suport Level: (.*)");		// Bug 913302 - typo in msgid "Suport Level" and msgid "Suport Type"
+		regexes.put("supportType",			"Subscription:(?:(?:\\n.+)+)Suport Type: (.*)");		// Bug 913302 - typo in msgid "Suport Level" and msgid "Suport Type"
+		regexes.put("architectures",		"Subscription:(?:(?:\\n.+)+)Architectures: (.*)");
+		regexes.put("productId",			"Subscription:(?:(?:\\n.+)+)Product Id: (.*)");			// Bug 913703 - rct cat-manifest > Subscription:> "Product Id:" should be labeled as "SKU:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
+		regexes.put("contract",				"Subscription:(?:(?:\\n.+)+)Contract: (.*)");
+		regexes.put("subscriptionId",		"Subscription:(?:(?:\\n.+)+)Subscription Id: (.*)");	// Bug 913720 - rct cat-manifest > Subscription:> "Subscription Id:" should be labeled as "Order Number:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
 		regexes.put("entitlementFile",		"Subscription:(?:(?:\\n.+)+)Entitlement File: (.+)");
 		regexes.put("certificateFile",		"Subscription:(?:(?:\\n.+)+)Certificate File: (.+)");
-		regexes.put("certificateVersion",	"Subscription:(?:(?:\\n.+)+)Certificate Version: (.+)");
-		regexes.put("providedProducts",		"Subscription:(?:(?:\\n.+)+)Provided Products:(.*(\\n.*?)+)^\\tContent Sets:");	//regexes.put("providedProducts",		"Subscription:(?:(?:\\n.+)+)Provided Products:(.*(\\n.*?)+)^\\t\\w+\\s?\\w+:");
-		regexes.put("contentSets",			"Subscription:(?:(?:\\n.+)+)Content Sets: (.+)");	//TODO FIXME UNDER CONSTRUCTIONS
+		regexes.put("certificateVersion",	"Subscription:(?:(?:\\n.+)+)Certificate Version: (.*)");
+		regexes.put("providedProducts",		"Subscription:(?:(?:\\n.+)+)Provided Products:(.*(\\n.*?)+)^\\s+Content Sets:");	// assumes "Content Sets:" is the next group
+		regexes.put("contentSets",			"Subscription:(?:(?:\\n.+)+)Content Sets:(.*(\\n.*?)+?)\\n(?:\\n|$)");	// assumes one or more content set values.  FIXME this will fail if there are no content sets
 		
 		List<Map<String,String>> productList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
@@ -204,6 +207,53 @@ public class ManifestSubscription extends AbstractCommandLineData {
 			manifestSubscriptions.add(new ManifestSubscription(productMap));
 		
 		return manifestSubscriptions;
+*/		
+		
+		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
+		regexes.put("name",					"^\\s+Name: (.+)");
+		regexes.put("quantity",				"^\\s+Quantity: (.+)");
+		regexes.put("created",				"^\\s+Created: (.+)");
+		regexes.put("startDate",			"^\\s+Start Date: (.+)");
+		regexes.put("endDate",				"^\\s+End Date: (.+)");
+		regexes.put("supportLevel",			"^\\s+Suport Level: (.+)");		// Bug 913302 - typo in msgid "Suport Level" and msgid "Suport Type"
+		regexes.put("supportType",			"^\\s+Suport Type: (.+)");		// Bug 913302 - typo in msgid "Suport Level" and msgid "Suport Type"
+		regexes.put("architectures",		"^\\s+Architectures: (.+)");
+		regexes.put("productId",			"^\\s+Product Id: (.+)");		// Bug 913703 - rct cat-manifest > Subscription:> "Product Id:" should be labeled as "SKU:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
+		regexes.put("contract",				"^\\s+Contract: (.+)");
+		regexes.put("subscriptionId",		"^\\s+Subscription Id: (.+)");	// Bug 913720 - rct cat-manifest > Subscription:> "Subscription Id:" should be labeled as "Order Number:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
+		regexes.put("entitlementFile",		"^\\s+Entitlement File: (.+)");
+		regexes.put("certificateFile",		"^\\s+Certificate File: (.+)");
+		regexes.put("certificateVersion",	"^\\s+Certificate Version: (.+)");
+		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)+)^\\s+Content Sets:");	// assumes "Content Sets:" is the next group
+		regexes.put("contentSets",			"^\\s+Content Sets:(.*(\\n.*?)+?)\\n(?:\\n|$)");	// assumes one or more content set values.  FIXME this will fail if there are no content sets
+
+		
+		// find all the raw "Subscription:" groupings and then create one ManifestSubscription per raw "Subscription:" grouping
+		String rawSubscrtionRegex = "Subscription:((\\n.+)+)";
+		List<ManifestSubscription> manifestSubscriptions = new ArrayList<ManifestSubscription>();
+		Matcher m = Pattern.compile(rawSubscrtionRegex, Pattern.MULTILINE).matcher(rawManifest);
+		while (m.find()) {
+			String rawSubscription = m.group(1);
+			
+			// find a list of all the certData matching the subscription fields in the map of regexes
+			List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+			for(String field : regexes.keySet()){
+				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+				addRegexMatchesToList(pat, rawSubscription, certDataList, field);
+			}
+			
+			// assert that there is only one group of certData found in the list for this subscription grouping
+			if (certDataList.size()!=1) Assert.fail("Error when parsing raw subscription group.  Expected to parse only one group of subscription data from:\n"+m.group(0));
+			Map<String,String> certData = certDataList.get(0);
+			
+			// create a new ContentNamespace
+			manifestSubscriptions.add(new ManifestSubscription(certData));
+		}
+		return manifestSubscriptions;
+		
+		
+		
+		
 	}
 }
 
