@@ -4,18 +4,23 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.Manifest;
 import rhsm.data.ManifestSubscription;
+import rhsm.data.ProductNamespace;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
@@ -112,7 +117,8 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="execute rct cat-manifest against all of the test manifest files",
 			groups={},
-			priority=30, //dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
+			dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
+			alwaysRun=true,	// run even when there are failures or skips in RCTDumpManifestDestination_Test
 			dataProvider="ManifestFilesData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -127,6 +133,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		Manifest catManifest = catManifests.get(0);
 		
 		// create EntitlementCert objects representing the source for all of the entitlements provided by this manifest
+		if (manifestFileContentMap.get(manifestFile)==null) throw new SkipException("Cannot execute this test until manifest file '"+manifestFile+"' has been successfully dumped.");
 		client.runCommandAndWaitWithoutLogging("find "+manifestFileContentMap.get(manifestFile).get(0).getParent()+"/export/entitlement_certificates"+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
 		String rawCertificates = client.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(rawCertificates);
@@ -221,18 +228,26 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(manifestSubscription.name,entitlementCert.orderNamespace.productName, "Subscription Name value comes from entitlementCert.orderNamespace.productName");
 			Assert.assertEquals(manifestSubscription.quantity,entitlementCert.orderNamespace.quantityUsed, "Subscription Quantity value comes from entitlementCert.orderNamespace.quantityUsed (ASSUMING NO OTHER UPSTREAM CONSUMERS)");
 			// TODO assert Created:
-			// TODO assert Start Date:
-			// TODO assert End Date:
-			Assert.assertEquals(manifestSubscription.supportLevel,entitlementCert.orderNamespace.supportLevel, "Subscription Support Level value comes from entitlementCert.orderNamespace.supportLevel");
-			Assert.assertEquals(manifestSubscription.supportType,entitlementCert.orderNamespace.supportType, "Subscription Support Type value comes from entitlementCert.orderNamespace.supportType");
-			// TODO assert Architectures:
-			Assert.assertEquals(manifestSubscription.productId,entitlementCert.orderNamespace.productId, "Subscription Product Id value comes from entitlementCert.orderNamespace.productId");
+			Assert.assertEquals(manifestSubscription.startDate,entitlementCert.validityNotBefore, "Subscription Start Date comes from entitlementCert.validityNotBefore");
+			Assert.assertEquals(manifestSubscription.endDate,entitlementCert.validityNotAfter, "Subscription End Date comes from entitlementCert.validityNotAfter");
+			Assert.assertEquals(manifestSubscription.supportLevel,entitlementCert.orderNamespace.supportLevel, "Subscription Service Level value comes from entitlementCert.orderNamespace.supportLevel");
+			Assert.assertEquals(manifestSubscription.supportType,entitlementCert.orderNamespace.supportType, "Subscription Service Type value comes from entitlementCert.orderNamespace.supportType");
+			List<String> actualArchitectures = new ArrayList<String>(); if (manifestSubscription.architectures!=null) actualArchitectures.addAll(Arrays.asList(manifestSubscription.architectures.split("\\s*,\\s*")));
+			List<String> expectedArchitectures = new ArrayList<String>(); for (ProductNamespace productNamespace : entitlementCert.productNamespaces) if (productNamespace.arch!=null) expectedArchitectures.addAll(Arrays.asList(productNamespace.arch.split("\\s*,\\s*")));
+			Assert.assertTrue(actualArchitectures.containsAll(expectedArchitectures)&&expectedArchitectures.containsAll(actualArchitectures), "Subscription Architectures contains the union of providedProduct arches: "+expectedArchitectures);
+			Assert.assertEquals(manifestSubscription.productId,entitlementCert.orderNamespace.productId, "Subscription SKU value comes from entitlementCert.orderNamespace.productId");
 			Assert.assertEquals(manifestSubscription.contract,entitlementCert.orderNamespace.contractNumber, "Subscription Contract value comes from entitlementCert.orderNamespace.contractNumber");
-			// TODO assert Entitlement File
-			// TODO assert Certificate File:
+			Assert.assertEquals(manifestSubscription.subscriptionId,entitlementCert.orderNamespace.orderNumber, "Subscription Order Number value comes from entitlementCert.orderNamespace.orderNumber");
+			// TODO assert Entitlement File in json format
+			Assert.assertTrue(entitlementCert.file.toString().endsWith(manifestSubscription.certificateFile),"Subscription Certificate File exists");
 			Assert.assertEquals(manifestSubscription.certificateVersion,entitlementCert.version, "Subscription Certificate Version value comes from entitlementCert.version");
-			// TODO assert Provided Products:
-			// TODO assert Content Sets:
+			List<String> actualProvidedProducts = manifestSubscription.providedProducts;
+			List<String> expectedProvidedProducts = new ArrayList<String>(); for (ProductNamespace productNamespace : entitlementCert.productNamespaces) expectedProvidedProducts.add(String.format("%s: %s", productNamespace.id, productNamespace.name));
+			Assert.assertTrue(actualProvidedProducts.containsAll(expectedProvidedProducts)&&expectedProvidedProducts.containsAll(actualProvidedProducts), "Subscription Provided Products contains all entitlementCert.productNamespaces=>\"id: name\": "+expectedProvidedProducts);
+			List<String> actualContentSets = new ArrayList<String>(); if (manifestSubscription.contentSets!=null) actualContentSets.addAll(manifestSubscription.contentSets);
+			List<String> expectedContentSets = new ArrayList<String>();
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) expectedContentSets.add(contentNamespace.downloadUrl);
+			Assert.assertTrue(actualContentSets.containsAll(expectedContentSets)&&expectedContentSets.containsAll(actualContentSets), "Subscription Content Sets contains all entitlementCert.contentNamespaces=>downloadUrl: "/* +expectedContentSets is too long to print*/);
 		}
 	}
 	
@@ -286,13 +301,25 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		for (File manifestFile : manifestFiles) {
-			BlockedByBzBug blockedByBug = null;
+			Set<String> bugIds = new HashSet<String>();
 			
 			// Bug 913187 - rct cat-manifest throws Traceback: KeyError: 'webAppPrefix'
-			if (manifestFile.getName().equals("stageSamTest20Nov2011.zip")) blockedByBug = new BlockedByBzBug("913187");
-			if (manifestFile.getName().equals("fake-manifest-syncable.zip")) blockedByBug = new BlockedByBzBug("913187");
-			if (manifestFile.getName().equals("manifest-0219-131433-939.zip")) blockedByBug = new BlockedByBzBug("913187");
-			ll.add(Arrays.asList(new Object[] {blockedByBug, manifestFile}));				
+			if (manifestFile.getName().equals("stageSamTest20Nov2011.zip")) bugIds.add("913187");
+			if (manifestFile.getName().equals("fake-manifest-syncable.zip")) bugIds.add("913187");
+			if (manifestFile.getName().equals("manifest-0219-131433-939.zip")) bugIds.add("913187");
+			
+			// Bug 914717 - rct cat-manifest fails to report Contract from the embedded entitlement cert
+			if (manifestFile.getName().equals("manifest_SYS0395_RH0197181.zip")) bugIds.add("914717");
+			if (manifestFile.getName().equals("manifest_RH1569626.zip")) bugIds.add("914717");
+			
+			// Bug 914799 - rct cat-manifest fails to report Architectures from the embedded entitlement cert
+			if (manifestFile.getName().equals("stageSamTest20Nov2011.zip")) bugIds.add("914799");
+
+			// Bug 914843 - rct cat-manifest fails to report Provided Products from the embedded entitlement cert
+			if (manifestFile.getName().equals("manifest_SYS0395_RH0197181.zip")) bugIds.add("914843");
+			
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			ll.add(Arrays.asList(new Object[] {blockedByBzBug, manifestFile}));				
 		}
 		
 		return ll;

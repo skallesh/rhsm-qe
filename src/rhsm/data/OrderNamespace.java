@@ -29,7 +29,7 @@ public class OrderNamespace extends AbstractCommandLineData {
 	public String productName;
 	public String orderNumber;
 	public String productId;	// SKU
-	public String subscriptionNumber;	// REGTOKEN
+	public String subscriptionNumber;	// REGTOKEN	// Bug 914717 - rct cat-manifest fails to report Contract from the embedded entitlement cert
 	public String quantity;
 	public Calendar startDate;
 	public Calendar endDate;
@@ -397,7 +397,7 @@ public class OrderNamespace extends AbstractCommandLineData {
 		regexes.put("productName",			"Order:(?:(?:\\n.+)+)Name: (.+)");
 		regexes.put("orderNumber",			"Order:(?:(?:\\n.+)+)Number: (.+)");
 		regexes.put("productId",			"Order:(?:(?:\\n.+)+)SKU: (.+)");
-		regexes.put("subscriptionNumber",	"Order:(?:(?:\\n.+)+)Subscription Number: (.+)");
+		regexes.put("subscriptionNumber",	"Order:(?:(?:\\n.+)+)Subscription: (.+)");
 		regexes.put("quantity",				"Order:(?:(?:\\n.+)+)Quantity: (.+)");
 		regexes.put("startDate",			"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
 		regexes.put("endDate",				"Certificate:(?:(?:\\n.+)+)End Date: (.+)");

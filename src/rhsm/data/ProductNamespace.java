@@ -20,8 +20,8 @@ public class ProductNamespace extends AbstractCommandLineData {
 	// abstraction fields
 	public String name;
 	public String version;
-	public String arch;
-	public String providedTags;	// comma separated list of tags: String1, String2, String3
+	public String arch;			// comma separated list of architectures: x86_64,x86
+	public String providedTags;	// comma separated list of tags: rhel-6,rhel-6-server
 
 	public String id;
 	

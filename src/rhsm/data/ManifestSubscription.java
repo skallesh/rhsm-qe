@@ -215,17 +215,17 @@ public class ManifestSubscription extends AbstractCommandLineData {
 		regexes.put("created",				"^\\s+Created: (.+)");
 		regexes.put("startDate",			"^\\s+Start Date: (.+)");
 		regexes.put("endDate",				"^\\s+End Date: (.+)");
-		regexes.put("supportLevel",			"^\\s+Suport Level: (.+)");		// Bug 913302 - typo in msgid "Suport Level" and msgid "Suport Type"
-		regexes.put("supportType",			"^\\s+Suport Type: (.+)");		// Bug 913302 - typo in msgid "Suport Level" and msgid "Suport Type"
+		regexes.put("supportLevel",			"^\\s+Service Level: (.+)");		// Bug 913302 - typo in msgid "Suport Level" and msgid "Suport Type"
+		regexes.put("supportType",			"^\\s+Service Type: (.+)");			// Bug 913302 - typo in msgid "Suport Level" and msgid "Suport Type"
 		regexes.put("architectures",		"^\\s+Architectures: (.+)");
-		regexes.put("productId",			"^\\s+Product Id: (.+)");		// Bug 913703 - rct cat-manifest > Subscription:> "Product Id:" should be labeled as "SKU:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
+		regexes.put("productId",			"^\\s+SKU: (.+)");					// Bug 913703 - rct cat-manifest > Subscription:> "Product Id:" should be labeled as "SKU:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
 		regexes.put("contract",				"^\\s+Contract: (.+)");
-		regexes.put("subscriptionId",		"^\\s+Subscription Id: (.+)");	// Bug 913720 - rct cat-manifest > Subscription:> "Subscription Id:" should be labeled as "Order Number:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
+		regexes.put("subscriptionId",		"^\\s+Order Number: (.+)");			// Bug 913720 - rct cat-manifest > Subscription:> "Subscription Id:" should be labeled as "Order Number:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
 		regexes.put("entitlementFile",		"^\\s+Entitlement File: (.+)");
 		regexes.put("certificateFile",		"^\\s+Certificate File: (.+)");
 		regexes.put("certificateVersion",	"^\\s+Certificate Version: (.+)");
 		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)+)^\\s+Content Sets:");	// assumes "Content Sets:" is the next group
-		regexes.put("contentSets",			"^\\s+Content Sets:(.*(\\n.*?)+?)\\n(?:\\n|$)");	// assumes one or more content set values.  FIXME this will fail if there are no content sets
+		regexes.put("contentSets",			"^\\s+Content Sets:(.*(\\n.*?)+)(?:[\\s\\w]+:|$)");
 
 		
 		// find all the raw "Subscription:" groupings and then create one ManifestSubscription per raw "Subscription:" grouping
