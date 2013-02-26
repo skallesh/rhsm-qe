@@ -66,6 +66,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			.toLowerCase();
 	String factname="system.entitlements_valid";
 	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify that Consumer Account And Contract Id are Present in the consumed list", 
+			groups = { "VerifyConsumerAccountAndContractIdPresence"}, enabled = true)
+	@ImplementsNitrateTest(caseId=68738)
+	public void VerifyConsumerAccountAndContractIdPresence() throws JSONException,Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
+				Assert.assertNotNull(consumed.accountNumber);
+				Assert.assertNotNull(consumed.contractNumber);
+
+		}
+	}
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -73,7 +92,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(description = "verify that system should not be compliant for an expired subscription", 
 			groups = { "VerifySubscriptionOfBestProductWithUnattendedRegistration"}, enabled = true)
-	public void VerifySubscriptionOfBestProductWithUnattendedRegistration () throws JSONException,Exception {
+	@ImplementsNitrateTest(caseId=71208)
+	public void VerifySubscriptionOfBestProductWithUnattendedRegistration() throws JSONException,Exception {
 		Map<String,String> attributes = new HashMap<String,String>();
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
@@ -117,10 +137,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
+			moveProductCertFiles(null, false);
 				Assert.assertEquals(consumed.productName, "Multi-Stackable for 100000000000002");
 		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			
+			if(installed.productId.equals("100000000000002"))
 			Assert.assertEquals(installed.status, "Subscribed");
 
 		}
