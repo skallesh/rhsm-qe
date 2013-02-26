@@ -28,6 +28,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 
 (def windows (define-windows
                {:main-window "Subscription Manager"
+                :about-dialog "About Subscription Manager"
                 :contract-selection-dialog "Contract Selection"
                 :date-selection-dialog "Date Selection"
                 :error-dialog "Error"
@@ -58,30 +59,27 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (def elements
   (merge
     (define-elements (windows :main-window)
-      (merge (same-name capitalize [:registration-settings
-                                    :glossary
-                                    :update-certificates
+      (merge (same-name capitalize [:about
                                     :all-available-subscriptions
-                                    :my-subscriptions
-                                    :my-installed-products
-                                    :search
-                                    ;; now called attach
-                                        ;:subscribe
-                                    :attach
                                     :all-subscriptions-view
-                                    :my-subscriptions-view
-                                    :installed-view
-                                    ;; now called remove
-                                        ;:unsubscribe
-                                    :remove
-                                    :preferences
+                                    :attach
+                                    :calendar
                                     :configure-proxy
-                                    :view-system-facts
-                                    :help
-                                    :getting-started
-                                    :online-documentation
                                     :filters
-                                    :calendar])
+                                    :getting-started
+                                    :glossary
+                                    :help
+                                    :installed-view
+                                    :my-installed-products
+                                    :my-subscriptions
+                                    :my-subscriptions-view
+                                    :online-documentation
+                                    :preferences
+                                    :registration-settings
+                                    :remove
+                                    :search
+                                    :update-certificates
+                                    :view-system-facts])
                     {:date-entry "date-entry"
                      :register-system "Register System"
                      :redeem "Redeem a Subscription"
@@ -137,12 +135,6 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :sla-cancel "Cancel"
          :sla-back "Back"
          })
-    (comment ;;this stuff is now part of the register-dialog
-      (define-elements (windows :subscribe-system-dialog)
-        {:sla-subscribe "Subscribe"
-         :sla-forward "Forward"
-         :sla-cancel "Cancel"
-         :sla-back "Back"}))
     (define-elements (windows :question-dialog)
       (same-name capitalize [:yes
                              :no ]))
@@ -157,8 +149,6 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :contract-selection-dialog)
       {:contract-selection-table "tbl0"
        :cancel-contract-selection "Cancel"
-       ;; now attach
-       ;:subscribe-contract-selection "Subscribe"
        :attach-contract-selection "Attach"
        })
     (define-elements (windows :proxy-config-dialog)
@@ -214,14 +204,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
       {:text-entry-toggle "Type a file name"
        :import-cert "Import"
        :import-cancel "Cancel"})
-    (comment ;this is now embedded into the import window
-      (define-elements (windows :file-chooser)
-        {:text-entry-toggle "Type a file name"
-         :file-cancel "Cancel"
-         :file-open "Open"}))
     (define-elements (windows :system-preferences-dialog)
       {:close-system-prefs "Close"
-       ;; these are bullshit, change for bug 909294
        :service-level-dropdown "sla_selection_combobox"
        :release-dropdown "release_selection_combobox"})
     (define-elements (windows :date-selection-dialog)
@@ -229,7 +213,15 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :subscription-redemption-dialog)
       {:email-address "Email Address Text"
        :redeem-cancel "Cancel"
-       :redeem "Redeem"})))
+       :redeem "Redeem"})
+    (define-elements (windows :about-dialog)
+      {;;these info fields are meant to be used by running gettext on them
+       :python-rhsm-version "python-rhsm version*"
+       :rhsm-service-version "subscription management service version*"
+       :rhsm-version "Subscription Manager*"
+       :next-system-check "Next System Check-in*"
+       :license "License"
+       :close-about-dialog "Close"})))
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
