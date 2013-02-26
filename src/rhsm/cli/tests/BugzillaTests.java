@@ -72,6 +72,71 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@Test(description = "verify if bind and unbind event is recorded in syslog", 
+			groups = { "VerifyBindAndUnbindInSyslog"}, enabled = true)
+	@ImplementsNitrateTest(caseId=68740)
+	public void VerifyBindAndUnbindInSyslog() throws JSONException,Exception {
+		BigInteger serialnums =null;
+		String productId=null;
+		String poolId=null;
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		
+	clienttasks.subscribe(true, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
+	String SyslogMessage="Added subscription for";
+	RemoteFileTasks.runCommandAndAssert(client,"tail -20 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
+	
+	clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
+	SyslogMessage="Removed subscription for '";
+	RemoteFileTasks.runCommandAndAssert(client,"tail -20 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
+	
+	for (SubscriptionPool available : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+		poolId=available.poolId;
+		productId=available.subscriptionName;
+	}
+	clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null);
+	SyslogMessage="Added subscription for '"+productId+"'";
+	RemoteFileTasks.runCommandAndAssert(client,"tail -20 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
+	
+	for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+		serialnums=consumed.serialNumber;
+		productId=consumed.productName;
+	}
+	clienttasks.unsubscribe(null, serialnums, null, null, null);
+	SyslogMessage="Removed subscription for '"+productId+"'";
+	RemoteFileTasks.runCommandAndAssert(client,"tail -20 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
+
+	
+
+
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if register and unregister event is recorded in syslog", 
+			groups = { "VerifyRegisterAndUnregisterInSyslog"}, enabled = true)
+	@ImplementsNitrateTest(caseId=68749)
+	public void VerifyRegisterAndUnregisterInSyslog() throws JSONException,Exception {
+	clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
+	String consumerid=clienttasks.getCurrentConsumerId();
+	String SyslogMessage="Registered system with identity: "+consumerid;
+		RemoteFileTasks.runCommandAndAssert(client,"tail -10 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
+	clienttasks.unregister(null, null, null);	
+	SyslogMessage="Unregistered machine with identity: "+consumerid;
+	RemoteFileTasks.runCommandAndAssert(client,"tail -10 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
+
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
 	@Test(description = "verify that Consumer Account And Contract Id are Present in the consumed list", 
 			groups = { "VerifyConsumerAccountAndContractIdPresence"}, enabled = true)
 	@ImplementsNitrateTest(caseId=68738)
@@ -1505,7 +1570,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate("/root/Expiredcert.pem");
 		consumed = clienttasks.list_(null, null, true, null, null, null,null, null, null).getStdout();
-		Assert.assertTrue(!(consumed == null));
+		Assert.assertFalse((consumed == null));
 		SSHCommandResult result = clienttasks.unsubscribe(true,(BigInteger) null, null, null, null);
 		List<File> Entitlementcerts = clienttasks
 				.getCurrentEntitlementCertFiles();
