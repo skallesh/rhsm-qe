@@ -1528,7 +1528,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		List<String> poolId = new ArrayList<String>();
-		String productId = null;
 		Map<String, String> factsMap = new HashMap<String, String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,(String) null, null, null, null, true, null, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
@@ -1544,31 +1543,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if (pool.multiEntitlement) {
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,	sm_clientPassword, sm_serverUrl, pool.poolId,"sockets");
 				if ((!(poolProductSocketsAttribute == null))&& poolProductSocketsAttribute.equals("1")) {
-					clienttasks.subscribe(null, null, pool.poolId, null, null,null, null, null, null, null, null).getStdout();
+					clienttasks.subscribe(null, null, pool.poolId, null, null,null, null, null, null, null, null);
 					poolId.add(pool.poolId);
-
 				}
 			}}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if (installed.status.equals("Partially Subscribed")) {
-				productId = installed.productId;
-				clienttasks.subscribe(null, null, poolId, null, null, null,null, null, null, null, null).getStdout();
+			Assert.assertEquals(installed.status, "Partially Subscribed");
 			}
-		}
+		clienttasks.subscribe(null, null, poolId, null, null, null,null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-			if (productId.equals(installedProduct.productId)) {
-				if (!(installedProduct.status.equals("Subscribed")))
 					moveProductCertFiles("", false);
 					List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
 					Assert.assertEquals(consumed.size(), sockets);
 					Assert.assertEquals(installedProduct.status, "Subscribed");
 			}
-		}
 		sockets = 1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
 		clienttasks.facts(null, true, null, null, null);
-
 	}
 
 	/**
