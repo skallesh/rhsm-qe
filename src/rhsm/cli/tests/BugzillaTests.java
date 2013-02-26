@@ -774,7 +774,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,
 				sm_serverAdminPassword, sm_serverUrl, "/consumers/"
 						+ consumerId);
-		String result=clienttasks.facts(null, true, null, null, null).getStderr();
+		String result=clienttasks.facts_(null, true, null, null, null).getStderr();
 		String ExpectedMsg="Consumer "+consumerId+" has been deleted";
 		Assert.assertEquals(result.trim(), ExpectedMsg);
 	}
@@ -789,7 +789,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithConsumeridOfDeletedOwner() throws JSONException,Exception {
 		String orgname="testOwner1";
 		servertasks.createOwnerUsingCPC(orgname);
-		clienttasks.register(sm_serverAdminUsername, sm_serverAdminPassword,
+		clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword,
 				orgname, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId=clienttasks.getCurrentConsumerId();
@@ -814,7 +814,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String orgname="testOwner1";
 		servertasks.createOwnerUsingCPC(orgname);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
-		SSHCommandResult result=clienttasks.register(sm_serverAdminUsername, sm_serverAdminPassword,orgname, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
+		SSHCommandResult result=clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword,orgname, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
 		String expected="Organization "+orgname+" does not exist.";
 		Assert.assertEquals(result.getStderr().trim(), expected);
 	}
@@ -886,7 +886,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	"blockedByBug-869729" }, enabled = true)
 	public void VerifyAutoSubscribeAndActivationkeyTogether()
 			throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
@@ -994,7 +994,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		}
 		String pool = randomizeCaseOfCharactersInString(poolId);
-		clienttasks.subscribe(null, null, pool, null, null, null, null, null,
+		clienttasks.subscribe_(null, null, pool, null, null, null, null, null,
 				null, null, null);
 		List<File> Cert = clienttasks.getCurrentEntitlementCertFiles();
 		Assert.assertEquals(Cert.size(), 0);
@@ -1142,7 +1142,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		String invalidconsumerId = randomGenerator.nextInt() + consumerId;
 		System.out.println(invalidconsumerId + "  " + consumerId);
-		SSHCommandResult result = clienttasks.register(sm_clientUsername,
+		SSHCommandResult result = clienttasks.register_(sm_clientUsername,
 				sm_clientPassword, sm_clientOrg, null, null, null,
 				invalidconsumerId, null, null, null, (String) null, null, null,
 				null, true, null, null, null, null);
@@ -1371,7 +1371,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerid = clienttasks.getCurrentConsumerId();
-		String result = clienttasks.register(sm_clientUsername,
+		String result = clienttasks.register_(sm_clientUsername,
 				sm_clientPassword, sm_clientOrg, null, null, null, consumerid,
 				null, null, null, (String) null, null, null, null, true, null,
 				null, null, null).getStderr();
@@ -1602,7 +1602,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.trim(), Expected);
 		command = "rm -rf " + FilePath;
 		client.runCommandAndWait(command);
-		result = clienttasks.register(sm_clientUsername, sm_clientPassword,
+		result = clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, null, null, null, null, null)
 				.getStdout();
@@ -1632,7 +1632,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String basicauthproxyUrl = String.format("%s:%s", "testmachine.com",
 				sm_basicauthproxyPort);
 		basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
-		String facts = clienttasks.facts(null, true, basicauthproxyUrl, null,
+		String facts = clienttasks.facts_(null, true, basicauthproxyUrl, null,
 				null).getStderr();
 		String Expect = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
 		Assert.assertEquals(facts.trim(), Expect);
@@ -1818,7 +1818,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		Assert.assertEquals(consumerCert.name, name);
 		name = "";
-		SSHCommandResult result = clienttasks.register(sm_clientUsername,
+		SSHCommandResult result = clienttasks.register_(sm_clientUsername,
 				sm_clientPassword, sm_clientOrg, null, null, name, null, null,
 				null, null, (String) null, null, null, null, true, null, null,
 				null, null);
@@ -1855,7 +1855,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<ProductSubscription> consumedSubscriptionsBeforeregister = clienttasks
 				.getCurrentlyConsumedProductSubscriptions();
 		clienttasks.clean_(null, null, null);
-		clienttasks.register(sm_client2Username, sm_clientPassword,
+		clienttasks.register_(sm_client2Username, sm_clientPassword,
 				sm_clientOrg, null, null, null, consumerId, null, null, null,
 				(String) null, null, null, null, null, null, null, null, null);
 		String consumerIdAfter = clienttasks.getCurrentConsumerId();
@@ -1966,7 +1966,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "subscription-manager: attempt register to with white space in the user name should fail", groups = {
 			"registeredTests", "blockedByBug-719378" }, enabled = true)
 	public void AttemptregisterWithWhiteSpacesInUsername_Test() {
-		SSHCommandResult result = clienttasks.register("user name",
+		SSHCommandResult result = clienttasks.register_("user name",
 				"password", sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		Assert.assertEquals(
