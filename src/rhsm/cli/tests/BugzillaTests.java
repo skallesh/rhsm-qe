@@ -795,7 +795,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId=clienttasks.getCurrentConsumerId();
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
 		clienttasks.clean_(null, null, null);
-		SSHCommandResult result=clienttasks.register(sm_serverAdminUsername, sm_serverAdminPassword, orgname, null, null, null, consumerId, null, null, null,(String)null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result=clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword, orgname, null, null, null, consumerId, null, null, null,(String)null, null, null, null, null, null, null, null, null);
 		String expected="Consumer "+consumerId+" has been deleted";
 		Assert.assertEquals(result.getStderr().trim(), expected);
 	}
@@ -886,7 +886,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	"blockedByBug-869729" }, enabled = true)
 	public void VerifyAutoSubscribeAndActivationkeyTogether()
 			throws JSONException, Exception {
-		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
@@ -900,7 +900,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						sm_clientPassword, sm_serverUrl, "/owners/"
 								+ sm_clientOrg + "/activation_keys",
 								jsonActivationKeyRequest.toString()));
-		SSHCommandResult result = clienttasks.register(null, null,
+		SSHCommandResult result = clienttasks.register_(null, null,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				jsonActivationKey.get("name").toString(), null, null, null,
 				true, null, null, null, null);
@@ -1039,8 +1039,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
-		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"certFrequency".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
@@ -1676,8 +1674,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Map<String, String> factsMap = new HashMap<String, String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,(String) null, null, null, null, true, null, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if (!(installed.productId.equals("100000000000002")))
+			if (!(installed.productId.equals("100000000000002"))){
 				moveProductCertFiles(installed.productId + ".pem", true);
+			}
 		}
 		int sockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
