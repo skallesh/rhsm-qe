@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -75,9 +76,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "NoMultipleReposCreated"}, enabled = true)
 		public void NoMultipleReposCreated() throws JSONException,Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, true, null, null,
+				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 		Calendar now = new GregorianCalendar();
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"multi-stackable");
+		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "multi-stackable");
 		Date onDate = now.getTime();
 		now.add(Calendar.YEAR, 1);
 		now.add(Calendar.DATE, 1);
@@ -95,19 +101,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, onDate, onDateToTest,"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+		CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 		sleep(3*60*1000);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
 		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			if(pools.subscriptionName.equals("Multi-Stackable")){
-			clienttasks.subscribeToSubscriptionPoolUsingPoolId(pools);	
+			clienttasks.subscribe(null, null,pools.poolId, null, null, null, null, null, null, null, null);	
 			}
 		}
-		
-		String result=clienttasks.repos(true,(String)null,(String)null, null, null, null).getStdout();
-		System.out.println(result);
-		
-		
-	}
+		String productIdOne=null;
+		List<Repo> originalRepos =clienttasks.getCurrentlySubscribedRepos();
+		for (Repo repo : originalRepos) {
+			String productIdTwo=null;
+			productIdOne=repo.repoId;
+			if(!(productIdTwo==null)){
+			Assert.assertNotSame(repo.repoId, productIdOne);
+			}
+			productIdTwo=productIdOne;
+		}
+			
+		}
+
+				
+	
 	
 	
 	/**
@@ -2975,6 +2993,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("mkdir -p " + "/etc/pki/faketmp");
 		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/*_.pem"
 				+ " " + "/etc/pki/faketmp/");
+	}
+	
+	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {
+		boolean foundMatches = false;
+		Matcher matcher = regex.matcher(to_parse);
+		int currListElem=0;
+		while (matcher.find()){
+			if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
+			Map<String,String> matchMap = matchList.get(currListElem);
+			matchMap.put(sub_key, matcher.group(1).trim());
+			matchList.set(currListElem, matchMap);
+			currListElem++;
+			foundMatches = true;
+		}
+        if (!foundMatches) {
+        	//log.warning("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
+        	log.finer("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
+        }
+		return foundMatches;
 	}
 
 	@AfterClass(groups = "setup")
