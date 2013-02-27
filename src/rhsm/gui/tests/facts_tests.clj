@@ -144,7 +144,7 @@
 
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-829900"]}}
-  verify_about_versions [_]
+  verify_about_information [_]
   (try
     (tasks/ui click :about)
     (tasks/ui waittillwindowexist :about-dialog 10)
