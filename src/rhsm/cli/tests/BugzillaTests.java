@@ -65,7 +65,39 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir"
 			.toLowerCase();
 	String factname="system.entitlements_valid";
-	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if bind and unbind event is recorded in syslog", 
+			groups = { "DeleteContentSourceFromProduct"}, enabled = true)
+	@ImplementsNitrateTest(caseId=68740)
+	public void DeleteContentSourceFromProduct() throws JSONException,Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		 List<String> modifiedProductIds=null;
+		 String contentId= "99999";
+		 Map<String,String> attributes = new HashMap<String,String>();
+		 attributes.put("sockets", "8");
+		 attributes.put("arch", "ALL");
+		String requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, modifiedProductIds).toString();
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/content", requestBody);	
+		CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
+		Assert.assertEquals(jsonActivationKey.getString("displayMessage"), "Content with id "+contentId+" could not be found.");
+		requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, modifiedProductIds).toString();
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/content", requestBody);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"fooname","fooproduct", null,attributes ,null);
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/products/fooproduct/content/"+contentId+"?enabled=false",null);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
+		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
+		Assert.assertContainsNoMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "fooproduct");
+
+	}
 	
 	/**
 	 * @author skallesh
@@ -193,7 +225,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		sleep(3*60*1000);
-		int sockets=14;
+		int sockets=16;
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
@@ -1601,7 +1633,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		command = "rm -rf " + FilePath;
 		client.runCommandAndWait(command);
 		result = clienttasks.register_(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, true, null, null,
+				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, null, null, null, null, null)
 				.getStdout();
 		Assert.assertContainsMatch(result.trim(),
@@ -1692,15 +1724,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				}
 			}}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(installed.productId.equals("100000000000002")){
 			Assert.assertEquals(installed.status, "Partially Subscribed");
+			}
 			}
 		clienttasks.subscribe(null, null, poolId, null, null, null,null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 					moveProductCertFiles("", false);
+					if(installedProduct.productId.equals("100000000000002")){
 					List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
 					Assert.assertEquals(consumed.size(), sockets);
 					Assert.assertEquals(installedProduct.status, "Subscribed");
-			}
+		}}
 		sockets = 1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
