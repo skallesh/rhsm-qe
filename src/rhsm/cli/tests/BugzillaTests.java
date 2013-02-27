@@ -65,14 +65,58 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir"
 			.toLowerCase();
 	String factname="system.entitlements_valid";
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if bind and unbind event is recorded in syslog", 
-			groups = { "DeleteContentSourceFromProduct"}, enabled = true)
-	@ImplementsNitrateTest(caseId=68740)
+			groups = { "NoMultipleReposCreated"}, enabled = true)
+		public void NoMultipleReposCreated() throws JSONException,Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		Calendar now = new GregorianCalendar();
+		Date onDate = now.getTime();
+		now.add(Calendar.YEAR, 1);
+		now.add(Calendar.DATE, 1);
+		Date onDateToTest = now.getTime();
+		Map<String,String> attributes = new HashMap<String,String>();
+		attributes.put("sockets", "8");
+		attributes.put("arch", "ALL");
+		attributes.put("type", "MKT");
+		attributes.put("multi-entitlement", "yes");
+		attributes.put("stacking_id", "726409");
+		List<String> providedProducts = new ArrayList<String>();
+		providedProducts.add("100000000000002");
+		providedProducts.add("100000000000001");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"Multi-Stackable","multi-stackable", 1,attributes ,null);
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, onDate, onDateToTest,"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+		sleep(3*60*1000);
+		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			if(pools.subscriptionName.equals("Multi-Stackable")){
+			clienttasks.subscribeToSubscriptionPoolUsingPoolId(pools);	
+			}
+		}
+		
+		String result=clienttasks.repos(true,(String)null,(String)null, null, null, null).getStdout();
+		System.out.println(result);
+		
+		
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if bind and unbind event is recorded in syslog", 
+			groups = { "DeleteContentSourceFromProduct","blockedByBug-687970"}, enabled = true)
 	public void DeleteContentSourceFromProduct() throws JSONException,Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
@@ -199,11 +243,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if(!(installed.productId.equals("100000000000002"))){
-				moveProductCertFiles(installed.productId + ".pem", true);
-			}
-		}
+		
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 		Calendar now = new GregorianCalendar();
@@ -230,21 +270,29 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("100000000000002"))){
+				moveProductCertFiles(installed.productId+"_"+ ".pem", true);
+				moveProductCertFiles(installed.productId + ".pem", true);
+			}
+		}
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
-			moveProductCertFiles(null, false);
-				Assert.assertEquals(consumed.productName, "Multi-Stackable for 100000000000002");
-		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(installed.productId.equals("100000000000002"))
 			Assert.assertEquals(installed.status, "Subscribed");
 
 		}
-		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"multi-stackable");
-		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "multi-stackable");
+		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
+			moveProductCertFiles(null, false);
+			CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"multi-stackable");
+			CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "multi-stackable");
+			Assert.assertEquals(consumed.productName, "Multi-Stackable for 100000000000002");
+		}
+		
+		
 		
 	}
 	
@@ -416,7 +464,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if system.entitlements_valid goes from valid to partial after oversubscribing", 
-			groups = { "systemEntitlementsValidityAfterOversubscribing",/*"blockedByBug-845126"*/}, enabled = true)
+			groups = { "systemEntitlementsValidityAfterOversubscribing","blockedByBug-845126"}, enabled = true)
 	public void systemEntitlementsValidityAfterOversubscribing() throws JSONException,Exception {
 		Boolean noMultiEntitlements=true;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -680,7 +728,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
-			groups = { "AddingVirtualPoolToActivationKey"}, enabled = true)
+			groups = { "AddingVirtualPoolToActivationKey","blockedByBug-755677"}, enabled = true)
 	public void AddingVirtualPoolToActivationKey() throws JSONException,Exception {
 		Integer addQuantity=1;
 		int count =0;
@@ -1634,17 +1682,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait(command);
 		result = clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, null, null, null, null, null)
+				(String) null, null, null, null, true, null, null, null, null)
 				.getStdout();
 		Assert.assertContainsMatch(result.trim(),
 				"The system has been registered with id: [a-f,0-9,\\-]{36}");
 
 	}
-	// ensure the empty ca cert is removed after VerifyEmptyCertCauseRegistrationFailure_Test to avoid subsequent test failures due to "Bad CA certificate: /etc/rhsm/ca/myemptycert.pem" 
+	
 	@AfterGroups(groups = {"setup"}, value = {"VerifyEmptyCertCauseRegistrationFailure_Test"})
 	public void removeMyEmptyCaCertFile() {
 		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
 	}
+	
 	protected final String myEmptyCaCertFile = "/etc/rhsm/ca/myemptycert.pem";
 
 	/**
