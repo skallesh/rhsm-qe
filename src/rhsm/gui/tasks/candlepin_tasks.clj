@@ -20,6 +20,14 @@
         prefix(SubscriptionManagerBaseTestScript/sm_serverPrefix)]
     (str hostname (if-not (blank? port) (str ":" port))  prefix)))
 
+(defn get-rhsm-service-version
+  "Returns the version and realease of the candlepin server."
+  []
+  (let [status (rest/get (str (server-url) "/status")
+                         (@config :username)
+                         (@config :password))]
+    (str (:version status) "-" (:release status))))
+
 ; Not a candlepin task, but sticking this here.
 (defn get-consumer-id
   "Returns the consumer id if registered."

@@ -28,15 +28,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to access functionality without registering",
-			groups={},
+			groups={"blockedByBug-749332"},
 			dataProvider="UnregisteredCommandData")
-	@ImplementsNitrateTest(caseId=41697)
+	@ImplementsNitrateTest(caseId=50215)
 	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
 		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
 		clienttasks.unregister(null, null, null);
-		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner, command);
-		//RemoteFileTasks.runCommandAndAssert(client,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);
-		// results changed after bug fix 749332
+		//RemoteFileTasks.runCommandAndAssert(client,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);	// results changed after bug fix 749332
 		RemoteFileTasks.runCommandAndAssert(client,command,255,"^"+clienttasks.msg_ConsumerNotRegistered,null);
 
 	}

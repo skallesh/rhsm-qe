@@ -11,6 +11,7 @@
         clojure.pprint
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
@@ -140,6 +141,30 @@
     (finally (if (= 1 (tasks/ui guiexist :system-preferences-dialog))
                (tasks/ui click :close-system-prefs))
              (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all"))))
+
+(defn ^{Test {:groups ["facts"
+                       "blockedByBug-829900"]}}
+  verify_about_versions [_]
+  (try
+    (tasks/ui click :about)
+    (tasks/ui waittillwindowexist :about-dialog 10)
+    (let [get-gui-version (fn [k] (last (split (tasks/ui gettextvalue k) #" ")))
+          gui-pyrhsm (get-gui-version :python-rhsm-version)
+          gui-rhsm (get-gui-version :rhsm-version)
+          gui-rhsm-service (get-gui-version :rhsm-service-version)
+          rpm-qi (fn [p s] (trim (.getStdout
+                                 (.runCommandAndWait
+                                  @clientcmd
+                                  (str "rpm -qi " p " | grep " s " | awk '{print $3}'")))))
+          get-cli-version (fn [p] (str (rpm-qi p "Version") "-" (rpm-qi p "Release")))
+          cli-pyrhsm (get-cli-version "python-rhsm")
+          cli-rhsm (get-cli-version "subscription-manager-gui")
+          cli-rhsm-service (ctasks/get-rhsm-service-version)]
+      (verify (= gui-pyrhsm cli-pyrhsm))
+      (verify (= gui-rhsm cli-rhsm))
+      (verify (= gui-rhsm-service cli-rhsm-service)))
+    (finally (if (= 1 (tasks/ui guiexist :about-dialog))
+               (tasks/ui click :close-about-dialog)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
