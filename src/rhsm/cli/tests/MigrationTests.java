@@ -912,6 +912,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// assert that when --no-auto is specified, no entitlements were granted during the rhsm registration
 		String autosubscribeAttemptedMsg = "Attempting to auto-subscribe to appropriate subscriptions ...";
 		autosubscribeAttemptedMsg = "Attempting to auto-attach to appropriate subscriptions ...";	// changed by bug 876294
+		autosubscribeAttemptedMsg = "Attempting to auto-attach to appropriate subscriptions...";	// changed by subscription-manager commit 1fba5696
 		String autosubscribeFailedMsg = "Unable to auto-subscribe.  Do your existing subscriptions match the products installed on this system?";
 		autosubscribeFailedMsg = "Unable to auto-attach.  Do your existing subscriptions match the products installed on this system?";	// changed by bug 876294
 		if (options.contains("-n")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
