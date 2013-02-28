@@ -127,9 +127,9 @@ public class SubscriptionManagerTasks {
 		//if (redhatRelease.contains("IBM POWER")) variant = "IBM Power";	//74.pem	Red Hat Enterprise Linux for IBM POWER	// TODO  Not sure if these are correct or if they are just Server on a different arch
 		//if (redhatRelease.contains("IBM System z")) variant = "System Z";	//72.pem	Red Hat Enterprise Linux for IBM System z	// TODO
 
-		Pattern pattern = Pattern.compile("\\d+\\.\\d+");
+		Pattern pattern = Pattern.compile("\\d+\\.\\d+"/*,Pattern.DOTALL*/);
 		Matcher matcher = pattern.matcher(redhatRelease);
-		Assert.assertTrue(matcher.find(),"Extracted redhatReleaseXY '"+matcher.group()+"' from '"+redhatRelease+"'");
+		Assert.assertTrue(matcher.find(),"Extracted RHEL redhatReleaseXY from '"+redhatRelease+"'");
 		redhatReleaseXY = matcher.group();
 		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
 		
@@ -260,9 +260,8 @@ public class SubscriptionManagerTasks {
 			
 			// install rpmUrl
 			log.info("Installing RPM from "+rpmUrl+"...");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"."+rpmPath+". saved");
-			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" "+installOptions).getExitCode(),Integer.valueOf(0),
-					"Yum installed local rpm: "+rpmPath);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
+			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" "+installOptions).getExitCode(), Integer.valueOf(0), "ExitCode from yum installed local rpm: "+rpmPath);
 		}
 		
 		// attempt to install all required packages that are not already installed
@@ -294,7 +293,7 @@ public class SubscriptionManagerTasks {
 			
 			// upgrade rpmUrl
 			log.info("Upgrading RPM from "+rpmUrl+"...");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"."+rpmPath+". saved");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
 			rpmPaths += rpmPath; rpmPaths += " ";
 		}
 		if (!rpmUpdateUrls.isEmpty()) Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localupdate "+rpmPaths+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated local rpms: "+rpmPaths);
