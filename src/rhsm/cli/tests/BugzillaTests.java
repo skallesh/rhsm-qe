@@ -63,6 +63,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey="";
 	protected String randomAvailableProductId;
 	protected EntitlementCert expiringCert = null;
+	protected String EndingDate;
 	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir"
 			.toLowerCase();
 	String factname="system.entitlements_valid";
@@ -72,7 +73,127 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if bind and unbind event is recorded in syslog", 
+	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", 
+			groups = { "ServerURLInRHSMFile","blockedByBug-916353"}, enabled = true)
+		public void ServerURLInRHSMFile() throws JSONException,Exception {
+		String defaultHostname = "rhel7.com";
+		String defaultPort = "8443";
+		String defaultPrefix = "/candlepin";
+		String org="foo";
+		String valueBeforeRegister=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
+		clienttasks.register(sm_clientUsername, sm_clientPassword,org, null, null, null, null, null, null, null,(String) null,defaultHostname+":"+defaultPort+"/"+defaultPrefix, null, null, null, null, null, null, null);
+		String valueAfterRegister = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
+		Assert.assertEquals(valueBeforeRegister, valueAfterRegister);
+		
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", 
+			groups = { "DipslayServicelevelWhenRegisteredToDiffrentMachine","blockedByBug-916362"}, enabled = true)
+		public void DipslayServicelevelWhenRegisteredToDiffrentMachine() throws JSONException,Exception {
+		String defaultHostname = "subscription.rhn.redhat.com";
+		String defaultPort = "443";
+		String defaultPrefix = "/subscription";
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, null, null, null, null, null);
+		String result=clienttasks.service_level_(null, null, null, null, null, null, null,defaultHostname+":"+defaultPort+"/"+defaultPrefix , null, null, null, null).getStdout();
+		Assert.assertEquals(result.trim(), "You are already registered to a different system");
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", 
+			groups = { "ExpirationOfEntitlementCerts"}, enabled = true)
+		public void ExpirationOfEntitlementCerts() throws JSONException,Exception {
+		int endingMinutesFromNow = 1;
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, null, null, null, null, null);
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		String productId=null;
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
+		for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			if(pool.poolId.equals(expiringPoolId)){
+				productId=pool.subscriptionName;
+			}
+		}
+		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null).getStdout();
+		sleep(2*60*1000);
+		for(Repo originalRepos :clienttasks.getCurrentlySubscribedRepos()){
+			Assert.assertNotSame(originalRepos.repoId, randomAvailableProductId);
+		}
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		String result=clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null).getStdout();	
+		String expected="Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+productId+" expired on: "+EndingDate;
+		Assert.assertEquals(result.trim(), expected);
+}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", 
+			groups = { "SubscribeToexpiredEntitlement"}, enabled = true)
+		public void SubscribeToexpiredEntitlement() throws JSONException,Exception {
+		int endingMinutesFromNow = 1;
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, null, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		sleep(1*60*1000);
+		clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null);
+		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
+		Assert.assertTrue(clienttasks.getCurrentEntitlementCertFiles().isEmpty());
+		
+		
+		}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if imported certs are deleted after registering", 
+			groups = { "EntitlementCertShouldNotBeDeleted"}, enabled = true)
+		public void EntitlementCertShouldNotBeDeleted() throws JSONException,Exception {
+		clienttasks.unregister(null, null, null);
+		File expectCertFile = new File(System.getProperty("automation.dir",null) + "/expiredcerts/CertV3.pem");
+		RemoteFileTasks.putFile(client.getConnection(),expectCertFile.toString(), "/root/", "0755");
+		clienttasks.importCertificate_("/root/CertV3.pem");
+		List<File> BeforeRegister=clienttasks.getCurrentEntitlementCertFiles();
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, null, null, null, null, null);
+		List<File> AfterRegister=clienttasks.getCurrentEntitlementCertFiles();
+		Assert.assertEquals(BeforeRegister, AfterRegister);
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if no multiple repos are created,if subscribed to a product that share one or more engineering subscriptions", 
 			groups = { "NoMultipleReposCreated"}, enabled = true)
 		public void NoMultipleReposCreated() throws JSONException,Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -572,6 +693,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("100000000000002"))){
+				moveProductCertFiles(installed.productId + "_.pem", true);
 				moveProductCertFiles(installed.productId + ".pem", true);
 			}
 		}
@@ -1160,7 +1282,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify content set associated with product", groups = { "VerifyUnsubscribingCertV3","blockedByBug-895447" }, enabled = true)
+	@Test(description = "verify content set associated with product", groups = { "VerifyUnsubscribingCertV3","blockedByBug-895447"}, enabled = true)
 	@ImplementsNitrateTest(caseId = 50215)
 	public void VerifyUnsubscribingCertV3() throws JSONException, Exception {
 
@@ -1168,10 +1290,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		File expectCertFile = new File(System.getProperty("automation.dir",
-				null) + "/expiredcerts/certV3.pem");
+				null) + "/expiredcerts/CertV3.pem");
 		RemoteFileTasks.putFile(client.getConnection(),
 				expectCertFile.toString(), "/root/", "0755");
-		clienttasks.importCertificate_("/root/certV3.pem");
+		clienttasks.importCertificate_("/root/CertV3.pem");
 		String expected = "This machine has been unsubscribed from 1 subscriptions";
 		String result = clienttasks.unsubscribe(true, (BigInteger) null, null,
 				null, null).getStdout();
@@ -1186,17 +1308,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify  rhsmcertd is logging update failed (255)", groups = {
 			"VerifyRHSMCertdLogging", "blockedByBug-708512","blockedByBug-907638" }, enabled = true)
 	public void VerifyRHSMCertdLogging() throws JSONException, Exception {
-		int certFrequency = 1;
+		int autoAttachInterval = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String Frequency = clienttasks.getConfFileParameter(
-				clienttasks.rhsmConfFile, "certFrequency");
-		clienttasks.restart_rhsmcertd(certFrequency, null, false, null);
+				clienttasks.rhsmConfFile, "autoAttachInterval");
+		clienttasks.restart_rhsmcertd(autoAttachInterval, null, false, null);
 		clienttasks.waitForRegexInRhsmcertdLog("update failed (255)", 1);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"certFrequency".toLowerCase(), Frequency });
+				"autoAttachInterval".toLowerCase(), Frequency });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 
 	}
@@ -1694,7 +1816,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String command = "touch " + FilePath;
 		client.runCommandAndWait(command);
 		String result = clienttasks.register(sm_clientUsername,
-				sm_clientPassword, sm_clientOrg, null, null, null, null, true,
+				sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 				null, null, (String) null, null, null, null, null, null, null,
 				null, null).getStdout();
 		String Expected = "Bad CA certificate: " + FilePath;
@@ -2997,24 +3119,103 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/*_.pem"
 				+ " " + "/etc/pki/faketmp/");
 	}
-	
-	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {
-		boolean foundMatches = false;
-		Matcher matcher = regex.matcher(to_parse);
-		int currListElem=0;
-		while (matcher.find()){
-			if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
-			Map<String,String> matchMap = matchList.get(currListElem);
-			matchMap.put(sub_key, matcher.group(1).trim());
-			matchList.set(currListElem, matchMap);
-			currListElem++;
-			foundMatches = true;
+	/**
+	 * @param startingMinutesFromNow
+	 * @param endingMinutesFromNow
+	 * @return poolId to the newly available SubscriptionPool
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {
+		Calendar endCalendar = new GregorianCalendar();
+		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
+		Date endDate = endCalendar.getTime();
+		DateFormat EndDateFormat = new SimpleDateFormat("MM/dd/yy hh:mm a");
+		EndingDate=EndDateFormat.format(endDate);
+		
+		if (true) return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId, null).getString("id");
+// TODO DELETE THE REST OF THIS METHOD'S CODE WHEN WE KNOW THE ABOVE CANDLEPIN TASK IS WORKING 8/12/2011
+		
+		// set the start and end dates
+		
+		Calendar startCalendar = new GregorianCalendar();
+		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
+		Date startDate = startCalendar.getTime();
+		
+		// randomly choose a contract number
+		Integer contractNumber = Integer.valueOf(getRandInt());
+		
+		// randomly choose an account number
+		Integer accountNumber = Integer.valueOf(getRandInt());
+		
+		// choose a product id for the subscription
+		//String productId =  "MKT-rhel-server";  // too hard coded
+		//JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
+		//String productId = null;
+		//do {	// pick a random productId (excluding a personal productId) // too random; could pick a product that is not available to this system
+		//	productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
+		//} while (getPersonProductIds().contains(productId));
+		String productId = randomAvailableProductId;
+		// choose providedProducts for the subscription
+		//String[] providedProducts = {"37068", "37069", "37060"};
+		//String[] providedProducts = {
+		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
+		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
+		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
+		//};
+		List<String> providedProducts = null;
+		
+		// create the subscription
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();
+		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
+		
+		// refresh the pools
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+		
+		// assemble an activeon parameter set to the start date so we can pass it on to the REST API call to find the created pool
+		DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");	
+
+		// "2012-02-08T00:00:00.000+0000"
+		String iso8601FormatedDateString = iso8601DateFormat.format(startDate);
+		iso8601FormatedDateString = iso8601FormatedDateString.replaceFirst("(..$)", ":$1");	
+		
+		
+		// "2012-02-08T00:00:00.000+00:00"	// see https://bugzilla.redhat.com/show_bug.cgi?id=720493 // http://books.xmlschemata.org/relaxng/ch19-77049.html requires a colon in the time zone for xsd:dateTime
+		String urlEncodedActiveOnDate = java.net.URLEncoder.encode(iso8601FormatedDateString, "UTF-8");	// "2012-02-08T00%3A00%3A00.000%2B00%3A00"	encode the string to escape the colons and plus signs so it can be passed as a parameter on an http call
+
+		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription id activeon startDate
+		String poolId = null;
+		String subscriptionId=null;
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {
+			if (jsonPool.getString("subscriptionId").equals(jsonSubscription.getString("id"))) {
+				
+				poolId = jsonPool.getString("id");
+				break;
+			}
 		}
-        if (!foundMatches) {
-        	//log.warning("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
-        	log.finer("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
-        }
-		return foundMatches;
+		Assert.assertNotNull(poolId,"Found newly created pool corresponding to the newly created subscription with id: "+jsonSubscription.getString("id"));
+		log.info("The newly created subscription pool with id '"+poolId+"' will start '"+startingMinutesFromNow+"' minutes from now.");
+		log.info("The newly created subscription pool with id '"+poolId+"' will expire '"+endingMinutesFromNow+"' minutes from now.");
+		return poolId; // return poolId to the newly available SubscriptionPool
+		
+	}
+	@BeforeClass(groups="setup")
+	public void findRandomAvailableProductIdBeforeClass() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		// find a randomly available product id
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		
+		// debugging bugzilla 760162
+		//pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-4", pools);
+		
+		randomAvailableProductId = pool.productId;
 	}
 
 	@AfterClass(groups = "setup")
