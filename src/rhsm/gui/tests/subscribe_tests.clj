@@ -83,7 +83,7 @@
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-703920"
                        "blockedByBug-869028"]
-              :dataProvider "subscriptions"}}
+              :dataProvider "multi-contract"}}
   check_contract_selection_dates
   [_ subscription]
   (try+ (tasks/open-contract-selection subscription)
@@ -101,7 +101,6 @@
         (catch [:type :item-not-available] _)
         (catch [:type :wrong-consumer-type]
             {:keys [log-warning]} (log-warning))))
-
 
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-766778"
