@@ -2865,7 +2865,7 @@ public class SubscriptionManagerTasks {
 					Assert.assertTrue(sshCommandResult.getStdout().contains(String.format("You have removed the value for section %s and name %s.",section,name.toLowerCase())), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
 					Assert.assertEquals(sshCommandResult.getStdout().contains(String.format("The default value for %s will now be used.",name.toLowerCase())), defaultConfFileParameterNames(true).contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
 				} else {
-					Assert.assertTrue(sshCommandResult.getStdout().contains(String.format("Section %s and name %s cannot be removed.",section,name.toLowerCase())), "The stdout indicates that config parameter name '"+name+"' from section '"+section+" cannot be removed since it is not set.");
+					Assert.assertTrue(sshCommandResult.getStdout().contains(String.format("Section %s and name %s cannot be removed.",section,name.toLowerCase())), "The stdout indicates that config parameter name '"+name+"' from section '"+section+"' cannot be removed since it is not set.");
 				}
 			}
 		}
