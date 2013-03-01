@@ -104,7 +104,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(result.getStdout()+result.getStderr().trim(),"No manual entry for "+command);
 			//RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);		// exit codes changed on RHEL7
 			result = client.runCommandAndWait("whatis "+command);
-			Assert.assertEquals(result.getStdout()+result.getStderr().trim(),command+": nothing appropriate"+(Integer.valueOf(clienttasks.redhatReleaseX)>=7?".":""));	// the expected message is appended with a period on RHEL7+
+			Assert.assertEquals(result.getStdout().trim()+result.getStderr().trim(),command+": nothing appropriate"+(Integer.valueOf(clienttasks.redhatReleaseX)>=7?".":""));	// the expected message is appended with a period on RHEL7+
 			throw new SkipException("The migration tool '"+command+"' and its man page is only applicable on RHEL5.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);

@@ -491,7 +491,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		rhsm_report_package_profile	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "report_package_profile");
 	}
 	@Test(	description="subscription-manager: assert the ability to enable/disable the reporting of the consumers package profile",
-			groups={"EnablementOfReportPackageProfile_Test"},
+			groups={"EnablementOfReportPackageProfile_Test","blockedByBug-905922"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnablementOfReportPackageProfile_Test() throws JSONException, Exception {

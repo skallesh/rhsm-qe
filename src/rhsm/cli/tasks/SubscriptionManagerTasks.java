@@ -127,9 +127,9 @@ public class SubscriptionManagerTasks {
 		//if (redhatRelease.contains("IBM POWER")) variant = "IBM Power";	//74.pem	Red Hat Enterprise Linux for IBM POWER	// TODO  Not sure if these are correct or if they are just Server on a different arch
 		//if (redhatRelease.contains("IBM System z")) variant = "System Z";	//72.pem	Red Hat Enterprise Linux for IBM System z	// TODO
 
-		Pattern pattern = Pattern.compile("\\d+\\.\\d+");
+		Pattern pattern = Pattern.compile("\\d+\\.\\d+"/*,Pattern.DOTALL*/);
 		Matcher matcher = pattern.matcher(redhatRelease);
-		Assert.assertTrue(matcher.find(),"Extracted redhatReleaseXY '"+matcher.group()+"' from '"+redhatRelease+"'");
+		Assert.assertTrue(matcher.find(),"Extracted RHEL redhatReleaseXY from '"+redhatRelease+"'");
 		redhatReleaseXY = matcher.group();
 		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
 		
@@ -222,7 +222,7 @@ public class SubscriptionManagerTasks {
 
 		// make sure the client's time is accurate
 		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl status ntpd.service | grep 'Active'", null, "\\(running\\)", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);
 		} else {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
 		}
@@ -260,9 +260,8 @@ public class SubscriptionManagerTasks {
 			
 			// install rpmUrl
 			log.info("Installing RPM from "+rpmUrl+"...");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"."+rpmPath+". saved");
-			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" "+installOptions).getExitCode(),Integer.valueOf(0),
-					"Yum installed local rpm: "+rpmPath);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
+			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" "+installOptions).getExitCode(), Integer.valueOf(0), "ExitCode from yum installed local rpm: "+rpmPath);
 		}
 		
 		// attempt to install all required packages that are not already installed
@@ -294,7 +293,7 @@ public class SubscriptionManagerTasks {
 			
 			// upgrade rpmUrl
 			log.info("Upgrading RPM from "+rpmUrl+"...");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"."+rpmPath+". saved");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
 			rpmPaths += rpmPath; rpmPaths += " ";
 		}
 		if (!rpmUpdateUrls.isEmpty()) Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localupdate "+rpmPaths+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated local rpms: "+rpmPaths);
@@ -625,7 +624,7 @@ public class SubscriptionManagerTasks {
 		
 		// restart rhsmcertd service
 		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart rhsmcertd.service && systemctl status rhsmcertd.service | grep 'Active'", null, "\\(running\\)", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart rhsmcertd.service && systemctl is-active rhsmcertd.service", Integer.valueOf(0), "^active$", null);
 		} else {
 			// NEW SERVICE RESTART FEEDBACK AFTER IMPLEMENTATION OF Bug 818978 - Missing systemD unit file
 			//	[root@jsefler-59server ~]# service rhsmcertd restart
@@ -766,9 +765,9 @@ public class SubscriptionManagerTasks {
 	
 	public void stop_rhsmcertd (){
 		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7+ / Fedora16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop rhsmcertd.service && systemctl status rhsmcertd.service | grep 'Active'", null, "\\(dead\\)", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop rhsmcertd.service && systemctl is-active rhsmcertd.service", Integer.valueOf(3), "^inactive$", null);
 		} else {
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service rhsmcertd stop && service rhsmcertd status",Integer.valueOf(3), "^rhsmcertd is stopped$", null);  // exit code 3 = program not running		// reference Bug 232163; Bug 679812
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service rhsmcertd stop && service rhsmcertd status", Integer.valueOf(3), "^rhsmcertd is stopped$", null);  // exit code 3 = program not running		// reference Bug 232163; Bug 679812
 		}
 	}
 	

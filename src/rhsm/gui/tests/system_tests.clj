@@ -121,6 +121,24 @@
     (finally    (tasks/ui closewindow :firefox-help-window)
                 (tasks/restart-app))))
 
-;; TODO
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-707041"]}}
+  date_picker_traceback [_]
+  (try
+    (if-not (= 1 (tasks/ui guiexist :main-window)) (tasks/restart-app))
+    (try+ (tasks/register-with-creds :re-register? false)
+          (catch [:type :already-registered] _))
+    (tasks/ui selecttab :all-available-subscriptions)
+    (let [output (tasks/get-logging @clientcmd
+                                    "/var/log/ldtpd/ldtpd.log"
+                                    "date_picker_traceback"
+                                    "Traceback"
+                                    (tasks/ui click :calendar)
+                                    (verify
+                                     (= 1 (tasks/ui waittillwindowexist :date-selection-dialog 10)))
+                                    (tasks/ui click :today))]
+      (verify (clojure.string/blank? output)))
+    (finally (if (= 1 (tasks/ui guiexist :date-selection-dialog))
+               (tasks/ui closewindow :date-selection-dialog)))))
 
 (gen-class-testng)
