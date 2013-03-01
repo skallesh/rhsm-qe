@@ -112,7 +112,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", 
-			groups = { "ExpirationOfEntitlementCerts"}, enabled = true)
+			groups = { "ExpirationOfEntitlementCerts"}, enabled = false)
 		public void ExpirationOfEntitlementCerts() throws JSONException,Exception {
 		int endingMinutesFromNow = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -651,7 +651,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", 
-			groups = { "certificateStacking","blockedByBug-726409"}, enabled = true)
+			groups = { "certificateStacking","blockedByBug-726409"}, enabled = false)
 	public void certificateStacking() throws JSONException,Exception {
 		Map<String,String> attributes = new HashMap<String,String>();
 		clienttasks.register(sm_serverAdminUsername, sm_serverAdminPassword,
@@ -1808,7 +1808,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(description = "Verify One empty certificate file in /etc/rhsm/ca causes registration failure", groups = {
 			"VerifyEmptyCertCauseRegistrationFailure_Test",
-	"blockedByBug-806958" }, enabled = true)
+	"blockedByBug-806958" }, enabled = false)
 	public void VerifyEmptyCertCauseRegistrationFailure_Test()
 			throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
