@@ -1491,14 +1491,21 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,regUsername,regPassword,regOrg,null);
 		String expectedStdout = "Unable to locate SystemId file. Is this system registered?";
-		
-		if (rhnBaseChannel==null) {
-			log.warning("Modifying expected results when the current RHN Classically registered system has no base channel.");
-			expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";
-		}
+		expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";	// changed to this value by subscription-manager commit 53c7f0745d1857cd5e1e080e06d577e67e76ecdd for the benefit of unit testing on Fedora
 		
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file.");
+		
+		// TODO: We could get the tail of the rhsm.log and assert the expected log messages
+		// -from up2date_client import up2dateErrors => "Unable to locate SystemId file. Is this system registered?" when no systemId file is present
+		//	2013-03-04 16:52:18,529 [ERROR]  @migrate.py:364 - Traceback (most recent call last):
+		//		  File "/usr/share/rhsm/subscription_manager/migrate/migrate.py", line 362, in get_subscribed_channels_list
+		//		    subscribedChannels = map(lambda x: x['label'], getChannels().channels())
+		//		  File "/usr/share/rhn/up2date_client/rhnChannel.py", line 96, in getChannels
+		//		    raise up2dateErrors.NoSystemIdError(_("Unable to Locate SystemId"))
+		//		NoSystemIdError: Unable to Locate SystemId
+		// -from up2date_client.rhnChannel import getChannels => "This system is not associated with any channel." when rhnBaseChannel==null
+		// ????? - Traceback
 	}
 	
 	
@@ -1514,8 +1521,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "The --servicelevel and --no-auto options cannot be used together.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "Stdout from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
-//		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "Exit code from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "Exit code from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "Exit code from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
 	}
 	
 	
@@ -1538,8 +1544,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		expectedStdout = "This machine appears to be already registered to Red Hat Subscription Management.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 874760
 		expectedStdout = "This system appears to be already registered to Red Hat Subscription Management.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' while already registered to RHSM ended with: "+expectedStdout);
-//		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
 	}
 	
 
