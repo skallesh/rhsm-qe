@@ -75,6 +75,40 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@Test(description = "verify if redhat repo is created subscription-manager yum plugin when the repo is not present", 
+			groups = { "RedhatrepoNotBeingCreated","blockedByBug-886992"}, enabled = true)
+		public void RedhatrepoNotBeingCreated() throws JSONException,Exception {
+		client.runCommandAndWait("mv /etc/yum.repos.d/redhat.repo /root/").getStdout();
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsm",
+				"manage_repos".toLowerCase(), "1" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, null, null, null, null, null);
+		String redhatrepoExists=client.runCommandAndWait("ls /etc/yum.repos.d/redhat.repo").getStdout();
+		Assert.assertEquals(redhatrepoExists.trim(), "/etc/yum.repos.d/redhat.repo");
+		String result=client.runCommandAndWait("yum repolist all").getStdout();
+
+		for(YumRepo originalRepos :clienttasks.getCurrentlySubscribedYumRepos()){
+			Assert.assertNotNull(originalRepos.id);
+			Boolean flag=false;
+				Pattern pattern = Pattern.compile(originalRepos.id, Pattern.MULTILINE);
+				Matcher matcher = pattern.matcher(result);
+				if (matcher.find()) {
+					flag=true;
+				}
+				Assert.assertTrue(flag);
+				flag=false;
+			}
+		
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
 	@Test(description = "verify if  insecure in rhsm.comf getse updated when using --insecure option if command fails", 
 			groups = { "InsecureValueInRHSMConfAfterRegistrationFailure","blockedByBug-916369"}, enabled = true)
 		public void InsecureValueInRHSMConfAfterRegistrationFailure() throws JSONException,Exception {
@@ -195,6 +229,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"certCheckInterval".toLowerCase(), "1" });
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, null, null, null, null, null);
@@ -232,6 +267,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"certCheckInterval".toLowerCase(), "1" });
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+
 		int endingMinutesFromNow = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -523,7 +560,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify that system should not be compliant for an expired subscription", 
 			groups = { "VerifySystemCompliantFactWhenAllProductsAreExpired_Test"}, enabled = true)
 	public void VerifySystemCompliantFactWhenAllProductsAreExpired_Test() throws JSONException,Exception {
-		
+		restoreProductCerts();
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"certCheckInterval".toLowerCase(), "1" });
@@ -931,21 +968,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
 			groups = { "VerifyRepoFileExistance","blockedByBug-886604"}, enabled = true)
 	public void VerifyRepoFileExistance() throws JSONException,Exception {
-		String productIdOne=null;
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsm","manage_repos", "1" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		List<Repo> originalRepos =clienttasks.getCurrentlySubscribedRepos();
+		List<YumRepo> originalRepos =clienttasks.getCurrentlySubscribedYumRepos();
 		String result=client.runCommandAndWait("yum repolist").getStdout();
 
-		for (Repo repo : originalRepos) {
+		for (YumRepo repo : originalRepos) {
 			
 			Boolean flag=false;
-			if(!(repo.repoId==null)){
-				Pattern pattern = Pattern.compile(productIdOne, Pattern.MULTILINE);
+			if(!(repo.id==null)){
+				Pattern pattern = Pattern.compile(repo.id, Pattern.MULTILINE);
 				Matcher matcher = pattern.matcher(result);
 				if (matcher.find()) {
 					flag=true;
@@ -953,7 +989,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(flag);
 				flag=false;
 			}
-	}}
+	}
+}
 	
 	/**
 	 * @author skallesh
@@ -1908,7 +1945,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String FilePath = myEmptyCaCertFile;
 		String command = "touch " + FilePath;
 		client.runCommandAndWait(command);
-		String result = clienttasks.register(sm_clientUsername,
+		String result = clienttasks.register_(sm_clientUsername,
 				sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 				null, null, (String) null, null, null, null, null, null, null,
 				null, null).getStdout();
@@ -1971,10 +2008,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
-		List<Repo> repos = clienttasks.getCurrentlySubscribedRepos();
+		List<YumRepo> repos = clienttasks.getCurrentlySubscribedYumRepos();
 		Assert.assertFalse(repos.isEmpty());
 		clienttasks.unregister(null, null, null);
-		List<Repo> repo = clienttasks.getCurrentlySubscribedRepos();
+		List<YumRepo> repo = clienttasks.getCurrentlySubscribedYumRepos();
 		Assert.assertTrue(repo.isEmpty());
 	}
 
@@ -2625,13 +2662,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		int j = randomGenerator.nextInt(poolid.size());
 		if (i == j) {
 			j = randomGenerator.nextInt(poolid.size());
-
+		}
 			SSHCommandResult subscribeResult = subscribeInvalidFormat_(null,
 					null, poolid.get(i), poolid.get(j), null, null, null, null,
 					null, null, null, null);
 			Assert.assertEquals(subscribeResult.getStdout().trim(),
 					"cannot parse argument: " + poolid.get(j));
-		}
+		
 
 	}
 
