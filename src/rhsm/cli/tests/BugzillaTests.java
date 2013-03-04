@@ -69,6 +69,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	String factname="system.entitlements_valid";
 	
 	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if  insecure in rhsm.comf getse updated when using --insecure option if command fails", 
+			groups = { "InsecureValueInRHSMConfAfterRegistrationFailure","blockedByBug-916369"}, enabled = true)
+		public void InsecureValueInRHSMConfAfterRegistrationFailure() throws JSONException,Exception {
+		String defaultHostname = "rhel7.com";
+		String defaultPort = "8443";
+		String defaultPrefix = "/candlepin";
+		String org="foo";
+		String valueBeforeRegister=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "insecure");
+		clienttasks.register(sm_clientUsername, sm_clientPassword,org, null, null, null, null, null, null, null,(String) null,defaultHostname+":"+defaultPort+"/"+defaultPrefix, null, null, null, null, null, null, null);
+		String valueAfterRegister = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "insecure");
+		Assert.assertEquals(valueBeforeRegister, valueAfterRegister);
+	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
