@@ -83,7 +83,7 @@
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-703920"
                        "blockedByBug-869028"]
-              :dataProvider "subscriptions"}}
+              :dataProvider "multi-contract"}}
   check_contract_selection_dates
   [_ subscription]
   (try+ (tasks/open-contract-selection subscription)
@@ -101,7 +101,6 @@
         (catch [:type :item-not-available] _)
         (catch [:type :wrong-consumer-type]
             {:keys [log-warning]} (log-warning))))
-
 
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-766778"
@@ -334,7 +333,9 @@
   (tasks/skip-dropdown :all-subscriptions-view subscription)
   (let [guiservice (tasks/ui gettextvalue :all-available-support-level-and-type)
         rawservice (get @servicelist subscription)
-        service (str (or (:support_level rawservice) "Not Set") ", " (:support_type rawservice))]
+        service (str (or (:support_level rawservice) "Not Set")
+                     (when (:support_type rawservice)
+                       (str ", " (:support_type rawservice))))]
     (verify (= guiservice service))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
