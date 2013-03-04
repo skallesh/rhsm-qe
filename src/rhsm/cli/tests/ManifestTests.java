@@ -168,7 +168,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		String consumerUUIDRegex = "[a-f,0-9,\\-]{36}";
 		Assert.assertTrue(Pattern.compile(consumerUUIDRegex/*,Pattern.DOTALL*/).matcher(catManifest.consumerUUID).matches(),"Consumer UUID format matches the expected regex '"+consumerUUIDRegex+"'.");
 		Assert.assertNotNull(catManifest.consumerType, "Consumer Type value is not null.");
-		Assert.assertEquals(catManifest.consumerType,"sam", "Consumer Type value.");
+		Assert.assertTrue(catManifest.consumerType.equals("sam")||catManifest.consumerType.equals("cloudforms"), "Consumer Type value equals 'sam' or 'cloudforms'.");	// TODO learn why there is a type distinction
 		}
 		//	
 		//	Subscription:

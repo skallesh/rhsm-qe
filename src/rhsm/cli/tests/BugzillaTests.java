@@ -1587,9 +1587,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId = 61710)
 	public void VerifyRegisterWithConsumerIdForDifferentUser()
 			throws JSONException, Exception {
-
-		clienttasks.register(sm_client2Username, sm_client1Password,
-				sm_clientOrg, null, null, null, null, null, null, null,
+		if (sm_client2Username==null) throw new SkipException("This test requires valid credentials for a second user.");
+		clienttasks.register(sm_client2Username, sm_client2Password,
+				sm_client2Org, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerid = clienttasks.getCurrentConsumerId();
 		String result = clienttasks.register_(sm_clientUsername,
@@ -2081,8 +2081,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<ProductSubscription> consumedSubscriptionsBeforeregister = clienttasks
 				.getCurrentlyConsumedProductSubscriptions();
 		clienttasks.clean_(null, null, null);
-		clienttasks.register_(sm_client2Username, sm_clientPassword,
-				sm_clientOrg, null, null, null, consumerId, null, null, null,
+		if (sm_client2Username==null) throw new SkipException("This test requires valid credentials for a second user.");
+		clienttasks.register_(sm_client2Username, sm_client2Password,
+				sm_client2Org, null, null, null, consumerId, null, null, null,
 				(String) null, null, null, null, null, null, null, null, null);
 		String consumerIdAfter = clienttasks.getCurrentConsumerId();
 		Assert.assertEquals(consumerId, consumerIdAfter,
