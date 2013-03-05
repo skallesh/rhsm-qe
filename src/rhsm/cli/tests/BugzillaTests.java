@@ -2754,25 +2754,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@Test(description = "Verify if rhsm not logging subscriptions and products properly ", groups = { "VerifyRhsmLogging_Test","blockedByBug-668032" }, enabled = true)
+	@Test(description = "Verify if rhsm not logging subscriptions and products properly ", groups = { "VerifyRhsmLogging_Test","blockedByBug-668032","blockedByBug-907638" }, enabled = true)
 	public void VerifyRhsmLoggingTest() throws Exception {
 		Boolean actual = true;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-		RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 			List<String> providedProducts = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword, sm_serverUrl, pool.poolId);
 			if ((providedProducts.size()) > 2) {
 			
 				clienttasks.subscribe(null, null, pool.poolId, null, null,
 						null, null, null, null, null, null);
-					String result=RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null);
-					System.out.println(result);
-			//	Boolean flag = waitForRegexInRhsmLog("@ /etc/pki/entitlement",);
-			//	Assert.assertEquals(flag, actual);
 			}
+	
+			Boolean flag = waitForRegexInRhsmLog("@ /etc/pki/entitlement",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
+			Assert.assertEquals(flag, actual);
+			
 
 		}
 
