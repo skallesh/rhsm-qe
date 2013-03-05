@@ -238,6 +238,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		String expectedStdoutMsgLabel;
 		expectedStdoutMsgLabel = "Successfully unsubscribed serial numbers:";
 		expectedStdoutMsgLabel = "Successfully removed serial numbers:";	// changed by bug 874749
+		expectedStdoutMsgLabel = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
 		String expectedStdoutMsg = expectedStdoutMsgLabel;
 		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;
 		SSHCommandResult result = clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
@@ -290,8 +291,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		// END OF WORKAROUND
 		String expectedStdoutMsg;
-		//expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// changed by bug 874749
+		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// changed by bug 874749
 		expectedStdoutMsg = "Successfully removed serial numbers:";
+		expectedStdoutMsg = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
 		for (BigInteger serial : serials) expectedStdoutMsg+="\n   "+serial;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		Assert.assertEquals(actualStdoutMsg, expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
 		
@@ -309,12 +311,14 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			serials.add(productSubscriptions.get(i).serialNumber);
 			serials.add(revokedSerials.get(i));
 		}
-		//expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// added by bug 867766	// changed by bug 874749
+		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// added by bug 867766	// changed by bug 874749
 		expectedStdoutMsg = "Successfully removed serial numbers:";
+		expectedStdoutMsg = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
 		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		expectedStdoutMsg +="\n";
 		//expectedStdoutMsg += "Unsuccessfully unsubscribed serial numbers:";	// added by bug 867766	// changed by bug 874749
-		expectedStdoutMsg += "Unsuccessfully removed serial numbers:";
+		//expectedStdoutMsg += "Unsuccessfully removed serial numbers:";
+		expectedStdoutMsg += "Serial numbers unsuccessfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
 		for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+String.format("Entitlement Certificate with serial number %s could not be found.", revokedSerial);	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		result = clienttasks.unsubscribe(null,serials,null,null,null);
 		actualStdoutMsg = result.getStdout().trim();
