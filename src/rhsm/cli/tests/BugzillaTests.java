@@ -90,6 +90,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String result=client.runCommandAndWait("yum repolist all").getStdout();
 
 		for(YumRepo originalRepos :clienttasks.getCurrentlySubscribedYumRepos()){
+			System.out.println(originalRepos.id);
 			Assert.assertNotNull(originalRepos.id);
 			Boolean flag=false;
 				Pattern pattern = Pattern.compile(originalRepos.id, Pattern.MULTILINE);
@@ -187,7 +188,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String defaultPrefix = "/candlepin";
 		String org="foo";
 		String valueBeforeRegister=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
-		clienttasks.register(sm_clientUsername, sm_clientPassword,org, null, null, null, null, null, null, null,(String) null,defaultHostname+":"+defaultPort+"/"+defaultPrefix, null, null, null, null, null, null, null);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,org, null, null, null, null, null, null, null,(String) null,defaultHostname+":"+defaultPort+"/"+defaultPrefix, null, null, null, null, null, null, null);
 		String valueAfterRegister = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
 		Assert.assertEquals(valueBeforeRegister, valueAfterRegister);
 		
@@ -381,9 +382,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 attributes.put("arch", "ALL");
 		String requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, modifiedProductIds).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/content", requestBody);	
-		CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
+		Assert.assertContainsNoMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
+		clienttasks.restart_rhsmcertd(null, null, false, null);
+		sleep(2*60*1000);	
+		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
 		Assert.assertEquals(jsonActivationKey.getString("displayMessage"), "Content with id "+contentId+" could not be found.");
 		requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, modifiedProductIds).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/content", requestBody);
@@ -1009,7 +1013,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					}
 	}
 }
-	}	
+	}
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -3015,7 +3021,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		Assert.assertEquals(param, "1440");
 	}
-
+	
+	@AfterGroups(groups = "setup", value = {"VerifyRepoFileExistance"}, enabled = true)
+	public void TurnonRepos(){
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsm","manage_repos", "1" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+	}
 	@BeforeGroups(groups = "setup", value = { "autohealPartial", "AutoHeal",
 			"heal", "BugzillaTests", "AutoHealFailForSLA", "AutohealForExpired" }, enabled = false)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test()
@@ -3210,12 +3223,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		
 		return ll;
 	}
-	@BeforeClass(groups = "setup")
-	protected void moveFakeProductCertFilesToFakeTmp() {
-		client.runCommandAndWait("mkdir -p " + "/etc/pki/faketmp");
-		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/*_.pem"
-				+ " " + "/etc/pki/faketmp/");
-	}
+	
 	/**
 	 * @param startingMinutesFromNow
 	 * @param endingMinutesFromNow
