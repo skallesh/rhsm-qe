@@ -166,14 +166,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, null, null, null, null, null);
-		String result=clienttasks.listInstalledProducts().getStdout();
-		Boolean flag=false;
-			Pattern pattern = Pattern.compile("Product ID:", Pattern.MULTILINE);
-			Matcher matcher = pattern.matcher(result);
-			if (matcher.find()) {
-				flag=true;
-			}
-		Assert.assertTrue(flag);
+		for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
+			Assert.assertNotNull(result.productId);
+			
+		}
+		
 	}
 	
 	
@@ -414,22 +411,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		
-	clienttasks.subscribe(true, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
 	String SyslogMessage="Added subscription for";
-	RemoteFileTasks.runCommandAndAssert(client,"tail -20 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
-	
-	clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
+	String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+	clienttasks.subscribe(true, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
+	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
 	SyslogMessage="Removed subscription for '";
-	RemoteFileTasks.runCommandAndAssert(client,"tail -20 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
-	
+	clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
+	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
+	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";	
 	for (SubscriptionPool available : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 		poolId=available.poolId;
 		productId=available.subscriptionName;
 	}
 	clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null);
 	SyslogMessage="Added subscription for '"+productId+"'";
-	RemoteFileTasks.runCommandAndAssert(client,"tail -20 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
+	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
 	
 	for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 		serialnums=consumed.serialNumber;
@@ -437,7 +436,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 	clienttasks.unsubscribe(null, serialnums, null, null, null);
 	SyslogMessage="Removed subscription for '"+productId+"'";
-	RemoteFileTasks.runCommandAndAssert(client,"tail -20 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
+	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
 
 	
 
@@ -989,9 +989,27 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(flag);
 				flag=false;
 			}
+			listOfSectionNameValues = new ArrayList<String[]>();
+			listOfSectionNameValues.add(new String[] { "rhsm","manage_repos", "0" });
+			clienttasks.config(null, null, true, listOfSectionNameValues);
+			originalRepos =clienttasks.getCurrentlySubscribedYumRepos();
+			 result=client.runCommandAndWait("yum repolist").getStdout();
+			 
+			 for (YumRepo yumrepo : originalRepos) {
+					
+					flag=false;
+					if(!(yumrepo.id==null)){
+						Pattern pattern = Pattern.compile(yumrepo.id, Pattern.MULTILINE);
+						Matcher matcher = pattern.matcher(result);
+						if (matcher.find()) {
+							flag=true;
+						}
+						Assert.assertFalse(flag);
+						flag=false;
+					}
 	}
 }
-	
+	}	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -1078,32 +1096,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		moveProductCertFiles("*.pem");
 		String InstalledProducts=clienttasks.listInstalledProducts().getStdout();
 		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
-		
-		int countBefore = Integer
-				.parseInt(client
-						.runCommandAndWait(
-								"wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1")
-								.getStdout().trim());
+		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		SubscriptionManagerCLITestScript.sleep(2 * 60 * 1000);
-
-	if (countBefore != 0) {
-		int countAfter = Integer
-				.parseInt(client
-						.runCommandAndWait(
-								"wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1")
-								.getStdout().trim());
-		Boolean flag = waitForRegexInRhsmLog("Error",
-				countAfter - countBefore);
+		Boolean flag = waitForRegexInRhsmLog("Error",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 		Assert.assertEquals(flag, actual);
 		actual=true;
-		flag = waitForRegexInRhsmLog("Installed product IDs: \\[\\]",
-				countAfter - countBefore);
+		flag = waitForRegexInRhsmLog("Installed product IDs: \\[\\]",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 		Assert.assertEquals(flag, actual);
 				
 	}
 		
-	}
+	
 	
 	
 	
@@ -2087,17 +2092,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						.getCurrentlyAvailableSubscriptionPools()) {
 					if (installed.productName
 							.contains(AvailSub.subscriptionName)) {
-						String jsonConsumer = CandlepinTasks
-								.deleteResourceUsingRESTfulAPI(
-										sm_serverAdminUsername,
-										sm_serverAdminPassword, sm_serverUrl,
-										"/products/" + AvailSub.productId);
-						String expect = "{\"displayMessage\""
-								+ ":"
-								+ "\"Product with UUID '"
-								+ AvailSub.productId
-								+ "'"
-								+ " cannot be deleted while subscriptions exist.\"}";
+						String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + AvailSub.productId);
+						String expect = "{\"displayMessage\""+ ":"+ "\"Product with UUID '"+ AvailSub.productId+ "'"+ " cannot be deleted while subscriptions exist.\"}";
 						Assert.assertEquals(expect, jsonConsumer);
 					}
 				}
@@ -2758,38 +2754,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@Test(description = "Verify if rhsm not logging subscriptions and products properly ", groups = { "VerifyRhsmLogging_Test","blockedByBug-907638","blockedByBug-668032" }, enabled = true)
+	@Test(description = "Verify if rhsm not logging subscriptions and products properly ", groups = { "VerifyRhsmLogging_Test","blockedByBug-668032" }, enabled = true)
 	public void VerifyRhsmLoggingTest() throws Exception {
 		Boolean actual = true;
-		int countBefore = 0;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-
-		for (SubscriptionPool pool : clienttasks
-				.getCurrentlyAllAvailableSubscriptionPools()) {
-			List<String> providedProducts = CandlepinTasks
-					.getPoolProvidedProductIds(sm_clientUsername,
-							sm_clientPassword, sm_serverUrl, pool.poolId);
+		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+		RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+			List<String> providedProducts = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword, sm_serverUrl, pool.poolId);
 			if ((providedProducts.size()) > 2) {
-				countBefore = Integer
-						.parseInt(client
-								.runCommandAndWait(
-										"wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1")
-										.getStdout().trim());
+			
 				clienttasks.subscribe(null, null, pool.poolId, null, null,
 						null, null, null, null, null, null);
-			}
-			if (countBefore != 0) {
-				int countAfter = Integer
-						.parseInt(client
-								.runCommandAndWait(
-										"wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1")
-										.getStdout().trim());
-
-				Boolean flag = waitForRegexInRhsmLog("@ /etc/pki/entitlement",
-						countAfter - countBefore);
-				Assert.assertEquals(flag, actual);
+					String result=RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null);
+					System.out.println(result);
+			//	Boolean flag = waitForRegexInRhsmLog("@ /etc/pki/entitlement",);
+			//	Assert.assertEquals(flag, actual);
 			}
 
 		}
@@ -3142,11 +3124,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return client.runCommandAndWait(command);
 	}
 
-	public Boolean waitForRegexInRhsmLog(String logRegex, int linecount) {
-		String input = client
-				.runCommandAndWait(
-						"tail -" + linecount + " " + clienttasks.rhsmLogFile)
-						.getStdout().trim();
+	public Boolean waitForRegexInRhsmLog(String logRegex, String input) {
+		
 		Pattern pattern = Pattern.compile(logRegex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(input);
 		int count = 0;
