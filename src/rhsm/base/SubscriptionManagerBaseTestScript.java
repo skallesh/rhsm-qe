@@ -133,6 +133,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	//public String sm_cdnProductBaselineUrl			= getProperty("sm.cdn.productBaselineUrl","");
 	public String sm_rhnDefinitionsGitRepository		= getProperty("sm.rhn.definitionsGitRepository","");
 	public String sm_rhnDefinitionsProductBaselineFile	= getProperty("sm.rhn.definitionsProductBaselineFile","");
+	public String sm_rhnDefinitionsProductCertsFile		= getProperty("sm.rhn.definitionsProductCertsFile","");
 
 	public String sm_translateToolkitGitRepository		= getProperty("sm.translate.toolkitGitRepository","");
 
