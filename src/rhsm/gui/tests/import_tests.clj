@@ -60,6 +60,12 @@
   (tasks/ui click :import-cert)
   (tasks/checkforerror))
 
+(defn- cert-version-one? []
+  (let [version (System/getProperty "sm.client.certificateVersion")]
+    (if (and version (re-find #"^1\." version))
+      true
+      false)))
+
 (defn ^{Test {:groups ["import"
                        "blockedByBug-712980"
                        ;checking this one in the function
@@ -67,20 +73,25 @@
                        "blockedByBug-712978"]}}
   import_valid_cert [_]
   ;only run this test if the bug is fixed or if we're using version 1.x certs
-  (let [version (System/getProperty "sm.client.certificateVersion")]
-    (if-not (and version (re-find #"^1\." version))
-      (verify (not (.isBugOpen (BzChecker/getInstance) "860344")))))
+  (if-not (cert-version-one?)
+    (verify (not (.isBugOpen (BzChecker/getInstance) "860344"))))
   (tasks/restart-app)
   (let [certlocation (str (.getValidImportCertificate @importtests))
         certdir (tasks/conf-file-value "entitlementCertDir")
         cert (last (split certlocation #"/"))
         key (clojure.string/replace cert ".pem" "-key.pem")
-        command (str "openssl x509 -text -in "
-                     certlocation
-                     " | grep 2312.9.4.1: -A 1 | grep -v 2312.9.4.1")
-        entname (str-drop
-                 2 (trim
-                    (.getStdout (.runCommandAndWait @clientcmd command))))]
+        command (if (cert-version-one?)
+                  (str "openssl x509 -text -in "
+                       certlocation
+                       " | grep 2312.9.4.1: -A 1 | grep -v 2312.9.4.1")
+                  (str "rct cat-cert --no-content "
+                       certlocation
+                       " | grep Order -A 10 | grep Name | cut -d: -f 2"))
+        entname (if (cert-version-one?)
+                  (str-drop
+                   2 (trim
+                      (.getStdout (.runCommandAndWait @clientcmd command))))
+                  (trim (.getStdout (.runCommandAndWait @clientcmd command))))]
     (import-cert certlocation)
     (verify (= 1 (tasks/ui guiexist
                            :information-dialog
@@ -225,7 +236,7 @@
    (not (tasks/substring?
          "Traceback" (tasks/get-logging
                       @clientcmd
-                      "/varlog/rhsm/rhsm.log"
+                      "/var/log/rhsm/rhsm.log"
                       "import_nonexistant"
                       (import-bad-cert "/this/does/not/exist.pem" :cert-does-not-exist))))))
 
