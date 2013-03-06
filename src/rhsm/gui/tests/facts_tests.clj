@@ -5,7 +5,8 @@
                                            clientcmd
                                            cli-tasks)]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.string :only (split-lines
+        [clojure.string :only (blank?
+                               split-lines
                                split
                                trim)]
         clojure.pprint
@@ -16,12 +17,14 @@
   (:import [org.testng.annotations
             BeforeClass
             BeforeGroups
+            AfterGroups
             Test
             DataProvider]))
 
 (def gui-facts (atom nil))
 (def cli-facts (atom nil))
 (def installed-certs (atom nil))
+(def productstatus (atom nil))
 
 (defn get-cli-facts []
   (let [allfacts (.getStdout
@@ -101,6 +104,17 @@
       (verify (= gui-val cli-val)))
     (finally (tasks/ui click :close-facts))))
 
+(defn ^{Test {:groups ["facts"]}}
+  check_cli_subscribed_on_gui [_]
+  (try
+    (.runCommandAndWait @clientcmd "subscription-manager unregister")
+    (.runCommandAndWait @clientcmd "subscription-manager clean")
+    (.runCommandAndWait @clientcmd "subscription-manager register --username testuser1 --password password --org snowwhite")
+     (let [raw-data (drop 1 (split-lines (.getStdout 
+                                          (.runCommandAndWait @clientcmd "subscription-manager subscribe --auto"))))
+           processed-data (map (fn [arg] (not (filter blank? (trim (raw-data))))))
+           subscribe-auto-map (apply hash-map (map (fn [arg] split processed-data #":")))]))) 
+
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-909294"
                        "blockedByBug-839772"]}}
@@ -166,6 +180,37 @@
     (finally (if (= 1 (tasks/ui guiexist :about-dialog))
                (tasks/ui click :close-about-dialog)))))
 
+(defn ^{BeforeGroups {:groups ["facts"]
+                      :value ["facts-product-status"]}}
+  before_check_product_status [_]
+  (let [output (.getStdout 
+                (.runCommandAndWait @clientcmd "subscription-manager subscribe --auto"))
+        not-blank? (fn [s] (not (blank? s)))
+        raw-cli-data (filter not-blank? (drop 1 (split-lines output)))
+        grab-value (fn [item] (trim (last (split item #":"))))
+        cli-data (apply hash-map (map grab-value raw-cli-data))]
+    (reset! productstatus cli-data)))
+
+(defn ^{Test {:groups ["facts"
+                       "facts-product-status"]
+              :dataProvider "installed-products"}}
+  check_product_status [_ product row]
+  (let [gui-value (tasks/ui getcellvalue :installed-view row 2)
+        cli-value (get @productstatus product)]
+    (verify (= gui-value cli-value))))
+
+(defn ^{Test {:groups ["facts"]
+              :dependsOnMethods "check_product_status" 
+              :dataProvider "installed-products"}}
+  check_product_status_unsubscribe [_ product row]
+  (let [gui-status (tasks/ui getcellvalue :installed-view row 2)]
+    (verify (= gui-status "Not Subscribed"))))
+
+(defn ^{AfterGroups {:groups ["facts"]
+                     :value ["facts-product-status"]}}
+  after_check_product_status [_]
+  (.getStdout (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -195,3 +240,4 @@
   (println (str "fact: " (@gui-facts "virt.is_guest"))))
 
 (gen-class-testng)
+
