@@ -390,6 +390,35 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: attempt multiple enable/disable invalid repo ids",
+			groups={"blockedByBug-846207","blockedByBug-918746"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposEnableDisableMultipleInvalidRepo_Test(){
+		List<String> enableRepos = Arrays.asList(new String[]{"invalid-repo-A","invalid-repo-B"});
+		List<String> disableRepos = Arrays.asList(new String[]{"invalid-repo-C","invalid-repo-D"});
+		List<String> invalidRepos = new ArrayList<String>(); invalidRepos.addAll(enableRepos); invalidRepos.addAll(disableRepos);
+		SSHCommandResult result = clienttasks.repos_(null, enableRepos, disableRepos, null, null, null);
+		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to disable an invalid-repo-id.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
+		String expectedStdoutMsgFormat = "Error: %s is not a valid repo ID. Use --list option to see valid repos.";
+		for (String invalidRepo : invalidRepos) {
+			String expectedStdoutMsg = String.format(expectedStdoutMsgFormat,invalidRepo);
+			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from an attempt to enable/disable multiple invalid repos contains expected message: "+expectedStdoutMsg);		
+		}
+		/* TODO: USE THIS BLOCK OF CODE IF BUG 918746 IS REJECTED
+		for (String invalidRepo : enableRepos) {
+			String expectedStdoutMsg = String.format(expectedStdoutMsgFormat,invalidRepo);
+			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from an attempt to enable multiple invalid repos contains expected message: "+expectedStdoutMsg);		
+		}
+		for (String invalidRepo : disableRepos) {
+			String expectedStdoutMsg = String.format(expectedStdoutMsgFormat,invalidRepo);
+			Assert.assertTrue(!result.getStdout().contains(expectedStdoutMsg), "Stdout from an attempt to disable multiple invalid repos does NOT contain expected message (because an invalid repo is effectively always disabled): "+expectedStdoutMsg);		
+		}
+		*/
+	}
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws JSONException
