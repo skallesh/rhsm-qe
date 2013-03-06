@@ -67,8 +67,54 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir"
 			.toLowerCase();
 	String factname="system.entitlements_valid";
+	protected String RemoteServerError="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 	
 	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if CLI auto-subscribe tries to re-use basic auth credentials.", 
+			groups = { "VerifyAutosubscribeReuseBasicAuthCredntials","blockedByBug-707641"}, enabled = true)
+		public void VerifyAutosubscribeReuseBasicAuthCredntials() throws JSONException,Exception {
+		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+		RemoteFileTasks.markFile(client, CandlepinTasks.tomcat6LogFile, LogMarker);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);	
+		String logMessage=" Authentication check for /consumers/"+clienttasks.getCurrentConsumerId()+"/entitlements";
+		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client,CandlepinTasks.tomcat6LogFile, LogMarker, logMessage).trim().equals(""));
+
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	//To be tested against stage
+	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe", 
+			groups = { "Verify500ErrorOnStage","blockedByBug-878994"}, enabled = true)
+		public void Verify500ErrorOnStage() throws JSONException,Exception {
+		String logMessage = "remote server status code: 500";
+		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
+		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, serverurl, null, null, true, null, null, null, null).getStdout();	
+		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
+		String result=clienttasks.listAvailableSubscriptionPools().getStdout();
+		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, logMessage).trim().equals(""));
+		Assert.assertNoMatch(result.trim(), RemoteServerError);
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
+		result=clienttasks.subscribe(true,(String)null,(String)null,(String)null, null, null, null, null, null, null, null).getStdout();
+		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, logMessage).trim().equals(""));
+		Assert.assertNoMatch(result.trim(), RemoteServerError);
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
+		result=clienttasks.unregister(null, null, null).getStdout();
+		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, logMessage).trim().equals(""));
+		Assert.assertNoMatch(result.trim(), RemoteServerError);
+	}
 	
 	/**
 	 * @author skallesh
@@ -386,7 +432,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsNoMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
 		clienttasks.restart_rhsmcertd(null, null, false, null);
-		sleep(2*60*1000);	
+		sleep(2*60*1000);
 		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
 		Assert.assertEquals(jsonActivationKey.getString("displayMessage"), "Content with id "+contentId+" could not be found.");
 		requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, modifiedProductIds).toString();
@@ -2266,52 +2312,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"Successfully updated the system facts.");
 	}
 
-	/**
-	 * @author skallesh
-	 * @throws Exception
-	 * @throws JSONException
-	 */
-	@Test(description = "subscription-manager: facts --list,verify system.entitlements_valid ", groups = {
-			"validTest", "blockedByBug-669513" }, enabled = true)
-	public void VerifyEntilementValidityInFactsList_Test()
-			throws JSONException, Exception {
-		clienttasks.deleteFactsFileWithOverridingValues();
-		List<String> productId = new ArrayList<String>();
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"autoAttachInterval".toLowerCase(), "1440" });
-		clienttasks.config(null, null, true, listOfSectionNameValues);
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(List<String>) null, null, null, null, true, null, null, null, null);
-		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
-		clienttasks.facts(true, null, null, null, null);
-		String result = clienttasks.getFactValue(factname);
-		Assert.assertEquals(result.trim(), "invalid");
-		clienttasks.subscribe(true, null, null, (String) null, null, null,
-				null, null, null, null, null);
-		for (InstalledProduct installed : clienttasks
-				.getCurrentlyInstalledProducts()) {
-			if ((installed.status.equals("Not Subscribed"))
-					|| (installed.status.equals("Partially Subscribed"))) {
-				productId.add(installed.productId);
-
-			}
-		}
-		if (!(productId.size() == 0)) {
-			for (int i = 0; i < productId.size(); i++) {
-				moveProductCertFiles(productId.get(i) + "_.pem");
-			}
-			result = clienttasks.getFactValue(factname);
-			Assert.assertEquals(result.trim(), "valid");
-
-		} else {
-			result = clienttasks.getFactValue(factname);
-			Assert.assertEquals(result.trim(), "valid");
-		}
-		
-
-	}
+	
 
 	/**
 	 * @author skallesh
