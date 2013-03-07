@@ -2356,21 +2356,13 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult refresh(String proxy, String proxyuser, String proxypassword) {
 		
 		SSHCommandResult sshCommandResult = refresh_(proxy, proxyuser, proxypassword);
-		String actualStdoutMsg = sshCommandResult.getStdout().trim();
+		String refreshStdoutMsg = sshCommandResult.getStdout().trim();
 		
-		// TEMPORARY WORKAROUND FOR BUG
-		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			String subString = "Any local-only certificates have been deleted.";
-			log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
-			actualStdoutMsg = actualStdoutMsg.replace(subString, "").trim();
-		}
-		// END OF WORKAROUND
+		refreshStdoutMsg = workaroundForBug906550(refreshStdoutMsg);
 		
 		// assert results for a successful clean
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the refresh command indicates a success.");
-		Assert.assertEquals(actualStdoutMsg, "All local data refreshed");
+		Assert.assertEquals(refreshStdoutMsg, "All local data refreshed");
 		
 		return sshCommandResult; // from the refresh command
 	}
@@ -3483,14 +3475,8 @@ public class SubscriptionManagerTasks {
 		if (auto)
 			Assert.assertTrue(sshCommandResult.getStdout().contains("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
 		else {
-			// TEMPORARY WORKAROUND FOR BUG
-			String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				Assert.assertTrue(sshCommandResult.getStdout().contains("Successfully attached a subscription"), "The subscribe stdout reports 'Successfully attached a subscription'.");
-			} else
-			// END OF WORKAROUND
-			Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports 'Success'.");
+			//Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports 'Success'.");
+			Assert.assertTrue(workaroundForBug906550(sshCommandResult.getStdout()).startsWith("Success"), "The subscribe stdout reports 'Success'.");
 		}
 		
 		// assert the exit code was not a failure
@@ -5529,6 +5515,28 @@ repolist: 3,394
 	
 	public void setLanguage(String lang){
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
+	}
+	
+	public String workaroundForBug906550(String stdoutMsg) {
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			String subString = "Any local-only certificates have been deleted.";
+			if (stdoutMsg.contains(subString)) {
+			  log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
+			  stdoutMsg = stdoutMsg.replace(subString, "").trim();
+			}
+			String subStringRegex = "(\\d+ local (certificate has|certificates have) been deleted\\.)";	// 1 local certificate has been deleted. // 2 local certificates have been deleted.	// subscription-manager commit 7bb3751ad6f398b044efd095af61cd605d9831bf
+			Pattern pattern = Pattern.compile(subStringRegex);
+			Matcher matcher = pattern.matcher(stdoutMsg);
+			while (matcher.find()) {
+				log.info("Stripping substring '"+matcher.group()+"' from stdout while bug '"+bugId+"' is open.");
+				stdoutMsg = stdoutMsg.replace(matcher.group(), "").trim();
+			}
+		}
+		// END OF WORKAROUND
+		return stdoutMsg;
 	}
 	
 	protected void workaroundForBug844455() {

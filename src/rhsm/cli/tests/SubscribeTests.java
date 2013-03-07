@@ -307,15 +307,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult subscribeResult = clienttasks.subscribe_(null,null,pool.poolId,null,null, null, null, null, null, null, null);
 		String subscribeStdout = subscribeResult.getStdout().trim();
 		
-		// TEMPORARY WORKAROUND FOR BUG
-		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			String subString = "Any local-only certificates have been deleted.";
-			log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
-			subscribeStdout = subscribeStdout.replace(subString, "").trim();
-		}
-		// END OF WORKAROUND
+		subscribeStdout = clienttasks.workaroundForBug906550(subscribeStdout);
 		
 		if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
 //			Assert.assertEquals(subscribeStdout, String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId),	// Bug 812410 - Subscription-manager subscribe CLI feedback 

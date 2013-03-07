@@ -243,16 +243,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;
 		SSHCommandResult result = clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
 		String actualStdoutMsg = result.getStdout().trim();
-		
-		// TEMPORARY WORKAROUND FOR BUG
-		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			String subString = "Any local-only certificates have been deleted.";
-			log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
-			actualStdoutMsg = actualStdoutMsg.replace(subString, "").trim();
-		}
-		// END OF WORKAROUND
+		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
 		
 		// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		// NOTE: TIME TO FIX THIS ASSERTION... Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
@@ -281,15 +272,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) serials.add(productSubscription.serialNumber);
 		SSHCommandResult result = clienttasks.unsubscribe(null,serials,null,null,null);
 		String actualStdoutMsg = result.getStdout().trim();
-		// TEMPORARY WORKAROUND FOR BUG
-		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			String subString = "Any local-only certificates have been deleted.";
-			log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
-			actualStdoutMsg = actualStdoutMsg.replace(subString, "").trim();
-		}
-		// END OF WORKAROUND
+		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
 		String expectedStdoutMsg;
 		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// changed by bug 874749
 		expectedStdoutMsg = "Successfully removed serial numbers:";
@@ -322,15 +305,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+String.format("Entitlement Certificate with serial number %s could not be found.", revokedSerial);	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		result = clienttasks.unsubscribe(null,serials,null,null,null);
 		actualStdoutMsg = result.getStdout().trim();
-		// TEMPORARY WORKAROUND FOR BUG
-		bugId = "906550"; invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			String subString = "Any local-only certificates have been deleted.";
-			log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
-			actualStdoutMsg = actualStdoutMsg.replace(subString, "").trim();
-		}
-		// END OF WORKAROUND
+		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
 		Assert.assertEquals(actualStdoutMsg, expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions (including revoked serials).");
 	}
 //TOO MUCH LOGGING FROM TOO MANY ASSERTIONS;  DELETEME IF ABOVE TEST WORKS WELL

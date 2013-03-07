@@ -98,7 +98,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		log.info("Verify that the currently consumed product subscriptions that came from this subscription pool have the same start and end date as the pool...");
 		List<ProductSubscription> originalProducts = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertFalse(originalProducts.isEmpty(),"After subscribing to a new pool, at least one consumed product subscription matching the entitlement cert's serial number '"+entitlementCert.serialNumber+"' is expected.");
-
+		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=660713 - jsefler 12/12/2010
 		Boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {String bugId="660713"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
