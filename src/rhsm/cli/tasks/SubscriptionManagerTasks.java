@@ -5519,20 +5519,31 @@ repolist: 3,394
 	
 	public String workaroundForBug906550(String stdoutMsg) {
 		// TEMPORARY WORKAROUND FOR BUG
+		// subscription-manager commit 7bb3751ad6f398b044efd095af61cd605d9831bf
 		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
+			// Any local-only certificates have been deleted.
 			String subString = "Any local-only certificates have been deleted.";
 			if (stdoutMsg.contains(subString)) {
 			  log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
 			  stdoutMsg = stdoutMsg.replace(subString, "").trim();
 			}
-			String subStringRegex = "(\\d+ local (certificate has|certificates have) been deleted\\.)";	// 1 local certificate has been deleted. // 2 local certificates have been deleted.	// subscription-manager commit 7bb3751ad6f398b044efd095af61cd605d9831bf
+			// 1 local certificate has been deleted.
+			// 2 local certificates have been deleted.
+			String subStringRegex = "(\\d+ local (certificate has|certificates have) been deleted\\.)";
 			Pattern pattern = Pattern.compile(subStringRegex);
 			Matcher matcher = pattern.matcher(stdoutMsg);
 			while (matcher.find()) {
 				log.info("Stripping substring '"+matcher.group()+"' from stdout while bug '"+bugId+"' is open.");
 				stdoutMsg = stdoutMsg.replace(matcher.group(), "").trim();
+			}
+			// 3 subscriptions removed at the server.
+			subStringRegex = "(\\d+ subscriptions removed at the server\\.)";
+			pattern = Pattern.compile(subStringRegex);
+			matcher = pattern.matcher(stdoutMsg);
+			while (matcher.find()) {
+				log.info("Stripping substring '"+matcher.group()+"' from stdout while bug '"+bugId+"' is open.");
 			}
 		}
 		// END OF WORKAROUND
