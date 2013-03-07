@@ -1,10 +1,12 @@
 (ns rhsm.gui.tests.register-tests
   (:use [test-clj.testng :only [gen-class-testng
                                 data-driven]]
-        [rhsm.gui.tasks.test-config :only (config)]
+        [rhsm.gui.tasks.test-config :only (config
+                                           clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [slingshot.slingshot :only (try+
                                     throw+)]
+        [clojure.string :only (blank?)]
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks])
@@ -12,6 +14,8 @@
             Test
             BeforeClass
             DataProvider]))
+
+(def sys-log "/var/log/rhsm/rhsm.log")
 
 (defn get-userlists [username password]
   (let [owners (ctasks/get-owners username password)]
@@ -61,6 +65,25 @@
             {:keys [unregister-first]} (unregister-first)))
   (tasks/unregister)
   (verify (action exists? :register-system)))
+
+(defn ^{Test {:groups ["registration" "blockedByBug-918303"]}}
+  register_check_syslog[_]
+  (let [output (tasks/get-logging @clientcmd
+                                  sys-log
+                                  "check-logging-info"
+                                  nil
+                                  (tasks/register-with-creds))]
+      (verify (not (blank? output)))))
+
+(defn ^{Test {:groups ["registration" "blockedByBug-918303"]
+              :dependsOnMethods ["register_check_syslog"]}}
+  unregister_check_syslog[_]
+  (let [output (tasks/get-logging @clientcmd
+                                  sys-log
+                                  "check-logging-info"
+                                  nil
+                                  (tasks/unregister))]
+      (verify (not (blank? output)))))
 
 (data-driven register_bad_credentials {Test {:groups ["registration"]}}
   [^{Test {:groups ["blockedByBug-718045"]}}

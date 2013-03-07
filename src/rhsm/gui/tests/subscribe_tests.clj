@@ -6,7 +6,8 @@
         [com.redhat.qe.verify :only (verify)]
         [slingshot.slingshot :only (try+
                                     throw+)]
-        [clojure.string :only (split)]
+        [clojure.string :only (split
+                               blank?)]
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
@@ -19,6 +20,7 @@
 
 (def productlist (atom {}))
 (def servicelist (atom {}))
+(def sys-log "/var/log/rhsm/rhsm.log")
 
 (defn build-subscription-map
   []
@@ -337,6 +339,25 @@
                      (when (:support_type rawservice)
                        (str ", " (:support_type rawservice))))]
     (verify (= guiservice service))))
+
+(defn ^{Test {:groups ["subscribe" "blockedByBug-918617"]}}
+  subscribe_check_syslog[_]
+  (let [output (tasks/get-logging @clientcmd
+                                  sys-log
+                                  "check-logging-info"
+                                  nil
+                                  (subscribe_all))]
+      (verify (not (blank? output)))))
+
+(defn ^{Test {:groups ["registration" "blockedByBug-918617"]
+              :dependsOnMethods ["subscribe_check_syslog"]}}
+  unsubscribe_check_syslog[_]
+  (let [output (tasks/get-logging @clientcmd
+                                  sys-log
+                                  "check-logging-info"
+                                  nil
+                                  (unsubscribe_all))]
+      (verify (not (blank? output)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
