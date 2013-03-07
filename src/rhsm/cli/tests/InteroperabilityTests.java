@@ -31,7 +31,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="User is warned when already registered using RHN Classic",
-			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018", "blockedByBug-755130", "blockedByBug-847795", "blockedByBug-859090"},
+			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018", "blockedByBug-755130", "blockedByBug-847795", "blockedByBug-859090", "blockedByBug-877590"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=75972)	
 	public void InteroperabilityRegister_Test() {
@@ -65,6 +65,12 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			"WARNING" +"\n\n"+
 			"This system has already been registered with Red Hat using RHN Classic." +"\n\n"+
 			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends that customers only register once. " +"\n\n"+
+			"To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// after Bug 877590 - The tool you are using is attempting to re-register using Red Hat Subscription Management technology.
+		interoperabilityWarningMessage = 
+			"WARNING" +"\n\n"+
+			"This system has already been registered with Red Hat using RHN Classic." +"\n\n"+
+			"Your system is being registered again using Red Hat Subscription Management. Red Hat recommends that customers only register once." +"\n\n"+
 			"To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
 		// during RHEL58, DEV trimmed whitespace from strings...
 		interoperabilityWarningMessage = interoperabilityWarningMessage.replaceAll(" +(\n|$)", "$1"); 
