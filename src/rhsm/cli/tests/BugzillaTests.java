@@ -10,11 +10,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -69,7 +67,39 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	String factname="system.entitlements_valid";
 	protected String RemoteServerError="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 	
-	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify if CLI lets you set consumer nameto empty string and defaults to username", 
+			groups = { "VerifyConsumerNameTest","blockedByBug-669395"}, enabled = true)
+		public void VerifyConsumerNameTest() throws JSONException,Exception {
+		String consumerName="tester";
+		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
+		Assert.assertContainsMatch(result, "name: "+clienttasks.hostname);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, consumerName, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
+		String expected="name: "+consumerName;
+		Assert.assertContainsMatch(result, expected);
+		String consumerId=clienttasks.getCurrentConsumerId();
+		clienttasks.clean(null, null, null);
+		consumerName="consumer";
+		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, consumerName, consumerId, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
+		Assert.assertContainsMatch(result, expected);
+		clienttasks.clean(null, null, null);
+		result=clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, "", consumerId, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null).getStdout();
+		Assert.assertEquals(result.trim(), "Error: system name can not be empty.");
+		result=clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, "", null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null).getStdout();
+		Assert.assertEquals(result.trim(), "Error: system name can not be empty.");
+	}
 	
 	/**
 	 * @author skallesh
