@@ -457,6 +457,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--list");
 		options.add("--enable=REPOID");
 		options.add("--disable=REPOID");
+		options.add("--proxy=PROXY_URL");		// added by bug 906642
+		options.add("--proxyuser=PROXY_USER");		// added by bug 906642
+		options.add("--proxypassword=PROXY_PASSWORD");		// added by bug 906642
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);

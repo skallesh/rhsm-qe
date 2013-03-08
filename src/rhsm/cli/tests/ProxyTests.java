@@ -767,6 +767,71 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	// REPOS Test methods ***********************************************************************
+
+	@Test(	description="subscription-manager : repos using a proxy server (Positive and Negative Variations)",
+			groups={"blockedByBug-906642"},
+			dataProvider="getReposAttemptsUsingProxyServerData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void ReposAttemptsUsingProxyServer_Test(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr) {
+		// setup for test
+		String moduleTask = "repos";
+		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribe(null,null,pool.poolId,null,null,null, null, null, null, null, null);
+
+		SSHCommandResult attemptResult = clienttasks.repos_(true,(List<String>)null,(List<String>)null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" --list using a proxy server.");
+		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" --list using a proxy server.");
+		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" --list using a proxy server.");
+	}
+
+	
+	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
+			groups={"blockedByBug-906642"},
+			dataProvider="getReposAttemptsUsingProxyServerViaRhsmConfigData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void ReposAttemptsUsingProxyServerViaRhsmConfig_Test(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern) {
+		// setup for test
+		String moduleTask = "repos";
+		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribe(null,null,pool.poolId,null,null,null, null, null, null, null, null);
+		
+		// pad the tail of basicauthproxyLog with a message
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" ReposAttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
+		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
+
+		// set the config parameters
+		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
+		
+		// attempt the moduleTask with the proxy options
+		SSHCommandResult attemptResult = clienttasks.repos_(true,(List<String>)null,(List<String>)null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" --list using a proxy server.");
+		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" --list using a proxy server.");
+		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" --list using a proxy server.");
+
+		// assert the tail of proxyLog shows the proxyLogGrepPattern
+		if (proxyLogGrepPattern!=null) {
+			//SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+			//SSHCommandResult proxyLogResult = proxyRunner.runCommandAndWait("(LINES=''; IFS=$'\n'; for line in $(tac "+proxyLog+"); do if [[ $line = '"+proxyLogMarker+"' ]]; then break; fi; LINES=${LINES}'\n'$line; done; echo -e $LINES) | grep "+clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy simultaneously
+			//Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogGrepPattern, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+			String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+			//Assert.assertContainsMatch(proxyLogResult, proxyLogGrepPattern, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");	// TOO MUCH LOGGING
+			Assert.assertTrue(proxyLogResult.contains(proxyLogGrepPattern), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains expected connection '"+proxyLogGrepPattern+"' attempts from "+clienttasks.ipaddr+" to the candlepin server.");
+		}
+	}
+	
+	
+	
 	// SUBSCRIBE Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager : subscribe using a proxy server (Positive and Negative Variations)",
@@ -1396,18 +1461,6 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
-// DELETME after bug https://bugzilla.redhat.com/show_bug.cgi?id=720049 is resolved
-//	@DataProvider(name="getReposAttemptsUsingProxyServerData")
-//	public Object[][] getReposAttemptsUsingProxyServerDataAs2dArray() {
-//		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
-//	}
-//	
-//	
-//	@DataProvider(name="getReposAttemptsUsingProxyServerViaRhsmConfigData")
-//	public Object[][] getReposAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-//		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
-//	}
-	
 	
 	@DataProvider(name="getFactsAttemptsUsingProxyServerData")
 	public Object[][] getFactsAttemptsUsingProxyServerDataAs2dArray() {
@@ -1452,6 +1505,46 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	@DataProvider(name="getRefreshAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getRefreshAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+	}
+	
+	
+	@DataProvider(name="getReposAttemptsUsingProxyServerData")
+	public Object[][] getReposAttemptsUsingProxyServerDataAs2dArray() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
+			
+			// get the existing BlockedByBzBug
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+			// add more BlockedByBzBug to rows that are expecting a network error
+			if (l.get(8)==nErrMsg) {
+				bugIds.add("919255");	// Bug 919255 - negative proxy testing against subscription-manager repos --list 
+			}
+			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			
+			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9)}));
+		}
+		return TestNGUtils.convertListOfListsTo2dArray(ll);
+	}
+	
+	
+	@DataProvider(name="getReposAttemptsUsingProxyServerViaRhsmConfigData")
+	public Object[][] getReposAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
+			
+			// get the existing BlockedByBzBug
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+			// add more BlockedByBzBug to rows that are expecting a network error
+			if (l.get(12)==nErrMsg) {
+				bugIds.add("919255");	// Bug 919255 - negative proxy testing against subscription-manager repos --list 
+			}
+			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			
+			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16)}));
+		}
+		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
 	
 	
