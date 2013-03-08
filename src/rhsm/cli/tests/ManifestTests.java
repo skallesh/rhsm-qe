@@ -47,7 +47,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="execute rct dump-manifest against all of the test manifest files",
-			groups={},
+			groups={"blockedByBug-919561"},
 			dataProvider="ManifestFilesData",
 			priority=10, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -79,7 +79,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="execute rct dump-manifest --destination=/tmp/RCTDumpManifestDestination_Test against all of the test manifest files",
-			groups={},
+			groups={"blockedByBug-919561"},
 			dataProvider="ManifestFilesData",
 			priority=20, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -116,7 +116,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="execute rct cat-manifest against all of the test manifest files",
-			groups={},
+			groups={"blockedByBug-919561"},
 			dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
 			alwaysRun=true,	// run even when there are failures or skips in RCTDumpManifestDestination_Test
 			dataProvider="ManifestFilesData",
