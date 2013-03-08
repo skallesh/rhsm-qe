@@ -1054,8 +1054,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		name = " ";						ll.add(Arrays.asList(new Object[] {null,	name, sm_clientOrg}));
 		name = "unknown";				ll.add(Arrays.asList(new Object[] {null,	name, sm_clientOrg}));
-		name = "ak_na_testování";		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"803773","906000"}),	name, sm_clientOrg}));
-		name = "使 용 Ф ব্ ಬ ഉ ବ୍ டு వా Й Ó";	ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"803773","906000"}),	name, sm_clientOrg}));
+		name = "ak_na_testování";		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"803773","906000","919584"}),	name, sm_clientOrg}));
+		name = "使 용 Ф ব্ ಬ ഉ ବ୍ டு వా Й Ó";	ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"803773","906000","919584"}),	name, sm_clientOrg}));
 		
 		return ll;
 	}
