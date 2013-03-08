@@ -388,7 +388,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnChannelFromProductCertsData",
-			enabled=true)
+			enabled=false /* OUT OF ORDER UNTIL WE LEARN FROM dgregor WHAT TO DO ABOUT DESCREPANCIES BEWTEEN product-certs.json AND product-baseline.json */)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileSupportsRhnChannelFromProductCerts_Test(Object bugzilla, String productCertsRhnChannel, File productCertsProductFile) throws JSONException {
 
