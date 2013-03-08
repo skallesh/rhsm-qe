@@ -70,7 +70,7 @@
   register_check_syslog[_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
-                                  "check-logging-info"
+                                  "register_check_syslog"
                                   nil
                                   (tasks/register-with-creds))]
       (verify (not (blank? output)))))
@@ -80,7 +80,7 @@
   unregister_check_syslog[_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
-                                  "check-logging-info"
+                                  "unregister_check_syslog"
                                   nil
                                   (tasks/unregister))]
       (verify (not (blank? output)))))

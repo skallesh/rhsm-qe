@@ -104,17 +104,6 @@
       (verify (= gui-val cli-val)))
     (finally (tasks/ui click :close-facts))))
 
-(defn ^{Test {:groups ["facts"]}}
-  check_cli_subscribed_on_gui [_]
-  (try
-    (.runCommandAndWait @clientcmd "subscription-manager unregister")
-    (.runCommandAndWait @clientcmd "subscription-manager clean")
-    (.runCommandAndWait @clientcmd "subscription-manager register --username testuser1 --password password --org snowwhite")
-     (let [raw-data (drop 1 (split-lines (.getStdout 
-                                          (.runCommandAndWait @clientcmd "subscription-manager subscribe --auto"))))
-           processed-data (map (fn [arg] (not (filter blank? (trim (raw-data))))))
-           subscribe-auto-map (apply hash-map (map (fn [arg] split processed-data #":")))]))) 
-
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-909294"
                        "blockedByBug-839772"]}}

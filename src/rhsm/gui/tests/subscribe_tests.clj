@@ -344,7 +344,7 @@
   subscribe_check_syslog[_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
-                                  "check-logging-info"
+                                  "subscribe_check_syslog"
                                   nil
                                   (subscribe_all))]
       (verify (not (blank? output)))))
@@ -354,7 +354,7 @@
   unsubscribe_check_syslog[_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
-                                  "check-logging-info"
+                                  "unsubscribe_check_syslog"
                                   nil
                                   (unsubscribe_all))]
       (verify (not (blank? output)))))
