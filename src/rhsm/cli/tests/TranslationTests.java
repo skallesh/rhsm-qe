@@ -75,7 +75,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to register to a Candlepin server using bogus credentials and check for localized strings results",
-			groups={"AcceptanceTests"},
+			groups={"blockedByBug-919584","AcceptanceTests"},
 			dataProvider="getInvalidRegistrationWithLocalizedStringsData")
 	@ImplementsNitrateTest(caseId=41691)
 	public void AttemptLocalizedRegistrationWithInvalidCredentials_Test(Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
