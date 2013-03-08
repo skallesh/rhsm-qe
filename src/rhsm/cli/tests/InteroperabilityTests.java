@@ -2,6 +2,7 @@ package rhsm.cli.tests;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.json.JSONException;
@@ -155,8 +156,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeRhnSystemIdFile();
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
 		String expectedMsgRHSM = "This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.";
-		String expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
-		if (Float.valueOf(clienttasks.redhatReleaseXY)>=6.4) expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";
+		String expectedMsgRHN; // comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
+		expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";
+		if (Arrays.asList(new String[]{"6.3","5.8","6.2","5.7","6.1"}).contains(clienttasks.redhatReleaseXY)) expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When not registered to either RHN nor RHSM, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When not registered to either RHN nor RHSM, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
@@ -192,8 +194,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeRhnSystemIdFile();
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
 		String expectedMsgRHSM = "This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.";	
-		String expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
-		if (Float.valueOf(clienttasks.redhatReleaseXY)>=6.4) expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";
+		String expectedMsgRHN;	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
+		expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";
+		if (Arrays.asList(new String[]{"6.3","5.8","6.2","5.7","6.1"}).contains(clienttasks.redhatReleaseXY)) expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHSM (but not subscribed) but not RHN, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When registered to RHSM (but not subscribed) but not RHN, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
@@ -208,8 +211,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeRhnSystemIdFile();
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
 		String expectedMsgRHSM = "This system is receiving updates from Red Hat Subscription Management.";
-		String expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
-		if (Float.valueOf(clienttasks.redhatReleaseXY)>=6.4) expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";
+		String expectedMsgRHN;	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
+		expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";
+		if (Arrays.asList(new String[]{"6.3","5.8","6.2","5.7","6.1"}).contains(clienttasks.redhatReleaseXY)) expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHSM (and subscribed) but not RHN, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When registered to RHSM (and subscribed) but not RHN, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
