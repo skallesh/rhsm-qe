@@ -384,7 +384,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, optionsRegex, new ArrayList<String>(options)}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("919512"), smHelpCommand, 0, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager import OPTIONS
