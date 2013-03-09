@@ -109,7 +109,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="attempt to set the subscription-manager release value that is not currently available",
-			groups={"blockedByBug-818205"},
+			groups={"blockedByBug-818205", "blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptToSetAnUnavailableReleaseValue_Test() {
@@ -127,7 +127,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="verify that the consumer's current subscription-manager release value matches the release value just set",
-			groups={"blockedByBug-814385"},
+			groups={"blockedByBug-814385", "blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void GetTheReleaseAfterSettingTheRelease_Test() {
@@ -147,7 +147,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the subscription-manager release can nolonger be unset by setting it to \"\".",
-			groups={"blockedByBug-807822","blockedByBug-814385"},
+			groups={"blockedByBug-807822","blockedByBug-814385", "blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptToUnsetTheReleaseWithAnEmptyString_Test() {
@@ -173,7 +173,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the subscription-manager release can be unset by using the unset option.",
-			groups={"blockedByBug-807822","blockedByBug-814385"},
+			groups={"blockedByBug-807822","blockedByBug-814385", "blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsetTheRelease_Test() {
@@ -196,7 +196,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that subscription-manager release without any options defaults to --show",
-			groups={"blockedByBug-812153"},
+			groups={"blockedByBug-812153", "blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReleaseShow_Test() {
