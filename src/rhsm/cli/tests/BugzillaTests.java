@@ -112,9 +112,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);	
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-		RemoteFileTasks.markFile(client, CandlepinTasks.tomcat6LogFile, LogMarker);
+		client.runCommandAndWait("ssh root@"+sm_serverHostname);
+		RemoteFileTasks.markFile(server, servertasks.tomcat6LogFile, LogMarker);
 		String logMessage=" Authentication check for /consumers/"+clienttasks.getCurrentConsumerId()+"/entitlements";
-		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client,CandlepinTasks.tomcat6LogFile, LogMarker, logMessage).trim().equals(""));
+		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(server,servertasks.tomcat6LogFile, LogMarker, logMessage).trim().equals(""));
 
 	}
 	
@@ -1485,7 +1486,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.putFile(client.getConnection(),
 				expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate_("/root/CertV3.pem");
-		String expected = "This machine has been unsubscribed from 1 subscriptions";
+		String expected = "1 subscriptions removed at the server.";
 		String result = clienttasks.unsubscribe(true, (BigInteger) null, null,
 				null, null).getStdout();
 		Assert.assertEquals(result.trim(), expected);
@@ -1937,8 +1938,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
 		Calendar StartTimeAfterRHSM = clienttasks.getCurrentConsumerCert().validityNotBefore;
 		Calendar EndTimeAfterRHSM = clienttasks.getCurrentConsumerCert().validityNotAfter;
-		String updatedCertdate = client.runCommandAndWait(
-				"ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8")
+		String updatedCertdate = client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8")
 				.getStdout();
 		setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
