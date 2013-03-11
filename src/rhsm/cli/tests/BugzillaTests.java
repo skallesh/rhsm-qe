@@ -109,10 +109,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify if CLI auto-subscribe tries to re-use basic auth credentials.", 
 			groups = { "VerifyAutosubscribeReuseBasicAuthCredntials","blockedByBug-707641"}, enabled = true)
 		public void VerifyAutosubscribeReuseBasicAuthCredntials() throws JSONException,Exception {
-		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-		RemoteFileTasks.markFile(client, CandlepinTasks.tomcat6LogFile, LogMarker);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);	
+		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+		RemoteFileTasks.markFile(client, CandlepinTasks.tomcat6LogFile, LogMarker);
 		String logMessage=" Authentication check for /consumers/"+clienttasks.getCurrentConsumerId()+"/entitlements";
 		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client,CandlepinTasks.tomcat6LogFile, LogMarker, logMessage).trim().equals(""));
 
@@ -160,7 +160,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"manage_repos".toLowerCase(), "1" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,
-				(String) null, null, null, null, null, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		String redhatrepoExists=client.runCommandAndWait("ls /etc/yum.repos.d/redhat.repo").getStdout();
 		Assert.assertEquals(redhatrepoExists.trim(), "/etc/yum.repos.d/redhat.repo");
 		String result=client.runCommandAndWait("yum repolist all").getStdout();
@@ -191,10 +191,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		public void InsecureValueInRHSMConfAfterRegistrationFailure() throws JSONException,Exception {
 		String defaultHostname = "rhel7.com";
 		String defaultPort = "8443";
-		String defaultPrefix = "/candlepin";
+		String defaultPrefix = "candlepin";
 		String org="foo";
 		String valueBeforeRegister=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "insecure");
-		clienttasks.register(sm_clientUsername, sm_clientPassword,org, null, null, null, null, null, null, null,(String) null,defaultHostname+":"+defaultPort+"/"+defaultPrefix, null, null, null, null, null, null, null);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,org, null, null, null, null, null, null, null,(String) null,defaultHostname+":"+defaultPort+"/"+defaultPrefix, null, null, null, null, null, null, null);
 		String valueAfterRegister = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "insecure");
 		Assert.assertEquals(valueBeforeRegister, valueAfterRegister);
 	}
@@ -1054,41 +1054,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		List<YumRepo> originalRepos =clienttasks.getCurrentlySubscribedYumRepos();
-		String result=client.runCommandAndWait("yum repolist").getStdout();
-
-		for (YumRepo repo : originalRepos) {
-			
-			Boolean flag=false;
-			if(!(repo.id==null)){
-				Pattern pattern = Pattern.compile(repo.id, Pattern.MULTILINE);
-				Matcher matcher = pattern.matcher(result);
-				if (matcher.find()) {
-					flag=true;
-				}
-				Assert.assertTrue(flag);
-				flag=false;
-			}
+			List<YumRepo> originalRepos =clienttasks.getCurrentlySubscribedYumRepos();
+			Assert.assertFalse(originalRepos.isEmpty());
 			listOfSectionNameValues = new ArrayList<String[]>();
 			listOfSectionNameValues.add(new String[] { "rhsm","manage_repos", "0" });
 			clienttasks.config(null, null, true, listOfSectionNameValues);
 			originalRepos =clienttasks.getCurrentlySubscribedYumRepos();
-			 result=client.runCommandAndWait("yum repolist").getStdout();
+			Assert.assertTrue(originalRepos.isEmpty());
 			 
-			 for (YumRepo yumrepo : originalRepos) {
-					
-					flag=false;
-					if(!(yumrepo.id==null)){
-						Pattern pattern = Pattern.compile(yumrepo.id, Pattern.MULTILINE);
-						Matcher matcher = pattern.matcher(result);
-						if (matcher.find()) {
-							flag=true;
-						}
-						Assert.assertFalse(flag);
-						flag=false;
-					}
-	}
-}
 	}
 	
 	
@@ -1285,7 +1258,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if(availOnDate.size()==0) throw new SkipException(
 				"Sufficient future pools are not available");
 		for (SubscriptionPool subscriptions : availOnDate) {
+			System.out.println(!(subscriptions.endDate.before(endDate)));
 			if(!(subscriptions.endDate.before(endDate))){
+				
 				clienttasks.subscribe(null, null, subscriptions.poolId, null, null,null, null, null, null, null, null);
 		}
 		}
@@ -1747,7 +1722,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String result = unsubscribeFromMultipleEntitlementsUsingSerialNumber(
 				serialOne.multiply(serialTwo), serialTwo.multiply(serialOne))
 				.getStdout();
-		String expected = "Unsuccessfully removed serial numbers:" + "\n"
+		String expected = "Serial numbers unsuccessfully removed at the server:" + "\n"
 				+ "   " + serialOne.multiply(serialTwo)
 				+ " is not a valid value for serial" + "\n" + "   "
 				+ serialTwo.multiply(serialOne)
