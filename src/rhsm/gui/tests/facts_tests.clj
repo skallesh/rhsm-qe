@@ -189,7 +189,7 @@
     (verify (= gui-value cli-value))))
 
 (defn ^{Test {:groups ["facts"]
-              :dependsOnMethods "check_product_status" 
+              :dependsOnMethods ["check_product_status"]
               :dataProvider "installed-products"}}
   check_product_status_unsubscribe [_ product row]
   (let [gui-status (tasks/ui getcellvalue :installed-view row 2)]
