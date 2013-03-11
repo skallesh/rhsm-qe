@@ -162,8 +162,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		String redhatrepoExists=client.runCommandAndWait("ls /etc/yum.repos.d/redhat.repo").getStdout();
-		Assert.assertEquals(redhatrepoExists.trim(), "/etc/yum.repos.d/redhat.repo");
+		Assert.assertFalse(RemoteFileTasks.testExists(client,"/etc/yum.repos.d/redhat.repo"));
 		String result=client.runCommandAndWait("yum repolist all").getStdout();
 
 		for(YumRepo originalRepos :clienttasks.getCurrentlySubscribedYumRepos()){
@@ -1486,7 +1485,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.putFile(client.getConnection(),
 				expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate_("/root/CertV3.pem");
-		String expected = "1 subscriptions removed at the server.";
+		String expected = "0 subscriptions removed at the server."+"\n"+"1 local certificate has been deleted.";
 		String result = clienttasks.unsubscribe(true, (BigInteger) null, null,
 				null, null).getStdout();
 		Assert.assertEquals(result.trim(), expected);
