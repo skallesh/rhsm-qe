@@ -341,7 +341,7 @@
     (verify (= guiservice service))))
 
 (defn ^{Test {:groups ["subscribe" "blockedByBug-918617"]}}
-  subscribe_check_syslog[_]
+  subscribe_check_syslog [_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
                                   "subscribe_check_syslog"
@@ -351,7 +351,7 @@
 
 (defn ^{Test {:groups ["registration" "blockedByBug-918617"]
               :dependsOnMethods ["subscribe_check_syslog"]}}
-  unsubscribe_check_syslog[_]
+  unsubscribe_check_syslog [_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
                                   "unsubscribe_check_syslog"
