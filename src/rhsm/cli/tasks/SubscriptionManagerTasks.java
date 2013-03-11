@@ -1235,6 +1235,24 @@ public class SubscriptionManagerTasks {
 	 * @return The fact value that subscription-manager lists for factName is returned.  If factName is not listed, null is returned.
 	 */
 	public String getFactValue(String factName) {
+		
+		// FIXME: SIMPLE WORKAROUND FOR NEW SERVER-SIDE COMPLIANCE CHECK ON "system.entitlements_valid" CompliantTests.factNameForSystemCompliance 3/11/2013
+		if (factName.equals("system.entitlements_valid")) {
+			log.warning("The former \""+factName+"\" fact is no longer used.  Employing a WORKAROUND by getting the system compliance status directly from the candlepin server...");
+			String complianceStatus = "UNKNOWN_COMPLIANCE_STATUS";
+			try {
+				complianceStatus = CandlepinTasks.getConsumerComplianceStatus(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId());
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return complianceStatus;
+		}
+		// END OF WORKAROUND
+		
 		Map<String,String> factsMap = getFacts(factName);
 		if (!factsMap.containsKey(factName)) {
 			log.warning("Did not find fact '"+factName+"' in the facts list on system '"+hostname+"'.");

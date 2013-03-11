@@ -1905,7 +1905,16 @@ schema generation failed
 		return factsMap;
 	}
 	
+	public static JSONObject getConsumerCompliance(String authenticator, String password, String url, String consumerId) throws JSONException, Exception {
+
+		JSONObject jsonCompliance = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerId+"/compliance"));
+		return jsonCompliance;
+	}
 	
+	public static String getConsumerComplianceStatus(String authenticator, String password, String url, String consumerId) throws JSONException, Exception {
+
+		return getConsumerCompliance(authenticator,password,url,consumerId).getString("status");
+	}
 	
 	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
 	
