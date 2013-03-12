@@ -3400,6 +3400,41 @@ public class SubscriptionManagerTasks {
 	
 	
 	
+	// plugins module tasks ************************************************************
+
+	/**
+	 * plugins without asserting results
+	 */
+	public SSHCommandResult plugins_(Boolean list, Boolean listslots, Boolean listhooks, Boolean verbose) {
+
+		// assemble the command
+		String command = this.command;		command += " plugins";
+		if (list!=null && list)				command += " --list";
+		if (listslots!=null && listslots)	command += " --listslots";
+		if (listhooks!=null && listhooks)	command += " --listhooks";
+		if (verbose!=null && verbose)		command += " --verbose";
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * plugins with asserting results
+	 */
+	public SSHCommandResult plugins(Boolean list, Boolean listslots, Boolean listhooks, Boolean verbose) {
+		
+		SSHCommandResult sshCommandResult = plugins_(list, listslots, listhooks, verbose);
+		
+		// assert results for a successful call to plugins
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the plugins command indicates a success.");
+		Assert.assertEquals(sshCommandResult.getStderr(), "", "Stderr from the plugins command indicates a success.");
+		
+		return sshCommandResult; // from the plugins command
+	}
+	
+	
+	
+
 	// subscribe module tasks ************************************************************
 
 	/**
@@ -3979,8 +4014,9 @@ public class SubscriptionManagerTasks {
 		List<SubscriptionPool> poolsAvailable = getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : poolsAvailable) {
 			try {
-//				if (!CandlepinTasks.isPoolProductMultiEntitlement(getConfFileParameter(rhsmConfFile, "hostname"),getConfFileParameter(rhsmConfFile, "port"),getConfFileParameter(rhsmConfFile, "prefix"),this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId)) {
-				if (!CandlepinTasks.isPoolProductMultiEntitlement(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,pool.poolId)) {
+				String authenticator = this.currentlyRegisteredUsername!=null?this.currentlyRegisteredUsername:SubscriptionManagerBaseTestScript.sm_serverAdminUsername;
+				String password = this.currentlyRegisteredPassword!=null?this.currentlyRegisteredPassword:SubscriptionManagerBaseTestScript.sm_serverAdminPassword;
+				if (!CandlepinTasks.isPoolProductMultiEntitlement(authenticator,password,SubscriptionManagerBaseTestScript.sm_serverUrl,pool.poolId)) {
 					poolsAvailableExcludingMuliEntitlement.add(pool);
 				}
 			} catch (Exception e) {

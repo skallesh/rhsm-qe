@@ -43,8 +43,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public static String sm_rhsmcertdCertFrequency	= null;
 	public static String sm_rhsmcertdHealFrequency	= null;
 	
-	public String sm_serverAdminUsername		= getProperty("sm.server.admin.username","");
-	public String sm_serverAdminPassword		= getProperty("sm.server.admin.password","");
+	public static String sm_serverAdminUsername		= getProperty("sm.server.admin.username","");
+	public static String sm_serverAdminPassword		= getProperty("sm.server.admin.password","");
 	
 	public String sm_serverInstallDir			= getProperty("sm.server.installDir","");
 	public String sm_serverImportDir			= getProperty("sm.server.importDir","");
@@ -144,7 +144,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected List<String> sm_rpmUpdateUrls						= new ArrayList<String>();
 	protected List<String> sm_repoCaCertUrls					= new ArrayList<String>();
 	protected List<String> sm_haPackages						= new ArrayList<String>();
-
+	protected List<String> sm_examplePluginUrls					= new ArrayList<String>();
+	
 //	protected JSONArray systemSubscriptionPoolProductData = null;
 	protected JSONArray sm_personSubscriptionPoolProductData = null;
 	protected JSONArray sm_contentIntegrationTestData = null;
@@ -165,6 +166,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		if (!getProperty("sm.rpm.updateurls", "").equals("")) 					sm_rpmUpdateUrls					= Arrays.asList(getProperty("sm.rpm.updateurls", "").trim().split(" *, *"));
 		if (!getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))				sm_repoCaCertUrls					= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 		if (!getProperty("sm.ha.packages", "").equals(""))						sm_haPackages						= Arrays.asList(getProperty("sm.ha.packages", "").trim().split(" *, *"));
+		if (!getProperty("sm.exampleplugin.urls", "").equals("")) 				sm_examplePluginUrls				= Arrays.asList(getProperty("sm.exampleplugin.urls", "").trim().split(" *, *"));
 
 				
 		if (sm_serverUrl==null)
