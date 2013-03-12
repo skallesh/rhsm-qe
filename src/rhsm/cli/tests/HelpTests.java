@@ -283,6 +283,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.add("version");
 		modules.add("attach");	// added by bug 874804
 		modules.add("remove");	// added by bug 874749
+		modules.add("plugins");	// added by https://engineering.redhat.com/trac/Entitlement/wiki/SubscriptionManagerPlugins
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
 			Integer exitCode = smHelpCommand.contains("--help")?0:1;	// coverage for bug 906124; the usage statement permits only "--help" and therefore any differing option (including "-h") should return non-zero exit code
 			List <String> usages = new ArrayList<String>();
@@ -752,6 +753,23 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--list");
 		options.add("--unset");
 		options.add("--show");	// Bug 812153 - release command should have a --show option which is the default
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
+			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
+		// subscription-manager plugins OPTIONS
+		module = "plugins";
+		options.clear();
+		options.add("-h, --help");
+		options.add("--list");
+		options.add("--listslots");
+		options.add("--listhooks");
+		options.add("--verbose");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
