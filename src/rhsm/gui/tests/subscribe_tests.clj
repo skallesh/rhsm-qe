@@ -349,7 +349,7 @@
                                   (subscribe_all))]
       (verify (not (blank? output)))))
 
-(defn ^{Test {:groups ["registration" "blockedByBug-918617"]
+(defn ^{Test {:groups ["subscribe" "blockedByBug-918617"]
               :dependsOnMethods ["subscribe_check_syslog"]}}
   unsubscribe_check_syslog [_]
   (let [output (tasks/get-logging @clientcmd

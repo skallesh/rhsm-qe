@@ -67,7 +67,7 @@
   (verify (action exists? :register-system)))
 
 (defn ^{Test {:groups ["registration" "blockedByBug-918303"]}}
-  register_check_syslog[_]
+  register_check_syslog [_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
                                   "register_check_syslog"
@@ -77,7 +77,7 @@
 
 (defn ^{Test {:groups ["registration" "blockedByBug-918303"]
               :dependsOnMethods ["register_check_syslog"]}}
-  unregister_check_syslog[_]
+  unregister_check_syslog [_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
                                   "unregister_check_syslog"
