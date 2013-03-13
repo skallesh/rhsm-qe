@@ -55,8 +55,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 		// test register with service level
 		clienttasks.unregister_(null,null,null);
-		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
-				"Before attempting to register with autosubscribe and a common servicelevel to become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
+		//Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,	// THIS ASSERTION IS NO LONGER VALID NOW THAT COMPLIANCE IS CALCULATED ON THE SERVER.  INSTEAD, THE LOCAL COMPLIANCE SHOULD BE TAKEN FROM THE SYSTEM CACHE.  THIS WORK IS CURRENTLY UNDER DEVELOPMENT 3/13/2013.
+		//		"Before attempting to register with autosubscribe and a common servicelevel to become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,servicelevel,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
