@@ -730,6 +730,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/te/")) bugIds.add("911779");
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pa/")) bugIds.add("911779");
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ko/")) bugIds.add("911779");
+				// Bug 921126 - [as] msgid "%%prog %s [OPTIONS] MANIFEST_FILE" is not translated in 1.8.X
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/as/")) bugIds.add("921126");
 				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
