@@ -338,8 +338,9 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// attempt the registration
 		String unavailableServiceLevel = "FOO";
 		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, unavailableServiceLevel, null, (String)null, null, null, null, true, null, null, null, null);
-		String msg = "Cannot set a service level for a consumer that is not available to its organization."; // before Bug 795798 - Cannot set a service level for a consumer that is not available to its organization.
-		//msg = String.format("Service level %s is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);
+		String msg;
+		msg = "Cannot set a service level for a consumer that is not available to its organization."; // valid before bug fix 795798 - Cannot set a service level for a consumer that is not available to its organization.
+		msg = String.format("Service level %s is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);	// valid before bug fix 864508 - Service level {0} is not available to consumers....
 		msg = String.format("Service level '%s' is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255));
 		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(msg), "Stdout message contains: "+msg);
@@ -443,7 +444,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.subscribe_(true,"FOO",(String)null,null,null,null,null,null,null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from an attempt to subscribe with auto and an unavailable service level.");
 		//Assert.assertEquals(result.getStdout().trim(), "Cannot set a service level for a consumer that is not available to its organization.", "Stdout from an attempt to subscribe with auto and an unavailable service level.");
-		//Assert.assertEquals(result.getStdout().trim(), String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg), "Stdout from an attempt to subscribe with auto and an unavailable service level.");
+		//Assert.assertEquals(result.getStdout().trim(), String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg), "Stdout from an attempt to subscribe with auto and an unavailable service level.");	// valid before bug fix 864508
 		Assert.assertEquals(result.getStdout().trim(), String.format("Service level '%s' is not available to consumers of organization %s.","FOO",sm_clientOrg), "Stdout from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to subscribe with auto and an unavailable service level.");
 	}
@@ -706,7 +707,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		String unavailableSericeLevel = "FOO";
 		SSHCommandResult result = clienttasks.service_level_(null, null, unavailableSericeLevel, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set with unavailable serviceLevel");
-		//Assert.assertEquals(result.getStderr().trim(), String.format("Service level %s is not available to consumers of organization %s.",unavailableSericeLevel,org), "Stderr from service-level --set with unavailable serviceLevel");
+		//Assert.assertEquals(result.getStderr().trim(), String.format("Service level %s is not available to consumers of organization %s.",unavailableSericeLevel,org), "Stderr from service-level --set with unavailable serviceLevel");	// valid before bug fix 864508
 		Assert.assertEquals(result.getStderr().trim(), String.format("Service level '%s' is not available to consumers of organization %s.",unavailableSericeLevel,org), "Stderr from service-level --set with unavailable serviceLevel");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --set with unavailable serviceLevel");
 	}
@@ -725,7 +726,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.service_level_(null, null, exemptSericeLevel, null, null, null, null, null, null, null, null, null);
 		log.info("An exempt service level should be treated as an unavailable service level when attempting to set.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set with exempt serviceLevel");
-		//Assert.assertEquals(result.getStderr().trim(), String.format("Service level %s is not available to consumers of organization admin.",exemptSericeLevel), "Stderr from service-level --set with exempt serviceLevel");
+		//Assert.assertEquals(result.getStderr().trim(), String.format("Service level %s is not available to consumers of organization admin.",exemptSericeLevel), "Stderr from service-level --set with exempt serviceLevel");	// valid before bug fix 864508
 		Assert.assertEquals(result.getStderr().trim(), String.format("Service level '%s' is not available to consumers of organization admin.",exemptSericeLevel), "Stderr from service-level --set with exempt serviceLevel");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --set with exempt serviceLevel");
 	}

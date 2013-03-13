@@ -708,7 +708,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		JSONObject jsonDryrunResult= new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, String.format("/consumers/%s/entitlements/dry-run%s",consumerId, serviceLevel==null?"":String.format("?service_level=%s",serviceLevel))));
 
 		Assert.assertTrue(jsonDryrunResult.has("displayMessage"),"The dry-run results threw an error with a displayMessage when attempting to run wirh serviceLevel '"+serviceLevel+"' ");
-		//Assert.assertEquals(jsonDryrunResult.getString("displayMessage"),String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg), "JSON results from a Candlepin Restful API call to dry-run with an unavailable service level.");
+		//Assert.assertEquals(jsonDryrunResult.getString("displayMessage"),String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg), "JSON results from a Candlepin Restful API call to dry-run with an unavailable service level.");	// valid before bug fix 864508
 		Assert.assertEquals(jsonDryrunResult.getString("displayMessage"),String.format("Service level '%s' is not available to consumers of organization %s.","FOO",sm_clientOrg), "JSON results from a Candlepin Restful API call to dry-run with an unavailable service level.");
 	}
 	
