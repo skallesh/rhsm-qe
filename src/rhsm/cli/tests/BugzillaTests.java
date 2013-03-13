@@ -126,7 +126,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	//To be tested against stage
 	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe", 
-			groups = { "Verify500ErrorOnStage","blockedByBug-878994"}, enabled = true)
+			groups = { "Verify500ErrorOnStage","blockedByBug-878994"}, enabled = false)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
 		String logMessage = "remote server status code: 500";
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
@@ -1116,7 +1116,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", 
-			groups = { "YumReposListAfterSubscription","blockedByBug-696786" }, enabled = true)
+			groups = { "YumReposListAfterSubscription","blockedByBug-696786","blockedByBug-919700" }, enabled = true)
 	public void YumReposListAfterSubscription() throws JSONException,Exception {
 		Boolean pattern=false;
 		Boolean Flag=false;
