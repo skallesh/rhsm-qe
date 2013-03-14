@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import java.util.regex.Pattern;
 
@@ -23,8 +24,8 @@ import com.redhat.qe.tools.SSHCommandResult;
 /**
  * @author jsefler
  *
- * The strategy for these tests is to exercise the example-plugins found in the upstream
- * subscription-manager git repository:
+ * The strategy for these tests is to exercise the test-plugins which are based on the
+ * exmaple-plugins found in the upstream subscription-manager git repository:
  * https://github.com/candlepin/subscription-manager/tree/master/example-plugins
  * 
  * Design Document:
@@ -96,7 +97,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="execute subscription-manager plugins --listhooks (with plugins installed and disabled)",
-			groups={},
+			groups={"DisabledPluginTests"},
 			priority=50, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListhooksWithDisabledPluginsInstalled_Test() {
@@ -106,64 +107,90 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	// EnabledRegisterConsumerPluginTests *************************************************
+	// RegisterConsumerTestPluginTests *************************************************
 	
-	@Test(	description="enable the RegisterConsumerPlugin and assert the plugins list reports enablement",
-			groups={},
+	@Test(	description="enable the RegisterConsumerTestPlugin and assert the plugins list reports enablement",
+			groups={"RegisterConsumerTestPluginTests"},
 			priority=60, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledRegisterConsumerPlugin_Test() {
+	public void verifyPluginsListWithEnabledRegisterConsumerTestPlugin_Test() {
 		
 		// find the plugin from the list of installed plugins
-		Plugin installedPlugin = getPlugin("register_consumer.RegisterConsumerPlugin");
-		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerPlugin is installed.");
+		Plugin installedPlugin = getPlugin("register_consumer1.RegisterConsumerTestPlugin");
+		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerTestPlugin is installed.");
 		
 		// enable the plugin
 		clienttasks.updateConfFileParameter(installedPlugin.configFile.getPath(), "enabled", "1");
 		
-		// verify the plugins list reports RegisterConsumerPlugin is enabled
+		// verify the plugins list reports RegisterConsumerTestPlugin is enabled
 		String expectedPluginReport = getExpectedPluginListReport(installedPlugin, "enabled", false);
 		Assert.assertTrue(clienttasks.plugins(null,null,null,null).getStdout().contains(expectedPluginReport), "Stdout from the plugins list command reports expected plugin report '"+expectedPluginReport+"'.");
 		
-		// verify the verbose plugins list reports RegisterConsumerPlugin is enabled
+		// verify the verbose plugins list reports RegisterConsumerTestPlugin is enabled
 		expectedPluginReport  = getExpectedPluginListReport(installedPlugin, "enabled", true);
 		Assert.assertTrue(clienttasks.plugins(null,null,null,true).getStdout().contains(expectedPluginReport), "Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
 	}
-	@Test(	description="verify the plugins listhooks reports all of the expected hooks for RegisterConsumerPlugin",
-			groups={},
-			dependsOnMethods={"verifyPluginsListWithEnabledRegisterConsumerPlugin_Test"},
+	@Test(	description="verify plugins listhooks reports all of the expected hooks for RegisterConsumerTestPlugin",
+			groups={"RegisterConsumerTestPluginTests"},
+			dependsOnMethods={"verifyPluginsListWithEnabledRegisterConsumerTestPlugin_Test"},
 			priority=70, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithEnabledRegisterConsumerPlugin_Test() {
+	public void verifyPluginsListhooksWithEnabledRegisterConsumerTestPlugin_Test() {
 		// find the plugin from the list of installed plugins
-		Plugin installedPlugin = getPlugin("register_consumer.RegisterConsumerPlugin");
-		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerPlugin is installed.");
+		Plugin installedPlugin = getPlugin("register_consumer1.RegisterConsumerTestPlugin");
+		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerTestPlugin is installed.");
 		
 		// hand populate the expected hooks (look for the python def methods inside the plugin.py file and prefix it with the plugin key.)
-		installedPlugin.preRegisterConsumerHooks.add(installedPlugin.key+".pre_register_consumer_hook");	//    def pre_register_consumer_hook(self, conduit):
-		installedPlugin.postRegisterConsumerHooks.add(installedPlugin.key+".post_register_consumer_hook");	//    def post_register_consumer_hook(self, conduit):
+		String expectedPreRegisterConsumerHook = installedPlugin.key+".pre_register_consumer_hook";		//    def pre_register_consumer_hook(self, conduit):
+		String expectedPostRegisterConsumerHook = installedPlugin.key+".post_register_consumer_hook";	//    def post_register_consumer_hook(self, conduit):
 
-		// verify the plugins --listhooks reports that the pre and post slots contain the expected RegisterConsumerPlugin hooks
+		// verify the plugins --listhooks reports that the pre and post slots contain the expected RegisterConsumerTestPlugin hooks
 		SSHCommandResult pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
 		List<String> actualPreRegisterConsumerHooks = parseHooksForSlotFromPluginsListhooksResult("pre_register_consumer", pluginsListhooksResult);
-		Assert.assertTrue(actualPreRegisterConsumerHooks.containsAll(installedPlugin.preRegisterConsumerHooks),"The plugins listhooks reports all of these expected pre_register_consumer hooks: "+installedPlugin.preRegisterConsumerHooks);
+		Assert.assertTrue(actualPreRegisterConsumerHooks.contains(expectedPreRegisterConsumerHook),"The plugins listhooks reports expected pre_register_consumer hook '"+expectedPreRegisterConsumerHook+"'.");
 		List<String> actualPostRegisterConsumerHooks = parseHooksForSlotFromPluginsListhooksResult("post_register_consumer", pluginsListhooksResult);
-		Assert.assertTrue(actualPostRegisterConsumerHooks.containsAll(installedPlugin.postRegisterConsumerHooks),"The plugins listhooks reports all of these expected post_register_consumer hooks: "+installedPlugin.preRegisterConsumerHooks);
+		Assert.assertTrue(actualPostRegisterConsumerHooks.contains(expectedPostRegisterConsumerHook),"The plugins listhooks report expected post_register_consumer hook '"+expectedPostRegisterConsumerHook+"'.");
 		
-		// assert the remaining slots have no hooks because RegisterConsumerPlugin is the first enabled plugin
+		// assert the remaining slots have no hooks because RegisterConsumerTestPlugin is the first enabled plugin
 		for (String slot : slots) {
 			if (slot.equals("pre_register_consumer")) continue;
 			if (slot.equals("post_register_consumer")) continue;
-			Assert.assertTrue(parseHooksForSlotFromPluginsListhooksResult(slot, pluginsListhooksResult).isEmpty(), "The plugins listhooks reports no hooks for slot '"+slot+"'.");
+			Assert.assertTrue(parseHooksForSlotFromPluginsListhooksResult(slot, pluginsListhooksResult).isEmpty(), "The plugins listhooks reports no hooks for slot '"+slot+"' because RegisterConsumerTestPlugin is the only enabled plugin.");
 		}
 	}
-	@Test(	description="execute subscription-manager modules and verify the expected RegisterConsumerPlugin hooks are called",
-			groups={},
-			dependsOnMethods={"verifyPluginsListWithEnabledRegisterConsumerPlugin_Test"},
-			priority=80, enabled=false)
+	@Test(	description="execute subscription-manager modules and verify the expected RegisterConsumerTestPlugin hooks are called",
+			groups={"RegisterConsumerTestPluginTests"},
+			dependsOnMethods={"verifyPluginsListWithEnabledRegisterConsumerTestPlugin_Test"},
+			priority=80, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledRegisterConsumerPluginHooksAreCalled_Test() {
+	public void verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test() {
+		
+		// get the pre-registered facts on the system
+		Map<String,String> facts = clienttasks.getFacts();
+		
+		// mark the rhsm.log file
+		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
+
 		// register and assert the pre and post hooks are logged
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null);
+
+
+		// get the tail of the marked rhsm.log file
+		//	2013-03-14 13:37:45,277 [DEBUG]  @plugins.py:695 - Running pre_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin
+		//	2013-03-14 13:37:45,277 [INFO]  @register_consumer1.py:30 - Running pre_register_consumer_hook: consumer name jsefler-7.usersys.redhat.com is about to be registered.
+		//	2013-03-14 13:37:45,278 [INFO]  @register_consumer1.py:31 - Running pre_register_consumer_hook: consumer facts count is 99
+		//
+		//	2013-03-14 13:37:45,782 [DEBUG]  @plugins.py:695 - Running post_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin
+		//	2013-03-14 13:37:45,782 [INFO]  @register_consumer1.py:39 - Running post_register_consumer_hook: consumer uuid 48db2a61-9af2-46ed-966a-374e0a94f9c4 is now registered.
+
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running pre_register_consumer_hook").trim();
+		// assert the expected log calls
+		List<String> expectedLogInfo= Arrays.asList(
+				"Running pre_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin",
+				"Running pre_register_consumer_hook: consumer name "+clienttasks.hostname+" is about to be registered.",
+				"Running pre_register_consumer_hook: consumer facts count is "+facts.values().size());
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 	}
 	
 	
@@ -213,30 +240,23 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	@BeforeGroups(groups={"setup"}, value="DisabledPluginTests")
 	public void fetchAndDisableAllPluginsBeforeGroups() {
 		if (clienttasks==null) return;
+		SSHCommandResult result;
 		
-		// fetch the example-plugins
-		if (sm_examplePluginUrls.isEmpty()) return; 
-		log.info("Fetching example-plugins for use by this test class...");
-		for (String sm_examplePluginUrl : sm_examplePluginUrls) {
-			if (sm_examplePluginUrl.endsWith(".py")) {
-				RemoteFileTasks.runCommandAndAssert(client, "cd "+pluginDir+" && wget --quiet "+sm_examplePluginUrl, Integer.valueOf(0));
-			} else if (sm_examplePluginUrl.endsWith(".conf")) {
-				RemoteFileTasks.runCommandAndAssert(client, "cd "+pluginConfDir+" && wget --quiet "+sm_examplePluginUrl, Integer.valueOf(0));
-			} else {
-				log.warning("Do not know where example-plugins file '"+sm_examplePluginUrl+"' belongs.");
-			}
-		}
+		// fetch the test-plugins files
+		if (sm_testpluginsUrl.isEmpty()) return; 
+		log.info("Fetching test plugins from "+sm_testpluginsUrl+" for use by this test class...");
+		RemoteFileTasks.runCommandAndAssert(client, "cd "+pluginDir+" && wget --quiet --recursive --no-host-directories --cut-dirs=2 --no-parent --accept .py "+sm_testpluginsUrl, Integer.valueOf(0)/*,null,"Downloaded: \\d+ files"*/);
+		RemoteFileTasks.runCommandAndAssert(client, "cd "+pluginConfDir+" && wget --quiet --recursive --no-host-directories --cut-dirs=2 --no-parent --accept .conf "+sm_testpluginsUrl, Integer.valueOf(0)/*,null,"Downloaded: \\d+ files"*/);
 		
 		// create plugin objects for simplicity
-		for (String sm_examplePluginUrl : sm_examplePluginUrls) {
-			if (sm_examplePluginUrl.endsWith(".conf")) {
-				// https://github.com/candlepin/subscription-manager/raw/master/example-plugins/all_slots.AllSlotsPlugin.conf
-				File examplePluginConfFile = new File(pluginConfDir+"/"+new File(sm_examplePluginUrl).getName());
-				File examplePluginFile = new File(pluginDir+"/"+examplePluginConfFile.getName().split("\\.")[0]+".py");
-				installedPlugins.add(new Plugin(examplePluginConfFile,examplePluginFile));
-			}
+		result = RemoteFileTasks.runCommandAndAssert(client, "find "+pluginConfDir+" -name *.conf", 0);
+		for (String pluginConfPathname : result.getStdout().trim().split("\\s*\\n\\s*")) {
+			if (pluginConfPathname.isEmpty()) continue;
+			File examplePluginConfFile = new File(pluginConfDir+"/"+new File(pluginConfPathname).getName());
+			File examplePluginFile = new File(pluginDir+"/"+examplePluginConfFile.getName().split("\\.")[0]+".py");
+			installedPlugins.add(new Plugin(examplePluginConfFile,examplePluginFile));
 		}
-		
+				
 		// disable all of the plugin configurations
 		for (Plugin installedPlugin : installedPlugins) {
 			clienttasks.updateConfFileParameter(installedPlugin.configFile.getPath(), "enabled", "0");
@@ -263,12 +283,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
     	public File configFile;	// /etc/rhsm/pluginconf.d/subscribe.SubscribePlugin.conf
     	public File sourceFile;	// /usr/share/rhsm-plugins/subscribe.py
     	public String key;		// subscribe.SubscribePlugin
-    	public List<String> preRegisterConsumerHooks = new ArrayList<String>();
-    	public List<String> postRegisterConsumerHooks = new ArrayList<String>();
     	Plugin(File configFile, File sourceFile) {
     		this.configFile = configFile;
     		this.sourceFile = sourceFile;
     		this.key = configFile.getName().replaceFirst("\\.conf$", "");
+    	}
+
+    	public String toString() {
+    		String string = "";
+    		if (key != null)			string += String.format(" %s='%s'", "key",key);
+    		if (sourceFile != null)		string += String.format(" %s='%s'", "sourceFile",sourceFile);
+    		if (configFile != null)		string += String.format(" %s='%s'", "configFile",configFile);    		
+    		return string.trim();
     	}
     }
     
@@ -323,7 +349,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		//		subscribe.SubscribePlugin.post_subscribe_hook
 		//		all_slots.AllSlotsPlugin.handler
     	boolean hookLine=false;
-    	for (String line : listhooksResult.getStdout().split("\\n")) {
+    	for (String line : listhooksResult.getStdout().trim().split("\\n")) {
     		if (line.startsWith("pre_")||line.startsWith("post_")) hookLine=false;
     		if (hookLine) hooks.add(line.trim());
 			if (line.equals(slot)) hookLine=true;
