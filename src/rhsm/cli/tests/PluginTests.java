@@ -3,6 +3,7 @@ package rhsm.cli.tests;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,14 +85,16 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult pluginsListResult = clienttasks.plugins(null,null,null,null);
 		for (Plugin installedPlugin : installedPlugins) {
 			String expectedPluginReport = getExpectedPluginListReport(installedPlugin, "disabled", false);
-			Assert.assertTrue(pluginsListResult.getStdout().contains(expectedPluginReport), "Stdout from the plugins list command reports expected plugin report '"+expectedPluginReport+"'.");
+			Assert.assertTrue(pluginsListResult.getStdout().contains(expectedPluginReport),
+					"Stdout from the plugins list command reports expected plugin report '"+expectedPluginReport+"'.");
 		}
 		
 		// assert each of the installed plugins is verbosely reported as disabled
 		SSHCommandResult pluginsListVerboseResult = clienttasks.plugins(true,null,null,true);
 		for (Plugin installedPlugin : installedPlugins) {
 			String expectedPluginReport = getExpectedPluginListReport(installedPlugin, "disabled", true);
-			Assert.assertTrue(pluginsListVerboseResult.getStdout().contains(expectedPluginReport), "Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
+			Assert.assertTrue(pluginsListVerboseResult.getStdout().contains(expectedPluginReport),
+					"Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
 		}
 
 	}
@@ -110,35 +113,36 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	// RegisterConsumerTestPluginTests *************************************************
 	
 	@Test(	description="enable the RegisterConsumerTestPlugin and assert the plugins list reports enablement",
-			groups={"RegisterConsumerTestPluginTests"},
+			groups={},
 			priority=60, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledRegisterConsumerTestPlugin_Test() {
+	public void verifyPluginsListWithEnabledRegisterConsumerTestPlugin_Test1() {
 		
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("register_consumer1.RegisterConsumerTestPlugin");
-		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerTestPlugin is installed.");
+		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerTestPlugin 1 is installed.");
 		
 		// enable the plugin
 		clienttasks.updateConfFileParameter(installedPlugin.configFile.getPath(), "enabled", "1");
 		
 		// verify the plugins list reports RegisterConsumerTestPlugin is enabled
 		String expectedPluginReport = getExpectedPluginListReport(installedPlugin, "enabled", false);
-		Assert.assertTrue(clienttasks.plugins(null,null,null,null).getStdout().contains(expectedPluginReport), "Stdout from the plugins list command reports expected plugin report '"+expectedPluginReport+"'.");
+		Assert.assertTrue(clienttasks.plugins(null,null,null,null).getStdout().contains(expectedPluginReport),
+				"Stdout from the plugins list command reports expected plugin report '"+expectedPluginReport+"'.");
 		
 		// verify the verbose plugins list reports RegisterConsumerTestPlugin is enabled
 		expectedPluginReport  = getExpectedPluginListReport(installedPlugin, "enabled", true);
-		Assert.assertTrue(clienttasks.plugins(null,null,null,true).getStdout().contains(expectedPluginReport), "Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
+		Assert.assertTrue(clienttasks.plugins(null,null,null,true).getStdout().contains(expectedPluginReport),
+				"Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
 	}
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for RegisterConsumerTestPlugin",
-			groups={"RegisterConsumerTestPluginTests"},
-			dependsOnMethods={"verifyPluginsListWithEnabledRegisterConsumerTestPlugin_Test"},
+			groups={},
 			priority=70, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithEnabledRegisterConsumerTestPlugin_Test() {
+	public void verifyPluginsListhooksWithEnabledRegisterConsumerTestPlugin_Test1() {
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("register_consumer1.RegisterConsumerTestPlugin");
-		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerTestPlugin is installed.");
+		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerTestPlugin 1 is installed.");
 		
 		// hand populate the expected hooks (look for the python def methods inside the plugin.py file and prefix it with the plugin key.)
 		String expectedPreRegisterConsumerHook = installedPlugin.key+".pre_register_consumer_hook";		//    def pre_register_consumer_hook(self, conduit):
@@ -155,26 +159,112 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		for (String slot : slots) {
 			if (slot.equals("pre_register_consumer")) continue;
 			if (slot.equals("post_register_consumer")) continue;
-			Assert.assertTrue(parseHooksForSlotFromPluginsListhooksResult(slot, pluginsListhooksResult).isEmpty(), "The plugins listhooks reports no hooks for slot '"+slot+"' because RegisterConsumerTestPlugin is the only enabled plugin.");
+			Assert.assertTrue(parseHooksForSlotFromPluginsListhooksResult(slot, pluginsListhooksResult).isEmpty(),
+					"The plugins listhooks reports no hooks for slot '"+slot+"' because RegisterConsumerTestPlugin is the only enabled plugin.");
 		}
 	}
 	@Test(	description="execute subscription-manager modules and verify the expected RegisterConsumerTestPlugin hooks are called",
-			groups={"RegisterConsumerTestPluginTests"},
-			dependsOnMethods={"verifyPluginsListWithEnabledRegisterConsumerTestPlugin_Test"},
+			groups={},
 			priority=80, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test() {
+	public void verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test1() {
 		
 		// get the pre-registered facts on the system
+		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
 		// mark the rhsm.log file
-		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test...";
+		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test1...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 
 		// register and assert the pre and post hooks are logged
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg));
 
+
+		// get the tail of the marked rhsm.log file
+		//	2013-03-14 13:37:45,277 [DEBUG]  @plugins.py:695 - Running pre_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin
+		//	2013-03-14 13:37:45,277 [INFO]  @register_consumer1.py:30 - Running pre_register_consumer_hook 1: consumer name jsefler-7.usersys.redhat.com is about to be registered.
+		//	2013-03-14 13:37:45,278 [INFO]  @register_consumer1.py:31 - Running pre_register_consumer_hook 1: consumer facts count is 99
+		//
+		//	2013-03-14 13:37:45,782 [DEBUG]  @plugins.py:695 - Running post_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin
+		//	2013-03-14 13:37:45,782 [INFO]  @register_consumer1.py:39 - Running post_register_consumer_hook 1: consumer uuid 48db2a61-9af2-46ed-966a-374e0a94f9c4 is now registered.
+		
+		// assert the expected log calls
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running pre_register_consumer_hook").trim();
+		List<String> expectedLogInfo= Arrays.asList(
+				"Running pre_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin",
+				"Running pre_register_consumer_hook 1: consumer name "+clienttasks.hostname+" is about to be registered.",
+				"Running pre_register_consumer_hook 1: consumer facts count is "+facts.values().size());
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
+				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
+		
+		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running post_register_consumer_hook").trim();
+		expectedLogInfo= Arrays.asList(
+				"Running post_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin",
+				"Running post_register_consumer_hook 1: consumer uuid "+consumerId+" is now registered.");
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
+				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
+	}
+	
+	@Test(	description="enable another RegisterConsumerTestPlugin and assert the plugins list reports enablement",
+			groups={},
+			priority=90, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyPluginsListWithEnabledRegisterConsumerTestPlugin_Test2() {
+		
+		// find the plugin from the list of installed plugins
+		Plugin installedPlugin = getPlugin("register_consumer2.RegisterConsumerTestPlugin");
+		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerTestPlugin 2 is installed.");
+		
+		// enable the plugin
+		clienttasks.updateConfFileParameter(installedPlugin.configFile.getPath(), "enabled", "1");
+		
+		// verify the plugins list reports RegisterConsumerTestPlugin is enabled
+		String expectedPluginReport = getExpectedPluginListReport(installedPlugin, "enabled", false);
+		Assert.assertTrue(clienttasks.plugins(null,null,null,null).getStdout().contains(expectedPluginReport),
+				"Stdout from the plugins list command reports expected plugin report '"+expectedPluginReport+"'.");
+		
+		// verify the verbose plugins list reports RegisterConsumerTestPlugin is enabled
+		expectedPluginReport  = getExpectedPluginListReport(installedPlugin, "enabled", true);
+		Assert.assertTrue(clienttasks.plugins(null,null,null,true).getStdout().contains(expectedPluginReport),
+				"Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
+	}
+	@Test(	description="verify plugins listhooks reports all of the expected hooks for another RegisterConsumerTestPlugin",
+			groups={},
+			priority=100, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyPluginsListhooksWithEnabledRegisterConsumerTestPlugin_Test2() {
+		// find the plugin from the list of installed plugins
+		Plugin installedPlugin = getPlugin("register_consumer2.RegisterConsumerTestPlugin");
+		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerTestPlugin is installed.");
+		
+		// hand populate the expected hooks (look for the python def methods inside the plugin.py file and prefix it with the plugin key.)
+		String expectedPreRegisterConsumerHook = installedPlugin.key+".pre_register_consumer_hook";		//    def pre_register_consumer_hook(self, conduit):
+		String expectedPostRegisterConsumerHook = installedPlugin.key+".post_register_consumer_hook";	//    def post_register_consumer_hook(self, conduit):
+
+		// verify the plugins --listhooks reports that the pre and post slots contain the expected RegisterConsumerTestPlugin hooks
+		SSHCommandResult pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
+		List<String> actualPreRegisterConsumerHooks = parseHooksForSlotFromPluginsListhooksResult("pre_register_consumer", pluginsListhooksResult);
+		Assert.assertTrue(actualPreRegisterConsumerHooks.contains(expectedPreRegisterConsumerHook),"The plugins listhooks reports expected pre_register_consumer hook '"+expectedPreRegisterConsumerHook+"'.");
+		List<String> actualPostRegisterConsumerHooks = parseHooksForSlotFromPluginsListhooksResult("post_register_consumer", pluginsListhooksResult);
+		Assert.assertTrue(actualPostRegisterConsumerHooks.contains(expectedPostRegisterConsumerHook),"The plugins listhooks report expected post_register_consumer hook '"+expectedPostRegisterConsumerHook+"'.");
+	}
+	@Test(	description="execute subscription-manager modules and verify the expected RegisterConsumerTestPlugin hooks are called",
+			groups={},
+			priority=110, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test2() {
+		
+		// get the pre-registered facts on the system
+		clienttasks.unregister(null,null,null);
+		Map<String,String> facts = clienttasks.getFacts();
+		
+		// mark the rhsm.log file
+		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test2...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
+
+		// register and assert the pre and post hooks are logged
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg));
 
 		// get the tail of the marked rhsm.log file
 		//	2013-03-14 13:37:45,277 [DEBUG]  @plugins.py:695 - Running pre_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin
@@ -183,17 +273,120 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		//
 		//	2013-03-14 13:37:45,782 [DEBUG]  @plugins.py:695 - Running post_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin
 		//	2013-03-14 13:37:45,782 [INFO]  @register_consumer1.py:39 - Running post_register_consumer_hook: consumer uuid 48db2a61-9af2-46ed-966a-374e0a94f9c4 is now registered.
-
-		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running pre_register_consumer_hook").trim();
+		
 		// assert the expected log calls
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running pre_register_consumer_hook").trim();
 		List<String> expectedLogInfo= Arrays.asList(
 				"Running pre_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin",
-				"Running pre_register_consumer_hook: consumer name "+clienttasks.hostname+" is about to be registered.",
-				"Running pre_register_consumer_hook: consumer facts count is "+facts.values().size());
-		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
+				"Running pre_register_consumer_hook 1: consumer name "+clienttasks.hostname+" is about to be registered.",
+				"Running pre_register_consumer_hook 1: consumer facts count is "+facts.values().size(),
+				"Running pre_register_consumer_hook in register_consumer2.RegisterConsumerTestPlugin",
+				"Running pre_register_consumer_hook 2: consumer name "+clienttasks.hostname+" is about to be registered.",
+				"Running pre_register_consumer_hook 2: consumer facts count is "+facts.values().size());
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
+				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
+		
+		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running post_register_consumer_hook").trim();
+		expectedLogInfo= Arrays.asList(
+				"Running post_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin",
+				"Running post_register_consumer_hook 1: consumer uuid "+consumerId+" is now registered.",
+				"Running post_register_consumer_hook in register_consumer2.RegisterConsumerTestPlugin",
+				"Running post_register_consumer_hook 2: consumer uuid "+consumerId+" is now registered.");
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
+				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 	}
 	
 	
+	// FactsCollectionTestPluginTests *************************************************
+
+	@Test(	description="enable FactsCollectionTestPlugin and assert the plugins list reports enablement",
+			groups={},
+			priority=120, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyPluginsListWithEnabledFactsCollectionTestPlugin_Test() {
+		
+		// find the plugin from the list of installed plugins
+		Plugin installedPlugin = getPlugin("facts_collection.FactsCollectionTestPlugin");
+		Assert.assertTrue(installedPlugin!=null, "The FactsCollectionTestPlugin is installed.");
+		
+		// enable the plugin
+		clienttasks.updateConfFileParameter(installedPlugin.configFile.getPath(), "enabled", "1");
+		
+		// verify the plugins list reports FactsCollectionTestPlugin is enabled
+		String expectedPluginReport = getExpectedPluginListReport(installedPlugin, "enabled", false);
+		Assert.assertTrue(clienttasks.plugins(null,null,null,null).getStdout().contains(expectedPluginReport),
+				"Stdout from the plugins list command reports expected plugin report '"+expectedPluginReport+"'.");
+		
+		// verify the verbose plugins list reports FactsCollectionTestPlugin is enabled
+		expectedPluginReport  = getExpectedPluginListReport(installedPlugin, "enabled", true);
+		Assert.assertTrue(clienttasks.plugins(null,null,null,true).getStdout().contains(expectedPluginReport),
+				"Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
+	}
+	@Test(	description="verify plugins listhooks reports all of the expected hooks for FactsCollectionTestPlugin",
+			groups={},
+			priority=130, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyPluginsListhooksWithEnabledFactsCollectionTestPlugin_Test() {
+		// find the plugin from the list of installed plugins
+		Plugin installedPlugin = getPlugin("facts_collection.FactsCollectionTestPlugin");
+		Assert.assertTrue(installedPlugin!=null, "The FactsCollectionTestPlugin is installed.");
+		
+		// hand populate the expected hooks (look for the python def methods inside the plugin.py file and prefix it with the plugin key.)
+		String expectedPostFactsCollectionHook = installedPlugin.key+".post_facts_collection_hook";	//    def post_facts_collection_hook(self, conduit):
+
+		// verify the plugins --listhooks reports that the pre and post slots contain the expected RegisterConsumerTestPlugin hooks
+		SSHCommandResult pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
+		List<String> actualPostRegisterConsumerHooks = parseHooksForSlotFromPluginsListhooksResult("post_facts_collection", pluginsListhooksResult);
+		Assert.assertTrue(actualPostRegisterConsumerHooks.contains(expectedPostFactsCollectionHook),"The plugins listhooks report expected post_facts_collection hook '"+expectedPostFactsCollectionHook+"'.");
+	}
+	@Test(	description="execute subscription-manager modules and verify the expected FactsCollectionTestPlugin hooks are called",
+			groups={},
+			priority=140, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyEnabledFactsCollectionTestPluginHooksAreCalled_Test() {
+		// get the pre-registered facts on the system
+		clienttasks.unregister(null,null,null);
+		Map<String,String> facts = clienttasks.getFacts();
+		
+		// mark the rhsm.log file
+		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledFactsCollectionTestPluginHooksAreCalled_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
+
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg));
+
+		// get the tail of the marked rhsm.log file
+		//	2013-03-14 18:47:39,595 [DEBUG]  @plugins.py:695 - Running post_facts_collection_hook in facts_collection.FactsCollectionTestPlugin
+		//	2013-03-14 18:47:39,595 [INFO]  @facts_collection.py:33 - Running post_facts_collection_hook: consumer facts count is 100
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running post_facts_collection_hook").trim();
+
+		// assert the expected log calls
+		List<String> expectedLogInfo= Arrays.asList(
+				"Running post_facts_collection_hook in facts_collection.FactsCollectionTestPlugin",
+				"Running post_facts_collection_hook: consumer facts count is "+facts.values().size());
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
+				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
+		
+		// add 1 extra plugintestfact and run update
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.put("plugintestfact", "123");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		logMarker = System.currentTimeMillis()+" Testing verifyEnabledFactsCollectionTestPluginHooksAreCalled_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
+		clienttasks.facts(null,true,null,null,null);
+		
+		// assert the expected log calls
+		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running post_facts_collection_hook").trim();
+		expectedLogInfo= Arrays.asList(
+				"Running post_facts_collection_hook in facts_collection.FactsCollectionTestPlugin",
+				"Running post_facts_collection_hook: consumer facts count is "+(facts.values().size()+1));
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
+				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
+
+	}
+	
+	
+	
+
 	
 	
 	
