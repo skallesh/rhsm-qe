@@ -49,9 +49,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListslots_Test() {
 		List<String> actualSlots = Arrays.asList(clienttasks.plugins(null,true,null,null).getStdout().trim().split("\n"));
-		Assert.assertTrue(actualSlots.containsAll(slots)&&slots.containsAll(actualSlots), "All of these expected slots are listed: "+slots);
+		Assert.assertTrue(actualSlots.containsAll(slots), "All of these expected slots are listed: "+slots);
+		Assert.assertTrue(slots.containsAll(actualSlots), "Only these expected slots are listed: "+slots);
 		actualSlots = Arrays.asList(clienttasks.plugins(null,true,null,true).getStdout().trim().split("\n"));
-		Assert.assertTrue(actualSlots.containsAll(slots)&&slots.containsAll(actualSlots), "All of these expected slots are listed (--verbose should have no affect): "+slots);
+		Assert.assertTrue(actualSlots.containsAll(slots)&&slots.containsAll(actualSlots), "Including --verbose option should produce the same list of slots.");
 	}
 
 	@Test(	description="execute subscription-manager plugins --list (with no plugins installed)",
@@ -360,80 +361,11 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	// ProductIdInstallTestPlugin Tests ***************************************************
-
-	@Test(	description="enable ProductIdInstallTestPlugin and assert the plugins list reports enablement",
-			groups={},
-			priority=410, enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledProductIdInstallTestPlugin_Test() {
-		
-		// find the plugin from the list of installed plugins
-		Plugin installedPlugin = getPlugin("product_id_install_test.ProductIdInstallTestPlugin");
-		Assert.assertTrue(installedPlugin!=null, "The ProductIdInstallTestPlugin is installed.");
-		
-		// enable and verify
-		enableTestPluginAndVerifyListReport(installedPlugin);
-	}
-	@Test(	description="verify plugins listhooks reports all of the expected hooks for ProductIdInstallTestPlugin",
-			groups={},
-			priority=420, enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithEnabledProductIdInstallTestPlugin_Test() {
-		// find the plugin from the list of installed plugins
-		Plugin installedPlugin = getPlugin("product_id_install_test.ProductIdInstallTestPlugin");
-		Assert.assertTrue(installedPlugin!=null, "The ProductIdInstallTestPlugin is installed.");
-		
-		// hand populate the expected hooks (look for the python def methods inside the plugin.py file and prefix it with the plugin key.)
-		String expectedPreProductIdInstallHook = installedPlugin.key+".pre_product_id_install_hook";	//    def pre_product_id_install_hook(self, conduit):
-		String expectedPostProductIdInstallHook = installedPlugin.key+".post_product_id_install_hook";	//    def post_product_id_install_hook(self, conduit):
-
-		// verify the plugins --listhooks reports that the pre and post slots contain the expected hooks
-		SSHCommandResult pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
-		List<String> actualPreProductIdInstallHooks = parseHooksForSlotFromPluginsListhooksResult("pre_product_id_install", pluginsListhooksResult);
-		Assert.assertTrue(actualPreProductIdInstallHooks.contains(expectedPreProductIdInstallHook),"The plugins listhooks report expected pre_facts_collection hook '"+expectedPreProductIdInstallHook+"'.");
-		pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
-		List<String> actualPostProductIdInstallHooks = parseHooksForSlotFromPluginsListhooksResult("post_product_id_install", pluginsListhooksResult);
-		Assert.assertTrue(actualPostProductIdInstallHooks.contains(expectedPostProductIdInstallHook),"The plugins listhooks report expected post_facts_collection hook '"+expectedPostProductIdInstallHook+"'.");
-	}
-	@Test(	description="execute subscription-manager modules and verify the expected ProductIdInstallTestPlugin hooks are called",
-			groups={},
-			priority=430, enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test() {
-		
-		// register and get the current installed product list
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
-		List<ProductCert> installedProducts = clienttasks.getCurrentProductCerts();
-		
-		// mark the rhsm.log file
-		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test...";
-		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
-
-		// do a yum transaction and assert that the product_id_install hooks are NOT yet called
-		clienttasks.getYumRepolist("all --enableplugin=product-id");
-
-		// get the tail of the marked rhsm.log file
-		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
-		
-		// assert the pre/post_product_id_install_hooks are NOT called
-		List<String> notExpectedLogInfo= Arrays.asList(
-				"Running pre_product_id_install_hook",
-				"Running post_product_id_install_hook",
-				"");
-		Assert.assertTrue(!logTail.replaceAll("\n","").matches(".*"+joinListToString(notExpectedLogInfo,".*")+".*"),
-				"The '"+clienttasks.rhsmLogFile+"' DOES NOT report log messages (becasue no product id should have been installed): "+notExpectedLogInfo);
-		
-		// TODO:  This test required stage access and can probably be used to install High Availability productCert on Server.
-		throw new SkipException("The remainder of this test is not yet implemented.");
-	}
-	
-
 	// SubscribeTestPlugin Tests ********************************************************
 
 	@Test(	description="enable SubscribeTestPlugin and assert the plugins list reports enablement",
 			groups={},
-			priority=510, enabled=true)
+			priority=410, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListWithEnabledSubscribeTestPlugin_Test() {
 		
@@ -446,7 +378,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for SubscribeTestPlugin",
 			groups={},
-			priority=520, enabled=true)
+			priority=420, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListhooksWithEnabledSubscribeTestPlugin_Test() {
 		// find the plugin from the list of installed plugins
@@ -467,7 +399,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	@Test(	description="execute subscription-manager modules and verify the expected SubscribeTestPlugin hooks are called",
 			groups={},
-			priority=530, enabled=true)
+			priority=430, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledSubscribeTestPluginHooksAreCalled_Test() {
 		// get the pre-registered facts on the system
@@ -502,15 +434,139 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 				"Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin",	// enabled in prior FactsCollectionTestPlugin Tests 
 				"Running post_facts_collection_hook: consumer facts count is "+facts.values().size(),	// enabled in prior FactsCollectionTestPlugin Tests 
 				"Running pre_subscribe_hook in subscribe_test.SubscribeTestPlugin",
-				"Running pre_subscribe_hook: system is about to subscribe.",
+				"Running pre_subscribe_hook: system is about to subscribe",
+				"Running pre_subscribe_hook: subscribing consumer is "+consumerId,
 				"Running post_subscribe_hook in subscribe_test.SubscribeTestPlugin",
-				"Running post_subscribe_hook: system just subscribed.",
+				"Running post_subscribe_hook: system just subscribed",
+				"Running post_subscribe_hook: subscribed consumer is "+consumerId,
+				"Running post_subscribe_hook: subscribed from pool id "+pool.poolId,
 				"");
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
 				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
 	}
 	
 	
+	// ProductIdInstallTestPlugin Tests ***************************************************
+
+	@Test(	description="enable ProductIdInstallTestPlugin and assert the plugins list reports enablement",
+			groups={},
+			priority=510, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyPluginsListWithEnabledProductIdInstallTestPlugin_Test() {
+		
+		// find the plugin from the list of installed plugins
+		Plugin installedPlugin = getPlugin("product_id_install_test.ProductIdInstallTestPlugin");
+		Assert.assertTrue(installedPlugin!=null, "The ProductIdInstallTestPlugin is installed.");
+		
+		// enable and verify
+		enableTestPluginAndVerifyListReport(installedPlugin);
+	}
+	@Test(	description="verify plugins listhooks reports all of the expected hooks for ProductIdInstallTestPlugin",
+			groups={},
+			priority=520, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyPluginsListhooksWithEnabledProductIdInstallTestPlugin_Test() {
+		// find the plugin from the list of installed plugins
+		Plugin installedPlugin = getPlugin("product_id_install_test.ProductIdInstallTestPlugin");
+		Assert.assertTrue(installedPlugin!=null, "The ProductIdInstallTestPlugin is installed.");
+		
+		// hand populate the expected hooks (look for the python def methods inside the plugin.py file and prefix it with the plugin key.)
+		String expectedPreProductIdInstallHook = installedPlugin.key+".pre_product_id_install_hook";	//    def pre_product_id_install_hook(self, conduit):
+		String expectedPostProductIdInstallHook = installedPlugin.key+".post_product_id_install_hook";	//    def post_product_id_install_hook(self, conduit):
+
+		// verify the plugins --listhooks reports that the pre and post slots contain the expected hooks
+		SSHCommandResult pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
+		List<String> actualPreProductIdInstallHooks = parseHooksForSlotFromPluginsListhooksResult("pre_product_id_install", pluginsListhooksResult);
+		Assert.assertTrue(actualPreProductIdInstallHooks.contains(expectedPreProductIdInstallHook),"The plugins listhooks report expected pre_facts_collection hook '"+expectedPreProductIdInstallHook+"'.");
+		pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
+		List<String> actualPostProductIdInstallHooks = parseHooksForSlotFromPluginsListhooksResult("post_product_id_install", pluginsListhooksResult);
+		Assert.assertTrue(actualPostProductIdInstallHooks.contains(expectedPostProductIdInstallHook),"The plugins listhooks report expected post_facts_collection hook '"+expectedPostProductIdInstallHook+"'.");
+	}
+	@Test(	description="execute subscription-manager modules and verify the expected ProductIdInstallTestPlugin hooks are called",
+			groups={"blockedByBug-859197", "blockedByBug-922871", "blockedByBug-922882"},
+			priority=530, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test() {
+		
+		// register and get the current installed product list
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
+		List<ProductCert> installedProducts = clienttasks.getCurrentProductCerts();
+		
+		// mark the rhsm.log file
+		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
+
+		// do a yum transaction and assert that the product_id_install hooks are NOT yet called
+		clienttasks.getYumRepolist("all --enableplugin=product-id");
+
+		// get the tail of the marked rhsm.log file
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
+		
+		// assert the pre/post_product_id_install_hooks are NOT called
+		List<String> notExpectedLogInfo= Arrays.asList(
+				"Running pre_product_id_install_hook",
+				"Running post_product_id_install_hook",
+				"");
+		Assert.assertTrue(!logTail.replaceAll("\n","").matches(".*"+joinListToString(notExpectedLogInfo,".*")+".*"),
+				"The '"+clienttasks.rhsmLogFile+"' DOES NOT report log messages (becasue no product id should have been installed): "+notExpectedLogInfo);
+		
+		
+		// now login with the HighAvailability credentials and install a package and assert the pre/post_product_id_install_hooks are called
+		if (sm_haUsername.equals("")) throw new SkipException("Skipping this test when no value was given for the High Availability username.");
+
+		// register to an account that offers High Availability subscriptions
+		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null));
+
+		// make sure that there are no ha packages and no productId installed
+		for (String haPackage : sm_haPackages) {
+			if (clienttasks.isPackageInstalled(haPackage)) clienttasks.yumRemovePackage(haPackage);
+		}
+		InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertNull(haInstalledProduct, "The High Availability product id '"+HighAvailabilityTests.haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
+		
+		// subscribe to the High Availability subscription and install an HA package
+		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
+		if (!HighAvailabilityTests.haSupportedArches.contains(clienttasks.arch)) {
+			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+HighAvailabilityTests.haSupportedArches);
+			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+HighAvailabilityTests.haSupportedArches);
+		}
+		
+		// Subscribe to the High Availability subscription SKU
+		clienttasks.subscribe(null,null,haPool.poolId, null,null,null,null,null,null,null,null);
+
+		// mark the rhsm.log file
+		logMarker = System.currentTimeMillis()+" Testing verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
+
+		// do a yum install of an ha package
+		clienttasks.yumInstallPackage(sm_haPackages.get(0));	// yum -y install ccs
+
+		// get the tail of the marked rhsm.log file
+ 		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
+		
+		// assert the pre/post_product_id_install_hooks are called
+		List<String> expectedLogInfo= Arrays.asList(
+				// after bug fix 822871 "Running pre_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin",
+				"Running post_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin",
+				"Running post_product_id_install_hook: yum product-id plugin just installed a product cert",
+				"Running post_product_id_install_hook: 1 product_ids were just installed",
+				// TODO:  Include some more log assertions from the plugin.	after bug fixes 922871 922882
+				"");
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
+				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
+		
+//		// TODO:  This test required stage access and can probably be used to install High Availability productCert on Server.
+//		throw new SkipException("The remainder of this test is not yet implemented.");
+	}
+	
+	
+	// TODO ProductIdRemoveTestPlugin Tests ***************************************************
+	// CURRENTLY BLOCKED BY BUGZILLA 922882
+
+	
+	
+
 	// AllSlotsTestPlugin Tests ********************************************************
 
 	@Test(	description="enable AllSlotsTestPlugin and assert the plugins list reports enablement",
