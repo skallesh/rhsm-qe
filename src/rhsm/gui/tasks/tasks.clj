@@ -22,10 +22,24 @@
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
 
+(defn get-release []
+  (let [release (.getStdout (.runCommandAndWait
+                             @clientcmd
+                             "cat /etc/redhat-release"))
+        matcher (re-find #"release \d" release)]
+    (case matcher
+      "release 5" :rhel5
+      "release 6" :rhel6
+      "release 7" :rhel7
+      :unknown)))
+
 (defn sleep
   "Sleeps for a given ammount of miliseconds."
   [ms]
   (. Thread (sleep ms)))
+
+(defn bash-bool [i]
+  (= 0 i))
 
 (defn bool [i]
   (= 1 i))
@@ -40,8 +54,8 @@
   `(let [starttime# (System/currentTimeMillis)]
      (loop ~bindings
        (if  (> (- (System/currentTimeMillis) starttime#) ~timeout)
-	 (throw (RuntimeException. (str "Hit timeout of " ~timeout "ms.")))
-	 (do ~@forms)))))
+         (throw (RuntimeException. (str "Hit timeout of " ~timeout "ms.")))
+         (do ~@forms)))))
 
 (defn #^String substring?
   "True if s contains the substring."
@@ -67,7 +81,7 @@
   (let [matches-message? (fn [key] (let [re (known-errors key)]
                                     (if (re-find re message) key false)))]
     (or (some matches-message? (keys known-errors))
-	:sm-error)))
+        :sm-error)))
 
 (defn connect
   ([url] (set-url url))
@@ -91,9 +105,17 @@
 
 (defn kill-app
   "Kills the subscription-manager-gui"
-  []
-  (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
-  (ui waittillwindownotexist :main-window 30))
+  ([force?]
+      (ui closewindow :main-window)
+      (let [result? (bool (ui waittillwindownotexist :main-window 10))]
+        (if (and (not result?) force?)
+          (do
+            (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
+            (ui waittillwindownotexist :main-window 30)))))
+  ([]
+     (if (= :rhel7 (get-release))
+       (kill-app false) ;; force quitting on rhel7 destroys ldtp
+       (kill-app true))))
 
 (defn start-firstboot
   "Convenience function that calls start-app with the firstboot path."
@@ -679,5 +701,3 @@
           productmap (atom {})
           dir "/etc/pki/product/"]
       (doseq [pem pemfile]))))
-
-
