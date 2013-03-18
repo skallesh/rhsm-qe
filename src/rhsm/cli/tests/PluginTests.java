@@ -547,12 +547,12 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the pre/post_product_id_install_hooks are called
 		List<String> expectedLogInfo= Arrays.asList(
-				// after bug fix 822871 "Running pre_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin",
+				/* TODO */"UPDATES NEEDED AFTER FIX FOR BUGS 822871 922871 922882",
+				"Running pre_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin",
 				"Running post_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin",
 				"Running post_product_id_install_hook: yum product-id plugin just installed a product cert",
 				"Running post_product_id_install_hook: 1 product_ids were just installed",
-				// TODO:  Include some more log assertions from the plugin.	after bug fixes 922871 922882
-				"");
+					"");
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
 				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
 		
