@@ -554,10 +554,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 				"Running post_product_id_install_hook: 1 product_ids were just installed",
 					"");
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
-				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
-		
-//		// TODO:  This test required stage access and can probably be used to install High Availability productCert on Server.
-//		throw new SkipException("The remainder of this test is not yet implemented.");
+				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);	
 	}
 	
 	
