@@ -101,9 +101,11 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	public void teardownAfterClass() {
 		if (clienttasks!=null) {
 			clienttasks.unregister_(null, null, null);
-			clienttasks.register_(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerId, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
-			clienttasks.unregister_(null, null, null);
-			consumerId = null;
+			if (consumerId!=null) {
+				clienttasks.register_(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerId, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+				clienttasks.unregister_(null, null, null);
+				consumerId = null;
+			}
 		}
 		
 	}
