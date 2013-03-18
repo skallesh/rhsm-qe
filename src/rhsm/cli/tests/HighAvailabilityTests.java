@@ -179,14 +179,13 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, allAvailableSubscriptionPools), "High Availability subscription SKU '"+sm_haSku+"' is available for consumption when the client arch is ignored.");
 		
 		// assert that the High Availability subscription SKU is found in the available list only on x86_64,x86 arches; see https://docspace.corp.redhat.com/docs/DOC-63084
-		List<String> supportedArches = Arrays.asList("x86_64","x86","i386","i686");
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
-		if (!supportedArches.contains(clienttasks.arch)) {
-			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+supportedArches);
-			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+supportedArches);
+		if (!haSupportedArches.contains(clienttasks.arch)) {
+			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+haSupportedArches);
+			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+haSupportedArches);
 		}
-		Assert.assertNotNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' is available for consumption on a system whose arch '"+clienttasks.arch+"' is among the supported arches "+supportedArches);
+		Assert.assertNotNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' is available for consumption on a system whose arch '"+clienttasks.arch+"' is among the supported arches "+haSupportedArches);
 		
 		// Subscribe to the High Availability subscription SKU
 		haEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(haPool);
@@ -484,13 +483,14 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	protected String originalProductCertDir			= null;
 	protected final String haProductCertDir			= "/tmp/sm-haProductCertDir";
 	protected final String backupProductIdJsonFile	= "/tmp/sm-productIdJsonFile";
-	protected final String haProductId				= "83";	// Red Hat Enterprise Linux High Availability (for RHEL Server)
 	protected /*final*/ String serverProductId		= null;	// set in assertRhelServerBeforeClass()
 	protected final String haPackage1				= "ccs";
 	protected /*final*/ String haPackage1Fetch		= null;	// set in assertRhelServerBeforeClass()	// released RHEL61 package to wget for testing bug 806457
 	protected final String haPackage2				= "cluster-glue-libs";
 	File haEntitlementCertFile = null;
-	
+	public static final List<String> haSupportedArches	= Arrays.asList("x86_64","x86","i386","i686");
+	public static final String haProductId				= "83";	// Red Hat Enterprise Linux High Availability (for RHEL Server)
+
 	
 	
 	
