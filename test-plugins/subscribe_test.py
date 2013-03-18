@@ -27,7 +27,10 @@ class SubscribeTestPlugin(SubManPlugin):
         Args:
             conduit: A SubscriptionConduit()
         """
-        conduit.log.info("Running pre_subscribe_hook: system is about to subscribe.")
+        #print dir(conduit)
+        #print conduit.consumer_uuid
+        conduit.log.info("Running pre_subscribe_hook: system is about to subscribe")
+        conduit.log.info("Running pre_subscribe_hook: subscribing consumer is %s" % conduit.consumer_uuid)
 
     def post_subscribe_hook(self, conduit):
         """`post_subscribe` hook
@@ -35,6 +38,11 @@ class SubscribeTestPlugin(SubManPlugin):
         Args:
             conduit: A PostSubscriptionConduit()
         """
-        conduit.log.info("Running post_subscribe_hook: system just subscribed.")
-
-
+        #print dir(conduit)
+        #print conduit.consumer_uuid
+        #print conduit.entitlement_data[0]['pool']['id']
+        conduit.log.info("Running post_subscribe_hook: system just subscribed")
+        conduit.log.info("Running post_subscribe_hook: subscribed consumer is %s" % conduit.consumer_uuid)
+        conduit.log.info("Running post_subscribe_hook: subscribed from pool id %s" % conduit.entitlement_data[0]['pool']['id'])
+        
+        

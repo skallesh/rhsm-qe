@@ -27,7 +27,10 @@ class ProductIdInstallTestPlugin(SubManPlugin):
         Args:
             conduit: A ProductConduit()
         """
-        conduit.log.info("Running pre_product_id_install_hook: %s products are installed." % len(conduit.product_list))
+        #print dir(conduit)
+        #print conduit.consumer_uuid
+        conduit.log.info("Running pre_product_id_install_hook: yum product-id plugin is about to install a product cert")
+        #conduit.log.info("Running pre_product_id_install_hook: %s product_ids are about to be installed" % len(conduit.product_list))
 
     def post_product_id_install_hook(self, conduit):
         """`post_product_id_install` hook
@@ -35,10 +38,18 @@ class ProductIdInstallTestPlugin(SubManPlugin):
         Args:
             conduit: A ProductConduit()
         """
-        conduit.log.info("Running post_product_id_install_hook: %s products are installed." % len(conduit.product_list))
+        #print dir(conduit)
+        #print conduit.consumer_uuid
+        conduit.log.info("Running post_product_id_install_hook: yum product-id plugin just installed a product cert")
+        conduit.log.info("Running post_product_id_install_hook: %s product_ids were just installed" % len(conduit.product_list))
 
-        # print out the product/product cert list
-        products = conduit.product_list
-        for product in products:
-            print "product ", product
-
+        # print out the product cert list
+        #for product_cert in conduit.product_list:
+        #    print "product_cert ", product_cert
+        #    print "dir(product_cert) ", dir(product_cert)
+        #    print "products ", product_cert.products
+        #    print "products length", len(product_cert.products)
+        #    print product_cert.products[0]
+        #    print dir(product_cert.products[0])
+        #    #print product_cert.products[0]['id']
+        
