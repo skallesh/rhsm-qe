@@ -64,7 +64,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String EndingDate;
 	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir"
 			.toLowerCase();
-	String factname="system.entitlements_valid";
+	protected final String myEmptyCaCertFile = "/etc/rhsm/ca/myemptycert.pem";
+	protected Integer configuredHealFrequency = null;
+	protected String factname="system.entitlements_valid";
 	protected String RemoteServerError="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
@@ -128,11 +130,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	//To be tested against stage
 	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe", 
-			groups = { "Verify500ErrorOnStage","blockedByBug-878994"}, enabled = false)
+			groups = { "Verify500ErrorOnStage","blockedByBug-878994"}, enabled = true)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
+		log.info("Fetching the generated product certs...");
+		//if (sm_serverType.equals(CandlepinType.standalone)){
+			System.out.println(sm_serverHostname + " server name is " +sm_serverType);
+	
+		SSHCommandResult results= server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
+		System.out.println(results);
 		String logMessage = "remote server status code: 500";
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
-		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,
+		clienttasks.register(sm_clientUsername, sm_clientPassword,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, true, null, null, null, null).getStdout();	
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
@@ -1907,9 +1915,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		log.info(clienttasks.getCurrentConsumerCert().validityNotBefore.toString() +"   "+ clienttasks.getCurrentConsumerCert().validityNotAfter.toString() +" cert validity before regeneration");
 		Calendar StartTimeBeforeRHSM = clienttasks.getCurrentConsumerCert().validityNotBefore;
 		Calendar EndTimeBeforeRHSM = clienttasks.getCurrentConsumerCert().validityNotAfter;
+		String EndDateBeforeRHSM = yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotAfter.getTime());
+		String StartDateBeforeRHSM=yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotBefore.getTime());
+		System.out.println(EndDateBeforeRHSM + "   ... "+ StartDateBeforeRHSM);
 		String existingCertdate = client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8")
 				.getStdout();
 		String StartDate=setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
@@ -1919,14 +1931,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase, "date -s '15 year 9 month' +'%F'");
 		clienttasks.restart_rhsmcertd(null, null, false, null);
-		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
+		SubscriptionManagerCLITestScript.sleep(2* 60 * 1000);
 		log.info(clienttasks.getCurrentConsumerCert().validityNotBefore.toString() +"   "+ clienttasks.getCurrentConsumerCert().validityNotAfter.toString() +" cert validity After regeneration");
-
 		Calendar StartTimeAfterRHSM = clienttasks.getCurrentConsumerCert().validityNotBefore;
 		Calendar EndTimeAfterRHSM = clienttasks.getCurrentConsumerCert().validityNotAfter;
-		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String EndDateAfterRHSM = yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotAfter.getTime());
 		String StartDateAfterRHSM=yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotBefore.getTime());
+		System.out.println(EndDateAfterRHSM+"   .... "+ StartDateAfterRHSM);
 		String updatedCertdate = client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStderr();
 		String EndDate=setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago' +'%F'");
@@ -1934,6 +1945,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				+ client.runCommandAndWait("hostname"));
 		setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago' +'%F'");
+		System.out.println();
 		Assert.assertEquals(StartDateAfterRHSM, StartDate);
 		Assert.assertEquals(EndDateAfterRHSM, EndDate);
 		Assert.assertNotSame(StartTimeBeforeRHSM.getTime(),
@@ -1944,32 +1956,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	}
 	
-	@AfterGroups(groups = { "setup" }, value = { "VerifyrhsmcertdRefreshIdentityCert" })
-	public void restoreSystemDate() throws IOException, ParseException {
-		String ClientDateAfterExecution=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
-					sm_sshkeyPassphrase,true);
-		String ServerDateAfterExecution=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
-				sm_sshkeyPassphrase,true);
-		String ClientDateAfterExeceutionOneDayBefore=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
-				sm_sshkeyPassphrase,false);
-		String ServerDateAfterExeceutionOneDayBefore=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
-				sm_sshkeyPassphrase,false);
-		
-		if((!(ClientDateAfterExecution.equals(SystemDateOnClient))) &&(!(ClientDateAfterExeceutionOneDayBefore.equals(SystemDateOnClient))) ){
-
-			setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
-					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
-		}
-		
-		if((!(ServerDateAfterExecution.equals(SystemDateOnServer)))&&(!(ServerDateAfterExeceutionOneDayBefore.equals(SystemDateOnServer)))){
-			setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
-					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
-			log.info("Changed the date of candlepin"
-					+ client.runCommandAndWait("hostname"));
-		}
-		clienttasks.restart_rhsmcertd(null, null, false, null);
-		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
-	}
+	
 
 	/**
 	 * @author skallesh
@@ -2038,15 +2025,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	}
 	
-	@AfterGroups(groups = {"setup"}, value = {"VerifyEmptyCertCauseRegistrationFailure_Test"})
-	public void removeMyEmptyCaCertFile() {
-		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
-	}
-	@AfterGroups(groups = {"setup"}, value = {"VerifyEmptyCertCauseRegistrationFailure_Test"})
-	public void moveProductCerts() {
-		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
-	}
-	protected final String myEmptyCaCertFile = "/etc/rhsm/ca/myemptycert.pem";
+	
+	
 
 	/**
 	 * @author skallesh
@@ -3044,13 +3024,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "rhsm","manage_repos", "1" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 	}
-	@BeforeGroups(groups = "setup", value = { "autohealPartial", "AutoHeal",
-			"heal", "BugzillaTests", "AutoHealFailForSLA", "AutohealForExpired" }, enabled = false)
+	
+	@BeforeGroups(groups = "setup", value = { "BugzillaTests" }, enabled = true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test()
 			throws Exception {
-
-		String consumerId = clienttasks
-				.getCurrentConsumerId(clienttasks.register(sm_clientUsername,
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,
 						sm_clientPassword, sm_clientOrg, null, null, null,
 						null, null, null, null, (String) null, null, null,
 						null, true, null, null, null, null));
@@ -3062,29 +3040,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"A new system consumer's autoheal attribute value defaults to true.");
 	}
 
-	protected Integer configuredHealFrequency = null;
 
 	@BeforeClass(groups = "setup")
 	public void rememberConfiguredHealFrequency() {
 		if (clienttasks == null)
 			return;
-		configuredHealFrequency = Integer.valueOf(clienttasks
-				.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd",
-						"autoAttachInterval"));
+		configuredHealFrequency = Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd","autoAttachInterval"));
 	}
 
+	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
 	@AfterClass(groups = "setup")
 	public void restoreConfiguredHealFrequency() {
 		if (clienttasks == null)
 			return;
-		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,
-				null);
+		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
 	}
 	
 	
 	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA","AutoHealFailForSLA","VerifyFuturesubscription_Test","VerifySubscriptionOf",
 	"VerifySystemCompliantFact","ValidityAfterOversubscribing","certificateStacking","UpdateWithNoInstalledProducts","VerifyHealingForFuturesubscription"
-	,"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct"})
+	,"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","BugzillaTests"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
@@ -3094,7 +3069,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifyautosubscribeTest",
-	"VerifyautosubscribeIgnoresSocketCount_Test" })
+	"VerifyautosubscribeIgnoresSocketCount_Test","BugzillaTests"})
 	@AfterClass(groups = { "setup" })
 	// insurance
 	public void deleteFactsFileWithOverridingValues() {
@@ -3339,6 +3314,39 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return poolId; // return poolId to the newly available SubscriptionPool
 		
 	}
+	
+	@AfterGroups(groups = { "setup" }, value = { "VerifyrhsmcertdRefreshIdentityCert"})
+	public void restoreSystemDate() throws IOException, ParseException {
+		String ClientDateAfterExecution=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+					sm_sshkeyPassphrase,true);
+		String ServerDateAfterExecution=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+				sm_sshkeyPassphrase,true);
+		String ClientDateAfterExeceutionOneDayBefore=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+				sm_sshkeyPassphrase,false);
+		String ServerDateAfterExeceutionOneDayBefore=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+				sm_sshkeyPassphrase,false);
+		
+		if((!(ClientDateAfterExecution.equals(SystemDateOnClient))) &&(!(ClientDateAfterExeceutionOneDayBefore.equals(SystemDateOnClient))) ){
+
+			setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
+		}
+		
+		if((!(ServerDateAfterExecution.equals(SystemDateOnServer)))&&(!(ServerDateAfterExeceutionOneDayBefore.equals(SystemDateOnServer)))){
+			setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
+			log.info("Changed the date of candlepin"
+					+ client.runCommandAndWait("hostname"));
+		}
+		clienttasks.restart_rhsmcertd(null, null, false, null);
+		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
+	}
+	
+	@AfterGroups(groups = {"setup"}, value = {"VerifyEmptyCertCauseRegistrationFailure_Test","BugzillaTests"})
+	public void removeMyEmptyCaCertFile() {
+		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
+	}
+	
 	@BeforeGroups(groups="ExpirationOfEntitlementCerts")
 	public void findRandomAvailableProductIdBeforeClass() throws Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
