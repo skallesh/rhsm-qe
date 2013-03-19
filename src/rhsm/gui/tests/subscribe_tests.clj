@@ -435,7 +435,7 @@
                                          :or {debug false}}]
   (tasks/restart-app)
   (register nil)
-  (tasks/search {:do-not-overlap? false})
+  (tasks/search :do-not-overlap? false)
   (let [subs (atom [])
         allsubs (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? true)]
     (doseq [s allsubs]
