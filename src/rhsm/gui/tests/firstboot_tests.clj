@@ -13,7 +13,8 @@
             AfterClass
             BeforeClass
             BeforeGroups
-            Test]))
+            Test]
+            [com.redhat.qe.auto.bugzilla BzChecker]))
 
 (defn start_firstboot []
   (tasks/start-firstboot)
@@ -51,6 +52,7 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
+  (verify (not (.isBugOpen (BzChecker/getInstance) "922806")))
   ;; new rhsm and classic have to be totally clean for this to run
   (.runCommand @clientcmd "subscription-manager clean")
   (let [sysidpath "/etc/sysconfig/rhn/systemid"]
