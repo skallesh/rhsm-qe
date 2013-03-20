@@ -40,7 +40,8 @@
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
-                       "blockedByBug-706384"]}}
+                       "blockedByBug-706384"
+                       "blockedByBug-922806"]}}
   run_second_instance [_]
   (tasks/restart-app)
   (let [output (tasks/get-logging @clientcmd
