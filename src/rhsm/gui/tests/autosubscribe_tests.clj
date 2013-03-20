@@ -142,7 +142,8 @@
         (verify (tasks/compliance?))))))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"]
+                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
+                       "blockedByBug-921245"]
               :dependsOnMethods ["simple_autosubscribe"]}}
   assert_service_level [_]
   (verify
