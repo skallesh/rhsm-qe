@@ -130,7 +130,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	//To be tested against stage
 	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe", 
-			groups = { "Verify500ErrorOnStage","blockedByBug-878994"}, enabled = true)
+			groups = { "Verify500ErrorOnStage","blockedByBug-878994"}, enabled = false)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
 		log.info("Fetching the generated product certs...");
 		//if (sm_serverType.equals(CandlepinType.standalone)){
