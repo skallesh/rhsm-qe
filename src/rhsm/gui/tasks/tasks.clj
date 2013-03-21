@@ -100,7 +100,6 @@
   ([path window lang]
      (ui launchapp path [] 10 1 lang)
      (ui waittillwindowexist window 30)
-     (sleep 1000)
      (ui maximizewindow window)))
 
 (defn kill-app
