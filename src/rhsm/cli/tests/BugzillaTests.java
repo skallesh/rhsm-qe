@@ -1905,7 +1905,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if rhsmcertd process refresh the identity certificate after every restart", groups = {
-			"VerifyrhsmcertdRefreshIdentityCert", "blockedByBug-827034",
+			"VerifyrhsmcertdRefreshIdentityCert", "blockedByBug-827034","blockedByBug-923159",
 	"blockedByBug-827035" }, enabled = true)
 	
 	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException,
