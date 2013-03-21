@@ -239,7 +239,7 @@ public class SubscriptionManagerTasks {
 		List<String> rpmUrlsReversed = new ArrayList<String>();
 		for (String rpmUrl : rpmInstallUrls) rpmUrlsReversed.add(0,rpmUrl);
 		for (String rpmUrl : rpmUrlsReversed) {
-			rpmUrl = rpmUrl.trim();
+			rpmUrl = rpmUrl.trim(); if (rpmUrl.isEmpty()) continue;
 			String rpm = Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
 			String pkg = rpm.replaceFirst("\\.rpm$", "");
 			String rpmPath = "/tmp/"+rpm; if (!rpmPath.endsWith(".rpm")) rpmPath+=".rpm";
@@ -253,7 +253,7 @@ public class SubscriptionManagerTasks {
 		// install new rpms
 		// http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/python-rhsm.noarch.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-gnome.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-firstboot.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-migration.x86_64.rpm,     http://gibson.usersys.redhat.com/latestrpm/?arch=noarch&version=1&rpmname=subscription-manager-migration-data
 		for (String rpmUrl : rpmInstallUrls) {
-			rpmUrl = rpmUrl.trim();
+			rpmUrl = rpmUrl.trim(); if (rpmUrl.isEmpty()) continue;
 			String rpm = Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
 			String pkg = rpm.replaceFirst("\\.rpm$", "");
 			String rpmPath = "/tmp/"+rpm; if (!rpmPath.endsWith(".rpm")) rpmPath+=".rpm";
@@ -286,7 +286,7 @@ public class SubscriptionManagerTasks {
 		// http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager,     http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager-gnome,     http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager-firstboot,     http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager-migration,    http://gibson.usersys.redhat.com/latestrpm/?arch=noarch&version=1.11&release=el5&rpmname=subscription-manager-migration-data
 		String rpmPaths = "";
 		for (String rpmUrl : rpmUpdateUrls) {
-			rpmUrl = rpmUrl.trim();
+			rpmUrl = rpmUrl.trim(); if (rpmUrl.isEmpty()) continue;
 			String rpm = Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
 			String pkg = rpm.replaceFirst("\\.rpm$", "");
 			String rpmPath = "/tmp/"+rpm; if (!rpmPath.endsWith(".rpm")) rpmPath+=".rpm";
