@@ -61,11 +61,15 @@
 
 (defn ^{Test {:groups ["facts"]
               :dataProvider "guifacts"}}
-  match_each_fact [_ fact value]
+  match_each_fact
+  "Tests that each fact in the GUI is shwowing the expected or known value."
+  [_ fact value]
   (verify (= (@cli-facts fact) value)))
 
 (defn ^{Test {:groups ["facts"]}}
-  facts_parity [_]
+  facts_parity
+  "Tests that the gui shows the same number of facts as the CLI."
+  [_]
   (verify (= (count @cli-facts)
              (count @gui-facts))))
 
@@ -73,7 +77,9 @@
                        "blockedByBug-683550"
                        "blockedByBug-825309"]
               :dataProvider "installed-products"}}
-  check_version_arch [_ product index]
+  check_version_arch
+  "Checks that the version and arch field are displayed properly for each product."
+  [_ product index]
   (let [version (:version (@installed-certs product))
         arch (:arch (@installed-certs product))
         guiversion (try (tasks/ui getcellvalue :installed-view index 1)
@@ -92,7 +98,9 @@
 
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-905136"]}}
-  check_org_id [_]
+  check_org_id
+  "Tests that the orginization id is displayed properly in he facts dialog."
+  [_]
   (try
     (tasks/ui click :view-system-facts)
     (tasks/ui waittillwindowexist :facts-dialog 10)
@@ -107,7 +115,9 @@
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-909294"
                        "blockedByBug-839772"]}}
-  check_available_service_levels [_]
+  check_available_service_levels
+  "Checks that all available service levels are shown in the GUI properly."
+  [_]
   (try
     (let [rawlevels (.getStdout
                      (.runCommandAndWait @clientcmd
@@ -126,7 +136,9 @@
                        "blockedByBug-909294"
                        "blockedByBug-908954"
                        "blockedByBug-839772"]}}
-  check_available_releases [_]
+  check_available_releases
+  "Checks that all avaiable releases are shown in the GUI properly."
+  [_]
   (try
     (.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively @cli-tasks)
     (let [result (.runCommandAndWait @clientcmd
@@ -147,7 +159,9 @@
 
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-829900"]}}
-  verify_about_information [_]
+  verify_about_information
+  "Asserts that all the information in the about dialog is correct."
+  [_]
   (try
     (tasks/ui click :about)
     (tasks/ui waittillwindowexist :about-dialog 10)
@@ -172,7 +186,7 @@
 (defn ^{BeforeGroups {:groups ["facts"]
                       :value ["facts-product-status"]}}
   before_check_product_status [_]
-  (let [output (.getStdout 
+  (let [output (.getStdout
                 (.runCommandAndWait @clientcmd "subscription-manager subscribe --auto"))
         not-blank? (fn [s] (not (blank? s)))
         raw-cli-data (filter not-blank? (drop 1 (split-lines output)))
@@ -183,22 +197,26 @@
 (defn ^{Test {:groups ["facts"
                        "facts-product-status"]
               :dataProvider "installed-products"}}
-  check_product_status [_ product row]
+  check_product_status
+  "Asserts that all product statuses match the known statuses in the CLI."
+  [_ product row]
   (let [gui-value (tasks/ui getcellvalue :installed-view row 2)
         cli-value (get @productstatus product)]
     (verify (= gui-value cli-value))))
-
-(defn ^{Test {:groups ["facts"]
-              :dependsOnMethods ["check_product_status"]
-              :dataProvider "installed-products"}}
-  check_product_status_unsubscribe [_ product row]
-  (let [gui-status (tasks/ui getcellvalue :installed-view row 2)]
-    (verify (= gui-status "Not Subscribed"))))
 
 (defn ^{AfterGroups {:groups ["facts"]
                      :value ["facts-product-status"]}}
   after_check_product_status [_]
   (.getStdout (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all")))
+
+(defn ^{Test {:groups ["facts"]
+              :dependsOnMethods ["check_product_status"]
+              :dataProvider "installed-products"}}
+  check_product_status_unsubscribe
+  "Checks product status is correct after unsubscribing."
+  [_ product row]
+  (let [gui-status (tasks/ui getcellvalue :installed-view row 2)]
+    (verify (= gui-status "Not Subscribed"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
@@ -229,4 +247,3 @@
   (println (str "fact: " (@gui-facts "virt.is_guest"))))
 
 (gen-class-testng)
-

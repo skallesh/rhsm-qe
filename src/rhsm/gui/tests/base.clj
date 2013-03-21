@@ -7,7 +7,9 @@
             AfterSuite]
            org.testng.SkipException))
 
-(defn restart-vnc []
+(defn restart-vnc
+  "function that restarts the vnc server"
+  []
   (if (= :rhel7 (get-release))
     (do (.runCommandAndWait @config/clientcmd "systemctl restart vncserver@:2.service"))
     (do

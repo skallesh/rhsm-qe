@@ -71,7 +71,9 @@
                        ;checking this one in the function
                        ;"blockedByBug-860344"
                        "blockedByBug-712978"]}}
-  import_valid_cert [_]
+  import_valid_cert
+  "Tests to see if a valid certificate can be imported sucessfully."
+  [_]
   ;only run this test if the bug is fixed or if we're using version 1.x certs
   (if-not (cert-version-one?)
     (verify (not (.isBugOpen (BzChecker/getInstance) "860344"))))
@@ -119,7 +121,9 @@
 
 (defn ^{Test {:groups ["import"]
               :dependsOnMethods ["import_valid_cert"]}}
-  import_unregister [_]
+  import_unregister
+  "Asserts that imported certs are sucessfully removed after unregister."
+  [_]
   (try+ (tasks/register-with-creds :re-register? false)
         (catch [:type :already-registered] _))
   (tasks/ui selecttab :my-subscriptions)
@@ -146,7 +150,9 @@
                        "blockedByBug-691784"
                        "blockedByBug-723363"]
               :dependsOnMethods ["import_valid_cert"]}}
-  import_unsubscribe [_]
+  import_unsubscribe
+  "Tests that an imported cert can be unsubscribed from in the GUI."
+  [_]
   (tasks/restart-app :unregister? true)
   (import_valid_cert nil)
   (let [assert-in-table? (fn [pred]
@@ -194,7 +200,9 @@
 
 (defn ^{Test {:groups ["import"
                        "blockedByBug-702075"]}}
-  import_random [_]
+  import_random
+  "Asserts that a random file cannot be imported."
+  [_]
   (let [certname "/tmp/randomCert.pem"]
     (.runCommandAndWait @clientcmd (str "rm -rf " certname))
     (.runCommandAndWait @clientcmd
@@ -203,26 +211,34 @@
 
 (defn ^{Test {:groups ["import"
                        "blockedByBug-702075"]}}
-  import_entitlement [_]
+  import_entitlement
+  "Asserts that an entitlement cannot be imported."[_]
   (let [certname (get-random-file "/tmp/sm-importentitlementsdir/" " | grep -v key")]
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
                        "blockedByBug-702075"]}}
-  import_key [_]
+  import_key
+  "Asserts that a product key cannot be imported."
+  [_]
   (let [certname (get-random-file "/tmp/sm-importentitlementsdir/" " | grep key")]
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
                        "blockedByBug-702075"]}}
-  import_product [_]
+
+  import_product
+  "Asserts that a product pem cannot be imported."
+  [_]
   (let [certname (get-random-file "/etc/pki/product/")]
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
                        "blockedByBug-691788"]
               :dependsOnMethods ["import_random"]}}
-  import_and_reopen [_]
+  import_and_reopen
+  "Assertst that the GUI can be restarted after an import has taken place."
+  [_]
   (import_random nil)
   (tasks/restart-app)
   (verify (= 1 (tasks/ui guiexist :main-window))))
@@ -231,7 +247,9 @@
                        "blockedByBug-702075"
                        "blockedByBug-748912"
                        "blockedByBug-877452"]}}
-  import_nonexistant [_]
+  import_nonexistant
+  "Asserts the correct error message when a non-existant file is imported."
+  [_]
   (verify
    (not (tasks/substring?
          "Traceback" (tasks/get-logging

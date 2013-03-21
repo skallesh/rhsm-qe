@@ -29,7 +29,9 @@
   (verify (not (tasks/ui showing? :register-system))))
 
 (defn ^{Test {:groups ["proxy"]}}
-  enable_proxy_auth [_]
+  enable_proxy_auth
+  "Asserts that the rhsm.conf file is correctly set after setting a proxy with auth."
+  [_]
   (let [hostname  (@config :basicauth-proxy-hostname)
         port      (@config :basicauth-proxy-port)
         username  (@config :basicauth-proxy-username)
@@ -38,7 +40,9 @@
     (tasks/verify-conf-proxies hostname port username password)))
 
 (defn ^{Test {:groups ["proxy"]}}
-  enable_proxy_noauth [_]
+  enable_proxy_noauth
+  "Asserts that the rhsm.conf file is correctly set after setting a proxy without auth."
+  [_]
   (let [hostname  (@config :noauth-proxy-hostname)
         port      (@config :noauth-proxy-port)]
     (tasks/enableproxy hostname :port port)
@@ -46,13 +50,17 @@
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_auth" "enable_proxy_noauth"]}}
-  disable_proxy [_]
+  disable_proxy
+  "Asserts that the rhsm.conf file is correctly set after diabling proxies."
+  [_]
   (tasks/disableproxy)
   (tasks/verify-conf-proxies "" "" "" ""))
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_auth"]}}
-  proxy_auth_connect [_]
+  proxy_auth_connect
+  "Asserts that rhsm can connect after setting a proxy with auth."
+  [_]
   (enable_proxy_auth nil)
   (let [logoutput (tasks/get-logging @auth-proxyrunner
                                      auth-log
@@ -63,7 +71,9 @@
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_noauth"]}}
-  proxy_noauth_connect [_]
+  proxy_noauth_connect
+  "Asserts that rhsm can connect after setting a proxy without auth."
+  [_]
   (enable_proxy_noauth nil)
   (let [logoutput (tasks/get-logging @noauth-proxyrunner
                                      noauth-log
@@ -74,7 +84,9 @@
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["disable_proxy"]}}
-  disable_proxy_connect [_]
+  disable_proxy_connect
+  "Asserts that a proxy is not used after clearing proxy settings."
+  [_]
   (disable_proxy nil)
   ;; note: if this takes forever, blank out the proxy log file.
   (let [logoutput (tasks/get-logging @auth-proxyrunner
@@ -100,17 +112,23 @@
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_auth"]}}
-  test_auth_proxy [_]
+  test_auth_proxy
+  "Tests the 'test connection' button when using a proxy with auth."
+  [_]
   (test_proxy "Proxy connection succeeded"))
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_noauth"]}}
-  test_noauth_proxy [_]
+  test_noauth_proxy
+  "Tests the 'test connection' button when using a proxy without auth."
+  [_]
   (test_proxy "Proxy connection succeeded"))
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["disable_proxy"]}}
-  test_disabled_proxy [_]
+  test_disabled_proxy
+  "Test that the 'test connection' button is disabled when proxy settings are cleared."
+  [_]
   (tasks/ui click :configure-proxy)
   (tasks/ui click :test-connection)
   (try+ (verify (not (some #(= "sensitive" %)
@@ -119,14 +137,18 @@
         (finally (tasks/ui click :close-proxy))))
 
 (defn ^{Test {:groups ["proxy"]}}
-  test_bad_proxy [_]
+  test_bad_proxy
+  "Tests the 'test connection' button when using a non-existant proxy."
+  [_]
   (try+
    (tasks/enableproxy "doesnotexist.redhat.com")
    (test_proxy "Proxy connection failed")
    (finally (tasks/disableproxy))))
 
 (defn ^{Test {:groups ["proxy"]}}
-  bad_proxy [_]
+  bad_proxy
+  "Tests error message when using a non-existant proxy."
+  [_]
   (try+ (tasks/unregister)
         (catch [:type :not-registered] _))
   (try
@@ -143,7 +165,9 @@
      (disable_proxy nil))))
 
 (defn ^{Test {:groups ["proxy" "blockedByBug-729688"]}}
-  bad_proxy_facts [_]
+  bad_proxy_facts
+  "Tests facts-update through a bad proxy."
+  [_]
   (disable_proxy nil)
   (register)
   (try
@@ -164,7 +188,9 @@
      (disable_proxy nil))))
 
 (defn ^{Test {:groups ["proxy" "blockedByBug-806993"]}}
-  test_proxy_formatting [_]
+  test_proxy_formatting
+  "Tests the auto-formatting feature of the proxy location field."
+  [_]
   (try+
    (tasks/enableproxy "http://some.host.name:1337")
    (tasks/ui click :configure-proxy)

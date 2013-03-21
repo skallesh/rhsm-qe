@@ -67,7 +67,9 @@
 
 (defn ^{Test {:groups ["subscribe"]
               :dataProvider "subscriptions"}}
-  subscribe_each [_ subscription]
+  subscribe_each
+  "Asserts that each subscripton can be subscribed to sucessfully."
+  [_ subscription]
   (try+
    (tasks/subscribe subscription)
    (catch [:type :item-not-available] _)
@@ -76,7 +78,9 @@
 
 (defn ^{Test {:groups ["subscribe"]
               :dataProvider "subscribed"}}
-  unsubscribe_each [_ subscription]
+  unsubscribe_each
+  "Asserts that each subscripton can be unsubscribed from sucessfully."
+  [_ subscription]
   (tasks/ui selecttab :my-subscriptions)
   (try+ (tasks/unsubscribe subscription)
         (verify (= false (tasks/ui rowexist? :my-subscriptions-view subscription)))
@@ -87,6 +91,7 @@
                        "blockedByBug-869028"]
               :dataProvider "multi-contract"}}
   check_contract_selection_dates
+  "Asserts that the dates in the contract selection dialog are displayed correctly."
   [_ subscription]
   (try+ (tasks/open-contract-selection subscription)
         (try
@@ -104,13 +109,14 @@
         (catch [:type :wrong-consumer-type]
             {:keys [log-warning]} (log-warning))))
 
+  ;; https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-766778"
                        "blockedByBug-723248"
                        "blockedByBug-855257"]
               :dataProvider "subscriptions"}}
   check_quantity_scroller
-  "https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3"
+  "Tests the quantity scroller assiciated with subscriptions."
   [_ subscription]
   (try+
     (tasks/open-contract-selection subscription)
@@ -176,10 +182,11 @@
     (finally (if (tasks/ui showing? :contract-selection-table)
                (tasks/ui click :cancel-contract-selection)))))
 
+;; https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3
 (defn ^{Test {:groups ["subscribe" "blockedByBug-723248"]
               :dataProvider "multi-entitle"}}
   check_quantity_subscribe
-  "https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3"
+  "Asserts that the selected quantity is given when subscribed to."
   [_ subscription contract]
   (try+
    (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all")
@@ -216,7 +223,9 @@
 
 (defn ^{Test {:groups ["subscribe" "blockedByBug-755861"]
               :dataProvider "multi-entitle"}}
-  check_quantity_subscribe_traceback [_ subscription contract]
+  check_quantity_subscribe_traceback
+  "Asserts no traceback is shown when subscribing in quantity."
+  [_ subscription contract]
   (let [ldtpd-log "/var/log/ldtpd/ldtpd.log"
         output (tasks/get-logging @clientcmd
                                   ldtpd-log
@@ -249,7 +258,9 @@
                          "blockedByBug-704408"
                          "blockedByBug-801434"]
                 :dependsOnMethods ["check_date_chooser_traceback"]}}
-    check_blank_date_click [_]
+    check_blank_date_click
+    "Tests the behavior when the date search field is blank and you click to another area."
+    [_]
     (try
       (tasks/ui selecttab :all-available-subscriptions)
       (tasks/ui settextvalue :date-entry "")
@@ -267,7 +278,9 @@
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-688454"
                        "blockedByBug-704408"]}}
-  check_blank_date_search [_]
+  check_blank_date_search
+  "Tests the behavior when the date search is blank and you try to search."
+  [_]
   (try
     (tasks/ui selecttab :all-available-subscriptions)
     (tasks/ui settextvalue :date-entry "")
@@ -281,7 +294,9 @@
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-858773"]
               :dataProvider "installed-products"}}
-  filter_by_product [_ product]
+  filter_by_product
+  "Tests that the product filter works when searching."
+  [_ product]
   (allsearch product)
   (let [expected (@productlist product)
         seen (into [] (tasks/get-table-elements
@@ -305,7 +320,9 @@
 
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-817901"]}}
-  check_no_search_results_message [_]
+  check_no_search_results_message
+  "Tests the message when the search returns no results."
+  [_]
   (tasks/restart-app :reregister? true)
   (tasks/ui selecttab :all-available-subscriptions)
   (tasks/search :contain-text "DOESNOTEXIST")
@@ -317,7 +334,9 @@
 
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-817901"]}}
-  check_please_search_message [_]
+  check_please_search_message
+  "Tests for the initial message before you search."
+  [_]
   (tasks/restart-app :reregister? true)
   (tasks/ui selecttab :all-available-subscriptions)
   (let [label "Press Update to search for subscriptions."]
@@ -330,7 +349,9 @@
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-911386"]
               :dataProvider "subscriptions"}}
-  check_service_levels [_ subscription]
+  check_service_levels
+  "Asserts that the displayed service levels are correct in the subscriptons view."
+  [_ subscription]
   (tasks/ui selecttab :all-available-subscriptions)
   (tasks/skip-dropdown :all-subscriptions-view subscription)
   (let [guiservice (tasks/ui gettextvalue :all-available-support-level-and-type)
@@ -341,7 +362,9 @@
     (verify (= guiservice service))))
 
 (defn ^{Test {:groups ["subscribe" "blockedByBug-918617"]}}
-  subscribe_check_syslog [_]
+  subscribe_check_syslog
+  "Asserts that subscribe events are logged in the syslog."
+  [_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
                                   "subscribe_check_syslog"
@@ -351,7 +374,9 @@
 
 (defn ^{Test {:groups ["subscribe" "blockedByBug-918617"]
               :dependsOnMethods ["subscribe_check_syslog"]}}
-  unsubscribe_check_syslog [_]
+  unsubscribe_check_syslog
+  "Asserts that unsubscribe events are logged in the syslog."
+  [_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
                                   "unsubscribe_check_syslog"

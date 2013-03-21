@@ -70,7 +70,9 @@
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForNoProductsSubscribable"
                        "blockedByBug-743704"]}}
-  no_products_subscribable [_]
+  no_products_subscribable
+  "Tests autosubscribe when no products are subscribable."
+  [_]
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? nodir))
@@ -101,7 +103,9 @@
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForNoProductsInstalled"]}}
-  no_products_installed [_]
+  no_products_installed
+  "Tests autosubscribe when no products are installed."
+  [_]
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? nonedir))
@@ -112,7 +116,9 @@
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
                        "blockedByBug-857147"]}}
-  simple_autosubscribe [_]
+  simple_autosubscribe
+  "Tests simple autosubscribe when all products can be covered by one service level."
+  [_]
    (.runCommandAndWait @clientcmd "subscription-manager unregister")
    (tasks/restart-app)
    (verify (dirsetup? one-sla-dir))
@@ -145,7 +151,9 @@
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
                        "blockedByBug-921245"]
               :dependsOnMethods ["simple_autosubscribe"]}}
-  assert_service_level [_]
+  assert_service_level
+  "Asserts that the service level was set system wide after simple autosubscribe."
+  [_]
   (verify
    (tasks/substring? @common-sla
                      (.getStdout (.runCommandAndWait @clientcmd "subscription-manager service-level"))))
@@ -161,7 +169,9 @@
                        "configureProductCertDirForSomeProductsSubscribable"
                        "blockedByBug-921245"]
               :dataProvider "my-installed-software"}}
-  assert_correct_status [_ product]
+  assert_correct_status
+  "Tests that the status for each product is correct after subscribing to everything."
+  [_ product]
   (let [index (tasks/ui gettablerowindex
                         :installed-view
                         product)
@@ -258,86 +268,3 @@
                    "subscription-manager facts --list | "
                    "grep \"lscpu.architecture\" | "
                    "cut -f 2 -d \":\"")))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; OLD TESTS NO LONGER IN USE ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(comment
-  ;; tests no longer usable in the GUI
-  (defn ^{Test {:groups ["autosubscribe"]}}
-    register_autosubscribe [_]
-    (let [beforesubs (tasks/warn-count)
-          user (@config :username)
-          pass (@config :password)
-          key  (@config :owner-key)
-          ownername (if (= "" key)
-                      nil
-                      (ctasks/get-owner-display-name user pass key))]
-      (if (= 0 beforesubs)
-        (verify (tasks/compliance?))
-        (do
-          (tasks/register user
-                          pass
-                          :skip-autosubscribe false
-                          :owner ownername)
-          (verify (<= (tasks/warn-count) beforesubs))))))
-
-  (defn ^{Test {:groups ["autosubscribe"
-                         "configureProductCertDirForSomeProductsSubscribable"]
-                :dependsOnMethods ["register_autosubscribe"]}}
-    some_products_subscribable [_]
-    (.runCommandAndWait @clientcmd "subscription-manager unregister")
-    (tasks/restart-app)
-    (verify (dirsetup? somedir))
-    (let [beforesubs (tasks/warn-count)
-          dircount (trim (.getStdout
-                          (.runCommandAndWait
-                           @clientcmd
-                           (str "ls " somedir " | wc -l"))))
-          user (@config :username)
-          pass (@config :password)
-          key  (@config :owner-key)
-          ownername (ctasks/get-owner-display-name user pass key)]
-      (verify (= (str beforesubs)
-                 dircount))
-      (if (= 0 beforesubs)
-        (verify (tasks/compliance?))
-        (do
-          (tasks/register user
-                          pass
-                          :skip-autosubscribe false
-                          :owner ownername)
-          (tasks/ui waittillwindownotexist :register-dialog 600)
-          (tasks/sleep 20000)
-          (verify (<= (tasks/warn-count) beforesubs))
-          (verify (not (tasks/compliance?)))))))
-
-  (defn ^{Test {:groups ["autosubscribe"
-                         "configureProductCertDirForAllProductsSubscribable"]
-                :dependsOnMethods ["register_autosubscribe"]}}
-    all_products_subscribable [_]
-    (.runCommandAndWait @clientcmd "subscription-manager unregister")
-    (tasks/restart-app)
-    (verify (dirsetup? alldir))
-    (let [beforesubs (tasks/warn-count)
-          user (@config :username)
-          pass (@config :password)
-          key  (@config :owner-key)
-          ownername (ctasks/get-owner-display-name user pass key)]
-      (verify (= (str beforesubs)
-                 (trim (.getStdout
-                        (.runCommandAndWait @clientcmd (str "ls " alldir " | wc -l"))))))
-      (if (= 0 beforesubs)
-        (verify (tasks/compliance?))
-        (do
-          (tasks/register user
-                          pass
-                          :skip-autosubscribe false
-                          :owner ownername)
-          (tasks/ui waittillwindownotexist :register-dialog 600)
-          (tasks/sleep 20000)
-          (verify (= (tasks/warn-count) 0))
-          (verify (tasks/compliance?))))))
-
-)

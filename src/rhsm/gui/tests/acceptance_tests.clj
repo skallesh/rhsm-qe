@@ -19,14 +19,18 @@
             DataProvider]))
 
 (defn ^{Test {:groups ["acceptance"]}}
-  register [_]
+  register
+  "Simple register test using a known username and password."
+  [_]
   (rtest/simple_register nil
                          (@config :username)
                          (@config :password)
                          nil))
 
 (defn ^{Test {:groups ["acceptance"]}}
-  unregister [_]
+  unregister
+  "Simple unregister test."
+  [_]
   (rtest/unregister nil))
 
 (defn- check-register []
@@ -34,12 +38,16 @@
     (register nil)))
 
 (defn ^{Test {:groups ["acceptance"]}}
-  subscribe_all [_]
+  subscribe_all
+  "Attemts to subscribe to all available subscriptions."
+  [_]
   (check-register)
   (stest/subscribe_all))
 
 (defn ^{Test {:groups ["acceptance"]}}
-  unsubscribe_all [_]
+  unsubscribe_all
+  "Attempts to unsubscribe from all subscribed subscriptions."
+  [_]
   (check-register)
   (stest/unsubscribe_all))
 
@@ -51,7 +59,9 @@
 
 (defn ^{Test {:groups ["acceptance"
                        "acceptance_autosubscribe"]}}
-  simple_autosubscribe [_]
+  simple_autosubscribe
+  "Attempts a simple autosubscibe and verifys results."
+  [_]
   (atest/simple_autosubscribe nil))
 
 (defn ^{AfterGroups {:groups ["acceptance"]
@@ -65,7 +75,9 @@
   (tasks/restart-app))
 
 (defn ^{Test {:groups ["acceptance"]}}
-  check_releases [_]
+  check_releases
+  "Tests that all available releases are shown in the GUI"
+  [_]
   (check-register)
   (let [certdir (tasks/conf-file-value "productCertDir")
         rhelcerts ["68" "69" "71" "72" "74" "76"]

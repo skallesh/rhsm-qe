@@ -38,7 +38,9 @@
 )
 
 (defn ^{Test {:groups ["interop"]}}
-  check_warning [_]
+  check_warning
+  "Tests that a warning message is shown when registered to classic and launching the app."
+  [_]
   (tasks/start-app)
   (tasks/ui waittillwindowexist :warning-dialog 30)
   (verify (systemid-exists?))
@@ -48,7 +50,9 @@
 
 (defn ^{Test {:groups ["interop" "blockedByBug-667991"]
               :dependsOnMethods ["check_warning"] }}
-  check_warning_ok [_]
+  check_warning_ok
+  "Tests that the RHN Classic warning can be cleared and that the main winow is still open."
+  [_]
   (tasks/start-app)
   (tasks/ui waittillwindowexist :warning-dialog 30)
   (tasks/ui click :warn-ok)
@@ -59,7 +63,9 @@
 
 (defn ^{Test {:groups ["interop"  "blockedByBug-667991"]
               :dependsOnMethods ["check_warning"]}}
-  check_warning_cancel [_]
+  check_warning_cancel
+  "Tests the cancel button of the RHN Classic warning and that the main window closes."
+  [_]
   (tasks/start-app)
   (tasks/ui waittillwindowexist :warning-dialog 30)
   (tasks/ui click :warn-cancel)
@@ -69,7 +75,9 @@
 
 (defn ^{Test {:groups ["interop"  "blockedByBug-667991"]
               :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}}
-  check_no_warning [_]
+  check_no_warning
+  "Asserts that no warning is shown when the app is started without the presence of a systemid file."
+  [_]
   (.runCommandAndWait @clientcmd (str "rm -f " systemid))
   (verify (not (systemid-exists?)))
   (tasks/start-app)

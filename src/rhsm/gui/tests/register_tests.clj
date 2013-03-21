@@ -28,7 +28,9 @@
 
 (defn ^{Test {:groups ["registration"]
               :dataProvider "userowners"}}
-  simple_register [_ user pass owner]
+  simple_register
+  "Simple register with known username, password, and owner."
+  [_ user pass owner]
   (try+
    (if owner
      (tasks/register user pass :owner owner)
@@ -44,7 +46,9 @@
         (tasks/ui click :close-facts)
         (verify (= 1 result))))))
 
-(defn register_bad_credentials [user pass recovery]
+(defn register_bad_credentials
+  "Checks error messages upon registering with bad credentials."
+  [user pass recovery]
   (try+ (tasks/unregister) (catch [:type :not-registered] _))
   (let [test-fn (fn [username password expected-error-type]
                   (try+ (tasks/register username password)
@@ -58,7 +62,9 @@
      (verify (and (= thrown-error expected-error) (action exists? register-button))))))
 
 (defn ^{Test {:groups ["registration"]}}
-  unregister [_]
+  unregister
+  "Simple unregister."
+  [_]
   (try+ (tasks/register (@config :username) (@config :password))
         (catch
             [:type :already-registered]
@@ -67,7 +73,9 @@
   (verify (action exists? :register-system)))
 
 (defn ^{Test {:groups ["registration" "blockedByBug-918303"]}}
-  register_check_syslog [_]
+  register_check_syslog
+  "Asserts that register events are logged in the syslog."
+  [_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
                                   "register_check_syslog"
@@ -77,7 +85,9 @@
 
 (defn ^{Test {:groups ["registration" "blockedByBug-918303"]
               :dependsOnMethods ["register_check_syslog"]}}
-  unregister_check_syslog [_]
+  unregister_check_syslog
+  "Asserts unregister events are logged in the syslog."
+  [_]
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
                                   "unregister_check_syslog"
@@ -110,7 +120,9 @@
                        "blockedByBug-822706"]
               ;:dependsOnMethods ["simple_register"]
               }}
-  check_auto_to_register_button [_]
+  check_auto_to_register_button
+  "Checks that the register button converts to the auto-subscribe button after register."
+  [_]
   (tasks/restart-app :unregister? true)
   (verify (and (tasks/ui showing? :register-system)
                (not (tasks/ui showing? :auto-attach))))

@@ -30,7 +30,9 @@
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-656896"]}}
-  check_libglade_warnings [_]
+  check_libglade_warnings
+  "Asserts that the libglade-WARNINGs are corrected."
+  [_]
   (let [output (tasks/get-logging @clientcmd
                                   ldtpd-log
                                   "check_libglade_warnings"
@@ -41,7 +43,9 @@
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-706384"]}}
-  run_second_instance [_]
+  run_second_instance
+  "Asserts that a second instance of rhsm-gui cannot be run."
+  [_]
   (tasks/restart-app)
   (let [output (tasks/get-logging @clientcmd
                             ldtpd-log
@@ -54,7 +58,9 @@
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-747014"]}}
-  check_help_button [_]
+  check_help_button
+  "Assertst that the help window opens."
+  [_]
   (try
     (tasks/restart-app)
     (tasks/ui click :getting-started)
@@ -63,7 +69,9 @@
     (tasks/ui closewindow :help-dialog)
     (finally (tasks/restart-app))))
 
-(defn check_escape_window [window shortcut]
+(defn check_escape_window
+  "Asserts that windows correctly render after exiting them with a shortcut."
+  [window shortcut]
   (tasks/restart-app :unregister? true)
   (let [exec-shortcut (fn [s] (tasks/ui generatekeyevent s))
         count-objects (fn [w] (count (tasks/ui getobjectlist w)))
@@ -96,7 +104,9 @@
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-785203"]}}
-  check_close_button [_]
+  check_close_button
+  "Checks that the close menu item works."
+  [_]
   (tasks/restart-app)
   (try
     (tasks/ui selectmenuitem :main-window "System")
@@ -107,7 +117,9 @@
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-833578"]}}
-  check_online_documentation [_]
+  check_online_documentation
+  "Asserts that the online documentation opens."
+  [_]
   (try
     (tasks/restart-app)
     (let [output (tasks/get-logging @clientcmd
@@ -123,7 +135,9 @@
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-707041"]}}
-  date_picker_traceback [_]
+  date_picker_traceback
+  "Asserts that the date chooser does not throw a traceback."
+  [_]
   (try
     (if-not (= 1 (tasks/ui guiexist :main-window)) (tasks/restart-app))
     (try+ (tasks/register-with-creds :re-register? false)
