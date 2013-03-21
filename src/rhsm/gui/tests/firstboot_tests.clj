@@ -66,8 +66,9 @@
   (zero-proxy-values))
 
 (defn ^{Test {:groups ["firstboot"]}}
-  firstboot_enable_proxy_auth [_]
+  firstboot_enable_proxy_auth
   "Checks whether the proxy and authentication is enabled in rhsm-conf file" 
+  [_]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (let [hostname (@config :basicauth-proxy-hostname)
@@ -81,8 +82,9 @@
     (tasks/verify-conf-proxies hostname port username password)))
 
 (defn ^{Test {:groups ["firstboot"]}}
-  firstboot_enable_proxy_noauth [_]
+  firstboot_enable_proxy_noauth
   "Checks whether the proxy is enabled and authentication is disabled in rhsm-conf file"
+  [_]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (let [hostname (@config :noauth-proxy-hostname)
@@ -94,8 +96,9 @@
     (tasks/verify-conf-proxies hostname port "" "")))
 
 (defn ^{Test {:groups ["firstboot"]}}
-  firstboot_disable_proxy [_]
+  firstboot_disable_proxy
   "Checks whether the proxy and authentication is disabled in rhsm-conf file"
+  [_]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (tasks/disableproxy true)
@@ -104,9 +107,10 @@
   (tasks/firstboot-register (@config :username) (@config :password))
   (tasks/verify-conf-proxies "" "" "" ""))
 
-(defn firstboot_register_invalid_user [user pass recovery]
-  (reset_firstboot)
+(defn firstboot_register_invalid_user
   "Register with invalid user credentials at firstboot"
+  [user pass recovery]
+  (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
   (let [test-fn (fn [username password expected-error-type]
@@ -124,8 +128,9 @@
 (defn ^{Test {:groups ["firstboot"
                        "blockedByBug-642660"
                        "blockedByBug-863572"]}}
-  firstboot_check_back_button_state [_]
-  "Checks the state of back and forward button (whether disabled) when firstboot is regestering to to a server"                     
+  firstboot_check_back_button_state
+  "Checks the state of back and forward button (whether disabled) when firstboot is regestering (when progress-bar is displayed) to to a server"                     
+  [_]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
@@ -135,8 +140,9 @@
 
 (defn ^{Test {:groups ["firstboot" "blockedByBug-872727"]
               :dependsOnMethods ["firstboot_check_back_button_state"]}}
-  firstboot_check_back_button [_]
+  firstboot_check_back_button
   "Checks the functionality of the back button during firstboot"
+  [_]
   (tasks/ui click :firstboot-back)
   (verify (tasks/ui showing? :register-rhsm))
   (let [output (.getStdout (.runCommandAndWait @clientcmd "subscription-manager identity"))]
@@ -144,8 +150,9 @@
 
 ;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
 (defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
-  firstboot_skip_register [_]
-  "Checks whether firstboot skips register if subscriptio manger is already registered"
+  firstboot_skip_register
+  "Checks whether firstboot skips register if subscription manger is already registered"
+  [_]
   (kill_firstboot)
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (.runCommandAndWait @clientcmd "subscritption-manager clean")
@@ -163,8 +170,9 @@
 
 ;; https://tcms.engineering.redhat.com/case/72670/?from_plan=2806
 (defn ^{Test {:groups ["firstboot"]}}
-  firstboot_check_register_sm_unregistered [_]
+  firstboot_check_register_sm_unregistered
   "Checks whether firstboot navigates to register screen when subscription manager is unregistered"
+  [_]
   (kill_firstboot)
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (reset_firstboot)
