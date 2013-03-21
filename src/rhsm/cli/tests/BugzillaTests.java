@@ -170,13 +170,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "rhsm",
 				"manage_repos".toLowerCase(), "1" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,
+		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null);
 		Assert.assertFalse(RemoteFileTasks.testExists(client,"/etc/yum.repos.d/redhat.repo"));
 		String result=client.runCommandAndWait("yum repolist all").getStdout();
-
-		for(YumRepo originalRepos :clienttasks.getCurrentlySubscribedYumRepos()){
-			System.out.println(originalRepos.id);
+		Assert.assertContainsNoMatch(result,"repolist: 0");
+		/*for(YumRepo originalRepos :clienttasks.getCurrentlySubscribedYumRepos()){
 			Assert.assertNotNull(originalRepos.id);
 			Boolean flag=false;
 				Pattern pattern = Pattern.compile(originalRepos.id, Pattern.MULTILINE);
@@ -186,7 +186,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				}
 				Assert.assertTrue(flag);
 				flag=false;
-			}
+			}*/
 		
 	}
 	
@@ -499,7 +499,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String productId=null;
 		String poolId=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, true, null, null,
+				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 	String SyslogMessage="Added subscription for";
 	String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
@@ -1003,7 +1003,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					(String) null, null, null, null, true, null, null, null, null);
 		for(EntitlementCert Cert: clienttasks.getCurrentEntitlementCerts()){
 			version=Cert.version;
-		Assert.assertEquals(version, "3.1");
+		Assert.assertEquals(version, "3.2");
 	}
 	}
 	
@@ -1261,14 +1261,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		now.add(Calendar.YEAR, 1);
 		now.add(Calendar.DATE, 1);
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
-		now.add(Calendar.YEAR, 1);
+//		now.add(Calendar.YEAR, 1);
 		String endDate=yyyy_MM_dd_DateFormat.format(now.getTime());
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
 		if(availOnDate.size()==0) throw new SkipException(
 				"Sufficient future pools are not available");
 		for (SubscriptionPool subscriptions : availOnDate) {
-			System.out.println(!(subscriptions.endDate.before(endDate)));
+			
+			System.out.println(subscriptions.endDate.before(now));
+			System.out.println(now + "   "+subscriptions.endDate);
+
 			if(!(subscriptions.endDate.before(endDate))){
 				
 				clienttasks.subscribe_(null, null, subscriptions.poolId, null, null,null, null, null, null, null, null);
@@ -1925,7 +1928,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String existingCertdate = client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8")
 				.getStdout();
 		String StartDate=setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
-				sm_sshkeyPassphrase, "date -s '15 year 9 month'	+'%F'");
+				sm_sshkeyPassphrase, "date -s '15 year 9 month' +'%F'");
 		log.info("Changed the date of candlepin"
 				+ client.runCommandAndWait("hostname"));
 		setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
