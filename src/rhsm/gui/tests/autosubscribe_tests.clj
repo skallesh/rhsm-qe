@@ -158,7 +158,8 @@
 
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "configureProductCertDirForSomeProductsSubscribable"]
+                       "configureProductCertDirForSomeProductsSubscribable"
+                       "blockedByBug-921245"]
               :dataProvider "my-installed-software"}}
   assert_correct_status [_ product]
   (let [index (tasks/ui gettablerowindex
