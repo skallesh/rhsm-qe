@@ -66,6 +66,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			.toLowerCase();
 	protected final String myEmptyCaCertFile = "/etc/rhsm/ca/myemptycert.pem";
 	protected Integer configuredHealFrequency = null;
+	protected String configuredHostname=null;
 	protected String factname="system.entitlements_valid";
 	protected String RemoteServerError="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 	protected String SystemDateOnClient=null;
@@ -129,19 +130,22 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	//To be tested against stage
-	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe", 
-			groups = { "Verify500ErrorOnStage","blockedByBug-878994"}, enabled = false)
+	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe",
+			
+			groups = { "Verify500ErrorOnStage","blockedByBug-878994"},
+			enabled = true)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
+		String username="stage_test_12";
+		String password="redhat";
+		server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		System.out.println(sm_serverInstallDir+servertasks.generatedProductsDir+"  "+server+ "  "+username+"  "+password );
+		server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
+		clienttasks.unregister(null, null, null);
 		log.info("Fetching the generated product certs...");
-		//if (sm_serverType.equals(CandlepinType.standalone)){
-			System.out.println(sm_serverHostname + " server name is " +sm_serverType);
-	
-		SSHCommandResult results= server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
-		System.out.println(results);
 		String logMessage = "remote server status code: 500";
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
-		clienttasks.register(sm_clientUsername, sm_clientPassword,null, null, null, null, null, null, null, null,
-				(String) null, serverurl, null, null, true, null, null, null, null).getStdout();	
+		clienttasks.register(username, password,null, null, null, null, null, null, null, null,
+				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();	
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		String result=clienttasks.listAvailableSubscriptionPools().getStdout();
@@ -756,26 +760,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if able to entitle consumer to the pool virt_only,pool_derived,bonus pool ", 
-			groups = { "consumeVirtOnlyPool","blockedByBug-756628"}, enabled = false)
+			groups = { "consumeVirtOnlyPool","blockedByBug-756628"}, enabled = true)
 	public void consumeVirtOnlyPool() throws JSONException,Exception {
 		String isPool_derived =null;
 		Boolean virtonly=false;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
-		
+		String isGuest=clienttasks.getFactValue("virt.is_guest");
+		System.out.println(isGuest);
+		if(isGuest.equals("false")){
 		for (SubscriptionPool availList : clienttasks
 				.getCurrentlyAvailableSubscriptionPools()) {
 			isPool_derived = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,	sm_clientPassword, sm_serverUrl, availList.poolId,"pool_derived");		
 			 virtonly= CandlepinTasks.isPoolVirtOnly(sm_clientUsername, sm_clientPassword, availList.poolId, sm_serverUrl);
 			 if(!(isPool_derived==null) || virtonly){
 				String result= clienttasks.subscribe_(null, null, availList.poolId, null, null, null, null,null,null, null,null).getStdout();
-				String Expected="Guest's host does not match owner of pool: '"+availList.poolId+"'.";
+				String Expected="Pool is restricted to virtual guests: '"+availList.poolId+"'.";
 				 Assert.assertEquals(result.trim(), Expected);
 			 }
 		}
-
+		}else throw new SkipException("Cannot test on a virtual machine");
 	}
+			
+
+
 
 	
 	/**
@@ -3049,6 +3058,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks == null)
 			return;
 		configuredHealFrequency = Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd","autoAttachInterval"));
+		configuredHostname=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server","hostname");
 	}
 
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
@@ -3348,6 +3358,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups = {"setup"}, value = {"VerifyEmptyCertCauseRegistrationFailure_Test","BugzillaTests"})
 	public void removeMyEmptyCaCertFile() {
 		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
+	}
+	
+	@AfterGroups(groups = {"setup"}, value = {"Verify500ErrorOnStage"})
+	public void restoreRHSMConfFileValues() {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "server","hostname".toLowerCase(),configuredHostname});
+		listOfSectionNameValues.add(new String[] { "server","port".toLowerCase(), "8443" });
+		listOfSectionNameValues.add(new String[] { "server","prefix".toLowerCase(), "/candlepin" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
 	}
 	
 	@BeforeGroups(groups="ExpirationOfEntitlementCerts")
