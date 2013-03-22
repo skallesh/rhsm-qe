@@ -851,7 +851,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			rhsmIconOptions.add("-f, --force-icon=TYPE");
 			rhsmIconOptions.add("-i, --check-immediately");
 			rhsmIconOptions.add("--display=DISPLAY");
-			for (String rhsmIconHelpCommand : new String[]{command+" -?", command+" --help"}) {
+			for (String helpOption : options.get(0).split(" *, *")) {	// "-?, --help"
+				String rhsmIconHelpCommand = command+" "+helpOption;
 				List <String> usages = new ArrayList<String>();
 				String usage = command+" [OPTIONS]";
 				usage = command+" [OPTION...]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading 
@@ -970,7 +971,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--heal-interval=MINUTES");					// added by bug 876753 as a deprecated, see --auto-attach-interval
 		options.add("-n, --now");
 		options.add("-d, --debug");
-		for (String commandHelp : new String[]{command+" -?", command+" -h", command+" --help"}) {
+		for (String helpOption : options.get(0).split(" *, *")) {	// "-?, --help"
+			String commandHelp = command+" "+helpOption;
 			List <String> usages = new ArrayList<String>();
 			String usage = command+" [OPTIONS]";
 			usage = command+" [OPTION...]";
