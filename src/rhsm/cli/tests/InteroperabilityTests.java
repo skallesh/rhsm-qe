@@ -164,7 +164,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="When registered to RHN but not RHSM, the subscription-manager yum plugin should inform that: This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.",
-			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-906875"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-906875","blockedByBug-924919"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase2_Test() {
@@ -219,7 +219,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="When registered to both RHN and RHSM (but not subscribed), the subscription-manager yum plugin should inform that: This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.",
-			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-871146","blockedByBug-906875"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-871146","blockedByBug-906875","blockedByBug-924919"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase4A_Test() {
@@ -241,7 +241,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="When registered to both RHN and RHSM (and subscribed), the subscription-manager yum plugin should inform that: This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.",
-			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-906875"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-906875","blockedByBug-924919"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase4B_Test() throws JSONException, Exception {
