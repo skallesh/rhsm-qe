@@ -641,11 +641,22 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productIdForSubscriptionContainingUTF8Character);
 		// create a new engineering product, marketing product that provides the engineering product, and a subscription for the marketing product
 		attributes.put("type", "MKT");
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "919584";	// Bug 919584 - 'ascii' codec can't decode byte 0xc3 in position 3: ordinal not in range(128)
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			if (clienttasks.redhatReleaseX.equals("5")) {
+				log.warning("Skipping the creation of subscription name containing UTF8 character: "+subscriptionNameForSubscriptionContainingUTF8Character);
+				return;
+			}
+		}
+		// END OF WORKAROUND
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, subscriptionNameForSubscriptionContainingUTF8Character, productIdForSubscriptionContainingUTF8Character, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productIdForSubscriptionContainingUTF8Character, providedProductIds);
 	}
 	@Test(	description="subscription-manager: subcription manager list available should display subscriptions containing UTF-8 character(s)",
-			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-880070"},
+			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-880070","blockedByBug-919584"},
 			priority=110,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
