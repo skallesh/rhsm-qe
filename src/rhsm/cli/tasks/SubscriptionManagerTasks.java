@@ -262,9 +262,14 @@ public class SubscriptionManagerTasks {
 			log.info("Installing RPM from "+rpmUrl+"...");
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
 			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" "+installOptions).getExitCode(), Integer.valueOf(0), "ExitCode from yum installed local rpm: "+rpmPath);
+			
+			// assert the local rpm is now installed
+			String rpmPackageVersion = sshCommandRunner.runCommandAndWait("rpm --query --package "+rpmPath).getStdout().trim();
+			String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
+			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
 		}
 		
-		// attempt to install all required packages that are not already installed
+		// attempt to install all missing packages
 		List<String> pkgs = new ArrayList<String>();
 		if (Float.valueOf(redhatReleaseXY)>=5.7f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot"}));
 		if (Float.valueOf(redhatReleaseXY)>=5.8f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
@@ -273,7 +278,8 @@ public class SubscriptionManagerTasks {
 		if (Float.valueOf(redhatReleaseXY)>=6.3f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
 		if (Float.valueOf(redhatReleaseXY)>=6.4f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
 		if (Float.valueOf(redhatReleaseXY)>=7.0f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
-		pkgs.add("expect");	// used for interactive cli prompting
+		if (Float.valueOf(redhatReleaseXY)>=6.0f) pkgs.add(0,"python-dateutil");	// dependency
+		pkgs.add(0,"expect");	// used for interactive cli prompting
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -285,6 +291,7 @@ public class SubscriptionManagerTasks {
 		}
 		// END OF WORKAROUND
 		for (String pkg : pkgs) {
+			if (pkg.equals("subscription-manager-gnome") && isPackageInstalled("subscription-manager-gui")) continue;	// avoid downgrading
 			if (!isPackageInstalled(pkg)) {
 				Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum installed package: "+pkg);
 			}
@@ -304,7 +311,20 @@ public class SubscriptionManagerTasks {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
 			rpmPaths += rpmPath; rpmPaths += " ";
 		}
-		if (!rpmUpdateUrls.isEmpty()) Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localupdate "+rpmPaths+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated local rpms: "+rpmPaths);
+		if (!rpmUpdateUrls.isEmpty()) {
+			// using yum update was causing trouble for subscription-manager-gnome => subscription-manager-gui (Package subscription-manager-gui not installed, cannot update it. Run yum install to install it instead.)
+			// switching to use rpm --upgrade instead
+			//SSHCommandResult updateResult = sshCommandRunner.runCommandAndWait("yum -y localupdate "+rpmPaths+" "+installOptions);
+			SSHCommandResult updateResult = sshCommandRunner.runCommandAndWait("rpm -v --upgrade "+rpmPaths);
+		}
+		// assert that all of the updated rpms are now installed
+		for (String rpmPath : rpmPaths.split(" ")) {
+			rpmPath = rpmPath.trim(); if (rpmPath.isEmpty()) continue;
+			String pkg = (new File(rpmPath)).getName().replaceFirst("\\.rpm$","");
+			String rpmPackageVersion = sshCommandRunner.runCommandAndWait("rpm --query --package "+rpmPath).getStdout().trim();
+			String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
+			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
+		}
 
 		
 		// remember the versions of the packages installed
