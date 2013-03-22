@@ -1323,8 +1323,11 @@ public class SubscriptionManagerTasks {
 		// system.name: jsefler-r63-server.usersys.redhat.com
 		// system.uuid: 1c404f7f-a77b-4afa-8748-0532f05435b5
 		// uname.machine: x86_64
+		// dmi.slot.slotlength: Short
+		// dmi.slot.type:slotbuswidth: x16
+		// dmi.slot.type:slottype: PCI Express
 		
-		String factNameRegex="^[\\w\\.\\(\\)-]+: ";
+		String factNameRegex="^[\\w\\.\\(\\)-:]+: ";
 		Pattern pattern = Pattern.compile(factNameRegex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(factsListAsString);
 		while (matcher.find()) {
