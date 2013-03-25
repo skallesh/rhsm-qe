@@ -694,17 +694,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttachSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
-//		// TEMPORARY WORKAROUND FOR BUG
-//		String bugId="889204"; 
-//		Boolean invokeWorkaroundWhileBugIsOpen = true;
-//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-//		if (invokeWorkaroundWhileBugIsOpen) {
-//			// must cleanup utf8-subscription-sku to avoid contaminating other tests; then skip this test
-//			afterGroupForSubscriptionContainingUTF8CharacterTests();
-//			// Bug 889204 - encountering the following stderr msg when subscription name contains UTF8 chars: [priority,] message string
-//			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
-//		}
-//		// END OF WORKAROUND
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId="889204";	// Bug 889204 - encountering the following stderr msg when subscription name contains UTF8 chars: [priority,] message string
+		Boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			// must cleanup utf8-subscription-sku to avoid contaminating other tests; then skip this test
+			afterGroupForSubscriptionContainingUTF8CharacterTests();
+			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
 			
 		SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(null, clienttasks.command+" attach --pool "+poolForSubscriptionContainingUTF8Character.poolId);
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Successfully attached a subscription for: %s",subscriptionNameForSubscriptionContainingUTF8Character), "Stdout from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
@@ -712,20 +711,19 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
 	}
 	@Test(	description="rct: cat-cert an entitlement containing UTF-8 character(s)",
-			groups={"SubscriptionContainingUTF8CharacterTests"/*,"blockedByBug-890296" TODO UNCOMMENT AFTER BUG IS FIXED AND REMOVE WORKAROUND FOR BUG 890296 */},
+			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-890296"},
 			dependsOnMethods={"AttachSubscriptionContainingUTF8Character_Test"},
-			priority=120,
+			priority=130,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void CatCertContainingUTF8Character_Test() throws JSONException, Exception {
 		// TEMPORARY WORKAROUND FOR BUG
-		String bugId="890296"; 
+		String bugId="890296";	// Bug 890296 - 'ascii' codec can't encode character u'\u2013'.
 		Boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// must cleanup utf8-subscription-sku to avoid contaminating other tests; then skip this test
 			afterGroupForSubscriptionContainingUTF8CharacterTests();
-			// Bug 890296 - 'ascii' codec can't encode character u'\u2013'.
 			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
 		}
 		// END OF WORKAROUND
@@ -766,7 +764,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: subcription manager remove a consumed subscription containing UTF-8 character(s)",
 			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204"},
 			dependsOnMethods={"CatCertContainingUTF8Character_Test"},
-			priority=130,
+			priority=140,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RemoveSubscriptionContainingUTF8Character_Test() {
