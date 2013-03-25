@@ -354,27 +354,45 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
+	@Test(	description="subscription-manager: verify the system.compliant fact when system is unregistered and has installed products (should be incompliant)",
+			groups={"RHNClassicTests","cli.tests"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifySystemCompliantFactWhenUnregistered_Test() {
+		// unregister
+		clienttasks.unregister(null,null,null);
+		configureProductCertDirAfterClass();
+		
+		// pre-test check for installed products
+		if (clienttasks.getCurrentlyInstalledProducts().isEmpty()) throw new SkipException("This test requires that at least one product cert is installed.");
+		
+		// 3/11/2013 DESIGN CHANGE DUE TO NEW SERVER-SIDE COMPLIANCE IMPLEMENTED BY dgoodwin.  NO MORE SYSTEM FACT FOR COMPLIANCE.
+		log.warning("DESIGN UPDATE! Client-side compliance determination has been eliminated and moved to the Server.  Consequently, an unregistered system by definition no longer has a compliance value.  We will simply assert that the former system compliance fact '"+factNameForSystemCompliance+"' has been eliminated.");
+		Assert.assertNull( clienttasks.getFacts().get(factNameForSystemCompliance), "The system's value for fact '"+factNameForSystemCompliance+"' has been eliminated.");
+		if (true) return;	// the rest of this test is no longer applicable to the new server-side compliance design
+		
+		// first assert that we are not compliant since we have not yet registered to RHN Classic
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
+				"While at least one product cert is installed and we are NOT registered to RHN Classic, the system should NOT be compliant (see value for fact '"+factNameForSystemCompliance+"').");
+	}
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact when system is already registered to RHN Classic",
 			groups={"blockedByBug-742027","RHNClassicTests","cli.tests"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenUnregistered_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test() {
 		
-		// pre-test check for installed products
-		clienttasks.unregister(null,null,null);
-		configureProductCertDirAfterClass();
-		if (clienttasks.getCurrentlyInstalledProducts().isEmpty()) throw new SkipException("This test requires that at least one product cert is installed.");
-
-		// first assert that we are not compliant since we have not yet registered to RHN Classic
-		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
-				"While at least one product cert is installed and we are NOT registered to RHN Classic, the system should NOT be compliant (see value for fact '"+factNameForSystemCompliance+"').");
-
 		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
 		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
 		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
-
+		
+		// 3/11/2013 DESIGN CHANGE DUE TO NEW SERVER-SIDE COMPLIANCE IMPLEMENTED BY dgoodwin.  NO MORE SYSTEM FACT FOR COMPLIANCE.
+		log.warning("DESIGN UPDATE! Client-side compliance determination has been eliminated and moved to the Server.  Consequently, the system compliance fact '"+factNameForSystemCompliance+"' has been eliminated.");
+		log.warning("We will simply pass this test so that the subsequent VerifyRhsmCompliancedWhenRegisteredToRHNClassic_Test will be attempted.");
+		if (true) return;	// the rest of this test is no longer applicable to the new server-side compliance design
+		
 		// now assert compliance
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"By definition, being registered to RHN Classic implies the system IS compliant no matter what products are installed (see value for fact '"+factNameForSystemCompliance+"').");
