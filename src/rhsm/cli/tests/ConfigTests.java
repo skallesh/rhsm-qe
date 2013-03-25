@@ -217,7 +217,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 
 	@Test(	description="subscription-manager: use config module to simultaneously remove multiple rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
-			groups={"blockedByBug-735695"},
+			groups={"blockedByBug-735695","blockedByBug-927350"},
 			//dependsOnMethods={"ConfigGetSectionNameValueAndVerifyDefault_Test"}, alwaysRun=true,
 			priority=50,
 			enabled=true)
