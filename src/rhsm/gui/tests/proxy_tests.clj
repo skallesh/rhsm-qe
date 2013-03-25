@@ -12,10 +12,13 @@
   (:import [org.testng.annotations
             Test
             BeforeClass
-            AfterClass]))
+            AfterClass
+            BeforeGroups
+            AfterGroups]))
 
 (def auth-log "/var/log/squid/access.log")
 (def noauth-log "/var/log/tinyproxy.log")
+(def proxy-success "Proxy connection succeeded")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
@@ -135,6 +138,41 @@
                            (tasks/ui getallstates :test-connection))))
         (verify (= "" (tasks/ui gettextvalue :connection-status)))
         (finally (tasks/ui click :close-proxy))))
+
+(defn ^{BeforeGroups {:groups ["proxy"]
+                      :value ["proxy-enabled-check-status"]}}
+  before_test_proxy_with_blank_fields[_]
+  (tasks/ui click :configure-proxy)
+  (tasks/ui check :proxy-checkbox))
+
+(defn ^{Test {:groups ["proxy"
+                       "proxy-enabled-check-status"
+                       "blockedByBug-927340"]
+              :dependsOnMethods ["disable_proxy"]}}
+  test_proxy_with_blank_proxy
+  "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
+  [_]
+  (tasks/ui click :test-connection)
+  (let [message (tasks/ui gettextvalue :connection-status)]
+    (verify (not (= message proxy-success)))))
+
+(defn ^{Test {:groups ["proxy"
+                       "proxy-enabled-check-status"]
+              :dependsOnMethods ["test_proxy_with_blank_proxy" "disable_proxy"]}}
+  test_proxy_with_blank_credentials
+  "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
+  [_]
+  (tasks/ui click :authentication-checkbox)
+  (tasks/ui click :test-connection)
+  (let [message (tasks/ui gettextvalue :connection-status)]
+    (verify (not (= message proxy-success)))))  
+
+(defn ^{AfterGroups {:groups ["proxy"]
+                     :value ["proxy-enabled-check-status"]}}
+  after_test_proxy_with_blank_fields[_]
+  (tasks/ui uncheck :proxy-checkbox)
+  (tasks/ui uncheck :authentication-checkbox)
+  (tasks/ui click :close-proxy))
 
 (defn ^{Test {:groups ["proxy"]}}
   test_bad_proxy
