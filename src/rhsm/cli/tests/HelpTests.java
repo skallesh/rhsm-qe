@@ -851,7 +851,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			rhsmIconOptions.add("-f, --force-icon=TYPE");
 			rhsmIconOptions.add("-i, --check-immediately");
 			rhsmIconOptions.add("--display=DISPLAY");
-			for (String helpOption : options.get(0).split(" *, *")) {	// "-?, --help"
+			for (String helpOption : rhsmIconOptions.get(0).split(" *, *")) {	// "-?, --help"
 				String rhsmIconHelpCommand = command+" "+helpOption;
 				List <String> usages = new ArrayList<String>();
 				String usage = command+" [OPTIONS]";
