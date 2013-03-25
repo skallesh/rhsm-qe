@@ -688,23 +688,23 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(poolForSubscriptionContainingUTF8Character.subscriptionName, subscriptionNameForSubscriptionContainingUTF8Character, "asserting the subscription name.");
 	}
 	@Test(	description="subscription-manager: subcription manager attach a subscription containing UTF-8 character(s)",
-			groups={"SubscriptionContainingUTF8CharacterTests"/*,"blockedByBug-889204" TODO UNCOMMENT AFTER BUG IS FIXED AND REMOVE WORKAROUND FOR BUG 889204 */},
+			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204"},
 			dependsOnMethods={"ListSubscriptionContainingUTF8Character_Test"},
 			priority=120,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttachSubscriptionContainingUTF8Character_Test() throws JSONException, Exception {
-		// TEMPORARY WORKAROUND FOR BUG
-		String bugId="889204"; 
-		Boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			// must cleanup utf8-subscription-sku to avoid contaminating other tests; then skip this test
-			afterGroupForSubscriptionContainingUTF8CharacterTests();
-			// Bug 889204 - encountering the following stderr msg when subscription name contains UTF8 chars: [priority,] message string
-			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
-		}
-		// END OF WORKAROUND
+//		// TEMPORARY WORKAROUND FOR BUG
+//		String bugId="889204"; 
+//		Boolean invokeWorkaroundWhileBugIsOpen = true;
+//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//		if (invokeWorkaroundWhileBugIsOpen) {
+//			// must cleanup utf8-subscription-sku to avoid contaminating other tests; then skip this test
+//			afterGroupForSubscriptionContainingUTF8CharacterTests();
+//			// Bug 889204 - encountering the following stderr msg when subscription name contains UTF8 chars: [priority,] message string
+//			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
+//		}
+//		// END OF WORKAROUND
 			
 		SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(null, clienttasks.command+" attach --pool "+poolForSubscriptionContainingUTF8Character.poolId);
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Successfully attached a subscription for: %s",subscriptionNameForSubscriptionContainingUTF8Character), "Stdout from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
