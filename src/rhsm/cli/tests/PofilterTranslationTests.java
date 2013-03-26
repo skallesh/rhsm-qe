@@ -60,7 +60,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   	https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.1.X
  *   
  *   	Subscription Manger 1.8.X Translation Request
- *   	https://engineering.redhat.com/rt/Ticket/Display.html?id=187204
+ *  	https://engineering.redhat.com/rt/Ticket/Display.html?id=192038
  *   	https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.8.X
  *   
  *   Translators:
@@ -198,9 +198,14 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		// ignore the following special cases of acceptable results for each of the pofilterTests..........
 				
 		if (pofilterTest.equals("accelerators")) {
-			if (translationFile.getPath().contains("/hi/")) ignorableMsgIds = Arrays.asList("proxy url in the form of proxy_hostname:proxy_port");
-			if (translationFile.getPath().contains("/ru/")) ignorableMsgIds = Arrays.asList("proxy url in the form of proxy_hostname:proxy_port","%%prog %s [OPTIONS] CERT_FILE");
-			if (translationFile.getPath().contains("/it/")) ignorableMsgIds = Arrays.asList("activation_key_entry"); // msgid "activation_key_entry"; msgstr "voce chiave di attivazione"
+			// these msgids are ignorable for all accelerator language tests because they are NOT used as gnome menu items
+			// Note: If these fail the accelerators test, then that means the underscored words were translated which may or may
+			// not be a bug as determined by the notranslatewords test or VerifyTranslationsDoNotTranslateSubStrings_Test.
+			ignorableMsgIds.add("proxy url in the form of proxy_hostname:proxy_port");
+			ignorableMsgIds.add("proxy URL in the form of proxy_hostname:proxy_port");
+			ignorableMsgIds.add("%%prog %s [OPTIONS] CERT_FILE");
+			ignorableMsgIds.add("%%prog %s [OPTIONS] MANIFEST_FILE");
+			ignorableMsgIds.addAll(Arrays.asList(new String[]{"progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox"}));	// these are various GTK widget ids, not gnome menu items
 		}
 		
 		if (pofilterTest.equals("newlines")) {
@@ -376,13 +381,14 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/bn_IN/"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Validity Applet","Auto-attach"));
 			if (translationFile.getPath().contains("/ta_IN/"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","Repo Id:              \\t%s","Repo Url:             \\t%s","Auto-attach"));
 			if (translationFile.getPath().contains("/pt_BR/"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","<b>Status:</b>","Login:","Virtual","_Help","virtual", "Repo Id:              \\t%s", "Arch:                 \\t%s"/* omaciel says "Arquitetura:" is better */, "Pool Id:              \\t%s"/* omaciel says "ID do pool:" is better */));
-			if (translationFile.getPath().contains("/de_DE/"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Name","Name:                 \\t%s","Status","<b>Status:</b>","Status:               \\t%s","Version: %s","Version","Version:              \\t%s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: "));
-			if (translationFile.getPath().contains("/es_ES/"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","No","%s: error: %s"));
+			if (translationFile.getPath().contains("/de_DE/"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","Status","<b>Status:</b>","Status:               \\t%s","Status:","Version: %s","Version","Version:              \\t%s","Version:","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server"));
+			if (translationFile.getPath().contains("/es_ES/"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","No","%s: error: %s","General:"));
 			if (translationFile.getPath().contains("/te/"))		ignorableMsgIds.addAll(Arrays.asList("page 2"));
 			if (translationFile.getPath().contains("/pa/"))		ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
-			if (translationFile.getPath().contains("/fr/"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Version","page 2"));
-			if (translationFile.getPath().contains("/it/"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","org id: %s","Account","<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch","Login:","No","Password:","Release: %s","Password: "));
+			if (translationFile.getPath().contains("/fr/"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Architectures","Version","page 2"));
+			if (translationFile.getPath().contains("/it/"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","org id: %s","Account","<b>Account:</b>","Account:              \\t%s","Account","<b>Arch:</b>","Arch:                 \\t%s","Arch:","Arch","Login:","No","Password:","Release: %s","Password: ","Server"));
 			if (translationFile.getPath().contains("/zh_TW/"))	ignorableMsgIds.addAll(Arrays.asList("Auto-attach"));
+			if (translationFile.getPath().contains("/zh_CN/"))	ignorableMsgIds.addAll(Arrays.asList("Section: %s, Name: %s"));
 			if (translationFile.getPath().contains("/bn_IN/"))	ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
 			if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
 			if (translationFile.getPath().contains("/zh_TW/"))	ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
@@ -715,10 +721,24 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 887890 - [pa_IN] polfilter unchanged test failed for msgid "Activation Keys are alphanumeric strings that..."
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pa/")) bugIds.add("887890");
 				// Bug 908886 - [ta_IN][pt_BR][de_DE][zh_CN] pofilter unchanged test fails against subscription-manager 1.8.X
+				// if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("908886");
+				// if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("908886");
+				// if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/de_DE/")) bugIds.add("908886");
+				// if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("908886");
+				// Bug 908886 - [ml][ta_IN][kn][pt_BR][es_ES][it][hi][zh_CN][te][ja][pa][ko][or] pofilter unchanged test fails against subscription-manager 1.8.X
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ml/")) bugIds.add("908886");
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/kn/")) bugIds.add("908886");
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("908886");
-				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/de_DE/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/it/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/hi/")) bugIds.add("908886");
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/te/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ja/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pa/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ko/")) bugIds.add("908886");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/or/")) bugIds.add("908886");
 				// Bug 911764 - [mr] pofilter unchanged test fails for subscription-manager 1.8.X
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/mr/")) bugIds.add("911764");
 				// Bug 911772 - [ml] pofilter unchanged test fails for subscription-manager 1.8.X
@@ -732,6 +752,12 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ko/")) bugIds.add("911779");
 				// Bug 921126 - [as] msgid "%%prog %s [OPTIONS] MANIFEST_FILE" is not translated in 1.8.X
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/as/")) bugIds.add("921126");
+				// Bug 927979 - [kn] unchanged msgid "%%prog %s [OPTIONS] MANIFEST_FILE" in subscription-manager 1.8.X
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/kn/")) bugIds.add("927979");
+				// Bug 927990 - [ta_IN] unchanged translations for several msgids containing "OPTIONS" in subscription-manager/1.8.X
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ta/")) bugIds.add("927990");
+				// Bug 928000 - [ml] unchanged translations for msgids containing the word OPTIONS
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ml/")) bugIds.add("928000");
 				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");

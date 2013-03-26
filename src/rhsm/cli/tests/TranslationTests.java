@@ -290,7 +290,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify that msgid \"deprecated, see auto-attach-interval\" did NOT translate the command line option \"auto-attach-interval\" for all languages",
-			groups={"blockedByBug-891375","blockedByBug-891434","blockedByBug-891377"},
+			groups={"blockedByBug-891375","blockedByBug-891434","blockedByBug-891377","blockedByBug-928073","blockedByBug-928082"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyMsdIdDeprecatedSeeAutoAttachInterval_Test() {
@@ -388,13 +388,23 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationsDoNotTranslateSubStrings_Test(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
-		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat","RHN","RHN Classic","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
-		// TODO ADD THESE TOO List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Management", "Red Hat Global Support Services" "Red Hat Customer Portal", "RHN Satellite");
+		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat",/*"RHN","RHN Classic", TRANSLATORS CHOICE*/"subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
+		// TODO CONSIDER ADDING THESE TOO List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Management", "Red Hat Global Support Services" "Red Hat Customer Portal", "RHN Satellite");
+		
+		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();
+		ignoreTheseExceptionalCases.add("View and configure subscription-manager plugins");
+		ignoreTheseExceptionalCases.add("list subscription-manager plugin hooks");
+		ignoreTheseExceptionalCases.add("list subscription-manager plugin slots");
+		ignoreTheseExceptionalCases.add("list subscription-manager plugins");
 		
 		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
 			for (Translation translation: translationFileMapForSubscriptionManager.get(translationFile)) {
 				for (String subString : doNotTranslateSubStrings) {
 					if (translation.msgid.contains(subString) && !translation.msgstr.contains(subString)) {
+						if (ignoreTheseExceptionalCases.contains(translation.msgid)) {
+							log.info("Exceptional case: Ignoring translated substring \""+subString+"\" in translation: "+translation);
+							continue;
+						}
 						log.warning("Substring \""+subString+"\" should remain untranslated in the "+translationFile+" translation: "+translation);
 						warningsFound = true;
 					}
