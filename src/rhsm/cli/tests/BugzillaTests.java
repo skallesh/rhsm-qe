@@ -92,6 +92,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
+	clienttasks.register(username, password, null, null, null, null, null, null, null, null,(String)null, serverurl,null, null, true, null, null, null, null);
 	clienttasks.service_level(null, null, null, null, username, password, null, serverurl, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
@@ -101,6 +102,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
 	}
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -206,11 +209,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null);
-		Assert.assertFalse(RemoteFileTasks.testExists(client,"/etc/yum.repos.d/redhat.repo"));
+		Assert.assertTrue(RemoteFileTasks.testExists(client,"/etc/yum.repos.d/redhat.repo"));
 		String result=client.runCommandAndWait("yum repolist all").getStdout();
 		Assert.assertContainsNoMatch(result,"repolist: 0");
-		
-		
 	}
 	
 	
@@ -551,9 +552,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	SyslogMessage="Removed subscription for '"+productId+"'";
 	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
 	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
-
-	
-
 
 	}
 	
@@ -2627,6 +2625,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 		Integer healFrequency = 2;
 		String filename = null;
+		System.out.println(RemoteFileTasks.testExists(client, "/etc/pki/tmp1"));
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -3091,9 +3090,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
-		client.runCommandAndWait("mv " + "/etc/pki/tmp1/*.pem" + " "
+		client.runCommandAndWait("mv " + "/root/temp1/*.pem" + " "
 				+ clienttasks.productCertDir);
-		client.runCommandAndWait("rm -rf " + "/etc/pki/tmp1");
+		client.runCommandAndWait("rm -rf " + "/root/temp1");
 	}
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifyautosubscribeTest",
@@ -3129,11 +3128,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	protected void moveProductCertFiles(String filename) throws IOException {
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
-		client.runCommandAndWait("mkdir -p " + "/etc/pki/tmp1");
-		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/"
-					+ filename + " " + "/etc/pki/tmp1/");
-			
-	}
+		if(!(RemoteFileTasks.testExists(client, "/root/temp1/"))){
+			client.runCommandAndWait("mkdir " + "/root/temp1/");
+		}
+			client.runCommandAndWait("mv " + clienttasks.productCertDir + "/"+ filename + " " + "/root/temp1/");
+	
+		}
+	
 
 	protected String getEntitlementCertFilesWithPermissions() throws IOException {
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
@@ -3377,11 +3378,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	@AfterGroups(groups = {"setup"}, value = {"Verify500ErrorOnStage","ServerURLInRHSMFile","DipslayServicelevelWhenRegisteredToDiffrentMachine","ServerUrloptionValuesInRHSMFile"})
 	public void restoreRHSMConfFileValues() {
+		clienttasks.unregister(null, null, null);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "server","hostname".toLowerCase(),configuredHostname});
 		listOfSectionNameValues.add(new String[] { "server","port".toLowerCase(), "8443" });
 		listOfSectionNameValues.add(new String[] { "server","prefix".toLowerCase(), "/candlepin" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
 	}
 	
 	@BeforeGroups(groups="ExpirationOfEntitlementCerts")
