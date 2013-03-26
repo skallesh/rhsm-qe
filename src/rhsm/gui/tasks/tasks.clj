@@ -21,6 +21,8 @@
 
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
+(def rhsm-gui-pid (atom nil))
+
 
 (defn get-release []
   (let [release (.getStdout (.runCommandAndWait
@@ -96,11 +98,20 @@
   ([]
      (start-app (@config :binary-path) :main-window (get-default-locale)))
   ([path]
-     (ui launchapp path [] 10 1 (get-default-locale)))
+     (start-app path nil (get-default-locale)))
   ([path window lang]
-     (ui launchapp path [] 10 1 lang)
-     (ui waittillwindowexist window 30)
-     (ui maximizewindow window)))
+     (let [pid (ui launchapp path [] 10 1 lang)]
+       (reset! rhsm-gui-pid pid)
+       (log/info (str "subscripton-manager-gui pid: " @rhsm-gui-pid)))
+     (when window
+       (do
+         (ui waittillwindowexist window 30)
+         (try (assert (bool (ui guiexist window))
+                      "subsciption-manager-gui did not launch!")
+              (catch AssertionError e
+                (reset! rhsm-gui-pid nil)
+                (throw e)))
+         (ui maximizewindow window)))))
 
 (defn kill-app
   "Kills the subscription-manager-gui"
@@ -110,7 +121,8 @@
         (if (and (not result?) force?)
           (do
             (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
-            (ui waittillwindownotexist :main-window 30)))))
+            (ui waittillwindownotexist :main-window 30))))
+      (sleep 1000))
   ([]
      (if (= :rhel7 (get-release))
        (kill-app false) ;; force quitting on rhel7 destroys ldtp
