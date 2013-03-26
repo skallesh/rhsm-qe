@@ -305,8 +305,10 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	}
 	 @AfterGroups(groups="setup",value={"DisableCertV3ForRamBasedSubscription"})
 	 public void restartTomcatWithCertV3Enabled() {
+	 clienttasks.unregister(null, null, null);
 	 servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "true");
 	 servertasks.restartTomcat();
+	 clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
 	 }
 
 	 
