@@ -813,6 +813,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// find a randomly available product id
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		if (pools.isEmpty()) {
+			log.warning("Skipping createFutureSubscriptionPoolBeforeClass() when no pools are available.");
+			return;		
+		}
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		String randomAvailableProductId = pool.productId;
 		
