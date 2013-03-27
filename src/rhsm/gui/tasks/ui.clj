@@ -154,7 +154,6 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :proxy-config-dialog)
        (merge (same-name capitalize [:proxy-checkbox
                                      :authentication-checkbox
-                                     :proxy-text
                                      :password-text
                                      :username-text])
               {:close-proxy "Close Button"
