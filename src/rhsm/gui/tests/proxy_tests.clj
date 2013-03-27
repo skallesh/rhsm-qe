@@ -152,6 +152,7 @@
   test_proxy_with_blank_proxy
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
   [_]
+  (tasks/ui settextvalue :proxy_test "")
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
     (verify (not (= message proxy-success)))))
@@ -162,7 +163,9 @@
   test_proxy_with_blank_credentials
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
   [_]
-  (tasks/ui click :authentication-checkbox)
+  (tasks/ui check :authentication-checkbox)
+  (tasks/ui settextvalue :password-text "")
+  (tasks/ui settextvalue :username-text "")
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
     (verify (not (= message proxy-success)))))  
