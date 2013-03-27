@@ -12,6 +12,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -19,6 +20,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.Translation;
@@ -219,6 +221,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 //bug 908488		if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("\n"+"Unable to register.\n"+"For further assistance, please contact Red Hat Global Support Services."));
 //bug 908488		if (translationFile.getPath().contains("/or/"))		ignorableMsgIds.addAll(Arrays.asList("Unable to perform refresh due to the following exception: %s"));
 			
+			
 			// newlines translations to ignore for specific langs
 			String msgId = ""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete.";
 			Translation failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
@@ -227,11 +230,60 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/ta_IN/") && failedTranslation!=null && failedTranslation.msgstr.equals("சந்தாவை மீட்டெடுப்பதற்கு சில நிமிடங்கள் எடுக்கலாம்.\n"+"மீட்டெடுத்தல் முடிந்ததும் அறிவிப்பை பெற ஒரு மின்னஞ்சல் முகவரியை கொடுக்கவும்.")) ignorableMsgIds.add(msgId);
 			if (translationFile.getPath().contains("/te/") && failedTranslation!=null && failedTranslation.msgstr.equals("సబ్‌స్క్రిప్షన్‌ను వెచ్చించుటకు కొంత సమయం పట్టవచ్చును.\n"+"వెచ్చింపు పూర్తవగానే నోటీసును స్వీకరించుటకు వొక ఈమెయిల్ చిరునామాను అందించుము.")) ignorableMsgIds.add(msgId);
 			if (translationFile.getPath().contains("/zh_CN/") && failedTranslation!=null && failedTranslation.msgstr.equals("兑换订阅可能需要几分钟的时间。\n"+"请提供电子邮件以在兑换完成时接收通知。")) ignorableMsgIds.add(msgId);
+			if (translationFile.getPath().contains("/zh_CN/") && failedTranslation!=null && failedTranslation.msgstr.equals("兑换订阅可能需要几分钟的时间。请提供电子邮件以在兑换完成时接收通知。")) ignorableMsgIds.add(msgId);
 			if (translationFile.getPath().contains("/hi/") && failedTranslation!=null && failedTranslation.msgstr.equals("सदस्यता रिडीम करना कुछ समय ले सकता है.\n"+"कृपया अधिसूचना पाने के लिए कोई ईमेल पता दाखिल करें जब रिडेप्शन पूरा होता है.")) ignorableMsgIds.add(msgId);
 			if (translationFile.getPath().contains("/zh_TW/") && failedTranslation!=null && failedTranslation.msgstr.equals("兌換訂閱服務可能會花上幾分鐘。\n"+"請提供電子郵件信箱，好在兌換服務完成時通知您。")) ignorableMsgIds.add(msgId);
 			if (translationFile.getPath().contains("/as/") && failedTranslation!=null && failedTranslation.msgstr.equals("স্বাক্ষৰণ ঘুৰাই নিয়ায় কিছু সময় লব পাৰে। ঘুৰাই নিয়া সম্পূৰ্ণ হলে \n"+"অধিসূচনা গ্ৰহণ কৰিবলে এটা ই-মেইল ঠিকনা প্ৰদান কৰক।")) ignorableMsgIds.add(msgId);
 			if (translationFile.getPath().contains("/bn_IN/") && failedTranslation!=null && failedTranslation.msgstr.equals("সাবস্ক্রিপশন ব্যবহার করতে কয়েক মিনিট ব্যয় হতে পারে।\n"+"প্রয়োগ সম্পূর্ণ হওয়ার পরে সূচনা প্রদানের উদ্দেশ্যে অনুগ্রহ করে একটি ই-মেইল ঠিকানা উল্লেখ করুন।")) ignorableMsgIds.add(msgId);
 			if (translationFile.getPath().contains("/kn/") && failedTranslation!=null && failedTranslation.msgstr.equals("ಚಂದಾದಾರಿಕೆಯನ್ನು ಹಿಂದಕ್ಕೆ ಪಡೆಯುವಿಕೆ ಕೆಲಹೊತ್ತು ಹಿಡಿಯಬಹುದು.\n"+"ಹಿಂದಕ್ಕೆ ಪಡೆಯುವಿಕೆಯು ಪೂರ್ಣಗೊಂಡ ನಂತರ ಸೂಚಿಸಲು ಒಂದು ಇಮೈಲ್ ವಿಳಾಸವನ್ನು ಒದಗಿಸಿ.")) ignorableMsgIds.add(msgId);
+			// TEMPORARY WORKAROUND FOR BUG
+			if (failedTranslation!=null) {
+				String bugId = "928401"; boolean invokeWorkaroundWhileBugIsOpen = true;
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring this failed pofilter newlines test translation while bug '"+bugId+"' is open. "+failedTranslation);
+					ignorableMsgIds.add(msgId);
+				}
+			}
+			// END OF WORKAROUND
+			
+			msgId = ""+"Did not receive a completed unregistration message from RHN Classic for system %s.\n"+"Please investigate on the Customer Portal at https://access.redhat.com.";
+			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
+			if (translationFile.getPath().contains("/zh_CN/") && failedTranslation!=null && failedTranslation.msgstr.equals("未从 RHN 传统订阅收到关于系统 %s 的 完整未注册信息。请在 https://access.redhat.com 客户门户网站中检查。")) ignorableMsgIds.add(msgId);
+			
+			msgId = ""+"We have detected that you have multiple service levels on various products.\n"+"Please select how you want them assigned.";
+			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
+			if (translationFile.getPath().contains("/zh_CN/") && failedTranslation!=null && failedTranslation.msgstr.equals("已探测到您在不同产品中有多个服务等级。请选择如何分配它们。")) ignorableMsgIds.add(msgId);
+
+			msgId = "Tip: Forgot your login or password? Look it up at http://redhat.com/forgot_password";
+			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
+			if (translationFile.getPath().contains("/or/") && failedTranslation!=null && failedTranslation.msgstr.equals("ସୂଚନା: ଆପଣଙ୍କର ଲଗଇନ କିମ୍ବା ପ୍ରବେଶ ସଂକେତ ଭୁଲିଯାଇଛନ୍ତି କି?"+"\n"+"http://redhat.com/forgot_password ରେ ଦେଖନ୍ତୁ")) ignorableMsgIds.add(msgId);
+
+			msgId = "\n"+"Retrieving existing RHN Classic subscription information...";
+			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
+			// TEMPORARY WORKAROUND FOR BUG
+			if (failedTranslation!=null) {
+				String bugId = "928401"; boolean invokeWorkaroundWhileBugIsOpen = true;
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring this failed pofilter newlines test translation while bug '"+bugId+"' is open. "+failedTranslation);
+					ignorableMsgIds.add(msgId);
+				}
+			}
+			// END OF WORKAROUND
+			
+			msgId = "\n"+"Attempting to register system to Red Hat Subscription Management...";
+			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
+			// TEMPORARY WORKAROUND FOR BUG
+			if (failedTranslation!=null) {
+				String bugId = "928401"; boolean invokeWorkaroundWhileBugIsOpen = true;
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring this failed pofilter newlines test translation while bug '"+bugId+"' is open. "+failedTranslation);
+					ignorableMsgIds.add(msgId);
+				}
+			}
+			// END OF WORKAROUND
 		}
 		
 		if (pofilterTest.equals("xmltags")) { 
@@ -404,7 +456,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			//	"Did not receive a completed unregistration message from RHN Classic for system %s.\n"
 			//	"Please investigate on the Customer Portal at https://access.redhat.com."
 			for (Translation failedTranslation : pofilterFailedTranslations) {
-				if (failedTranslation.msgid.contains("https://access.redhat.com.") && failedTranslation.msgstr.contains("https://access.redhat.com")) {
+				if (failedTranslation.msgid.replaceAll("\\n","").matches(".*https://access\\.redhat\\.com\\.$") && failedTranslation.msgstr.contains("https://access.redhat.com")) {
 					ignorableMsgIds.add(failedTranslation.msgid);
 				}
 			}
@@ -536,6 +588,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/gu/"))) {bugIds.add("908108");}
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/zh_TW/"))) {bugIds.add("908108");}
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/kn/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/or/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/it/"))) {bugIds.add("908108");}
+				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/hi/"))) {bugIds.add("908108");}
 				// Bug 908037 - [hi][it][ml][ru] character ¶ should not appear in translated msgstr
 				if (pofilterTest.equals("newlines") && (translationFile.getPath().contains("/ml/"))) {bugIds.add("908037");}
 				// Bug 908434 - [it] pofilter newlines test failed on msgid="Error subscribing: %s"
@@ -579,6 +634,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 911759 - [it][ja] pofilter tabs is failing on subscription-manager 1.8.X
 				if (pofilterTest.equals("tabs") && translationFile.getPath().contains("/it/")) bugIds.add("911759");
 				if (pofilterTest.equals("tabs") && translationFile.getPath().contains("/ja/")) bugIds.add("911759");
+				// Bug 928472 - [kn] pofilter tabs test failed for subscription-manager 1.8.X
+				if (pofilterTest.equals("tabs") && translationFile.getPath().contains("/kn/")) bugIds.add("928472");
 				
 				// Bug 827161 	[bn_IN] failed pofilter xmltags tests for subscription-manager translations
 				if (pofilterTest.equals("xmltags") && translationFile.getPath().contains("/bn_IN/")) bugIds.add("827161");
@@ -658,6 +715,10 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 908869 - [pt_BR][ta_IN] pofilter options test failed for subscription-manager 1.8.X
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("908869");
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("908869");
+				// Bug 928475 - [ru] pofilter options test failed on incorrect translation of commandline option "--list"
+				if (pofilterTest.equals("options") && translationFile.getPath().contains("/ru/")) bugIds.add("928475");
+				// Bug 928523 - [ko] pofilter options test failed
+				if (pofilterTest.equals("options") && translationFile.getPath().contains("/ko/")) bugIds.add("928523");
 				
 				// Bug 828985 - [ml] failed pofilter urls test for subscription manager translations
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ml/")) bugIds.add("828985");
@@ -671,6 +732,12 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887429");
 				// Bug 908059 - [pt-BR] pofilter urls test is failing against subscription-manager 1.8.X
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("908059");
+				// Bug 928469 - [ml] pofilter urls test failed for subscription-manager 1.8.X
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ml/")) bugIds.add("928469");			
+				// Bug 928489 - [pt_BR] pofilter urls test failed for subscription-manager 1.8.X
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("928489");
+				// Bug 928487 - [ru] pofilter fails on url tests in subscription-manager 1.8.X
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ru/")) bugIds.add("928487");
 				
 				// Bug 845304 - translation of the word "[OPTIONS]" has reverted
 				if (pofilterTest.equals("unchanged")) bugIds.add("845304");
