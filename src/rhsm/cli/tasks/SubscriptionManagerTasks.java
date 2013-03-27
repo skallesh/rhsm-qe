@@ -3001,6 +3001,8 @@ public class SubscriptionManagerTasks {
 		defaultNames.add("certCheckInterval");
 		defaultNames.add("autoAttachInterval");
 		defaultNames.add("report_package_profile");
+		defaultNames.add("pluginDir");
+		defaultNames.add("pluginConfDir");
 		
 		// lowercase all of the defaultNames when requested
 		if (toLowerCase) for (String defaultName : defaultNames) {

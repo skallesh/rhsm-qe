@@ -447,6 +447,9 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"repo_ca_cert",			"/tmp/rhsm/repo_ca_cert.pem"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"ssl_verify_depth",		"1"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("797996"),	"rhsm",			"manage_repos",			"0"}));
+		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"report_package_profile",	"0"}));
+		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"plugindir",				"/tmp/rhsm/plugindir"}));
+		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"pluginconfdir",			"/tmp/rhsm/pluginconfdir"}));
 		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsm",			"certfrequency",		"100"}));	// obsoleted by bug 882459
 		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsm",			"healfrequency",		"1000"}));	// obsoleted by bug 882459
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsm",			"certcheckinterval",		"100"}));
