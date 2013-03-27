@@ -776,7 +776,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromSerialNumber(consumedProductSubscription.serialNumber);
 	}
 	@AfterClass(groups={"setup"})	// needed since @AfterGroups will skip when some of the tests within the group are skipped even when alwaysRun=true
-	@AfterGroups(groups={"setup"},value="SubscriptionContainingUTF8CharacterTests"/*,alwaysRun=true HAS NO EFFECT*/)
+	@AfterGroups(groups={"setup"},value="SubscriptionContainingUTF8CharacterTests",alwaysRun=true /* does not seem to have any effect */)
 	public void afterGroupForSubscriptionContainingUTF8CharacterTests() throws JSONException, Exception {
 		clienttasks.unregister_(null, null, null);	// to return any consumed subscriptions containing UTF8 characters
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForSubscriptionContainingUTF8Character);
