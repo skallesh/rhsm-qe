@@ -365,11 +365,13 @@
   subscribe_check_syslog
   "Asserts that subscribe events are logged in the syslog."
   [_]
-  (let [output (tasks/get-logging @clientcmd
+  (allsearch)
+  (let [subscription (rand-nth (tasks/get-table-elements :all-subscriptions-view 0))
+        output (tasks/get-logging @clientcmd
                                   sys-log
                                   "subscribe_check_syslog"
                                   nil
-                                  (subscribe_all))]
+                                  (tasks/subscribe subscription))]
       (verify (not (blank? output)))))
 
 (defn ^{Test {:groups ["subscribe" "blockedByBug-918617"]
@@ -377,11 +379,12 @@
   unsubscribe_check_syslog
   "Asserts that unsubscribe events are logged in the syslog."
   [_]
-  (let [output (tasks/get-logging @clientcmd
+  (let [subscription (rand-nth (tasks/get-table-elements :my-subscriptions-view 0))
+        output (tasks/get-logging @clientcmd
                                   sys-log
                                   "unsubscribe_check_syslog"
                                   nil
-                                  (unsubscribe_all))]
+                                  (tasks/unsubscribe subscription))]
       (verify (not (blank? output)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

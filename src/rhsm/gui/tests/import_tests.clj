@@ -237,7 +237,7 @@
                        "blockedByBug-691788"]
               :dependsOnMethods ["import_random"]}}
   import_and_reopen
-  "Assertst that the GUI can be restarted after an import has taken place."
+  "Asserts that the GUI can be restarted after an import has taken place."
   [_]
   (import_random nil)
   (tasks/restart-app)
