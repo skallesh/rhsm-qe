@@ -152,7 +152,7 @@
   test_proxy_with_blank_proxy
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
   [_]
-  (tasks/ui settextvalue :proxy_test "")
+  (tasks/ui settextvalue :proxy-location "")
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
     (verify (not (= message proxy-success)))))
