@@ -44,7 +44,7 @@
 (defn ^{Test {:groups ["system"
                        "blockedByBug-909823"]}}
   check_gtype_warnings
-  "Asserts that the libglade-WARNINGs are corrected."
+  "Asserts that the gtype WARNINGs are corrected."
   [_]
   (let [output (tasks/get-logging @clientcmd
                                   ldtpd-log
