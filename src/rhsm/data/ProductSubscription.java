@@ -33,7 +33,8 @@ public class ProductSubscription extends AbstractCommandLineData {
 	public Calendar endDate;
 	public String serviceLevel;
 	public String serviceType;
-	
+	public String poolId;		// added by bug 908671 // Including the pool ID in the certificate required a change to Candlepin.  If the pool ID is not present in the entitlement certificate, subscription-manager will report the pool ID as "Not Available".
+
 	public SubscriptionPool fromSubscriptionPool;
 	
 	public Boolean isExpired(){
@@ -78,6 +79,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 		if (endDate != null)		string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
 		if (serviceLevel != null)	string += String.format(" %s='%s'", "serviceLevel",serviceLevel);
 		if (serviceType != null)	string += String.format(" %s='%s'", "serviceType",serviceType);
+		if (poolId != null)			string += String.format(" %s='%s'", "poolId",poolId);
 		if (fromSubscriptionPool != null)		string += String.format(" %s='%s'", "fromPool",fromSubscriptionPool);
 
 		return string.trim();
@@ -225,6 +227,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 		regexes.put("serviceType",			"Service Type:(.*)");
 		regexes.put("startDate",			"Starts:(.*)");	// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
 		regexes.put("endDate",				"Ends:(.*)");	// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
+		regexes.put("poolId",				"Pool ID:(.*)");	// Bug 908671 - RFE: include pool id in list --consumed
 		
 		List<Map<String,String>> productList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
