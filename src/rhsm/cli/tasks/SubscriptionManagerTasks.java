@@ -3111,13 +3111,13 @@ public class SubscriptionManagerTasks {
 			String unregisterSuccessMsg = "System has been unregistered.";
 			
 			// TEMPORARY WORKAROUND FOR BUG
-			boolean invokeWorkaroundWhileBugIsOpen = true;
+			boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	VERIFIED
 			try {String bugId="878657"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) unregisterSuccessMsg = "System has been un-registered.";
 			// END OF WORKAROUND
 			
 			// TEMPORARY WORKAROUND FOR BUG
-			invokeWorkaroundWhileBugIsOpen = true;
+			invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED ERRATA
 			try {String bugId="800121"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("If 'NoneType' object message was thrown to stdout during unregister, we will ignore it while this bug is open.");
