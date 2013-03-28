@@ -347,8 +347,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyAutoSubscribeAbortsWhenNoProductsAreInstalled_Test() {
-		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
-		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
+		SSHCommandResult result = clienttasks.subscribe_(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
+		//String expectedMsg = autosubscribeCompliantMessage;
+		//Assert.assertTrue(result.getStdout().trim().startsWith(expectedMsg), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+expectedMsg);
+		String expectedMsg = "No Installed products on system. No need to attach subscriptions.";
+		Assert.assertEquals(result.getStdout().trim(),expectedMsg, "When the there are no installed products on the system, an attempt to auto-subscribe should be intercepted.");
 	}
 	
 	
