@@ -451,12 +451,22 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		if (pofilterTest.equals("urls")) {
 			if(translationFile.getPath().contains("/zh_CN/")) ignorableMsgIds.addAll(Arrays.asList("Server URL has an invalid scheme. http:// and https:// are supported"));
 			
-			// search for failed pofilter urls translation for the following msgid and then ignore the translations that "correctly" excluded the trailing grammar period from the url
-			//	msgid ""
-			//	"Did not receive a completed unregistration message from RHN Classic for system %s.\n"
-			//	"Please investigate on the Customer Portal at https://access.redhat.com."
+			// search for failed pofilter urls translation and ignore acceptable cases
 			for (Translation failedTranslation : pofilterFailedTranslations) {
+				//	msgid ""
+				//	"Did not receive a completed unregistration message from RHN Classic for system %s.\n"
+				//	"Please investigate on the Customer Portal at https://access.redhat.com."
+				// ignore translations that excluded the trailing period on the url
 				if (failedTranslation.msgid.replaceAll("\\n","").matches(".*https://access\\.redhat\\.com\\.$") && failedTranslation.msgstr.contains("https://access.redhat.com")) {
+					ignorableMsgIds.add(failedTranslation.msgid);
+				}
+				
+				//	msgid ""
+				//	"Too many content sets for certificate {0}. A newer client may be available "
+				//	"to address this problem. See kbase "
+				//	"https://access.redhat.com/knowledge/node/129003 for more information."
+				// ignore translations that appended the url with a period or surrounded the url with parenthesis since their inclusion does NOT appear to affect the linkability of the url (e.g. "https://access.redhat.com/knowledge/node/129003)" resolves to the expected page and so does "https://access.redhat.com/knowledge/node/129003." )
+				if (failedTranslation.msgid.replaceAll("\\n","").contains("https://access.redhat.com/knowledge/node/129003 ") && failedTranslation.msgstr.contains("https://access.redhat.com/knowledge/node/129003")) {
 					ignorableMsgIds.add(failedTranslation.msgid);
 				}
 			}
@@ -860,23 +870,27 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		Map<File,List<Translation>> translationFileMapForCandlepin = buildTranslationFileMapForCandlepin();
 		for (File translationFile : translationFileMapForCandlepin.keySet()) {
 			for (String pofilterTest : pofilterTests) {
-				BlockedByBzBug bugzilla = null;
+				Set<String> bugIds = new HashSet<String>();
 				
 				// skip the accelerators test since there are gnome gui menu items generated from the candlepin msgids
 				if (pofilterTest.equals("accelerators")) continue;
 				
 				// Bug 842450 - [ja_JP] failed pofilter newlines option test for candlepin translations
-				if (pofilterTest.equals("newlines") && translationFile.getName().equals("ja.po")) bugzilla = new BlockedByBzBug("842450");
-				if (pofilterTest.equals("tabs") && translationFile.getName().equals("ja.po")) bugzilla = new BlockedByBzBug("842450");
+				if (pofilterTest.equals("newlines") && translationFile.getName().equals("ja.po")) bugIds.add("842450");
+				if (pofilterTest.equals("tabs") && translationFile.getName().equals("ja.po")) bugIds.add("842450");
 				
 				// Bug 842784 - [ALL LANG] failed pofilter untranslated option test for candlepin translations
-				if (pofilterTest.equals("untranslated")) bugzilla = new BlockedByBzBug("842784");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("pa.po")) bugIds.add("842784");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("bn_IN.po")) bugIds.add("842784");
 				
 				// Bug 865561 - [pa_IN] the pofilter escapes test is failing on msgid "Consumer Type with id {0} could not be found."
-				if (pofilterTest.equals("escapes")) bugzilla = new BlockedByBzBug("865561");
+				if (pofilterTest.equals("escapes") && translationFile.getName().equals("pa.po")) bugIds.add("865561");
 				
+				// Bug 929218 - [de_DE] pofilter unchanged test is failing
+				if (pofilterTest.equals("unchanged") && translationFile.getName().equals("de_DE.po")) bugIds.add("929218");
 				
-				ll.add(Arrays.asList(new Object[] {bugzilla, pofilterTest, translationFile}));
+				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				ll.add(Arrays.asList(new Object[] {blockedByBzBug, pofilterTest, translationFile}));
 			}
 		}
 		
