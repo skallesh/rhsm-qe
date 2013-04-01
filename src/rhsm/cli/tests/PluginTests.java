@@ -349,6 +349,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		logMarker = System.currentTimeMillis()+" Testing verifyEnabledFactsCollectionTestPluginHooksAreCalled_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		clienttasks.facts(null,true,null,null,null);
+		sleep(5000);	// give the server a chance to update the facts; I think this is an async process
 		
 		// assert the expected log calls
 		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running post_facts_collection_hook").trim();
