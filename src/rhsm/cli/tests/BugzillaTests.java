@@ -45,6 +45,7 @@ import rhsm.data.OrderNamespace;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.Repo;
+import rhsm.data.RevokedCert;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -71,7 +72,94 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String RemoteServerError="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="Consumer unsubscribed when Subscription revoked",
+			groups={"CRLTest"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=55355)
+	public void CRLTest() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg ,null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		for (SubscriptionPool availPools : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools);
+			clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+			for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+				clienttasks.unsubscribe(null, consumed.serialNumber, null, null, null);
+		}
+		}
+		System.out.println(servertasks.getCurrentlyRevokedCerts());
+		for(RevokedCert revokedCert : servertasks.getCurrentlyRevokedCerts()){
+			System.out.println(revokedCert.serialNumber);
+		}
+		
+	}
 
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="Consumer unsubscribed when Subscription revoked",
+			groups={"ConsumerUnsubscribedWhenSubscriptionRevoked"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=56025)
+	public void ConsumerUnsubscribedWhenSubscriptionRevoked() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"multi-stackable-to-delete");
+		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "multi-stackable-to-delete");
+
+		String name,productId;
+		List<String> providedProductIds = new ArrayList<String>();
+		name = "Awesome OS for systems with sockets value=0";
+		productId = "0-sockets";
+		providedProductIds.clear();
+		providedProductIds.add("90001");
+		Map<String,String> attributes = new HashMap<String,String>();
+		attributes.clear();
+		attributes.put("sockets", "0");
+		attributes.put("version", "1.0");
+		attributes.put("variant", "server");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "30");
+		File entitlementCertFile=null;
+		// delete already existing subscription and products
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
+		attributes.put("type", "SVC");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", providedProductIds.get(0), 1, attributes, null);
+		attributes.put("type", "MKT");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+
+		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
+			if(pool.productId.equals(productId)){
+				 entitlementCertFile=	clienttasks.subscribeToSubscriptionPool(pool);
+			}
+		}
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+		Assert.assertFalse(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
+	//	Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
+	//	System.out.println(servertasks.getCurrentlyRevokedCerts());
+		server = new SSHCommandRunner(sm_serverHostname,sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);		
+		System.out.println("  server tasks............. ");
+		
+		RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber,servertasks.getCurrentlyRevokedCerts());
+
+		System.out.println(revokedCert);
+	}
 	
 	/**
 	 * @author skallesh
@@ -79,7 +167,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", 
-			groups = { "ServerUrloptionValuesInRHSMFile","blockedByBug-669395"}, enabled = true)
+			groups = { "ServerUrloptionValuesInRHSMFile","blockedByBug-889573"}, enabled = true)
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException,Exception {
 	
 	String username="stage_test_12";
@@ -253,7 +341,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 								jsonActivationKeyRequest.toString()));
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, null, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		String consumerID=clienttasks.getCurrentConsumerId();
 		clienttasks.unregister(null, null, null);
 		String result=clienttasks.register_(sm_clientUsername, sm_clientPassword,
@@ -275,7 +363,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		public void ProductIdInInstalledList() throws JSONException,Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, null, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
 			Assert.assertNotNull(result.productId);
 			
@@ -317,7 +405,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String defaultPrefix = "/subscription";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, null, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		String result=clienttasks.service_level_(null, null, null, null, null, null, null,defaultHostname+":"+defaultPort+"/"+defaultPrefix , null, null, null, null).getStdout();
 		Assert.assertEquals(result.trim(), "You are already registered to a different system");
 	}
@@ -339,7 +427,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, null, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		String productId=null;
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -379,7 +467,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		int endingMinutesFromNow = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, null, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
@@ -796,7 +884,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				 Assert.assertEquals(result.trim(), Expected);
 			 }
 		}
-		}else throw new SkipException("Cannot test on a virtual machine");
+		}
+		else throw new SkipException("Cannot test on a virtual machine");
+	
 	}
 			
 
@@ -1175,8 +1265,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@ImplementsNitrateTest(caseId=50235)
 	@Test(description = "verify rhsm log for Update With No Installed Products", 
-			groups = {"UpdateWithNoInstalledProducts","blockedByBug-746241","blockedByBug-907638" }, enabled = true)
+			groups = {"UpdateWithNoInstalledProducts","blockedByBug-746241","blockedByBug-946996" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException,Exception {
 		Boolean actual = false;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -2580,8 +2671,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		} else {
 			clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 			SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
-			for (InstalledProduct product : clienttasks
-					.getCurrentlyInstalledProducts()) {
+			for (InstalledProduct product : clienttasks.getCurrentlyInstalledProducts()) {
 				for (int i = 0; i < Expiredproductid.size(); i++) {
 
 					if (product.productId.equals(Expiredproductid.get(i)))
