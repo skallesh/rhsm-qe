@@ -42,6 +42,19 @@
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
+                       "blockedByBug-909823"]}}
+  check_gtype_warnings
+  "Asserts that the gtype WARNINGs are corrected."
+  [_]
+  (let [output (tasks/get-logging @clientcmd
+                                  ldtpd-log
+                                  "check_gtype_warnings"
+                                  "gtype"
+                                  (tasks/start-app))]
+    (verify (not (tasks/substring? "gtype" output))))
+  (tasks/kill-app))
+
+(defn ^{Test {:groups ["system"
                        "blockedByBug-706384"]}}
   run_second_instance
   "Asserts that a second instance of rhsm-gui cannot be run."
