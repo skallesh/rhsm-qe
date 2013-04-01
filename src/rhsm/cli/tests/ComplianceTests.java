@@ -49,7 +49,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by more than one common service level",
 			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","blockedbyBug-859652","cli.tests"},
 			dataProvider="getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesData",
-			priority=10,
+			priority=100,
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test(Object bugzilla, String servicelevel) {
@@ -86,8 +86,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by more than one common service level",
 			groups={"cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
-			priority=20,
+			priority=110,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},			
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
@@ -96,8 +95,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="when all installed products are subscribable by more than one common service level and system is compliant, auto-subscribe should abort",
 			groups={"cli.tests","blockedByBug-864207"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
-			priority=30,
+			priority=120,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
@@ -111,7 +109,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by one common service level",
 			groups={"configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","blockedbyBug-859652","cli.tests"},
-			priority=100,
+			priority=200,
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test() {
@@ -120,8 +118,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by one common service level",
 			groups={"cli.tests","blockedByBug-864383","blockedByBug-865193"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
-			priority=110,
+			priority=210,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByOneCommonServiceLevel_Test() {
@@ -130,8 +127,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="when all installed products are subscribable by one common service level and system is compliant, auto-subscribe should abort",
 			groups={"cli.tests","blockedByBug-864207"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
-			priority=120,
+			priority=220,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},	
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByOneCommonServiceLevel_Test() {
@@ -145,7 +141,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when some installed products are subscribable",
 			groups={"configureProductCertDirForSomeProductsSubscribable","cli.tests"},
-					priority=200,
+			priority=300,
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test() throws JSONException, Exception {
@@ -162,8 +158,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when some installed products are subscribable",
 			groups={"blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
-					priority=210,
+			priority=310,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenSomeProductsAreSubscribable_Test() {
@@ -180,8 +175,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="when some installed products are subscribable and system is NOT compliant, auto-subscribing again should try but not get any new entitlements",
 			groups={"cli.tests","blockedByBug-723044"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
-					priority=220,
+			priority=320,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyAutoSubscribeAttemptsWhenNotCompliantAndSomeProductsAreSubscribable_Test() {
@@ -199,7 +193,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable",
 			groups={"configureProductCertDirForAllProductsSubscribable","cli.tests"},
-					priority=300,
+			priority=400,
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test() throws JSONException, Exception {
@@ -218,8 +212,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable (or an appropriate warning period status if an entitlement is within its warning period status)",
 			groups={"blockedbyBug-723336","cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
-					priority=310,
+			priority=410,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test() {
@@ -236,8 +229,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="when all installed products are subscribable and system in compliant, auto-subscribe should abort",
 			groups={"cli.tests","blockedByBug-864207"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
-					priority=320,
+			priority=420,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsAreSubscribable_Test() {
@@ -251,7 +243,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when no installed products are subscribable",
 			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests"},
-					priority=400,
+			priority=500,
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test() throws JSONException, Exception {
@@ -270,8 +262,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when no installed products are subscribable",
 			groups={"blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
-					priority=410,
+			priority=510,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenNoProductsAreSubscribable_Test() {
@@ -288,8 +279,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="when no installed products are subscribable and system is NOT compliant, auto-subscribing again should try but not get any new entitlements",
 			groups={"cli.tests","blockedByBug-723044"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
-					priority=420,
+			priority=520,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyAutoSubscribeAttemptsWhenNotCompliantAndNoProductsAreSubscribable_Test() {
@@ -307,7 +297,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when no products are installed",
 			groups={"configureProductCertDirForNoProductsInstalled","cli.tests"},
-					priority=500,
+			priority=600,
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
@@ -324,8 +314,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed (and a warning period status when at least one entitlement cert is within its warning period)",
 			groups={"blockedbyBug-723336","cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},
-					priority=510,
+			priority=610,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},		
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled_Test() {
@@ -360,8 +349,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="when no products are installed, auto-subscribe should abort",
 			groups={"cli.tests","blockedByBug-864207"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},
-					priority=520,
+			priority=620,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyAutoSubscribeAbortsWhenNoProductsAreInstalled_Test() {
@@ -377,7 +365,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact when system is unregistered and has installed products (should be incompliant)",
 			groups={"RHNClassicTests","cli.tests"},
-					priority=600,
+			priority=700,
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenUnregistered_Test() {
@@ -400,8 +388,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact when system is already registered to RHN Classic",
 			groups={"blockedByBug-742027","RHNClassicTests","cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenUnregistered_Test"},
-					priority=610,
+			priority=710,//dependsOnMethods={"VerifySystemCompliantFactWhenUnregistered_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test() {
@@ -423,8 +410,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when registered to RHN Classic",
 			groups={"RHNClassicTests","cli.tests"},
-					priority=620,
-			dependsOnMethods={"VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test"},
+			priority=720,//dependsOnMethods={"VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenRegisteredToRHNClassic_Test() {
@@ -440,7 +426,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact remains False when all installed products are subscribable in the future",
 			groups={"blockedbyBug-737553","blockedbyBug-649068","configureProductCertDirForAllProductsSubscribableInTheFuture","cli.tests"},
-					priority=700,
+			priority=800,
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
@@ -479,8 +465,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when all installed products are subscribable in the future",
 			groups={"cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},
-					priority=710,
+			priority=810,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribableInTheFuture_Test() {
