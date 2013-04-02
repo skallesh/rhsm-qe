@@ -1136,5 +1136,88 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		}
 	*/
 	
+	
+	// Notes from subscription-manager-1.8
+	
+	// AVAILABLE PERSONAL SUBSCRIPTION
+	//  +-------------------------------------------+
+	//     Available Subscriptions
+	//  +-------------------------------------------+
+	//  Subscription Name: Awesome OS Developer Edition
+	//  SKU:               AWESOMEOS09XYU34
+	//  Pool ID:           8a90f81d3db68117013db68228710326
+	//  Quantity:          5
+	//  Service Level:     
+	//  Service Type:      
+	//  Multi-Entitlement: No
+	//  Ends:              03/28/2014
+	//  System Type:       Physical
+	
+	// CONSUMED PERSONAL SUBSCRIPTION
+	//	+-------------------------------------------+
+	//	   Consumed Subscriptions
+	//	+-------------------------------------------+
+	//	
+	//	Subscription Name: Awesome OS Developer Edition
+	//	Provides:          
+	//	SKU:               AWESOMEOS09XYU34
+	//	Contract:          30
+	//	Account:           12331131231
+	//	Serial Number:     7572441957135066234
+	//	Pool ID:           8a90f81d3db68117013db68228710326
+	//	Active:            True
+	//	Quantity Used:     1
+	//	Service Level:     
+	//	Service Type:      
+	//	Starts:            03/28/2013
+	//	Ends:              03/28/2014
+	
+	// AVAILABLE SYSTEM SUBPOOL SUBSCRIPTION
+	//	+-------------------------------------------+
+	//	    Available Subscriptions
+	//	+-------------------------------------------+
+	//	Subscription Name: Awesome OS Developer Basic
+	//	SKU:               1144
+	//	Pool ID:           8a90f81d3db68117013dc7af678d3a15
+	//	Quantity:          Unlimited
+	//	Service Level:     
+	//	Service Type:      
+	//	Multi-Entitlement: No
+	//	Ends:              03/28/2014
+	//	System Type:       Physical
+
+	// CONSUMED SYSTEM SUBPOOL SUBSCRIPTION
+	//	+-------------------------------------------+
+	//	   Consumed Subscriptions
+	//	+-------------------------------------------+
+	//
+	//	Subscription Name: Awesome OS Developer Edition
+	//	Provides:          Awesome OS Developer Basic
+	//	SKU:               AWESOMEOS09XYU34
+	//	Contract:          30
+	//	Account:           12331131231
+	//	Serial Number:     6922665016974616001
+	//	Pool ID:           8a90f81d3db68117013dc7af678d3a15
+	//	Active:            True
+	//	Quantity Used:     1
+	//	Service Level:     
+	//	Service Type:      
+	//	Starts:            03/28/2013
+	//	Ends:              03/28/2014
+	
+	// INSTALLED PRODUCT PROVIDED FOR BY SUBPOOL
+	//	+-------------------------------------------+
+	//	    Installed Product Status
+	//	+-------------------------------------------+
+	//
+	//	Product Name: Awesome OS Developer Basic
+	//	Product ID:   1144
+	//	Version:      1.0
+	//	Arch:         ALL
+	//	Status:       Subscribed
+	//	Starts:       03/28/2013
+	//	Ends:         03/28/2014
+
+
 }
 
