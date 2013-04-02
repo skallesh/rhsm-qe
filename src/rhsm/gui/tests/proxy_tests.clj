@@ -132,6 +132,7 @@
   test_disabled_proxy
   "Test that the 'test connection' button is disabled when proxy settings are cleared."
   [_]
+  (disable_proxy nil)
   (tasks/ui click :configure-proxy)
   (tasks/ui click :test-connection)
   (try+ (verify (not (some #(= "sensitive" %)
@@ -140,18 +141,19 @@
         (finally (tasks/ui click :close-proxy))))
 
 (defn ^{BeforeGroups {:groups ["proxy"]
-                      :value ["proxy-enabled-check-status"]}}
+                      :value ["proxy-enabled-check-status"]
+                      :dependsOnMethods ["disable_proxy"]}}
   before_test_proxy_with_blank_fields[_]
   (tasks/ui click :configure-proxy)
   (tasks/ui check :proxy-checkbox))
 
 (defn ^{Test {:groups ["proxy"
                        "proxy-enabled-check-status"
-                       "blockedByBug-927340"]
-              :dependsOnMethods ["disable_proxy"]}}
+                       "blockedByBug-927340"]}}
   test_proxy_with_blank_proxy
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
   [_]
+  (disable_proxy nil)
   (tasks/ui settextvalue :proxy-location "")
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
@@ -159,10 +161,11 @@
 
 (defn ^{Test {:groups ["proxy"
                        "proxy-enabled-check-status"]
-              :dependsOnMethods ["test_proxy_with_blank_proxy" "disable_proxy"]}}
+              :dependsOnMethods ["test_proxy_with_blank_proxy"]}}
   test_proxy_with_blank_credentials
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
   [_]
+  (disable_proxy nil)
   (tasks/ui check :authentication-checkbox)
   (tasks/ui settextvalue :password-text "")
   (tasks/ui settextvalue :username-text "")
