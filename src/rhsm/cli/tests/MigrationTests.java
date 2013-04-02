@@ -1854,6 +1854,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 	}
 	
+	@AfterClass(groups={"setup"})
+	public void removeRHNSystemIdFileAfterClass() {
+		if (clienttasks!=null) {
+			clienttasks.removeRhnSystemIdFile();
+		}
+	}
+	
 	@BeforeClass(groups={"setup"})
 	public void determineCdnProductBaselineMapsBeforeClass() throws IOException, JSONException {
 
