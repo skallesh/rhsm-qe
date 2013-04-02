@@ -231,7 +231,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@AfterGroups(value="EnableDisableYumRepoAndVerifyContentAvailable_Test", alwaysRun=true)
 	protected void teardownAfterEnableDisableYumRepoAndVerifyContentAvailable_Test() {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
-		clienttasks.restart_rhsmcertd(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "certFrequency")), null, false, null);
+		clienttasks.restart_rhsmcertd(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"certFrequency" WAS CHANGED BY BUG 882459 TO */ "certCheckInterval")), null, false, null);
 	}
 	
 
