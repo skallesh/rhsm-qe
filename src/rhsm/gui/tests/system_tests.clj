@@ -168,4 +168,22 @@
     (finally (if (= 1 (tasks/ui guiexist :date-selection-dialog))
                (tasks/ui closewindow :date-selection-dialog)))))
 
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-947485"]}}
+  open_with_bad_hostname
+  "Verifies that the gui can open with a bad hostname in /etc/rhsm/rhsm.conf."
+  [_]
+  (let [hostname (tasks/conf-file-value "hostname")]
+    (try+
+     (.runCommandAndWait @clientcmd "subscription-manager clean")
+     (tasks/restart-app)
+     (tasks/register-with-creds)
+     (tasks/kill-app)
+     (tasks/set-conf-file-value "hostname" "blahblahdoesnotexist.redhat.com")
+     (tasks/start-app)
+     (tasks/ui waittillwindowexist :main-window 20)
+     (verify (tasks/bool (tasks/ui guiexist :main-window)))
+     (finally
+       (tasks/set-conf-file-value "hostname" hostname)))))
+
 (gen-class-testng)
