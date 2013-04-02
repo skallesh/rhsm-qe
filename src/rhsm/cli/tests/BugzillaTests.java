@@ -90,14 +90,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool availPools : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools);
 			clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+
 			for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 				clienttasks.unsubscribe(null, consumed.serialNumber, null, null, null);
 		}
+			RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber,servertasks.getCurrentlyRevokedCerts());
+			Assert.assertTrue(revokedCert!=null);
 		}
-		System.out.println(servertasks.getCurrentlyRevokedCerts());
-		for(RevokedCert revokedCert : servertasks.getCurrentlyRevokedCerts()){
-			System.out.println(revokedCert.serialNumber);
-		}
+	
 		
 	}
 
@@ -150,16 +151,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		Assert.assertFalse(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
-	//	Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
-	//	System.out.println(servertasks.getCurrentlyRevokedCerts());
-		server = new SSHCommandRunner(sm_serverHostname,sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);		
-		System.out.println("  server tasks............. ");
-		
+		List <ProductSubscription> consumedSusbscription=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertFalse(consumedSusbscription.isEmpty());
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
+		clienttasks.restart_rhsmcertd(null, null, false, null);
+		sleep(2*60*1000);
+		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
+		for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
+			
+		}
 		RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber,servertasks.getCurrentlyRevokedCerts());
-
-		System.out.println(revokedCert);
-	}
+		Assert.assertTrue(revokedCert!=null);	
+		}
 	
 	/**
 	 * @author skallesh
@@ -231,8 +236,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if CLI auto-subscribe tries to re-use basic auth credentials.", 
-			groups = { "VerifyAutosubscribeReuseBasicAuthCredntials","blockedByBug-707641","blockedByBug-919700"}, enabled = true)
+	@Test(description = "verify if CLI auto-subscribe tries to re-use basic auth credentials.",
+			groups = { "VerifyAutosubscribeReuseBasicAuthCredntials","blockedByBug-707641"/*,"blockedByBug-919700"*/}, enabled = true)
 		public void VerifyAutosubscribeReuseBasicAuthCredntials() throws JSONException,Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);	
@@ -3490,7 +3495,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		
 		randomAvailableProductId = pool.productId;
 	}
-
+	
+	@BeforeClass(groups = "setup")
+	public void SetServerTasks() throws Exception {
+	server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+	servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
+	}
 	
 
 }
