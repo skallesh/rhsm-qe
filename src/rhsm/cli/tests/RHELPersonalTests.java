@@ -518,6 +518,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				}
 				
 				ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
+				Assert.assertNotNull(productSubscription, "Found the consumed Product Subscription with productName='"+systemConsumedProductName+"'.");
 				client2tasks.unsubscribeFromProductSubscription(productSubscription);
 				SubscriptionPool systemSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",systemProductId,client2tasks.getCurrentlyAvailableSubscriptionPools());
 				Assert.assertNotNull(systemSubscriptionPool,"Subscription to ProductId '"+systemProductId+"' is once again available to consumer '"+consumerId+"' (registered as a system under username '"+username+"')");
