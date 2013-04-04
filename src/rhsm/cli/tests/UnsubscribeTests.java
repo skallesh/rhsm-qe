@@ -164,8 +164,8 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 		// first make sure we are subscribed to a pool
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
-		SubscriptionPool pool = pools.get(0);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));	// random available pool
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
 		
 		// now remove the consumer cert to simulate an unregister

@@ -3610,7 +3610,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * subscribe to the given SubscriptionPool 
+	 * subscribe to the given SubscriptionPool (assumes pool came from the list of available pools)
 	 * @param pool
 	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
 	 */
