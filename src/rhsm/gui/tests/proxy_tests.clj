@@ -141,15 +141,15 @@
         (finally (tasks/ui click :close-proxy))))
 
 (defn ^{BeforeGroups {:groups ["proxy"]
-                      :value ["proxy-enabled-check-status"]
-                      :dependsOnMethods ["disable_proxy"]}}
+                      :value ["proxy-enabled-check-status"]}}
   before_test_proxy_with_blank_fields[_]
   (tasks/ui click :configure-proxy)
   (tasks/ui check :proxy-checkbox))
 
 (defn ^{Test {:groups ["proxy"
                        "proxy-enabled-check-status"
-                       "blockedByBug-927340"]}}
+                       "blockedByBug-927340"]
+              :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_proxy
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
   [_]
@@ -161,7 +161,7 @@
 
 (defn ^{Test {:groups ["proxy"
                        "proxy-enabled-check-status"]
-              :dependsOnMethods ["test_proxy_with_blank_proxy"]}}
+              :dependsOnMethods ["test_proxy_with_blank_proxy" "disable_proxy"]}}
   test_proxy_with_blank_credentials
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
   [_]
