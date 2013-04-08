@@ -770,7 +770,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	// REPOS Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager : repos using a proxy server (Positive and Negative Variations)",
-			groups={"blockedByBug-906642"},
+			groups={"blockedByBug-906642"/*,"blockedByBug-909778"*/},
 			dataProvider="getReposAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -791,7 +791,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 	
 	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={"blockedByBug-906642"},
+			groups={"blockedByBug-906642"/*,"blockedByBug-909778"*/},
 			dataProvider="getReposAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
