@@ -73,6 +73,77 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
 	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Facts for change in OS ",
+			groups={"AddingFutureSubscriptionToActivationKey"},
+			enabled=true)
+	public void AddingFutureSubscriptionToActivationKey() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		Calendar now = new GregorianCalendar();
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		String onDate = yyyy_MM_dd_DateFormat.format(now.getTime());
+		now.add(Calendar.YEAR, 1);
+		now.add(Calendar.DATE, 1);
+		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
+		if(availOnDate.size()==0) throw new SkipException(
+				"Sufficient future pools are not available");
+		for (SubscriptionPool subscriptions : availOnDate) {
+			System.out.println(subscriptions.productId);
+			for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
+
+			}
+			clienttasks.subscribe_(null, null, subscriptions.poolId, null, null,
+					null, null, null, null, null, null);
+		}
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Facts for change in OS ",
+			groups={"createVirtOnlyPool"},
+			enabled=true)
+	public void createVirtOnlyPool () throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		List<SubscriptionPool> poolsbeforecreation=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+	String consumerId = clienttasks.getCurrentConsumerId();
+	ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+	String name,productId;
+	List<String> providedProductIds = new ArrayList<String>();
+	name = "virt-only-product";
+	productId = "virt-only test-product";
+	Map<String,String> attributes = new HashMap<String,String>();
+	attributes.clear();
+	attributes.put("version", "1.0");
+	attributes.put("variant", "server");
+	attributes.put("arch", "ALL");
+	attributes.put("warning_period", "30");
+	attributes.put("type", "MKT");
+	attributes.put("type", "SVC");
+	attributes.put("virt_limit", "4");
+
+	
+	File entitlementCertFile=null;
+
+	CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
+	CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+	List<SubscriptionPool> poolsaftercreation=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+	CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -120,10 +191,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
 			}
 		}
-	
-		
 	}
 
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -1395,7 +1465,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		now.add(Calendar.YEAR, 1);
 		now.add(Calendar.DATE, 1);
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
-		now.add(Calendar.YEAR, 1);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
 		if(availOnDate.size()==0) throw new SkipException(
@@ -3461,16 +3530,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String ServerDateAfterExeceutionOneDayBefore=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase,false);
 		
-		if((!(ClientDateAfterExecution.equals(SystemDateOnClient))) &&(!(ClientDateAfterExeceutionOneDayBefore.equals(SystemDateOnClient))) ){
+		if((!(ClientDateAfterExecution.equals(SystemDateOnClient))) &&((ClientDateAfterExeceutionOneDayBefore.equals(SystemDateOnClient))) ){
 
 			setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
 					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
+			log.info("Reverted the date of client"
+					+ client.runCommandAndWait("hostname"));
 		}
 		
-		if((!(ServerDateAfterExecution.equals(SystemDateOnServer)))&&(!(ServerDateAfterExeceutionOneDayBefore.equals(SystemDateOnServer)))){
+		if((!(ServerDateAfterExecution.equals(SystemDateOnServer)))&&((ServerDateAfterExeceutionOneDayBefore.equals(SystemDateOnServer)))){
 			setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
 					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
-			log.info("Changed the date of candlepin"
+			log.info("Reverted the date of candlepin"
 					+ client.runCommandAndWait("hostname"));
 		}
 		clienttasks.restart_rhsmcertd(null, null, false, null);
