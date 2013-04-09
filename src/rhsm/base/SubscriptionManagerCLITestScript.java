@@ -2295,6 +2295,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				JSONObject jsonPool = (JSONObject) jsonPools.get(j);
 				
 				// remember all the jsonPools that come from subscriptionId
+				if (jsonPool.isNull("subscriptionId")) continue;	// will happen if there is a generated sub-pool from a consumed person subscription
 				if (jsonPool.getString("subscriptionId").equals(subscriptionId)) {
 
 					// JSONObject jsonPool
