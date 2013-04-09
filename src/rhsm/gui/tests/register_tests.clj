@@ -73,7 +73,7 @@
   (verify (action exists? :register-system)))
 
 (defn ^{Test {:groups ["registration" "blockedByBug-918303"]
-              :priority int 10}}
+              :priority (int 10)}}
   register_check_syslog
   "Asserts that register events are logged in the syslog."
   [_]
@@ -86,7 +86,7 @@
 
 (defn ^{Test {:groups ["registration" "blockedByBug-918303"]
               :dependsOnMethods ["register_check_syslog"]
-              :priority int 20}}
+              :priority (int 20)}}
   unregister_check_syslog
   "Asserts unregister events are logged in the syslog."
   [_]
