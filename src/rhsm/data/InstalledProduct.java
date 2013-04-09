@@ -94,6 +94,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 	
 	@Override
 	protected Calendar parseDateString(String dateString){
+		if (dateString.isEmpty()) return null;	// avoid a ParseException when we know it is going to fail
 		return parseDateString(dateString, simpleDateFormat);
 	}
 	
