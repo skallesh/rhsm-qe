@@ -61,8 +61,7 @@
           register-button :register-system]
      (verify (and (= thrown-error expected-error) (action exists? register-button))))))
 
-(defn ^{Test {:groups ["registration"]
-              :priority ["10"]}}
+(defn ^{Test {:groups ["registration"]}}
   unregister
   "Simple unregister."
   [_]
@@ -73,7 +72,8 @@
   (tasks/unregister)
   (verify (action exists? :register-system)))
 
-(defn ^{Test {:groups ["registration" "blockedByBug-918303"]}}
+(defn ^{Test {:groups ["registration" "blockedByBug-918303"]
+              :priority 10}}
   register_check_syslog
   "Asserts that register events are logged in the syslog."
   [_]
@@ -86,7 +86,7 @@
 
 (defn ^{Test {:groups ["registration" "blockedByBug-918303"]
               :dependsOnMethods ["register_check_syslog"]
-              :priority ["20"]}}
+              :priority 20}}
   unregister_check_syslog
   "Asserts unregister events are logged in the syslog."
   [_]
