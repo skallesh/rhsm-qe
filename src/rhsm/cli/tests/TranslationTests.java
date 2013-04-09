@@ -381,14 +381,14 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="verify that Red Hat product names (e.g. 'Red Hat','RHN Classic') remain untranslated",
+	@Test(	description="verify that Red Hat product names (e.g. 'Red Hat','RHN') remain untranslated",
 			groups={},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationsDoNotTranslateSubStrings_Test(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
-		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat",/*"RHN","RHN Classic", TRANSLATORS CHOICE*/"subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
+		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat","RHN",/*"RHN Classic", TRANSLATORS CHOICE*/"subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
 		// TODO CONSIDER ADDING THESE TOO List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Management", "Red Hat Global Support Services" "Red Hat Customer Portal", "RHN Satellite");
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();
@@ -456,7 +456,12 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/ru/")) bugIds.add("906967");
 			if (translationFile.getPath().contains("/pa/")) bugIds.add("906967");
 			if (translationFile.getPath().contains("/ko/")) bugIds.add("906967");
-				
+			
+			// Bug 950099 - [ml][zh_CN][ru] locales should not translate "RHN"
+			if (translationFile.getPath().contains("/ml/")) bugIds.add("950099");
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("950099");
+			if (translationFile.getPath().contains("/ru/")) bugIds.add("950099");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
 		}
