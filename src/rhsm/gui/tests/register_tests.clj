@@ -29,7 +29,7 @@
 (defn ^{Test {:groups ["registration"]
               :dataProvider "userowners"}}
   simple_register
-  "Simple register with known username, password, and owner."
+  "Simple register with known username, password and owner."
   [_ user pass owner]
   (try+
    (if owner
