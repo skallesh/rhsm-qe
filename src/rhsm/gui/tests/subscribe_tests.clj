@@ -361,7 +361,8 @@
                        (str ", " (:support_type rawservice))))]
     (verify (= guiservice service))))
 
-(defn ^{Test {:groups ["subscribe" "blockedByBug-918617"]}}
+(defn ^{Test {:groups ["subscribe" "blockedByBug-918617"]
+              :priority (int 10)}}
   subscribe_check_syslog
   "Asserts that subscribe events are logged in the syslog."
   [_]
@@ -375,7 +376,8 @@
       (verify (not (blank? output)))))
 
 (defn ^{Test {:groups ["subscribe" "blockedByBug-918617"]
-              :dependsOnMethods ["subscribe_check_syslog"]}}
+              :dependsOnMethods ["subscribe_check_syslog"]
+              :priority (int 20)}}
   unsubscribe_check_syslog
   "Asserts that unsubscribe events are logged in the syslog."
   [_]
