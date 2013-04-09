@@ -29,7 +29,7 @@
 (defn ^{Test {:groups ["registration"]
               :dataProvider "userowners"}}
   simple_register
-  "Simple register with known username, password, and owner."
+  "Simple register with known username, password and owner."
   [_ user pass owner]
   (try+
    (if owner
@@ -72,7 +72,9 @@
   (tasks/unregister)
   (verify (action exists? :register-system)))
 
-(defn ^{Test {:groups ["registration" "blockedByBug-918303"]}}
+(defn ^{Test {:groups ["registration" 
+                       "blockedByBug-918303"]
+              :priority (int 10)}}
   register_check_syslog
   "Asserts that register events are logged in the syslog."
   [_]
@@ -83,11 +85,14 @@
                                   (tasks/register-with-creds))]
       (verify (not (blank? output)))))
 
-(defn ^{Test {:groups ["registration" "blockedByBug-918303"]
-              :dependsOnMethods ["register_check_syslog"]}}
+(defn ^{Test {:groups ["registration" 
+                       "blockedByBug-918303"]
+              :dependsOnMethods ["register_check_syslog"]
+              :priority (int 20)}}
   unregister_check_syslog
   "Asserts unregister events are logged in the syslog."
   [_]
+  ;(tasks/register-with-creds)
   (let [output (tasks/get-logging @clientcmd
                                   sys-log
                                   "unregister_check_syslog"

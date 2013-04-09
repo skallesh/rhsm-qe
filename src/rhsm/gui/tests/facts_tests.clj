@@ -66,7 +66,8 @@
   [_ fact value]
   (verify (= (@cli-facts fact) value)))
 
-(defn ^{Test {:groups ["facts"]}}
+(defn ^{Test {:groups ["facts" 
+                       "blockedByBug-950146"]}}
   facts_parity
   "Tests that the gui shows the same number of facts as the CLI."
   [_]
