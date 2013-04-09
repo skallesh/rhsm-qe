@@ -91,7 +91,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
 		if (!configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted);
-		VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test();
+		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
 	
 	@Test(	description="when all installed products are subscribable by more than one common service level and system is compliant, auto-subscribe should abort",
@@ -105,6 +105,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
 	
+	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
+			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
+			priority=130,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
+		if (!configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted);
+		verifyListInstalledIsCachedWhenServerGoesOffline();
+	}
+	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test")
+	public void afterVerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
+		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
+	}
 	
 	
 	
@@ -125,7 +138,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByOneCommonServiceLevel_Test() {
 		if (!configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted);
-		VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test();
+		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
 	
 	@Test(	description="when all installed products are subscribable by one common service level and system is compliant, auto-subscribe should abort",
@@ -139,6 +152,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
 	
+	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
+			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test"},
+			priority=230,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test() {
+		if (!configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted);
+		verifyListInstalledIsCachedWhenServerGoesOffline();
+	}
+	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test")
+	public void afterVerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test() {
+		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
+	}
 	
 	
 	
@@ -193,6 +219,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(entitlementCertsBefore.size(), entitlementCertsAfter.size(), "The number of entitlement certs did not change after an attempt to autosubscribe a second time.");
 	}
 	
+	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
+			groups={"cli.tests","VerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test"},
+			priority=330,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test() {
+		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
+		verifyListInstalledIsCachedWhenServerGoesOffline();
+	}
+	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test")
+	public void afterVerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test() {
+		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
+	}
 	
 	
 	
@@ -223,15 +262,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test() {
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
-		String command = clienttasks.rhsmComplianceD+" -s -d";
-
-		if (clienttasks.getCurrentEntitlementCertsWithinWarningPeriod().isEmpty()) {
-			// otherwise verify the rhsmcomplianced status when we should be fully compliant
-			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
-		} else {
-			// verify the rhsmcomplianced status when there are entitlement certs within their warning period
-			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, null);
-		}
+		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
 	
 	@Test(	description="when all installed products are subscribable and system in compliant, auto-subscribe should abort",
@@ -245,6 +276,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
 	
+	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
+			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test"},
+			priority=430,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test() {
+		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
+		verifyListInstalledIsCachedWhenServerGoesOffline();
+	}
+	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test")
+	public void afterVerifyListInstalledIsCachedAfterAllProductsSubscribable_Test() {
+		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
+	}
 	
 	
 	
@@ -301,6 +345,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(entitlementCertsBefore.size(), entitlementCertsAfter.size(), "The number of entitlement certs did not change after an attempt to autosubscribe a second time.");
 	}
 	
+	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
+			groups={"cli.tests","VerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test"},
+			priority=530,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test() {
+		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
+		verifyListInstalledIsCachedWhenServerGoesOffline();
+	}
+	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test")
+	public void afterVerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test() {
+		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
+	}
 	
 	
 	
@@ -488,6 +545,25 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
 	}
 	
+	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
+			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test"},
+			priority=830,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test() {
+		if (!configureProductCertDirForAllProductsSubscribableInTheFutureCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableInTheFutureCompleted="+configureProductCertDirForAllProductsSubscribableInTheFutureCompleted);
+		verifyListInstalledIsCachedWhenServerGoesOffline();
+	}
+	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test")
+	public void afterVerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test() {
+		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
+	}
+	
+	
+	
+	
+	
+	
 	
 	
 	// Candidates for an automated Test:
@@ -586,6 +662,28 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		return serviceLevelToProductIdsMap;
 	}
 	
+	protected void verifyListInstalledIsCachedWhenServerGoesOffline() {
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		clienttasks.config(null, null, true, new String[]{"server","hostname","offline-"+serverHostname});
+		Assert.assertEquals(clienttasks.identity_(null, null, null, null, null, null, null).getExitCode(), Integer.valueOf(255), "Identity fails when system is offline");
+		List<InstalledProduct> installedProductsCached = clienttasks.getCurrentlyInstalledProducts();
+		for (InstalledProduct installedProduct : installedProductsCached) {
+			Assert.assertTrue(!installedProduct.status.equalsIgnoreCase("Unknown"),"Installed product '"+installedProduct.productName+"' status '"+installedProduct.status+"' should NOT be Unknown when server is offline.");
+		}
+		Assert.assertTrue(installedProductsCached.containsAll(installedProducts)&&installedProducts.containsAll(installedProductsCached),"Installed product list should remain cached when server is offline.");
+	}
+	
+	protected void verifyRhsmCompliancedWhenAllProductsAreSubscribable() {
+		String command = clienttasks.rhsmComplianceD+" -s -d";
+
+		if (clienttasks.getCurrentEntitlementCertsWithinWarningPeriod().isEmpty()) {
+			// otherwise verify the rhsmcomplianced status when we should be fully compliant
+			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+		} else {
+			// verify the rhsmcomplianced status when there are entitlement certs within their warning period
+			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, null);
+		}
+	}
 	
 	// Configuration Methods ***********************************************************************
 
@@ -593,6 +691,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void afterRHNClassicTests() {
 		if (clienttasks!=null) {
 			clienttasks.removeRhnSystemIdFile();
+		}
+	}
+	
+	protected String serverHostname=null;
+	@BeforeClass(groups={"setup"})
+	public void saveHostnameBeforeClass() throws ParseException, JSONException, Exception {
+		if (clienttasks!=null) {
+			serverHostname = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
 		}
 	}
 	
