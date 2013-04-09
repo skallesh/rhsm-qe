@@ -1265,6 +1265,7 @@ public class SubscriptionManagerTasks {
 	public String getFactValue(String factName) {
 		
 		// FIXME: SIMPLE WORKAROUND FOR NEW SERVER-SIDE COMPLIANCE CHECK ON "system.entitlements_valid" CompliantTests.factNameForSystemCompliance 3/11/2013
+		// maybe the new solution should get the compliance status from the new cache file /var/lib/rhsm/cache/entitlement_status.json
 		if (factName.equals("system.entitlements_valid")) {
 			log.warning("The former \""+factName+"\" fact is no longer used.  Employing a WORKAROUND by getting the system compliance status directly from the candlepin server...");
 			String complianceStatus = "UNKNOWN_COMPLIANCE_STATUS";
