@@ -9,20 +9,6 @@
                org.testng.SkipException
                [com.redhat.qe.auto.bugzilla BzChecker]))
 
-(defmacro skip-if-bz-open [bugid & forms]
-  `(let [bz# (BzChecker/getInstance)
-         open?# (.isBugOpen bz# ~bugid)
-         state# (str (.getBugState bz# ~bugid))
-         summary# (.getBugField bz# ~bugid "summary")]
-     (if (and open?#
-              ~@forms)
-       (throw (SkipException. (str "This test is blocked by "
-                                   state#
-                                   " Bugzilla bug '"
-                                   summary#
-                                   "'.  (https://bugzilla.redhat.com/show_bug.cgi?id="
-                                   ~bugid")"))))))
-
 (defn get-release []
   (let [release (.getStdout (.runCommandAndWait
                              @clientcmd
@@ -92,3 +78,18 @@
      (RemoteFileTasks/markFile ~runner ~logfile marker#)
      (do ~@forms)
      (RemoteFileTasks/getTailFromMarkedFile ~runner ~logfile marker# ~grep)))
+
+(defmacro skip-if-bz-open [bugid & forms]
+  `(let [bz# (BzChecker/getInstance)
+         open?# (.isBugOpen bz# ~bugid)
+         state# (str (.getBugState bz# ~bugid))
+         summary# (.getBugField bz# ~bugid "summary")]
+     (if (and open?#
+              ~@forms)
+       (throw (SkipException. (str "This test is blocked by "
+                                   state#
+                                   " Bugzilla bug '"
+                                   summary#
+                                   "'.  (https://bugzilla.redhat.com/show_bug.cgi?id="
+                                   ~bugid
+                                   ")"))))))
