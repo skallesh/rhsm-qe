@@ -73,6 +73,92 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
 	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Future subscription added to the activation key ",
+			groups={"AddingFutureSubscriptionToActivationKey"},
+			enabled=true)
+	public void AddingFutureSubscriptionToActivationKey() throws Exception {
+		Integer addQuantity=1;
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		Calendar now = new GregorianCalendar();
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		now.add(Calendar.YEAR, 1);
+		now.add(Calendar.DATE, 1);
+		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
+		if(availOnDate.size()==0) throw new SkipException(
+				"Sufficient future pools are not available");
+			int i= randomGenerator.nextInt(availOnDate.size());
+			List<String> providedPools = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword, sm_serverUrl, availOnDate.get(i).poolId);
+			System.out.println(providedPools.get(randomGenerator.nextInt(providedPools.size())));
+			String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
+					sm_clientOrg, System.currentTimeMillis());
+			Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
+			mapActivationKeyRequest.put("name", name);
+			JSONObject jsonActivationKeyRequest = new JSONObject(
+					mapActivationKeyRequest);
+			JSONObject jsonActivationKey = new JSONObject(
+					CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
+							sm_clientPassword, sm_serverUrl, "/owners/"
+									+ sm_clientOrg + "/activation_keys",
+									jsonActivationKeyRequest.toString()));
+			List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+			listOfSectionNameValues.add(new String[] { "rhsmcertd",
+					"autoAttachInterval".toLowerCase(), "1440" });
+			clienttasks.config(null, null, true, listOfSectionNameValues);
+			new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +availOnDate.get(i).poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
+			clienttasks.unregister(null, null, null);
+			clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);			
+			for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
+				if(result.productId.equals(providedPools.get(randomGenerator.nextInt(providedPools.size())))){
+					Assert.assertEquals(result.status, "Future Subscription");
+				}
+			}
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Facts for change in OS ",
+			groups={"createVirtOnlyPool"},
+			enabled=false)
+	public void createVirtOnlyPool () throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		List<SubscriptionPool> poolsbeforecreation=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+	String consumerId = clienttasks.getCurrentConsumerId();
+	ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+	String name,productId;
+	List<String> providedProductIds = new ArrayList<String>();
+	name = "virt-only-product";
+	productId = "virt-only test-product";
+	Map<String,String> attributes = new HashMap<String,String>();
+	attributes.clear();
+	attributes.put("version", "1.0");
+	attributes.put("variant", "server");
+	attributes.put("arch", "ALL");
+	attributes.put("warning_period", "30");
+	attributes.put("type", "MKT");
+	attributes.put("type", "SVC");
+	attributes.put("virt_limit", "4");
+	CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
+	CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+	List<SubscriptionPool> poolsaftercreation=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+	CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -120,10 +206,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
 			}
 		}
-	
-		
 	}
 
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -990,10 +1075,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				sm_clientUsernames, (String) null, null, null, true, null, null, null,null);
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"multi-stackable");
+		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "multi-stackable");
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"stackable");
+		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "stackable");
 		
 		int sockets = 14;
 		String poolid = null;
 		String validity = null;
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
@@ -1002,10 +1097,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 		Calendar now = new GregorianCalendar();
-		Date onDate = now.getTime();
 		now.add(Calendar.YEAR, 1);
 		now.add(Calendar.DATE, 1);
-		Date onDateToTest = now.getTime();
 		attributes.put("sockets", "2");
 		attributes.put("arch", "ALL");
 		attributes.put("type", "MKT");
@@ -1013,16 +1106,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("stacking_id", "726409");
 		List<String> providedProducts = new ArrayList<String>();
 		providedProducts.add("100000000000002");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"Multi-Stackable for 100000000000002","multi-stackable", 1,attributes ,null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, onDate, onDateToTest,"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
-		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Multi-Stackable for 100000000000002", "multi-stackable", 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), "multi-stackable", providedProducts);
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 		attributes.put("sockets", "4");
 		attributes.put("multi-entitlement", "no");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "Stackable for 100000000000002","stackable", 1,attributes ,null);
-		requestBody = CandlepinTasks.createSubscriptionRequestBody(20, onDate, onDateToTest, "stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
-		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);		
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Stackable for 100000000000002", "stackable", 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), "stackable", providedProducts);
 		jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
@@ -1031,7 +1122,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				moveProductCertFiles(installed.productId + ".pem");
 			}
 		}
-		sleep(3*60*1000);		
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 			if(availList.subscriptionName.equals("Multi-Stackable for 100000000000002")){
 				poolid=availList.poolId;
@@ -1395,7 +1486,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		now.add(Calendar.YEAR, 1);
 		now.add(Calendar.DATE, 1);
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
-		now.add(Calendar.YEAR, 1);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
 		if(availOnDate.size()==0) throw new SkipException(
@@ -2037,10 +2127,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException,
 	Exception {
-		SystemDateOnClient=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
-				sm_sshkeyPassphrase,true);
-		SystemDateOnServer=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
-				sm_sshkeyPassphrase,true);
+		
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -3465,16 +3552,27 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 			setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
 					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
+			log.info("Reverted the date of client"
+					+ client.runCommandAndWait("hostname"));
 		}
 		
-		if((!(ServerDateAfterExecution.equals(SystemDateOnServer)))&&(!(ServerDateAfterExeceutionOneDayBefore.equals(SystemDateOnServer)))){
+		if((!(ServerDateAfterExecution.equals(SystemDateOnServer)))&&((ServerDateAfterExeceutionOneDayBefore.equals(SystemDateOnServer)))){
 			setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
 					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
-			log.info("Changed the date of candlepin"
+			log.info("Reverted the date of candlepin"
 					+ client.runCommandAndWait("hostname"));
 		}
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
+	}
+	
+	
+	@BeforeGroups(groups = {"setup"}, value = {"VerifyrhsmcertdRefreshIdentityCert"})
+	public void rgetSystemDate() throws IOException, ParseException {
+	SystemDateOnClient=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+			sm_sshkeyPassphrase,true);
+	SystemDateOnServer=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+			sm_sshkeyPassphrase,true);
 	}
 	
 	@AfterGroups(groups = {"setup"}, value = {"VerifyEmptyCertCauseRegistrationFailure_Test","BugzillaTests"})
