@@ -6,6 +6,7 @@
         [clojure.string :only (trim split)]
         [slingshot.slingshot :only [throw+
                                     try+]]
+        rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
@@ -95,9 +96,9 @@
                                      :skip-autosubscribe false
                                      :owner ownername)
                      (catch [:type :no-sla-available] {:keys [msg]} msg))]
-            (verify (tasks/substring? "No service level will cover all installed products" msg)))
+            (verify (substring? "No service level will cover all installed products" msg)))
           (tasks/ui waittillwindownotexist :register-dialog 600)
-          (tasks/sleep 1000)
+          (sleep 1000)
           (verify (= (tasks/warn-count) beforesubs))
           (verify (not (tasks/compliance?)))))))
 
@@ -143,7 +144,7 @@
                         :skip-autosubscribe false
                         :owner ownername)
         (tasks/ui waittillwindownotexist :register-dialog 600)
-        (tasks/sleep 20000)
+        (sleep 20000)
         (verify (<= (tasks/warn-count) beforesubs))
         (verify (tasks/compliance?))))))
 
@@ -155,7 +156,7 @@
   "Asserts that the service level was set system wide after simple autosubscribe."
   [_]
   (verify
-   (tasks/substring? @common-sla
+   (substring? @common-sla
                      (.getStdout (.runCommandAndWait @clientcmd "subscription-manager service-level"))))
   (let [_ (tasks/ui click :system-preferences)
         _ (tasks/ui waittillguiexist :system-preferences-dialog)
@@ -180,7 +181,7 @@
                          index 2)
         not-nil? (fn [b] (not (nil? b)))
         expected (@productmap product)
-        rhel5?   (tasks/substring? "release 5"
+        rhel5?   (substring? "release 5"
                              (.getStdout
                               (.runCommandAndWait
                                @clientcmd

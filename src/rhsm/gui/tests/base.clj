@@ -1,6 +1,7 @@
 (ns rhsm.gui.tests.base
   (:use [test-clj.testng :only (gen-class-testng)]
-        [rhsm.gui.tasks.tasks])
+        [rhsm.gui.tasks.tasks]
+        rhsm.gui.tasks.tools)
   (:require [rhsm.gui.tasks.test-config :as config]
             [clojure.tools.logging :as log])
   (:import [org.testng.annotations BeforeSuite

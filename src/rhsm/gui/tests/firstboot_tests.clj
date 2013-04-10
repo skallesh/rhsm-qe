@@ -6,6 +6,7 @@
         [com.redhat.qe.verify :only (verify)]
         [slingshot.slingshot :only (try+
                                     throw+)]
+        rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
              rhsm.gui.tasks.ui)
@@ -28,7 +29,7 @@
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
-      (tasks/sleep 3000) ;; FIXME find a better way than a hard wait...
+      (sleep 3000) ;; FIXME find a better way than a hard wait...
       (verify (tasks/fbshowing? :register-now))))
   (tasks/ui click :register-now)
   (tasks/ui click :firstboot-forward)
@@ -36,7 +37,7 @@
 
 (defn kill_firstboot []
   (.runCommand @clientcmd "killall -9 firstboot")
-  (tasks/sleep 5000))
+  (sleep 5000))
 
 (defn zero-proxy-values []
   (tasks/set-conf-file-value "proxy_hostname" "")
@@ -146,7 +147,7 @@
   (tasks/ui click :firstboot-back)
   (verify (tasks/ui showing? :register-rhsm))
   (let [output (.getStdout (.runCommandAndWait @clientcmd "subscription-manager identity"))]
-    (verify (tasks/substring? "This system is not yet registered" output))))
+    (verify (substring? "This system is not yet registered" output))))
 
 ;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
 (defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}

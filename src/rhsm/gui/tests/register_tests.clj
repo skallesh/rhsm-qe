@@ -7,6 +7,7 @@
         [slingshot.slingshot :only (try+
                                     throw+)]
         [clojure.string :only (blank?)]
+        rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks])
@@ -41,7 +42,7 @@
   (if owner
     (do
       (tasks/ui click :view-system-facts)
-      (tasks/sleep 5000)
+      (sleep 5000)
       (let [result (tasks/ui objectexist :facts-dialog owner)]
         (tasks/ui click :close-facts)
         (verify (= 1 result))))))
@@ -78,7 +79,7 @@
   register_check_syslog
   "Asserts that register events are logged in the syslog."
   [_]
-  (let [output (tasks/get-logging @clientcmd
+  (let [output (get-logging @clientcmd
                                   sys-log
                                   "register_check_syslog"
                                   nil
@@ -93,7 +94,7 @@
   "Asserts unregister events are logged in the syslog."
   [_]
   ;(tasks/register-with-creds)
-  (let [output (tasks/get-logging @clientcmd
+  (let [output (get-logging @clientcmd
                                   sys-log
                                   "unregister_check_syslog"
                                   nil

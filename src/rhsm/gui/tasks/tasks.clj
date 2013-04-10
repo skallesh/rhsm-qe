@@ -1,14 +1,15 @@
 (ns rhsm.gui.tasks.tasks
   (:use [rhsm.gui.tasks.test-config :only (config
-                                                       clientcmd
-                                                       cli-tasks
-                                                       auth-proxyrunner
-                                                       noauth-proxyrunner)]
+                                           clientcmd
+                                           cli-tasks
+                                           auth-proxyrunner
+                                           noauth-proxyrunner)]
         [slingshot.slingshot :only [throw+ try+]]
         [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (split
                                split-lines
                                trim)]
+        rhsm.gui.tasks.tools
         matchure
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
@@ -22,47 +23,6 @@
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
 (def rhsm-gui-pid (atom nil))
-
-
-(defn get-release []
-  (let [release (.getStdout (.runCommandAndWait
-                             @clientcmd
-                             "cat /etc/redhat-release"))
-        matcher (re-find #"release \d" release)]
-    (case matcher
-      "release 5" :rhel5
-      "release 6" :rhel6
-      "release 7" :rhel7
-      :unknown)))
-
-(defn sleep
-  "Sleeps for a given ammount of miliseconds."
-  [ms]
-  (. Thread (sleep ms)))
-
-(defn bash-bool [i]
-  (= 0 i))
-
-(defn bool [i]
-  (= 1 i))
-
-(def is-boolean?
-  (fn [expn]
-    (or
-      (= expn 'true)
-      (= expn 'false))))
-
-(defmacro loop-timeout [timeout bindings & forms]
-  `(let [starttime# (System/currentTimeMillis)]
-     (loop ~bindings
-       (if  (> (- (System/currentTimeMillis) starttime#) ~timeout)
-         (throw (RuntimeException. (str "Hit timeout of " ~timeout "ms.")))
-         (do ~@forms)))))
-
-(defn #^String substring?
-  "True if s contains the substring."
-  [substring #^String s]
-  (.contains s substring))
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid Credentials|Invalid username or password.*"
@@ -88,9 +48,6 @@
 (defn connect
   ([url] (set-url url))
   ([] (connect (@config :ldtp-url))))
-
-(defn get-default-locale
-  [] (trim (.getStdout (.runCommandAndWait @clientcmd "echo $LANG"))))
 
 (defn start-app
   "starts the subscription-manager-gui
@@ -333,7 +290,6 @@
     )
   (checkforerror))
 
-
 (defn wait-for-progress-bar
   "Waits for a progress bar to finish."
   []
@@ -427,7 +383,6 @@
         (ui click :attach-contract-selection)))
   (checkforerror)
   (wait-for-progress-bar))
-
 
 (defn unsubscribe
   "Unsubscribes from a given subscription, s"
@@ -581,27 +536,6 @@
     (verify (= config-file-user user))
     (verify (= config-file-password password))))
 
-(comment
-  ;old and busted
-  (defn get-logging
-
-    [runner logfile name grep f]
-    (let [marker (str (System/currentTimeMillis) " " name)]
-      (RemoteFileTasks/markFile runner logfile marker)
-      (f)
-      (RemoteFileTasks/getTailFromMarkedFile runner logfile marker grep))))
-
-(defmacro get-logging [runner logfile name grep & forms]
-  "Runs given forms and returns changes to a log file.
-  runner: an instance of a SSHCommandRunner
-  log: string containing which log file to look at
-  name: string used to mark the log file
-  grep: what to grep the results for"
-  `(let [marker# (str (System/currentTimeMillis) " " ~name)]
-     (RemoteFileTasks/markFile ~runner ~logfile marker#)
-     (do ~@forms)
-     (RemoteFileTasks/getTailFromMarkedFile ~runner ~logfile marker# ~grep)))
-
 (defn register-with-creds
   "Registers user with credentials found in automation.properties"
   [& {:keys [re-register?]
@@ -688,27 +622,3 @@
     (.runCommandAndWait @clientcmd command)
     (if update?
       (.runCommandAndWait @clientcmd "subscription-manager facts --update"))))
-
-(defn get-locale-regex
-  "Gets the correct formated locale date string and transforms it into a usable regex.
-    @locale : The locale to use eg: 'en_US' (optional)"
-  ([locale]
-     (let [cmd (str "python -c \"import locale; locale.setlocale(locale.LC_TIME,'"
-                    locale
-                    "'); print locale.nl_langinfo(locale.D_FMT)\"")
-           pyformat (clojure.string/trim (.getStdout (.runCommandAndWait @clientcmd cmd)))
-           transform (fn [s] (cond (= s "%d") "\\\\d{2}"
-                                  (= s "%m") "\\\\d{2}"
-                                  (= s "%y") "\\\\d{2}"
-                                  (= s "%Y") "\\\\d{4}"))]
-       (re-pattern (clojure.string/replace pyformat #"%\w{1}" #(transform %1)))))
-  ([]
-     (get-locale-regex (get-default-locale))))
-
-(comment
-  (defn build-installed-product-map
-    []
-    (let [pemfiles (split-lines (.getStdout (.runcommandAndWait @clientcmd "ls /etc/pki/product/")))
-          productmap (atom {})
-          dir "/etc/pki/product/"]
-      (doseq [pem pemfile]))))

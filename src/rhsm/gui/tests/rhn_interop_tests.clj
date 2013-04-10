@@ -3,6 +3,7 @@
         [rhsm.gui.tasks.test-config :only (config
                                            clientcmd)]
         [com.redhat.qe.verify :only (verify)]
+        rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
              rhsm.gui.tasks.ui)

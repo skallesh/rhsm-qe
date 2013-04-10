@@ -8,6 +8,7 @@
                                     throw+)]
         [clojure.string :only (split
                                blank?)]
+        rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
@@ -99,7 +100,7 @@
             (if (>= row 0)
               (let [startdate (tasks/ui getcellvalue :contract-selection-table row 3)
                     enddate (tasks/ui getcellvalue :contract-selection-table row 4)
-                    datex (tasks/get-locale-regex)]
+                    datex (get-locale-regex)]
                 (verify (not (nil? (re-matches datex startdate))))
                 (verify (not (nil? (re-matches datex enddate))))
                 (recur (dec row)))))
@@ -190,7 +191,7 @@
   [_ subscription contract]
   (try+
    (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all")
-   (tasks/sleep 3000)
+   (sleep 3000)
    (tasks/search)
    (tasks/open-contract-selection subscription)
     (tasks/ui selectrow :contract-selection-table contract)
@@ -208,7 +209,7 @@
                                                          (repeat-cmd (.length max) "<backspace> ")
                                                          num " <enter>")))))]
       (enter-quantity available)
-      (tasks/sleep 500)
+      (sleep 500)
       (tasks/ui click :attach-contract-selection)
       (tasks/checkforerror)
       (tasks/wait-for-progress-bar)
@@ -227,12 +228,12 @@
   "Asserts no traceback is shown when subscribing in quantity."
   [_ subscription contract]
   (let [ldtpd-log "/var/log/ldtpd/ldtpd.log"
-        output (tasks/get-logging @clientcmd
+        output (get-logging @clientcmd
                                   ldtpd-log
                                   "multi-subscribe-tracebacks"
                                   nil
                                   (check_quantity_subscribe nil subscription contract))]
-    (verify (not (tasks/substring? "Traceback" output)))))
+    (verify (not (substring? "Traceback" output)))))
 
 (comment
   ;; TODO: this is not in rhel6.3 branch, finish when that is released
@@ -243,7 +244,7 @@
     check_date_chooser_traceback [_]
     (try
       (let [ldtpd-log "/var/log/ldtpd/ldtpd.log"
-            output (tasks/get-logging @clientcmd
+            output (get-logging @clientcmd
                                       ldtp-log
                                       "date-chooser-tracebacks"
                                       nil
@@ -251,7 +252,7 @@
                                         (tasks/ui selecttab :all-available-subscriptions)
                                         (tasks/ui click :calendar)
                                         (tasks/checkforerror)))]
-        (verify (not (tasks/substring? "Traceback" output))))
+        (verify (not (substring? "Traceback" output))))
       (finally (tasks/restart-app))))
 
   (defn ^{Test {:groups ["subscribe"
@@ -303,7 +304,7 @@
                        :all-subscriptions-view
                        0
                        :skip-dropdowns? true))
-        hasprod? (fn [s] (tasks/substring? product s))
+        hasprod? (fn [s] (substring? product s))
         inmap? (fn [e] (some hasprod? (flatten e)))
         matches (flatten (filter inmap? @productlist))
         not-nil? (fn [b] (not (nil? b)))]
@@ -369,7 +370,7 @@
   [_]
   (allsearch)
   (let [subscription (rand-nth (tasks/get-table-elements :all-subscriptions-view 0))
-        output (tasks/get-logging @clientcmd
+        output (get-logging @clientcmd
                                   sys-log
                                   "subscribe_check_syslog"
                                   nil
@@ -384,7 +385,7 @@
   "Asserts that unsubscribe events are logged in the syslog."
   [_]
   (let [subscription (rand-nth (tasks/get-table-elements :my-subscriptions-view 0))
-        output (tasks/get-logging @clientcmd
+        output (get-logging @clientcmd
                                   sys-log
                                   "unsubscribe_check_syslog"
                                   nil

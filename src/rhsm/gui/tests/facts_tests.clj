@@ -9,6 +9,7 @@
                                split-lines
                                split
                                trim)]
+        rhsm.gui.tasks.tools
         clojure.pprint
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
@@ -19,7 +20,8 @@
             BeforeGroups
             AfterGroups
             Test
-            DataProvider]))
+            DataProvider]
+           org.testng.SkipException))
 
 (def gui-facts (atom nil))
 (def cli-facts (atom nil))

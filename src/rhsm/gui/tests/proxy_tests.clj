@@ -7,6 +7,7 @@
         [slingshot.slingshot :only (try+
                                     throw+)]
         [com.redhat.qe.verify :only (verify)]
+        rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks])
   (:import [org.testng.annotations
@@ -65,7 +66,7 @@
   "Asserts that rhsm can connect after setting a proxy with auth."
   [_]
   (enable_proxy_auth nil)
-  (let [logoutput (tasks/get-logging @auth-proxyrunner
+  (let [logoutput (get-logging @auth-proxyrunner
                                      auth-log
                                      "proxy-auth-connect"
                                      nil
@@ -78,7 +79,7 @@
   "Asserts that rhsm can connect after setting a proxy without auth."
   [_]
   (enable_proxy_noauth nil)
-  (let [logoutput (tasks/get-logging @noauth-proxyrunner
+  (let [logoutput (get-logging @noauth-proxyrunner
                                      noauth-log
                                      "proxy-noauth-connect"
                                      nil
@@ -92,13 +93,13 @@
   [_]
   (disable_proxy nil)
   ;; note: if this takes forever, blank out the proxy log file.
-  (let [logoutput (tasks/get-logging @auth-proxyrunner
+  (let [logoutput (get-logging @auth-proxyrunner
                                      auth-log
                                      "disabled-auth-connect"
                                      nil
                                      (register))]
     (verify (clojure.string/blank? logoutput)))
-  (let [logoutput (tasks/get-logging @noauth-proxyrunner
+  (let [logoutput (get-logging @noauth-proxyrunner
                                      noauth-log
                                      "disabled-auth-connect"
                                      nil
@@ -240,7 +241,7 @@
    (tasks/ui click :configure-proxy)
    (tasks/ui waittillwindowexist :proxy-config-dialog 60)
    (let [location (tasks/ui gettextvalue :proxy-location)]
-     (verify (not (tasks/substring? "http://" location)))
+     (verify (not (substring? "http://" location)))
      (verify (= 2 (count (clojure.string/split location #":")))))
    (finally
      (tasks/ui click :close-proxy)

@@ -1,6 +1,6 @@
 (ns rhsm.gui.tasks.candlepin-tasks
   (:use [rhsm.gui.tasks.test-config :only (config
-                                                       clientcmd)]
+                                           clientcmd)]
         [clojure.string :only (trim blank?)])
   (:require [rhsm.gui.tasks.rest :as rest])
   (:import [com.redhat.qe.tools RemoteFileTasks]

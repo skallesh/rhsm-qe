@@ -9,6 +9,7 @@
         [clojure.string :only (split
                                split-lines
                                trim)]
+        rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
              rhsm.gui.tasks.ui)
@@ -101,7 +102,7 @@
     (tasks/ui click :info-ok)
     ;verify that it added to My Subscriptons
     (tasks/ui selecttab :my-subscriptions)
-    (tasks/sleep 5000)
+    (sleep 5000)
     (verify (< 0 (tasks/ui getrowcount :my-subscriptions-view)))
     (verify (not-nil?
              (some #{entname}
@@ -251,8 +252,8 @@
   "Asserts the correct error message when a non-existant file is imported."
   [_]
   (verify
-   (not (tasks/substring?
-         "Traceback" (tasks/get-logging
+   (not (substring?
+         "Traceback" (get-logging
                       @clientcmd
                       "/var/log/rhsm/rhsm.log"
                       "import_nonexistant"

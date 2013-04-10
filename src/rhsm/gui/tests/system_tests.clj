@@ -6,6 +6,7 @@
         [com.redhat.qe.verify :only (verify)]
         [slingshot.slingshot :only [throw+
                                     try+]]
+        rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [clojure.tools.logging :as log]
@@ -33,12 +34,12 @@
   check_libglade_warnings
   "Asserts that the libglade-WARNINGs are corrected."
   [_]
-  (let [output (tasks/get-logging @clientcmd
+  (let [output (get-logging @clientcmd
                                   ldtpd-log
                                   "check_libglade_warnings"
                                   "libglade-WARNING"
                                   (tasks/start-app))]
-    (verify (not (tasks/substring? "libglade-WARNING" output))))
+    (verify (not (substring? "libglade-WARNING" output))))
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
@@ -46,12 +47,12 @@
   check_gtype_warnings
   "Asserts that the gtype WARNINGs are corrected."
   [_]
-  (let [output (tasks/get-logging @clientcmd
+  (let [output (get-logging @clientcmd
                                   ldtpd-log
                                   "check_gtype_warnings"
                                   "gtype"
                                   (tasks/start-app))]
-    (verify (not (tasks/substring? "gtype" output))))
+    (verify (not (substring? "gtype" output))))
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
@@ -60,14 +61,14 @@
   "Asserts that a second instance of rhsm-gui cannot be run."
   [_]
   (tasks/restart-app)
-  (let [output (tasks/get-logging @clientcmd
+  (let [output (get-logging @clientcmd
                             ldtpd-log
                             "run_second_instance"
                             nil
                             (tasks/start-app)
-                            (tasks/sleep 10000))]
-    (verify (tasks/substring? "subscription-manager-gui is already running" output))
-    (verify (not (tasks/substring? "Traceback" output)))))
+                            (sleep 10000))]
+    (verify (substring? "subscription-manager-gui is already running" output))
+    (verify (not (substring? "Traceback" output)))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-747014"]}}
@@ -77,7 +78,7 @@
   (try
     (tasks/restart-app)
     (tasks/ui click :getting-started)
-    (tasks/sleep 3000)
+    (sleep 3000)
     (verify (= 1 (tasks/ui guiexist :help-dialog)))
     (tasks/ui closewindow :help-dialog)
     (finally (tasks/restart-app))))
@@ -91,7 +92,7 @@
         beforecount (do (exec-shortcut shortcut)
                         ;sleeps are necessary because window doesn't instantly render
                         (tasks/ui waittillwindowexist window 10)
-                        (tasks/sleep 3000)
+                        (sleep 3000)
                         (count-objects window))
         ;this has to be here due to weird issues in RHEL5
         ; where the objectlist was getting cached
@@ -104,7 +105,7 @@
     (exec-shortcut "<ESC>")
     (exec-shortcut shortcut)
     (tasks/ui waittillwindowexist window 10)
-    (tasks/sleep 3000)
+    (sleep 3000)
     (let [newcount (count-objects window)]
       (verify (= beforecount newcount)))))
 
@@ -135,14 +136,14 @@
   [_]
   (try
     (tasks/restart-app)
-    (let [output (tasks/get-logging @clientcmd
+    (let [output (get-logging @clientcmd
                             ldtpd-log
                             "check_online_documentation"
                             nil
                             (tasks/ui click :online-documentation)
                             (tasks/ui waittillguiexist :firefox-help-window 10))]
        (verify (= 1 (tasks/ui guiexist :firefox-help-window)))
-       (verify (not (tasks/substring? "Traceback" output))))
+       (verify (not (substring? "Traceback" output))))
     (finally    (tasks/ui closewindow :firefox-help-window)
                 (tasks/restart-app))))
 
@@ -156,7 +157,7 @@
     (try+ (tasks/register-with-creds :re-register? false)
           (catch [:type :already-registered] _))
     (tasks/ui selecttab :all-available-subscriptions)
-    (let [output (tasks/get-logging @clientcmd
+    (let [output (get-logging @clientcmd
                                     "/var/log/ldtpd/ldtpd.log"
                                     "date_picker_traceback"
                                     "Traceback"
@@ -182,7 +183,7 @@
      (tasks/set-conf-file-value "hostname" "blahblahdoesnotexist.redhat.com")
      (tasks/start-app)
      (tasks/ui waittillwindowexist :main-window 20)
-     (verify (tasks/bool (tasks/ui guiexist :main-window)))
+     (verify (bool (tasks/ui guiexist :main-window)))
      (finally
        (tasks/set-conf-file-value "hostname" hostname)))))
 
