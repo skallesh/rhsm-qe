@@ -66,9 +66,10 @@
   match_each_fact
   "Tests that each fact in the GUI is shwowing the expected or known value."
   [_ fact value]
+  (skip-if-bz-open "921249" (substring? "virt" fact))
   (verify (= (@cli-facts fact) value)))
 
-(defn ^{Test {:groups ["facts" 
+(defn ^{Test {:groups ["facts"
                        "blockedByBug-950146"]}}
   facts_parity
   "Tests that the gui shows the same number of facts as the CLI."
