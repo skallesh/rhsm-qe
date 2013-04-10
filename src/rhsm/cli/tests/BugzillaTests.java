@@ -2106,10 +2106,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException,
 	Exception {
-		SystemDateOnClient=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
-				sm_sshkeyPassphrase,true);
-		SystemDateOnServer=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
-				sm_sshkeyPassphrase,true);
+		
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -3530,7 +3527,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String ServerDateAfterExeceutionOneDayBefore=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase,false);
 		
-		if((!(ClientDateAfterExecution.equals(SystemDateOnClient))) &&((ClientDateAfterExeceutionOneDayBefore.equals(SystemDateOnClient))) ){
+		if((!(ClientDateAfterExecution.equals(SystemDateOnClient))) &&(!(ClientDateAfterExeceutionOneDayBefore.equals(SystemDateOnClient))) ){
 
 			setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
 					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
@@ -3546,6 +3543,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
+	}
+	
+	
+	@BeforeGroups(groups = {"setup"}, value = {"VerifyrhsmcertdRefreshIdentityCert"})
+	public void rgetSystemDate() throws IOException, ParseException {
+	SystemDateOnClient=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+			sm_sshkeyPassphrase,true);
+	SystemDateOnServer=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+			sm_sshkeyPassphrase,true);
 	}
 	
 	@AfterGroups(groups = {"setup"}, value = {"VerifyEmptyCertCauseRegistrationFailure_Test","BugzillaTests"})
