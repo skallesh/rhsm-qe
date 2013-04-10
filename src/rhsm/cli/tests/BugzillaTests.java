@@ -112,7 +112,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify Facts for change in OS ",
 			groups={"createVirtOnlyPool"},
-			enabled=true)
+			enabled=false)
 	public void createVirtOnlyPool () throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -133,10 +133,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	attributes.put("type", "MKT");
 	attributes.put("type", "SVC");
 	attributes.put("virt_limit", "4");
-
-	
-	File entitlementCertFile=null;
-
 	CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
 	CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 	List<SubscriptionPool> poolsaftercreation=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
