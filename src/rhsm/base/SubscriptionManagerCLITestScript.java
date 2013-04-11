@@ -1312,7 +1312,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						 */
 						if (attributeName.equals("arch")) {
 							List<String> supportedArches = new ArrayList<String>(Arrays.asList(attributeValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
-							if (supportedArches.contains("x86")) {supportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
+							if (supportedArches.contains("x86")) {supportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general term to cover all 32-bit intel microprocessors 
 							if (!productSupportedArches.containsAll(supportedArches)) {
 								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' WITH PROVIDED PRODUCT '"+providedProductName+"' IS QUESTIONABLE.  THE PROVIDED PRODUCT '"+providedProductId+"' ARCH ATTRIBUTE '"+attributeValue+"' IS NOT A SUBSET OF THE TOP LEVEL PRODUCT '"+productId+"' ARCH ATTRIBUTE '"+productSupportedArches+"'.");
 							}
