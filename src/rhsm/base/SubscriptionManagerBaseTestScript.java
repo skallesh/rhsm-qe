@@ -104,6 +104,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_sshUser					= getProperty("sm.ssh.user","root");
 	public String sm_sshKeyPrivate				= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
 	public String sm_sshkeyPassphrase			= getProperty("sm.sshkey.passphrase","");
+	public String sm_sshEmergenecyTimeoutMS		= getProperty("sm.ssh.emergencyTimeoutMS",null);
 	
 	public String sm_dbHostname					= getProperty("sm.server.db.hostname","");
 	public String sm_dbSqlDriver				= getProperty("sm.server.db.sqlDriver","");

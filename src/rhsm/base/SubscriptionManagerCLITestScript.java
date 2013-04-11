@@ -81,14 +81,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// create SSHCommandRunners to connect to the subscription-manager clients
 		File sshKeyPrivateKeyFile = new File(System.getProperty("automation.dir", null)+"/"+sm_sshKeyPrivate);
 		if (!sshKeyPrivateKeyFile.exists()) Assert.fail("Expected to find the private ssh key for automation testing at '"+sshKeyPrivateKeyFile+"'.  Ask the RHSM Automation Administrator for a copy.");
-		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) client.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 		clienttasks = new SubscriptionManagerTasks(client);
 		client1 = client;
 		client1tasks = clienttasks;
 		
 		// will we be testing multiple clients?
 		if (!(	sm_client2Hostname.equals("") /*|| client2username.equals("") || client2password.equals("")*/ )) {
-			client2 = new SSHCommandRunner(sm_client2Hostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+			client2 = new SSHCommandRunner(sm_client2Hostname, sm_sshUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
+			if (sm_sshEmergenecyTimeoutMS!=null) client2.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 			client2tasks = new SubscriptionManagerTasks(client2);
 		} else {
 			log.info("Multi-client testing will be skipped.");
@@ -103,7 +105,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// can we create an SSHCommandRunner to connect to the candlepin server ?
 		if (!sm_serverHostname.equals("") && !sm_serverType.equals(CandlepinType.hosted)) {
-			server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+			server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
+			if (sm_sshEmergenecyTimeoutMS!=null) server.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 			servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
 		} else {
 			log.info("Assuming the server is already setup and running.");
