@@ -24,6 +24,7 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
@@ -45,6 +46,75 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
+	
+	@Test(	description="when a product cert is installed that does not match the system (differing arch), assert the installed product status is blocked from going green",
+			groups={"cli.tests","VerifyComplianceOfInstalledProductConsidersSystemArch_Test"/*,"blockedByBug-909467"*/},
+			dataProvider="getProductCertAndSubscriptionPoolData",
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyComplianceOfInstalledProductConsidersSystemArch_Test(Object bugzilla, ProductCert productCert, SubscriptionPool pool) {
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productCert.productId, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(installedProduct.status, "Not Subscribed");
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productCert.productId, clienttasks.getCurrentlyInstalledProducts());
+		
+		// get the arches on which the installation of this product cert is valid
+		List<String> productCertArches = new ArrayList<String>(Arrays.asList(productCert.productNamespace.arch.trim().split(" *, *")));	// Note: the productNamespace.arch can be a comma separated list of values
+		// if the arches contains x86, add all the individual arches for which x86 is an alias
+		if (productCertArches.contains("x86")) {productCertArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general term to cover all 32-bit intel microprocessors 
+		// if arches contains ALL, add this client's arch
+		if (productCertArches.contains("ALL")) productCertArches.add(clienttasks.arch);
+		// if arches contains this client's arch, then this product cert matches this system's arch (green status is achievable)
+		if (productCertArches.contains(clienttasks.arch)) {
+			Assert.assertEquals(installedProduct.status, "Subscribed","When the arch(es) '"+productCert.productNamespace.arch+"' of installed product '"+productCert.productName+"' matches this system's arch '"+clienttasks.arch+"', the highest compliance achieveable is green.");
+		} else {
+			Assert.assertEquals(installedProduct.status, "Partially Subscribed","When the arch(es) '"+productCert.productNamespace.arch+"' of this installed product '"+productCert.productName+"' does not match this system's arch '"+clienttasks.arch+"', the highest compliance achieveable is yellow.");
+		}
+	}
+	@BeforeGroups(groups={"setup"},value="VerifyComplianceOfInstalledProductConsidersSystemArch_Test")
+	public void createFactsFileWithOverridingValuesBeforeVerifyComplianceOfInstalledProductConsidersSystemArch_Test() {
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.put("cpu.cpu_socket(s)","1");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+	}
+	@AfterGroups(groups={"setup"},value="VerifyComplianceOfInstalledProductConsidersSystemArch_Test")
+	public void deleteFactsFileWithOverridingValuesAfterVerifyComplianceOfInstalledProductConsidersSystemArch_Test() {
+		clienttasks.deleteFactsFileWithOverridingValues();
+	}
+	@DataProvider(name="getProductCertAndSubscriptionPoolData")
+	public Object[][] getProductCertAndSubscriptionPoolDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getProductCertAndSubscriptionPoolDataAsListOfLists());
+	}
+	protected List<List<Object>> getProductCertAndSubscriptionPoolDataAsListOfLists() throws JSONException, Exception{
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		//configureProductCertDirAfterClass(); is not needed since the priority of this test is implied as 0 and run first before the other tests alter the productCertDir
+		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+		List<ProductCert> productCertsAdded = new ArrayList<ProductCert>();
+		for (List<Object> allAvailableSubscriptionPoolsDataList : getAllAvailableSubscriptionPoolsDataAsListOfLists()) {
+			SubscriptionPool availableSubscriptionPool = (SubscriptionPool) allAvailableSubscriptionPoolsDataList.get(0);
+			List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId);
+			for (ProductCert productCert : productCerts) {
+				if (providedProductIds.contains(productCert.productId)) {
+					
+					// if a row has already been added for this productCert, skip it since adding it would be redundant testing
+					if (productCertsAdded.contains(productCert)) continue;
+					
+					ll.add(Arrays.asList(new Object[]{null,	productCert, availableSubscriptionPool}));
+					
+					productCertsAdded.add(productCert);	
+				}
+			}
+		}
+
+		return ll;
+	}
+	
+	
+	
+	
+	
+	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by more than one common service level",
 			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","blockedbyBug-859652","cli.tests"},
@@ -558,6 +628,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void afterVerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test() {
 		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
 	}
+	
 	
 	
 	
