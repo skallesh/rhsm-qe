@@ -426,10 +426,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"entitlementcertdir",	"/tmp/server/entitlementcertdir"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"productcertdir",		"/tmp/server/productcertdir"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"consumercertdir",		"/tmp/server/consumercertdir"}));
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"certfrequency",		"200"}));	// obsoleted by bug 882459
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"healfrequency",		"2000"}));	// obsoleted by bug 882459
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"server",		"certcheckinterval",		"200"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"server",		"autoattachinterval",		"2000"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"server",		/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"200"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"server",		/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"2000"}));
 		
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"baseurl",				"https://rhsm.baseurl.com"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"ca_cert_dir",			"/tmp/rhsm/ca_cert_dir"}));
@@ -450,16 +448,12 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"report_package_profile",	"0"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"plugindir",				"/tmp/rhsm/plugindir"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"pluginconfdir",			"/tmp/rhsm/pluginconfdir"}));
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsm",			"certfrequency",		"100"}));	// obsoleted by bug 882459
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsm",			"healfrequency",		"1000"}));	// obsoleted by bug 882459
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsm",			"certcheckinterval",		"100"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsm",			"autoattachinterval",		"1000"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"100"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"1000"}));
 		
 		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"ca_cert_dir",			"/tmp/rhsmcertd/ca_cert_dir"}));
-		//ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"certFrequency",		"300"}));	// obsoleted by bug 882459
-		//ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"healFrequency",		"3000"}));	// obsoleted by bug 882459
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	"certcheckinterval",		"300"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	"autoattachinterval",		"3000"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"300"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"3000"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"hostname",				"rhsmcertd.hostname.redhat.com"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"insecure",				"0"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"port",					"3000"}));

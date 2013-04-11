@@ -188,7 +188,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	public void checkTimeBeforeClass() throws Exception{
 		checkTime("candlepin server", server);
 		checkTime("client", client);
-		originalCertFrequency = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd", "certFrequency");
+		originalCertFrequency = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd", /*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");
 		clienttasks.restart_rhsmcertd(certFrequency, null, false, null);
 	}
 	@AfterClass(groups="setup")

@@ -801,7 +801,7 @@ public class SubscriptionManagerTasks {
 	
 	public void waitForRegexInRhsmcertdLog(String logRegex, int timeoutMinutes) {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -1 "+rhsmcertdLogFile,Integer.valueOf(0));
-		int retryMilliseconds = Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency"))*60*1000;  // certFrequency is in minutes
+		int retryMilliseconds = Integer.valueOf(getConfFileParameter(rhsmConfFile, /*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval"))*60*1000;  // certFrequency is in minutes
 		int t = 0;
 		
 		while(!sshCommandRunner.runCommandAndWait("tail -1 "+rhsmcertdLogFile).getStdout().trim().matches(logRegex) && (t*retryMilliseconds < timeoutMinutes*60*1000)) {
@@ -2997,10 +2997,8 @@ public class SubscriptionManagerTasks {
 		defaultNames.add("productCertDir");
 		defaultNames.add("entitlementCertDir");
 		defaultNames.add("consumerCertDir");
-		//defaultNames.add("certFrequency");	// obsoleted by bug 882459
-		//defaultNames.add("healFrequency");	// obsoleted by bug 882459
-		defaultNames.add("certCheckInterval");
-		defaultNames.add("autoAttachInterval");
+		defaultNames.add(/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");
+		defaultNames.add(/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval");
 		defaultNames.add("report_package_profile");
 		defaultNames.add("pluginDir");
 		defaultNames.add("pluginConfDir");

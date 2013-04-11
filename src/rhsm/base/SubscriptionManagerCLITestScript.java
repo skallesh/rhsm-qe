@@ -243,11 +243,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (!sm_rhsmConsumerCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "consumerCertDir", sm_rhsmConsumerCertDir);				else sm_rhsmConsumerCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "consumerCertDir");
 	
 		// rhsm.conf [rhsmcertd] configurations
-		//if (!sm_rhsmcertdCertFrequency.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", sm_rhsmcertdCertFrequency);				else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");	// name changed by bug 882459
-		//if (!sm_rhsmcertdHealFrequency.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "healFrequency", sm_rhsmcertdHealFrequency);				else sm_rhsmcertdHealFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "healFrequency");	// name changed by bug 882459
-		if (!sm_rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certCheckInterval", sm_rhsmcertdCertFrequency);			else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certCheckInterval");
-		if (!sm_rhsmcertdHealFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "autoAttachInterval", sm_rhsmcertdHealFrequency);			else sm_rhsmcertdHealFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "autoAttachInterval");
-	
+		if (!sm_rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, /*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval",	sm_rhsmcertdCertFrequency);				else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, /*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");
+		if (!sm_rhsmcertdHealFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, /*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval",	sm_rhsmcertdHealFrequency);				else sm_rhsmcertdHealFrequency = smt.getConfFileParameter(smt.rhsmConfFile, /*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval");
+		
 		smt.initializeFieldsFromConfigFile();
 		smt.removeAllCerts(true,true, false);
 		smt.removeAllFacts();
