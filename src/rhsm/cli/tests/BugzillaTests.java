@@ -178,6 +178,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result, changedHostname," Fact matches the hostname(After changing the hostname..)");
 		
 	}
+	@AfterGroups(groups={"setup"},value="FactsForChangeIn_OS")
+	public void restoreHostnameAfterFactsForChangeIn_OS() {
+		if (clienttasks!=null) client.runCommandAndWait("hostname "+clienttasks.hostname);
+	}
 	
 	
 	/**
