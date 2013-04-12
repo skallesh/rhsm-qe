@@ -827,7 +827,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("100000000000002"))){
 				moveProductCertFiles(installed.productId+"_"+ ".pem");
@@ -1096,7 +1096,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
@@ -1690,7 +1690,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
+		clienttasks.deleteFactsFileWithOverridingValues();
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		for (SubscriptionPool subscriptionpool : clienttasks
 				.getCurrentlyAvailableSubscriptionPools()) {
@@ -2047,13 +2047,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Integer sockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		factsMap.put("uname.machine", "i386");
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts",
-				factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		String listAfterUpdate = clienttasks.facts(true, null, null, null,
 				null).getStdout();
 		Assert.assertNoMatch(listAfterUpdate, listBeforeUpdate);
-		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
+		clienttasks.deleteFactsFileWithOverridingValues();
 		clienttasks.facts(null, true, null, null, null);
 
 	}
@@ -2314,7 +2313,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		int sockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
@@ -2339,7 +2338,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}}
 		sockets = 1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 	}
 
@@ -2588,8 +2587,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts",
-				factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
@@ -2618,8 +2616,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		moreSockets = 1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts",
-				factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 
 	}
@@ -2711,7 +2708,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Map<String, String> factsMap = new HashMap<String, String>();
 		Integer moreSockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues("/socket.facts",factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		for (SubscriptionPool SubscriptionPool : clienttasks
 				.getCurrentlyAllAvailableSubscriptionPools()) {
@@ -2734,8 +2731,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		moreSockets = 1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues("/socket.facts",
-				factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		Assert.assertEquals(Flag, "true");
 	}
 
@@ -2969,8 +2965,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("uname.machine", String.valueOf(architecture));
-		clienttasks.createFactsFileWithOverridingValues("/socket.facts",
-				factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 	}
 
