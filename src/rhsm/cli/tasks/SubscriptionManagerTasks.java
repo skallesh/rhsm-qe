@@ -369,7 +369,7 @@ public class SubscriptionManagerTasks {
 	
 	
 	public void removeAllFacts() {
-		log.info("Cleaning out facts from consumerCertDir: "+this.factsDir);
+		log.info("Cleaning out facts directory: "+this.factsDir);
 		if (!this.factsDir.startsWith("/etc/rhsm/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING FACTS FROM: "+this.factsDir);
 		else sshCommandRunner.runCommandAndWait("rm -rf "+this.factsDir+"/*.facts");
 	}
