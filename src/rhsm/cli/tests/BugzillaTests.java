@@ -78,6 +78,99 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
+			groups={"SubscriptionManagerAccess","blockedByBug-878588"},
+			enabled=true)
+	public void AddingExpiredEntitlementToActivationKey() throws Exception {
+		int endingMinutesFromNow = 2;
+		Integer addQuantity=1;
+		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
+				sm_clientOrg, System.currentTimeMillis());
+		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
+		mapActivationKeyRequest.put("name", name);
+		JSONObject jsonActivationKeyRequest = new JSONObject(
+				mapActivationKeyRequest);
+		JSONObject jsonActivationKey = new JSONObject(
+				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
+						sm_clientPassword, sm_serverUrl, "/owners/"
+								+ sm_clientOrg + "/activation_keys",
+								jsonActivationKeyRequest.toString()));
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		
+		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
+
+		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);			
+		for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
+			if(result.productId.equals("100000000000002")){
+				Assert.assertEquals(result.status, "Expired");
+			}
+		}
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
+			groups={"SubscriptionManagerAccess","blockedByBug-878588"},
+			enabled=true)
+	public void SubscriptionManagerAccess() throws Exception {
+		String username="test";
+		String password="password";
+		client.runCommandAndWait("useradd "+username);
+		client.runCommandAndWait("echo "+password+" | passwd "+username +"--stdin");
+		client=new SSHCommandRunner(sm_clientHostname, username, password,null);
+		SSHCommandResult result=client.runCommandAndWait("subscription-manager");
+		client.runCommandAndWait("logout");
+		client.runCommandAndWait("userdel -r "+username);
+		client=new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		String expectedMessage="Error: this command requires root access to execute";
+		Assert.assertEquals(result.getStderr().trim(), expectedMessage);
+
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
+			groups={"RegisterTwoClientsUsingSameConsumerId","blockedByBug-949990"},
+			enabled=true)
+	public void RegisterTwoClientsUsingSameConsumerId() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String consumerid=clienttasks.getCurrentConsumerId();
+		clienttasks.subscribe(true, null,(String)null, null, null,  null, null, null, null, null, null);
+		List<ProductSubscription> consumedSubscriptionOnFirstMachine=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		client2tasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, null, null,(String)null, null, null, null, true, null, null, null, null);
+		String result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
+		List<ProductSubscription> consumedSubscriptionOnSecondMachine=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(consumedSubscriptionOnFirstMachine, consumedSubscriptionOnSecondMachine);
+		result=clienttasks.getCurrentConsumerId();
+		Assert.assertEquals(result.trim(),consumerid);
+		Assert.assertEquals(result.trim(), clienttasks.msg_ConsumerNotRegistered);
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
 	@Test(	description="verify proxy option in repos list ",
 			groups={"ProxyOptionForRepos"},
 			enabled=true)
@@ -86,9 +179,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
-		String result=clienttasks.repos(true,(String)null,(String)null, sm_basicauthproxyPort, null, null).getStdout();
-		System.out.println(result);
-		
+		String result=clienttasks.repos(true,(String)null,(String)null, sm_basicauthproxyHostname+":"+sm_basicauthproxyPort, null, null).getStdout();
+		String expectedMessage="Network error, unable to connect to server."+"\n"+"Please see /var/log/rhsm/rhsm.log for more information.";
+		Assert.assertNotSame(result.trim(), expectedMessage);
 	}
 	
 	/**
@@ -114,7 +207,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"Sufficient future pools are not available");
 			int i= randomGenerator.nextInt(availOnDate.size());
 			List<String> providedPools = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword, sm_serverUrl, availOnDate.get(i).poolId);
-			System.out.println(providedPools.get(randomGenerator.nextInt(providedPools.size())));
 			String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
 					sm_clientOrg, System.currentTimeMillis());
 			Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
@@ -377,7 +469,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
 		String username="stage_test_12";
 		String password="redhat";
-		server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		//server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		System.out.println(sm_serverInstallDir+servertasks.generatedProductsDir+"  "+server+ "  "+username+"  "+password );
 		server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
 		clienttasks.unregister(null, null, null);
@@ -3513,7 +3605,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
 		//};
 		List<String> providedProducts = null;
-		
+		providedProducts.add("100000000000002");
+
 		// create the subscription
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
