@@ -133,7 +133,7 @@ public class SubscriptionManagerTasks {
 		redhatReleaseXY = matcher.group();
 		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
 		
-		// predict sockets on the system
+		// predict sockets on the system   http://libvirt.org/formatdomain.html#elementsCPU
 		if (Float.valueOf(redhatReleaseXY) < 6.0f) {
 			sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | sort | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
 		} else if (Float.valueOf(redhatReleaseXY) < 6.4f) {
