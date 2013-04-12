@@ -522,7 +522,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, packagesNotSupportedLogMsg).trim().isEmpty(), "When the entitlements server supports package upload, this message should NOT be logged to "+clienttasks.rhsmLogFile+": "+packagesNotSupportedLogMsg);
 			Assert.assertTrue(!RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, reportPackageProfileOffLogMsg).trim().isEmpty(), "When the entitlements server supports package upload and rhsm.report_package_profile is turned off , this expected message should be logged to "+clienttasks.rhsmLogFile+": "+reportPackageProfileOffLogMsg);
 		} else {
-			Assert.assertTrue(!RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, packagesNotSupportedLogMsg).trim().isEmpty(), "Regardless of the rhsm.report_package_profile value, when the entitlements server does not support package upload, this expected message is logged to "+clienttasks.rhsmLogFile+": "+packagesNotSupportedLogMsg);
+			Assert.assertTrue(!RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, packagesNotSupportedLogMsg).trim().isEmpty(), "Regardless of the rhsm.report_package_profile value, when the entitlements server does not support package upload, message '"+packagesNotSupportedLogMsg+"' is logged to "+clienttasks.rhsmLogFile+".");
 		}
 		
 		if (!isPackagesSupported) throw new SkipException("Only limited testing of the rhsm.report_package_profile enablement parameter can be achieved when the entitlement server does not support uploading the package profile of a consumer.  This testing should be done against a Katello server.");
