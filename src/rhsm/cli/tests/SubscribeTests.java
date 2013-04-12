@@ -165,6 +165,17 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					Assert.assertEquals(installedProducts.size(),1, "The status of installed product '"+productCert.productName+"' should only be reported once in the list of installed products.");
 					InstalledProduct installedProduct = installedProducts.get(0);
 					
+					// TEMPORARY WORKAROUND FOR BUG
+					if (installedProduct.arch.contains(",")) {
+						boolean invokeWorkaroundWhileBugIsOpen = true;
+						String bugId="951633"; // Bug 951633 - installed product with comma separated arch attribute fails to go green
+						try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+						if (invokeWorkaroundWhileBugIsOpen) {
+							throw new SkipException("Verification for status of Installed Product name='"+installedProduct.productName+"' with arch='"+installedProduct.arch+"' is blocked by open bugzilla '"+bugId+"'.");
+						}
+					}
+					// END OF WORKAROUND
+					
 					// decide what the status should be...  "Subscribed" or "Partially Subscribed" (SPECIAL CASE WHEN poolProductSocketsAttribute=0  or "null" SHOULD YIELD Subscribed)
 					String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
 					// treat a non-numeric poolProductSocketsAttribute as if it was null
@@ -628,7 +639,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getInstalledProductCertsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyInstalledProductCertWasAutoSubscribed_Test(ProductCert productCert) throws Exception {
+	public void VerifyInstalledProductCertWasAutoSubscribed_Test(Object bugzilla, ProductCert productCert) throws Exception {
 		
 		// search the subscriptionPoolProductData for a bundledProduct matching the productCert's productName
 		// (subscriptionPoolProductData was set in a prior test methods that this test depends on)
@@ -1087,7 +1098,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		for (ProductCert productCert: clienttasks.getCurrentProductCerts()) {
-			ll.add(Arrays.asList(new Object[]{productCert}));
+			BlockedByBzBug blockedByBzBug = null;
+			
+			// Bug 951633 - installed product with comma separated arch attribute fails to go green 
+			if (productCert.productNamespace.arch.contains(",")) blockedByBzBug = new BlockedByBzBug("951633");
+			
+			ll.add(Arrays.asList(new Object[]{blockedByBzBug, productCert}));
 		}
 		
 		return ll;
