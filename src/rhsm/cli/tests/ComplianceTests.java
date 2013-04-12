@@ -21,6 +21,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -96,11 +97,15 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId);
 			for (ProductCert productCert : productCerts) {
 				if (providedProductIds.contains(productCert.productId)) {
+					BlockedByBzBug blockedByBzBug = null;
 					
 					// if a row has already been added for this productCert, skip it since adding it would be redundant testing
 					if (productCertsAdded.contains(productCert)) continue;
 					
-					ll.add(Arrays.asList(new Object[]{null,	productCert, availableSubscriptionPool}));
+					// Bug 951633 - installed product with comma separated arch attribute fails to go green 
+					if (productCert.productNamespace.arch.contains(",")) blockedByBzBug = new BlockedByBzBug("951633");
+					
+					ll.add(Arrays.asList(new Object[]{blockedByBzBug,	productCert, availableSubscriptionPool}));
 					
 					productCertsAdded.add(productCert);	
 				}
