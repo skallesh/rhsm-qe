@@ -524,6 +524,19 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		for (InstalledProduct autosubscribedProduct : autosubscribedProducts) {
 			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", autosubscribedProduct.productName, installedProducts);
 			if (providedProductIds.contains(installedProduct.productId)) {
+				
+				// TEMPORARY WORKAROUND FOR BUG
+				if (installedProduct.arch.contains(",")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="951633"; // Bug 951633 - installed product with comma separated arch attribute fails to go green
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						log.warning("Skipping assertion for autosubscribed status of Installed Product name='"+installedProduct.productName+"' while Bugzilla '"+bugId+"' is open.");
+						continue;
+					}
+				}
+				// END OF WORKAROUND
+				
 				Assert.assertEquals(autosubscribedProduct.status,"Subscribed","Status for productName '"+autosubscribedProduct.productName+"' in feedback from registration with autosubscribe.");
 			} else {
 				Assert.assertEquals(autosubscribedProduct.status,"Not Subscribed","Status for productName '"+autosubscribedProduct.productName+"' in feedback from registration with autosubscribe.");
@@ -534,9 +547,22 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		for (InstalledProduct installedProduct : installedProducts) {
 			if (providedProductIds.contains(installedProduct.productId)) {
-				Assert.assertEquals(installedProduct.status,"Subscribed","Status for Installed productId '"+installedProduct.productId+"' in list of installed products after registration with autosubscribe.");
+				
+				// TEMPORARY WORKAROUND FOR BUG
+				if (installedProduct.arch.contains(",")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="951633"; // Bug 951633 - installed product with comma separated arch attribute fails to go green
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {			
+						log.warning("Skipping assertion for autosubscribed status of Installed Product name='"+installedProduct.productName+"' while Bugzilla '"+bugId+"' is open.");
+						continue;
+					}
+				}
+				// END OF WORKAROUND
+				
+				Assert.assertEquals(installedProduct.status,"Subscribed","Status for Installed Product name='"+installedProduct.productName+"' id='"+installedProduct.productId+"' in list of installed products after registration with autosubscribe.");
 			} else {
-				Assert.assertEquals(installedProduct.status,"Not Subscribed","Status for Installed productId '"+installedProduct.productId+"' in list of installed products after registration with autosubscribe.");
+				Assert.assertEquals(installedProduct.status,"Not Subscribed","Status for Installed Product name='"+installedProduct.productName+"' id='"+installedProduct.productId+"' in list of installed products after registration with autosubscribe.");
 			}
 		}
 		Assert.assertEquals(autosubscribedProducts.size(), installedProducts.size(), "The 'Installed Product Current Status' reported during register --autosubscribe should contain the same number of products as reported by list --installed.");
