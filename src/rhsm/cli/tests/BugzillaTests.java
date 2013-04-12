@@ -73,6 +73,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify proxy option in repos list ",
+			groups={"ProxyOptionForRepos"},
+			enabled=true)
+	public void ProxyOptionForRepos() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		String result=clienttasks.repos(true,(String)null,(String)null, sm_basicauthproxyPort, null, null).getStdout();
+		System.out.println(result);
+		
+	}
 	
 	/**
 	 * @author skallesh
