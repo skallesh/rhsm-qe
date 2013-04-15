@@ -79,6 +79,72 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
+			groups={"ManualChangesToRedhat_Repo","blockedByBug-878588"},
+			enabled=true)
+	public void ManualChangesToRedhat_Repo() throws Exception {
+		Boolean expected=false;
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		List<SubscriptionPool> Availablepools=clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool =Availablepools.get(randomGenerator.nextInt(Availablepools.size()));
+		clienttasks.subscribeToSubscriptionPool(pool);
+		client.runCommand("sed -i \"/\\[always-enabled-content]/,/\\[/s/^enabled\\s*=.*/enabled=false/\" /etc/yum.repos.d/redhat.repo");	
+		for(Repo repo : clienttasks.getCurrentlySubscribedRepos()){
+			if(repo.repoId.equals("always-enabled-content")){
+				Assert.assertEquals(repo.enabled, expected);
+			}
+		}
+		client.runCommand(" yum repolist enabled");
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		String expected_message="The system is not entitled to use any repositories.";
+		String reposlist=clienttasks.repos(true, (String)null, null, null, null, null).getStdout();
+			Assert.assertEquals(reposlist.trim(), expected_message);
+		clienttasks.unregister(null, null, null);
+		reposlist=clienttasks.repos(true, (String)null, null, null, null, null).getStdout();
+		Assert.assertEquals(reposlist.trim(), expected_message);
+		clienttasks.subscribeToSubscriptionPool(pool);
+		for(Repo repo : clienttasks.getCurrentlySubscribedRepos()){
+			expected=true;
+			if(repo.repoId.equals("always-enabled-content")){
+				Assert.assertEquals(repo.enabled, expected);
+			}
+		}
+		}
+		
+		
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
+			groups={"SubscriptionManagerAccess","blockedByBug-878588"},
+			enabled=true)
+	public void ExtraneousSlashInRequesturls () throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		Boolean actual =true;
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "server",
+				"prefix".toLowerCase(), "/candlepin" });
+		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+		clienttasks.config(null, null, true,listOfSectionNameValues);
+		Boolean flag = RegexInRhsmLog("//",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker,"GET"));
+		Assert.assertEquals(flag, actual);
+
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
 			groups={"SubscriptionManagerAccess","blockedByBug-878588"},
 			enabled=true)
 	public void AddingExpiredEntitlementToActivationKey() throws Exception {
@@ -1503,10 +1569,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		SubscriptionManagerCLITestScript.sleep(2 * 60 * 1000);
-		Boolean flag = waitForRegexInRhsmLog("Error",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
+		Boolean flag = RegexInRhsmLog("Error",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 		Assert.assertEquals(flag, actual);
 		actual=true;
-		flag = waitForRegexInRhsmLog("Installed product IDs: \\[\\]",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
+		flag = RegexInRhsmLog("Installed product IDs: \\[\\]",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 		Assert.assertEquals(flag, actual);
 				
 	}
@@ -3098,7 +3164,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						null, null, null, null, null, null);
 			}
 	
-			Boolean flag = waitForRegexInRhsmLog("@ /etc/pki/entitlement",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
+			Boolean flag = RegexInRhsmLog("@ /etc/pki/entitlement",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 			Assert.assertEquals(flag, actual);
 			
 
@@ -3473,7 +3539,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return client.runCommandAndWait(command);
 	}
 
-	public Boolean waitForRegexInRhsmLog(String logRegex, String input) {
+	public Boolean RegexInRhsmLog(String logRegex, String input) {
 		
 		Pattern pattern = Pattern.compile(logRegex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(input);
