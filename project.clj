@@ -47,6 +47,7 @@
     (use '[slingshot.slingshot :only (try+ throw+)])
     (require '[clojure.tools.logging :as log])
     (do
+      (use :reload-all '[rhsm.gui.tasks.tools])
       (require :reload-all '[rhsm.gui.tasks.test-config :as config])
       (require :reload-all '[rhsm.gui.tasks.tasks :as tasks])
       (require :reload-all '[rhsm.gui.tasks.candlepin-tasks :as ctasks])

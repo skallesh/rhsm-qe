@@ -1,6 +1,6 @@
 (ns rhsm.gui.tasks.test-config
   (:import [com.redhat.qe.auto.testng TestScript]
-	   [com.redhat.qe.tools SSHCommandRunner]
+           [com.redhat.qe.tools SSHCommandRunner]
            [rhsm.cli.tasks SubscriptionManagerTasks]
            [rhsm.cli.tasks CandlepinTasks]
            [rhsm.gui.tasks SSLUtilities]))
@@ -46,6 +46,7 @@
                                             "sm.sshkey.private"
                                             ".ssh/id_auto_dsa")
                          :ssh-key-passphrase "sm.sshkey.passphrase"
+                         :ssh-timeout "sm.ssh.emergencyTimeoutMS"
                          :basicauth-proxy-hostname "sm.basicauthproxy.hostname"
                          :basicauth-proxy-port "sm.basicauthproxy.port"
                          :basicauth-proxy-username "sm.basicauthproxy.username"
@@ -53,8 +54,8 @@
                          :noauth-proxy-hostname "sm.noauthproxy.hostname"
                          :noauth-proxy-port "sm.noauthproxy.port"})]
        (merge m (property-map
-		 {:ldtp-url (DefaultMapKey. "sm.ldtp.url"
-			      (str "http://" (m :client-hostname) ":4118"))}))))
+                 {:ldtp-url (DefaultMapKey. "sm.ldtp.url"
+                              (str "http://" (m :client-hostname) ":4118"))}))))
 (def config (atom {}))
 (def clientcmd (atom nil))
 (def cli-tasks (atom nil))
@@ -67,10 +68,12 @@
   (swap! config merge (get-properties))
   ;; client command runner to run ssh commands on the rhsm client box
   (reset! clientcmd (SSHCommandRunner. (@config :client-hostname)
-				       (@config :ssh-user)
-				       (@config :ssh-key-private)
-				       (@config :ssh-key-passphrase)
-				       nil))
+                                       (@config :ssh-user)
+                                       (@config :ssh-key-private)
+                                       (@config :ssh-key-passphrase)
+                                       nil))
+  (when (@config :ssh-timeout)
+    (.setEmergencyTimeout @clientcmd (Long/valueOf (@config :ssh-timeout))))
   ;; client command runner to run file and other tasks on rhsm client box
   (reset! cli-tasks (SubscriptionManagerTasks. @clientcmd))
   (.initializeFieldsFromConfigFile @cli-tasks)
@@ -80,12 +83,16 @@
                                               (@config :ssh-key-private)
                                               (@config :ssh-key-passphrase)
                                               nil))
+  (when (@config :ssh-timeout)
+    (.setEmergencyTimeout @auth-proxyrunner (Long/valueOf (@config :ssh-timeout))))
   ;; command runner to run ssh commands on the proxy server (no authentication)
   (reset! noauth-proxyrunner (SSHCommandRunner. (@config :noauth-proxy-hostname)
                                                 (@config :ssh-user)
                                                 (@config :ssh-key-private)
                                                 (@config :ssh-key-passphrase)
                                                 nil))
+  (when (@config :ssh-timeout)
+    (.setEmergencyTimeout @noauth-proxyrunner (Long/valueOf (@config :ssh-timeout))))
   ;; instantiate CandlepinTasks
   (reset! candlepin-tasks (CandlepinTasks.))
   ;; turn off SSL Checking so rest API works
