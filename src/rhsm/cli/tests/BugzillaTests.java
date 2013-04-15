@@ -78,8 +78,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
-			groups={"ManualChangesToRedhat_Repo","blockedByBug-878588"},
+	@Test(	description="verify Manual Changes To Redhat.Repo is sticky",
+			groups={"ManualChangesToRedhat_Repo","blockedByBug-797243"},
 			enabled=true)
 	public void ManualChangesToRedhat_Repo() throws Exception {
 		Boolean expected=false;
@@ -97,7 +97,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		client.runCommand(" yum repolist enabled");
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		String expected_message="The system is not entitled to use any repositories.";
+		String expected_message="This system has no repositories available through subscriptions.";
 		String reposlist=clienttasks.repos(true, (String)null, null, null, null, null).getStdout();
 			Assert.assertEquals(reposlist.trim(), expected_message);
 		clienttasks.unregister(null, null, null);
@@ -120,8 +120,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
-			groups={"SubscriptionManagerAccess","blockedByBug-878588"},
+	@Test(	description="Extraneous / InRequest urls in the rhsm.log file",
+			groups={"ExtraneousSlashInRequesturls","blockedByBug-848836"},
 			enabled=true)
 	public void ExtraneousSlashInRequesturls () throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
