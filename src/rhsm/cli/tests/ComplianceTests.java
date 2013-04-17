@@ -50,28 +50,36 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="when a product cert is installed that does not match the system (differing arch), assert the installed product status is blocked from going green",
 			groups={"cli.tests","VerifyComplianceOfInstalledProductConsidersSystemArch_Test"/*,"blockedByBug-909467"*/},
-			dataProvider="getProductCertAndSubscriptionPoolData",
+			dataProvider="getSubscriptionPoolProvidingProductIdOnArchData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyComplianceOfInstalledProductConsidersSystemArch_Test(Object bugzilla, ProductCert productCert, SubscriptionPool pool) {
+	public void VerifyComplianceOfInstalledProductConsidersSystemArch_Test(Object bugzilla, SubscriptionPool pool, String providingProductId, String poolArch) {
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
-		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productCert.productId, clienttasks.getCurrentlyInstalledProducts());
+		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(installedProduct.status, "Not Subscribed");
 		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-		installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productCert.productId, clienttasks.getCurrentlyInstalledProducts());
+		installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
 		
-		// get the arches on which the installation of this product cert is valid
-		List<String> productCertArches = new ArrayList<String>(Arrays.asList(productCert.productNamespace.arch.trim().split(" *, *")));	// Note: the productNamespace.arch can be a comma separated list of values
-		// if the arches contains x86, add all the individual arches for which x86 is an alias
-		if (productCertArches.contains("x86")) {productCertArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general term to cover all 32-bit intel microprocessors 
-		// if arches contains ALL, add this client's arch
-		if (productCertArches.contains("ALL")) productCertArches.add(clienttasks.arch);
-		// if arches contains this client's arch, then this product cert matches this system's arch (green status is achievable)
-		if (productCertArches.contains(clienttasks.arch)) {
-			Assert.assertEquals(installedProduct.status, "Subscribed","When the arch(es) '"+productCert.productNamespace.arch+"' of installed product '"+productCert.productName+"' matches this system's arch '"+clienttasks.arch+"', the highest compliance achieveable is green.");
-		} else {
-			Assert.assertEquals(installedProduct.status, "Partially Subscribed","When the arch(es) '"+productCert.productNamespace.arch+"' of this installed product '"+productCert.productName+"' does not match this system's arch '"+clienttasks.arch+"', the highest compliance achieveable is yellow.");
+		// expand the arches that an entitlement from this subscription pool covers
+		List<String> poolArches = new ArrayList<String>(Arrays.asList(poolArch.trim().split(" *, *")));	// Note: the arch can be a comma separated list of values
+		// expand the x86 alias
+		if (poolArches.contains("x86")) {poolArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general term to cover all 32-bit intel microprocessors 
+		
+		// expand the arches that this installed product is valid on
+		List<String> installedProductArches = new ArrayList<String>(Arrays.asList(installedProduct.arch.trim().split(" *, *")));	// Note: the arch can be a comma separated list of values
+		// expand the x86 alias
+		if (installedProductArches.contains("x86")) {installedProductArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general term to cover all 32-bit intel microprocessors 
+
+		// if the poolArches contains any one element of installedProductArches and contains the system's arch, then status should go "green", otherwise it should be "yellow"
+		String expectedStatus="Partially Subscribed";	// yellow
+		for (String installedProductArch : installedProductArches) {
+			if (poolArches.contains(installedProductArch)) {
+				if (poolArches.contains(clienttasks.arch)) {
+					expectedStatus="Subscribed";	// green
+				}
+			}
 		}
+		Assert.assertEquals(installedProduct.status, expectedStatus,"When installed product '"+installedProduct.productName+"' valid on arch(es) '"+installedProduct.arch+"' and the installed system's arch '"+clienttasks.arch+"' do not match the subscription pool's product arch '"+poolArch+"' , the installed product compliance achieveable is limited to yellow after subscribing to '"+pool.subscriptionName+"'.");
 	}
 	@BeforeGroups(groups={"setup"},value="VerifyComplianceOfInstalledProductConsidersSystemArch_Test")
 	public void createFactsFileWithOverridingValuesBeforeVerifyComplianceOfInstalledProductConsidersSystemArch_Test() {
@@ -83,31 +91,32 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void deleteFactsFileWithOverridingValuesAfterVerifyComplianceOfInstalledProductConsidersSystemArch_Test() {
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
-	@DataProvider(name="getProductCertAndSubscriptionPoolData")
-	public Object[][] getProductCertAndSubscriptionPoolDataAs2dArray() throws JSONException, Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getProductCertAndSubscriptionPoolDataAsListOfLists());
+	@DataProvider(name="getSubscriptionPoolProvidingProductIdOnArchData")
+	public Object[][] getSubscriptionPoolProvidingProductIdOnArchDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionPoolProvidingProductIdOnArchDataAsListOfLists());
 	}
-	protected List<List<Object>> getProductCertAndSubscriptionPoolDataAsListOfLists() throws JSONException, Exception{
+	protected List<List<Object>> getSubscriptionPoolProvidingProductIdOnArchDataAsListOfLists() throws JSONException, Exception{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		//configureProductCertDirAfterClass(); is not needed since the priority of this test is implied as 0 and run first before the other tests alter the productCertDir
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
-		List<ProductCert> productCertsAdded = new ArrayList<ProductCert>();
+		List<String> productIdArchTested = new ArrayList<String>();
 		for (List<Object> allAvailableSubscriptionPoolsDataList : getAllAvailableSubscriptionPoolsDataAsListOfLists()) {
 			SubscriptionPool availableSubscriptionPool = (SubscriptionPool) allAvailableSubscriptionPoolsDataList.get(0);
 			List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId);
+			String poolProductArch = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId, "arch");
 			for (ProductCert productCert : productCerts) {
 				if (providedProductIds.contains(productCert.productId)) {
 					BlockedByBzBug blockedByBzBug = null;
 					
-					// if a row has already been added for this productCert, skip it since adding it would be redundant testing
-					if (productCertsAdded.contains(productCert)) continue;
+					// if a row has already been added for this productId+arch combination, skip it since adding it would be redundant testing
+					if (productIdArchTested.contains(productCert.productId+poolProductArch)) continue;
 					
 					// Bug 951633 - installed product with comma separated arch attribute fails to go green 
 					if (productCert.productNamespace.arch.contains(",")) blockedByBzBug = new BlockedByBzBug("951633");
 					
-					ll.add(Arrays.asList(new Object[]{blockedByBzBug,	productCert, availableSubscriptionPool}));
+					ll.add(Arrays.asList(new Object[]{blockedByBzBug, availableSubscriptionPool, productCert.productId, poolProductArch}));
 					
-					productCertsAdded.add(productCert);	
+					productIdArchTested.add(productCert.productId+poolProductArch);	
 				}
 			}
 		}
