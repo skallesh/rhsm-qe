@@ -9,6 +9,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
@@ -16,6 +17,7 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
@@ -256,7 +258,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-867766"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAllSerialsIncludingRevokedSerials_Test() {
+	public void UnsubscribeFromAllSerialsIncludingRevokedSerials_Test() throws JSONException, Exception {
 	
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
@@ -269,7 +271,13 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// unsubscribe from all serials in one call and assert the feedback;
 		List<BigInteger> serials = new ArrayList<BigInteger>();
-		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) serials.add(productSubscription.serialNumber);
+		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+			// insert modifiers at the head of the serials list so their removal won't cause a cert regeneration (NOT SURE IF THIS IS NEEDED OR WORKS)
+			if (!productSubscription.poolId.equals("Unknown") && CandlepinTasks.isPoolAModifier(sm_clientUsername,sm_clientPassword, productSubscription.poolId, sm_serverUrl))
+				serials.add(0,productSubscription.serialNumber);
+			else
+				serials.add(productSubscription.serialNumber);
+		}
 		SSHCommandResult result = clienttasks.unsubscribe(null,serials,null,null,null);
 		String actualStdoutMsg = result.getStdout().trim();
 		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
