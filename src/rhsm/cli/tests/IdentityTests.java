@@ -153,7 +153,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		JSONObject owner = CandlepinTasks.getOwnerOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org name: ",owner.getString("displayName")));
 		//Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org id: ",owner.getString("id")));	// RHEL63
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org id: ",owner.getString("key")));	// technically the org id has been changed to display "key" which is more useful (after bug fix 852001)
+		//Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org id: ",owner.getString("key")));	// technically the org id has been changed to display "key" which is more useful (after bug fix 852001)	// msgid changed by bug 878634
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org ID: ",owner.getString("key")));	// technically the org id has been changed to display "key" which is more useful (after bug fix 852001)
 	}
 	
 	

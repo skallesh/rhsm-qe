@@ -127,7 +127,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(0), "The exit code indicates that the register attempt was a success.");
 		//Assert.assertContainsMatch(registerResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+/*username*/clienttasks.hostname);	// applicable to RHEL61 and RHEL57 
-		Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
+		//Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");	// msgid changed by bug 878634
+		Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with ID: [a-f,0-9,\\-]{36}");
 	}
 	@AfterGroups(value={"RegisterWithCredentials_Test"},alwaysRun=true)
 	public void generateRegistrationReportTableAfterRegisterWithCredentials_Test() {
@@ -220,7 +221,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"734114","906000","919584"}),	sm_clientUsername,					sm_clientPassword,				"\"富 酒吧\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"富 酒吧"+" does not exist."*/"Organization "+"富 酒吧"+" does not exist."}));
 
 		// force a successful registration, and then...
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"616065","669395"}),	sm_clientUsername,					sm_clientPassword,				sm_clientOrg,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",					null}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"616065","669395"}),	sm_clientUsername,					sm_clientPassword,				sm_clientOrg,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"The system has been registered with ID: [a-f,0-9,\\-]{36}",					null}));
 
 		// ... try to register again even though the system is already registered
 		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
@@ -644,7 +645,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		       invalidNameStderr = "System name cannot contain most special characters.";	// bugzilla 677405
 		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters\\.";
 		String name;
-		String successfulStdout = "The system has been registered with id: [a-f,0-9,\\-]{36}";
+		String successfulStdout = "The system has been registered with id: [a-f,0-9,\\-]{36}";	// msg changed by bug 878634
+		       successfulStdout = "The system has been registered with ID: [a-f,0-9,\\-]{36}";
 
 		// valid names according to bugzilla 672233
 		name = "periods...dashes---underscores___alphanumerics123";
@@ -772,7 +774,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 					ll.add(Arrays.asList(new Object[]{null,  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
 				}
 				*/
-				ll.add(Arrays.asList(new Object[]{null,  	username,	password,	owner,	name,	type,	Integer.valueOf(0),	"The system has been registered with id: [a-f,0-9,\\-]{36}",	null}));			
+				ll.add(Arrays.asList(new Object[]{null,  	username,	password,	owner,	name,	type,	Integer.valueOf(0),	"The system has been registered with ID: [a-f,0-9,\\-]{36}",	null}));			
 			} else {
 				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	Integer.valueOf(255),	null,	"No such consumer type: "+type}));			
 	
@@ -1086,22 +1088,22 @@ Expected Results:
 		String x = String.valueOf(getRandInt());
 		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
 			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOwner, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with ID: [a-f,0-9,\\-]{36}",				null}));
 			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(255),	uErrMsg,																	null}));
-			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with ID: [a-f,0-9,\\-]{36}",				null}));
 			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				sm_clientOrg,	new Integer(255),	uErrMsg,																	null}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with ID: [a-f,0-9,\\-]{36}",				null}));
 			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				sm_clientOrg,	new Integer(255),	uErrMsg,																	null}));
-			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(\nUsername: ){3}"+sm_clientUsername+"(\nPassword: ){3}"+"\nThe system has been registered with id: [a-f,0-9,\\-]{36}",	null}));		
+			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(\nUsername: ){3}"+sm_clientUsername+"(\nPassword: ){3}"+"\nThe system has been registered with ID: [a-f,0-9,\\-]{36}",	null}));		
 		} else {
 			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOwner, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with ID: [a-f,0-9,\\-]{36}",				null}));
 			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with ID: [a-f,0-9,\\-]{36}",				null}));
 			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with ID: [a-f,0-9,\\-]{36}",				null}));
 			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(Username: ){3}The system has been registered with id: [a-f,0-9,\\-]{36}",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));		
+			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(Username: ){3}The system has been registered with ID: [a-f,0-9,\\-]{36}",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));		
 		}
 		return ll;
 	}

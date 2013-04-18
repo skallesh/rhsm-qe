@@ -1252,7 +1252,8 @@ public class SubscriptionManagerTasks {
 		// The system with UUID 080ee4f9-736e-4195-88e1-8aff83250e7d has been unregistered
 		// The system has been registered with id: 3bc07645-781f-48ef-b3d4-8821dae438f8 
 
-		Pattern pattern = Pattern.compile("^The system has been registered with id: [a-f,0-9,\\-]{36} *$", Pattern.MULTILINE/* | Pattern.DOTALL*/);
+		//Pattern pattern = Pattern.compile("^The system has been registered with id: [a-f,0-9,\\-]{36} *$", Pattern.MULTILINE/* | Pattern.DOTALL*/);	// msgid changed by bug 878634
+		Pattern pattern = Pattern.compile("^The system has been registered with ID: [a-f,0-9,\\-]{36} *$", Pattern.MULTILINE/* | Pattern.DOTALL*/);
 		Matcher matcher = pattern.matcher(registerResult.getStdout());
 		Assert.assertTrue(matcher.find(),"Found the registered UUID in the register result."); 
 		return matcher.group().split(":")[1].trim();
@@ -2134,7 +2135,8 @@ public class SubscriptionManagerTasks {
 		if (name==null) name = this.hostname;				// https://bugzilla.redhat.com/show_bug.cgi?id=669395
 		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name);	// applicable to RHEL61 and RHEL57. changed in RHEL62 due to feedback from mmccune https://engineering.redhat.com/trac/kalpana/wiki/SubscriptionManagerReview - jsefler 6/28/2011
 		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
-		msg = "The system has been registered with id: [a-f,0-9,\\-]{36}";
+		//msg = "The system has been registered with id: [a-f,0-9,\\-]{36}";	// msgid changed by bug 878634
+		msg = "The system has been registered with ID: [a-f,0-9,\\-]{36}";
 		Assert.assertTrue(Pattern.compile(".*"+msg+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from register contains a match to expected msg: "+msg);
 		
 		// assert that register with consumerId returns the expected uuid
@@ -2142,7 +2144,8 @@ public class SubscriptionManagerTasks {
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), consumerId+" "+username, "register to an exiting consumer was a success");
 			//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^"+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395	// applicable to RHEL61 and RHEL57.
 			//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: "+consumerid, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395
-			msg = "The system has been registered with id: "+consumerid;
+			//msg = "The system has been registered with id: "+consumerid;	// msgid changed by bug 878634
+			msg = "The system has been registered with ID: "+consumerid;
 			Assert.assertTrue(sshCommandResult.getStdout().contains(msg), "Stdout from register contains a match to expected msg: "+msg);
 		}
 		
