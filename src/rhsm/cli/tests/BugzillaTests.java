@@ -72,6 +72,100 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String RemoteServerError="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
+	List<String> providedProducts = new ArrayList<String>();
+
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if refresh pools will not notice change in provided products",
+			groups={"RefreshPoolAfterChangeInProvidedProducts","blockedByBug-665118"},
+			enabled=true)
+	public void RefreshPoolAfterChangeInProvidedProducts() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		Map<String,String> attributes = new HashMap<String,String>();
+		attributes.put("version", "1.0");
+		attributes.put("variant", "server");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "30");
+		attributes.put("type", "MKT");
+		attributes.put("type", "SVC");
+		providedProducts.add("37060");
+		providedProducts.add("37065");
+		providedProducts.add("37068");
+		providedProducts.add("awesome_test_product");
+		int contractNumber=12345;
+		int accountNumber=54321;
+		String poolId=null;
+		String productId="TestProductForRefresh_poolsTest";
+		String Name="ProductForRefreshPools_test";
+		Calendar now = new GregorianCalendar();
+		Date onDate = now .getTime();
+		DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");	
+		String iso8601FormatedDateString = iso8601DateFormat.format(onDate);
+		iso8601FormatedDateString = iso8601FormatedDateString.replaceFirst("(..$)", ":$1");	
+		now.add(Calendar.YEAR, 1);
+		now.add(Calendar.DATE, 1);
+		
+		Date onDateToTest = now.getTime();
+	//	String PoolId = createTestPool(1,endingMinutesFromNow,providedProducts);
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, Name, productId, 1, attributes, null);
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, onDate, onDateToTest,  productId, contractNumber, accountNumber, providedProducts).toString();
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
+	    Date StartDate=new java.util.Date(-1*24*60*1000L);
+	    System.out.println(StartDate);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProducts);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			if(pools.productId.equals(productId)){
+				poolId=pools.poolId;
+			}
+		}
+		
+		
+		String result=CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/owners/admin/pools/");
+		System.out.println(result );
+
+		providedProducts.remove("37068");
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
+		jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+		CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/owners/admin/pools/");
+	
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Manual Changes To Redhat.Repo is sticky",
+			groups={"DisplayOfRemoteServerExceptionForServer500Error","blockedByBug-797243"},
+			enabled=true)
+	public void DisplayOfRemoteServerExceptionForServer500Error() throws Exception {
+		String prefixValueBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "server",
+				"prefix".toLowerCase(), "/foo" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		String RemoteError=clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null).getStdout();
+		String Expected_Message="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
+		listOfSectionNameValues.add(new String[] { "server",
+				"prefix".toLowerCase(), prefixValueBeforeExecution.trim() });
+		Assert.assertEquals(RemoteError.trim(), Expected_Message);
+		
+	}
 	
 	/**
 	 * @author skallesh
@@ -82,6 +176,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"ManualChangesToRedhat_Repo","blockedByBug-797243"},
 			enabled=true)
 	public void ManualChangesToRedhat_Repo() throws Exception {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
 		Boolean expected=false;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -170,8 +268,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
-		
-		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
+		providedProducts.add("100000000000002");
+		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow,providedProducts);
 
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
@@ -311,7 +409,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		List<SubscriptionPool> poolsbeforecreation=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 	String consumerId = clienttasks.getCurrentConsumerId();
 	ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 	String name,productId;
@@ -319,7 +417,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	name = "virt-only-product";
 	productId = "virt-only test-product";
 	Map<String,String> attributes = new HashMap<String,String>();
-	attributes.clear();
 	attributes.put("version", "1.0");
 	attributes.put("variant", "server");
 	attributes.put("arch", "ALL");
@@ -329,7 +426,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	attributes.put("virt_limit", "4");
 	CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
 	CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
-	List<SubscriptionPool> poolsaftercreation=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+	clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 	CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
 	}
@@ -536,7 +633,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String username="stage_test_12";
 		String password="redhat";
 		//server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
-		System.out.println(sm_serverInstallDir+servertasks.generatedProductsDir+"  "+server+ "  "+username+"  "+password );
 		server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
 		clienttasks.unregister(null, null, null);
 		log.info("Fetching the generated product certs...");
@@ -711,7 +807,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
-		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
+		providedProducts.add("100000000000002");
+		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow,providedProducts);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			if(pool.poolId.equals(expiringPoolId)){
 				productId=pool.subscriptionName;
@@ -749,7 +846,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
-		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
+		providedProducts.add("100000000000002");
+		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow,providedProducts);
 		sleep(1*60*1000);
 		clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
@@ -1123,7 +1221,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		jsonProduct.put(0, product);
 		jsonSubscriptions.remove("productAttributes");
 		jsonSubscriptions.accumulate("productAttributes", jsonProduct);
-		String result=CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions" ,jsonSubscriptions);
+		CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions" ,jsonSubscriptions);
 		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 
 		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
@@ -1338,7 +1436,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "OwnerInfoForActivePools","blockedByBug-710141",}, enabled = true)
 	public void OwnerInfoForActivePools() throws JSONException,Exception {
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		Map<String,String> regexes = new HashMap<String,String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
@@ -1487,7 +1584,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		String poolAddedToActivationkey=null;
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
 				sm_clientOrg, System.currentTimeMillis());
 		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
@@ -3633,7 +3729,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {
+	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow,List<String> providedProducts) throws JSONException, Exception  {
 		Calendar endCalendar = new GregorianCalendar();
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
 		Date endDate = endCalendar.getTime();
@@ -3641,9 +3737,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		EndingDate=EndDateFormat.format(endDate);
 		
 		if (true) return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId, null).getString("id");
-// TODO DELETE THE REST OF THIS METHOD'S CODE WHEN WE KNOW THE ABOVE CANDLEPIN TASK IS WORKING 8/12/2011
 		
-		// set the start and end dates
 		
 		Calendar startCalendar = new GregorianCalendar();
 		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
@@ -3655,22 +3749,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// randomly choose an account number
 		Integer accountNumber = Integer.valueOf(getRandInt());
 		
-		// choose a product id for the subscription
-		//String productId =  "MKT-rhel-server";  // too hard coded
-		//JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
-		//String productId = null;
-		//do {	// pick a random productId (excluding a personal productId) // too random; could pick a product that is not available to this system
-		//	productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
-		//} while (getPersonProductIds().contains(productId));
+		
 		String productId = randomAvailableProductId;
-		// choose providedProducts for the subscription
-		//String[] providedProducts = {"37068", "37069", "37060"};
-		//String[] providedProducts = {
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
-		//};
-		List<String> providedProducts = null;
+		
 		providedProducts.add("100000000000002");
 
 		// create the subscription
@@ -3768,7 +3849,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		}
 	
-	@BeforeGroups(groups="ExpirationOfEntitlementCerts")
+	@BeforeGroups(groups={"setup"}, value = {"ExpirationOfEntitlementCerts","RefreshPoolAfterChangeInProvidedProducts"})
 	public void findRandomAvailableProductIdBeforeClass() throws Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
