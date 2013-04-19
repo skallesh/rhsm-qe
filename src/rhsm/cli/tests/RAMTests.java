@@ -93,7 +93,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify healing of partially subscribed Ram/socket based subscription", 
-			groups = { "RamSocketSubscription","blockedByBug-907638"}, enabled = true)
+			groups = { "RamSocketSubscription","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
 	public void HealingPartialRamSocketSubscription() throws JSONException,Exception {
 		factsMap.put("memory.memtotal", String.valueOf(value*10));
 		Integer sockets = 4;
@@ -153,7 +153,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify Auto Heal for Ram subscription .", 
-			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638"}, enabled = true)
+			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
 	public void AutoHealRamBasedSubscription() throws JSONException,Exception {
 		int healFrequency=2;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
