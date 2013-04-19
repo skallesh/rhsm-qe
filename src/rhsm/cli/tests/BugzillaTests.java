@@ -82,7 +82,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if refresh pools will not notice change in provided products",
 			groups={"RefreshPoolAfterChangeInProvidedProducts","blockedByBug-665118"},
-			enabled=true)
+			enabled=false)
 	public void RefreshPoolAfterChangeInProvidedProducts() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -100,8 +100,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		providedProducts.add("37065");
 		providedProducts.add("37068");
 		providedProducts.add("awesome_test_product");
-		Integer contractNumber=getRandInt();
-		int accountNumber=getRandInt();
+		Integer contractNumber = Integer.valueOf(getRandInt());
+		Integer accountNumber = Integer.valueOf(getRandInt());
 		String poolId=null;
 		String productId="TestProductForRefresh_poolsTest";
 		String Name="ProductForRefreshPools_test";
@@ -464,10 +464,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	@ImplementsNitrateTest(caseId=55355)
 	public void CRLTest() throws Exception {
+		clienttasks.deleteFactsFileWithOverridingValues();
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg ,null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
+		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 		for (SubscriptionPool availPools : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools);
 			clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
@@ -489,10 +495,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="Consumer unsubscribed when Subscription revoked",
-			groups={"ConsumerUnsubscribedWhenSubscriptionRevoked"},
+			groups={"ConsumerUnsubscribedWhenSubscriptionRevoked","blockedByBug-947429"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56025)
 	public void ConsumerUnsubscribedWhenSubscriptionRevoked() throws Exception {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -526,8 +536,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertFalse(consumedSusbscription.isEmpty());
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
-		clienttasks.restart_rhsmcertd(null, null, false, null);
-		sleep(2*60*1000);
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
 		for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
 			Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
@@ -789,7 +797,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify expiration of entitlement certs", 
-			groups = { "ExpirationOfEntitlementCerts","blockedByBug-907638"}, enabled = true)
+			groups = { "ExpirationOfEntitlementCerts","blockedByBug-907638","blockedByBug-953830"}, enabled = true)
 		public void ExpirationOfEntitlementCerts() throws JSONException,Exception {
 		int endingMinutesFromNow =1;
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -812,7 +820,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null).getStdout();
-		sleep(2*60*1000);
+		sleep(1*60*1000);
 		
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String result=clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null).getStdout();	
@@ -3725,16 +3733,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {
-		Calendar endCalendar = new GregorianCalendar();
-		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
-		Date endDate = endCalendar.getTime();
-		DateFormat EndDateFormat = new SimpleDateFormat("MM/dd/yy hh:mm a");
-		EndingDate=EndDateFormat.format(endDate);
-		
+				
 		if (true) return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId, null).getString("id");
 		
 		
 		Calendar startCalendar = new GregorianCalendar();
+		startCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
+		Date endDate = startCalendar.getTime();
 		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
 		Date startDate = startCalendar.getTime();
 		
