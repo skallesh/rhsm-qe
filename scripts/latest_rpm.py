@@ -87,7 +87,7 @@ def sort_by_version(links):
     return cur_list
 
 
-def find_latest_rpm_url(baseurl, arch, rpm_name, version=''):
+def find_latest_rpm_url(baseurl, arch, rpm_name, version='', release=''):
     version_page = urllib2.urlopen(baseurl)
     if version == '':
         REGEX = VERSION_REGEX
@@ -98,7 +98,11 @@ def find_latest_rpm_url(baseurl, arch, rpm_name, version=''):
     version_append = links[len(links)-1]
 
     epoch_page = urllib2.urlopen(baseurl+version_append)
-    links = get_links_matching_regex(EPOCH_REGEX,epoch_page)
+    if release == '':
+        REGEX = EPOCH_REGEX
+    else:
+        REGEX = "\d+\." + release + "/"
+    links = get_links_matching_regex(REGEX,epoch_page)
     epoch_append = links[len(links)-1]['href']
     rpm_page = urllib2.urlopen(baseurl+version_append+epoch_append+arch+'/')
     links = get_links_matching_regex(rpm_name, rpm_page)

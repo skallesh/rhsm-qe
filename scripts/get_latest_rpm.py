@@ -39,8 +39,13 @@ def handler(request):
     getlink = params.get('getlink', 'false')
     arch    = params.get('arch', "")
     version = params.get('version','')
+    release = params.get('release','')
 
-    rpmurl = find_latest_rpm_url(baseurl%basegrp, arch, rpmname, version)
+    rpmurl = find_latest_rpm_url(baseurl%basegrp,
+                                         arch,
+                                         rpmname,
+                                         version,
+                                         release)
     if 'true' in getlink:
         request.content_type = 'text/plain'
         request.send_http_header()
