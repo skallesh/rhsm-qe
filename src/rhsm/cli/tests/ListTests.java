@@ -777,7 +777,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@AfterGroups(groups={"setup"},value="SubscriptionContainingUTF8CharacterTests",alwaysRun=true /* does not seem to have any effect */)
 	public void afterGroupForSubscriptionContainingUTF8CharacterTests() throws JSONException, Exception {
 		clienttasks.unregister_(null, null, null);	// to return any consumed subscriptions containing UTF8 characters
-		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForSubscriptionContainingUTF8Character);
+		if (poolForSubscriptionContainingUTF8Character!=null) CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForSubscriptionContainingUTF8Character);
 	}
 	
 	
