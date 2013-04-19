@@ -72,7 +72,279 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String RemoteServerError="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
+	List<String> providedProducts = new ArrayList<String>();
+
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if refresh pools will not notice change in provided products",
+			groups={"RefreshPoolAfterChangeInProvidedProducts","blockedByBug-665118"},
+			enabled=false)
+	public void RefreshPoolAfterChangeInProvidedProducts() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		Map<String,String> attributes = new HashMap<String,String>();
+		attributes.put("version", "1.0");
+		attributes.put("variant", "server");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "30");
+		attributes.put("type", "MKT");
+		attributes.put("type", "SVC");
+		providedProducts.add("37060");
+		providedProducts.add("37065");
+		providedProducts.add("37068");
+		providedProducts.add("awesome_test_product");
+		Integer contractNumber = Integer.valueOf(getRandInt());
+		Integer accountNumber = Integer.valueOf(getRandInt());
+		String poolId=null;
+		String productId="TestProductForRefresh_poolsTest";
+		String Name="ProductForRefreshPools_test";
+		Calendar endCalendar = new GregorianCalendar();
+		int endingMinutesFromNow=15*24*60;
+		int startingMinutesFromNow=-1*24*60;
+		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
+		Date endDate = endCalendar.getTime();
+		Calendar startCalendar = new GregorianCalendar();
+		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
+		Date startDate = startCalendar.getTime();
+		
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, Name, productId, 1, attributes, null);
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, startDate, endDate,  productId, contractNumber, accountNumber, providedProducts).toString();
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
+		
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+		sleep(4*60*1000);
+		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			if(pools.productId.equals(productId)){
+				poolId=pools.poolId;
+			}
+		}
+		System.out.println(poolId);
+		
+		String result=CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/owners/admin/pools/");
+		System.out.println(result );
+
+		providedProducts.remove("37068");
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
+		jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+		CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/owners/admin/pools/");
+	
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Manual Changes To Redhat.Repo is sticky",
+			groups={"DisplayOfRemoteServerExceptionForServer500Error","blockedByBug-797243"},
+			enabled=true)
+	public void DisplayOfRemoteServerExceptionForServer500Error() throws Exception {
+		String prefixValueBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "server",
+				"prefix".toLowerCase(), "/foo" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		String RemoteError=clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null).getStdout();
+		String Expected_Message="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
+		listOfSectionNameValues.add(new String[] { "server",
+				"prefix".toLowerCase(), prefixValueBeforeExecution.trim() });
+		Assert.assertEquals(RemoteError.trim(), Expected_Message);
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Manual Changes To Redhat.Repo is sticky",
+			groups={"ManualChangesToRedhat_Repo","blockedByBug-797243"},
+			enabled=true)
+	public void ManualChangesToRedhat_Repo() throws Exception {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		Boolean expected=false;
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		List<SubscriptionPool> Availablepools=clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool =Availablepools.get(randomGenerator.nextInt(Availablepools.size()));
+		clienttasks.subscribeToSubscriptionPool(pool);
+		client.runCommand("sed -i \"/\\[always-enabled-content]/,/\\[/s/^enabled\\s*=.*/enabled=false/\" /etc/yum.repos.d/redhat.repo");	
+		for(Repo repo : clienttasks.getCurrentlySubscribedRepos()){
+			if(repo.repoId.equals("always-enabled-content")){
+				Assert.assertEquals(repo.enabled, expected);
+			}
+		}
+		client.runCommand(" yum repolist enabled");
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		String expected_message="This system has no repositories available through subscriptions.";
+		String reposlist=clienttasks.repos(true, (String)null, null, null, null, null).getStdout();
+			Assert.assertEquals(reposlist.trim(), expected_message);
+		clienttasks.unregister(null, null, null);
+		reposlist=clienttasks.repos(true, (String)null, null, null, null, null).getStdout();
+		Assert.assertEquals(reposlist.trim(), expected_message);
+		clienttasks.subscribeToSubscriptionPool(pool);
+		for(Repo repo : clienttasks.getCurrentlySubscribedRepos()){
+			expected=true;
+			if(repo.repoId.equals("always-enabled-content")){
+				Assert.assertEquals(repo.enabled, expected);
+			}
+		}
+		}
+		
+		
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="Extraneous / InRequest urls in the rhsm.log file",
+			groups={"ExtraneousSlashInRequesturls","blockedByBug-848836"},
+			enabled=true)
+	public void ExtraneousSlashInRequesturls () throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		Boolean actual =true;
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "server",
+				"prefix".toLowerCase(), "/candlepin" });
+		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+		clienttasks.config(null, null, true,listOfSectionNameValues);
+		Boolean flag = RegexInRhsmLog("//",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker,"GET"));
+		Assert.assertEquals(flag, actual);
+
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
+			groups={"AddingExpiredEntitlementToActivationKey","blockedByBug-878588"},
+			enabled=true)
+	public void AddingExpiredEntitlementToActivationKey() throws Exception {
+		int endingMinutesFromNow = 2;
+		Integer addQuantity=1;
+		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
+				sm_clientOrg, System.currentTimeMillis());
+		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
+		mapActivationKeyRequest.put("name", name);
+		JSONObject jsonActivationKeyRequest = new JSONObject(
+				mapActivationKeyRequest);
+		JSONObject jsonActivationKey = new JSONObject(
+				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
+						sm_clientPassword, sm_serverUrl, "/owners/"
+								+ sm_clientOrg + "/activation_keys",
+								jsonActivationKeyRequest.toString()));
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		providedProducts.add("100000000000002");
+		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
+
+		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);			
+		for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
+			if(result.productId.equals("100000000000002")){
+				Assert.assertEquals(result.status, "Expired");
+			}
+		}
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
+			groups={"SubscriptionManagerAccess","blockedByBug-878588"},
+			enabled=true)
+	public void SubscriptionManagerAccess() throws Exception {
+		String username="test";
+		String password="password";
+		client.runCommandAndWait("useradd "+username);
+		client.runCommandAndWait("echo "+password+" | passwd "+username +"--stdin");
+		client=new SSHCommandRunner(sm_clientHostname, username, password,null);
+		SSHCommandResult result=client.runCommandAndWait("subscription-manager");
+		client.runCommandAndWait("logout");
+		client.runCommandAndWait("userdel -r "+username);
+		client=new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		String expectedMessage="Error: this command requires root access to execute";
+		Assert.assertEquals(result.getStderr().trim(), expectedMessage);
+
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
+			groups={"RegisterTwoClientsUsingSameConsumerId","blockedByBug-949990"},
+			enabled=true)
+	public void RegisterTwoClientsUsingSameConsumerId() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String consumerid=clienttasks.getCurrentConsumerId();
+		clienttasks.subscribe(true, null,(String)null, null, null,  null, null, null, null, null, null);
+		List<ProductSubscription> consumedSubscriptionOnFirstMachine=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		client2tasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, null, null,(String)null, null, null, null, true, null, null, null, null);
+		String result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
+		List<ProductSubscription> consumedSubscriptionOnSecondMachine=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(consumedSubscriptionOnFirstMachine, consumedSubscriptionOnSecondMachine);
+		result=clienttasks.getCurrentConsumerId();
+		Assert.assertEquals(result.trim(),consumerid);
+		Assert.assertEquals(result.trim(), clienttasks.msg_ConsumerNotRegistered);
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify proxy option in repos list ",
+			groups={"ProxyOptionForRepos"},
+			enabled=true)
+	public void ProxyOptionForRepos() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		String result=clienttasks.repos(true,(String)null,(String)null, sm_basicauthproxyHostname+":"+sm_basicauthproxyPort, null, null).getStdout();
+		String expectedMessage="Network error, unable to connect to server."+"\n"+"Please see /var/log/rhsm/rhsm.log for more information.";
+		Assert.assertNotSame(result.trim(), expectedMessage);
+	}
 	
 	/**
 	 * @author skallesh
@@ -97,7 +369,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"Sufficient future pools are not available");
 			int i= randomGenerator.nextInt(availOnDate.size());
 			List<String> providedPools = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword, sm_serverUrl, availOnDate.get(i).poolId);
-			System.out.println(providedPools.get(randomGenerator.nextInt(providedPools.size())));
 			String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
 					sm_clientOrg, System.currentTimeMillis());
 			Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
@@ -136,7 +407,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		List<SubscriptionPool> poolsbeforecreation=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 	String consumerId = clienttasks.getCurrentConsumerId();
 	ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 	String name,productId;
@@ -144,7 +415,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	name = "virt-only-product";
 	productId = "virt-only test-product";
 	Map<String,String> attributes = new HashMap<String,String>();
-	attributes.clear();
 	attributes.put("version", "1.0");
 	attributes.put("variant", "server");
 	attributes.put("arch", "ALL");
@@ -154,7 +424,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	attributes.put("virt_limit", "4");
 	CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
 	CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
-	List<SubscriptionPool> poolsaftercreation=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+	clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 	CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
 	}
@@ -194,10 +464,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	@ImplementsNitrateTest(caseId=55355)
 	public void CRLTest() throws Exception {
+		clienttasks.deleteFactsFileWithOverridingValues();
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg ,null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
+		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 		for (SubscriptionPool availPools : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools);
 			clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
@@ -219,10 +495,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="Consumer unsubscribed when Subscription revoked",
-			groups={"ConsumerUnsubscribedWhenSubscriptionRevoked"},
+			groups={"ConsumerUnsubscribedWhenSubscriptionRevoked","blockedByBug-947429"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56025)
 	public void ConsumerUnsubscribedWhenSubscriptionRevoked() throws Exception {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -256,8 +536,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertFalse(consumedSusbscription.isEmpty());
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
-		clienttasks.restart_rhsmcertd(null, null, false, null);
-		sleep(2*60*1000);
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
 		for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
 			Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
@@ -360,8 +638,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
 		String username="stage_test_12";
 		String password="redhat";
-		server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
-		System.out.println(sm_serverInstallDir+servertasks.generatedProductsDir+"  "+server+ "  "+username+"  "+password );
+		//server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
 		clienttasks.unregister(null, null, null);
 		log.info("Fetching the generated product certs...");
@@ -520,9 +797,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify expiration of entitlement certs", 
-			groups = { "ExpirationOfEntitlementCerts","blockedByBug-907638"}, enabled = true)
+			groups = { "ExpirationOfEntitlementCerts","blockedByBug-907638","blockedByBug-953830"}, enabled = true)
 		public void ExpirationOfEntitlementCerts() throws JSONException,Exception {
-		int endingMinutesFromNow = 2;
+		int endingMinutesFromNow =1;
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"certCheckInterval".toLowerCase(), "1" });
@@ -539,14 +816,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			if(pool.poolId.equals(expiringPoolId)){
-				productId=pool.subscriptionName;
+				productId=pool.productId;
 			}
 		}
 		clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null).getStdout();
-		sleep(2*60*1000);
-		for(Repo originalRepos :clienttasks.getCurrentlySubscribedRepos()){
-			Assert.assertNotSame(originalRepos.repoId, randomAvailableProductId);
-		}
+		sleep(1*60*1000);
+		
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String result=clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null).getStdout();	
 		String expected="Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+productId+" expired on: "+EndingDate;
@@ -574,6 +849,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+	//	providedProducts.add("100000000000002");
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
 		sleep(1*60*1000);
 		clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null);
@@ -948,7 +1224,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		jsonProduct.put(0, product);
 		jsonSubscriptions.remove("productAttributes");
 		jsonSubscriptions.accumulate("productAttributes", jsonProduct);
-		String result=CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions" ,jsonSubscriptions);
+		CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions" ,jsonSubscriptions);
 		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 
 		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
@@ -1163,7 +1439,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "OwnerInfoForActivePools","blockedByBug-710141",}, enabled = true)
 	public void OwnerInfoForActivePools() throws JSONException,Exception {
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		Map<String,String> regexes = new HashMap<String,String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
@@ -1312,7 +1587,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		String poolAddedToActivationkey=null;
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
 				sm_clientOrg, System.currentTimeMillis());
 		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
@@ -1394,10 +1668,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		SubscriptionManagerCLITestScript.sleep(2 * 60 * 1000);
-		Boolean flag = waitForRegexInRhsmLog("Error",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
+		Boolean flag = RegexInRhsmLog("Error",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 		Assert.assertEquals(flag, actual);
 		actual=true;
-		flag = waitForRegexInRhsmLog("Installed product IDs: \\[\\]",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
+		flag = RegexInRhsmLog("Installed product IDs: \\[\\]",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 		Assert.assertEquals(flag, actual);
 				
 	}
@@ -1866,7 +2140,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify healing of installed products without taking future subscriptions into consideration", groups = { "VerifyHealingForFutureSubscription","blockedByBug-907638"}, enabled = true)
+	@Test(description = "verify healing of installed products without taking future subscriptions into consideration", groups = { "VerifyHealingForFutureSubscription","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
 	public void VerifyHealingForFuturesubscription() throws JSONException,
 	Exception {
 		int autoAttachInterval = 2;
@@ -2141,7 +2415,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Calendar EndTimeBeforeRHSM = clienttasks.getCurrentConsumerCert().validityNotAfter;
 		String EndDateBeforeRHSM = yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotAfter.getTime());
 		String StartDateBeforeRHSM=yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotBefore.getTime());
-		System.out.println(EndDateBeforeRHSM + "   ... "+ StartDateBeforeRHSM);
 		String existingCertdate = client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8")
 				.getStdout();
 		String StartDate=setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
@@ -2556,7 +2829,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(description = "Auto-heal for partial subscription", groups = {
-			"autohealPartial", "blockedByBug-746218","blockedByBug-907638" }, enabled = true)
+			"autohealPartial", "blockedByBug-746218","blockedByBug-907638","blockedByBug-907400" }, enabled = true)
 	public void VerifyAutohealForPartialSubscription() throws Exception {
 		Integer healFrequency = 3;
 		Integer moreSockets = 0;
@@ -2626,7 +2899,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@Test(description = "Auto-heal with SLA", groups = { "AutoHealWithSLA","blockedByBug-907638" }, enabled = true)
+	@Test(description = "Auto-heal with SLA", groups = { "AutoHealWithSLA","blockedByBug-907638","blockedByBug-907400" }, enabled = true)
 	public void VerifyAutohealWithSLA() throws JSONException, Exception {
 		Integer autoAttachInterval = 2;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -2741,7 +3014,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "Auto-heal for Expired subscription", groups = {
-			"AutohealForExpired", "blockedByBug-746088","blockedByBug-907638" }, enabled = true)
+			"AutohealForExpired", "blockedByBug-746088","blockedByBug-907638","blockedByBug-907400" }, enabled = true)
 	public void VerifyAutohealForExpiredSubscription() throws JSONException,
 	Exception {
 		int healFrequency = 2;
@@ -2791,7 +3064,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Auto-heal for subscription", groups = { "AutoHeal","blockedByBug-907638","blockedByBug-726411" }, enabled = true)
+	@Test(description = "Auto-heal for subscription", groups = { "AutoHeal","blockedByBug-907638","blockedByBug-726411","blockedByBug-907400" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 119327)
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
 		Integer healFrequency = 2;
@@ -2989,7 +3262,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						null, null, null, null, null, null);
 			}
 	
-			Boolean flag = waitForRegexInRhsmLog("@ /etc/pki/entitlement",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
+			Boolean flag = RegexInRhsmLog("@ /etc/pki/entitlement",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 			Assert.assertEquals(flag, actual);
 			
 
@@ -3129,7 +3402,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@Test(description = "Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ", groups = { "VerifyautosubscribeIgnoresSocketCount_Test" }, enabled = true)
+	@Test(description = "Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ", groups = { "VerifyautosubscribeIgnoresSocketCount_Test","blockedByBug-743704" }, enabled = true)
 	public void VerifyautosubscribeIgnoresSocketCount_Test() throws Exception {
 		int socketnum = 0;
 		int socketvalue = 0;
@@ -3246,10 +3519,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests" }, enabled = true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test()
 			throws Exception {
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,
-						sm_clientPassword, sm_clientOrg, null, null, null,
-						null, null, null, null, (String) null, null, null,
-						null, true, null, null, null, null));
+		clienttasks.register(sm_clientUsername,
+				sm_clientPassword, sm_clientOrg, null, null, null,
+				null, null, null, null, (String) null, null, null,
+				null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(
 				sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,
 				true);
@@ -3364,7 +3638,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return client.runCommandAndWait(command);
 	}
 
-	public Boolean waitForRegexInRhsmLog(String logRegex, String input) {
+	public Boolean RegexInRhsmLog(String logRegex, String input) {
 		
 		Pattern pattern = Pattern.compile(logRegex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(input);
@@ -3459,18 +3733,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {
-		Calendar endCalendar = new GregorianCalendar();
-		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
-		Date endDate = endCalendar.getTime();
-		DateFormat EndDateFormat = new SimpleDateFormat("MM/dd/yy hh:mm a");
-		EndingDate=EndDateFormat.format(endDate);
-		
+				
 		if (true) return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId, null).getString("id");
-// TODO DELETE THE REST OF THIS METHOD'S CODE WHEN WE KNOW THE ABOVE CANDLEPIN TASK IS WORKING 8/12/2011
 		
-		// set the start and end dates
 		
 		Calendar startCalendar = new GregorianCalendar();
+		startCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
+		Date endDate = startCalendar.getTime();
 		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
 		Date startDate = startCalendar.getTime();
 		
@@ -3480,23 +3749,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// randomly choose an account number
 		Integer accountNumber = Integer.valueOf(getRandInt());
 		
-		// choose a product id for the subscription
-		//String productId =  "MKT-rhel-server";  // too hard coded
-		//JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
-		//String productId = null;
-		//do {	// pick a random productId (excluding a personal productId) // too random; could pick a product that is not available to this system
-		//	productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
-		//} while (getPersonProductIds().contains(productId));
-		String productId = randomAvailableProductId;
-		// choose providedProducts for the subscription
-		//String[] providedProducts = {"37068", "37069", "37060"};
-		//String[] providedProducts = {
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
-		//};
-		List<String> providedProducts = null;
 		
+		String productId = randomAvailableProductId;
+		
+		providedProducts.add("100000000000002");
+
 		// create the subscription
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
@@ -3592,7 +3849,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		}
 	
-	@BeforeGroups(groups="ExpirationOfEntitlementCerts")
+	@BeforeGroups(groups={"setup"}, value = {"ExpirationOfEntitlementCerts","RefreshPoolAfterChangeInProvidedProducts","AddingExpiredEntitlementToActivationKey","SubscribeToexpiredEntitlement"})
 	public void findRandomAvailableProductIdBeforeClass() throws Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
