@@ -82,33 +82,42 @@ def sort_by_version(links):
         n += 1
 
     for item in cur_list:
-        cur_list[cur_list.index(item)] = str(rchop(item,".0") + '/')
+        #cur_list[cur_list.index(item)] = str(rchop(item, ".0") + '/')
+        cur_list[cur_list.index(item)] = str(item + '/')
 
     return cur_list
 
 
-def find_latest_rpm_url(baseurl, arch, rpm_name, version='', release=''):
+def find_latest_rpm_url(baseurl, arch, rpm_name, version='', release='', regress=False):
     version_page = urllib2.urlopen(baseurl)
     if version == '':
-        REGEX = VERSION_REGEX
+        VREGEX = VERSION_REGEX
     else:
-        REGEX = version + "[\.\d+]*/"
-    links = get_links_matching_regex(REGEX,version_page)
-    links = sort_by_version(links)
-    version_append = links[len(links)-1]
-
-    epoch_page = urllib2.urlopen(baseurl+version_append)
+        VREGEX = version + "[\.\d+]*/"
     if release == '':
-        REGEX = EPOCH_REGEX
+        EREGEX = EPOCH_REGEX
     else:
-        REGEX = "\d+\." + release + "/"
-    links = get_links_matching_regex(REGEX,epoch_page)
-    epoch_append = links[len(links)-1]['href']
+        EREGEX = "\d+\." + release + "/"
+    version_links = get_links_matching_regex(VREGEX, version_page)
+    version_links = sort_by_version(version_links)
+    version_links.reverse()
+    for i in xrange(len(version_links)):
+        version_append = version_links[i]
+        epoch_page = urllib2.urlopen(baseurl+version_append)
+        epoch_links = get_links_matching_regex(EREGEX, epoch_page)
+        if epoch_links or not regress:
+            break
+    epoch_append = epoch_links[len(epoch_links)-1]['href']
     rpm_page = urllib2.urlopen(baseurl+version_append+epoch_append+arch+'/')
-    links = get_links_matching_regex(rpm_name, rpm_page)
-    rpm_append = links[0]['href']
+    rpm_links = get_links_matching_regex(rpm_name, rpm_page)
+    rpm_append = rpm_links[0]['href']
     return baseurl+version_append+epoch_append+arch+'/'+rpm_append
 
 if __name__ in "__main__":
-    print find_latest_rpm_url(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    regress = sys.argv[6]
+    if regress.lower() == 'true':
+        regress=True
+    else:
+        regress=False
+    print find_latest_rpm_url(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], regress)
 

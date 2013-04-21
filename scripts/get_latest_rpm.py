@@ -40,13 +40,19 @@ def handler(request):
     arch    = params.get('arch', "")
     version = params.get('version','')
     release = params.get('release','')
+    regress = params.get('regress', 'false')
+    if regress.lower() == 'true':
+        regress = True
+    else:
+        regress = False
 
     rpmurl = find_latest_rpm_url(baseurl%basegrp,
                                          arch,
                                          rpmname,
                                          version,
-                                         release)
-    if 'true' in getlink:
+                                         release,
+                                         regress)
+    if 'true' in getlink.lower():
         request.content_type = 'text/plain'
         request.send_http_header()
         request.write(rpmurl)
