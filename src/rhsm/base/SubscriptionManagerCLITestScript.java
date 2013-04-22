@@ -227,6 +227,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	public void setupClient(SubscriptionManagerTasks smt, File serverCaCertFile, List<File> generatedProductCertFiles) throws IOException, JSONException{		
+		if (sm_yumInstallZStreamUpdates)				smt.installZStreamUpdates(sm_yumInstallOptions);
 		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions);
 		
 		// rhsm.conf [server] configurations
