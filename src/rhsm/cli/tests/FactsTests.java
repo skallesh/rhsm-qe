@@ -390,7 +390,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cpu_socket(s) fact matches the value from lscpu",
-			groups={"AcceptanceTest","blockedByBug-707292"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
+			groups={"AcceptanceTests","blockedByBug-707292"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void MatchingCPUSocketsFact_Test() {
