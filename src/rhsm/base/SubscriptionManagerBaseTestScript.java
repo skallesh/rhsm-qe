@@ -169,7 +169,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		if (!getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))				sm_repoCaCertUrls					= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 		if (!getProperty("sm.ha.packages", "").equals(""))						sm_haPackages						= Arrays.asList(getProperty("sm.ha.packages", "").trim().split(" *, *"));
 
-				
+		if (sm_yumInstallZStreamUpdates) 										sm_yumInstallOptions += " --enablerepo=rhel-zstream";
+		
 		if (sm_serverUrl==null)
 			sm_serverUrl					= getProperty("sm.server.url","");
 		
