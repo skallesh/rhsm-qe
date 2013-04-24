@@ -81,8 +81,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify if refresh pools will not notice change in provided products",
-			groups={"RefreshPoolAfterChangeInProvidedProducts","blockedByBug-665118"},
+			groups={"defaultValueForManageRepos","blockedByBug-807721"},
 			enabled=true)
+	public void defaultValueForManageRepos() throws Exception {
+		
+	String value=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "manage_repos");
+	client.runCommand("sed -i \"manage_repos = "+value +",#manage_repos = "+value+"\""+clienttasks.rhsmConfFile);	
+
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if refresh pools will not notice change in provided products",
+			groups={"RefreshPoolAfterChangeInProvidedProducts","blockedByBug-665118"},
+			enabled=false)
 	public void RefreshPoolAfterChangeInProvidedProducts() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
