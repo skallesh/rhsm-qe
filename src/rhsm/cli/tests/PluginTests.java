@@ -173,7 +173,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 		// register and assert the pre and post hooks are logged
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg));
-		sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
+		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 
 		// get the tail of the marked rhsm.log file
@@ -246,7 +246,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 		// register and assert the pre and post hooks are logged
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg));
-		sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
+		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
 		//	2013-03-14 13:37:45,277 [DEBUG]  @plugins.py:695 - Running pre_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin
@@ -330,7 +330,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg));
-		sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
+		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
 		//	2013-03-14 18:47:39,595 [DEBUG]  @plugins.py:695 - Running post_facts_collection_hook in facts_collection.FactsCollectionTestPlugin
@@ -422,7 +422,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 		// subscribe to a random pool (to generate calls to pre/post hooks)
 		clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null);
-		sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
+		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
@@ -503,7 +503,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 		// do a yum transaction and assert that the product_id_install hooks are NOT yet called
 		clienttasks.getYumRepolist("all --enableplugin=product-id");
-		sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
+		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
@@ -547,7 +547,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 		// do a yum install of an ha package
 		clienttasks.yumInstallPackage(sm_haPackages.get(0));	// yum -y install ccs
-		sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
+		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
  		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
@@ -622,7 +622,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null);
-		sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
+		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running h").trim();
@@ -665,7 +665,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="verify changes to the rhsm.conf / [rhsm]pluginDir configuration",
 			groups={},
-			priority=1000, enabled=false)
+			priority=1000, enabled=false)	// TODO
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyRhsmPluginDirConfiguration_Test() {
 		
@@ -674,7 +674,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="verify changes to the rhsm.conf / [rhsm]pluginConfDir configuration",
 			groups={},
-			priority=1000, enabled=false)
+			priority=1000, enabled=false)	// TODO
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyRhsmPluginConfDirConfiguration_Test() {
 		
@@ -687,6 +687,15 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 
+	@BeforeClass(groups={"setup"})
+	public void removeRhsmLogBeforeClass() {
+		if (client==null) return;
+		
+		// remove the rhsm.log before this class to effectively reduce its size because it occasionally gets backed up to rhsm.log.1
+		// in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
+		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);
+	}
+	
 	@BeforeClass(groups={"setup"})
 	public void removeAllPluginsBeforeClass() {
 		if (clienttasks==null) return;
@@ -739,7 +748,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			"pre_register_consumer",	"post_register_consumer",
 			"pre_product_id_install",	"post_product_id_install",
 			"pre_subscribe",			"post_subscribe",
-			/*"post_facts_collection",*/"post_facts_collection");
+			/*"pre_facts_collection",*/"post_facts_collection");
 	
 	
 	// data object representing an installed plugin
