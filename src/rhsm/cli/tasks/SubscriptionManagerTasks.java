@@ -1,8 +1,13 @@
 package rhsm.cli.tasks;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.math.BigInteger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -218,6 +223,34 @@ public class SubscriptionManagerTasks {
 		}
 	}
 
+	public void installZStreamUpdates(String installOptions) throws IOException {
+		
+		// locally create a yum.repos.d zstream repos file
+		// now dump out the list of userData to a file
+	    File file = new File("tmp/rhel-zstream.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+	    String archZStream = arch;
+	    if (Integer.valueOf(redhatReleaseX)>=6 && arch.equals("i386")) archZStream = "i686"; // only i686 arch packages are built in brew for RHEL6
+	    String baseurl = "http://download.devel.redhat.com/rel-eng/repos/RHEL-"+redhatReleaseXY+"-Z/"+archZStream;
+	    try {
+	    	Writer output = new BufferedWriter(new FileWriter(file));
+			
+			// write out the rows of the table
+			output.write("[rhel-zstream]\n");
+			output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+"\n");
+			output.write("enabled  = 0\n");
+			//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+			output.write("exclude  = redhat-release*\n");
+			output.write("baseurl  = "+baseurl+"\n");
+		    output.close();
+		    //log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from zstream repo: "+baseurl);	// exclude all redhat-release* packages for safety; rhel5-client will undesirably upgrade from redhat-release-5Client-5.9.0.2 ---> Package redhat-release.x86_64 0:5Server-5.9.0.2 set to be updated
+	}
+	
 	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions) {
 
 		// make sure the client's time is accurate
@@ -513,7 +546,14 @@ public class SubscriptionManagerTasks {
 				0,"Uncommented '"+confFile+"' parameter: "+parameter);
 	}
 	
-
+	public void addConfFileParameter(String confFile, String section, String parameter, String value){
+		log.info("Adding config file '"+confFile+"' section '"+section+"' parameter: "+parameter+"="+value);
+		
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "\\["+section+"\\]", "\\["+section+"\\]\\n"+parameter+"="+value),
+				0,"Added config file '"+confFile+"' section '"+section+"' parameter '"+parameter+"' value '"+value+"'");
+	}
+	
 	/**
 	 * This method should be deleted and replaced with calls to getConfFileParameter(String confFile, String section, String parameter)
 	 * @param confFile
@@ -592,7 +632,6 @@ public class SubscriptionManagerTasks {
 	
 	
 	
-
 	/**
 	 * Update the rhsmcertd frequency configurations in /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
 	 * @param certFrequency - Frequency of certificate refresh (in minutes) (passing null will not change the current value)

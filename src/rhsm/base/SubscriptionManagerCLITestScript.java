@@ -227,7 +227,23 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	public void setupClient(SubscriptionManagerTasks smt, File serverCaCertFile, List<File> generatedProductCertFiles) throws IOException, JSONException{		
+		if (sm_yumInstallZStreamUpdates)				smt.installZStreamUpdates(sm_yumInstallOptions);
 		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions);
+		
+		// rewrite rhsmcertd.certFrequency -> rhsmcertd.certCheckInterval   see bug 882459
+		String certFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "rhsmcertd", "certFrequency");
+		if (certFrequency!=null) {
+			smt.commentConfFileParameter(smt.rhsmConfFile, "certFrequency");
+			//smt.config(null, null, true, new String[]{"rhsmcertd","certCheckInterval".toLowerCase(),certFrequency});
+			smt.addConfFileParameter(smt.rhsmConfFile, "rhsmcertd", "certCheckInterval", certFrequency);
+		}
+		// rewrite rhsmcertd.healFrequency -> rhsmcertd.autoAttachInterval   see bug 882459
+		String healFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "rhsmcertd", "healFrequency");
+		if (healFrequency!=null) {
+			smt.commentConfFileParameter(smt.rhsmConfFile, "healFrequency");
+			//smt.config(null, null, true, new String[]{"rhsmcertd","autoAttachInterval".toLowerCase(),healFrequency});
+			smt.addConfFileParameter(smt.rhsmConfFile, "rhsmcertd", "autoAttachInterval", healFrequency);
+		}
 		
 		// rhsm.conf [server] configurations
 		if (!sm_serverHostname.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "hostname", sm_serverHostname);							else sm_serverHostname = smt.getConfFileParameter(smt.rhsmConfFile, "hostname");

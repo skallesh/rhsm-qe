@@ -390,19 +390,22 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cpu_socket(s) fact matches the value from lscpu",
-			groups={"AcceptanceTest","blockedByBug-707292"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
+			groups={"AcceptanceTests","blockedByBug-707292"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void MatchingCPUSocketsFact_Test() {
 		clienttasks.deleteFactsFileWithOverridingValues();
+		
+		// determine the cpu_socket(s) value using the topology calculation
+		String topologyCalcualtedSockets = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
+		log.info("The cpu_socket(s) value calculated using the topology algorithm above is '"+topologyCalcualtedSockets+"'.");
 		
 		// get the value of cpu_sockets as determined by subscription-manager facts
 		String cpuFact = "cpu.cpu_socket(s)";
 		String cpu_sockets = clienttasks.getFactValue(cpuFact);
 		
 		if (clienttasks.redhatRelease.contains("release 5")) {
-			String sockets = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
-			Assert.assertEquals(cpu_sockets, sockets, "The value of system fact '"+cpuFact+"' should match the value for 'CPU socket(s)' value='"+sockets+"' as calculated above.");
+			Assert.assertEquals(cpu_sockets, topologyCalcualtedSockets, "The value of system fact '"+cpuFact+"' should match the value for 'CPU socket(s)' value='"+topologyCalcualtedSockets+"' as calculated using cpu topology.");
 		}
 		else /*if (clienttasks.redhatRelease.contains("release 6"))*/ {
 			client.runCommandAndWait("lscpu");

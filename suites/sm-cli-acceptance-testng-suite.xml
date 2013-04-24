@@ -228,7 +228,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="ReleaseTests" />
+				<include name="AcceptanceTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -241,7 +241,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="StackingTests" />
+				<include name="AcceptanceTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
