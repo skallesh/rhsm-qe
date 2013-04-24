@@ -85,9 +85,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void defaultValueForManageRepos() throws Exception {
 		
-	String value=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "manage_repos");
-	client.runCommand("sed -i \"manage_repos = "+value +",#manage_repos = "+value+"\""+clienttasks.rhsmConfFile);	
-
+	String result =clienttasks.config(true, null, null, (String[])null).getStdout();
+	clienttasks.commentConfFileParameter(clienttasks.rhsmConfFile, "manage_repos");
+	String resultAfterCommentingtheParameter=clienttasks.config(true, null, null, (String[])null).getStdout();
+	Assert.assertEquals(result, resultAfterCommentingtheParameter);
+	clienttasks.uncommentConfFileParameter(clienttasks.rhsmConfFile, "manage_repos");
 		
 	}
 	
