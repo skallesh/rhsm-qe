@@ -82,47 +82,52 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if refresh pools will not notice change in provided products",
 			groups={"RefreshPoolAfterChangeInProvidedProducts","blockedByBug-665118"},
-			enabled=false)
+			enabled=true)
 	public void RefreshPoolAfterChangeInProvidedProducts() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		String name,productId;
+		List<String> providedProductIds = new ArrayList<String>();
+		name = "Test product to check pool refresh";
+		productId = "test-product";
 		Map<String,String> attributes = new HashMap<String,String>();
+		attributes.clear();
 		attributes.put("version", "1.0");
 		attributes.put("variant", "server");
 		attributes.put("arch", "ALL");
 		attributes.put("warning_period", "30");
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
-		providedProducts.add("37060");
-		providedProducts.add("37065");
-		providedProducts.add("37068");
-		providedProducts.add("awesome_test_product");
-		Integer contractNumber = Integer.valueOf(getRandInt());
-		Integer accountNumber = Integer.valueOf(getRandInt());
-		String poolId=null;
-		String productId="TestProductForRefresh_poolsTest";
-		String Name="ProductForRefreshPools_test";
+		String ProvidedProductTobeDeleted="37068";
+		providedProductIds.add("37060");
+		providedProductIds.add("37065");
+		providedProductIds.add(ProvidedProductTobeDeleted);
+		Integer contractNumber = getRandInt();
+		Integer accountNumber = getRandInt();
 		Calendar endCalendar = new GregorianCalendar();
-		int endingMinutesFromNow=15*24*60;
-		int startingMinutesFromNow=-1*24*60;
-		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
+		endCalendar.add(Calendar.MINUTE, 15*24*60);
 		Date endDate = endCalendar.getTime();
 		Calendar startCalendar = new GregorianCalendar();
-		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
-		Date startDate = startCalendar.getTime();
-		
-		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		startCalendar.add(Calendar.MINUTE, -1*24*60);
+		Date startDate = startCalendar.getTime();		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, Name, productId, 1, attributes, null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, startDate, endDate,  productId, contractNumber, accountNumber, providedProducts).toString();
-		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+	//	CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, contractNumber, accountNumber, productId, providedProductIds);
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds).toString();
+		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions",requestBody));
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 		
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
-		CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
-		sleep(4*60*1000);
+
+		
+		String poolId=null;
+		
 		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			if(pools.productId.equals(productId)){
 				poolId=pools.poolId;
@@ -130,15 +135,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		System.out.println(poolId);
 		
-		String result=CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/owners/admin/pools/");
-		System.out.println(result );
+	String  result = (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/owners/admin/pools/")).toString();
+		result=client.runCommandAndWait(result+" | grep "+poolId+" -B8 -A57").getStdout();
+		System.out.println(result);
 
-		providedProducts.remove("37068");
-		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
-		jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
-		CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
-		CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/owners/admin/pools/");
-	
+		if(!(poolId.equals(null))){		
+			server.runCommandAndWait("su - postgres");
+			server.runCommandAndWait("psql candlepin");
+			server.runCommandAndWait("select * from cp_subscription_products where subscription_id='"+poolId+"';");
+			server.runCommandAndWait("delete from cp_subscription_products where subscription_id='"+poolId+"' and product_id='"+ProvidedProductTobeDeleted+"';");
+			jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
+			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+			
+			}
+			else throw new SkipException("no pools available to test");
+			jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
+			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+						
+			String resultafterRemoval = (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/owners/admin/pools/")).toString();
+			resultafterRemoval=client.runCommandAndWait(result+" | grep "+poolId+" -B8 -A57").getStdout();
+			System.out.println(resultafterRemoval );
 	}
 	
 	/**
@@ -423,7 +439,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	attributes.put("type", "SVC");
 	attributes.put("virt_limit", "4");
 	CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
-	CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+	CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 	clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 	CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
