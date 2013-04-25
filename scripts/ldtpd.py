@@ -11,6 +11,9 @@ import gobject
 import gtk
 import time
 import fnmatch
+import os
+import subprocess
+import pdb
 from fnmatch import translate
 
 logger = logging.getLogger("xmlrpcserver.ldtp")
@@ -34,7 +37,6 @@ class LoggingSimpleXMLRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHa
       response = self.server._marshaled_dispatch(data, getattr(self, '_dispatch', None))
       # Log server response
       logger.info('Server response: \n%s\n' % response)
-
     except:
       # This should only happen if the module is buggy
       # internal error, report as HTTP server error
@@ -71,10 +73,8 @@ _additional_methods = ['closewindow', 'maximizewindow']
 for item in _additional_methods: _supported_methods.append(item)
 _supported_methods.sort()
 
-
 #create a class with all ldtp methods as attributes
 class AllMethods:
-  #states class variable
   #states enum from /usr/include/at-spi-1.0/cspi/spi-statetypes.h as part of at-spi-devel
   #hint: state = $line_number - 80
   states = ['INVALID',
@@ -118,13 +118,13 @@ class AllMethods:
             'VISITED',
             'LAST_DEFINED']
 
-  def _translate_state(self,value):
+  def _translate_state(self, value):
     if value in self.states:
       return self.states.index(value)
     else:
       return value
 
-  def _translate_number(self,num):
+  def _translate_number(self, num):
     if num in xrange(len(self.states)):
       return self.states[num]
     else:
@@ -169,7 +169,7 @@ class AllMethods:
         continue
     raise Exception("Item not found in table!")
 
-  def _window_search(self,match,term):
+  def _window_search(self, match, term):
     if re.search(fnmatch.translate(term),
                    match,
                    re.U | re.M | re.L) \
@@ -180,7 +180,7 @@ class AllMethods:
     else:
       return False
 
-  def _closewindow(self,window_name):
+  def _closewindow(self, window_name):
     screen = wnck.screen_get_default()
     while gtk.events_pending():
       gtk.main_iteration()
@@ -198,7 +198,7 @@ class AllMethods:
     gtk.main()
     return success
 
-  def _maximizewindow(self,window_name):
+  def _maximizewindow(self, window_name):
     screen = wnck.screen_get_default()
     while gtk.events_pending():
       gtk.main_iteration()
@@ -216,7 +216,28 @@ class AllMethods:
     gtk.main()
     return success
 
-  def _dispatch(self,method,params):
+  def _launchapp(self, cmd, args=[], delay=0, env=1, lang="C"):
+    os.environ['NO_GAIL']='0'
+    os.environ['NO_AT_BRIDGE']='0'
+    if env:
+      os.environ['GTK_MODULES']='gail:atk-bridge'
+      os.environ['GNOME_ACCESSIBILITY']='1'
+    if lang:
+      os.environ['LANG']=lang
+    try:
+      process=subprocess.Popen([cmd]+args, close_fds=True)
+      # Let us wait so that the application launches
+      try:
+        time.sleep(int(delay))
+      except ValueError:
+        time.sleep(5)
+    except Exception, e:
+      raise Exception(str(e))
+    os.environ['NO_GAIL']='1'
+    os.environ['NO_AT_BRIDGE']='1'
+    return process.pid
+
+  def _dispatch(self, method, params):
     if method in _supported_methods:
       paramslist = list(params)
       if method == "hasstate":
@@ -229,6 +250,8 @@ class AllMethods:
       elif method == "getobjectproperty":
         paramslist[1] = self._getobjectproperty(paramslist[0],paramslist[1])
         params = tuple(paramslist)
+      elif method == "launchapp":
+        return self._launchapp(*paramslist)
 
       function = getattr(ldtp,method)
       retval = function(*params)
