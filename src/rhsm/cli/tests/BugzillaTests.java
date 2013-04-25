@@ -35,6 +35,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
+import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.ConsumerCert;
@@ -74,16 +75,68 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String SystemDateOnServer=null;
 	List<String> providedProducts = new ArrayList<String>();
 
+
 	
 	/**
 	 * @author skallesh
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(	description="verify if refresh pools will not notice change in provided products",
+	@Test(	description="verify the system compliance after deleting the consumer",
+			groups={"ComplianceAfterConsumerDeletion"},
+			enabled=true)
+	public void ComplianceAfterConsumerDeletion() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String consumerid=clienttasks.getCurrentConsumerId();
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/consumers/"+consumerid);
+		String complianceStatus = CandlepinTasks.getConsumerCompliance(sm_serverAdminUsername, sm_serverAdminPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerid).getString("displayMessage");
+		String message="Consumer "+consumerid+" has been deleted";
+		Assert.assertContainsMatch(message, complianceStatus);
+		
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if ipV4_Address is unknown in the facts list",
+			groups={"VerifyIfIPV4_AddressIsUnknown","blockedByBug-694662"},
+			enabled=true)
+	public void VerifyIfIPV4_AddressIsUnknown() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		Map<String, String> ipv4=clienttasks.getFacts("ipv4_address");
+		Assert.assertFalse(ipv4.containsValue("unknown"));
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if the whitespace in the title line of man subscription-manager-gui is completely consumed",
+			groups={"ManPagesTest","blockedByBug-694662"},
+			enabled=true)
+	public void ManPagesTest() throws Exception {
+		String expectedResult="subscription-manager-gui(8)  Subscription Manager  subscription-manager-gui(8)";
+		String result=client.runCommandAndWait("man "+clienttasks.command+"-gui | head -1").getStdout();
+		Assert.assertEquals(result.trim(), expectedResult);
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if configurations like manage_repos have default values",
 			groups={"defaultValueForManageRepos","blockedByBug-807721"},
 			enabled=true)
-	public void defaultValueForManageRepos() throws Exception {
+	public void defaultValueForManageReposConfiguration() throws Exception {
 		
 	String result =clienttasks.config(true, null, null, (String[])null).getStdout();
 	clienttasks.commentConfFileParameter(clienttasks.rhsmConfFile, "manage_repos");
@@ -105,9 +158,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+		
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 		String name,productId;
@@ -275,7 +326,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
-			groups={"AddingExpiredEntitlementToActivationKey","blockedByBug-878588"},
+			groups={"AddingExpiredEntitlementToActivationKey"},
 			enabled=true)
 	public void AddingExpiredEntitlementToActivationKey() throws Exception {
 		int endingMinutesFromNow = 2;
@@ -322,10 +373,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"SubscriptionManagerAccess","blockedByBug-878588"},
 			enabled=true)
 	public void SubscriptionManagerAccess() throws Exception {
-		String username="test";
-		String password="password";
+		String username="testuser";
+		String password="123testpassword";
 		client.runCommandAndWait("useradd "+username);
-		client.runCommandAndWait("echo "+password+" | passwd "+username +"--stdin");
+		client.runCommandAndWait("echo "+password+" | passwd "+username);
 		client=new SSHCommandRunner(sm_clientHostname, username, password,null);
 		SSHCommandResult result=client.runCommandAndWait("subscription-manager");
 		client.runCommandAndWait("logout");
@@ -1621,6 +1672,27 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+	String consumerId = clienttasks.getCurrentConsumerId();
+	ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+	String Productname,productId;
+	List<String> providedProductIds = new ArrayList<String>();
+	Productname = "virt-only-product to be added to activation key";
+	productId = "virt-only test-product";
+	String poolId=null;
+	Map<String,String> attributes = new HashMap<String,String>();
+	attributes.put("version", "1.0");
+	attributes.put("variant", "server");
+	attributes.put("arch", "ALL");
+	attributes.put("warning_period", "30");
+	attributes.put("type", "MKT");
+	attributes.put("type", "SVC");
+	attributes.put("virt_limit", "unlimited");
+	CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+	System.out.println(sm_serverUrl + " is the url");
+	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+	CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, Productname, productId, 1, attributes, null);
+	CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
 				sm_clientOrg, System.currentTimeMillis());
 		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
@@ -1639,16 +1711,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		for (SubscriptionPool availList : clienttasks
 				.getCurrentlyAllAvailableSubscriptionPools()) {
-			String virtLimit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,	sm_clientPassword, sm_serverUrl, availList.poolId,"virt_limit");
-
-			if(virtLimit.equals("unlimited")){
-			count++;			
+					if(availList.subscriptionName.equals(Productname)){
+						poolId=availList.poolId;
 			new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +availList.poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
-			}
+			
+		}
 		}
 		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);
 		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
-		Assert.assertEquals(consumed.poolId, count);
+		Assert.assertEquals(consumed.poolId, poolId);
 		}
 		new JSONObject(CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_clientUsername,
 				sm_clientPassword, sm_serverUrl,"/activation_keys/"+name));
@@ -2713,9 +2784,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify config Server port with blank or incorrect text produces traceback", groups = { "configBlankTest" }, enabled = true)
+	@Test(description = "verify config Server port with blank or incorrect text produces traceback", groups = { "configBlankTest","blockedByBug-744654" }, enabled = true)
 	// @ImplementsNitrateTest(caseId=)
-	public void ConfigSetServerPortValueBlank_Test() {
+	public void ConfigSetServerPortValueToBlank_Test() {
 
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		String section = "server";
