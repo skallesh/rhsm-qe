@@ -334,6 +334,13 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.endDate), "endDate from ProductSubscription in list --consumed matches endDate from OrderNamespace ("+OrderNamespace.formatDateString(entitlementCert.orderNamespace.endDate)+") after conversion from GMT in EntitlementCert to local time.");
 	}
 	
+	@Test(	description="subscription-manager: list of consumed subscriptions should report the poolId from which the entitlement originated",
+			groups={"blockedByBug-908671"},
+			enabled=false)
+	//@ImplementsNitrateTest(caseId=, fromPlan=)
+	public void EnsureListConsumedReportsOriginatingPoolId_Test() {
+		// TODO
+	}
 	
 	@Test(	description="subscription-manager-cli: RHEL Personal should be the only available subscription to a consumer registered as type person",
 			groups={"EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test"},
