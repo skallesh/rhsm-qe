@@ -164,15 +164,13 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyEntitlementCertContainsExpectedOIDs_Test(SubscriptionPool pool) throws JSONException, Exception {
 		
-		// skip RAM-based subscriptions
+		// skip RAM-based subscriptions since they were are not supported on v1 certificates
 		if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "ram")!=null) {
-			if (Float.valueOf(clienttasks.getFactValue("system.certificate_version")) < 3.1) {
-				//SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-				//Assert.assertEquals(subscribeResult.getStderr().trim(), "Please upgrade to a newer client to use subscription: "+pool.subscriptionName, "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
-				//Assert.assertEquals(subscribeResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
-				//Assert.assertEquals(subscribeResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
-				throw new SkipException("This test is not designed for RAM-based product subscriptions requiring system.certificate_version >= 3.1");
-			}
+			throw new SkipException("This test is not designed for RAM-based product subscriptions.");
+		}
+		// skip CORES-based subscriptions since they were are not supported on v1 certificates
+		if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "cores")!=null) {
+			throw new SkipException("This test is not designed for CORES-based product subscriptions.");
 		}
 		
 		// subscribe to the pool and get the EntitlementCert
@@ -282,7 +280,6 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	public void deleteFactsFileWithOverridingValues() {
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
-	
 	
 	
 	@Test(	description="assert that the rct cat-cert tool reports the currently installed product certs are Certificate: Version: 1.0 (Note: this is not the ProductNamespace.version)",
