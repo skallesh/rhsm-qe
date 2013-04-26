@@ -905,6 +905,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	
+	// Candidates for an automated Test:
+	// TODO Bug 955824 - Product certs should not be generated with a tag value of "None"
+	
+	
+	
+	
 	// Protected methods ***********************************************************************
 	protected String baseProductsDir = "/usr/share/rhsm/product/RHEL";
 	protected String channelCertMappingFilename = "channel-cert-mapping.txt";
