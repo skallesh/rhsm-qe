@@ -5580,10 +5580,37 @@ repolist: 3,394
 		command = String.format("grep ID- %s", rhnSystemIdFile);
 		return sshCommandRunner.runCommandAndWait(command).getStdout().trim().replaceAll("\\<.*?\\>", "").replaceFirst("ID-", "");		// return 1021538137
 	}
-
-
-
-
+	
+	/**
+	 * Call rhn-channel --list to get the currently consumed RHN channels.
+	 * @return
+	 */
+	public List<String> getCurrentRhnClassicChannels() {
+		
+		// [root@jsefler-onprem-5server rhn]# rhn-channel --list
+		// rhel-x86_64-server-5
+		// rhel-x86_64-server-supplementary-5
+		// rhel-x86_64-server-supplementary-5-debuginfo
+		String command = String.format("rhn-channel --list");
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		
+		// assert result
+		String tolerateStderrMsg = "This system is not associated with any channel.";
+		if (result.getExitCode()==1 && result.getStderr().trim().equals(tolerateStderrMsg)) {
+			log.warning(tolerateStderrMsg);
+		} else {
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "Exitcode from attempt to list currently consumed RHN Classic channels.");
+			Assert.assertEquals(result.getStderr(), "", "Stderr from attempt to list currently consumed RHN Classic channels.");
+		}
+		
+		// parse the rhnChannels from stdout 
+		List<String> rhnChannels = new ArrayList<String>();
+		if (!result.getStdout().trim().equals("")) {
+			rhnChannels	= Arrays.asList(result.getStdout().trim().split("\\n"));
+		}
+		return rhnChannels;
+	}
+	
 	public boolean isRhnSystemIdRegistered(String rhnUsername, String rhnPassword,String rhnHostname, String systemId) {
 		String command = String.format("rhn-is-registered.py --username=%s --password=%s --server=%s  %s", rhnUsername, rhnPassword, rhnHostname, systemId);
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
