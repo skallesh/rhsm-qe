@@ -1434,18 +1434,46 @@ public class SubscriptionManagerTasks {
 	 * @return a Map equivalent to the contents of "/var/lib/rhsm/productid.js"
 	 * @throws JSONException
 	 */
-	public Map<String,String> getProductIdRepoMap() throws JSONException {
-		Map<String,String> productIdToRepoMap = new HashMap<String,String>();
+	public Map<String,List<String>> getProductIdToReposMap() throws JSONException {
+		Map<String,List<String>> productIdToReposMap = new HashMap<String,List<String>>();
 		sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cat "+productIdJsonFile);
-		JSONObject productIdToRepoJSON = new JSONObject(sshCommandRunner.getStdout());
+		JSONObject productIdToReposJSON = new JSONObject(sshCommandRunner.getStdout());
 
-		Iterator<String> productIdKeysIter = productIdToRepoJSON.keys();
+		Iterator<String> productIdKeysIter = productIdToReposJSON.keys();
 		while (productIdKeysIter.hasNext()) {
 			String productId = productIdKeysIter.next();
-			String repo = productIdToRepoJSON.getString(productId);
-			productIdToRepoMap.put(productId, repo);
+			List<String> repos = new ArrayList<String>();
+			// two possibilities for backward compatibility...
+			
+			// NEW - after bug 859197 fix https://bugzilla.redhat.com/show_bug.cgi?id=859197#c15
+			//	[root@rhsm-compat-rhel58 ~]# cat /var/lib/rhsm/productid.js
+			//	{
+			//	  "69": "anaconda-base-201202021136.x86_64"
+			//	}
+			
+			// OLD
+			//	[root@jsefler-5 ~]# cat /var/lib/rhsm/productid.js
+			//	{
+			//	  "69": [
+			//	    "anaconda-base-201211291318.x86_64", 
+			//	    "rel-eng-latest"
+			//	  ]
+			//	}
+			
+			try { // first possibility for backward compatibility 
+				repos.add(productIdToReposJSON.getString(productId));
+			} catch (JSONException e) {	// org.json.JSONException: JSONObject["69"] not a string.
+				// second possibility is the new way
+				JSONArray reposJSON = productIdToReposJSON.getJSONArray(productId);
+				for (int r = 0; r < reposJSON.length(); r++) {
+					String repo = (String) reposJSON.get(r);
+					repos.add(repo);
+				}
+			}
+						
+			productIdToReposMap.put(productId, repos);
 		}
-		return productIdToRepoMap;
+		return productIdToReposMap;
 	}
 	
 	
