@@ -64,12 +64,16 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		List<String> poolArches = new ArrayList<String>(Arrays.asList(poolArch.trim().split(" *, *")));	// Note: the arch can be a comma separated list of values
 		// expand the x86 alias
 		if (poolArches.contains("x86")) {poolArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general term to cover all 32-bit intel microprocessors 
+		// expand the ALL alias
+		if (poolArches.contains("ALL")) {poolArches.addAll(Arrays.asList("i386","i486","i586","i686","x86_64","ia64","ppc64","s390x"));}
 		
 		// expand the arches that this installed product is valid on
 		List<String> installedProductArches = new ArrayList<String>(Arrays.asList(installedProduct.arch.trim().split(" *, *")));	// Note: the arch can be a comma separated list of values
 		// expand the x86 alias
 		if (installedProductArches.contains("x86")) {installedProductArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general term to cover all 32-bit intel microprocessors 
-
+		// expand the ALL alias
+		if (installedProductArches.contains("ALL")) {installedProductArches.addAll(Arrays.asList("i386","i486","i586","i686","x86_64","ia64","ppc64","s390x"));}
+		
 		// if the poolArches contains any one element of installedProductArches and contains the system's arch, then status should go "green", otherwise it should be "yellow"
 		String expectedStatus="Partially Subscribed";	// yellow
 		for (String installedProductArch : installedProductArches) {
