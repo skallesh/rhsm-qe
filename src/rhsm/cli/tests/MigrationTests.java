@@ -1222,8 +1222,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass"})
+	@BeforeClass(groups="setup", dependsOnMethods={/*NOT TRUE "setupBeforeClass"*/})
 	public void rememberOriginallyInstalledRedHatProductCertsBeforeClass() {
+		if (clienttasks==null) return;
 		
 		// review the currently installed product certs and filter out the ones from test automation (indicated by suffix "_.pem")
 		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
@@ -1233,7 +1234,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass"})
+	@BeforeClass(groups="setup", dependsOnMethods={/*NOT TRUE "setupBeforeClass"*/})
 	public void rememberOriginallyConfiguredServerUrlBeforeClass() {
 		if (clienttasks==null) return;
 		
@@ -1242,8 +1243,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		originalServerPrefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 	}
 	
-	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass"})
+	@BeforeClass(groups="setup", dependsOnMethods={/*NOT TRUE "setupBeforeClass"*/})
 	public void backupProductCertsBeforeClass() {
+		if (clienttasks==null) return;
 		
 		// determine the original productCertDir value
 		//productCertDirRestore = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
@@ -1288,8 +1290,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		iptablesAcceptPort(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port"));
 	}
 	
-	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass"})
+	@BeforeClass(groups="setup", dependsOnMethods={/*NOT TRUE "setupBeforeClass"*/})
 	public void copyScriptsToClient() throws IOException {
+		if (client==null) return;
+		
 		// copy the rhn-channels.py script to the client
 		File rhnChannelsScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-channels.py");
 		if (!rhnChannelsScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnChannelsScriptFile);
@@ -1428,9 +1432,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected List<String> rhnAvailableChildChannels = new ArrayList<String>();
 	static public String installNumTool = "install-num-migrate-to-rhsm";
 	static public String rhnMigrateTool = "rhn-migrate-classic-to-rhsm";
-	protected String originalServerHostname;
-	protected String originalServerPort;
-	protected String originalServerPrefix;
+	protected String originalServerHostname = null;
+	protected String originalServerPort = null;
+	protected String originalServerPrefix = null;
 	
 	protected boolean isCurrentlyConfiguredServerTypeHosted() {
 		return isHostnameHosted(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"));
