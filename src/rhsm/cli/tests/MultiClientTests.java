@@ -141,8 +141,8 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	@AfterGroups(groups={"setup"},value="MultiClientRegisterAsPerson_Test", alwaysRun=true)
 	public void unregisterMultiClientRegisterAsPersonAfterGroups() {
 		//if (personIdForMultiClientRegisterAsPerson_Test!=null) {
-			client2tasks.unregister(null,null,null);
-			client1tasks.unregister(null,null,null);
+			if (client2tasks!=null) client2tasks.unregister(null,null,null);
+			if (client1tasks!=null) client1tasks.unregister(null,null,null);
 		//}
 	}
 	

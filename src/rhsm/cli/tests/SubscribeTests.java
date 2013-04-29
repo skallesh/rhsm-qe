@@ -2,19 +2,14 @@ package rhsm.cli.tests;
 
 import java.io.File;
 import java.math.BigInteger;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
@@ -23,16 +18,11 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
-import com.redhat.qe.auto.bugzilla.BzChecker;
-import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
-import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.ConsumerType;
-import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
@@ -41,9 +31,14 @@ import rhsm.data.ProductCert;
 import rhsm.data.ProductNamespace;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
+
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
-import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author ssalevan
@@ -1036,6 +1031,92 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		attachResult = client.runCommandAndWait(clienttasks.command+" attach --pool=123");
 		Assert.assertEquals(subscribeResult.toString(), attachResult.toString(), "Results from 'subscribe' and 'attach' module commands should be identical.");
 	}
+	
+	
+	
+	@BeforeGroups(groups={"setup"}, value={"VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test"})
+	public void createFactsFileWithOverridingValues() {
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.put("system.certificate_version", "1.0");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+	}
+	@Test(	description="Make sure that older subscription-managers are denied attempts to attach a subscription based on: ram, cores",
+			groups={"VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test","blockedByBug-957218" },
+			dataProvider="getAllAvailableRamCoresSubscriptionPoolsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test(Object bugzilla, SubscriptionPool pool) throws JSONException, Exception {
+		
+		//	[root@jsefler-5 ~]# subscription-manager subscribe --pool=8a90f8313e472bce013e472d22150352
+		//	The client must support at least v3.1 certificates in order to use subscription: Multi-Attribute (non-stackable) (24 cores, 6 sockets, 8GB RAM). A newer client may be available to address this problem.
+		//	[root@jsefler-5 ~]# 
+		
+		String systemCertificateVersion = clienttasks.getFactValue("system.certificate_version");
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		Assert.assertEquals(subscribeResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' when system.certificate_version is old '"+systemCertificateVersion+"'.");
+		
+		// CORES-based subscriptions
+		if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "cores")!=null) {
+			Assert.assertEquals(subscribeResult.getStderr().trim(), String.format("The client must support at least v%s certificates in order to use subscription: %s. A newer client may be available to address this problem.","3.2",pool.subscriptionName),
+					"Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' a CORES-based subscription when system.certificate_version is < 3.2");
+			Assert.assertEquals(subscribeResult.getStdout().trim(), "",
+					"Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' a CORES-based subscription when system.certificate_version is < 3.2");
+			return;
+		}
+		
+		// stackable RAM-based subscriptions
+		if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "ram")!=null &&
+			CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "stacking_id")!=null) {
+			Assert.assertEquals(subscribeResult.getStderr().trim(), String.format("The client must support at least v%s certificates in order to use subscription: %s. A newer client may be available to address this problem.","3.2",pool.subscriptionName),
+					"Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.2");
+			Assert.assertEquals(subscribeResult.getStdout().trim(), "",
+					"Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.2");
+			return;
+		}
+		
+		// only RAM-based subscriptions
+		if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "ram")!=null) {
+			Assert.assertEquals(subscribeResult.getStderr().trim(), String.format("The client must support at least v%s certificates in order to use subscription: %s. A newer client may be available to address this problem.","3.1",pool.subscriptionName),
+					"Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
+			Assert.assertEquals(subscribeResult.getStdout().trim(), "",
+					"Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
+			return;
+		}
+		
+		Assert.fail("Do not know how to assert the attempted attachment of '"+pool.subscriptionName+"'.");
+	}
+	@AfterGroups(groups={"setup"}, value={"VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test"})
+	@AfterClass(groups={"setup"})	// insurance; not really needed
+	public void deleteFactsFileWithOverridingValues() {
+		clienttasks.deleteFactsFileWithOverridingValues();
+	}
+	@DataProvider(name="getAllAvailableRamCoresSubscriptionPoolsData")
+	public Object[][] getAllAvailableRamCoresSubscriptionPoolsDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableRamCoresSubscriptionPoolsDataAsListOfLists());
+	}
+	protected List<List<Object>>getAllAvailableRamCoresSubscriptionPoolsDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		for (List<Object> list : getAllAvailableSubscriptionPoolsDataAsListOfLists()) {
+			SubscriptionPool pool = (SubscriptionPool) list.get(0);
+			
+			// include RAM-based subscriptions
+			if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "ram")!=null) {
+				ll.add(Arrays.asList(new Object[] {null,	pool}));
+				continue;
+			}
+			
+			// include CORES-based subscriptions
+			if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "cores")!=null) {
+				ll.add(Arrays.asList(new Object[] {null,	pool}));
+				continue;
+			}
+			
+		}
+		
+		return ll;
+	}
+	
 	
 	
 	

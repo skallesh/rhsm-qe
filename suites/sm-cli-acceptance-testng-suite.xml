@@ -585,6 +585,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Migration Data Tests">
+		<classes>
+			<class name="rhsm.cli.tests.MigrationDataTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Migration Tests">
 		<classes>
 			<class name="rhsm.cli.tests.MigrationTests" />

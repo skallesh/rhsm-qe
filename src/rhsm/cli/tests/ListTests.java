@@ -335,6 +335,26 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager: list of consumed subscriptions should report the poolId from which the entitlement originated",
+			groups={"blockedByBug-908671"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=, fromPlan=)
+	public void EnsureListConsumedReportsOriginatingPoolId_Test() {
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// subscribe to a randomly available pool
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null);
+		
+		// verify the list of consumed subscriptions reports the pool.poolId
+		List<ProductSubscription> consumedProductSubscriptionsFromPool = ProductSubscription.findAllInstancesWithMatchingFieldFromList("poolId", pool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
+		Assert.assertNotNull(consumedProductSubscriptionsFromPool, "Successfully found the consumed subscription reporting the poolId '"+pool.poolId+"' that we just attached.");
+		Assert.assertEquals(consumedProductSubscriptionsFromPool.size(), 1, "The number of consumed subscriptions reporting the poolId '"+pool.poolId+"' that we just attached.");
+		Assert.assertEquals(consumedProductSubscriptionsFromPool.get(0).poolId, pool.poolId, "Redundant assertion on matching poolId between the attached subscription and the list of consumed subscriptions.");
+	}
+	
+	
 	@Test(	description="subscription-manager-cli: RHEL Personal should be the only available subscription to a consumer registered as type person",
 			groups={"EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test"},
 			enabled=true)

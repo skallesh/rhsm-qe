@@ -540,7 +540,34 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void afterEnablementOfReportPackageProfile_Test() {
 		clienttasks.config(null, null, true, new String[]{"rhsm","report_package_profile",rhsm_report_package_profile});
 	}
-
+	
+	
+	@Test(	description="verify the fact value for system.certificate_version which tells the candlepin server the maximum entitlement certificate version this system knows how to consume. ",
+			groups={"blockedByBug-957218"}, dependsOnGroups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AssertFactForSystemCertificateVersion_Test() {
+		String actualSystemCertificateVersion = clienttasks.getFactValue("system.certificate_version");
+		String expectedSystemCertificateVersion = "3.2";
+		
+		if (clienttasks.installedPackageVersion.get("subscription-manager").startsWith("subscription-manager-0.")) {
+			expectedSystemCertificateVersion = null;
+		}
+		if (clienttasks.installedPackageVersion.get("subscription-manager").startsWith("subscription-manager-1.0.")) {
+			expectedSystemCertificateVersion = "3.0";
+		}
+		if (clienttasks.installedPackageVersion.get("subscription-manager").startsWith("subscription-manager-1.1.")) {
+			expectedSystemCertificateVersion = "3.1";
+		}
+		if (clienttasks.installedPackageVersion.get("subscription-manager").startsWith("subscription-manager-1.8.")) {
+			expectedSystemCertificateVersion = "3.2";
+		}
+		Assert.assertEquals(actualSystemCertificateVersion, expectedSystemCertificateVersion,"fact value for system.certificate_version");
+	}
+	
+	
+	
+	
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669513
@@ -581,7 +608,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//	The Dell service tag: CNZFGH1, has already been used to activate a subscription
 	//	[root@jsefler-onprem-workstation facts]# 
 
-	
 	
 	
 	

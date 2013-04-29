@@ -229,6 +229,7 @@ public class SubscriptionManagerTasks {
 		// now dump out the list of userData to a file
 	    File file = new File("tmp/rhel-zstream.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
 	    String archZStream = arch;
+	    if (Integer.valueOf(redhatReleaseX)>=5 && arch.equals("i686")) archZStream = "i386"; // only i386 arch packages are built in brew for RHEL5
 	    if (Integer.valueOf(redhatReleaseX)>=6 && arch.equals("i386")) archZStream = "i686"; // only i686 arch packages are built in brew for RHEL6
 	    String baseurl = "http://download.devel.redhat.com/rel-eng/repos/RHEL-"+redhatReleaseXY+"-Z/"+archZStream;
 	    try {
@@ -1433,18 +1434,46 @@ public class SubscriptionManagerTasks {
 	 * @return a Map equivalent to the contents of "/var/lib/rhsm/productid.js"
 	 * @throws JSONException
 	 */
-	public Map<String,String> getProductIdRepoMap() throws JSONException {
-		Map<String,String> productIdToRepoMap = new HashMap<String,String>();
+	public Map<String,List<String>> getProductIdToReposMap() throws JSONException {
+		Map<String,List<String>> productIdToReposMap = new HashMap<String,List<String>>();
 		sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cat "+productIdJsonFile);
-		JSONObject productIdToRepoJSON = new JSONObject(sshCommandRunner.getStdout());
+		JSONObject productIdToReposJSON = new JSONObject(sshCommandRunner.getStdout());
 
-		Iterator<String> productIdKeysIter = productIdToRepoJSON.keys();
+		Iterator<String> productIdKeysIter = productIdToReposJSON.keys();
 		while (productIdKeysIter.hasNext()) {
 			String productId = productIdKeysIter.next();
-			String repo = productIdToRepoJSON.getString(productId);
-			productIdToRepoMap.put(productId, repo);
+			List<String> repos = new ArrayList<String>();
+			// two possibilities for backward compatibility...
+			
+			// NEW - after bug 859197 fix https://bugzilla.redhat.com/show_bug.cgi?id=859197#c15
+			//	[root@rhsm-compat-rhel58 ~]# cat /var/lib/rhsm/productid.js
+			//	{
+			//	  "69": "anaconda-base-201202021136.x86_64"
+			//	}
+			
+			// OLD
+			//	[root@jsefler-5 ~]# cat /var/lib/rhsm/productid.js
+			//	{
+			//	  "69": [
+			//	    "anaconda-base-201211291318.x86_64", 
+			//	    "rel-eng-latest"
+			//	  ]
+			//	}
+			
+			try { // first possibility for backward compatibility 
+				repos.add(productIdToReposJSON.getString(productId));
+			} catch (JSONException e) {	// org.json.JSONException: JSONObject["69"] not a string.
+				// second possibility is the new way
+				JSONArray reposJSON = productIdToReposJSON.getJSONArray(productId);
+				for (int r = 0; r < reposJSON.length(); r++) {
+					String repo = (String) reposJSON.get(r);
+					repos.add(repo);
+				}
+			}
+						
+			productIdToReposMap.put(productId, repos);
 		}
-		return productIdToRepoMap;
+		return productIdToReposMap;
 	}
 	
 	
@@ -5580,10 +5609,37 @@ repolist: 3,394
 		command = String.format("grep ID- %s", rhnSystemIdFile);
 		return sshCommandRunner.runCommandAndWait(command).getStdout().trim().replaceAll("\\<.*?\\>", "").replaceFirst("ID-", "");		// return 1021538137
 	}
-
-
-
-
+	
+	/**
+	 * Call rhn-channel --list to get the currently consumed RHN channels.
+	 * @return
+	 */
+	public List<String> getCurrentRhnClassicChannels() {
+		
+		// [root@jsefler-onprem-5server rhn]# rhn-channel --list
+		// rhel-x86_64-server-5
+		// rhel-x86_64-server-supplementary-5
+		// rhel-x86_64-server-supplementary-5-debuginfo
+		String command = String.format("rhn-channel --list");
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		
+		// assert result
+		String tolerateStderrMsg = "This system is not associated with any channel.";
+		if (result.getExitCode()==1 && result.getStderr().trim().equals(tolerateStderrMsg)) {
+			log.warning(tolerateStderrMsg);
+		} else {
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "Exitcode from attempt to list currently consumed RHN Classic channels.");
+			Assert.assertEquals(result.getStderr(), "", "Stderr from attempt to list currently consumed RHN Classic channels.");
+		}
+		
+		// parse the rhnChannels from stdout 
+		List<String> rhnChannels = new ArrayList<String>();
+		if (!result.getStdout().trim().equals("")) {
+			rhnChannels	= Arrays.asList(result.getStdout().trim().split("\\n"));
+		}
+		return rhnChannels;
+	}
+	
 	public boolean isRhnSystemIdRegistered(String rhnUsername, String rhnPassword,String rhnHostname, String systemId) {
 		String command = String.format("rhn-is-registered.py --username=%s --password=%s --server=%s  %s", rhnUsername, rhnPassword, rhnHostname, systemId);
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);

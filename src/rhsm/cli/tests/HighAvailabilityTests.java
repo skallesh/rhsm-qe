@@ -87,7 +87,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		
 		// get the installed products and product database map
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		Map<String,String> productIdRepoMap = clienttasks.getProductIdRepoMap();
+		Map<String,List<String>> productIdRepoMap = clienttasks.getProductIdToReposMap();
 		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
 		
 		// assert that product database and installed products are in sync
