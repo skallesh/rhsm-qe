@@ -31,7 +31,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 	
 
 	@Test(	description="verify content label for modifier subscription (EUS) is only available in yum repolist after providing subscriptions are entitled",
-			groups={"AcceptanceTests","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546"},
+			groups={"AcceptanceTests","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-958182"},
 			dependsOnGroups={},
 			dataProvider="getModifierSubscriptionData",
 			enabled=true)
