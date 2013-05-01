@@ -70,8 +70,14 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=30, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListhooksWithNoPluginsInstalled_Test() {
-		Assert.assertEquals(clienttasks.plugins(null,null,true,null).getStdout(),clienttasks.plugins(null,true,null,null).getStdout(), "When there are no plugins installed, the expected --listhooks report should be identical to the --listslots.");
-		Assert.assertEquals(clienttasks.plugins(null,null,true,true).getStdout(),clienttasks.plugins(null,true,null,null).getStdout(), "When there are no plugins installed, the expected --listhooks --verbose report should be identical to the --listslots.");
+		List<String> plugins_listslots			= Arrays.asList(clienttasks.plugins(null,true,null,null).getStdout().trim().split("\n"));
+		List<String> plugins_listhooks			= Arrays.asList(clienttasks.plugins(null,null,true,null).getStdout().trim().split("\n"));
+		List<String> plugins_listhooks_verbose	= Arrays.asList(clienttasks.plugins(null,null,true,true).getStdout().trim().split("\n"));
+		
+		Assert.assertTrue(plugins_listslots.containsAll(plugins_listhooks) && plugins_listhooks.containsAll(plugins_listslots),
+				"When there are no plugins installed, the expected --listhooks report should be identical to the --listslots.");
+		Assert.assertTrue(plugins_listslots.containsAll(plugins_listhooks_verbose) && plugins_listhooks_verbose.containsAll(plugins_listslots),
+				"When there are no plugins installed, the expected --listhooks --verbose report should be identical to the --listslots.");
 	}
 	
 	
@@ -108,13 +114,14 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=120, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListhooksWithDisabledPluginsInstalled_Test() {
-				
 		List<String> plugins_listslots			= Arrays.asList(clienttasks.plugins(null,true,null,null).getStdout().trim().split("\n"));
 		List<String> plugins_listhooks			= Arrays.asList(clienttasks.plugins(null,null,true,null).getStdout().trim().split("\n"));
 		List<String> plugins_listhooks_verbose	= Arrays.asList(clienttasks.plugins(null,null,true,true).getStdout().trim().split("\n"));
 		
-		Assert.assertTrue(plugins_listslots.containsAll(plugins_listhooks) && plugins_listhooks.containsAll(plugins_listslots), "When all plugins installed are disabled, the expected --listhooks report should be identical to the --listslots.");
-		Assert.assertTrue(plugins_listslots.containsAll(plugins_listhooks_verbose) && plugins_listhooks_verbose.containsAll(plugins_listslots), "When all plugins installed are disabled, the expected --listhooks --verbose report should be identical to the --listslots.");
+		Assert.assertTrue(plugins_listslots.containsAll(plugins_listhooks) && plugins_listhooks.containsAll(plugins_listslots),
+				"When all plugins installed are disabled, the expected --listhooks report should be identical to the --listslots.");
+		Assert.assertTrue(plugins_listslots.containsAll(plugins_listhooks_verbose) && plugins_listhooks_verbose.containsAll(plugins_listslots),
+				"When all plugins installed are disabled, the expected --listhooks --verbose report should be identical to the --listslots.");
 	}
 	
 	
