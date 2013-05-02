@@ -229,8 +229,8 @@ public class SubscriptionManagerTasks {
 		// now dump out the list of userData to a file
 	    File file = new File("tmp/rhel-zstream.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
 	    String archZStream = arch;
-	    if (Integer.valueOf(redhatReleaseX)>=5 && arch.equals("i686")) archZStream = "i386"; // only i386 arch packages are built in brew for RHEL5
-	    if (Integer.valueOf(redhatReleaseX)>=6 && arch.equals("i386")) archZStream = "i686"; // only i686 arch packages are built in brew for RHEL6
+	    if (Integer.valueOf(redhatReleaseX)==5 && arch.equals("i686")) archZStream = "i386"; // only i386 arch packages are built in brew for RHEL5
+	    if (Integer.valueOf(redhatReleaseX)==6 && arch.equals("i386")) archZStream = "i686"; // only i686 arch packages are built in brew for RHEL6
 	    String baseurl = "http://download.devel.redhat.com/rel-eng/repos/RHEL-"+redhatReleaseXY+"-Z/"+archZStream;
 	    try {
 	    	Writer output = new BufferedWriter(new FileWriter(file));
