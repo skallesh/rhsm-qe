@@ -246,6 +246,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String Expected_Message="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 		listOfSectionNameValues.add(new String[] { "server",
 				"prefix".toLowerCase(), prefixValueBeforeExecution.trim() });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
 		Assert.assertEquals(RemoteError.trim(), Expected_Message);
 		
 	}
@@ -1678,7 +1679,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	String Productname,productId;
 	List<String> providedProductIds = new ArrayList<String>();
 	Productname = "virt-only-product to be added to activation key";
-	productId = "virt-only test-product";
+	productId = "virt-only-test-product";
 	String poolId=null;
 	Map<String,String> attributes = new HashMap<String,String>();
 	attributes.put("version", "1.0");
@@ -3941,7 +3942,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
 	}
 	
-	@AfterGroups(groups = {"setup"}, value = {"Verify500ErrorOnStage","ServerURLInRHSMFile","DipslayServicelevelWhenRegisteredToDiffrentMachine","ServerUrloptionValuesInRHSMFile"})
+	@AfterGroups(groups = {"setup"}, value = {"Verify500ErrorOnStage","ServerURLInRHSMFile","DipslayServicelevelWhenRegisteredToDiffrentMachine","ServerUrloptionValuesInRHSMFile","DisplayOfRemoteServerExceptionForServer500Error"})
 	public void restoreRHSMConfFileValues() {
 		clienttasks.unregister(null, null, null);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
