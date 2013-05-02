@@ -5596,6 +5596,13 @@ repolist: 3,394
 			stderr = stderr.replaceAll(msg, "");
 		}
 		
+		// this will occur on rhel5 while bug 924919 is open, but does not really affect the success of rhnreg_ks.  See bugzilla 924919
+		msg = "WARNING:rhsm-app.subscription_manager.isodate:dateutil module not found, trying pyxml";
+		if (stderr.contains(msg)) {
+			log.warning("Ignoring stderr result: "+msg);
+			stderr = stderr.replaceAll(msg, "");
+		}
+		
 		Assert.assertEquals(exitCode, new Integer(0),"Exitcode from attempt to register to RHN Classic.");
 		Assert.assertEquals(stderr.trim(), "","Stderr from attempt to register to RHN Classic.");
 		Assert.assertEquals(stdout.trim(), "","Stdout from attempt to register to RHN Classic.");

@@ -16,7 +16,8 @@
                  [com.redhat.qe/ssh-tools "1.0.1-SNAPSHOT"]
                  [com.redhat.qe/assertions "1.0.2"]
                  [com.redhat.qe/bz-checker "1.0.3-SNAPSHOT"]
-                 [org.testng/testng "6.8"] ;;forcing new testng
+                 ;[org.testng/testng "6.8"] ;;forcing new testng
+                 [testng-bigtest "6.8.2-SNAPSHOT"]
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]

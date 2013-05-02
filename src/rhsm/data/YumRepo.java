@@ -52,6 +52,8 @@ public class YumRepo extends AbstractCommandLineData {
 	public String cost;
 	public Boolean skip_if_unavailable;
 	
+	public String ui_repoid_vars;	// introduced by bug 906554
+	
 	// http://wiki.centos.org/PackageManagement/Yum/Priorities
 	// http://docs.fedoraproject.org/en-US/Fedora/15/html/Musicians_Guide/sect-Musicians_Guide-CCRMA_Repository_Priorities.html
 	public Integer priority;
@@ -108,6 +110,7 @@ public class YumRepo extends AbstractCommandLineData {
 		if (cost != null)					string += String.format(" %s='%s'", "cost",cost);
 		if (skip_if_unavailable != null)	string += String.format(" %s='%s'", "skip_if_unavailable",skip_if_unavailable);
 		if (priority != null)				string += String.format(" %s='%s'", "priority",priority);
+		if (ui_repoid_vars != null)			string += String.format(" %s='%s'", "ui_repoid_vars",ui_repoid_vars);
 
 		return string.trim();
 	}
@@ -214,6 +217,7 @@ public class YumRepo extends AbstractCommandLineData {
 			regexes.put("cost",					"cost\\s*=\\s*(.*)");
 			regexes.put("skip_if_unavailable",	"skip_if_unavailable\\s*=\\s*(.*)");
 			regexes.put("priority",				"priority\\s*=\\s*(.*)");
+			regexes.put("ui_repoid_vars",		"ui_repoid_vars\\s*=\\s*(.*)");
 			
 			
 			List<Map<String,String>> yumRepoDataList = new ArrayList<Map<String,String>>();

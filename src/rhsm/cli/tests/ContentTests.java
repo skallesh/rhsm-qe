@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -676,8 +678,54 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	
-	
+	@Test(	description="Verify that yum vars used in a baseurl are listed in a yum repo parameter called ui_repoid_vars",
+			groups={"AcceptanceTests","blockedByBug-906554"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyYumRepoUiRepoIdVars_Test() throws JSONException, Exception {
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+
+		// subscribe to available subscriptions
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		
+		// process each of the yum repos granted and assert the yum vars contained in the baseurl are listed in the ui_repoid_vars
+		boolean UiRepoIdVarsTested=false;
+		for (YumRepo yumRepo : clienttasks.getCurrentlySubscribedYumRepos()) {
+			log.info("Asserting Yum Repo: "+yumRepo);
+			Pattern p = Pattern.compile("\\$\\w+");	// baseurl = https://cdn.redhat.com/content/dist/rhel/server/5/$releasever/$basearch/jbeap/5/os
+			Matcher matcher = p.matcher(yumRepo.baseurl);
+			
+			// first, check if the baseurl has any yum vars
+			if (!matcher.find()) {
+				// assert that this yumRepo has no ui_repoid_vars configuration
+				Assert.assertNull(yumRepo.ui_repoid_vars, "When baseurl '"+yumRepo.baseurl+"' of yumRepo '"+yumRepo.id+"' contains no yum vars, then configuration ui_repoid_vars is not required.");
+				continue;
+			}
+			
+			// now make sure all of the yum vars in the baseurl are present in the ui_repoid_vars configuration
+			matcher.reset();
+			List<String> actualUiRepoidVars = Arrays.asList(yumRepo.ui_repoid_vars.trim().split("\\s+"));
+			while (matcher.find()) {
+				UiRepoIdVarsTested = true;
+				String yumVar = matcher.group();
+				
+				// assert that the configured ui_repoid_vars contains this yum var
+				Assert.assertTrue(actualUiRepoidVars.contains(yumVar.replaceFirst("^\\$","")), "The ui_repoid_vars configuration in repo id '"+yumRepo.id+"' contains yum var '"+yumVar+"' used in its baseurl '"+yumRepo.baseurl+"'.");
+			}
+			
+			// TODO on RHEL7 we should learn how the yum vars get propagated to the ui when calling yum repolist  (dgregor probably knows)
+			//	[root@jsefler-7 ~]# yum repolist
+			//	Loaded plugins: langpacks, product-id, security, subscription-manager
+			//	This system is receiving updates from Red Hat Subscription Management.
+			//	repo id                                                                                           repo name                                                                               status
+			//	always-enabled-content/6.92Server                                                                 always-enabled-content                                                                  0
+			//	awesomeos/6.92Server/x86_64                                                                       awesomeos                                                                               0
+			//	repolist: 0
+			// Notice the repoid labels are appended with /$releasever and /$releasever/$basearch
+		}
+		if (!UiRepoIdVarsTested) throw new SkipException("Could not find any YumRepos containing yum vars to assert this test.");
+	}
 	
 	
 	
@@ -753,8 +801,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			String contentName = "Content Name "+i;
 			String contentId = String.format(contentIdStringFormat,i);	// must be numeric (and unique)
 			String contentLabel = "content-label-"+i;
+			// include some "yum var"iability for testing bug 906554
+			String yumVarPath="";
+			if (i%5 == 0) yumVarPath+="$basearch/";
+			if (i%10 == 0) yumVarPath+="$releasever/";
+			if (i%15 == 0) yumVarPath+="$arch/";
+			if (i%20 == 0) yumVarPath+="$uuid/";
 			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
-			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+contentLabel, "/gpg/path/to/"+contentLabel, "3600", null, null);
+			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+yumVarPath+contentLabel, "/gpg/path/to/"+yumVarPath+contentLabel, "3600", null, null);
 		}
 	
 		// recreate Subscription SKUs: subscriptionSKUProvidingA185ContentSetProduct, subscriptionSKUProvidingA186ContentSetProduct
