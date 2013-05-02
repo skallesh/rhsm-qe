@@ -1,5 +1,13 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
+<!-- 5/2/2013 jsefler DO NOT USE THIS SUITE ANYMORE.
+     A BETTER SOLUTION IS TO INCLUDE THIS EXPECT COMMAND IN THE HUDSON JOB'S BASH SCRIPT
+# return2beaker
+cd "$WORKSPACE"
+if [[ $CLIENT_RETURN2BEAKER == "true" && $CLIENT1_HOSTNAME != "" ]]; then expect -c "spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i .ssh/id_auto_dsa root@$CLIENT1_HOSTNAME \"return2beaker.sh\"; expect_after eof exit; expect_before eof exit; set timeout 20; expect \"Enter passphrase*\" {send dog8code\r} timeout {puts \"Timed out expecting prompt.\"; exit -1}; interact timeout 30 {puts \"Aborting expect script!\"; exit -1}; catch wait reason; exit [lindex \$reason 3]"; fi
+if [[ $CLIENT_RETURN2BEAKER == "true" && $CLIENT2_HOSTNAME != "" ]]; then expect -c "spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i .ssh/id_auto_dsa root@$CLIENT2_HOSTNAME \"return2beaker.sh\"; expect_after eof exit; expect_before eof exit; set timeout 20; expect \"Enter passphrase*\" {send dog8code\r} timeout {puts \"Timed out expecting prompt.\"; exit -1}; interact timeout 30 {puts \"Aborting expect script!\"; exit -1}; catch wait reason; exit [lindex \$reason 3]"; fi
+-->
+
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
 <suite name="SM CleanUp">
 

@@ -70,3 +70,5 @@ set interactiveTimeout 240; 	# use a timeout in case there is an unexpected inte
 interact timeout $interactiveTimeout {puts "WARNING: Timed out after ${interactiveTimeout} seconds expecting ${tool} to have already completed."; exit -1};
 catch wait reason
 exit [lindex $reason 3]
+
+# reason is a list of 4 values, e.g {10824 exp4 0 127} : {processId, spawnId, 0=success or -1=fail, exitCode}
