@@ -558,10 +558,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg ,null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
-		for (SubscriptionPool availPools : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools);
+		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
+		List<SubscriptionPool> availPools = clienttasks.getCurrentlyAvailableSubscriptionPools(); 
+			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools.get(randomGenerator.nextInt(availPools.size())));
 			clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 
@@ -571,7 +571,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
 				Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
 			}
-		}
+		
 	}
 
 	
@@ -1557,7 +1557,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if refresh Pools w/ Auto-Create Owner Fails", 
-			groups = { "EnableAndDisableCertV3","blockedByBug-919700"}, enabled = true)
+			groups = { "EnableAndDisableCertV3","blockedByBug-919700"}, enabled = false)
 	public void EnableAndDisableCertV3() throws JSONException,Exception {
 		String version=null;
 		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "false");
@@ -1854,7 +1854,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if Repos List is empty for FutureSubscription", 
-			groups = { "EmptyReposListForFutureSubscription" }, enabled = true)
+			groups = { "EmptyReposListForFutureSubscription","blockedByBug-958775" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 148534)
 	public void EmptyReposListForFutureSubscription() throws JSONException,
 	Exception {
@@ -1876,8 +1876,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"Sufficient future pools are not available");
 		for (SubscriptionPool subscriptions : availOnDate) {
 			if(!(subscriptions.endDate.before(now))){
-				
-				clienttasks.subscribe_(null, null, subscriptions.poolId, null, null,null, null, null, null, null, null);
+				System.out.println("inside the if loop  ..............");
+				clienttasks.subscribe(null, null, subscriptions.poolId, null, null,null, null, null, null, null, null);
 		}
 		}
 		for (ProductSubscription subscriptions : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
