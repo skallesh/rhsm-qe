@@ -223,7 +223,7 @@ public class SubscriptionManagerTasks {
 		}
 	}
 
-	public void installZStreamUpdates(String installOptions) throws IOException {
+	public void installZStreamUpdates(String installOptions, List<String> updatePackages) throws IOException {
 		
 		// locally create a yum.repos.d zstream repos file
 		// now dump out the list of userData to a file
@@ -240,7 +240,7 @@ public class SubscriptionManagerTasks {
 			output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+"\n");
 			output.write("enabled  = 0\n");
 			//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
-			output.write("exclude  = redhat-release*\n");
+			output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 			output.write("baseurl  = "+baseurl+"\n");
 		    output.close();
 		    //log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
@@ -249,7 +249,13 @@ public class SubscriptionManagerTasks {
 			e.printStackTrace();
 		}
 		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from zstream repo: "+baseurl);	// exclude all redhat-release* packages for safety; rhel5-client will undesirably upgrade from redhat-release-5Client-5.9.0.2 ---> Package redhat-release.x86_64 0:5Server-5.9.0.2 set to be updated
+		
+		// assembe the packages to be updated (note: if the list is empty, then all packages will be updated)
+		String updatePackagesAsString = "";
+		for (String updatePackage : updatePackages) updatePackagesAsString += updatePackage+" "; updatePackagesAsString=updatePackagesAsString.trim();
+
+		// run yum update
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from zstream repo: "+baseurl);	// exclude all redhat-release* packages for safety; rhel5-client will undesirably upgrade from redhat-release-5Client-5.9.0.2 ---> Package redhat-release.x86_64 0:5Server-5.9.0.2 set to be updated
 	}
 	
 	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions) {
