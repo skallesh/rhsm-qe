@@ -327,7 +327,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
-			groups={"AddingExpiredEntitlementToActivationKey"},
+			groups={"AddingExpiredEntitlementToActivationKey","blockedByBug-949419"},
 			enabled=true)
 	public void AddingExpiredEntitlementToActivationKey() throws Exception {
 		int endingMinutesFromNow = 2;
@@ -1760,7 +1760,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@ImplementsNitrateTest(caseId=50235)
 	@Test(description = "verify rhsm log for Update With No Installed Products", 
-			groups = {"UpdateWithNoInstalledProducts","blockedByBug-746241","blockedByBug-946996" }, enabled = true)
+			groups = {"UpdateWithNoInstalledProducts","blockedByBug-746241" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException,Exception {
 		Boolean actual = false;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
