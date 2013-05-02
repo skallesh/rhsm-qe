@@ -427,7 +427,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
-		String result=clienttasks.repos(true,(String)null,(String)null, sm_basicauthproxyHostname+":"+sm_basicauthproxyPort, null, null).getStdout();
+		String result=clienttasks.repos_(true,(String)null,(String)null, sm_basicauthproxyHostname+":"+sm_basicauthproxyPort, null, null).getStdout();
 		String expectedMessage="Network error, unable to connect to server."+"\n"+"Please see /var/log/rhsm/rhsm.log for more information.";
 		Assert.assertNotSame(result.trim(), expectedMessage);
 	}
@@ -649,7 +649,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
 	clienttasks.register(username, password, null, null, null, null, null, null, null, null,(String)null, serverurl,null, null, true, null, null, null, null);
-	clienttasks.service_level(null, null, null, null, username, password, null, serverurl, null, null, null, null);
+	clienttasks.service_level(null, null, "foo", null, username, password, null, serverurl, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
