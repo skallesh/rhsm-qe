@@ -5749,6 +5749,8 @@ repolist: 3,394
 	}
 	
 	protected void workaroundForBug844455() {
+		
+		if (false) { // DISABLE THIS WORKAROUND BECAUSE IT IS SLOW
 		// TEMPORARY WORKAROUND FOR BUG
 		List<File> entitlementFiles = getCurrentEntitlementCertFiles();
 		int tooManyEntitlements = 30;
@@ -5761,6 +5763,31 @@ repolist: 3,394
 				for (int i=entitlementFiles.size()-1; i>=tooManyEntitlements; i--) {
 					unsubscribe_(null, getSerialNumberFromEntitlementCertFile(entitlementFiles.get(i)), null,null,null);
 				}
+			}
+		}
+		// END OF WORKAROUND
+		}
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		int tooManyEntitlements = 30;
+		List<File> entitlementFiles = getCurrentEntitlementCertFiles();
+		if (entitlementFiles.size()>tooManyEntitlements) { 
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="844455";	// Bug 844455 - when consuming many entitlements, subscription-manager unsubscribe --all throws SSLTimeoutError: timed out
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("The workaround to avoid an SSLTimeoutError during an unregister or unsubscribe --all is to reduced the total consumed entitlements by unsubscribing from multiple serials until we are under "+tooManyEntitlements+" remaining.  Then resume the unregister or unsubscribe --all.");
+				int avoidInfiniteLoopSize=entitlementFiles.size();
+				do {
+					List<BigInteger> serials = new ArrayList<BigInteger>();
+					for(int e=0; e<tooManyEntitlements; e++) {
+						//serials.add(getEntitlementCertFromEntitlementCertFile(entitlementFiles.get(e)).serialNumber);
+						serials.add(getSerialNumberFromEntitlementCertFile(entitlementFiles.get(e)));
+					}
+					unsubscribe(null, serials, null, null, null);
+					entitlementFiles = getCurrentEntitlementCertFiles();
+					if (avoidInfiniteLoopSize==entitlementFiles.size()) {break; /* because unsubscribe is failing */} else {avoidInfiniteLoopSize=entitlementFiles.size();}
+				} while (entitlementFiles.size()>tooManyEntitlements);
 			}
 		}
 		// END OF WORKAROUND
