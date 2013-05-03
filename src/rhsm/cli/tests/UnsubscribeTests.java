@@ -125,7 +125,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="subscription-manager: subscribe and then unsubscribe from a future subscription pool",
-			groups={"blockedByBug-727970"},
+			groups={"blockedByBug-727970","blockedByBug-958775"},
 			dataProvider="getAllFutureSystemSubscriptionPoolsData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
