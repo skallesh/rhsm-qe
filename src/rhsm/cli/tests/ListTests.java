@@ -183,8 +183,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// assert same results when no subscribed to anything...
 		log.info("assert list [--installed] produce same results when not subscribed to anything...");
-		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null);
-		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null);
+		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -196,8 +196,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPool_(pool);
-		listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null);
-		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null);
+		listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null, null);
+		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -458,7 +458,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	public void AttemptListWithoutBeingRegistered_Test() {
 		
 		clienttasks.unregister(null,null,null);
-		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null, null, null);
+		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null, null, null, null);
 		
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
 	}
@@ -471,14 +471,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult listResult;
 		clienttasks.unregister(null,null,null);
 		
-		listResult = clienttasks.list_(null,true,null,null,null,null,null, null, null);
+		listResult = clienttasks.list_(null,true,null,null,null,null,null, null, null, null);
 		//Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list available command indicates a problem.");
 		//Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list available subscriptions should require registration.");
 		// results changed after bug fix 749332
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(255), "The exit code from the list available command indicates a problem.");
 		Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --available subscriptions should require registration.");
 
-		listResult = clienttasks.list_(true,true,null,null,null,null,null, null, null);
+		listResult = clienttasks.list_(true,true,null,null,null,null,null, null, null, null);
 		//Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list all available command indicates a problem.");
 		//Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list all available subscriptions should require registration.");
 		// results changed after bug fix 749332
@@ -487,6 +487,20 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 	}
 	
+	
+	@Test(	description="subscription-manager: subcription manager list status without being registered",
+			groups={},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptListStatusWithoutBeingRegistered_Test() {
+		SSHCommandResult listStatusResult;
+		clienttasks.unregister(null,null,null);
+		
+		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
+		String expectedStatus = "Overall Status: Unknown";
+		Assert.assertTrue(listStatusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' when not registered.");
+	}
+
 	
 	
 	
@@ -543,7 +557,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			if (onDatesTested.contains(onDateToTest)) continue;
 			
 			// list all available onDateToTest
-			SSHCommandResult listResult = clienttasks.list_(true,true,null,null,null,onDateToTest,null, null, null);
+			SSHCommandResult listResult = clienttasks.list_(true,true,null,null,null,null,onDateToTest, null, null, null);
 			Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --ondate command indicates a success.");
 
 			List<SubscriptionPool> subscriptionPools = SubscriptionPool.parse(listResult.getStdout());
@@ -584,14 +598,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> expectedSubscriptionPools, filteredSubscriptionPools;
 				
 		// list all available (without service level)
-		listResult = clienttasks.list_(true,true,null,null,null,null,null,null,null);
+		listResult = clienttasks.list_(true,true,null,null,null,null,null,null,null, null);
 		List<SubscriptionPool> allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
 		// determine the subset of expected pools with a case-insensitive matching servicelevel
 		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allAvailableSubscriptionPools);
 
 		// list all available filtered by servicelevel
-		listResult = clienttasks.list_(true,true,null,null,servicelevel,null,null,null,null);
+		listResult = clienttasks.list_(true,true,null,null,null,servicelevel,null,null,null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --servicelevel command indicates a success.");
 		
 		// assert results
@@ -601,14 +615,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (expectedSubscriptionPools.isEmpty()) Assert.assertEquals(listResult.getStdout().trim(), "No available subscription pools to list","Expected message when no subscription remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
 				
 		// list all available (without service level)
-		listResult = clienttasks.list_(false,true,null,null,null,null,null,null,null);
+		listResult = clienttasks.list_(false,true,null,null,null,null,null,null,null, null);
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		
 		// determine the subset of expected pools with a matching servicelevel
 		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, availableSubscriptionPools);
 		
 		// list available filtered by servicelevel
-		listResult = clienttasks.list_(false,true,null,null,servicelevel,null,null,null,null);
+		listResult = clienttasks.list_(false,true,null,null,null,servicelevel,null,null,null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --servicelevel command indicates a success.");
 		
 		// assert results
@@ -629,7 +643,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<ProductSubscription> expectedProductSubscriptions, filteredProductSubscriptions;
 				
 		// list consumed (without service level)
-		listResult = clienttasks.list_(false,false,true,null,null,null,null,null,null);
+		listResult = clienttasks.list_(false,false,true,null,null,null,null,null,null, null);
 		List<ProductSubscription> allConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		
 		// determine the subset of expected pools with a matching servicelevel
@@ -637,7 +651,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		expectedProductSubscriptions = ProductSubscription.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allConsumedProductSubscriptions);
 
 		// list consumed filtered by servicelevel
-		listResult = clienttasks.list_(false,false,true,null,servicelevel,null,null,null,null);
+		listResult = clienttasks.list_(false,false,true,null,null,servicelevel,null,null,null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --consumed --servicelevel command indicates a success.");
 		
 		// assert results

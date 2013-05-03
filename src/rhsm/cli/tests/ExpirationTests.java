@@ -60,7 +60,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNull(expiredPool,"The expired TestPool is no longer available for subscribing: "+expiringPoolId);
 		
 		// verify that the expired product subscriptions are not listed among the consumed
-		List <ProductSubscription> currentProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null).getStdout());
+		List <ProductSubscription> currentProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null, null).getStdout());
 		for (ProductSubscription p : expiringProductSubscriptions) {
 			Assert.assertTrue(!currentProductSubscriptions.contains(p),"The expired ProductSubscription '"+p+"' no longer appears as consumed.");
 		}
