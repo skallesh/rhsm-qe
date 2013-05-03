@@ -147,6 +147,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected List<String> sm_rpmUpdateUrls						= new ArrayList<String>();
 	protected List<String> sm_repoCaCertUrls					= new ArrayList<String>();
 	protected List<String> sm_haPackages						= new ArrayList<String>();
+	protected List<String> sm_yumInstallZStreamUpdatePackages	= new ArrayList<String>();
 	
 //	protected JSONArray systemSubscriptionPoolProductData = null;
 	protected JSONArray sm_personSubscriptionPoolProductData = null;
@@ -168,6 +169,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		if (!getProperty("sm.rpm.updateurls", "").equals("")) 					sm_rpmUpdateUrls					= Arrays.asList(getProperty("sm.rpm.updateurls", "").trim().split(" *, *"));
 		if (!getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))				sm_repoCaCertUrls					= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 		if (!getProperty("sm.ha.packages", "").equals(""))						sm_haPackages						= Arrays.asList(getProperty("sm.ha.packages", "").trim().split(" *, *"));
+		if (!getProperty("sm.client.yumInstallZStreamUpdatePackages", "").equals(""))						sm_yumInstallZStreamUpdatePackages						= Arrays.asList(getProperty("sm.client.yumInstallZStreamUpdatePackages", "").trim().split(" *, *")); // default of "" implies update every package
 
 		if (sm_yumInstallZStreamUpdates) 										sm_yumInstallOptions += " --enablerepo=rhel-zstream";
 		

@@ -223,14 +223,14 @@ public class SubscriptionManagerTasks {
 		}
 	}
 
-	public void installZStreamUpdates(String installOptions) throws IOException {
+	public void installZStreamUpdates(String installOptions, List<String> updatePackages) throws IOException {
 		
 		// locally create a yum.repos.d zstream repos file
 		// now dump out the list of userData to a file
 	    File file = new File("tmp/rhel-zstream.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
 	    String archZStream = arch;
-	    if (Integer.valueOf(redhatReleaseX)>=5 && arch.equals("i686")) archZStream = "i386"; // only i386 arch packages are built in brew for RHEL5
-	    if (Integer.valueOf(redhatReleaseX)>=6 && arch.equals("i386")) archZStream = "i686"; // only i686 arch packages are built in brew for RHEL6
+	    if (Integer.valueOf(redhatReleaseX)==5 && arch.equals("i686")) archZStream = "i386"; // only i386 arch packages are built in brew for RHEL5
+	    if (Integer.valueOf(redhatReleaseX)==6 && arch.equals("i386")) archZStream = "i686"; // only i686 arch packages are built in brew for RHEL6
 	    String baseurl = "http://download.devel.redhat.com/rel-eng/repos/RHEL-"+redhatReleaseXY+"-Z/"+archZStream;
 	    try {
 	    	Writer output = new BufferedWriter(new FileWriter(file));
@@ -240,7 +240,7 @@ public class SubscriptionManagerTasks {
 			output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+"\n");
 			output.write("enabled  = 0\n");
 			//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
-			output.write("exclude  = redhat-release*\n");
+			output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 			output.write("baseurl  = "+baseurl+"\n");
 		    output.close();
 		    //log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
@@ -249,7 +249,13 @@ public class SubscriptionManagerTasks {
 			e.printStackTrace();
 		}
 		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from zstream repo: "+baseurl);	// exclude all redhat-release* packages for safety; rhel5-client will undesirably upgrade from redhat-release-5Client-5.9.0.2 ---> Package redhat-release.x86_64 0:5Server-5.9.0.2 set to be updated
+		
+		// assembe the packages to be updated (note: if the list is empty, then all packages will be updated)
+		String updatePackagesAsString = "";
+		for (String updatePackage : updatePackages) updatePackagesAsString += updatePackage+" "; updatePackagesAsString=updatePackagesAsString.trim();
+
+		// run yum update
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from zstream repo: "+baseurl);	// exclude all redhat-release* packages for safety; rhel5-client will undesirably upgrade from redhat-release-5Client-5.9.0.2 ---> Package redhat-release.x86_64 0:5Server-5.9.0.2 set to be updated
 	}
 	
 	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions) {
@@ -5743,6 +5749,8 @@ repolist: 3,394
 	}
 	
 	protected void workaroundForBug844455() {
+		
+		if (false) { // DISABLE THIS WORKAROUND BECAUSE IT IS SLOW
 		// TEMPORARY WORKAROUND FOR BUG
 		List<File> entitlementFiles = getCurrentEntitlementCertFiles();
 		int tooManyEntitlements = 30;
@@ -5755,6 +5763,31 @@ repolist: 3,394
 				for (int i=entitlementFiles.size()-1; i>=tooManyEntitlements; i--) {
 					unsubscribe_(null, getSerialNumberFromEntitlementCertFile(entitlementFiles.get(i)), null,null,null);
 				}
+			}
+		}
+		// END OF WORKAROUND
+		}
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		int tooManyEntitlements = 30;
+		List<File> entitlementFiles = getCurrentEntitlementCertFiles();
+		if (entitlementFiles.size()>tooManyEntitlements) { 
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="844455";	// Bug 844455 - when consuming many entitlements, subscription-manager unsubscribe --all throws SSLTimeoutError: timed out
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("The workaround to avoid an SSLTimeoutError during an unregister or unsubscribe --all is to reduced the total consumed entitlements by unsubscribing from multiple serials until we are under "+tooManyEntitlements+" remaining.  Then resume the unregister or unsubscribe --all.");
+				int avoidInfiniteLoopSize=entitlementFiles.size();
+				do {
+					List<BigInteger> serials = new ArrayList<BigInteger>();
+					for(int e=0; e<tooManyEntitlements; e++) {
+						//serials.add(getEntitlementCertFromEntitlementCertFile(entitlementFiles.get(e)).serialNumber);
+						serials.add(getSerialNumberFromEntitlementCertFile(entitlementFiles.get(e)));
+					}
+					unsubscribe(null, serials, null, null, null);
+					entitlementFiles = getCurrentEntitlementCertFiles();
+					if (avoidInfiniteLoopSize==entitlementFiles.size()) {break; /* because unsubscribe is failing */} else {avoidInfiniteLoopSize=entitlementFiles.size();}
+				} while (entitlementFiles.size()>tooManyEntitlements);
 			}
 		}
 		// END OF WORKAROUND
