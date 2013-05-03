@@ -3224,24 +3224,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (InstalledProduct installedProduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
 
-			if (installedProduct.status.trim().equalsIgnoreCase("Subscribed")
-					|| installedProduct.status.trim().equalsIgnoreCase(
+			if (installedProduct.status.equalsIgnoreCase("Subscribed") || installedProduct.status.equalsIgnoreCase(
 							"Partially Subscribed")) {
+				System.out.println("inside the for loop");
 				filename = installedProduct.productId + ".pem";
 				moveProductCertFiles(filename);
 			}
 		}
-		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		List<EntitlementCert> certsbeforeRHSMService = clienttasks
 				.getCurrentEntitlementCerts();
 		log.info("cert contents are " + certsbeforeRHSMService);
-		clienttasks.subscribe_(true, null, null, (List<String>) null, null,
-				null, null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
-		if (!(certs.isEmpty()))
-		
 		Assert.assertTrue((certs.isEmpty()), "autoheal has failed");
 	}
 
