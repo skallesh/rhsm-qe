@@ -264,17 +264,21 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-		Boolean expected=false;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		List<SubscriptionPool> Availablepools=clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool =Availablepools.get(randomGenerator.nextInt(Availablepools.size()));
 		clienttasks.subscribeToSubscriptionPool(pool);
-		client.runCommand("sed -i \"/\\[always-enabled-content]/,/\\[/s/^enabled\\s*=.*/enabled=false/\" /etc/yum.repos.d/redhat.repo");	
 		for(Repo repo : clienttasks.getCurrentlySubscribedRepos()){
 			if(repo.repoId.equals("always-enabled-content")){
-				Assert.assertEquals(repo.enabled, expected);
+				
+				Assert.assertTrue(repo.enabled);
+			}
+		}		client.runCommand("sed -i \"/\\[always-enabled-content]/,/\\[/s/^enabled\\s*=.*/Enabled: false/\" /etc/yum.repos.d/redhat.repo");	
+		for(Repo repo : clienttasks.getCurrentlySubscribedRepos()){
+			if(repo.repoId.equals("always-enabled-content")){
+				Assert.assertFalse(repo.enabled);
 			}
 		}
 		client.runCommand(" yum repolist enabled");
@@ -283,13 +287,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String reposlist=clienttasks.repos(true, (String)null, null, null, null, null).getStdout();
 			Assert.assertEquals(reposlist.trim(), expected_message);
 		clienttasks.unregister(null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
 		reposlist=clienttasks.repos(true, (String)null, null, null, null, null).getStdout();
 		Assert.assertEquals(reposlist.trim(), expected_message);
-		clienttasks.subscribeToSubscriptionPool(pool);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
 		for(Repo repo : clienttasks.getCurrentlySubscribedRepos()){
-			expected=true;
 			if(repo.repoId.equals("always-enabled-content")){
-				Assert.assertEquals(repo.enabled, expected);
+				Assert.assertTrue(repo.enabled);
 			}
 		}
 		}
@@ -309,11 +315,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		Boolean actual =true;
+		Boolean actual =false;
+		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "server",
 				"prefix".toLowerCase(), "/candlepin" });
-		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		clienttasks.config(null, null, true,listOfSectionNameValues);
 		Boolean flag = RegexInRhsmLog("//",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker,"GET"));
 		Assert.assertEquals(flag, actual);
@@ -644,12 +650,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	String hostnameBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
 	String portBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
 	String prefixBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
+	clienttasks.register(username, password, null, null, null, null, null, null, null, null,(String)null, serverurl,null, null, true, null, null, null, null);
+	List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+	listOfSectionNameValues.add(new String[] { "server","hostname".toLowerCase(),hostnameBeforeExecution});
+	listOfSectionNameValues.add(new String[] { "server","port".toLowerCase(), "8443" });
+	listOfSectionNameValues.add(new String[] { "server","prefix".toLowerCase(), "/candlepin" });
+	clienttasks.config(null, null, true, listOfSectionNameValues);
 	clienttasks.orgs(username, password, serverurl, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
-	clienttasks.register(username, password, null, null, null, null, null, null, null, null,(String)null, serverurl,null, null, true, null, null, null, null);
-	clienttasks.service_level(null, null, "foo", null, username, password, null, serverurl, null, null, null, null);
+	
+	clienttasks.service_level(null, null, null, null, username, password, null, serverurl, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
@@ -1766,6 +1778,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		moveProductCertFiles("*.pem");
 		String InstalledProducts=clienttasks.listInstalledProducts().getStdout();
@@ -2615,12 +2628,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.trim(), Expected);
 		command = "rm -rf " + FilePath;
 		client.runCommandAndWait(command);
-		result = clienttasks.register_(sm_clientUsername, sm_clientPassword,
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null)
 				.getStdout();
-		Assert.assertContainsMatch(result.trim(),
-				"The system has been registered with id: [a-f,0-9,\\-]{36}");
+		
 
 	}
 	
@@ -2776,7 +2788,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, null, null).getStdout();
 
 		Assert.assertContainsMatch(result.trim(),
-				"The system has been registered with id: [a-f,0-9,\\-]{36}");
+				"The system has been registered with ID: [a-f,0-9,\\-]{36}");
 
 	}
 
