@@ -1459,7 +1459,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"stackable");
 		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "stackable");
-		
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("100000000000002"))){
+				moveProductCertFiles(installed.productId + "_.pem");
+				moveProductCertFiles(installed.productId + ".pem");
+			}
+		}
 		int sockets = 14;
 		String poolid = null;
 		String validity = null;
@@ -1494,12 +1499,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), "stackable", providedProducts);
 		jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
-		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if(!(installed.productId.equals("100000000000002"))){
-				moveProductCertFiles(installed.productId + "_.pem");
-				moveProductCertFiles(installed.productId + ".pem");
-			}
-		}
+		
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 			if(availList.subscriptionName.equals("Multi-Stackable for 100000000000002")){
