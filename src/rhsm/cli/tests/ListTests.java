@@ -500,9 +500,90 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String expectedStatus = "Overall Status: Unknown";
 		Assert.assertTrue(listStatusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' when not registered.");
 	}
+	
+	
+	@Test(	description="subscription-manager: subcription manager list status when registered without entitlements",
+			groups={"AcceptanceTests"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptListStatusWhileRegisteredWithoutEntitlements_Test() {
+		int numberOfInstalledProducts = clienttasks.getCurrentProductCertFiles().size();
+		SSHCommandResult listStatusResult;
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
+		
+		//	[root@jsefler-5 ~]# subscription-manager list --status
+		//	+-------------------------------------------+
+		//	   System Status Details
+		//	+-------------------------------------------+
+		//	Overall Status: Invalid
+		//
+		//	Red Hat Enterprise Linux Server: Not covered by a valid subscription.
 
+		// assert the overall status
+		String expectedStatus;
+ 		if (numberOfInstalledProducts==0) {
+			expectedStatus = "Overall Status: Current";	// translation for "valid"
+		} else {
+			expectedStatus = "Overall Status: Invalid";	// translation for "invalid"
+		}
+		Assert.assertTrue(listStatusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' when registered without entitlements and '"+numberOfInstalledProducts+"' installed products.");
+
+		// assert the individual installed product status details
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		for (InstalledProduct installedProduct : installedProducts) {
+			Assert.assertContainsMatch(listStatusResult.getStdout().trim(), installedProduct.productName+":\\s*"+installedProduct.statusDetails, "Expecting the installed product '"+installedProduct.productName+"'s status details '"+installedProduct.statusDetails+"' to appear in the list of overall status details.");
+		}
+		if (installedProducts.isEmpty()) {
+			Assert.assertTrue(listStatusResult.getStdout().trim().endsWith(expectedStatus), "There should be no report of installed product details when there are no installed products; only expected '"+expectedStatus+"'.");
+		}
+	}
 	
 	
+	@Test(	description="subscription-manager: subcription manager list status when registered with entitlements",
+			groups={"debugTest", "AcceptanceTests"},
+			enabled=false)	// UNDER DEVELOPMENT
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptListStatusWhileRegisteredWithEntitlements_Test() throws JSONException, Exception {
+		int numberOfInstalledProducts = clienttasks.getCurrentProductCertFiles().size();
+		SSHCommandResult listStatusResult;
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		String systemEntitlementsValid = clienttasks.getFactValue("system.entitlements_valid");
+		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
+		
+//		//	[root@jsefler-5 ~]# subscription-manager list --status
+//		//	+-------------------------------------------+
+//		//	   System Status Details
+//		//	+-------------------------------------------+
+//		//	Overall Status: Invalid
+//		//
+//		//	Red Hat Enterprise Linux Server: Not covered by a valid subscription.
+//
+		// assert the overall status
+		String expectedStatus = null;
+ 		if (systemEntitlementsValid.equals("valid")) {
+			expectedStatus = "Overall Status: Current";	// translation for "valid"
+		} else if (systemEntitlementsValid.equals("invalid")){
+			expectedStatus = "Overall Status: Invalid";	// translation for "invalid"
+		} else if (systemEntitlementsValid.equals("partial")){
+			expectedStatus = "Overall Status: insufficient";	// translation for "partial"
+		} else if (systemEntitlementsValid.equals("unknown")){
+			expectedStatus = "Overall Status: Unknown";	// translation for "unknown"
+		} else {
+			Assert.fail("Encountered an unexpected value for systemEntitlementsValid '"+systemEntitlementsValid+"'.");
+		}
+		Assert.assertTrue(listStatusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' when registered without entitlements and '"+numberOfInstalledProducts+"' installed products.");
+//
+//		// assert the individual installed product status details
+//		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+//		for (InstalledProduct installedProduct : installedProducts) {
+//			Assert.assertContainsMatch(listStatusResult.getStdout().trim(), installedProduct.productName+":\\s*"+installedProduct.statusDetails, "Expecting the installed product '"+installedProduct.productName+"'s status details '"+installedProduct.statusDetails+"' to appear in the list of overall status details.");
+//		}
+//		if (installedProducts.isEmpty()) {
+//			Assert.assertTrue(listStatusResult.getStdout().trim().endsWith(expectedStatus), "There should be no report of installed product details when there are no installed products; only expected '"+expectedStatus+"'.");
+//		}
+	}
 	
 	
 	@Test(	description="subscription-manager: subcription manager list future subscription pools for a system",

@@ -33,6 +33,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 	public String version;
 	public String arch;
 	public String status;
+	public String statusDetails;
 	public Calendar startDate;
 	public Calendar endDate;
 	
@@ -40,13 +41,14 @@ public class InstalledProduct extends AbstractCommandLineData {
 		super(productData);
 	}
 	
-	public InstalledProduct(String productName, String productId, String version, String arch, String status, Calendar startDate, Calendar endDate) {
+	public InstalledProduct(String productName, String productId, String version, String arch, String status, String statusDetails, Calendar startDate, Calendar endDate) {
 		super(null);
 		this.productName = productName;
 		this.productId = productId;
 		this.version = version;
 		this.arch = arch;
 		this.status = status;
+		this.statusDetails = statusDetails;
 		this.startDate = startDate;
 		this.endDate = endDate;
 	}
@@ -60,37 +62,13 @@ public class InstalledProduct extends AbstractCommandLineData {
 		if (version != null)			string += String.format(" %s='%s'", "version",version);
 		if (arch != null)				string += String.format(" %s='%s'", "arch",arch);
 		if (status != null)				string += String.format(" %s='%s'", "status",status);
+		if (statusDetails != null)		string += String.format(" %s='%s'", "statusDetails",statusDetails);
 		if (startDate != null)			string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
 		if (endDate != null)			string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
 		
 		return string.trim();
 	}
-
-// DELETEME: The super.equals was fixed which should mean that this Override is not needed anymore.
-//	@Override
-//	public boolean equals(Object obj){
-//		InstalledProduct that = (InstalledProduct) obj;
-//		
-//		if (that.productName!=null && !that.productName.equals(this.productName)) return false;
-//		if (this.productName!=null && !this.productName.equals(that.productName)) return false;
-//		
-//		if (that.version!=null && !that.version.equals(this.version)) return false;
-//		if (this.version!=null && !this.version.equals(that.version)) return false;
-//		
-//		if (that.arch!=null && !that.arch.equals(this.arch)) return false;
-//		if (this.arch!=null && !this.arch.equals(that.arch)) return false;
-//		
-//		if (that.status!=null && !that.status.equals(this.status)) return false;
-//		if (this.status!=null && !this.status.equals(that.status)) return false;
-//		
-//		if (that.startDate!=null && !that.startDate.equals(this.startDate)) return false;
-//		if (this.startDate!=null && !this.startDate.equals(that.startDate)) return false;
-//		
-//		if (that.endDate!=null && !that.endDate.equals(this.endDate)) return false;
-//		if (this.endDate!=null && !this.endDate.equals(that.endDate)) return false;
-//		
-//		return true;
-//	}
+	
 	
 	@Override
 	protected Calendar parseDateString(String dateString){
@@ -166,6 +144,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 		regexes.put("version",		"^Version:(.*)");
 		regexes.put("arch",			"^Arch:(.*)");
 		regexes.put("status",		"^Status:(.*)");
+		regexes.put("statusDetails","^Status Details:(.*)");
 		regexes.put("startDate",	"^Starts:(.*)");	// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
 		regexes.put("endDate",		"^Ends:(.*)");		// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
 		
