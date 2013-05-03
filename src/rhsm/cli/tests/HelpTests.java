@@ -117,7 +117,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPagevForRhnMigrateClassicToRhsm_Test() {
+	public void ManPageForRhnMigrateClassicToRhsm_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = MigrationTests.rhnMigrateTool;
 		// is the command installed?
@@ -554,6 +554,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--consumed");
 		options.add("--available");
 		options.add("--all");
+		options.add("--status");	// new as of rhel510
 		options.add("--servicelevel=SERVICE_LEVEL");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=800999
 		options.add("--ondate=ON_DATE");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=672562
 		options.add("--proxy=PROXY_URL");
