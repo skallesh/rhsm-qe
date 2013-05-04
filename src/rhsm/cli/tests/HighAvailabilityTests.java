@@ -220,7 +220,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="yum install a High Availability package ccs and assert installed products",
-			groups={"blockedByBug-859197"},
+			groups={"blockedByBug-859197","blockedByBug-958548"},
 			priority=40,
 			//dependsOnMethods={"VerifyHighAvailabilityPackagesAreAvailabile_Test"},
 			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
@@ -244,7 +244,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="yum install a second High Availability package cman and assert installed products",
-			groups={"blockedByBug-859197"},
+			groups={"blockedByBug-859197","blockedByBug-958548"},
 			priority=50,
 			//dependsOnMethods={"YumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
 			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
