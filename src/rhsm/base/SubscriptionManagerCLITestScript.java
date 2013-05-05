@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
@@ -471,13 +473,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	/**
 	 * Randomize the input string case.  For example input="Hello World", output="HElLo wORlD"
-	 * @param input
+	 * @param string
 	 * @return
 	 */
-	protected String randomizeCaseOfCharactersInString(String input) {
+	protected String randomizeCaseOfCharactersInString(String string) {
 		String output = "";
-		for (int i=0; i<input.length(); i++) {
-			String c = input.substring(i, i+1);
+		for (int i=0; i<string.length(); i++) {
+			String c = string.substring(i, i+1);
 			output+=randomGenerator.nextInt(2)==0? c.toUpperCase():c.toLowerCase();
 		}
 		return output;
@@ -491,12 +493,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	    return true;
 	}
 	
-	public static boolean isInteger( String input ) {  
+	public static boolean isInteger(String string) {  
 	   try {  
-	      Integer.parseInt( input );  
+	      Integer.parseInt(string);  
 	      return true;  
 	   }  
-	   catch( Exception e) {  
+	   catch(Exception e) {  
 	      return false;  
 	   }  
 	} 
@@ -510,6 +512,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	      sb.append(item);
 	   }
 	   return sb.toString();
+	}
+	
+	static public List<String> getSubstringMatches(String string, String subStringRegex) {
+		Pattern pattern = Pattern.compile(subStringRegex, Pattern.MULTILINE/* | Pattern.DOTALL*/);
+		Matcher matcher = pattern.matcher(string);
+		List<String> substringMatches = new ArrayList<String>();
+		while (matcher.find()) substringMatches.add(matcher.group());
+		return substringMatches;
+	}
+	
+	static public boolean doesStringContainMatches(String string, String subStringRegex) {
+		return !getSubstringMatches(string, subStringRegex).isEmpty();
 	}
 	
 	

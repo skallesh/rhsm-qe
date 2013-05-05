@@ -532,7 +532,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// assert the individual installed product status details
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		for (InstalledProduct installedProduct : installedProducts) {
-			Assert.assertContainsMatch(listStatusResult.getStdout().trim(), installedProduct.productName+":\\s*"+installedProduct.statusDetails, "Expecting the installed product '"+installedProduct.productName+"'s status details '"+installedProduct.statusDetails+"' to appear in the list of overall status details.");
+			Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":\\s*"+installedProduct.statusDetails).size()==1,
+					"Expecting the status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' to appear only once in the list of overall status details.");
 		}
 		if (installedProducts.isEmpty()) {
 			Assert.assertTrue(listStatusResult.getStdout().trim().endsWith(expectedStatus), "There should be no report of installed product details when there are no installed products; only expected '"+expectedStatus+"'.");
@@ -541,25 +542,36 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subcription manager list status when registered with entitlements",
-			groups={"debugTest", "AcceptanceTests"},
-			enabled=false)	// UNDER DEVELOPMENT
+			groups={"AcceptanceTests"/*, "blockedByBug-958827"*/},
+			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptListStatusWhileRegisteredWithEntitlements_Test() throws JSONException, Exception {
-		int numberOfInstalledProducts = clienttasks.getCurrentProductCertFiles().size();
 		SSHCommandResult listStatusResult;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		String systemEntitlementsValid = clienttasks.getFactValue("system.entitlements_valid");
 		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
 		
-//		//	[root@jsefler-5 ~]# subscription-manager list --status
-//		//	+-------------------------------------------+
-//		//	   System Status Details
-//		//	+-------------------------------------------+
-//		//	Overall Status: Invalid
-//		//
-//		//	Red Hat Enterprise Linux Server: Not covered by a valid subscription.
-//
+		//	[root@jsefler-5 ~]# subscription-manager list --status
+		//	+-------------------------------------------+
+		//	   System Status Details
+		//	+-------------------------------------------+
+		//	Overall Status: Invalid
+		//
+		//	Virt Only Awesome OS for i386 Bits:   Not covered by a valid subscription.
+		//	Awesome OS for x86 Bits:              Not covered by a valid subscription.
+		//	Awesome OS for S390 Bits:             Not covered by a valid subscription.
+		//	Red Hat Enterprise Linux Server:      Not covered by a valid subscription.
+		//	Awesome OS for ppc64 Bits:            Not covered by a valid subscription.
+		//	Awesome OS for ia64 Bits:             Not covered by a valid subscription.
+		//	Awesome OS for i686 Bits:             Not covered by a valid subscription.
+		//	Awesome OS Premium Architecture Bits: Not covered by a valid subscription.
+		//	Awesome OS Developer Basic:           Not covered by a valid subscription.
+		//	Awesome OS Developer Bits:            Not covered by a valid subscription.
+		//	Multiplier Product Bits:              Not covered by a valid subscription.
+		//	Awesome OS for S390X Bits:            Not covered by a valid subscription.
+		//	Awesome OS for i386 Bits:             Not covered by a valid subscription.
+		
 		// assert the overall status
 		String expectedStatus = null;
  		if (systemEntitlementsValid.equals("valid")) {
@@ -567,22 +579,46 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		} else if (systemEntitlementsValid.equals("invalid")){
 			expectedStatus = "Overall Status: Invalid";	// translation for "invalid"
 		} else if (systemEntitlementsValid.equals("partial")){
-			expectedStatus = "Overall Status: insufficient";	// translation for "partial"
+			expectedStatus = "Overall Status: Insufficient";	// translation for "partial"	// Bug 959124 - "Compliant status" of the system set to "Insufficient" if any partial subscription is attached to a product (which is not exsiting )
 		} else if (systemEntitlementsValid.equals("unknown")){
 			expectedStatus = "Overall Status: Unknown";	// translation for "unknown"
 		} else {
 			Assert.fail("Encountered an unexpected value for systemEntitlementsValid '"+systemEntitlementsValid+"'.");
 		}
-		Assert.assertTrue(listStatusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' when registered without entitlements and '"+numberOfInstalledProducts+"' installed products.");
-//
-//		// assert the individual installed product status details
-//		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-//		for (InstalledProduct installedProduct : installedProducts) {
-//			Assert.assertContainsMatch(listStatusResult.getStdout().trim(), installedProduct.productName+":\\s*"+installedProduct.statusDetails, "Expecting the installed product '"+installedProduct.productName+"'s status details '"+installedProduct.statusDetails+"' to appear in the list of overall status details.");
-//		}
-//		if (installedProducts.isEmpty()) {
-//			Assert.assertTrue(listStatusResult.getStdout().trim().endsWith(expectedStatus), "There should be no report of installed product details when there are no installed products; only expected '"+expectedStatus+"'.");
-//		}
+		Assert.assertTrue(listStatusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"'.");
+
+		// assert the individual installed product status details
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+			
+			// asset the list status output
+			if (!installedProduct.statusDetails.isEmpty()) { 
+				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":\\s*"+installedProduct.statusDetails).size()==1,
+						"Expecting the status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' to appear only once in the list of overall status details.");
+			} else {
+				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":").isEmpty(),
+						"Expecting the empty status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+" to NOT appear in the list of overall status details.");
+			}
+			
+			// also assert the individual status details for the list installed products
+			if (installedProduct.status.equals("Subscribed")) { 
+				Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "Expecting the installed product '"+installedProduct.productName+"'s Status Details '"+installedProduct.statusDetails+"' to be empty when the installed product's status is 'Subscribed'.");
+			} else {
+				Assert.assertTrue(!installedProduct.statusDetails.isEmpty(), "Expecting the installed product '"+installedProduct.productName+"'s Status Details '"+installedProduct.statusDetails+"' to explain why the installed product's status is not 'Subscribed'.");
+			}
+		}
+		
+		// assert the individual consumed subscription status details
+		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+			
+			// asset the list status output
+			if (!productSubscription.statusDetails.isEmpty()) { 
+				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+productSubscription.productName+":\\s*"+productSubscription.statusDetails).size()==1,
+						"Expecting the status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+"' to appear only once in the list of overall status details.");
+			} else {
+				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+productSubscription.productName+":").isEmpty(),
+						"Expecting the empty status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+" to NOT appear in the list of overall status details.");
+			}
+		}
 	}
 	
 	
@@ -925,7 +961,6 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			log.warning("Skipping createFutureSubscriptionPoolBeforeClass() when server is null.");
 			return;	
 		}
-//debugTesting if (true) return;
 		
 		// find a randomly available product id
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -940,12 +975,6 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		JSONObject futureJSONPool = CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 15, 5/*years*/*365*24*60, 6/*years*/*365*24*60, getRandInt(), getRandInt(), randomAvailableProductId, null);
 	}
 	
-
-	@BeforeGroups(groups="setup",value="unsubscribeBeforeGroup")
-	public void unsubscribeBeforeGroup() {
-		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
-	}
 	
 	@BeforeClass(groups="setup")
 	public void createSubscriptionsWithVariationsOnProductAttributeSockets() throws JSONException, Exception {
@@ -957,7 +986,6 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			log.warning("Skipping createSubscriptionsWithVariationsOnProductAttributeSockets() when server is null.");
 			return;	
 		}
-//debugTesting if (true) return;
 	
 		// Awesome OS for 0 sockets
 		name = "Awesome OS for systems with sockets value=0";
@@ -1092,13 +1120,22 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 		}}
 		
-		
 		// TODO: To get the product certs, use the CandlepinTasks REST API:
         //"url": "/products/{product_uuid}/certificate", 
         //"GET"
-
 	}	
-
+	
+	
+	
+	
+	@BeforeGroups(groups="setup",value="unsubscribeBeforeGroup")
+	public void unsubscribeBeforeGroup() {
+		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+	}
+	
+	
+	
 	
 	
 	// Data Providers ***********************************************************************
