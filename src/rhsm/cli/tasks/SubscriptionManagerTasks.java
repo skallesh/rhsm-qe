@@ -149,16 +149,8 @@ public class SubscriptionManagerTasks {
 		} else {
 			sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'Socket(s)'").getStdout().split(":")[1].trim();	// Socket(s):             2
 		}
-		* INSTEAD, JUST USE THE subscription-manager fact for "cpu.cpu_socket(s)".  THIS IS THE VALUE CANDLEPIN USES FOR HARDWARE RULES. */
-		removeAllFacts();
-		String cpuSocketsFact = "cpu.cpu_socket(s)";
-		sockets = getFactValue(cpuSocketsFact);
-		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(sockets) && Integer.valueOf(sockets)>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+sockets+"' is a positive integer.");
-		String cpuCoresPerSocketFact = "cpu.core(s)_per_socket";
-		coresPerSocket = getFactValue(cpuCoresPerSocketFact);
-		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(coresPerSocket) && Integer.valueOf(coresPerSocket)>0, "Subscription manager facts '"+cpuCoresPerSocketFact+"' value '"+coresPerSocket+"' is a positive integer.");
-		cores = String.valueOf(Integer.valueOf(sockets)*Integer.valueOf(coresPerSocket));
-	
+		* INSTEAD, CALL initializeRamCoreSockets() */
+		
 		// copy RHNS-CA-CERT to RHN-ORG-TRUSTED-SSL-CERT on RHEL7 as a workaround for Bug 906875 ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT 
 		if (Integer.valueOf(redhatReleaseX)>=7) {
 			log.info("Invoking the following suggestion to enable this rhel7 system to use rhn-client-tools https://bugzilla.redhat.com/show_bug.cgi?id=906875#c2 ");
@@ -169,7 +161,23 @@ public class SubscriptionManagerTasks {
 		Assert.assertTrue(ipaddr.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"), "Detected ip address '"+ipaddr+"' for client '"+hostname+"' which appears successful.");
 	}
 	
-
+	
+	/**
+	 * Must be called after installSubscriptionManagerRPMs(...)
+	 */
+	public void initializeRamCoreSockets() {
+		// STORE THE subscription-manager fact for "cpu.cpu_socket(s)".  THIS IS THE VALUE CANDLEPIN USES FOR HARDWARE RULES.
+		removeAllFacts();
+		String cpuSocketsFact = "cpu.cpu_socket(s)";
+		sockets = getFactValue(cpuSocketsFact);
+		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(sockets) && Integer.valueOf(sockets)>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+sockets+"' is a positive integer.");
+		String cpuCoresPerSocketFact = "cpu.core(s)_per_socket";
+		coresPerSocket = getFactValue(cpuCoresPerSocketFact);
+		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(coresPerSocket) && Integer.valueOf(coresPerSocket)>0, "Subscription manager facts '"+cpuCoresPerSocketFact+"' value '"+coresPerSocket+"' is a positive integer.");
+		cores = String.valueOf(Integer.valueOf(sockets)*Integer.valueOf(coresPerSocket));
+		//TODO ram
+	}
+	
 	
 	/**
 	 * Must be called after installSubscriptionManagerRPMs(...)
