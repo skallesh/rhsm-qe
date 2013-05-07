@@ -396,6 +396,12 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
 		List<ProductCert> rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
+		// EXCEPTION: On RHEL5, could be either Red Hat Enterprise Linux Desktop (68) Tags: rhel-5,rhel-5-client OR Red Hat Enterprise Linux Workstation (71) Tags: rhel-5-client-workstation,rhel-5-workstation
+		// TODO: Don't know how to predict which one since I believe Workstation is really born after consuming a child channel of Client rather than a base channel; for now let's just assume the other
+		if (clienttasks.releasever.equals("5Client") && rhelProductCerts.isEmpty()) {
+			providingTag += "-workstation";
+			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
+		}
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
 		ProductCert rhelProductCert = rhelProductCerts.get(0);
 		
