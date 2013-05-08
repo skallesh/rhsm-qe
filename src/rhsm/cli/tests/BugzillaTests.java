@@ -2626,12 +2626,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, null).getStdout();
 		String Expected = "Bad CA certificate: " + FilePath;
 		Assert.assertEquals(result.trim(), Expected);
-		command = "rm -rf " + FilePath;
-		client.runCommandAndWait(command);
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null)
-				.getStdout();
+		
 		
 
 	}
@@ -3654,6 +3649,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		configuredHealFrequency = Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd","autoAttachInterval"));
 		configuredHostname=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server","hostname");
 	}
+	
 
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
 	@AfterClass(groups = "setup")
