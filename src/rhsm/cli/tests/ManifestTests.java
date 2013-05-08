@@ -47,6 +47,22 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="execute rct dump-manifest against all of the test manifest files",
+			groups={"blockedByBug-961124"},
+			priority=5, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RCTDumpManifestTwice_Test() throws Exception {
+		SSHCommandResult dumpResult;
+		
+		// execute and assert rct dump-manifest MANIFEST_FILE
+		File manifestFile = manifestFiles.get(randomGenerator.nextInt(manifestFiles.size())); // randomly pick a manifest file to test
+		dumpResult = RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestFile.getParent()+" && rct dump-manifest "+manifestFile, 0);
+		Assert.assertEquals(dumpResult.getStdout().trim(), "The manifest has been dumped to the current directory", "stdout from rct dump-manifest");
+		dumpResult = RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestFile.getParent()+" && rct dump-manifest "+manifestFile, 0);
+		Assert.assertEquals(dumpResult.getStdout().trim(), "The manifest has been dumped to the current directory (FIXME: exact working is waiting on bug 961124)", "stdout from rct dump-manifest after a second call to dump-manifest is attempted");
+	}
+	
+	
+	@Test(	description="execute rct dump-manifest against all of the test manifest files",
 			groups={"blockedByBug-919561"},
 			dataProvider="ManifestFilesData",
 			priority=10, enabled=true)
@@ -54,6 +70,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	public void RCTDumpManifest_Test(Object bugzilla, File manifestFile) throws Exception {
 		
 		// execute and assert rct dump-manifest MANIFEST_FILE
+		RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestFile.getParent()+" && rm -rf consumer_export.zip export signature", 0);
 		SSHCommandResult dumpResult = RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestFile.getParent()+" && rct dump-manifest "+manifestFile, 0);
 		Assert.assertEquals(dumpResult.getStdout().trim(), "The manifest has been dumped to the current directory", "stdout from rct dump-manifest");
 		
@@ -116,7 +133,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="execute rct cat-manifest against all of the test manifest files",
-			groups={"blockedByBug-919561"},
+			groups={"blockedByBug-919561","blockedByBug-913720"},
 			dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
 			alwaysRun=true,	// run even when there are failures or skips in RCTDumpManifestDestination_Test
 			dataProvider="ManifestFilesData",
@@ -234,7 +251,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(manifestSubscription.supportType,entitlementCert.orderNamespace.supportType, "Subscription Service Type value comes from entitlementCert.orderNamespace.supportType");
 			List<String> actualArchitectures = new ArrayList<String>(); if (manifestSubscription.architectures!=null) actualArchitectures.addAll(Arrays.asList(manifestSubscription.architectures.split("\\s*,\\s*")));
 			List<String> expectedArchitectures = new ArrayList<String>(); for (ProductNamespace productNamespace : entitlementCert.productNamespaces) if (productNamespace.arch!=null) expectedArchitectures.addAll(Arrays.asList(productNamespace.arch.split("\\s*,\\s*")));
-			Assert.assertTrue(actualArchitectures.containsAll(expectedArchitectures)&&expectedArchitectures.containsAll(actualArchitectures), "Subscription Architectures contains the union of providedProduct arches: "+expectedArchitectures);
+			//BAD ASSERT SEE https://bugzilla.redhat.com/show_bug.cgi?id=914799#c3 Assert.assertTrue(actualArchitectures.containsAll(expectedArchitectures)&&expectedArchitectures.containsAll(actualArchitectures), "Subscription Architectures contains the union of providedProduct arches: "+expectedArchitectures);
 			Assert.assertEquals(manifestSubscription.productId,entitlementCert.orderNamespace.productId, "Subscription SKU value comes from entitlementCert.orderNamespace.productId");
 			Assert.assertEquals(manifestSubscription.contract,entitlementCert.orderNamespace.contractNumber, "Subscription Contract value comes from entitlementCert.orderNamespace.contractNumber");
 			Assert.assertEquals(manifestSubscription.subscriptionId,entitlementCert.orderNamespace.orderNumber, "Subscription Order Number value comes from entitlementCert.orderNamespace.orderNumber");
