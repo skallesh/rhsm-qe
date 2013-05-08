@@ -419,8 +419,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			// CPU socket(s):         2
 			SSHCommandResult lspcuResult = client.runCommandAndWait("lscpu | grep -i 'socket(s)'");
 			String lscpuSockets = lspcuResult.getStdout().split(":")[1].trim();
-			Assert.assertEquals(lscpuSockets, factsMap.get(lscpuSocketsFact), "The value of system fact '"+lscpuSocketsFact+"' should match the value '"+lscpuSockets+"' as reported by lscpu.");
-			Assert.assertEquals(factsMap.get(cpuSocketsFact), lscpuSockets, "The value of system fact '"+cpuSocketsFact+"' should match the value '"+lscpuSockets+"' as reported by lscpu.");
+			Assert.assertEquals(factsMap.get(lscpuSocketsFact), lscpuSockets, "The value of system fact '"+lscpuSocketsFact+"' should match the value reported by lscpu.");
+			Assert.assertEquals(factsMap.get(cpuSocketsFact), lscpuSockets, "The value of system fact '"+cpuSocketsFact+"' should match the value reported by lscpu.");
 		}
 	}
 	
