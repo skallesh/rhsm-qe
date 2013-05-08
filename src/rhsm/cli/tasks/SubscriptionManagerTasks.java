@@ -100,6 +100,8 @@ public class SubscriptionManagerTasks {
 	public String ipaddr						= null;	// of the client
 	public String arch							= null;	// of the client
 	public String sockets						= null;	// of the client
+	public String coresPerSocket				= null;	// of the client
+	public String cores							= null;	// of the client
 	public String variant						= null;	// of the client
 	public String releasever					= null;	// of the client	 // e.g. 5Server	// e.g. 5Client
 	
@@ -139,6 +141,7 @@ public class SubscriptionManagerTasks {
 		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
 		
 		// predict sockets on the system   http://libvirt.org/formatdomain.html#elementsCPU
+		/* 5/6/2013: DON'T PREDICT THIS USING lscpu ANY MORE.  IT LEADS TO TOO MANY TEST FAILURES TO TROUBLESHOOT.  INSTEAD, RELY ON FactsTests.MatchingCPUSocketsFact_Test() TO ASSERT BUGZILLA Bug 751205 - cpu_socket(s) facts value occasionally differs from value reported by lscpu (which is correct?)
 		if (Float.valueOf(redhatReleaseXY) < 6.0f) {
 			sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | sort | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
 		} else if (Float.valueOf(redhatReleaseXY) < 6.4f) {
@@ -146,6 +149,7 @@ public class SubscriptionManagerTasks {
 		} else {
 			sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'Socket(s)'").getStdout().split(":")[1].trim();	// Socket(s):             2
 		}
+		* INSTEAD, CALL initializeRamCoreSockets() */
 		
 		// copy RHNS-CA-CERT to RHN-ORG-TRUSTED-SSL-CERT on RHEL7 as a workaround for Bug 906875 ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT 
 		if (Integer.valueOf(redhatReleaseX)>=7) {
@@ -157,7 +161,23 @@ public class SubscriptionManagerTasks {
 		Assert.assertTrue(ipaddr.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"), "Detected ip address '"+ipaddr+"' for client '"+hostname+"' which appears successful.");
 	}
 	
-
+	
+	/**
+	 * Must be called after installSubscriptionManagerRPMs(...)
+	 */
+	public void initializeRamCoreSockets() {
+		// STORE THE subscription-manager fact for "cpu.cpu_socket(s)".  THIS IS THE VALUE CANDLEPIN USES FOR HARDWARE RULES.
+		removeAllFacts();
+		String cpuSocketsFact = "cpu.cpu_socket(s)";
+		sockets = getFactValue(cpuSocketsFact);
+		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(sockets) && Integer.valueOf(sockets)>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+sockets+"' is a positive integer.");
+		String cpuCoresPerSocketFact = "cpu.core(s)_per_socket";
+		coresPerSocket = getFactValue(cpuCoresPerSocketFact);
+		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(coresPerSocket) && Integer.valueOf(coresPerSocket)>0, "Subscription manager facts '"+cpuCoresPerSocketFact+"' value '"+coresPerSocket+"' is a positive integer.");
+		cores = String.valueOf(Integer.valueOf(sockets)*Integer.valueOf(coresPerSocket));
+		//TODO ram
+	}
+	
 	
 	/**
 	 * Must be called after installSubscriptionManagerRPMs(...)
