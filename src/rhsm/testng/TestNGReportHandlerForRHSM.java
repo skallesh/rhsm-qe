@@ -11,15 +11,42 @@ import com.redhat.qe.auto.testng.TestNGReportHandler;
 public class TestNGReportHandlerForRHSM extends TestNGReportHandler {
 	@Override
 	public void publish(LogRecord logRecord) {
-		if (buffering) {
-			logRecordBuffer.add(logRecord);
-		} else {
-			super.publish(logRecord);
-		}
-//		if (Boolean.valueOf(SubscriptionManagerBaseTestScript.getProperty("sm.conservativeTestNGReporting", "false"))) {
-//			super.publish(record);
-//			return;
+//		if (buffering) {
+//			logRecordBuffer.add(logRecord);
+//		} else {
+//			super.publish(logRecord);
 //		}
+		// when the user does not want to use TestNGReportHandlerForRHSM, simply publish the logRecord and return
+		if (!Boolean.valueOf(SubscriptionManagerBaseTestScript.getProperty("sm.conservativeTestNGReporting", "false"))) {
+			super.publish(logRecord);
+			return;
+		}
+		
+		
+		if (logRecord.getMessage().startsWith("Test Passed")) {
+			logRecordBuffer.clear();
+			buffering = false;
+		}
+		
+		if (logRecord.getMessage().startsWith("Test Failed")) {
+			buffering = false;
+		}
+		
+		if (logRecord.getMessage().startsWith("Skipping Test") || logRecord.getMessage().startsWith("Skipping test")) {
+			buffering = false;
+		}
+		
+		logRecordBuffer.add(logRecord);
+		if (!buffering) { // publish the entire logRecordBuffer
+			for (LogRecord record : logRecordBuffer) {
+				super.publish(record);
+			}
+			logRecordBuffer.clear();
+		}
+		
+		if (logRecord.getMessage().startsWith("Starting Test:")) {
+			buffering = true;
+		}
 //		
 //		
 //		if (!Boolean.valueOf(SubscriptionManagerBaseTestScript.getProperty("sm.conservativeTestNGReporting", "true"))) {
@@ -50,24 +77,24 @@ public class TestNGReportHandlerForRHSM extends TestNGReportHandler {
 	private List<LogRecord> logRecordBuffer = new ArrayList<LogRecord>();
 	private boolean buffering=false;
 	
-	public void clearBuffer() {
-		// clear all log records pending in the buffer (these will never be logged)
-		logRecordBuffer.clear();
-	}
-	public void stopBuffer() {
-		// stop the buffer
-		buffering=false;
-		// and publish what has accumulated
-		for (LogRecord logRecord : logRecordBuffer) {
-			this.publish(logRecord);
-		}
-	}
-	public void startBuffer() {
-		// when the user does not want to use TestNGReportHandlerForRHSM, simply don't start buffering
-		if (!Boolean.valueOf(SubscriptionManagerBaseTestScript.getProperty("sm.conservativeTestNGReporting", "false"))) {
-			return;
-		}
-		
-		buffering=true;
-	}
+//	public void clearBuffer() {
+//		// clear all log records pending in the buffer (these will never be logged)
+//		logRecordBuffer.clear();
+//	}
+//	public void stopBuffer() {
+//		// stop the buffer
+//		buffering=false;
+//		// and publish what has accumulated
+//		for (LogRecord logRecord : logRecordBuffer) {
+//			this.publish(logRecord);
+//		}
+//	}
+//	public void startBuffer() {
+//		// when the user does not want to use TestNGReportHandlerForRHSM, simply don't start buffering
+//		if (!Boolean.valueOf(SubscriptionManagerBaseTestScript.getProperty("sm.conservativeTestNGReporting", "false"))) {
+//			return;
+//		}
+//		
+//		buffering=true;
+//	}
 }
