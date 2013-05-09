@@ -204,8 +204,11 @@ ldtp2commands = ['activatetext',
                  'waittillguinotexist',
                  'windowuptime']
 
+ldtp3commands = ['activatetext', 'activatewindow', 'appendtext', 'appundertest', 'check', 'checkrow', 'click', 'closewindow', 'comboselect', 'comboselectindex', 'copytext', 'cuttext', 'decrease', 'delaycmdexec', 'deletetext', 'deregisterevent', 'deregisterkbevent', 'doesmenuitemexist', 'doesrowexist', 'doubleclick', 'doubleclickrow', 'enterstring', 'expandtablecell', 'generatekeyevent', 'generatemouseevent', 'getaccesskey', 'getallitem', 'getallstates', 'getapplist', 'getcellsize', 'getcellvalue', 'getcharcount', 'getchild', 'getcombovalue', 'getcpustat', 'getcursorposition', 'getlastlog', 'getmax', 'getmaxvalue', 'getmemorystat', 'getmin', 'getminincrement', 'getminvalue', 'getobjectinfo', 'getobjectlist', 'getobjectnameatcoords', 'getobjectproperty', 'getobjectsize', 'getpanelchildcount', 'getrowcount', 'getslidervalue', 'getstatusbartext', 'gettabcount', 'gettablerowindex', 'gettabname', 'gettextvalue', 'getvalue', 'getwindowlist', 'getwindowsize', 'grabfocus', 'guiexist', 'guitimeout', 'handletablecell', 'hasstate', 'hidelist', 'imagecapture', 'increase', 'inserttext', 'invokemenu', 'isalive', 'ischildindexselected', 'ischildselected', 'istextstateenabled', 'keypress', 'keyrelease', 'launchapp', 'listsubmenus', 'maximizewindow', 'menucheck', 'menuitemenabled', 'menuuncheck', 'minimizewindow', 'mouseleftclick', 'mousemove', 'mouserightclick', 'objectexist', 'objtimeout', 'onedown', 'oneleft', 'oneright', 'oneup', 'onwindowcreate', 'pastetext', 'poll_events', 'press', 'registerevent', 'registerkbevent', 'remap', 'removecallback', 'rightclick', 'scrolldown', 'scrollleft', 'scrollright', 'scrollup', 'selectall', 'selecteditemcount', 'selectindex', 'selectitem', 'selectlastrow', 'selectmenuitem', 'selectpanel', 'selectpanelindex', 'selectpanelname', 'selectrow', 'selectrowindex', 'selectrowpartialmatch', 'selecttab', 'selecttabindex', 'setcellvalue', 'setcursorposition', 'setlocale', 'setmax', 'setmin', 'settextvalue', 'setvalue', 'showlist', 'simulatemousemove', 'singleclickrow', 'startprocessmonitor', 'stateenabled', 'stopprocessmonitor', 'uncheck', 'uncheckrow', 'unhandletablecell', 'unmaximizewindow', 'unminimizewindow', 'unselectall', 'unselectindex', 'unselectitem', 'verifycheck', 'verifydropdown', 'verifyhidelist', 'verifymenucheck', 'verifymenuuncheck', 'verifypartialmatch', 'verifypartialtablecell', 'verifypushbutton', 'verifyscrollbarhorizontal', 'verifyscrollbarvertical', 'verifyselect', 'verifysettext', 'verifysetvalue', 'verifyshowlist', 'verifysliderhorizontal', 'verifyslidervertical', 'verifytablecell', 'verifytabname', 'verifytoggled', 'verifyuncheck', 'wait', 'waittillguiexist', 'waittillguinotexist', 'windowuptime']
+
 _ldtp_methods = filter(lambda fn: inspect.isfunction(getattr(ldtp,fn)),  dir(ldtp))
 _supported_methods = filter(lambda x: x in ldtp2commands, _ldtp_methods)
+_unsupported_methods = filter(lambda x: x not in ldtp2commands, _ldtp_methods)
 _additional_methods = ['closewindow', 'maximizewindow']
 for item in _additional_methods: _supported_methods.append(item)
 _supported_methods.sort()
@@ -372,6 +375,10 @@ class AllMethods:
     os.environ['NO_GAIL']='1'
     os.environ['NO_AT_BRIDGE']='1'
     return process.pid
+
+  #def _gettextvalue(self, window_name, object_name, startPosition=None,
+  #                 endPosition=None):
+  # DO THIS
 
   def _dispatch(self, method, params):
     if method in _supported_methods:
