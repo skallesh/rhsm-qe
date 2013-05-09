@@ -260,6 +260,11 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, packagesDir), "The expected Packages directory exists after mounting the downloaded iso file.");
 		client.runCommandAndWait("ls -l "+packagesDir);
 		client.runCommandAndWait("umount "+mountPoint);
+		
+		// Note: if you get a HTTP request sent, awaiting response... 404 Not Found, then it is probably missing from the CDN
+		// Note: if you get a 403 then it may really be a cert issue, try downloading the http:// file (without the "s") to verify that it really is a cert issue
+		// https://cdn.rcm-qa.redhat.com/content/dist/rhel/rhui/server/5/5Server/x86_64/rhui/1.2/iso/rhel-5.5-rhui-1.2-x86_64.iso
+		// http://cdn.rcm-qa.redhat.com/content/dist/rhel/rhui/server/5/5Server/x86_64/rhui/1.2/iso/rhel-5.5-rhui-1.2-x86_64.iso
 	}
 
 	
