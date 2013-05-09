@@ -43,7 +43,7 @@ public class TestNGReportHandlerForRHSM extends TestNGReportHandler {
 	public void publish(LogRecord logRecord) {
 		
 		// when the user does not want to use TestNGReportHandlerForRHSM, simply publish the logRecord and return
-		if (!Boolean.valueOf(SubscriptionManagerBaseTestScript.getProperty("sm.conservativeTestNGReporting", "true"))) {
+		if (!Boolean.valueOf(SubscriptionManagerBaseTestScript.getProperty("sm.conservativeTestNGReporting", "false"))) {
 			super.publish(logRecord);
 			return;
 		}
