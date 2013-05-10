@@ -883,6 +883,27 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("pa.po")) bugIds.add("842784");
 				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("bn_IN.po")) bugIds.add("842784");
 				
+				// Bug 962011 - [ALL] candlepin master translations for all the new "compliance reasons" are needed
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("it.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("es_ES.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("pt_BR.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("gu.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("or.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("as.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("kn.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("de_DE.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("ko.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("ru.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("mr.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("hi.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("ja.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("te.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("ta_IN.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("ml.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("fr.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("zh_CN.po")) bugIds.add("962011");
+				if (pofilterTest.equals("untranslated") && translationFile.getName().equals("zh_TW.po")) bugIds.add("962011");
+				
 				// Bug 865561 - [pa_IN] the pofilter escapes test is failing on msgid "Consumer Type with id {0} could not be found."
 				if (pofilterTest.equals("escapes") && translationFile.getName().equals("pa.po")) bugIds.add("865561");
 				
