@@ -5,11 +5,14 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -727,6 +730,140 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (!UiRepoIdVarsTested) throw new SkipException("Could not find any YumRepos containing yum vars to assert this test.");
 	}
 	
+	
+	@Test(	description="Verify that all content sets granted from a subscription pool that are restricted to specific arches satisfy the current system's arch.",
+			groups={"AcceptanceTests"/*,"blockedByBug-706187"*/},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test() throws JSONException, Exception {
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+
+		// subscribe to available subscriptions
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		
+		boolean contentBasedArchesFound = false;
+		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				List<String> arches = new ArrayList<String>();
+				if (!contentNamespace.arches.trim().isEmpty()) arches.addAll(Arrays.asList(contentNamespace.arches.trim().split(" *, *")));	// Note: the arches field can be a comma separated list of values
+				if (!arches.isEmpty()) contentBasedArchesFound = true;
+				
+				if (arches.contains("x86")) {arches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
+				Assert.assertTrue(arches.isEmpty() || arches.contains("ALL") || arches.contains(clienttasks.arch), "Content label '"+contentNamespace.label+"' restricted to arches '"+contentNamespace.arches+"' granted by entitlement cert '"+entitlementCert.productNamespaces.get(0).name+"' matches the system's arch '"+clienttasks.arch+"'.");
+			}
+		}
+		
+		if (!contentBasedArchesFound) throw new SkipException("No entitlements were found containing non-empty arch-based content after subscribing to available pools.");
+	}
+	
+	
+	@Test(	description="Verify that all content sets granted from a subscription pool satisfy the system arch and subset the provided product's arch",
+			groups={"AcceptanceTests"/*,"blockedByBug-706187"*/},
+			dataProvider="getAvailableSubscriptionPoolsData",
+			enabled=false)	// TODO UNDER CONSTRUCTION 5/10/2013 jsefler
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyContentSetsEntitledFromSubscriptionPoolSatisfyTheSystemArch_Test(SubscriptionPool pool) throws JSONException, Exception {
+		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId);
+		if (providedProductIds.isEmpty()) throw new SkipException("This test is not applicable for a pool that provides no products.");
+		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		
+
+		// maintain a list of expected content sets
+		List<String> expectedContentLabels = new ArrayList<String>();
+		// maintain a list of unexpected content sets
+		List<String> unexpectedContentLabels = new ArrayList<String>();
+		
+		for (String providedProductId : providedProductIds) {
+			
+			// get the product
+			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
+			
+			
+			// get the product supported arches
+			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
+			List<String> productSupportedArches = new ArrayList<String>();
+			for (int j = 0; j < jsonProductAttributes.length(); j++) {
+				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
+				String attributeName = jsonProductAttribute.getString("name");
+				String attributeValue = jsonProductAttribute.isNull("value")? null:jsonProductAttribute.getString("value");
+				if (attributeName.equals("arch")) {
+					productSupportedArches.addAll(Arrays.asList(attributeValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+					if (productSupportedArches.contains("x86")) {productSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
+//					if (!productSupportedArches.contains("ALL") && !productSupportedArches.contains(clienttasks.arch)) {
+//						productAttributesPassRulesCheck = false;
+//					}
+				}
+			}
+			
+
+			
+			// get the provided product contents
+			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
+			for (int j = 0; j < jsonProductContents.length(); j++) {
+				JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
+				JSONObject jsonContent = jsonProductContent.getJSONObject("content");
+				boolean   enabled = jsonProductContent.getBoolean("enabled");
+				String    contentLabel = jsonProductContent.getString("label");
+				String    requiredTags = jsonProductContent.getString("requiredTags");
+				clienttasks.areAllRequiredTagsProvidedByProductCerts(requiredTags, installedProductCerts);
+
+//				// get modifiedProductIds for each of the productContents
+//				JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
+//				for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
+//					String modifiedProductId = (String) jsonModifiedProductIds.get(k);
+//				}
+				
+				// get arches for each of the productContents
+				// TODO not yet sure if this will be a list or null or string
+				if (jsonContent.has("arches")) {
+					JSONArray jsonArches = jsonContent.getJSONArray("arches");
+					for (int k = 0; k < jsonArches.length(); k++) {
+						String arch = (String) jsonArches.get(k);
+					}
+				} else {
+					// when no arches have been defined on the content set, then add it to the expectedContentLabels
+					// if it's product also matches the system
+					// and if all it's required tags are installed
+					if ((productSupportedArches.contains("ALL") || productSupportedArches.contains(clienttasks.arch)) &&
+						clienttasks.areAllRequiredTagsProvidedByProductCerts(requiredTags, installedProductCerts)) {
+						expectedContentLabels.add(contentLabel);
+					} else {
+						unexpectedContentLabels.add(contentLabel);
+					}
+					
+				}
+			}
+			
+			
+		}
+		
+		if (expectedContentLabels.isEmpty() && unexpectedContentLabels.isEmpty()) throw new SkipException("This test is not applicable for a pool whose provided products have no content sets.");
+		
+		clienttasks.unsubscribe(true,(BigInteger)null,null,null,null);
+		clienttasks.subscribeToSubscriptionPool(pool);
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
+		
+		// entitlement asserts
+		List<String> actualEntitledContentLabels = new ArrayList<String>();
+		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) actualEntitledContentLabels.add(contentNamespace.label);
+		for (String expectedContentLabel : expectedContentLabels) {
+			Assert.assertTrue(actualEntitledContentLabels.contains(expectedContentLabel), "As expected, contentNamespcce label '"+expectedContentLabel+"' is included in the entitlement.");
+		}
+		for (String unexpectedContentLabel : unexpectedContentLabels) {
+			Assert.assertTrue(!actualEntitledContentLabels.contains(unexpectedContentLabel), "As expected, contentNamespcce label '"+unexpectedContentLabel+"' is NOT included in the entitlement.");
+		}
+		
+		// YumRepo asserts
+		List<String> actualYumRepoLabels = new ArrayList<String>();
+		for (YumRepo yumRepo : clienttasks.getCurrentlySubscribedYumRepos()) actualYumRepoLabels.add(yumRepo.id);
+		for (String expectedContentLabel : expectedContentLabels) {
+			Assert.assertTrue(actualYumRepoLabels.contains(expectedContentLabel), "As expected, yum repo label '"+expectedContentLabel+"' is included in "+clienttasks.redhatRepoFile);
+		}
+		for (String unexpectedContentLabel : unexpectedContentLabels) {
+			Assert.assertTrue(!actualYumRepoLabels.contains(unexpectedContentLabel), "As expected, yum repo label '"+unexpectedContentLabel+"' is NOT included in in "+clienttasks.redhatRepoFile);
+		}
+	}
 	
 	
 	

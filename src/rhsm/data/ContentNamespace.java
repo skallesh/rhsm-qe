@@ -27,6 +27,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 	public Boolean enabled;
 	public Integer metadataExpire;	// seconds
 	public String requiredTags;	// comma separated list of tags: TAG1,TAG2,TAG3
+	public String arches;// comma separated list of arches: ARCH1,ARCH2,ARCH3
 
 	public String hash;
 	public String type;
@@ -57,6 +58,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 		if (enabled != null)				string += String.format(" %s='%s'", "enabled",enabled);
 		if (metadataExpire != null)			string += String.format(" %s='%s'", "metadataExpire",metadataExpire);
 		if (requiredTags != null)			string += String.format(" %s='%s'", "requiredTags",requiredTags);
+		if (arches != null)					string += String.format(" %s='%s'", "arches",arches);
 		
 		return string.trim();
 	}
@@ -472,6 +474,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 		regexes.put("enabled",				"^\\s+Enabled: (.+)");
 		regexes.put("metadataExpire",		"^\\s+Expires: (.+)");
 		regexes.put("requiredTags",			"^\\s+Required Tags: (.*)");
+		regexes.put("arches",				"^\\s+Arches: (.*)");
 		regexes.put("type",					"^\\s+Type: (.+)");	// Bug 856349 - rct cat-cert tool should report Content for "file" repo types as well as "yum" repos types
 
 		
