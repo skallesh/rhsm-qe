@@ -15,6 +15,8 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -185,7 +187,8 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		sshCommandResult = clienttasks.environments(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, false, null, null, null);
 		
 		// change the server.ca_cert_dir configuration to simulate a missing candlepin ca cert
-		sshCommandResult = clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir","/tmp"});
+		client.runCommandAndWait("mkdir -p /tmp/emptyDir");
+		sshCommandResult = clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir","/tmp/emptyDir"});
 		
 		// calling environments without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, false, null, null, null);
