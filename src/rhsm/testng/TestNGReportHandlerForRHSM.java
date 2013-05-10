@@ -65,6 +65,18 @@ public class TestNGReportHandlerForRHSM extends TestNGReportHandler {
 			buffering = false;
 		}
 		
+		// this if block is insurance to make sure that we are not buffering for these event
+		// this if block should be unnecessary because a Test Passed/Failed/Skip event should already have turned off buffering
+		if (logRecord.getMessage().startsWith("Starting TestNG Script:") ||
+			logRecord.getMessage().startsWith("Finished TestNG Script:") ||
+			logRecord.getMessage().startsWith("Skipping configuration:") ||
+			logRecord.getMessage().startsWith("Configuration completed:") ||
+			logRecord.getMessage().startsWith("Starting TestNG Suite:") ||
+			logRecord.getMessage().startsWith("Finishing TestNG Suite:") ||
+			logRecord.getMessage().startsWith("Configuration Failed:")) {
+			buffering = false;
+		}
+		
 		logRecordBuffer.add(logRecord);
 		if (!buffering) { // publish the entire logRecordBuffer
 			for (LogRecord record : logRecordBuffer) super.publish(record);
