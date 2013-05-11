@@ -417,6 +417,27 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			// RHEL6.1+
 			// [root@rhsm-accept-rhel63 ~]# lscpu | grep -i 'socket(s)'
 			// CPU socket(s):         2
+			
+			
+			// TODO on s390, you may have to combine "Book(s)" * "Socket(s) per book" to get the lscpuSockets
+			//	ssh root@ibm-z10-08.rhts.eng.bos.redhat.com lscpu
+			//	Stdout:
+			//	Architecture: s390x
+			//	CPU op-mode(s): 32-bit, 64-bit
+			//	Byte Order: Big Endian
+			//	CPU(s): 2
+			//	On-line CPU(s) list: 0,1
+			//	Thread(s) per core: 1
+			//	Core(s) per socket: 1
+			//	Socket(s) per book: 1
+			//	Book(s): 2
+			//	Vendor ID: IBM/S390
+			//	BogoMIPS: 11061.00
+			//	Hypervisor: z/VM 6.1.0
+			//	Hypervisor vendor: IBM
+			//	Virtualization type: full
+			//	Dispatching mode: horizontal
+			
 			SSHCommandResult lspcuResult = client.runCommandAndWait("lscpu | grep -i 'socket(s)'");
 			String lscpuSockets = lspcuResult.getStdout().split(":")[1].trim();
 			Assert.assertEquals(factsMap.get(lscpuSocketsFact), lscpuSockets, "The value of system fact '"+lscpuSocketsFact+"' should match the value reported by lscpu.");
@@ -608,7 +629,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Map<String, String> factsMap = clienttasks.getFacts("socket");
 		String cpuSocketsFact = "cpu.cpu_socket(s)";
 		String cpuCoresPerSocketFact = "cpu.core(s)_per_socket";
-		String lscpuSocketsFact = "lscpu.socket(s)";
+		String lscpuSocketsFact = "lscpu.socket(s)";	// TODO: On s390 this appears to be replaced by a combination of "lscpu.socket(s)_per_book" * "lscpu.book(s)"
 		String lscpuCoresPerSocketFact = "lscpu.core(s)_per_socket";
 		
 		if (clienttasks.redhatRelease.contains("release 5")) {
@@ -626,6 +647,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			// Core(s) per socket:    1
 
 			SSHCommandResult lspcuResult = client.runCommandAndWait("lscpu | grep -i 'Core(s) per socket'");
+			
 			String lscpuCoresPerSocket = lspcuResult.getStdout().split(":")[1].trim();
 			Assert.assertEquals(lscpuCoresPerSocket, factsMap.get(lscpuCoresPerSocketFact), "The value of system fact '"+lscpuCoresPerSocketFact+"' should match the value for '"+lscpuCoresPerSocket+"' as reported by lscpu.");
 			Assert.assertEquals(cpuCores, lscpuCores, "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using lscpu facts '"+lscpuSocketsFact+"'*'"+lscpuCoresPerSocketFact+"'");
