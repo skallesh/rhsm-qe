@@ -745,6 +745,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		boolean contentBasedArchesFound = false;
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (contentNamespace.arches==null) Assert.fail("This version of subscription-manager does not appear to parse arch restricted content.  Upgrade to a newer build of subscription-manager.");
 				List<String> arches = new ArrayList<String>();
 				if (!contentNamespace.arches.trim().isEmpty()) arches.addAll(Arrays.asList(contentNamespace.arches.trim().split(" *, *")));	// Note: the arches field can be a comma separated list of values
 				if (!arches.isEmpty()) contentBasedArchesFound = true;
