@@ -394,265 +394,245 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertCpuCpuSocketsMatchLscpuSockets_Test() {
+//		boolean assertedSockets = false;
 		clienttasks.deleteFactsFileWithOverridingValues();
 		
-		// determine the cpu_socket(s) value using the topology calculation
-		String topologyCalcualtedSockets = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
-		log.info("The cpu_socket(s) value calculated using the topology algorithm above is '"+topologyCalcualtedSockets+"'.");
-		
 		// get the facts
-		Map<String, String> factsMap = clienttasks.getFacts("socket(s)");
+		Map<String, String> factsMap = clienttasks.getFacts();
 		String cpuSocketsFact = "cpu.cpu_socket(s)";
-		String lscpuSocketsFact = "lscpu.socket(s)";
+		Integer cpuSockets = Integer.valueOf(factsMap.get(cpuSocketsFact));
 		
-		if (clienttasks.redhatRelease.contains("release 5")) {
-			Assert.assertEquals(factsMap.get(cpuSocketsFact), topologyCalcualtedSockets, "The value of system fact '"+cpuSocketsFact+"' should match the value for 'CPU socket(s)' value='"+topologyCalcualtedSockets+"' as calculated using cpu topology.");
+		// determine the cpu_socket(s) value using the topology calculation
+		String socketsCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
+		log.info("The cpu_socket(s) value calculated using the topology algorithm above is '"+socketsCalcualtedUsingTopology+"'.");
+		
+
+		// assert sockets against the socketsCalcualtedUsingTopology
+		Assert.assertEquals(factsMap.get(cpuSocketsFact), socketsCalcualtedUsingTopology, "The value of system fact '"+cpuSocketsFact+"' should match the value for 'CPU socket(s)' value='"+socketsCalcualtedUsingTopology+"' as calculated using cpu topology.");
+
+		// assert sockets against the socketsCalculatedUsingLscpu when lscpu is available
+		if (factsMap.get("lscpu.socket(s)")!=null) {
+			Integer socketsCalculatedUsingLscpu = Integer.valueOf(factsMap.get("lscpu.socket(s)"));
+			Assert.assertEquals(cpuSockets, socketsCalculatedUsingLscpu, "The fact value for '"+cpuSocketsFact+"' should match the calculation using lscpu facts.");
+//			assertedSockets = true;
 		}
-		else /*if (clienttasks.redhatRelease.contains("release 6"))*/ {
-			client.runCommandAndWait("lscpu");
-			// RHEL6.4+
-			// [root@rhsm-accept-rhel64 ~]# lscpu | grep -i 'socket(s)'
-			// Socket(s):             2
-			
-			// RHEL6.1+
-			// [root@rhsm-accept-rhel63 ~]# lscpu | grep -i 'socket(s)'
-			// CPU socket(s):         2
-			
-			
-			// TODO on s390, you may have to combine "Book(s)" * "Socket(s) per book" to get the lscpuSockets
-			//	ssh root@ibm-z10-08.rhts.eng.bos.redhat.com lscpu
-			//	Stdout:
-			//	Architecture: s390x
-			//	CPU op-mode(s): 32-bit, 64-bit
-			//	Byte Order: Big Endian
-			//	CPU(s): 2
-			//	On-line CPU(s) list: 0,1
-			//	Thread(s) per core: 1
-			//	Core(s) per socket: 1
-			//	Socket(s) per book: 1
-			//	Book(s): 2
-			//	Vendor ID: IBM/S390
-			//	BogoMIPS: 11061.00
-			//	Hypervisor: z/VM 6.1.0
-			//	Hypervisor vendor: IBM
-			//	Virtualization type: full
-			//	Dispatching mode: horizontal
-			
-			SSHCommandResult lspcuResult = client.runCommandAndWait("lscpu | grep -i 'socket(s)'");
-			String lscpuSockets = lspcuResult.getStdout().split(":")[1].trim();
-			Assert.assertEquals(factsMap.get(lscpuSocketsFact), lscpuSockets, "The value of system fact '"+lscpuSocketsFact+"' should match the value reported by lscpu.");
-			Assert.assertEquals(factsMap.get(cpuSocketsFact), lscpuSockets, "The value of system fact '"+cpuSocketsFact+"' should match the value reported by lscpu.");
+		if (factsMap.get("lscpu.book(s)")!=null && factsMap.get("lscpu.socket(s)_per_book")!=null) {
+			Integer socketsCalculatedUsingLscpu = Integer.valueOf(factsMap.get("lscpu.book(s)"))*Integer.valueOf(factsMap.get("lscpu.socket(s)_per_book"));
+			Assert.assertEquals(cpuSockets, socketsCalculatedUsingLscpu, "The fact value for '"+cpuSocketsFact+"' should match the calculation using lscpu facts.");
+//			assertedSockets = true;
 		}
 	}
 	
 	
-	@Test(	description="subscription-manager: assert that the cores calculation using facts cpu.cpu_socket(s)*cpu.core(s)_per_socket matches the cores calculation using lscpu.socket(s)*lscpu.core(s)_per_socket",
+	@Test(	description="subscription-manager: assert that the cores calculation using facts cpu.cpu_socket(s)*cpu.core(s)_per_socket matches the cores calculation using lscpu facts",
 			groups={"AcceptanceTests"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertCoresCalculatedUsingCpuFactsMatchCoresCalculatedUsingLscpu_Test() {
+		boolean assertedCores = false;
 		clienttasks.deleteFactsFileWithOverridingValues();
+		
+		// get the facts
+		Map<String, String> factsMap = clienttasks.getFacts();
+		String cpuSocketsFact = "cpu.cpu_socket(s)";
+		String cpuCoresPerSocketFact = "cpu.core(s)_per_socket";
+		Integer cpuCores = Integer.valueOf(factsMap.get(cpuSocketsFact))*Integer.valueOf(factsMap.get(cpuCoresPerSocketFact));
+		
 		
 		// determine the number of cores using dmidecode information
 		Integer coresCalculatedUsingDmidecode = 0;
 		SSHCommandResult dmidecodeResult = client.runCommandAndWait("dmidecode -t processor");
-		if (doesStringContainMatches(dmidecodeResult.getStdout(), "Core Count")) {
-			//	[jsefler@jseflerT5400 rhsm-qe]$ sudo dmidecode -t processor
-			//	# dmidecode 2.11
-			//	SMBIOS 2.5 present.
-			//
-			//	Handle 0x0400, DMI type 4, 40 bytes
-			//	Processor Information
-			//		Socket Designation: CPU
-			//		Type: Central Processor
-			//		Family: Xeon
-			//		Manufacturer: Intel
-			//		ID: 7A 06 01 00 FF FB EB BF
-			//		Signature: Type 0, Family 6, Model 23, Stepping 10
-			//		Flags:
-			//			FPU (Floating-point unit on-chip)
-			//			VME (Virtual mode extension)
-			//			DE (Debugging extension)
-			//			PSE (Page size extension)
-			//			TSC (Time stamp counter)
-			//			MSR (Model specific registers)
-			//			PAE (Physical address extension)
-			//			MCE (Machine check exception)
-			//			CX8 (CMPXCHG8 instruction supported)
-			//			APIC (On-chip APIC hardware supported)
-			//			SEP (Fast system call)
-			//			MTRR (Memory type range registers)
-			//			PGE (Page global enable)
-			//			MCA (Machine check architecture)
-			//			CMOV (Conditional move instruction supported)
-			//			PAT (Page attribute table)
-			//			PSE-36 (36-bit page size extension)
-			//			CLFSH (CLFLUSH instruction supported)
-			//			DS (Debug store)
-			//			ACPI (ACPI supported)
-			//			MMX (MMX technology supported)
-			//			FXSR (FXSAVE and FXSTOR instructions supported)
-			//			SSE (Streaming SIMD extensions)
-			//			SSE2 (Streaming SIMD extensions 2)
-			//			SS (Self-snoop)
-			//			HTT (Multi-threading)
-			//			TM (Thermal monitor supported)
-			//			PBE (Pending break enabled)
-			//		Version: Not Specified
-			//		Voltage: 1.1 V
-			//		External Clock: 1333 MHz
-			//		Max Speed: 3800 MHz
-			//		Current Speed: 2000 MHz
-			//		Status: Populated, Enabled
-			//		Upgrade: Socket LGA771
-			//		L1 Cache Handle: 0x0700
-			//		L2 Cache Handle: 0x0701
-			//		L3 Cache Handle: Not Provided
-			//		Serial Number: Not Specified
-			//		Asset Tag: Not Specified
-			//		Part Number: Not Specified
-			//		Core Count: 4
-			//		Core Enabled: 4
-			//		Thread Count: 4
-			//		Characteristics:
-			//			64-bit capable
-			//
-			//	Handle 0x0401, DMI type 4, 40 bytes
-			//	Processor Information
-			//		Socket Designation: CPU
-			//		Type: Central Processor
-			//		Family: Xeon
-			//		Manufacturer: Intel
-			//		ID: 7A 06 01 00 FF FB EB BF
-			//		Signature: Type 0, Family 6, Model 23, Stepping 10
-			//		Flags:
-			//			FPU (Floating-point unit on-chip)
-			//			VME (Virtual mode extension)
-			//			DE (Debugging extension)
-			//			PSE (Page size extension)
-			//			TSC (Time stamp counter)
-			//			MSR (Model specific registers)
-			//			PAE (Physical address extension)
-			//			MCE (Machine check exception)
-			//			CX8 (CMPXCHG8 instruction supported)
-			//			APIC (On-chip APIC hardware supported)
-			//			SEP (Fast system call)
-			//			MTRR (Memory type range registers)
-			//			PGE (Page global enable)
-			//			MCA (Machine check architecture)
-			//			CMOV (Conditional move instruction supported)
-			//			PAT (Page attribute table)
-			//			PSE-36 (36-bit page size extension)
-			//			CLFSH (CLFLUSH instruction supported)
-			//			DS (Debug store)
-			//			ACPI (ACPI supported)
-			//			MMX (MMX technology supported)
-			//			FXSR (FXSAVE and FXSTOR instructions supported)
-			//			SSE (Streaming SIMD extensions)
-			//			SSE2 (Streaming SIMD extensions 2)
-			//			SS (Self-snoop)
-			//			HTT (Multi-threading)
-			//			TM (Thermal monitor supported)
-			//			PBE (Pending break enabled)
-			//		Version: Not Specified
-			//		Voltage: 1.1 V
-			//		External Clock: 1333 MHz
-			//		Max Speed: 3800 MHz
-			//		Current Speed: 2000 MHz
-			//		Status: Populated, Idle
-			//		Upgrade: Socket LGA771
-			//		L1 Cache Handle: 0x0702
-			//		L2 Cache Handle: 0x0703
-			//		L3 Cache Handle: Not Provided
-			//		Serial Number: Not Specified
-			//		Asset Tag: Not Specified
-			//		Part Number: Not Specified
-			//		Core Count: 4
-			//		Core Enabled: 4
-			//		Thread Count: 4
-			//		Characteristics:
-			//			64-bit capable
-			
-			// sum up the value of all the Core Counts
-			coresCalculatedUsingDmidecode=0;
-			for (String coreCountValue : getSubstringMatches(dmidecodeResult.getStdout(), "Core Count:\\s+\\d+")) {
-				coresCalculatedUsingDmidecode += Integer.valueOf(coreCountValue.split(":")[1].trim());
-			}
-
-		} else {
-			//	[root@rhsm-compat-rhel57 ~]# dmidecode -t processor
-			//	# dmidecode 2.11
-			//	SMBIOS 2.4 present.
-			//
-			//	Handle 0x0401, DMI type 4, 32 bytes
-			//	Processor Information
-			//		Socket Designation: CPU 1
-			//		Type: Central Processor
-			//		Family: Other
-			//		Manufacturer: Bochs
-			//		ID: 23 06 00 00 FD FB 8B 07
-			//		Version: Not Specified
-			//		Voltage: Unknown
-			//		External Clock: Unknown
-			//		Max Speed: 2000 MHz
-			//		Current Speed: 2000 MHz
-			//		Status: Populated, Enabled
-			//		Upgrade: Other
-			//		L1 Cache Handle: Not Provided
-			//		L2 Cache Handle: Not Provided
-			//		L3 Cache Handle: Not Provided
-			//
-			//	Handle 0x0402, DMI type 4, 32 bytes
-			//	Processor Information
-			//		Socket Designation: CPU 2
-			//		Type: Central Processor
-			//		Family: Other
-			//		Manufacturer: Bochs
-			//		ID: 23 06 00 00 FD FB 8B 07
-			//		Version: Not Specified
-			//		Voltage: Unknown
-			//		External Clock: Unknown
-			//		Max Speed: 2000 MHz
-			//		Current Speed: 2000 MHz
-			//		Status: Populated, Enabled
-			//		Upgrade: Other
-			//		L1 Cache Handle: Not Provided
-			//		L2 Cache Handle: Not Provided
-			//		L3 Cache Handle: Not Provided
-			
-			// in the absense of "Core Count", we'll assume 1 core per CPU
-			coresCalculatedUsingDmidecode = Integer.valueOf(client.runCommandAndWait("dmidecode -t processor | grep \"Socket Designation:\" | uniq | wc -l").getStdout().trim());
-			//coresCalculatedUsingDmidecode = getSubstringMatches(dmidecodeResult.getStdout(), "Socket Designation:").size();
-		}
+		if (dmidecodeResult.getExitCode().equals(Integer.valueOf(0))) { // dmidecode is not always available
+			if (doesStringContainMatches(dmidecodeResult.getStdout(), "Core Count")) {
+				//	[jsefler@jseflerT5400 rhsm-qe]$ sudo dmidecode -t processor
+				//	# dmidecode 2.11
+				//	SMBIOS 2.5 present.
+				//
+				//	Handle 0x0400, DMI type 4, 40 bytes
+				//	Processor Information
+				//		Socket Designation: CPU
+				//		Type: Central Processor
+				//		Family: Xeon
+				//		Manufacturer: Intel
+				//		ID: 7A 06 01 00 FF FB EB BF
+				//		Signature: Type 0, Family 6, Model 23, Stepping 10
+				//		Flags:
+				//			FPU (Floating-point unit on-chip)
+				//			VME (Virtual mode extension)
+				//			DE (Debugging extension)
+				//			PSE (Page size extension)
+				//			TSC (Time stamp counter)
+				//			MSR (Model specific registers)
+				//			PAE (Physical address extension)
+				//			MCE (Machine check exception)
+				//			CX8 (CMPXCHG8 instruction supported)
+				//			APIC (On-chip APIC hardware supported)
+				//			SEP (Fast system call)
+				//			MTRR (Memory type range registers)
+				//			PGE (Page global enable)
+				//			MCA (Machine check architecture)
+				//			CMOV (Conditional move instruction supported)
+				//			PAT (Page attribute table)
+				//			PSE-36 (36-bit page size extension)
+				//			CLFSH (CLFLUSH instruction supported)
+				//			DS (Debug store)
+				//			ACPI (ACPI supported)
+				//			MMX (MMX technology supported)
+				//			FXSR (FXSAVE and FXSTOR instructions supported)
+				//			SSE (Streaming SIMD extensions)
+				//			SSE2 (Streaming SIMD extensions 2)
+				//			SS (Self-snoop)
+				//			HTT (Multi-threading)
+				//			TM (Thermal monitor supported)
+				//			PBE (Pending break enabled)
+				//		Version: Not Specified
+				//		Voltage: 1.1 V
+				//		External Clock: 1333 MHz
+				//		Max Speed: 3800 MHz
+				//		Current Speed: 2000 MHz
+				//		Status: Populated, Enabled
+				//		Upgrade: Socket LGA771
+				//		L1 Cache Handle: 0x0700
+				//		L2 Cache Handle: 0x0701
+				//		L3 Cache Handle: Not Provided
+				//		Serial Number: Not Specified
+				//		Asset Tag: Not Specified
+				//		Part Number: Not Specified
+				//		Core Count: 4
+				//		Core Enabled: 4
+				//		Thread Count: 4
+				//		Characteristics:
+				//			64-bit capable
+				//
+				//	Handle 0x0401, DMI type 4, 40 bytes
+				//	Processor Information
+				//		Socket Designation: CPU
+				//		Type: Central Processor
+				//		Family: Xeon
+				//		Manufacturer: Intel
+				//		ID: 7A 06 01 00 FF FB EB BF
+				//		Signature: Type 0, Family 6, Model 23, Stepping 10
+				//		Flags:
+				//			FPU (Floating-point unit on-chip)
+				//			VME (Virtual mode extension)
+				//			DE (Debugging extension)
+				//			PSE (Page size extension)
+				//			TSC (Time stamp counter)
+				//			MSR (Model specific registers)
+				//			PAE (Physical address extension)
+				//			MCE (Machine check exception)
+				//			CX8 (CMPXCHG8 instruction supported)
+				//			APIC (On-chip APIC hardware supported)
+				//			SEP (Fast system call)
+				//			MTRR (Memory type range registers)
+				//			PGE (Page global enable)
+				//			MCA (Machine check architecture)
+				//			CMOV (Conditional move instruction supported)
+				//			PAT (Page attribute table)
+				//			PSE-36 (36-bit page size extension)
+				//			CLFSH (CLFLUSH instruction supported)
+				//			DS (Debug store)
+				//			ACPI (ACPI supported)
+				//			MMX (MMX technology supported)
+				//			FXSR (FXSAVE and FXSTOR instructions supported)
+				//			SSE (Streaming SIMD extensions)
+				//			SSE2 (Streaming SIMD extensions 2)
+				//			SS (Self-snoop)
+				//			HTT (Multi-threading)
+				//			TM (Thermal monitor supported)
+				//			PBE (Pending break enabled)
+				//		Version: Not Specified
+				//		Voltage: 1.1 V
+				//		External Clock: 1333 MHz
+				//		Max Speed: 3800 MHz
+				//		Current Speed: 2000 MHz
+				//		Status: Populated, Idle
+				//		Upgrade: Socket LGA771
+				//		L1 Cache Handle: 0x0702
+				//		L2 Cache Handle: 0x0703
+				//		L3 Cache Handle: Not Provided
+				//		Serial Number: Not Specified
+				//		Asset Tag: Not Specified
+				//		Part Number: Not Specified
+				//		Core Count: 4
+				//		Core Enabled: 4
+				//		Thread Count: 4
+				//		Characteristics:
+				//			64-bit capable
 				
-		// get the facts
-		Map<String, String> factsMap = clienttasks.getFacts("socket");
-		String cpuSocketsFact = "cpu.cpu_socket(s)";
-		String cpuCoresPerSocketFact = "cpu.core(s)_per_socket";
-		String lscpuSocketsFact = "lscpu.socket(s)";	// TODO: On s390 this appears to be replaced by a combination of "lscpu.socket(s)_per_book" * "lscpu.book(s)"
-		String lscpuCoresPerSocketFact = "lscpu.core(s)_per_socket";
+				// sum up the value of all the Core Counts
+				coresCalculatedUsingDmidecode=0;
+				for (String coreCountValue : getSubstringMatches(dmidecodeResult.getStdout(), "Core Count:\\s+\\d+")) {
+					coresCalculatedUsingDmidecode += Integer.valueOf(coreCountValue.split(":")[1].trim());
+				}
+	
+			} else {
+				//	[root@rhsm-compat-rhel57 ~]# dmidecode -t processor
+				//	# dmidecode 2.11
+				//	SMBIOS 2.4 present.
+				//
+				//	Handle 0x0401, DMI type 4, 32 bytes
+				//	Processor Information
+				//		Socket Designation: CPU 1
+				//		Type: Central Processor
+				//		Family: Other
+				//		Manufacturer: Bochs
+				//		ID: 23 06 00 00 FD FB 8B 07
+				//		Version: Not Specified
+				//		Voltage: Unknown
+				//		External Clock: Unknown
+				//		Max Speed: 2000 MHz
+				//		Current Speed: 2000 MHz
+				//		Status: Populated, Enabled
+				//		Upgrade: Other
+				//		L1 Cache Handle: Not Provided
+				//		L2 Cache Handle: Not Provided
+				//		L3 Cache Handle: Not Provided
+				//
+				//	Handle 0x0402, DMI type 4, 32 bytes
+				//	Processor Information
+				//		Socket Designation: CPU 2
+				//		Type: Central Processor
+				//		Family: Other
+				//		Manufacturer: Bochs
+				//		ID: 23 06 00 00 FD FB 8B 07
+				//		Version: Not Specified
+				//		Voltage: Unknown
+				//		External Clock: Unknown
+				//		Max Speed: 2000 MHz
+				//		Current Speed: 2000 MHz
+				//		Status: Populated, Enabled
+				//		Upgrade: Other
+				//		L1 Cache Handle: Not Provided
+				//		L2 Cache Handle: Not Provided
+				//		L3 Cache Handle: Not Provided
+				
+				// in the absense of "Core Count" (system is probably a virt guest), we'll assume 1 core per CPU
+				coresCalculatedUsingDmidecode = Integer.valueOf(client.runCommandAndWait("dmidecode -t processor | grep \"Socket Designation:\" | uniq | wc -l").getStdout().trim());
+				//coresCalculatedUsingDmidecode = getSubstringMatches(dmidecodeResult.getStdout(), "Socket Designation:").size();
+			}
+		}
 		
-		if (clienttasks.redhatRelease.contains("release 5")) {
-			Integer cpuCores = Integer.valueOf(factsMap.get(cpuSocketsFact))*Integer.valueOf(factsMap.get(cpuCoresPerSocketFact));
-			
+		// assert cpuCores against the coresCalculatedUsingDmidecode when dmidecode is available
+		if (coresCalculatedUsingDmidecode>0) {
 			Assert.assertEquals(cpuCores, coresCalculatedUsingDmidecode, "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using dmidecode data.");
+			assertedCores = true;
 		}
-		else /*if (clienttasks.redhatRelease.contains("release 6"))*/ {
-			
-			Integer cpuCores = Integer.valueOf(factsMap.get(cpuSocketsFact))*Integer.valueOf(factsMap.get(cpuCoresPerSocketFact));
-			Integer lscpuCores = Integer.valueOf(factsMap.get(lscpuSocketsFact))*Integer.valueOf(factsMap.get(lscpuCoresPerSocketFact));
-			
-			client.runCommandAndWait("lscpu");
-			// [root@rhsm-compat-rhel63 ~]# lscpu | grep -i 'Core(s) per socket'
-			// Core(s) per socket:    1
-
-			SSHCommandResult lspcuResult = client.runCommandAndWait("lscpu | grep -i 'Core(s) per socket'");
-			
-			String lscpuCoresPerSocket = lspcuResult.getStdout().split(":")[1].trim();
-			Assert.assertEquals(lscpuCoresPerSocket, factsMap.get(lscpuCoresPerSocketFact), "The value of system fact '"+lscpuCoresPerSocketFact+"' should match the value for '"+lscpuCoresPerSocket+"' as reported by lscpu.");
-			Assert.assertEquals(cpuCores, lscpuCores, "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using lscpu facts '"+lscpuSocketsFact+"'*'"+lscpuCoresPerSocketFact+"'");
-			Assert.assertEquals(cpuCores, coresCalculatedUsingDmidecode, "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using dmidecode data.");
+		
+		
+		// assert cpuCores against the coresCalculatedUsingLscpu when lscpu is available
+		if (factsMap.get("lscpu.socket(s)")!=null && factsMap.get("lscpu.core(s)_per_socket")!=null) {
+			Integer coresCalculatedUsingLscpu = Integer.valueOf(factsMap.get("lscpu.socket(s)"))*Integer.valueOf(factsMap.get("lscpu.core(s)_per_socket"));
+			Assert.assertEquals(cpuCores, coresCalculatedUsingLscpu, "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using lscpu facts.");
+			assertedCores = true;
 		}
+		if (factsMap.get("lscpu.book(s)")!=null && factsMap.get("lscpu.socket(s)_per_book")!=null && factsMap.get("lscpu.core(s)_per_socket")!=null) {
+			Integer coresCalculatedUsingLscpu = Integer.valueOf(factsMap.get("lscpu.book(s)"))*Integer.valueOf(factsMap.get("lscpu.socket(s)_per_book"))*Integer.valueOf(factsMap.get("lscpu.core(s)_per_socket"));
+			Assert.assertEquals(cpuCores, coresCalculatedUsingLscpu, "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using lscpu facts.");
+			assertedCores = true;
+		}
+		
+		if (!assertedCores) Assert.fail("Could not figure out how to assert the expected number of cores.");
 	}
 
 	
