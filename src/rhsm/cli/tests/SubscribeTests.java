@@ -54,7 +54,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
-			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986"},
+			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
@@ -720,7 +720,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with a valid service level",
-			groups={"AcceptanceTests","blockedByBug-859652"},
+			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-962520"},
 			dataProvider="getSubscribeWithAutoAndServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -835,7 +835,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe using various good and bad values for the --quantity option",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-962520"},
 			dataProvider="getSubscribeWithQuantityData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

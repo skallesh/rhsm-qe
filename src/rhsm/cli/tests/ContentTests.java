@@ -242,7 +242,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
-			groups={"AcceptanceTests","blockedByBug-804227","blockedByBug-871146","blockedByBug-924919"},
+			groups={"AcceptanceTests","blockedByBug-804227","blockedByBug-871146","blockedByBug-924919","blockedByBug-962520"},
 	        enabled=true)
 	@ImplementsNitrateTest(caseId=47578,fromPlan=2479)
 	public void VerifyYumRepoListsEnabledContent_Test() throws JSONException, Exception{
@@ -288,7 +288,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager content flag : gpgcheck value in redhat.repo should be disabled when gpg_url is empty or null",
-			groups={"AcceptanceTests","blockedByBug-741293","blockedByBug-805690"},
+			groups={"AcceptanceTests","blockedByBug-741293","blockedByBug-805690","blockedByBug-962520"},
 	        enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyGpgCheckValuesInYumRepos_Test() throws JSONException, Exception {
@@ -387,7 +387,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={"AcceptanceTests","blockedByBug-701425","blockedByBug-871146"},
+			groups={"AcceptanceTests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)

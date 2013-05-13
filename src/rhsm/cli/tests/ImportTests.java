@@ -38,7 +38,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: import a valid version 1.0 entitlement cert/key bundle and verify subscriptions are consumed",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-962520"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementVersion1CertAndKeyFromFile_Test() {

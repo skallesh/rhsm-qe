@@ -232,7 +232,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after subscribing to all available subscriptions, assert that content with url paths that reference $releasever are substituted with the consumers current release preference",
-			groups={"blockedByBug-807407"},
+			groups={"blockedByBug-807407","blockedByBug-962520"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyReleaseverSubstitutionInRepoLists_Test() throws JSONException, Exception {
