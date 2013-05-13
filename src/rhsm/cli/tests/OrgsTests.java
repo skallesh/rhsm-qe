@@ -217,7 +217,8 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, false, null, null, null);
 		
 		// change the server.ca_cert_dir configuration to simulate a missing candlepin ca cert
-		sshCommandResult = clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir","/tmp"});
+		client.runCommandAndWait("mkdir -p /tmp/emptyDir");
+		sshCommandResult = clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir","/tmp/emptyDir"});
 		
 		// calling orgs without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword, null, false, null, null, null);

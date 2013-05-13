@@ -878,7 +878,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		sshCommandResult = clienttasks.service_level(null,true,null,null,sm_clientUsername,sm_clientPassword, sm_clientOrg, null, false, null, null, null);
 		
 		// change the server.ca_cert_dir configuration to simulate a missing candlepin ca cert
-		sshCommandResult = clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir","/tmp"});
+		client.runCommandAndWait("mkdir -p /tmp/emptyDir");
+		sshCommandResult = clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir","/tmp/emptyDir"});
 		
 		// calling service level list without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.service_level_(null,true,null,null,sm_clientUsername,sm_clientPassword, sm_clientOrg, null, false, null, null, null);
