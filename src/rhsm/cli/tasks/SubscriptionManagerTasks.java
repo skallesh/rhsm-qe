@@ -256,13 +256,61 @@ public class SubscriptionManagerTasks {
 	    	Writer output = new BufferedWriter(new FileWriter(file));
 			
 			// write out the rows of the table
-			output.write("[rhel-zstream]\n");
-			output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+"\n");
+			output.write("[rhel-zstream-"+archZStream+"]\n");
+			output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+archZStream+"\n");
 			output.write("enabled  = 0\n");
 			//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
 			output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 			output.write("baseurl  = "+baseurl+"\n");
+			output.write("\n");
+		    installOptions += " --enablerepo=rhel-zstream-"+archZStream;
+		    
+		    if (archZStream.equals("ppc64")) {
+				output.write("[rhel-zstream-ppc]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" ppc\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurl.replaceAll("ppc64$", "ppc")+"\n");
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-ppc";
+		    }
+		    
+		    if (archZStream.equals("s390x")) {
+				output.write("[rhel-zstream-s390]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" s390\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurl.replaceAll("s390x$", "s390")+"\n");
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-s390";
+		    }
+		    
+		    if (archZStream.equals("x86_64") && Integer.valueOf(redhatReleaseX)==5) {
+				output.write("[rhel-zstream-i386]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" i386\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurl.replaceAll("x86_64$", "i386")+"\n");
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-i386";
+		    }
+		    
+		    if (archZStream.equals("x86_64") && Integer.valueOf(redhatReleaseX)==6) {
+				output.write("[rhel-zstream-i686]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" i686\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurl.replaceAll("x86_64$", "i686")+"\n");
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-i686";
+		    }
+		    
 		    output.close();
+		    
 		    //log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
