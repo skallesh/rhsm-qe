@@ -19,6 +19,7 @@
 
 (def auth-log "/var/log/squid/access.log")
 (def noauth-log "/var/log/tinyproxy.log")
+(def rhsm-log "/var/log/rhsm/rhsm.log")
 (def proxy-success "Proxy connection succeeded")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
@@ -246,6 +247,24 @@
    (finally
      (tasks/ui click :close-proxy)
      (disable_proxy nil))))
+
+(defn ^{Test {:groups ["proxy"
+                       "blockedByBug-920551"]}}
+  test_invalid_proxy_restart
+  "Test to check whether traceback is thrown when an invalid proxy is configured and sub-man is restarted"
+  [_]
+  (setup nil)
+  (disable_proxy nil)
+  (tasks/ui click :configure-proxy)
+  (tasks/ui check :proxy-checkbox)
+  (tasks/ui settextvalue :proxy-location "doesnotexist.redhat.com")
+  (let [output (get-logging @clientcmd
+                            rhsm-log
+                            "check_for_traceback"
+                            nil
+                            (tasks/restart-app))]
+    (verify (not (substring? "Traceback" output))))
+  (disable_proxy nil))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
