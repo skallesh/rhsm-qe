@@ -169,6 +169,17 @@ public class CandlepinTasks {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+" && git pull", Integer.valueOf(0));
 		}
 		
+		// kill all runaway instances of tomcat6
+		SSHCommandResult tomcatProcesses = sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6");
+		if (tomcatProcesses.getStdout().trim().split("\\n").length>1) {
+			log.warning("Detected multiple instances of tomcat6 running.  Killing the pids...");
+			for (String tomcatProcess : tomcatProcesses.getStdout().trim().split("\\n")) {
+				// tomcat   26523  1.9 17.4 1953316 178396 ?      Sl   06:35   6:43 /usr/lib/jvm/java-1.6.0/bin/java -Djavax.sql.DataSource.Factory=org.apache.commons.dbcp.BasicDataSourceFactory -classpath :/usr/share/tomcat6/bin/bootstrap.jar:/usr/share/tomcat6/bin/tomcat-juli.jar:/usr/share/java/commons-daemon.jar -Dcatalina.base=/usr/share/tomcat6 -Dcatalina.home=/usr/share/tomcat6 -Djava.endorsed.dirs= -Djava.io.tmpdir=/var/cache/tomcat6/temp -Djava.util.logging.config.file=/usr/share/tomcat6/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager org.apache.catalina.startup.Bootstrap start
+				String pid = tomcatProcess.trim().split("\\s+")[1];
+				sshCommandRunner.runCommandAndWait("kill -9 "+pid);
+			}
+		}
+		
 		// clear out the tomcat6 log file (catalina.out)
 		if (RemoteFileTasks.testExists(sshCommandRunner, tomcat6LogFile)) {
 			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "echo \"\" > "+tomcat6LogFile, TestRecords.action());	
