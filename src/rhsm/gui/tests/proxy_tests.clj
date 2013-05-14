@@ -142,45 +142,31 @@
         (verify (= "" (tasks/ui gettextvalue :connection-status)))
         (finally (tasks/ui click :close-proxy))))
 
-(defn ^{BeforeGroups {:groups ["proxy"]
-                      :value ["proxy-enabled-check-status"]}}
-  before_test_proxy_with_blank_fields[_]
-  (tasks/ui click :configure-proxy)
-  (tasks/ui check :proxy-checkbox))
-
 (defn ^{Test {:groups ["proxy"
-                       "proxy-enabled-check-status"
                        "blockedByBug-927340"]
               :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_proxy
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
   [_]
   (disable_proxy nil)
-  (tasks/ui settextvalue :proxy-location "")
+  (tasks/enableproxy " <Backspace>" :close? false)
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
-    (verify (not (= message proxy-success)))))
+    (verify (not (= message proxy-success))))
+  (disable_proxy nil))
 
 (defn ^{Test {:groups ["proxy"
                        "proxy-enabled-check-status"]
-              :dependsOnMethods ["test_proxy_with_blank_proxy" "disable_proxy"]}}
+              :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_credentials
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
   [_]
   (disable_proxy nil)
-  (tasks/ui check :authentication-checkbox)
-  (tasks/ui settextvalue :password-text "")
-  (tasks/ui settextvalue :username-text "")
+  (tasks/enableproxy " <Backspace>" :close? false :auth? true :user "" :pass "")
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
-    (verify (not (= message proxy-success)))))  
-
-(defn ^{AfterGroups {:groups ["proxy"]
-                     :value ["proxy-enabled-check-status"]}}
-  after_test_proxy_with_blank_fields[_]
-  (tasks/ui uncheck :proxy-checkbox)
-  (tasks/ui uncheck :authentication-checkbox)
-  (tasks/ui click :close-proxy))
+    (verify (not (= message proxy-success))))
+  (disable_proxy nil))  
 
 (defn ^{Test {:groups ["proxy"]}}
   test_bad_proxy
@@ -255,15 +241,13 @@
   [_]
   (setup nil)
   (disable_proxy nil)
-  (tasks/ui click :configure-proxy)
-  (tasks/ui check :proxy-checkbox)
-  (tasks/ui settextvalue :proxy-location "doesnotexist.redhat.com")
+  (tasks/enableproxy "doesnotexist.redhat.com")
   (let [output (get-logging @clientcmd
-                            rhsm-log
-                            "check_for_traceback"
-                            nil
-                            (tasks/restart-app))]
-    (verify (not (substring? "Traceback" output))))
+                               rhsm-log
+                               "check_for_traceback"
+                               nil
+                               (tasks/restart-app))]
+       (verify (not (substring? "Traceback" output))))
   (disable_proxy nil))
 
 (defn ^{AfterClass {:groups ["setup"]
