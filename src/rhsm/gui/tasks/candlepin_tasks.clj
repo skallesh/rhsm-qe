@@ -152,3 +152,25 @@
                                                 password
                                                 (server-url)
                                                 pool))
+
+(defn get-instance-multiplier
+  "Returns the instance multiplier on the pool."
+  [username password pool & {:keys [string?]
+                             :or {string? true}}]
+  (let [attr (:productAttributes (rest/get
+                                  (str (server-url) "/pools/" pool)
+                                  (@config :username)
+                                  (@config :password)))
+        x (map #(list (:name %) (:value %)) attr)
+        y (group-by first x)
+        ykeys (map #(keyword %) (keys y))
+        yvals (let [v (map #(map second %) (vals y))]
+                (map first v))
+        z (zipmap ykeys yvals)
+        multiplier (:instance_multiplier z)
+        settype (if string?
+                  (fn [x] (str x))
+                  (fn [x] (Integer/parseInt x)))]
+    (if multiplier
+      (settype multiplier)
+      (settype "1"))))
