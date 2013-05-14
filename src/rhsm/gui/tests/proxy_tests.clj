@@ -243,11 +243,12 @@
   (disable_proxy nil)
   (tasks/enableproxy "doesnotexist.redhat.com")
   (let [output (get-logging @clientcmd
-                               rhsm-log
+                               rhsm-log               ; This could be changed to ldtpd-log if tracebacks can be ignored when GUI launches successfully
                                "check_for_traceback"
                                nil
                                (tasks/restart-app))]
        (verify (not (substring? "Traceback" output))))
+  (tasks/ui guiexist :main-window)
   (disable_proxy nil))
 
 (defn ^{AfterClass {:groups ["setup"]
