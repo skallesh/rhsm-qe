@@ -101,7 +101,8 @@
 ;; (doseq [[p i] (ftest/get_installed_products nil :debug true)] (ftest/check_version_arch nil p i))
 
 (defn ^{Test {:groups ["facts"
-                       "blockedByBug-905136"]}}
+                       "blockedByBug-905136"
+                       "blockedByBug-869306"]}}
   check_org_id
   "Tests that the orginization id is displayed properly in he facts dialog."
   [_]
