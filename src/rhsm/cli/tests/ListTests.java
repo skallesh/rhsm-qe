@@ -512,6 +512,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
 		
+		// ORIGINAL IMPLEMENTATION'S FORMAT
 		//	[root@jsefler-5 ~]# subscription-manager list --status
 		//	+-------------------------------------------+
 		//	   System Status Details
@@ -519,6 +520,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		//	Overall Status: Invalid
 		//
 		//	Red Hat Enterprise Linux Server: Not covered by a valid subscription.
+		
+		//	[root@jsefler-5 ~]# subscription-manager list --status
+		//	+-------------------------------------------+
+		//	   System Status Details
+		//	+-------------------------------------------+
+		//	Overall Status: Invalid
+		//
+		//	Awesome OS Modifier Bits:
+		//	- Not covered by a valid subscription.
+
 
 		// assert the overall status
 		String expectedStatus;
@@ -532,7 +543,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// assert the individual installed product status details
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		for (InstalledProduct installedProduct : installedProducts) {
-			Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":\\s*"+installedProduct.statusDetails).size()==1,
+			//Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":\\s*"+installedProduct.statusDetails).size()==1,
+			Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":\\n- "+installedProduct.statusDetails).size()==1,
 					"Expecting the status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' to appear only once in the list of overall status details.");
 		}
 		if (installedProducts.isEmpty()) {
@@ -552,6 +564,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String systemEntitlementsValid = clienttasks.getFactValue("system.entitlements_valid");
 		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
 		
+		// ORIGINAL IMPLEMENTATION'S FORMAT
 		//	[root@jsefler-5 ~]# subscription-manager list --status
 		//	+-------------------------------------------+
 		//	   System Status Details
@@ -590,10 +603,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// assert the individual installed product status details
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			
-			// asset the list status output
+			// assert the list status output
 			if (!installedProduct.statusDetails.isEmpty()) { 
-				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":\\s*"+installedProduct.statusDetails).size()==1,
-						"Expecting the status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' to appear only once in the list of overall status details.");
+				//Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":\\s*"+installedProduct.statusDetails).size()==1,
+				//		"Expecting the status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' to appear only once in the list of overall status details.");
+				Assert.assertTrue(doesStringContainMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":(\\n.+)*?\\n- "+installedProduct.statusDetails),
+						"Expecting the status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' to appear in the list of overall status details.");
+				Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+installedProduct.statusDetails+"){2,}"),
+						"The status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' should NOT appear in duplicate.");
 			} else {
 				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":").isEmpty(),
 						"Expecting the empty status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+" to NOT appear in the list of overall status details.");
@@ -612,8 +629,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			
 			// asset the list status output
 			if (!productSubscription.statusDetails.isEmpty()) { 
-				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+productSubscription.productName+":\\s*"+productSubscription.statusDetails).size()==1,
-						"Expecting the status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+"' to appear only once in the list of overall status details.");
+				//Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+productSubscription.productName+":\\s*"+productSubscription.statusDetails).size()==1,
+				//		"Expecting the status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+"' to appear only once in the list of overall status details.");	
+				Assert.assertTrue(doesStringContainMatches(listStatusResult.getStdout(), "^"+productSubscription.productName+":(\\n.+)*?\\n- "+productSubscription.statusDetails),
+						"Expecting the status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+"' to appear in the list of overall status details.");
+				Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+productSubscription.statusDetails+"){2,}"),
+						"The status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+"' should NOT appear in duplicate.");
 			} else {
 				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+productSubscription.productName+":").isEmpty(),
 						"Expecting the empty status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+" to NOT appear in the list of overall status details.");
