@@ -114,7 +114,8 @@
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-766778"
                        "blockedByBug-723248"
-                       "blockedByBug-855257"]
+                       "blockedByBug-855257"
+                       "blockedByBug-962905"]
               :dataProvider "subscriptions"}}
   check_quantity_scroller
   "Tests the quantity scroller assiciated with subscriptions."
@@ -125,21 +126,27 @@
       (if (>= row 0)
         (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
               pool (ctasks/get-pool-id (@config :username)
-                                      (@config :password)
-                                      (@config :owner-key)
-                                      subscription
-                                      contract)
+                                       (@config :password)
+                                       (@config :owner-key)
+                                       subscription
+                                       contract)
+              multiplier (ctasks/get-instance-multiplier (@config :username)
+                                                         (@config :password)
+                                                         pool
+                                                         :string? false)
               usedmax (tasks/ui getcellvalue :contract-selection-table row 2)
               default (first (split (tasks/ui getcellvalue :contract-selection-table row 5) #"\s"))
               used (first (split usedmax #" / "))
               max (last (split usedmax #" / "))
-              available (str (- (Integer. max) (Integer. used)))
+              available (- (Integer. max) (Integer. used))
               repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))
               enter-quantity (fn [num]
                                (tasks/ui generatekeyevent
                                          (str (repeat-cmd 5 "<right> ")
                                               "<space>"
-                                              (when num (str " " num " <enter>")))))
+                                              (when num (str " "
+                                                             (- num (mod num multiplier))
+                                                             " <enter>")))))
               get-quantity (fn []
                              (first
                               (split (tasks/ui getcellvalue :contract-selection-table row 5) #"\s")))
@@ -151,14 +158,15 @@
               ;verify that the quantity can be changed
               (tasks/ui selectrowindex :contract-selection-table row)
               (enter-quantity available)
-              (verify (= available
-                         (get-quantity)))
+              (let [quantity (- available (mod available multiplier))]
+                (verify (= quantity
+                           (get-quantity-int))))
               ;verify that the quantity cannot exceed the max
-              (enter-quantity (str (+ 1 (Integer. available))))
-              (verify (>= (Integer. available)
+              (enter-quantity (+ 1 available))
+              (verify (>= available
                           (get-quantity-int)))
               ;verify that the quantity cannot exceed the min
-              (enter-quantity "-1")
+              (enter-quantity -1)
               (verify (<= 0 (get-quantity-int)))
               ;verify max and min values for scroller
               (enter-quantity nil)
@@ -174,12 +182,13 @@
             (do
               ;verify that the quantity cannot be changed
               (tasks/ui selectrowindex :contract-selection-table row)
-              (enter-quantity max)
+              (enter-quantity (Integer. max))
               (verify (= default (get-quantity)))))
           (recur (dec row)))))
     (catch [:type :subscription-not-available] _)
     (catch [:type :wrong-consumer-type]
         {:keys [log-warning]} (log-warning))
+    (catch [:type :contract-selection-not-available] _)
     (finally (if (tasks/ui showing? :contract-selection-table)
                (tasks/ui click :cancel-contract-selection)))))
 
@@ -362,7 +371,7 @@
                        (str ", " (:support_type rawservice))))]
     (verify (= guiservice service))))
 
-(defn ^{Test {:groups ["subscribe" 
+(defn ^{Test {:groups ["subscribe"
                        "blockedByBug-918617"]
               :priority (int 10)}}
   subscribe_check_syslog
@@ -377,7 +386,7 @@
                                   (tasks/subscribe subscription))]
       (verify (not (blank? output)))))
 
-(defn ^{Test {:groups ["subscribe" 
+(defn ^{Test {:groups ["subscribe"
                        "blockedByBug-918617"]
               :dependsOnMethods ["subscribe_check_syslog"]
               :priority (int 20)}}
