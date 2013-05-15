@@ -193,7 +193,9 @@
                (tasks/ui click :cancel-contract-selection)))))
 
 ;; https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3
-(defn ^{Test {:groups ["subscribe" "blockedByBug-723248"]
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-723248"
+                       "blockedByBug-962905"]
               :dataProvider "multi-entitle"}}
   check_quantity_subscribe
   "Asserts that the selected quantity is given when subscribed to."
@@ -202,36 +204,30 @@
    (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all")
    (sleep 3000)
    (tasks/search)
-   (tasks/open-contract-selection subscription)
-    (tasks/ui selectrow :contract-selection-table contract)
-    (let [line (tasks/ui gettablerowindex :contract-selection-table contract)
-          usedmax (tasks/ui getcellvalue :contract-selection-table line 2)
-          used (first (split usedmax #" / "))
-          max (last (split usedmax #" / "))
-          available (str (- (Integer. max) (Integer. used)))
-          repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))
-          enter-quantity (fn [num]
-                           (tasks/ui generatekeyevent
-                                     (str (repeat-cmd 5 "<right> ")
-                                          "<space>"
-                                          (when num (str " "
-                                                         (repeat-cmd (.length max) "<backspace> ")
-                                                         num " <enter>")))))]
-      (enter-quantity available)
-      (sleep 500)
-      (tasks/ui click :attach-contract-selection)
-      (tasks/checkforerror)
-      (tasks/wait-for-progress-bar)
-      (tasks/ui selecttab :my-subscriptions)
+   (let [user (@config :username)
+         pass (@config :password)
+         pool (ctasks/get-pool-id user
+                                  pass
+                                  (@config :owner-key)
+                                  subscription
+                                  contract)
+         available (ctasks/get-quantity-available user pass pool)
+         multiplier (ctasks/get-instance-multiplier user pass pool)
+         requested (- available (mod available multiplier))]
+     (tasks/subscribe subscription contract requested)
+     (tasks/ui selecttab :my-subscriptions)
       (let [row (tasks/ui gettablerowindex :my-subscriptions-view subscription)
-            count (tasks/ui getcellvalue :my-subscriptions-view row 3)]
-        (verify (= count available))))
+            count (Integer. (tasks/ui getcellvalue :my-subscriptions-view row 3))]
+        (verify (= count requested))))
     (tasks/unsubscribe subscription)
     (catch [:type :item-not-available] _)
     (catch [:type :wrong-consumer-type]
-        {:keys [log-warning]} (log-warning))))
+        {:keys [log-warning]} (log-warning))
+    (catch [:type :contract-selection-not-available] _)))
 
-(defn ^{Test {:groups ["subscribe" "blockedByBug-755861"]
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-755861"
+                       "blockedByBug-962905"]
               :dataProvider "multi-entitle"}}
   check_quantity_subscribe_traceback
   "Asserts no traceback is shown when subscribing in quantity."

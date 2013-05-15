@@ -372,17 +372,49 @@
 
 (defn subscribe
   "Subscribes to a given subscription, s."
-  [s]
-  (ui selecttab :all-available-subscriptions)
-  (skip-dropdown :all-subscriptions-view s)
-  (ui click :attach)
-  (checkforerror)
-  (ui waittillwindowexist :contract-selection-dialog 5)
-  (if (= 1 (ui guiexist :contract-selection-dialog))
-    (do (ui selectrowindex :contract-selection-table 0)  ;;pick first contract for now
-        (ui click :attach-contract-selection)))
-  (checkforerror)
-  (wait-for-progress-bar))
+  ([subscription contract quantity] ;;subscribe to a given contract, subscription, and quantity
+     (open-contract-selection subscription)
+     (ui selectrow :contract-selection-table contract)
+     (let [pool (ctasks/get-pool-id (@config :username)
+                                    (@config :password)
+                                    (@config :owner-key)
+                                    subscription
+                                    contract)
+           multiplier (ctasks/get-instance-multiplier (@config :username)
+                                                      (@config :password)
+                                                      pool
+                                                      :string? false)
+           line (ui gettablerowindex :contract-selection-table contract)
+           usedmax (ui getcellvalue :contract-selection-table line 2)
+           used (first (split usedmax #" / "))
+           max (last (split usedmax #" / "))
+           repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))
+           enter-quantity (fn [num]
+                            (ui generatekeyevent
+                                (str (repeat-cmd 5 "<right> ")
+                                     "<space>"
+                                     (when num (str " "
+                                                    (repeat-cmd (.length max) "<backspace> ")
+                                                    (- num (mod num multiplier))
+                                                    " <enter>")))))]
+       (when quantity (do (enter-quantity quantity)
+                          (sleep 500)))
+       (ui click :attach-contract-selection)
+       (checkforerror)
+       (wait-for-progress-bar)))
+  ([s c] ;;use the default quantity
+     (subscribe s c nil))
+  ([s] ;;simple subscribe that picks the first contract and default quantity
+     (ui selecttab :all-available-subscriptions)
+     (skip-dropdown :all-subscriptions-view s)
+     (ui click :attach)
+     (checkforerror)
+     (ui waittillwindowexist :contract-selection-dialog 5)
+     (if (= 1 (ui guiexist :contract-selection-dialog))
+       (do (ui selectrowindex :contract-selection-table 0)
+           (ui click :attach-contract-selection)))
+     (checkforerror)
+     (wait-for-progress-bar)))
 
 (defn unsubscribe
   "Unsubscribes from a given subscription, s"

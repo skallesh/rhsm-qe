@@ -153,24 +153,40 @@
                                                 (server-url)
                                                 pool))
 
-(defn get-instance-multiplier
-  "Returns the instance multiplier on the pool."
-  [username password pool & {:keys [string?]
-                             :or {string? true}}]
-  (let [attr (:productAttributes (rest/get
-                                  (str (server-url) "/pools/" pool)
-                                  (@config :username)
-                                  (@config :password)))
-        x (map #(list (:name %) (:value %)) attr)
+(defn get-pool-attributes
+  "Returns a combined mapping of subscripton and product attributes in a pool."
+  [username password pool]
+  (let [attr  (rest/get
+               (str (server-url) "/pools/" pool)
+               (@config :username)
+               (@config :password))
+        pattr (:productAttributes attr)
+        x (map #(list (:name %) (:value %)) pattr)
         y (group-by first x)
         ykeys (map #(keyword %) (keys y))
         yvals (let [v (map #(map second %) (vals y))]
                 (map first v))
         z (zipmap ykeys yvals)
-        multiplier (:instance_multiplier z)
+        attr (merge attr z)]
+    attr))
+
+(defn get-instance-multiplier
+  "Returns the instance multiplier on the pool."
+  [username password pool & {:keys [string?]
+                             :or {string? false}}]
+  (let [attr (get-pool-attributes username password pool)
+        multiplier (:instance_multiplier attr)
         settype (if string?
                   (fn [x] (str x))
                   (fn [x] (Integer/parseInt x)))]
     (if multiplier
       (settype multiplier)
       (settype "1"))))
+
+(defn get-quantity-available
+  "Returns the quantity available on a pool."
+  [username password pool]
+  (let [attr (get-pool-attributes username password pool)
+        quantity (Integer. (:quantity attr))
+        consumed (Integer. (:consumed attr))]
+    (- quantity consumed)))
