@@ -2606,9 +2606,10 @@ schema generation failed
 	
 	public void restartTomcat() {
 		
-		// debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
+		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
 		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of tomcat6 running...");
-			
+		sshCommandRunner.runCommandAndWait("df -h");
+		
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
 		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart tomcat6.service && systemctl is-active tomcat6.service", Integer.valueOf(0), "^active$", null);
@@ -2616,8 +2617,9 @@ schema generation failed
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
 		}
 		
-		// debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
+		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
 		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of tomcat6 running...");
+		sshCommandRunner.runCommandAndWait("df -h");
 	}
 	
 	public List<RevokedCert> getCurrentlyRevokedCerts() {

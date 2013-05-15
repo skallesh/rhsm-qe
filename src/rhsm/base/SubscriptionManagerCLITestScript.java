@@ -123,6 +123,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
 			servertasks.cleanOutCRL();
 			servertasks.deploy();
+			server.runCommandAndWait("df -h");server.runCommandAndWait("ls -Slh /var/log/tomcat6 | head");	// log candlepin's starting disk usage (for debugging information only)
 			servertasks.setupTranslateToolkit(sm_translateToolkitGitRepository);
 			servertasks.reportAPI();
 			
@@ -350,6 +351,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}	// close the connection to the database
+		}
+		
+		// log candlepin's ending disk usage (for debugging information only)
+		if (server!=null) {
+			server.runCommandAndWait("df -h");
+			server.runCommandAndWait("ls -Slh /var/log/tomcat6 | head");
 		}
 	}
 	
