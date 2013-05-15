@@ -20,6 +20,7 @@
 (def auth-log "/var/log/squid/access.log")
 (def noauth-log "/var/log/tinyproxy.log")
 (def rhsm-log "/var/log/rhsm/rhsm.log")
+(def ldtdp-log "/var/log/ldtpd/ldtpd.log")
 (def proxy-success "Proxy connection succeeded")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
@@ -110,10 +111,10 @@
 (defn test_proxy [expected-message]
   (tasks/ui click :configure-proxy)
   (if (= 0 (tasks/ui hasstate :test-connection "SENSITIVE"))
-  (try+
-   (let [message (tasks/ui gettextvalue :connection-status)]
-     (verify (= expected-message message)))
-   (finally (tasks/ui click :close-proxy)))))
+    (try+
+     (let [message (tasks/ui gettextvalue :connection-status)]
+       (verify (= expected-message message)))
+     (finally (tasks/ui click :close-proxy)))))
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_auth"]}}
@@ -137,10 +138,11 @@
   (disable_proxy nil)
   (tasks/ui click :configure-proxy)
   (if (= 0 (tasks/ui hasstate :test-connection "SENSITIVE"))
-  (try+ (verify (not (some #(= "sensitive" %)
-                           (tasks/ui getallstates :test-connection))))
-        (verify (= "" (tasks/ui gettextvalue :connection-status)))
-        (finally (tasks/ui click :close-proxy)))))
+    (try+
+     (verify (not (some #(= "sensitive" %)
+                        (tasks/ui getallstates :test-connection))))
+     (verify (= "" (tasks/ui gettextvalue :connection-status)))
+     (finally (tasks/ui click :close-proxy)))))
 
 (defn ^{Test {:groups ["proxy"
                        "blockedByBug-927340"]
@@ -243,7 +245,9 @@
   (disable_proxy nil)
   (tasks/enableproxy "doesnotexist.redhat.com")
   (let [output (get-logging @clientcmd
-                               rhsm-log               ; This could be changed to ldtpd-log if tracebacks can be ignored when GUI launches successfully
+                               ldtpd-log ; Changed to
+                                         ; ldtpd-log from rhsm-log
+                                         ; based on comments on 920551
                                "check_for_traceback"
                                nil
                                (tasks/restart-app))]
