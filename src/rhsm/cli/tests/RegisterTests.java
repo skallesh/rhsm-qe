@@ -812,7 +812,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	        * check the consumed entitlements have not changed
 	 */
 	@Test(	description="subscription-manager-cli: reregister basic registration",
-			groups={"blockedByBug-636843","AcceptanceTests"},
+			groups={"blockedByBug-636843","AcceptanceTests","blockedByBug-962520"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56327)
 	public void ReregisterBasicRegistration_Test() {

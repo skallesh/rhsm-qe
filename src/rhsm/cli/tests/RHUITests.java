@@ -64,7 +64,7 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="after registering to the stage/prod environment as a RHUI consumer, subscribe to the expected RHUI product subscription",
-			groups={"blockedByBug-885325"},
+			groups={"blockedByBug-885325","blockedByBug-962520"},
 			dependsOnMethods={"RegisterRHUIConsumer_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

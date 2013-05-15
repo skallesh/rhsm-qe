@@ -54,7 +54,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
-			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986"},
+			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
@@ -720,7 +720,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with a valid service level",
-			groups={"AcceptanceTests","blockedByBug-859652"},
+			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-962520"},
 			dataProvider="getSubscribeWithAutoAndServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -835,7 +835,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe using various good and bad values for the --quantity option",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-962520"},
 			dataProvider="getSubscribeWithQuantityData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1046,6 +1046,38 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test(Object bugzilla, SubscriptionPool pool) throws JSONException, Exception {
+		/*
+		The way that this works is that all attributes that are specified on a
+		pool are version checked. Here are the current versions:
+		ram: 3.1
+		cores: 3.2
+		sockets: 1.0
+
+		If a pool has a ram attribute, the minimum required version will be 3.1.
+		If a pool has a cores attribute, the minimum required version will be 3.2
+		if a pool has cores AND ram attributes, the minimum required version
+		will be 3.2
+
+		Again, each attribute on the pool will be checked against the above
+		versions, and the largest found will be the minimum required version
+		that the client must support in order to attach that sub.
+
+		Supported versions do not change based on stacking... it changes when
+		the certificate content changes. i.e when the cores attribute was added
+		to the cert. It has no relation to what our rules support.
+
+		So both examples above are correct since the system is 1.0. They are
+		dealing with RAM subscriptions, so they should be restricted to clients
+		supporting certificate versions >= 3.1
+
+		If the test subs were to include cores, it would require 3.2
+
+		Clear as mud!?
+
+		Ping me if you have more questions about this.
+
+		--mstead
+		*/
 		
 		//	[root@jsefler-5 ~]# subscription-manager subscribe --pool=8a90f8313e472bce013e472d22150352
 		//	The client must support at least v3.1 certificates in order to use subscription: Multi-Attribute (non-stackable) (24 cores, 6 sockets, 8GB RAM). A newer client may be available to address this problem.
@@ -1065,6 +1097,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// stackable RAM-based subscriptions
+		/* I assumed this block was a valid test.  I was wrong.  See mstead's notes above...
 		if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "ram")!=null &&
 			CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "stacking_id")!=null) {
 			Assert.assertEquals(subscribeResult.getStderr().trim(), String.format("The client must support at least v%s certificates in order to use subscription: %s. A newer client may be available to address this problem.","3.2",pool.subscriptionName),
@@ -1073,8 +1106,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					"Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.2");
 			return;
 		}
+		*/
+
 		
-		// only RAM-based subscriptions
+		// RAM-based subscriptions
 		if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "ram")!=null) {
 			Assert.assertEquals(subscribeResult.getStderr().trim(), String.format("The client must support at least v%s certificates in order to use subscription: %s. A newer client may be available to address this problem.","3.1",pool.subscriptionName),
 					"Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");

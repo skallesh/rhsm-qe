@@ -19,6 +19,7 @@
             AfterClass]))
 
 (def ldtpd-log "/var/log/ldtpd/ldtpd.log")
+(def rhsm-log "/var/log/rhsm/rhsm.log")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
@@ -186,5 +187,20 @@
      (verify (bool (tasks/ui guiexist :main-window)))
      (finally
        (tasks/set-conf-file-value "hostname" hostname)))))
+
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-920091"]}}
+  cli_unregister_check_traceback
+  "Verifies whether it causes traceback when GUI is running and sub-man is unregistered through CLI"
+  [_]
+  (tasks/restart-app)
+  (tasks/register-with-creds)
+  (let [output (get-logging @clientcmd
+                                  rhsm-log
+                                  "check_traceback"
+                                  nil
+                                  (.runCommandAndWait @clientcmd "subscription-manager unregister"))]
+    (verify (not (substring? "Traceback" output))))
+  (tasks/kill-app))
 
 (gen-class-testng)

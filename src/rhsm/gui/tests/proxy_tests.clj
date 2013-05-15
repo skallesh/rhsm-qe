@@ -19,6 +19,7 @@
 
 (def auth-log "/var/log/squid/access.log")
 (def noauth-log "/var/log/tinyproxy.log")
+(def rhsm-log "/var/log/rhsm/rhsm.log")
 (def proxy-success "Proxy connection succeeded")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
@@ -108,11 +109,11 @@
 
 (defn test_proxy [expected-message]
   (tasks/ui click :configure-proxy)
-  (tasks/ui click :test-connection)
+  (if (= 0 (tasks/ui hasstate :test-connection "SENSITIVE"))
   (try+
    (let [message (tasks/ui gettextvalue :connection-status)]
      (verify (= expected-message message)))
-   (finally (tasks/ui click :close-proxy))))
+   (finally (tasks/ui click :close-proxy)))))
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_auth"]}}
@@ -135,51 +136,37 @@
   [_]
   (disable_proxy nil)
   (tasks/ui click :configure-proxy)
-  (tasks/ui click :test-connection)
+  (if (= 0 (tasks/ui hasstate :test-connection "SENSITIVE"))
   (try+ (verify (not (some #(= "sensitive" %)
                            (tasks/ui getallstates :test-connection))))
         (verify (= "" (tasks/ui gettextvalue :connection-status)))
-        (finally (tasks/ui click :close-proxy))))
-
-(defn ^{BeforeGroups {:groups ["proxy"]
-                      :value ["proxy-enabled-check-status"]}}
-  before_test_proxy_with_blank_fields[_]
-  (tasks/ui click :configure-proxy)
-  (tasks/ui check :proxy-checkbox))
+        (finally (tasks/ui click :close-proxy)))))
 
 (defn ^{Test {:groups ["proxy"
-                       "proxy-enabled-check-status"
                        "blockedByBug-927340"]
               :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_proxy
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
   [_]
   (disable_proxy nil)
-  (tasks/ui settextvalue :proxy-location "")
+  (tasks/enableproxy " <Backspace>" :close? false)
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
-    (verify (not (= message proxy-success)))))
+    (verify (not (= message proxy-success))))
+  (disable_proxy nil))
 
 (defn ^{Test {:groups ["proxy"
-                       "proxy-enabled-check-status"]
-              :dependsOnMethods ["test_proxy_with_blank_proxy" "disable_proxy"]}}
+                       "blockedByBug-927340"]
+              :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_credentials
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
   [_]
   (disable_proxy nil)
-  (tasks/ui check :authentication-checkbox)
-  (tasks/ui settextvalue :password-text "")
-  (tasks/ui settextvalue :username-text "")
+  (tasks/enableproxy " <Backspace>" :close? false :auth? true :user "" :pass "")
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
-    (verify (not (= message proxy-success)))))  
-
-(defn ^{AfterGroups {:groups ["proxy"]
-                     :value ["proxy-enabled-check-status"]}}
-  after_test_proxy_with_blank_fields[_]
-  (tasks/ui uncheck :proxy-checkbox)
-  (tasks/ui uncheck :authentication-checkbox)
-  (tasks/ui click :close-proxy))
+    (verify (not (= message proxy-success))))
+  (disable_proxy nil))  
 
 (defn ^{Test {:groups ["proxy"]}}
   test_bad_proxy
@@ -246,6 +233,23 @@
    (finally
      (tasks/ui click :close-proxy)
      (disable_proxy nil))))
+
+(defn ^{Test {:groups ["proxy"
+                       "blockedByBug-920551"]}}
+  test_invalid_proxy_restart
+  "Test to check whether traceback is thrown when an invalid proxy is configured and sub-man is restarted"
+  [_]
+  (setup nil)
+  (disable_proxy nil)
+  (tasks/enableproxy "doesnotexist.redhat.com")
+  (let [output (get-logging @clientcmd
+                               rhsm-log               ; This could be changed to ldtpd-log if tracebacks can be ignored when GUI launches successfully
+                               "check_for_traceback"
+                               nil
+                               (tasks/restart-app))]
+       (verify (not (substring? "Traceback" output))))
+  (tasks/ui guiexist :main-window)
+  (disable_proxy nil))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
