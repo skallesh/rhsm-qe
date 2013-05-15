@@ -20,7 +20,7 @@
 (def auth-log "/var/log/squid/access.log")
 (def noauth-log "/var/log/tinyproxy.log")
 (def rhsm-log "/var/log/rhsm/rhsm.log")
-(def ldtdp-log "/var/log/ldtpd/ldtpd.log")
+(def ldtpd-log "/var/log/ldtpd/ldtpd.log")
 (def proxy-success "Proxy connection succeeded")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
