@@ -1,5 +1,6 @@
 package rhsm.cli.tests;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -31,6 +32,8 @@ import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
+
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
@@ -44,8 +47,9 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 @Test(groups={"InstanceBasedTests"})
 public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	Map<String, String> factsMap = new HashMap<String, String>();
+	protected Integer configuredHealFrequency = null;
+	protected String configuredHostname=null;
 
-	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -263,5 +267,128 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 }
 	
 	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify Auto bind of instance based subscription", 
+			groups = { "StackingOfInstanceBasedSubscription"}, enabled = true)
+	public void AutoAttachOfInstanceBasedSubscriptionOnCertV1() throws JSONException,Exception {
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("system.certificate_version", "1.0");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.facts(null, true, null, null, null);
+		if(clienttasks.getFactValue("virt.is_guest").contains("false")){
+			Integer sockets = 4;
+			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+			clienttasks.facts(null, true, null, null, null);
+			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+						if(availList.subscriptionName.contains("Instance Based")){
+							clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null);
+					
+			}
+		
+		 }
+		
+			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+				if(installed.productId.contains("Instance Server")){
+					Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+				}
+			}
+			clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+				if(installed.productId.contains("Instance Server")){
+					Assert.assertEquals(installed.status.trim(), "Subscribed");
+					
+				}	
+		}
+	
+	}}
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify Auto bind of instance based subscription", 
+			groups = { "ManuallyAttachInstanceBasedSubscriptionOnCertV1"}, enabled = true)
+	public void ManuallyAttachInstanceBasedSubscriptionOnCertV1() throws JSONException,Exception {
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("system.certificate_version", "1.0");
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"_"+ ".pem");
+				moveProductCertFiles(installed.productId + ".pem");
+			}
+		}
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.facts(null, true, null, null, null);
+			if(clienttasks.getFactValue("virt.is_guest").contains("false")){
+			Integer sockets = 4;
+			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+			clienttasks.facts(null, true, null, null, null);
+			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+						if(availList.subscriptionName.contains("Instance Based")){
+							clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null);
+					
+			}
+			}for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+				if(installed.productId.contains("Instance Server")){
+					Assert.assertEquals(installed.status.trim(), "Subscribed");
+					
+				}	
+			}
+			String systemStatus=clienttasks.getFactValue("system.entitlements_valid");
+			String expected="partial";
+			Assert.assertEquals(systemStatus.trim(), expected);
+			
+		 }
+	}	
+	
+	protected void moveProductCertFiles(String filename) throws IOException {
+		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		if(!(RemoteFileTasks.testExists(client, "/root/temp1/"))){
+			client.runCommandAndWait("mkdir " + "/root/temp1/");
+		}
+			client.runCommandAndWait("mv " + clienttasks.productCertDir + "/"+ filename + " " + "/root/temp1/");
+	
+		}
+	@BeforeClass(groups = "setup")
+	public void rememberConfiguredHealFrequency() {
+		if (clienttasks == null)
+			return;
+		configuredHealFrequency = Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd","autoAttachInterval"));
+		configuredHostname=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server","hostname");
+	}
+	
+	
+	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
+	@AfterClass(groups = "setup")
+	public void restoreConfiguredHealFrequency() {
+		if (clienttasks == null)
+			return;
+		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
+	}
+	
+	
+	@AfterGroups(groups = { "setup" }, value = { "ManuallyAttachInstanceBasedSubscriptionOnCertV1"})
+	@AfterClass(groups = "setup")
+	public void restoreProductCerts() throws IOException {
+		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		client.runCommandAndWait("mv " + "/root/temp1/*.pem" + " "
+				+ clienttasks.productCertDir);
+		client.runCommandAndWait("rm -rf " + "/root/temp1");
+	}
+	
 }
 	

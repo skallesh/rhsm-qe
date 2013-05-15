@@ -265,6 +265,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
 			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 		}
+		System.out.println();
 		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 			int quantity=consumed.quantityUsed;
 			if(ramvalue<=4){
