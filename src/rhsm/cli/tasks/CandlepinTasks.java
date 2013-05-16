@@ -77,9 +77,9 @@ public class CandlepinTasks {
 	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
 	protected /*NOT static*/ String serverInstallDir = null;
 	protected /*NOT static*/ String serverImportDir = null;
-	public static String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
-	public static String tomcat6LogFile	= "/var/log/tomcat6/catalina.out";
-	public static String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
+	public static final String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
+	public static final String tomcat6LogFile	= "/var/log/tomcat6/catalina.out";
+	public static final String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
 	public static String rubyClientDir	= "/client/ruby";
 	public static File candlepinCACertFile = new File("/etc/candlepin/certs/candlepin-ca.crt");
 	public static String generatedProductsDir	= "/generated_certs";	// "/proxy/generated_certs";
@@ -182,7 +182,16 @@ public class CandlepinTasks {
 		
 		// clear out the tomcat6 log file (catalina.out)
 		if (RemoteFileTasks.testExists(sshCommandRunner, tomcat6LogFile)) {
-			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "echo \"\" > "+tomcat6LogFile, TestRecords.action());	
+
+			//	[root@jsefler-f14-7candlepin ~]# ls -hl  /var/log/tomcat6/catalina.out*
+			//	-rw-r--r--. 1 tomcat tomcat 3.6G May 15 11:56 /var/log/tomcat6/catalina.out
+			//	-rw-r--r--. 1 tomcat tomcat 7.1K May 12 03:40 /var/log/tomcat6/catalina.out-20130512.gz
+			//
+			//	[root@jsefler-f14-5candlepin ~]# ls -l  /var/log/tomcat6/catalina.out*
+			//	-rw-r--r--. 1 tomcat tomcat     102646 May 15 11:56 /var/log/tomcat6/catalina.out
+			//	-rw-r--r--. 1 tomcat tomcat 1813770240 May 12 03:10 /var/log/tomcat6/catalina.out-20130512
+			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "echo \"\" > "+tomcat6LogFile, TestRecords.action());
+			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+tomcat6LogFile+"-*", TestRecords.action());
 		}
 		
 		// clear out the candlepin/hornetq to prevent the following:
@@ -2606,9 +2615,10 @@ schema generation failed
 	
 	public void restartTomcat() {
 		
-		// debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
+		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
 		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of tomcat6 running...");
-			
+		sshCommandRunner.runCommandAndWait("df -h");
+		
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
 		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart tomcat6.service && systemctl is-active tomcat6.service", Integer.valueOf(0), "^active$", null);
@@ -2616,8 +2626,9 @@ schema generation failed
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
 		}
 		
-		// debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
+		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
 		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of tomcat6 running...");
+		sshCommandRunner.runCommandAndWait("df -h");
 	}
 	
 	public List<RevokedCert> getCurrentlyRevokedCerts() {
