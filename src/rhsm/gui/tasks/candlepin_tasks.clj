@@ -1,7 +1,8 @@
 (ns rhsm.gui.tasks.candlepin-tasks
   (:use [rhsm.gui.tasks.test-config :only (config
                                            clientcmd)]
-        [clojure.string :only (trim blank?)])
+        [clojure.string :only (trim blank?)]
+        rhsm.gui.tasks.tools)
   (:require [rhsm.gui.tasks.rest :as rest])
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [rhsm.cli.tasks CandlepinTasks]
@@ -34,9 +35,8 @@
   []
   (let [identity
         (trim
-         (.getStdout
-          (.runCommandAndWait
-           @clientcmd
+         (:stdout
+          (run-command
            "subscription-manager identity | grep identity | cut -f 2 -d :")))]
     (if (= identity "")
       nil

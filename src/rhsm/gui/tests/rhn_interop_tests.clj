@@ -16,11 +16,11 @@
 (def systemid "/etc/sysconfig/rhn/systemid")
 
 (defn systemid-exists? []
-  (= 1 (->> (.getStdout (.runCommandAndWait @clientcmd (str "test -e " systemid " && echo 1 || echo 0"))) str .trim Integer/parseInt))
+  (= 1 (->> (:stdout (run-command (str "test -e " systemid " && echo 1 || echo 0"))) str .trim Integer/parseInt))
 )
 
 (defn kill-app []
-  (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
+  (run-command "killall -9 subscription-manager-gui")
   (tasks/ui waittillwindownotexist :main-window 30)
 )
 
@@ -28,14 +28,14 @@
   setup [_]
   (if (tasks/ui exists? :main-window "*")
     (kill-app))
-  (.runCommandAndWait @clientcmd (str "touch " systemid))
+  (run-command (str "touch " systemid))
 )
 
 (defn ^{AfterClass {:groups ["setup"]}}
   cleanup [_]
     (if-not (tasks/ui exists? :main-window "*")
       (tasks/start-app))
-    (.runCommandAndWait @clientcmd (str "rm -f " systemid))
+    (run-command (str "rm -f " systemid))
 )
 
 (defn ^{Test {:groups ["interop"]}}
@@ -79,7 +79,7 @@
   check_no_warning
   "Asserts that no warning is shown when the app is started without the presence of a systemid file."
   [_]
-  (.runCommandAndWait @clientcmd (str "rm -f " systemid))
+  (run-command (str "rm -f " systemid))
   (verify (not (systemid-exists?)))
   (tasks/start-app)
   (verify (not (tasks/ui exists? :warning-dialog "*")))

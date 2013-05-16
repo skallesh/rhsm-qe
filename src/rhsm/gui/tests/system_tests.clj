@@ -177,7 +177,7 @@
   [_]
   (let [hostname (tasks/conf-file-value "hostname")]
     (try+
-     (.runCommandAndWait @clientcmd "subscription-manager clean")
+     (run-command "subscription-manager clean")
      (tasks/restart-app)
      (tasks/register-with-creds)
      (tasks/kill-app)
@@ -199,7 +199,7 @@
                                   rhsm-log
                                   "check_traceback"
                                   nil
-                                  (.runCommandAndWait @clientcmd "subscription-manager unregister"))]
+                                  (run-command "subscription-manager unregister"))]
     (verify (not (substring? "Traceback" output))))
   (tasks/kill-app))
 

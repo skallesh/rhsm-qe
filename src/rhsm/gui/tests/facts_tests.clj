@@ -30,9 +30,8 @@
 (def productstatus (atom nil))
 
 (defn get-cli-facts []
-  (let [allfacts (.getStdout
-                  (.runCommandAndWait @clientcmd
-                                      "subscription-manager facts --list"))
+  (let [allfacts (:stdout
+                  (run-command "subscription-manager facts --list"))
         allfactpairs (split-lines allfacts)
         factslist (into {} (map (fn [fact] (vec (split fact #": ")))
                                 allfactpairs))]
@@ -114,9 +113,8 @@
   (try
     (tasks/ui click :view-system-facts)
     (tasks/ui waittillwindowexist :facts-dialog 10)
-    (let [cli-raw (.getStdout
-                   (.runCommandAndWait @clientcmd
-                                       "subscription-manager identity | grep 'org id'"))
+    (let [cli-raw (:stdout
+                   (run-command "subscription-manager identity | grep 'org id'"))
           cli-val (trim (last (split cli-raw #":")))
           gui-val (tasks/ui gettextvalue :facts-org-id)]
       (verify (= gui-val cli-val)))
@@ -129,9 +127,8 @@
   "Checks that all available service levels are shown in the GUI properly."
   [_]
   (try
-    (let [rawlevels (.getStdout
-                     (.runCommandAndWait @clientcmd
-                                         "subscription-manager service-level --list"))
+    (let [rawlevels (:stdout
+                     (run-command "subscription-manager service-level --list"))
           cli-levels (drop 3 (split-lines rawlevels))
           expected-levels (sort (conj cli-levels "Not Set"))]
       (tasks/ui click :preferences)
@@ -151,9 +148,8 @@
   [_]
   (try
     (.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively @cli-tasks)
-    (let [result (.runCommandAndWait @clientcmd
-                                     "subscription-manager release --list")
-          stdout (.getStdout result)
+    (let [result (run-command "subscription-manager release --list")
+          stdout (:stdout result)
           cli-releases  (if (clojure.string/blank? stdout)
                           []
                           (drop 3 (split-lines stdout)))
@@ -165,7 +161,7 @@
         (verify (not (nil? (some #{"Not Set"} gui-releases))))))
     (finally (if (= 1 (tasks/ui guiexist :system-preferences-dialog))
                (tasks/ui click :close-system-prefs))
-             (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all"))))
+             (run-command "subscription-manager unsubscribe --all"))))
 
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-829900"]}}
@@ -179,9 +175,8 @@
           gui-pyrhsm (get-gui-version :python-rhsm-version)
           gui-rhsm (get-gui-version :rhsm-version)
           gui-rhsm-service (get-gui-version :rhsm-service-version)
-          rpm-qi (fn [p s] (trim (.getStdout
-                                 (.runCommandAndWait
-                                  @clientcmd
+          rpm-qi (fn [p s] (trim (:stdout
+                                 (run-command
                                   (str "rpm -qi " p " | grep " s " | awk '{print $3}'")))))
           get-cli-version (fn [p] (str (rpm-qi p "Version") "-" (rpm-qi p "Release")))
           cli-pyrhsm (get-cli-version "python-rhsm")
@@ -196,8 +191,8 @@
 (defn ^{BeforeGroups {:groups ["facts"]
                       :value ["facts-product-status"]}}
   before_check_product_status [_]
-  (let [output (.getStdout
-                (.runCommandAndWait @clientcmd "subscription-manager subscribe --auto"))
+  (let [output (:stdout
+                (run-command "subscription-manager subscribe --auto"))
         not-blank? (fn [s] (not (blank? s)))
         raw-cli-data (filter not-blank? (drop 1 (split-lines output)))
         grab-value (fn [item] (trim (last (split item #":"))))
@@ -217,7 +212,7 @@
 (defn ^{AfterGroups {:groups ["facts"]
                      :value ["facts-product-status"]}}
   after_check_product_status [_]
-  (.getStdout (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all")))
+  (:stdout (run-command "subscription-manager unsubscribe --all")))
 
 (defn ^{Test {:groups ["facts"]
               :dependsOnMethods ["check_product_status"]

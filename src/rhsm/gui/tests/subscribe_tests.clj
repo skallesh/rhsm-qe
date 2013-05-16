@@ -201,7 +201,7 @@
   "Asserts that the selected quantity is given when subscribed to."
   [_ subscription contract]
   (try+
-   (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all")
+   (run-command "subscription-manager unsubscribe --all")
    (sleep 3000)
    (tasks/search)
    (let [user (@config :username)
@@ -491,7 +491,7 @@
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
-  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (run-command "subscription-manager unregister")
   (tasks/restart-app)
   (tasks/register-with-creds)
   (let [prods (into [] (map vector (tasks/get-table-elements

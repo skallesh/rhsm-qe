@@ -77,7 +77,7 @@
       (let [result? (bool (ui waittillwindownotexist :main-window 10))]
         (if (and (not result?) force?)
           (do
-            (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
+            (run-command "killall -9 subscription-manager-gui")
             (ui waittillwindownotexist :main-window 30))))
       (sleep 1000))
   ([]
@@ -88,7 +88,7 @@
 (defn start-firstboot
   "Convenience function that calls start-app with the firstboot path."
   []
-  (if (and (= "true" (trim (.getStdout (.runCommandAndWait @clientcmd "test -f  /etc/sysconfig/firstboot && echo \"true\""))))
+  (if (and (= "true" (trim (:stdout (run-command "test -f  /etc/sysconfig/firstboot && echo \"true\""))))
            (= "NO" (.getConfFileParameter @cli-tasks "/etc/sysconfig/firstboot" "RUN_FIRSTBOOT")))
     (.updateConfFileParameter @cli-tasks  "/etc/sysconfig/firstboot" "RUN_FIRSTBOOT" "YES"))
   (let [path (@config :firstboot-binary-path)]
@@ -602,7 +602,7 @@
            reregister? false}}]
   (kill-app)
   (if (or unregister? reregister?)
-    (.runCommandAndWait @clientcmd "subscription-manager unregister"))
+    (run-command "subscription-manager unregister"))
   (start-app)
   (if reregister?
     (register-with-creds)))
@@ -652,6 +652,6 @@
   (let [redirect (if overwrite? ">" ">>")
         contents (if (string? facts) facts (json/json-str facts))
         command (str "echo '" contents "' " redirect " " path filename)]
-    (.runCommandAndWait @clientcmd command)
+    (run-command command)
     (if update?
-      (.runCommandAndWait @clientcmd "subscription-manager facts --update"))))
+      (run-command "subscription-manager facts --update"))))

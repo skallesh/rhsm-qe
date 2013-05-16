@@ -69,10 +69,10 @@
   [_]
   (enable_proxy_auth nil)
   (let [logoutput (get-logging @auth-proxyrunner
-                                     auth-log
-                                     "proxy-auth-connect"
-                                     nil
-                                     (register))]
+                               auth-log
+                               "proxy-auth-connect"
+                               nil
+                               (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
 
 (defn ^{Test {:groups ["proxy"]
@@ -82,10 +82,10 @@
   [_]
   (enable_proxy_noauth nil)
   (let [logoutput (get-logging @noauth-proxyrunner
-                                     noauth-log
-                                     "proxy-noauth-connect"
-                                     nil
-                                     (register))]
+                               noauth-log
+                               "proxy-noauth-connect"
+                               nil
+                               (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
 
 (defn ^{Test {:groups ["proxy"]
@@ -96,16 +96,16 @@
   (disable_proxy nil)
   ;; note: if this takes forever, blank out the proxy log file.
   (let [logoutput (get-logging @auth-proxyrunner
-                                     auth-log
-                                     "disabled-auth-connect"
-                                     nil
-                                     (register))]
+                               auth-log
+                               "disabled-auth-connect"
+                               nil
+                               (register))]
     (verify (clojure.string/blank? logoutput)))
   (let [logoutput (get-logging @noauth-proxyrunner
-                                     noauth-log
-                                     "disabled-auth-connect"
-                                     nil
-                                     (register))]
+                               noauth-log
+                               "disabled-auth-connect"
+                               nil
+                               (register))]
     (verify (clojure.string/blank? logoutput))))
 
 (defn test_proxy [expected-message]
@@ -168,7 +168,7 @@
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
     (verify (not (= message proxy-success))))
-  (disable_proxy nil))  
+  (disable_proxy nil))
 
 (defn ^{Test {:groups ["proxy"]}}
   test_bad_proxy
@@ -245,12 +245,12 @@
   (disable_proxy nil)
   (tasks/enableproxy "doesnotexist.redhat.com")
   (let [output (get-logging @clientcmd
-                               ldtpd-log ; Changed to
-                                         ; ldtpd-log from rhsm-log
-                                         ; based on comments on 920551
-                               "check_for_traceback"
-                               nil
-                               (tasks/restart-app))]
+                            ldtpd-log ; Changed to
+                                      ; ldtpd-log from rhsm-log
+                                      ; based on comments on 920551
+                            "check_for_traceback"
+                            nil
+                            (tasks/restart-app))]
        (verify (not (substring? "Traceback" output))))
   (tasks/ui guiexist :main-window)
   (disable_proxy nil))

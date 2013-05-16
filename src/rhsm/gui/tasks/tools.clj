@@ -9,10 +9,22 @@
                org.testng.SkipException
                [com.redhat.qe.auto.bugzilla BzChecker]))
 
-(defn get-release []
-  (let [release (.getStdout (.runCommandAndWait
-                             @clientcmd
-                             "cat /etc/redhat-release"))
+(defn run-command
+  "Runs a given command on the client using SSHCommandRunner()."
+  [command & {:keys [runner]
+                              :or {runner @clientcmd}}]
+  (let [result (.runCommandAndWait runner command)
+         out (.getStdout result)
+         err (.getStderr result)
+         exit (.getExitCode result)]
+     {:stdout out
+      :stderr err
+      :exitcode exit}))
+
+(defn get-release
+  "Returns a key representing the RHEL release on the client."
+  []
+  (let [release (:stdout (run-command "cat /etc/redhat-release"))
         matcher (re-find #"release \d" release)]
     (case matcher
       "release 5" :rhel5
@@ -50,7 +62,7 @@
   (.contains s substring))
 
 (defn get-default-locale
-  [] (trim (.getStdout (.runCommandAndWait @clientcmd "echo $LANG"))))
+  [] (trim (:stdout (run-command "echo $LANG"))))
 
 (defn get-locale-regex
   "Gets the correct formated locale date string and transforms it into a usable regex.
@@ -59,7 +71,7 @@
      (let [cmd (str "python -c \"import locale; locale.setlocale(locale.LC_TIME,'"
                     locale
                     "'); print locale.nl_langinfo(locale.D_FMT)\"")
-           pyformat (clojure.string/trim (.getStdout (.runCommandAndWait @clientcmd cmd)))
+           pyformat (clojure.string/trim (:stdout (run-command cmd)))
            transform (fn [s] (cond (= s "%d") "\\\\d{2}"
                                   (= s "%m") "\\\\d{2}"
                                   (= s "%y") "\\\\d{2}"

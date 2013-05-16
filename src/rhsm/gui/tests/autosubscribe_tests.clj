@@ -35,9 +35,8 @@
 (defn- dirsetup? [dir]
   (and
    (= "exists" (trim
-                (.getStdout
-                 (.runCommandAndWait @clientcmd
-                                     (str  "test -d " dir " && echo exists")))))
+                (:stdout
+                 (run-command (str  "test -d " dir " && echo exists")))))
    (= dir (tasks/conf-file-value "productCertDir"))))
 
 (defn setup-product-map
@@ -58,13 +57,13 @@
                       (ComplianceTests/allProductsSubscribableByOneCommonServiceLevelValue)))
   (reset! sla-list (map #(.toUpperCase %)
                         (seq (ComplianceTests/allProductsSubscribableByMoreThanOneCommonServiceLevelValues))))
-  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (run-command "subscription-manager unregister")
   (tasks/start-app))
 
 (defn ^{AfterClass {:groups ["cleanup"]
                     :alwaysRun true}}
   cleanup [_]
-  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (run-command "subscription-manager unregister")
   (.configureProductCertDirAfterClass @complytests)
   (tasks/restart-app))
 
@@ -74,7 +73,7 @@
   no_products_subscribable
   "Tests autosubscribe when no products are subscribable."
   [_]
-  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (run-command "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? nodir))
   (tasks/register-with-creds)
@@ -84,8 +83,8 @@
         key  (@config :owner-key)
         ownername (ctasks/get-owner-display-name user pass key)]
     (verify (= (str beforesubs)
-               (trim (.getStdout
-                      (.runCommandAndWait @clientcmd (str "ls " nodir " | wc -l"))))))
+               (trim (:stdout
+                      (run-command (str "ls " nodir " | wc -l"))))))
     (if (= 0 beforesubs)
         (verify (tasks/compliance?))
         (do
@@ -107,7 +106,7 @@
   no_products_installed
   "Tests autosubscribe when no products are installed."
   [_]
-  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (run-command "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? nonedir))
   (tasks/register-with-creds)
@@ -120,14 +119,13 @@
   simple_autosubscribe
   "Tests simple autosubscribe when all products can be covered by one service level."
   [_]
-   (.runCommandAndWait @clientcmd "subscription-manager unregister")
+   (run-command "subscription-manager unregister")
    (tasks/restart-app)
    (verify (dirsetup? one-sla-dir))
    (tasks/register-with-creds)
    (let [beforesubs (tasks/warn-count)
-         dircount (trim (.getStdout
-                         (.runCommandAndWait
-                          @clientcmd
+         dircount (trim (:stdout
+                         (run-command
                           (str "ls " one-sla-dir " | wc -l"))))
          user (@config :username)
          pass (@config :password)
@@ -157,7 +155,7 @@
   [_]
   (verify
    (substring? @common-sla
-                     (.getStdout (.runCommandAndWait @clientcmd "subscription-manager service-level"))))
+                     (:stdout (run-command "subscription-manager service-level"))))
   (let [_ (tasks/ui click :system-preferences)
         _ (tasks/ui waittillguiexist :system-preferences-dialog)
         sla-slected? (tasks/ui showing? :system-preferences-dialog @common-sla)
@@ -182,13 +180,11 @@
         not-nil? (fn [b] (not (nil? b)))
         expected (@productmap product)
         rhel5?   (substring? "release 5"
-                             (.getStdout
-                              (.runCommandAndWait
-                               @clientcmd
+                             (:stdout
+                              (run-command
                                "cat /etc/redhat-release")))
-        boxarch (trim (.getStdout
-                       (.runCommandAndWait
-                        @clientcmd
+        boxarch (trim (:stdout
+                       (run-command
                         (str
                          "subscription-manager facts --list | "
                          (if rhel5?
@@ -228,7 +224,7 @@
 (defn ^{DataProvider {:name "my-installed-software"}}
   get_installed_software [_ & {:keys [debug]
                                :or {debug false}}]
-  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (run-command "subscription-manager unregister")
   (tasks/restart-app)
   (tasks/register-with-creds)
   (let [prods (into [] (map vector (tasks/get-table-elements
@@ -241,7 +237,7 @@
                     nil
                     (ctasks/get-owner-display-name user pass key))]
     (setup-product-map)
-    (.runCommandAndWait @clientcmd "subscription-manager subscribe --auto")
+    (run-command "subscription-manager subscribe --auto")
     (comment
       (tasks/unregister)
       (tasks/register user
@@ -262,9 +258,8 @@
 ;; cruft I want to keep:
 
 (comment
-  boxarch (trim (.getStdout
-                 (.runCommandAndWait
-                  @clientcmd
+  boxarch (trim (:stdout
+                 (run-command
                   (str
                    "subscription-manager facts --list | "
                    "grep \"lscpu.architecture\" | "
