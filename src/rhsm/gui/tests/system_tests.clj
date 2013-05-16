@@ -142,7 +142,7 @@
                             "check_online_documentation"
                             nil
                             (tasks/ui click :online-documentation)
-                            (tasks/ui waittillguiexist :firefox-help-window 10))]
+                            (tasks/ui waittillwindowexist :firefox-help-window 10))]
        (verify (= 1 (tasks/ui guiexist :firefox-help-window)))
        (verify (not (substring? "Traceback" output))))
     (finally    (tasks/ui closewindow :firefox-help-window)
