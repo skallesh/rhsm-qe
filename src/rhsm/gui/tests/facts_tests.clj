@@ -14,7 +14,8 @@
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
-            rhsm.gui.tasks.ui)
+            rhsm.gui.tasks.ui
+            [clojure.tools.logging :as log])
   (:import [org.testng.annotations
             BeforeClass
             BeforeGroups
@@ -74,8 +75,12 @@
   facts_parity
   "Tests that the gui shows the same number of facts as the CLI."
   [_]
-  (verify (= (count @cli-facts)
-             (count @gui-facts))))
+  (let [cli-uniq (clojure.set/difference (set @cli-facts) (set @gui-facts))
+        gui-uniq (clojure.set/difference (set @gui-facts) (set @cli-facts))]
+    (log/info (str "CLI uniques are: " cli-uniq))
+    (log/info (str "GUI uniques are: " gui-uniq))
+    (verify (empty? cli-uniq))
+    (verify (empty? gui-uniq))))
 
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-683550"
