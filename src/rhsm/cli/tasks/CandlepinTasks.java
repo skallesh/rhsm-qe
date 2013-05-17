@@ -533,6 +533,10 @@ schema generation failed
 		return setAttributeForConsumer(authenticator, password, url, consumerid, "autoheal", autoheal);
 	}
 	
+	static public JSONObject setGuestIdsForConsumer(String authenticator, String password, String url, String consumerid, List<String> guestIds) throws Exception {
+		return setAttributeForConsumer(authenticator, password, url, consumerid, "guestIds", guestIds);
+	}
+	
 	static public JSONObject setAttributeForConsumer(String authenticator, String password, String url, String consumerid, String attributeName, Object attributeValue) throws Exception {
 
 //		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request PUT --data '{"autoheal":false}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7
@@ -2217,6 +2221,15 @@ schema generation failed
 		if (value==null) return false;
 		
 		return value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("true") || value.equals("1");
+	}
+	
+	public static boolean isPoolProductInstanceBased (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		String value = getPoolProductAttributeValue(authenticator,password,url,poolId,"instance_multiplier");
+		
+		// the absence of a "instance_multiplier" attribute means this pool is NOT a instance based pool
+		if (value==null) return false;
+		
+		return true;
 	}
 	
 	public static boolean isPoolProductConsumableByConsumerType (String authenticator, String password, String url, String poolId, ConsumerType consumerType) throws JSONException, Exception {
