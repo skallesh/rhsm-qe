@@ -20,6 +20,7 @@
 (def auth-log "/var/log/squid/access.log")
 (def noauth-log "/var/log/tinyproxy.log")
 (def rhsm-log "/var/log/rhsm/rhsm.log")
+(def ldtpd-log "/var/log/ldtpd/ldtpd.log")
 (def proxy-success "Proxy connection succeeded")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
@@ -68,10 +69,10 @@
   [_]
   (enable_proxy_auth nil)
   (let [logoutput (get-logging @auth-proxyrunner
-                                     auth-log
-                                     "proxy-auth-connect"
-                                     nil
-                                     (register))]
+                               auth-log
+                               "proxy-auth-connect"
+                               nil
+                               (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
 
 (defn ^{Test {:groups ["proxy"]
@@ -81,10 +82,10 @@
   [_]
   (enable_proxy_noauth nil)
   (let [logoutput (get-logging @noauth-proxyrunner
-                                     noauth-log
-                                     "proxy-noauth-connect"
-                                     nil
-                                     (register))]
+                               noauth-log
+                               "proxy-noauth-connect"
+                               nil
+                               (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
 
 (defn ^{Test {:groups ["proxy"]
@@ -95,25 +96,25 @@
   (disable_proxy nil)
   ;; note: if this takes forever, blank out the proxy log file.
   (let [logoutput (get-logging @auth-proxyrunner
-                                     auth-log
-                                     "disabled-auth-connect"
-                                     nil
-                                     (register))]
+                               auth-log
+                               "disabled-auth-connect"
+                               nil
+                               (register))]
     (verify (clojure.string/blank? logoutput)))
   (let [logoutput (get-logging @noauth-proxyrunner
-                                     noauth-log
-                                     "disabled-auth-connect"
-                                     nil
-                                     (register))]
+                               noauth-log
+                               "disabled-auth-connect"
+                               nil
+                               (register))]
     (verify (clojure.string/blank? logoutput))))
 
 (defn test_proxy [expected-message]
   (tasks/ui click :configure-proxy)
   (if (= 0 (tasks/ui hasstate :test-connection "SENSITIVE"))
-  (try+
-   (let [message (tasks/ui gettextvalue :connection-status)]
-     (verify (= expected-message message)))
-   (finally (tasks/ui click :close-proxy)))))
+    (try+
+     (let [message (tasks/ui gettextvalue :connection-status)]
+       (verify (= expected-message message)))
+     (finally (tasks/ui click :close-proxy)))))
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_auth"]}}
@@ -137,10 +138,11 @@
   (disable_proxy nil)
   (tasks/ui click :configure-proxy)
   (if (= 0 (tasks/ui hasstate :test-connection "SENSITIVE"))
-  (try+ (verify (not (some #(= "sensitive" %)
-                           (tasks/ui getallstates :test-connection))))
-        (verify (= "" (tasks/ui gettextvalue :connection-status)))
-        (finally (tasks/ui click :close-proxy)))))
+    (try+
+     (verify (not (some #(= "sensitive" %)
+                        (tasks/ui getallstates :test-connection))))
+     (verify (= "" (tasks/ui gettextvalue :connection-status)))
+     (finally (tasks/ui click :close-proxy)))))
 
 (defn ^{Test {:groups ["proxy"
                        "blockedByBug-927340"]
@@ -166,7 +168,7 @@
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
     (verify (not (= message proxy-success))))
-  (disable_proxy nil))  
+  (disable_proxy nil))
 
 (defn ^{Test {:groups ["proxy"]}}
   test_bad_proxy
@@ -243,10 +245,12 @@
   (disable_proxy nil)
   (tasks/enableproxy "doesnotexist.redhat.com")
   (let [output (get-logging @clientcmd
-                               rhsm-log               ; This could be changed to ldtpd-log if tracebacks can be ignored when GUI launches successfully
-                               "check_for_traceback"
-                               nil
-                               (tasks/restart-app))]
+                            ldtpd-log ; Changed to
+                                      ; ldtpd-log from rhsm-log
+                                      ; based on comments on 920551
+                            "check_for_traceback"
+                            nil
+                            (tasks/restart-app))]
        (verify (not (substring? "Traceback" output))))
   (tasks/ui guiexist :main-window)
   (disable_proxy nil))

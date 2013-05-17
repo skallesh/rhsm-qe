@@ -73,7 +73,7 @@
   (tasks/unregister)
   (verify (action exists? :register-system)))
 
-(defn ^{Test {:groups ["registration" 
+(defn ^{Test {:groups ["registration"
                        "blockedByBug-918303"]
               :priority (int 10)}}
   register_check_syslog
@@ -86,7 +86,7 @@
                                   (tasks/register-with-creds))]
       (verify (not (blank? output)))))
 
-(defn ^{Test {:groups ["registration" 
+(defn ^{Test {:groups ["registration"
                        "blockedByBug-918303"]
               :dependsOnMethods ["register_check_syslog"]
               :priority (int 20)}}
@@ -156,6 +156,5 @@
  ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
      (if (and (@config :username) (@config :password))
        [(str "   " (@config :username)) (@config :password) nil])))))
-
 
 (gen-class-testng)

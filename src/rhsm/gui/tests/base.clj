@@ -12,12 +12,12 @@
   "function that restarts the vnc server"
   []
   (if (= :rhel7 (get-release))
-    (do (.runCommandAndWait @config/clientcmd "systemctl restart vncserver@:2.service"))
+    (do (run-command "systemctl restart vncserver@:2.service"))
     (do
-      (.runCommandAndWait @config/clientcmd "service vncserver stop")
+      (run-command "service vncserver stop")
       ( . Thread (sleep 5000))
-      (.runCommandAndWait @config/clientcmd "rm -f /tmp/.X2-lock; rm -f /tmp/.X11-unix/X2")
-      (.runCommandAndWait @config/clientcmd "service vncserver start")))
+      (run-command "rm -f /tmp/.X2-lock; rm -f /tmp/.X11-unix/X2")
+      (run-command "service vncserver start")))
   ( . Thread (sleep 10000)))
 
 (defn ^{BeforeSuite {:groups ["setup"]}}
@@ -34,9 +34,8 @@
   killGUI [_]
   (kill-app)
   (log/info "Contents of ldtpd.log:")
-  (log/info (.getStdout
-             (.runCommandAndWait
-              @config/clientcmd
+  (log/info (:stdout
+             (run-command
               "cat /var/log/ldtpd/ldtpd.log"))))
 
 (gen-class-testng)

@@ -142,7 +142,7 @@
                             "check_online_documentation"
                             nil
                             (tasks/ui click :online-documentation)
-                            (tasks/ui waittillguiexist :firefox-help-window 10))]
+                            (tasks/ui waittillwindowexist :firefox-help-window 10))]
        (verify (= 1 (tasks/ui guiexist :firefox-help-window)))
        (verify (not (substring? "Traceback" output))))
     (finally    (tasks/ui closewindow :firefox-help-window)
@@ -177,7 +177,7 @@
   [_]
   (let [hostname (tasks/conf-file-value "hostname")]
     (try+
-     (.runCommandAndWait @clientcmd "subscription-manager clean")
+     (run-command "subscription-manager clean")
      (tasks/restart-app)
      (tasks/register-with-creds)
      (tasks/kill-app)
@@ -199,7 +199,7 @@
                                   rhsm-log
                                   "check_traceback"
                                   nil
-                                  (.runCommandAndWait @clientcmd "subscription-manager unregister"))]
+                                  (run-command "subscription-manager unregister"))]
     (verify (not (substring? "Traceback" output))))
   (tasks/kill-app))
 

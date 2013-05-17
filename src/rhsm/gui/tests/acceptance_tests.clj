@@ -72,7 +72,7 @@
 
 (defn ^{AfterClass {:groups ["cleanup"]}}
   cleanup [_]
-  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (run-command "subscription-manager unregister")
   (tasks/restart-app))
 
 (defn ^{Test {:groups ["acceptance"]}}
@@ -83,8 +83,8 @@
   (let [certdir (tasks/conf-file-value "productCertDir")
         rhelcerts ["68" "69" "71" "72" "74" "76"]
         certlist (map #(str certdir "/" % ".pem") rhelcerts)
-        certexist? (map #(= 0 (.getExitCode
-                               (.runCommandAndWait @clientcmd (str "test -f " %))))
+        certexist? (map #(= 0 (:exitcode
+                               (run-command (str "test -f " %))))
                         certlist)]
     (verify (some true? certexist?)))
   (ftest/check_available_releases nil))

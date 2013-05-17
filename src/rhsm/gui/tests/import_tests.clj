@@ -40,9 +40,9 @@
   (reset! importtests (ImportTests.))
   (.restartCertFrequencyBeforeClass @importtests)
   (.setupEntitlemenCertsForImportBeforeClass @importtests)
-  (.runCommandAndWait @clientcmd "subscripton-manager unregister")
-  (.runCommandAndWait @clientcmd (str "rm -rf " tmpcertpath))
-  (.runCommandAndWait @clientcmd (str "mkdir " tmpcertpath)))
+  (run-command "subscripton-manager unregister")
+  (run-command (str "rm -rf " tmpcertpath))
+  (run-command (str "mkdir " tmpcertpath)))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
@@ -93,8 +93,8 @@
         entname (if (cert-version-one?)
                   (str-drop
                    2 (trim
-                      (.getStdout (.runCommandAndWait @clientcmd command))))
-                  (trim (.getStdout (.runCommandAndWait @clientcmd command))))]
+                      (:stdout (run-command command))))
+                  (trim (:stdout (run-command command))))]
     (import-cert certlocation)
     (verify (= 1 (tasks/ui guiexist
                            :information-dialog
@@ -109,8 +109,7 @@
                    (tasks/get-table-elements :my-subscriptions-view 0))))
     ;verify that it split the key and the pem
     (let [certdirfiles (split-lines
-                        (.getStdout (.runCommandAndWait
-                                     @clientcmd (str "ls " certdir))))]
+                        (:stdout (run-command (str "ls " certdir))))]
       (verify (not-nil? (some #{cert} certdirfiles)))
       (verify (not-nil? (some #{key} certdirfiles))))
     (reset! importedcert
@@ -138,9 +137,7 @@
     (tasks/unregister)
     (verify (assert-in-table? nil?)))
   (let [certdirfiles (split-lines
-                      (.getStdout (.runCommandAndWait
-                                   @clientcmd
-                                   (str "ls " (:certdir @importedcert)))))
+                      (:stdout (run-command (str "ls " (:certdir @importedcert)))))
         does-not-exist? (fn [file]
                           (nil? (some #{file} certdirfiles)))]
     (verify (does-not-exist? (:cert @importedcert)))
@@ -166,9 +163,7 @@
     (tasks/unsubscribe (:entname @importedcert))
     (verify (assert-in-table? nil?)))
   (let [certdirfiles (split-lines
-                      (.getStdout (.runCommandAndWait
-                                   @clientcmd
-                                   (str "ls " (:certdir @importedcert)))))
+                      (:stdout (run-command (str "ls " (:certdir @importedcert)))))
         does-not-exist? (fn [file]
                           (nil? (some #{file} certdirfiles)))]
     (verify (does-not-exist? (:cert @importedcert)))
@@ -188,13 +183,11 @@
 (defn get-random-file
   ([path filter]
      (let [certsindir (split-lines
-                       (.getStdout
-                        (.runCommandAndWait
-                         @clientcmd (str "ls " path filter))))
+                       (:stdout
+                        (run-command (str "ls " path filter))))
            tmpcertname (rand-nth certsindir)
            certname (str tmpcertpath "a" tmpcertname)]
-       (.runCommandAndWait @clientcmd
-                           (str "/bin/cp -f " path tmpcertname " " certname))
+       (run-command (str "/bin/cp -f " path tmpcertname " " certname))
        certname))
   ([path]
      (get-random-file path "")))
@@ -205,9 +198,8 @@
   "Asserts that a random file cannot be imported."
   [_]
   (let [certname "/tmp/randomCert.pem"]
-    (.runCommandAndWait @clientcmd (str "rm -rf " certname))
-    (.runCommandAndWait @clientcmd
-                        (str "dd if=/dev/urandom of=" certname " bs=1M count=2"))
+    (run-command (str "rm -rf " certname))
+    (run-command (str "dd if=/dev/urandom of=" certname " bs=1M count=2"))
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
