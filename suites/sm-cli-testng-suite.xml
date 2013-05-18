@@ -208,6 +208,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Instance Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="InstanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: ServiceLevel Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
