@@ -220,7 +220,7 @@ public class ManifestSubscription extends AbstractCommandLineData {
 		regexes.put("architectures",		"^\\s+Architectures: (.+)");
 		regexes.put("productId",			"^\\s+SKU: (.+)");					// Bug 913703 - rct cat-manifest > Subscription:> "Product Id:" should be labeled as "SKU:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
 		regexes.put("contract",				"^\\s+Contract: (.+)");
-		regexes.put("subscriptionId",		"^\\s+Order Number: (.+)");			// Bug 913720 - rct cat-manifest > Subscription:> "Subscription Id:" should be labeled as "Order Number:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)
+		regexes.put("subscriptionId",		"^\\s+Order: (.+)");			// Bug 913720 - rct cat-manifest > Subscription:> "Subscription Id:" should be labeled as "Order Number:"	// Bug 878634 - String Updates: Capitalization of acronyms (URL, ID, HTTP, CPU)	// cahnged from Order Number back to Order https://bugzilla.redhat.com/show_bug.cgi?id=913720#c6 
 		regexes.put("entitlementFile",		"^\\s+Entitlement File: (.+)");
 		regexes.put("certificateFile",		"^\\s+Certificate File: (.+)");
 		regexes.put("certificateVersion",	"^\\s+Certificate Version: (.+)");
