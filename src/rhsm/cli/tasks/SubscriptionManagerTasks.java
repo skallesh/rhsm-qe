@@ -326,6 +326,45 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from zstream repo: "+baseurl);	// exclude all redhat-release* packages for safety; rhel5-client will undesirably upgrade from redhat-release-5Client-5.9.0.2 ---> Package redhat-release.x86_64 0:5Server-5.9.0.2 set to be updated
 	}
 	
+	
+	/**
+	 * assumes there are already enabled repos that will provide any of the rhsm packages that are not already installed
+	 * @param installOptions
+	 */
+	public void installSubscriptionManagerRPMs(String installOptions) {
+
+		// attempt to install all missing packages
+		List<String> pkgs = new ArrayList<String>();
+		if (Float.valueOf(redhatReleaseXY)>=5.7f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot"}));
+		if (Float.valueOf(redhatReleaseXY)>=5.8f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
+		if (Float.valueOf(redhatReleaseXY)>=5.9f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));	// "subscription-manager-gnome" => "subscription-manager-gui" bug 818397
+		if (Float.valueOf(redhatReleaseXY)>=6.1f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot"}));
+		if (Float.valueOf(redhatReleaseXY)>=6.3f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
+		if (Float.valueOf(redhatReleaseXY)>=6.4f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
+		if (Float.valueOf(redhatReleaseXY)>=7.0f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
+		if (Float.valueOf(redhatReleaseXY)>=6.0f) pkgs.add(0,"python-dateutil");	// dependency
+		pkgs.add(0,"expect");	// used for interactive cli prompting
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			String pkg = "subscription-manager-migration-data";
+			log.warning("Skipping the install of "+pkg+".");
+			pkgs.remove(pkg);
+		}
+		// END OF WORKAROUND
+		for (String pkg : pkgs) {
+			if (pkg.equals("subscription-manager-gnome") && isPackageInstalled("subscription-manager-gui")) continue;	// avoid downgrading
+			if (!isPackageInstalled(pkg)) {
+				//Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum installed package: "+pkg);
+				sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions);
+			}
+		}
+	}
+	
+	
+	
 	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions) {
 
 		// make sure the client's time is accurate
@@ -377,34 +416,6 @@ public class SubscriptionManagerTasks {
 			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
 		}
 		
-		// attempt to install all missing packages
-		List<String> pkgs = new ArrayList<String>();
-		if (Float.valueOf(redhatReleaseXY)>=5.7f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot"}));
-		if (Float.valueOf(redhatReleaseXY)>=5.8f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
-		if (Float.valueOf(redhatReleaseXY)>=5.9f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));	// "subscription-manager-gnome" => "subscription-manager-gui" bug 818397
-		if (Float.valueOf(redhatReleaseXY)>=6.1f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot"}));
-		if (Float.valueOf(redhatReleaseXY)>=6.3f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
-		if (Float.valueOf(redhatReleaseXY)>=6.4f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
-		if (Float.valueOf(redhatReleaseXY)>=7.0f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
-		if (Float.valueOf(redhatReleaseXY)>=6.0f) pkgs.add(0,"python-dateutil");	// dependency
-		pkgs.add(0,"expect");	// used for interactive cli prompting
-		
-		// TEMPORARY WORKAROUND FOR BUG
-		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			String pkg = "subscription-manager-migration-data";
-			log.warning("Skipping the install of "+pkg+".");
-			pkgs.remove(pkg);
-		}
-		// END OF WORKAROUND
-		for (String pkg : pkgs) {
-			if (pkg.equals("subscription-manager-gnome") && isPackageInstalled("subscription-manager-gui")) continue;	// avoid downgrading
-			if (!isPackageInstalled(pkg)) {
-				Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum installed package: "+pkg);
-			}
-		}
-		
 		// update new rpms
 		// http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager,     http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager-gnome,     http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager-firstboot,     http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager-migration,    http://gibson.usersys.redhat.com/latestrpm/?arch=noarch&version=1.11&release=el5&rpmname=subscription-manager-migration-data
 		String rpmPaths = "";
@@ -433,10 +444,9 @@ public class SubscriptionManagerTasks {
 			String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
 			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
 		}
-
 		
 		// remember the versions of the packages installed
-		for (String pkg : pkgs) {
+		for (String pkg : Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"})) {
 			String version = sshCommandRunner.runCommandAndWait("rpm -q "+pkg).getStdout().trim();
 			installedPackageVersion.put(pkg,version);
 		}
