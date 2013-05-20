@@ -34,6 +34,25 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author jsefler
+ * 
+ * Notes: on calculation of cpu.* facts <br>
+Here is a breakdown of how subscription-manager uses
+/sys/devices/system/cpu/cpu[num] to determine it's facts.
+
+cpu.cpu(s): The number of /sys/devices/system/cpu/cpu[num] found.
+cpu.cpu_socket(s):
+   - The number of distinct socket_ids found for each cpu above.
+   - Each socket_id is determined by the contents of:
+/sys/devices/system/cpu/cpu[num]/topology/physical_package_id (do not
+count if this doesn't exist)
+   - physical_package_id does not exist on all hypervisors (xen for example)
+   - If no socket_ids can be determined, assume 1.
+cpu.core(s)_per_socket: Calculated from above data: cpu.cpu(s) /
+cpu.cpu_socket(s)
+
+
+--mstead
+ 
  */
 @Test(groups={"FactsTests"})
 public class FactsTests extends SubscriptionManagerCLITestScript{
