@@ -24,6 +24,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
@@ -54,35 +55,37 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void QuantityNeededToAchieveSocketCompliance_Test(Object bugzilla, Boolean systemIsGuest, Integer systemSockets, SubscriptionPool pool) throws NumberFormatException, JSONException, Exception {
 		
-		// THIS TEST ATTEMPTS TO TEST SEVERAL ASSERTIONS BASED ON THE TABLE OF SAMPLE CASES IN THIS DESIGN DOC
+		// This dataProvided test was inspired by the following table of scenarios
 		// https://engineering.redhat.com/trac/Entitlement/wiki/InstanceBasedDesign#Scenarios
 		/*
-			+-----------------------------------------------------------------------+
-			|              Quantity needed to Achieve Socket Compliance             |
-			|-----------------------------------------------------------------------|
-			| Sample Systems |  2010 Pricing Sub   |  2013 Pricing Sub (inst-based) |
-			|                |------------------------------------------------------|
-			|                |sockets=2 |sockets=4 | sockets = 1   | sockets = 2    |
-			|                |          |          | instance_multiplier = 2        |
-			|=======================================================================|
-			| Physical       |    1*    |     1*   |      2        |       2*       |
-			| 1 sockets      |          |          |               |                |
-			|-----------------------------------------------------------------------|
-			| Physical       |    1     |     1*   |      4        |       2        |
-			| 2 sockets      |          |          |               |                |
-			|-----------------------------------------------------------------------|
-			| Physical       |    4     |     2    |      16       |       8        |
-			| 8 sockets      |          |          |               |                |
-			|-----------------------------------------------------------------------|
-			| Virtual        |    1     |     1*   |      1        |       1        |
-			| 1 sockets      |          |          |               |                |
-			|-----------------------------------------------------------------------|
-			| Virtual        |    1     |     1*   |      1        |       1        |
-			| 2 sockets      |          |          |               |                |
-			|-----------------------------------------------------------------------|
-			| Virtual        |    4     |     2    |      1        |       1        |
-			| 8 sockets      |          |          |               |                |
-			+-----------------------------------------------------------------------+
+		+--------------------------------------------------------------------------+
+		|                     Quantity needed to Achieve Socket Compliance         |
+		|--------------------------------------------------------------------------|
+		| Sample Systems |   2010 Pricing Sub  |  2013 Pricing Sub (inst-based)    |
+		|                |                     |     instance_multiplier=2         |
+		|                |  order quantity=10  |     order quantity=10             |
+		|                |  pool quantity=10   |     pool quantity=20              |
+		|                |---------------------------------------------------------|
+		|                |sockets=2 |sockets=4 | sockets=1 | sockets=2 | sockets=4 | 
+		|==========================================================================|
+		| Physical       |    1*    |     1*   |     2     |     2*    |    2*     |
+		| 1 sockets      |          |          |           |           |           |
+		|--------------------------------------------------------------------------|
+		| Physical       |    1     |     1*   |     4     |     2     |    2*     |
+		| 2 sockets      |          |          |           |           |           |
+		|--------------------------------------------------------------------------|
+		| Physical       |    4     |     2    |     16    |     8     |    4      |
+		| 8 sockets      |          |          |           |           |           |
+		|--------------------------------------------------------------------------|
+		| Virtual        |    1*    |     1*   |     1     |     1*    |    1*     |
+		| 1 sockets      |          |          |           |           |           |
+		|--------------------------------------------------------------------------|
+		| Virtual        |    1     |     1*   |     1     |     1     |    1*     |
+		| 2 sockets      |          |          |           |           |           |
+		|--------------------------------------------------------------------------|
+		| Virtual        |    4     |     2    |     1     |     1     |    1      |
+		| 8 sockets      |          |          |           |           |           |
+		+--------------------------------------------------------------------------+
 		*/
 		
 		// make sure we are unsubscribed from all subscriptions
@@ -211,12 +214,16 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
 			
-			// assert the quantity of consumption
+			// assert the total quantity of consumption
 			if (!providedProductIdsActuallyInstalled.isEmpty()) {
-				productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", pool.subscriptionName, clienttasks.getCurrentlyConsumedProductSubscriptions());
-				Assert.assertNotNull(productSubscription, "Found a consumed product subscription to '"+pool.subscriptionName+"' after auto-subscribing.");
-				Assert.assertEquals(productSubscription.quantityUsed,Integer.valueOf(expectedQuantityToAchieveCompliance),"Quantity of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
-				Assert.assertEquals(productSubscription.statusDetails,"","Status Details of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
+				List<ProductSubscription> productSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("productName", pool.subscriptionName, clienttasks.getCurrentlyConsumedProductSubscriptions());
+				Assert.assertTrue(!productSubscriptions.isEmpty(), "Found at lease one consumed product subscription to '"+pool.subscriptionName+"' after auto-subscribing.");
+				Integer totalQuantityUsed = 0;
+				for (ProductSubscription prodSub : productSubscriptions) {
+					totalQuantityUsed += prodSub.quantityUsed;
+					Assert.assertEquals(prodSub.statusDetails,"","Status Details of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
+				}
+				Assert.assertEquals(totalQuantityUsed,Integer.valueOf(expectedQuantityToAchieveCompliance),"Quantity of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
 			} else log.warning("There are no installed product ids '"+poolProvidedProductIds+"' to assert compliance status of instance-based subscription '"+pool.subscriptionName+"'.");
 			
 			// assert the installed provided products are compliant
@@ -236,9 +243,8 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
 			clienttasks.facts(null,true,null,null,null);
 			List<SubscriptionPool> availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", pool.productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-			Assert.assertTrue(!availableInstanceBasedSubscriptionPools.isEmpty(), "Instance based subscription(s) to '"+pool.subscriptionName+"' are available to a virtual system.");
 			for (SubscriptionPool availableInstanceBasedSubscriptionPool : availableInstanceBasedSubscriptionPools) {
-				Assert.assertEquals(availableInstanceBasedSubscriptionPool.machineType, "Physical", "Only physical pools to '"+pool.subscriptionName+"' should be available to a guest system when its virt_uuid is not on the guestIds of the consuming host.");
+				Assert.assertEquals(availableInstanceBasedSubscriptionPool.machineType, "Physical", "Only physical pools to '"+pool.subscriptionName+"' should be available to a guest system when its virt_uuid is not on the host's list of guestIds.");
 			}
 			
 			// now fake this consumer's facts and guestIds to make it think it is a guest of itself (a trick for testing)
@@ -268,24 +274,33 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getAvailableInstanceBasedSubscriptionPoolsDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
-		Set<String> poolProductIdsTested = new HashSet<String>();
+		Map<String,Integer> poolProductIdsQuantityMap = new HashMap<String,Integer>();
 		for (List<Object> list : getAvailableSubscriptionPoolsDataAsListOfLists(false)) {
 			SubscriptionPool pool = (SubscriptionPool)(list.get(0));
-			if (poolProductIdsTested.contains(pool.productId)) {continue;} else {poolProductIdsTested.add(pool.productId);} // skip this pool productId if it is already being tested 
 			
-			if (CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
+			if (poolProductIdsQuantityMap.containsKey(pool.productId)) {
+				
+				// the fact that we are here means that there are multiple pools available for the same instance-based product subscription
+				// let's try testing cpu_sockets size that will require entitlements from both pools when auto-subscribing
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"963227","964332"}),	false,	Integer.valueOf(Math.max(poolProductIdsQuantityMap.get(pool.productId),Integer.valueOf(pool.quantity)))+2,	pool}));
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"963227","964332"}),	false,	Integer.valueOf(pool.quantity)+poolProductIdsQuantityMap.get(pool.productId),	pool}));
+
+				poolProductIdsQuantityMap.put(pool.productId, Integer.valueOf(pool.quantity)+poolProductIdsQuantityMap.get(pool.productId));
+
+			} else if (CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
 				
 				// Object bugzilla, Boolean is_guest, String cpu_sockets, SubscriptionPool pool
-//				ll.add(Arrays.asList(new Object[]{null,	false,	new Integer(1),	pool}));
-//				ll.add(Arrays.asList(new Object[]{null,	false,	new Integer(2),	pool}));
-//				ll.add(Arrays.asList(new Object[]{null,	false,	new Integer(8),	pool}));
-				ll.add(Arrays.asList(new Object[]{null,	false,	new Integer(pool.quantity)+2,	pool}));
-//				ll.add(Arrays.asList(new Object[]{null,	true,	new Integer(1),	pool}));
-//				ll.add(Arrays.asList(new Object[]{null,	true,	new Integer(2),	pool}));
-//				ll.add(Arrays.asList(new Object[]{null,	true,	new Integer(8),	pool}));
+				ll.add(Arrays.asList(new Object[]{null,	false,	new Integer(1),	pool}));
+				ll.add(Arrays.asList(new Object[]{null,	false,	new Integer(2),	pool}));
+				ll.add(Arrays.asList(new Object[]{null,	false,	new Integer(5),	pool}));
+				ll.add(Arrays.asList(new Object[]{null,	true,	new Integer(1),	pool}));
+				ll.add(Arrays.asList(new Object[]{null,	true,	new Integer(2),	pool}));
+				ll.add(Arrays.asList(new Object[]{null,	true,	new Integer(5),	pool}));
+				
+				// keep a quantity map of the instance based pools we are testing
+				poolProductIdsQuantityMap.put(pool.productId, Integer.valueOf(pool.quantity));
 			}
 		}
-		
 		return ll;
 	}
 	
@@ -295,6 +310,8 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
+	
+	
 	
 	
 	// Configuration methods ***********************************************************************
