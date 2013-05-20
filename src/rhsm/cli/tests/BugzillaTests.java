@@ -1908,7 +1908,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"Sufficient future pools are not available");
 		for (SubscriptionPool subscriptions : availOnDate) {
 			if(!(subscriptions.endDate.before(now))){
-				System.out.println("inside the if loop  ..............");
 				clienttasks.subscribe(null, null, subscriptions.poolId, null, null,null, null, null, null, null, null);
 		}
 		}
