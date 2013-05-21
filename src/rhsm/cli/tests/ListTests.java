@@ -512,15 +512,6 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
 		
-		// ORIGINAL IMPLEMENTATION'S FORMAT
-		//	[root@jsefler-5 ~]# subscription-manager list --status
-		//	+-------------------------------------------+
-		//	   System Status Details
-		//	+-------------------------------------------+
-		//	Overall Status: Invalid
-		//
-		//	Red Hat Enterprise Linux Server: Not covered by a valid subscription.
-		
 		//	[root@jsefler-5 ~]# subscription-manager list --status
 		//	+-------------------------------------------+
 		//	   System Status Details
@@ -543,9 +534,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// assert the individual installed product status details
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		for (InstalledProduct installedProduct : installedProducts) {
-			//Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":\\s*"+installedProduct.statusDetails).size()==1,
-			Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":\\n- "+installedProduct.statusDetails).size()==1,
-					"Expecting the status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' to appear only once in the list of overall status details.");
+			for (String statusDetail : installedProduct.statusDetails) {
+				Assert.assertTrue(!getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":(\\n- .*)*?\\n- "+statusDetail).isEmpty(),
+						"Expecting the status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' to appear in the list of overall status details.");
+				Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), statusDetail+"(\\n- .*)*?\\n- "+statusDetail),
+						"Status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' should not appear in duplicate.");
+			}
 		}
 		if (installedProducts.isEmpty()) {
 			Assert.assertTrue(listStatusResult.getStdout().trim().endsWith(expectedStatus), "There should be no report of installed product details when there are no installed products; only expected '"+expectedStatus+"'.");
@@ -554,37 +548,109 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subcription manager list status when registered with entitlements",
-			groups={"AcceptanceTests"/*, "blockedByBug-958827"*/},
+			groups={"AcceptanceTests"/*, "blockedByBug-958827"*/,"AttemptListStatusWhileRegisteredWithEntitlements_Test"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptListStatusWhileRegisteredWithEntitlements_Test() throws JSONException, Exception {
 		SSHCommandResult listStatusResult;
+		// override the system facts setting the attribute count to a value for which all the stackable subscriptions are needed to achieve compliance
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.put("memory.memtotal", "75");
+		factsMap.put("cpu.cpu_socket(s)", "100");
+		factsMap.put("cpu.core(s)_per_socket", "2");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		String systemEntitlementsValid = clienttasks.getFactValue("system.entitlements_valid");
 		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
 		
-		// ORIGINAL IMPLEMENTATION'S FORMAT
 		//	[root@jsefler-5 ~]# subscription-manager list --status
 		//	+-------------------------------------------+
 		//	   System Status Details
 		//	+-------------------------------------------+
 		//	Overall Status: Invalid
 		//
-		//	Virt Only Awesome OS for i386 Bits:   Not covered by a valid subscription.
-		//	Awesome OS for x86 Bits:              Not covered by a valid subscription.
-		//	Awesome OS for S390 Bits:             Not covered by a valid subscription.
-		//	Red Hat Enterprise Linux Server:      Not covered by a valid subscription.
-		//	Awesome OS for ppc64 Bits:            Not covered by a valid subscription.
-		//	Awesome OS for ia64 Bits:             Not covered by a valid subscription.
-		//	Awesome OS for i686 Bits:             Not covered by a valid subscription.
-		//	Awesome OS Premium Architecture Bits: Not covered by a valid subscription.
-		//	Awesome OS Developer Basic:           Not covered by a valid subscription.
-		//	Awesome OS Developer Bits:            Not covered by a valid subscription.
-		//	Multiplier Product Bits:              Not covered by a valid subscription.
-		//	Awesome OS for S390X Bits:            Not covered by a valid subscription.
-		//	Awesome OS for i386 Bits:             Not covered by a valid subscription.
-		
+		//	Large File Support Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS for x86 Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Stackable Cores Package (8 cores)/Stackable Cores Package (8 cores):
+		//	- Only covers 16 of 200 cores.
+		//
+		//	Awesome OS for S390X Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS for S390 Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Load Balancing Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS Workstation Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Clustering Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS for i386 Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Stackable with Awesome OS for x86_64/Awesome OS for x86_64/Stackable with Awesome OS for x86_64/Awesome OS for x86_64:
+		//	- Only covers 4 of 100 sockets.
+		//
+		//	Multi-Attribute (non-stackable) (6 cores, 8GB):
+		//	- Only covers 6 of 200 cores.
+		//
+		//	Awesome OS for ia64 Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS Developer Basic:
+		//	- Not covered by a valid subscription.
+		//
+		//	Multi-Attribute (multi-entitlement only) (8 cores, 4GB):
+		//	- Only covers 8 of 200 cores.
+		//
+		//	Cores Package (26 cores):
+		//	- Only covers 26 of 200 cores.
+		//
+		//	Multiplier Product Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	RAM/Cores Package (8GB, 4 cores):
+		//	- Only covers 4 of 200 cores.
+		//
+		//	Shared Storage Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS for ppc64 Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS for i686 Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS Premium Architecture Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Multi-Attribute Stackable (4 cores)/Multi-Attribute Stackable (2 GB, 2 Cores)/Multi-Attribute Stackable (4 cores)/Multi-Attribute Stackable (2 GB, 2 Cores)/Multi-Attribute Stackable (16
+		//	cores, 4 sockets, 8GB RAM)/Multi-Attribute Stackable (2 sockets)/Multi-Attribute Stackable (2 GB)/Multi-Attribute Stackable (2 sockets)/Multi-Attribute Stackable (16 cores, 4 sockets, 8GB
+		//	RAM)/Multi-Attribute Stackable (2 GB):
+		//	- Only covers 44 of 200 cores.
+		//	- Only covers 12 of 100 sockets.
+		//
+		//	Management Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Virt Only Awesome OS for i386 Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS Developer Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390 Bits:
+		//	- Not covered by a valid subscription.
+
 		// assert the overall status
 		String expectedStatus = null;
  		if (systemEntitlementsValid.equals("valid")) {
@@ -604,23 +670,25 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			
 			// assert the list status output
-			if (!installedProduct.statusDetails.isEmpty()) { 
-				//Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":\\s*"+installedProduct.statusDetails).size()==1,
-				//		"Expecting the status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' to appear only once in the list of overall status details.");
-				Assert.assertTrue(doesStringContainMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":(\\n.+)*?\\n- "+installedProduct.statusDetails),
-						"Expecting the status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' to appear in the list of overall status details.");
-				Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+installedProduct.statusDetails+"){2,}"),
-						"The status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+"' should NOT appear in duplicate.");
-			} else {
+			if (installedProduct.statusDetails.isEmpty()) {
 				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":").isEmpty(),
-						"Expecting the empty status details '"+installedProduct.statusDetails+"' of installed product '"+installedProduct.productName+" to NOT appear in the list of overall status details.");
+						"Expecting the empty status details of installed product '"+installedProduct.productName+" to NOT appear in the list of overall status details.");
+			} else {
+				for (String statusDetail : installedProduct.statusDetails) {
+					Assert.assertTrue(!getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":(\\n- .*)*?\\n- "+statusDetail).isEmpty(),
+							"Expecting the status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' to appear in the list of overall status details.");
+					//Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+statusDetail+"){2,}"),
+					//		"Status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' should NOT appear in duplicate.");
+					Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), statusDetail+"(\\n- .*)*?\\n- "+statusDetail),
+							"Status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' should not appear in duplicate.");
+				}
 			}
 			
 			// also assert the individual status details for the list installed products
 			if (installedProduct.status.equals("Subscribed")) { 
-				Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "Expecting the installed product '"+installedProduct.productName+"'s Status Details '"+installedProduct.statusDetails+"' to be empty when the installed product's status is 'Subscribed'.");
+				Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "Expecting the Status Details "+installedProduct.statusDetails+" of installed product '"+installedProduct.productName+"' to be empty when the installed product's status is '"+installedProduct.status+"'.");
 			} else {
-				Assert.assertTrue(!installedProduct.statusDetails.isEmpty(), "Expecting the installed product '"+installedProduct.productName+"'s Status Details '"+installedProduct.statusDetails+"' to explain why the installed product's status is not 'Subscribed'.");
+				Assert.assertTrue(!installedProduct.statusDetails.isEmpty(), "Expecting the Status Details "+installedProduct.statusDetails+" of installed product '"+installedProduct.productName+"' to explain why the installed product's status is NOT '"+"Subscribed"+"'.");
 			}
 		}
 		
@@ -628,18 +696,25 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 			
 			// asset the list status output
-			if (!productSubscription.statusDetails.isEmpty()) { 
-				//Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+productSubscription.productName+":\\s*"+productSubscription.statusDetails).size()==1,
-				//		"Expecting the status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+"' to appear only once in the list of overall status details.");	
-				Assert.assertTrue(doesStringContainMatches(listStatusResult.getStdout(), "^"+productSubscription.productName+":(\\n.+)*?\\n- "+productSubscription.statusDetails),
-						"Expecting the status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+"' to appear in the list of overall status details.");
-				Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+productSubscription.statusDetails+"){2,}"),
-						"The status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+"' should NOT appear in duplicate.");
+			if (productSubscription.statusDetails.isEmpty()) {
+				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^.*"+productSubscription.productName+".*:").isEmpty(),
+						"Expecting the empty status details "+productSubscription.statusDetails+" of consumed subscription '"+productSubscription.productName+" to NOT appear in the list of overall status details.");
 			} else {
-				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+productSubscription.productName+":").isEmpty(),
-						"Expecting the empty status details '"+productSubscription.statusDetails+"' of consumed subscription '"+productSubscription.productName+" to NOT appear in the list of overall status details.");
+				for (String statusDetail : productSubscription.statusDetails) {
+					Assert.assertTrue(!getSubstringMatches(listStatusResult.getStdout(), "^.*"+productSubscription.productName+".*:(\\n- .*)*?\\n- "+statusDetail).isEmpty(),
+							"Expecting the status detail '"+statusDetail+"' of consumed subscription '"+productSubscription.productName+"' to appear in the list of overall status details.");
+					//Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+statusDetail+"){2,}"),
+					//		"Status detail '"+statusDetail+"' of consumed subscription '"+productSubscription+"' should NOT appear in duplicate.");
+					Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), statusDetail+"(\\n- .*)*?\\n- "+statusDetail),
+							"Status detail '"+statusDetail+"' of consumed subscription '"+productSubscription.productName+"' should not appear in duplicate.");
+				}
 			}
 		}
+	}
+	@AfterGroups(groups={"setup"},value="AttemptListStatusWhileRegisteredWithEntitlements_Test", alwaysRun=true)
+	public void afterAttemptListStatusWhileRegisteredWithEntitlements_Test() {
+		if (clienttasks==null) return;
+		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 	
 	
