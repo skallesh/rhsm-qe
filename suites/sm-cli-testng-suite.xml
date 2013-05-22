@@ -169,6 +169,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Status Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="StatusTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Repos Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
