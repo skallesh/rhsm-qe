@@ -284,6 +284,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.add("attach");	// added by bug 874804
 		modules.add("remove");	// added by bug 874749
 		modules.add("plugins");	// added by https://engineering.redhat.com/trac/Entitlement/wiki/SubscriptionManagerPlugins
+		modules.add("status");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
 			Integer exitCode = smHelpCommand.contains("--help")?0:1;	// coverage for bug 906124; the usage statement permits only "--help" and therefore any differing option (including "-h") should return non-zero exit code
 			List <String> usages = new ArrayList<String>();
@@ -554,12 +555,24 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--consumed");
 		options.add("--available");
 		options.add("--all");
-		options.add("--status");	// new as of rhel510
 		options.add("--servicelevel=SERVICE_LEVEL");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=800999
 		options.add("--ondate=ON_DATE");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=672562
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
+			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
+		// subscription-manager status OPTIONS
+		module = "status";
+		options.clear();
+		options.add("-h, --help");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -1149,6 +1162,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.clear();
 		options.add("-h, --help");
 		options.add("--destination=DESTINATION");
+		options.add("-f, --force");	// added by Bug 961124 - attempt to rct dump-manifest twice throws traceback
 		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS] MANIFEST_FILE",command,module);

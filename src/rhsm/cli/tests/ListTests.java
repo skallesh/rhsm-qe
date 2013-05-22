@@ -183,8 +183,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// assert same results when no subscribed to anything...
 		log.info("assert list [--installed] produce same results when not subscribed to anything...");
-		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null, null);
-		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null);
+		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null);
+		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -196,8 +196,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPool_(pool);
-		listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null, null);
-		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null);
+		listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null);
+		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -458,7 +458,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	public void AttemptListWithoutBeingRegistered_Test() {
 		
 		clienttasks.unregister(null,null,null);
-		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null, null, null, null);
+		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null, null, null);
 		
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
 	}
@@ -471,14 +471,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult listResult;
 		clienttasks.unregister(null,null,null);
 		
-		listResult = clienttasks.list_(null,true,null,null,null,null,null, null, null, null);
+		listResult = clienttasks.list_(null,true,null,null,null,null,null, null, null);
 		//Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list available command indicates a problem.");
 		//Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list available subscriptions should require registration.");
 		// results changed after bug fix 749332
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(255), "The exit code from the list available command indicates a problem.");
 		Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --available subscriptions should require registration.");
 
-		listResult = clienttasks.list_(true,true,null,null,null,null,null, null, null, null);
+		listResult = clienttasks.list_(true,true,null,null,null,null,null, null, null);
 		//Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list all available command indicates a problem.");
 		//Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list all available subscriptions should require registration.");
 		// results changed after bug fix 749332
@@ -486,237 +486,6 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --all --available subscriptions should require registration.");
 
 	}
-	
-	
-	@Test(	description="subscription-manager: subcription manager list status without being registered",
-			groups={},
-			enabled=true)
-			//@ImplementsNitrateTest(caseId=)
-	public void AttemptListStatusWithoutBeingRegistered_Test() {
-		SSHCommandResult listStatusResult;
-		clienttasks.unregister(null,null,null);
-		
-		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
-		String expectedStatus = "Overall Status: Unknown";
-		Assert.assertTrue(listStatusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' when not registered.");
-	}
-	
-	
-	@Test(	description="subscription-manager: subcription manager list status when registered without entitlements",
-			groups={"AcceptanceTests"},
-			enabled=true)
-			//@ImplementsNitrateTest(caseId=)
-	public void AttemptListStatusWhileRegisteredWithoutEntitlements_Test() {
-		int numberOfInstalledProducts = clienttasks.getCurrentProductCertFiles().size();
-		SSHCommandResult listStatusResult;
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
-		
-		//	[root@jsefler-5 ~]# subscription-manager list --status
-		//	+-------------------------------------------+
-		//	   System Status Details
-		//	+-------------------------------------------+
-		//	Overall Status: Invalid
-		//
-		//	Awesome OS Modifier Bits:
-		//	- Not covered by a valid subscription.
-
-
-		// assert the overall status
-		String expectedStatus;
- 		if (numberOfInstalledProducts==0) {
-			expectedStatus = "Overall Status: Current";	// translation for "valid"
-		} else {
-			expectedStatus = "Overall Status: Invalid";	// translation for "invalid"
-		}
-		Assert.assertTrue(listStatusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' when registered without entitlements and '"+numberOfInstalledProducts+"' installed products.");
-
-		// assert the individual installed product status details
-		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		for (InstalledProduct installedProduct : installedProducts) {
-			for (String statusDetail : installedProduct.statusDetails) {
-				Assert.assertTrue(!getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":(\\n- .*)*?\\n- "+statusDetail).isEmpty(),
-						"Expecting the status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' to appear in the list of overall status details.");
-				Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), statusDetail+"(\\n- .*)*?\\n- "+statusDetail),
-						"Status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' should not appear in duplicate.");
-			}
-		}
-		if (installedProducts.isEmpty()) {
-			Assert.assertTrue(listStatusResult.getStdout().trim().endsWith(expectedStatus), "There should be no report of installed product details when there are no installed products; only expected '"+expectedStatus+"'.");
-		}
-	}
-	
-	
-	@Test(	description="subscription-manager: subcription manager list status when registered with entitlements",
-			groups={"AcceptanceTests"/*, "blockedByBug-958827"*/,"AttemptListStatusWhileRegisteredWithEntitlements_Test"},
-			enabled=true)
-			//@ImplementsNitrateTest(caseId=)
-	public void AttemptListStatusWhileRegisteredWithEntitlements_Test() throws JSONException, Exception {
-		SSHCommandResult listStatusResult;
-		// override the system facts setting the attribute count to a value for which all the stackable subscriptions are needed to achieve compliance
-		Map<String,String> factsMap = new HashMap<String,String>();
-		factsMap.put("memory.memtotal", "75");
-		factsMap.put("cpu.cpu_socket(s)", "100");
-		factsMap.put("cpu.core(s)_per_socket", "2");
-		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-		String systemEntitlementsValid = clienttasks.getFactValue("system.entitlements_valid");
-		listStatusResult = clienttasks.list(null,null,null,null,true,null,null, null, null, null);
-		
-		//	[root@jsefler-5 ~]# subscription-manager list --status
-		//	+-------------------------------------------+
-		//	   System Status Details
-		//	+-------------------------------------------+
-		//	Overall Status: Invalid
-		//
-		//	Large File Support Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Awesome OS for x86 Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Stackable Cores Package (8 cores)/Stackable Cores Package (8 cores):
-		//	- Only covers 16 of 200 cores.
-		//
-		//	Awesome OS for S390X Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Awesome OS for S390 Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Load Balancing Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Awesome OS Workstation Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Clustering Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Awesome OS for i386 Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Stackable with Awesome OS for x86_64/Awesome OS for x86_64/Stackable with Awesome OS for x86_64/Awesome OS for x86_64:
-		//	- Only covers 4 of 100 sockets.
-		//
-		//	Multi-Attribute (non-stackable) (6 cores, 8GB):
-		//	- Only covers 6 of 200 cores.
-		//
-		//	Awesome OS for ia64 Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Awesome OS Developer Basic:
-		//	- Not covered by a valid subscription.
-		//
-		//	Multi-Attribute (multi-entitlement only) (8 cores, 4GB):
-		//	- Only covers 8 of 200 cores.
-		//
-		//	Cores Package (26 cores):
-		//	- Only covers 26 of 200 cores.
-		//
-		//	Multiplier Product Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	RAM/Cores Package (8GB, 4 cores):
-		//	- Only covers 4 of 200 cores.
-		//
-		//	Shared Storage Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Awesome OS for ppc64 Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Awesome OS for i686 Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Awesome OS Premium Architecture Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Multi-Attribute Stackable (4 cores)/Multi-Attribute Stackable (2 GB, 2 Cores)/Multi-Attribute Stackable (4 cores)/Multi-Attribute Stackable (2 GB, 2 Cores)/Multi-Attribute Stackable (16
-		//	cores, 4 sockets, 8GB RAM)/Multi-Attribute Stackable (2 sockets)/Multi-Attribute Stackable (2 GB)/Multi-Attribute Stackable (2 sockets)/Multi-Attribute Stackable (16 cores, 4 sockets, 8GB
-		//	RAM)/Multi-Attribute Stackable (2 GB):
-		//	- Only covers 44 of 200 cores.
-		//	- Only covers 12 of 100 sockets.
-		//
-		//	Management Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Virt Only Awesome OS for i386 Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Awesome OS Developer Bits:
-		//	- Not covered by a valid subscription.
-		//
-		//	Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390 Bits:
-		//	- Not covered by a valid subscription.
-
-		// assert the overall status
-		String expectedStatus = null;
- 		if (systemEntitlementsValid.equals("valid")) {
-			expectedStatus = "Overall Status: Current";	// translation for "valid"
-		} else if (systemEntitlementsValid.equals("invalid")){
-			expectedStatus = "Overall Status: Invalid";	// translation for "invalid"
-		} else if (systemEntitlementsValid.equals("partial")){
-			expectedStatus = "Overall Status: Insufficient";	// translation for "partial"	// Bug 959124 - "Compliant status" of the system set to "Insufficient" if any partial subscription is attached to a product (which is not exsiting )
-		} else if (systemEntitlementsValid.equals("unknown")){
-			expectedStatus = "Overall Status: Unknown";	// translation for "unknown"
-		} else {
-			Assert.fail("Encountered an unexpected value for systemEntitlementsValid '"+systemEntitlementsValid+"'.");
-		}
-		Assert.assertTrue(listStatusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"'.");
-
-		// assert the individual installed product status details
-		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-			
-			// assert the list status output
-			if (installedProduct.statusDetails.isEmpty()) {
-				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":").isEmpty(),
-						"Expecting the empty status details of installed product '"+installedProduct.productName+" to NOT appear in the list of overall status details.");
-			} else {
-				for (String statusDetail : installedProduct.statusDetails) {
-					Assert.assertTrue(!getSubstringMatches(listStatusResult.getStdout(), "^"+installedProduct.productName+":(\\n- .*)*?\\n- "+statusDetail).isEmpty(),
-							"Expecting the status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' to appear in the list of overall status details.");
-					//Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+statusDetail+"){2,}"),
-					//		"Status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' should NOT appear in duplicate.");
-					Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), statusDetail+"(\\n- .*)*?\\n- "+statusDetail),
-							"Status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' should not appear in duplicate.");
-				}
-			}
-			
-			// also assert the individual status details for the list installed products
-			if (installedProduct.status.equals("Subscribed")) { 
-				Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "Expecting the Status Details "+installedProduct.statusDetails+" of installed product '"+installedProduct.productName+"' to be empty when the installed product's status is '"+installedProduct.status+"'.");
-			} else {
-				Assert.assertTrue(!installedProduct.statusDetails.isEmpty(), "Expecting the Status Details "+installedProduct.statusDetails+" of installed product '"+installedProduct.productName+"' to explain why the installed product's status is NOT '"+"Subscribed"+"'.");
-			}
-		}
-		
-		// assert the individual consumed subscription status details
-		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			
-			// asset the list status output
-			if (productSubscription.statusDetails.isEmpty()) {
-				Assert.assertTrue(getSubstringMatches(listStatusResult.getStdout(), "^.*"+productSubscription.productName+".*:").isEmpty(),
-						"Expecting the empty status details "+productSubscription.statusDetails+" of consumed subscription '"+productSubscription.productName+" to NOT appear in the list of overall status details.");
-			} else {
-				for (String statusDetail : productSubscription.statusDetails) {
-					Assert.assertTrue(!getSubstringMatches(listStatusResult.getStdout(), "^.*"+productSubscription.productName+".*:(\\n- .*)*?\\n- "+statusDetail).isEmpty(),
-							"Expecting the status detail '"+statusDetail+"' of consumed subscription '"+productSubscription.productName+"' to appear in the list of overall status details.");
-					//Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+statusDetail+"){2,}"),
-					//		"Status detail '"+statusDetail+"' of consumed subscription '"+productSubscription+"' should NOT appear in duplicate.");
-					Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), statusDetail+"(\\n- .*)*?\\n- "+statusDetail),
-							"Status detail '"+statusDetail+"' of consumed subscription '"+productSubscription.productName+"' should not appear in duplicate.");
-				}
-			}
-		}
-	}
-	@AfterGroups(groups={"setup"},value="AttemptListStatusWhileRegisteredWithEntitlements_Test", alwaysRun=true)
-	public void afterAttemptListStatusWhileRegisteredWithEntitlements_Test() {
-		if (clienttasks==null) return;
-		clienttasks.deleteFactsFileWithOverridingValues();
-	}
-	
 	
 	@Test(	description="subscription-manager: subcription manager list future subscription pools for a system",
 			groups={"blockedByBug-672562"},
@@ -770,7 +539,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			if (onDatesTested.contains(onDateToTest)) continue;
 			
 			// list all available onDateToTest
-			SSHCommandResult listResult = clienttasks.list_(true,true,null,null,null,null,onDateToTest, null, null, null);
+			SSHCommandResult listResult = clienttasks.list_(true,true,null,null,null,onDateToTest,null, null, null);
 			Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --ondate command indicates a success.");
 
 			List<SubscriptionPool> subscriptionPools = SubscriptionPool.parse(listResult.getStdout());
@@ -811,14 +580,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> expectedSubscriptionPools, filteredSubscriptionPools;
 				
 		// list all available (without service level)
-		listResult = clienttasks.list_(true,true,null,null,null,null,null,null,null, null);
+		listResult = clienttasks.list_(true,true,null,null,null,null,null,null,null);
 		List<SubscriptionPool> allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
 		// determine the subset of expected pools with a case-insensitive matching servicelevel
 		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allAvailableSubscriptionPools);
 
 		// list all available filtered by servicelevel
-		listResult = clienttasks.list_(true,true,null,null,null,servicelevel,null,null,null, null);
+		listResult = clienttasks.list_(true,true,null,null,servicelevel,null,null,null,null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --servicelevel command indicates a success.");
 		
 		// assert results
@@ -828,14 +597,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (expectedSubscriptionPools.isEmpty()) Assert.assertEquals(listResult.getStdout().trim(), "No available subscription pools to list","Expected message when no subscription remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
 				
 		// list all available (without service level)
-		listResult = clienttasks.list_(false,true,null,null,null,null,null,null,null, null);
+		listResult = clienttasks.list_(false,true,null,null,null,null,null,null,null);
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		
 		// determine the subset of expected pools with a matching servicelevel
 		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, availableSubscriptionPools);
 		
 		// list available filtered by servicelevel
-		listResult = clienttasks.list_(false,true,null,null,null,servicelevel,null,null,null, null);
+		listResult = clienttasks.list_(false,true,null,null,servicelevel,null,null,null,null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --servicelevel command indicates a success.");
 		
 		// assert results
@@ -856,7 +625,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<ProductSubscription> expectedProductSubscriptions, filteredProductSubscriptions;
 				
 		// list consumed (without service level)
-		listResult = clienttasks.list_(false,false,true,null,null,null,null,null,null, null);
+		listResult = clienttasks.list_(false,false,true,null,null,null,null,null,null);
 		List<ProductSubscription> allConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		
 		// determine the subset of expected pools with a matching servicelevel
@@ -864,7 +633,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		expectedProductSubscriptions = ProductSubscription.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allConsumedProductSubscriptions);
 
 		// list consumed filtered by servicelevel
-		listResult = clienttasks.list_(false,false,true,null,null,servicelevel,null,null,null, null);
+		listResult = clienttasks.list_(false,false,true,null,servicelevel,null,null,null,null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --consumed --servicelevel command indicates a success.");
 		
 		// assert results
