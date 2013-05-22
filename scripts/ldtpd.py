@@ -14,6 +14,7 @@ import fnmatch
 import os
 import subprocess
 import pdb
+import dogtail.tree
 from fnmatch import translate
 
 logger = logging.getLogger("xmlrpcserver.ldtp")
@@ -399,33 +400,42 @@ class AllMethods:
     os.environ['NO_AT_BRIDGE']='1'
     return process.pid
 
-  #def _gettextvalue(self, window_name, object_name, startPosition=None,
-  #                 endPosition=None):
-  # TODO: implement this with getlabel if object is label
+  def _gettextvalue(self, window_name, object_name, startPosition=None,
+                    endPosition=None):
+    retval = ""
+    if ldtp.getobjectproperty(window_name, object_name, "class") == "label":
+      f = dogtail.tree.root.application('subscription-manager-gui')
+      w = f.childNamed(window_name)
+      o = w.childNamed(object_name)
+      retval = o.text
+    else:
+      retval = ldtp.gettextvalue(window_name, object_name, startPosition, endPosition)
+    if not ((isinstance(retval, str) or isinstance(retval, unicode))):
+      retval = ""
+    return retval
 
   def _dispatch(self, method, params):
     if method in _supported_methods:
       paramslist = list(params)
-      if method == "hasstate":
-        paramslist[2]=self._translate_state(paramslist[2])
-        params = tuple(paramslist)
-      elif method == "closewindow":
+      if method == "closewindow":
         return self._closewindow(paramslist[0])
-      elif method == "maximizewindow":
-        return self._maximizewindow(paramslist[0])
       elif method == "getobjectproperty":
         paramslist[1] = self._getobjectproperty(paramslist[0],paramslist[1])
         params = tuple(paramslist)
+      elif method == "gettextvalue":
+        return self._gettextvalue(*paramslist)
+      elif method == "hasstate":
+        paramslist[2]=self._translate_state(paramslist[2])
+        params = tuple(paramslist)
       elif method == "launchapp":
         return self._launchapp(*paramslist)
+      elif method == "maximizewindow":
+        return self._maximizewindow(paramslist[0])
 
       function = getattr(ldtp,method)
       retval = function(*params)
 
-      if (method == "gettextvalue") and not (isinstance(retval, str) or
-                                             isinstance(retval, unicode)):
-        retval = ""
-      elif (retval == -1) and (method == "gettablerowindex"):
+      if (retval == -1) and (method == "gettablerowindex"):
         paramslist = list(params)
         #use quick method for now
         retval = self._quickgettablerowindex(paramslist[0],
