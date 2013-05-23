@@ -233,7 +233,7 @@ ldtp3commands = ['activatetext',
 _ldtp_methods = filter(lambda fn: inspect.isfunction(getattr(ldtp,fn)),  dir(ldtp))
 _supported_methods = filter(lambda x: x in ldtp3commands, _ldtp_methods)
 #_unsupported_methods = filter(lambda x: x not in ldtp3commands, _ldtp_methods)
-_additional_methods = ['closewindow', 'maximizewindow']
+_additional_methods = ['closewindow', 'maximizewindow', 'getallitem']
 for item in _additional_methods: _supported_methods.append(item)
 _supported_methods.sort()
 
@@ -470,6 +470,8 @@ class AllMethods:
         retval = 0
 
       return retval
+    else:
+      raise Exception("Function '%s' is not supported."%(method))
   pass
 
 for name in _supported_methods:
