@@ -44,7 +44,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		
 		// Subscribe to a randomly available pool...
 		log.info("Subscribe to a randomly available pool...");
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("There are no available pools at all to get entitlements from.  Cannot attempt this test.");
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
