@@ -321,7 +321,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// rhn-migrate-classic-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-840169","blockedbyBug-878986"},
+			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-966745","blockedByBug-840169","blockedbyBug-878986"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
@@ -691,7 +691,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a non-default rhsm.productcertdir configured",
-			groups={"RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test","blockedbyBug-878986"},
+			groups={"RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test","blockedbyBug-878986","blockedByBug-966745"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmWithNonDefaultProductCertDirData",	// dataProvider="RhnMigrateClassicToRhsmData",  IS TOO TIME CONSUMING
 			enabled=true)
@@ -1120,7 +1120,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="attempt to execute migration tool rhn-migrate-classic-to-rhsm while while under attack by a man-in-the-middle security vulnerability",
-			groups={"blockedByBug-885130","blockedByBug-918967","blockedByBug-918969", "RhnMigrateClassicToRhsmCertificateVerification_Test"},
+			groups={"blockedByBug-966745","blockedByBug-885130","blockedByBug-918967","blockedByBug-918969", "RhnMigrateClassicToRhsmCertificateVerification_Test"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmCertificateVerification_Test() {
