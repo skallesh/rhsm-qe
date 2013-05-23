@@ -427,11 +427,20 @@ class AllMethods:
       retval = ""
     return retval
 
+  def _getallitem(self, window_name, object_name):
+    f = dogtail.tree.root.application("subscription-manager-gui")
+    w = f.childNamed(window_name)
+    o = w.childNamed(object_name)
+    nodes = o.children[0].children
+    return [n.name for n in nodes]
+
   def _dispatch(self, method, params):
     if method in _supported_methods:
       paramslist = list(params)
       if method == "closewindow":
         return self._closewindow(paramslist[0])
+      elif method = "getallitem":
+        return self._getallitem(*paramslist)
       elif method == "getobjectproperty":
         paramslist[1] = self._getobjectproperty(paramslist[0],paramslist[1])
         params = tuple(paramslist)
