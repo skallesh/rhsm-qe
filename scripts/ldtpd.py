@@ -402,12 +402,25 @@ class AllMethods:
 
   def _gettextvalue(self, window_name, object_name, startPosition=None,
                     endPosition=None):
+    def findFirst(node, search_string):
+      try: children = node.children
+      except: return None
+      for child in children:
+        if self._matches(search_string, child.name):
+          return child
+        else:
+          child = findFirst(child,search_string)
+          if child:
+            return child
     retval = ""
     if ldtp.getobjectproperty(window_name, object_name, "class") == "label":
       f = dogtail.tree.root.application('subscription-manager-gui')
       w = f.childNamed(window_name)
-      o = w.childNamed(object_name)
-      retval = o.text
+      o = findFirst(w, object_name)
+      if o:
+       retval = o.text
+      else:
+       raise Exception("Cannot find object: %s in tree."%(object_name))
     else:
       retval = ldtp.gettextvalue(window_name, object_name, startPosition, endPosition)
     if not ((isinstance(retval, str) or isinstance(retval, unicode))):
