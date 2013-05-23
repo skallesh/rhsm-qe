@@ -439,7 +439,7 @@ class AllMethods:
       paramslist = list(params)
       if method == "closewindow":
         return self._closewindow(paramslist[0])
-      elif method = "getallitem":
+      elif method == "getallitem":
         return self._getallitem(*paramslist)
       elif method == "getobjectproperty":
         paramslist[1] = self._getobjectproperty(paramslist[0],paramslist[1])
