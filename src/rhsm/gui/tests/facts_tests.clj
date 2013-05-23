@@ -114,7 +114,7 @@
     (tasks/ui click :view-system-facts)
     (tasks/ui waittillwindowexist :facts-dialog 10)
     (let [cli-raw (:stdout
-                   (run-command "subscription-manager identity | grep 'org id'"))
+                   (run-command "subscription-manager identity | grep 'org ID'"))
           cli-val (trim (last (split cli-raw #":")))
           gui-val (tasks/ui gettextvalue :facts-org-id)]
       (verify (= gui-val cli-val)))

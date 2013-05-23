@@ -142,7 +142,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
       {:facts-view "facts_view"
        :close-facts "close_button"
        :update-facts "Update Facts"
-       :facts-org-id "Organization ID"})
+       :facts-org-id "Organization ID Value"})
     (define-elements (windows :error-dialog)
       {:ok-error "OK"
        :error-msg "lbl[A-Za-z]*"})
