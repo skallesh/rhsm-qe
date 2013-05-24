@@ -137,7 +137,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="execute rct cat-manifest against all of the test manifest files",
-			groups={"blockedByBug-919561","blockedByBug-913720"},
+			groups={"blockedByBug-919561","blockedByBug-913720","blockedByBug-967137"},
 			dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
 			alwaysRun=true,	// run even when there are failures or skips in RCTDumpManifestDestination_Test
 			dataProvider="ManifestFilesData",
