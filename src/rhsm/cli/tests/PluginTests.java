@@ -7,12 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.util.regex.Pattern;
-
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -21,7 +18,6 @@ import rhsm.data.ProductCert;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -174,6 +170,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=230, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test1() {
+		removeRhsmLog();
 		
 		// get the pre-registered facts on the system
 		clienttasks.unregister(null,null,null);
@@ -247,6 +244,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=260, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test2() {
+		removeRhsmLog();
 		
 		// get the pre-registered facts on the system
 		clienttasks.unregister(null,null,null);
@@ -333,6 +331,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=330, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledFactsCollectionTestPluginHooksAreCalled_Test() {
+		removeRhsmLog();
+		
 		// get the pre-registered facts on the system
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
@@ -418,6 +418,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=430, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledSubscribeTestPluginHooksAreCalled_Test() {
+		removeRhsmLog();
+		
 		// get the pre-registered facts on the system
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
@@ -504,6 +506,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=530, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test() {
+		removeRhsmLog();
 		
 		// register and get the current installed product list
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
@@ -579,7 +582,13 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// TODO ProductIdRemoveTestPlugin Tests ***************************************************
 	// CURRENTLY BLOCKED BY BUGZILLA 922882
-
+	@Test(	description="enable ProductIdRemoveTestPlugin and assert the plugins list reports enablement",
+			groups={"blockedByBug-922882"},
+			priority=610, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyPluginsListWithEnabledProductIdRemoveTestPlugin_Test() {
+		Assert.fail("This test will be implemented after RFE bug 922882 is implemented.");
+	}
 	
 	
 
@@ -587,7 +596,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 	@Test(	description="enable AllSlotsTestPlugin and assert the plugins list reports enablement",
 			groups={},
-			priority=610, enabled=true)
+			priority=710, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListWithEnabledAllSlotsTestPlugin_Test() {
 		
@@ -600,7 +609,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for AllSlotsTestPlugin",
 			groups={},
-			priority=620, enabled=true)
+			priority=720, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListhooksWithEnabledAllSlotsTestPlugin_Test() {
 		// find the plugin from the list of installed plugins
@@ -617,9 +626,11 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	@Test(	description="execute subscription-manager modules and verify the expected AllSlotsTestPlugin hooks are called",
 			groups={},
-			priority=630, enabled=true)
+			priority=730, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledAllSlotsTestPluginHooksAreCalled_Test() {
+		removeRhsmLog();
+		
 		// get the pre-registered facts on the system
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
@@ -698,9 +709,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	// see https://github.com/RedHatQE/rhsm-qe/issues
 	
 	// Configuration methods ***********************************************************************
-
-	@BeforeClass(groups={"setup"})
-	public void removeRhsmLogBeforeClass() {
+	
+	//@BeforeClass(groups={"setup"})	// not often enough due to recently added noisy logging:    2013-05-25 02:04:06,091 [DEBUG]  @injection.py:64 - Returning callable provider for feature ENT_DIR: <class 'subscription_manager.certdirectory.EntitlementDirectory'>
+	public void removeRhsmLog() {
 		if (client==null) return;
 		
 		// remove the rhsm.log before this class to effectively reduce its size because it occasionally gets backed up to rhsm.log.1
