@@ -283,12 +283,8 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	// Protected methods ***********************************************************************
 	protected String expectedMsgRHN_RHEL7 = "This system is not subscribed to any channels.\nRHN channel support will be disabled.";
 	
-	@AfterGroups(groups="setup",value={"DisableCertV3ForRamBasedSubscription"})
-	public void restartTomcatWithCertV3Enabled() {
-		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "true");
-		servertasks.restartTomcat();
-	}
-
+	
+	
 	// Data Providers ***********************************************************************
 	
 }
