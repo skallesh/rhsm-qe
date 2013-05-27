@@ -75,7 +75,27 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String SystemDateOnServer=null;
 	List<String> providedProducts = new ArrayList<String>();
 
-
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Stacking of a future subscription and present subsciption make the product compliant ",
+			groups={"StackingFutureSubscriptionWithCurrentSubscription","blockedByBug-966069"},
+			enabled=true)
+	public void StackingFutureSubscriptionWithCurrentSubscription() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		Calendar now = new GregorianCalendar();
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		now.add(Calendar.YEAR, 1);
+		now.add(Calendar.DATE, 1);
+		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		for(SubscriptionPool availOnDate :getAvailableFutureSubscriptionsOndate(onDateToTest)){
+			
+		}
+	}
 	
 	/**
 	 * @author skallesh
@@ -187,7 +207,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Date startDate = startCalendar.getTime();		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
-	//	CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, contractNumber, accountNumber, productId, providedProductIds);
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions",requestBody));
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
