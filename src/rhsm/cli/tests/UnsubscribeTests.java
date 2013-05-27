@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
@@ -260,24 +262,30 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAllSerialsIncludingRevokedSerials_Test() throws JSONException, Exception {
 	
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,false,null,null,null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("This test requires multiple available pools.");
+		
+		// which poolIds are modifiers?
+		Set<String> modifierPoolIds = new HashSet<String>();
+		for (SubscriptionPool subscriptionPool : pools) if (CandlepinTasks.isPoolAModifier(sm_clientUsername,sm_clientPassword, subscriptionPool.poolId, sm_serverUrl)) modifierPoolIds.add(subscriptionPool.poolId);
 		
 		// subscribe to all of the available pools
 		List<String> poolIds = new ArrayList<String>();
 		for (SubscriptionPool pool : pools) poolIds.add(pool.poolId);
 		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
-
-		// unsubscribe from all serials in one call and assert the feedback;
+		
+		// prepare a list of currently consumed serials that we can use to collectively unsubscribe from
 		List<BigInteger> serials = new ArrayList<BigInteger>();
 		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			// insert modifiers at the head of the serials list so their removal won't cause a cert regeneration (NOT SURE IF THIS IS NEEDED OR WORKS)
-			if (!productSubscription.poolId.equals("Unknown") && CandlepinTasks.isPoolAModifier(sm_clientUsername,sm_clientPassword, productSubscription.poolId, sm_serverUrl))
+			// insert modifiers at the head of the serials list so their removal won't cause a cert regeneration
+			if (!productSubscription.poolId.equals("Unknown")/*indicative of an older candlepin*/ && modifierPoolIds.contains(productSubscription.poolId))
 				serials.add(0,productSubscription.serialNumber);
 			else
 				serials.add(productSubscription.serialNumber);
 		}
+		
+		// unsubscribe from all serials in one call and assert the feedback;
 		SSHCommandResult result = clienttasks.unsubscribe(null,serials,null,null,null);
 		String actualStdoutMsg = result.getStdout().trim();
 		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
@@ -292,28 +300,38 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		List<BigInteger> revokedSerials = new ArrayList<BigInteger>();
 		for (BigInteger serial : serials) revokedSerials.add(serial);
 		
-		// subscribe to all the available pools again
+		// re-subscribe to all the available pools again
 		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
 		
-		// now attempt to unsubscribe from both the current serials AND the previously consumed serials in one call and assert the feedback
+		// re-prepare a list of currently consumed serials that we can use to collectively unsubscribe from
+		// include the revokedSerials by interleaving them into the currently consumed serials
 		serials.clear();
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		for (int i=0; i<productSubscriptions.size(); i++) {
-			serials.add(productSubscriptions.get(i).serialNumber);
+			ProductSubscription productSubscription = productSubscriptions.get(i);
+			// insert modifiers at the head of the serials list so their removal won't cause a cert regeneration
+			if (!productSubscription.poolId.equals("Unknown")/*indicative of an older candlepin*/ && modifierPoolIds.contains(productSubscription.poolId))
+				serials.add(0,productSubscription.serialNumber);
+			else
+				serials.add(productSubscription.serialNumber);
+			
+			// interleave the former revokedSerials amongst the serials
 			serials.add(revokedSerials.get(i));
 		}
+		
+		// now attempt to unsubscribe from both the current serials AND the previously consumed serials in one call and assert the feedback
+		result = clienttasks.unsubscribe(null,serials,null,null,null);
+		actualStdoutMsg = result.getStdout().trim();
+		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
 		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// added by bug 867766	// changed by bug 874749
 		expectedStdoutMsg = "Successfully removed serial numbers:";
 		expectedStdoutMsg = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
-		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+		for (BigInteger serial : serials) if (!revokedSerials.contains(serial)) expectedStdoutMsg+="\n   "+serial;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		expectedStdoutMsg +="\n";
 		//expectedStdoutMsg += "Unsuccessfully unsubscribed serial numbers:";	// added by bug 867766	// changed by bug 874749
 		//expectedStdoutMsg += "Unsuccessfully removed serial numbers:";
 		expectedStdoutMsg += "Serial numbers unsuccessfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
 		for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+String.format("Entitlement Certificate with serial number %s could not be found.", revokedSerial);	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
-		result = clienttasks.unsubscribe(null,serials,null,null,null);
-		actualStdoutMsg = result.getStdout().trim();
-		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
 		Assert.assertEquals(actualStdoutMsg, expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions (including revoked serials).");
 	}
 //TOO MUCH LOGGING FROM TOO MANY ASSERTIONS;  DELETEME IF ABOVE TEST WORKS WELL
