@@ -254,7 +254,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		regexes.put("subscriptionName",			"Subscription Name:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// was "Product Name"; changed by Bug 806986	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
 		regexes.put("productId",				"SKU:(.*)");		// "Product Id"; changed by Bug 806986
 		regexes.put("poolId",					"Pool ID:(.*)");	// "Pool Id:(.*)"); changed by Bug 878634
-		regexes.put("quantity",					"Quantity:(.*)");	// "quantity:(.*)"); changed by Bug 612730
+		regexes.put("quantity",					"Quantity:(.*)");	// "quantity:(.*)"); changed by Bug 612730	// may eventually be changed by Bug 963874
 		regexes.put("serviceLevel",				"Service Level:(.*)");
 		regexes.put("serviceType",				"Service Type:(.*)");
 		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");

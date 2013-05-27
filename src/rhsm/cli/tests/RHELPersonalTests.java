@@ -122,7 +122,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 	
 	@Test(	description="subscription-manager-cli: Ensure RHEL Personal Bits are available and unlimited after a person has subscribed to RHEL Personal",
-			groups={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test", "RHELPersonal", "blockedByBug-624816", "blockedByBug-641155", "blockedByBug-643405"},
+			groups={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test", "RHELPersonal", "blockedByBug-624816", "blockedByBug-641155", "blockedByBug-643405", "blockedByBug-967160"},
 			priority=100,
 			enabled=true)
 	@ImplementsNitrateTest(caseId=55702)
@@ -189,6 +189,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: Ensure RHEL Personal Bits are consumable after a person has subscribed to RHEL Personal",
 			groups={"EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test","RHELPersonal"},
 			priority=110,//dependsOnGroups={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
+			dependsOnMethods={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=55702)
 //	@ImplementsNitrateTest(caseId={55702,55718})
@@ -232,6 +233,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: Ensure that availability of RHEL Personal Bits is revoked once the person unsubscribes from RHEL Personal",
 			groups={"EnsureAvailabilityOfSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","RHELPersonal"},
 			priority=120,//dependsOnGroups={"EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
+			dependsOnMethods={"EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void EnsureAvailabilityOfSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test() throws JSONException {
@@ -261,6 +263,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: Ensure that multiple (unlimited) systems can subscribe to subpool",
 			groups={"SubscribeMultipleSystemsToSubPool_Test","RHELPersonal"/*, "blockedByBug-661130"*/},
 			priority=130,//dependsOnGroups={"EnsureAvailabilityOfSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
+			dependsOnMethods={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void SubscribeMultipleSystemsToSubPool_Test() throws JSONException {
@@ -325,6 +328,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unsubscribe while subpools are consumed",
 			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658283", "blockedByBug-658683", "blockedByBug-675473", "blockedByBug-738448"},
 			priority=140,//dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
+			dependsOnMethods={"SubscribeMultipleSystemsToSubPool_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=58898)
 	// 1) unsubscribe person from personal pool while systems are subscribed to subpool (scenario from calfanso@redhat.com)
@@ -394,6 +398,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unregister while subpools are consumed",
 			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658683", "blockedByBug-661130", "blockedByBug-738448"},
 			priority=150,//dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
+			dependsOnMethods={"SubscribeMultipleSystemsToSubPool_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test() {
@@ -493,6 +498,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: Ensure that unsubscribing system from subpool while other systems are subscribed to subpool does not cause subpool to go away",
 			groups={"EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test","RHELPersonal", "blockedByBug-643405"},
 			priority=160,//dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test","EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test"},
+			dependsOnMethods={"SubscribeMultipleSystemsToSubPool_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=58899)
 	// 2) unsubscribe system from subpool while other systems are subscribed to subpool, make sure the subpool doesn't go away (scenario from calfanso@redhat.com)
@@ -530,6 +536,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: Ensure that after unsubscribing all systems from a subpool, the subpool should not get deleted",
 			groups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test","RHELPersonal"},
 			priority=170,//dependsOnGroups={"EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test"},
+			dependsOnMethods={"EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=58907)
 	// 3) unsubscribe system from subpool as the last system subscribed, make sure the subpool doesn't get deleted (scenario from calfanso@redhat.com)
@@ -569,6 +576,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			groups={"EnsureSystemAutosubscribeConsumesSubPool_Test", "blockedByBug-637937", "blockedByBug-737762"},
 //			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
 			priority=200,
+			dependsOnMethods={"EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void EnsureSystemAutosubscribeConsumesSubPool_Test() throws JSONException {
@@ -629,6 +637,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			groups={"EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test", "blockedByBug-643405"},
 //			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
 			priority=210,
+			dependsOnMethods={"EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=61126)
 	public void EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test() throws JSONException {

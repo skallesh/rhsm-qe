@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -363,6 +364,16 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(productBaselineRhnChannel),
 					"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" was NOT mapped to a product certificate in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.  This is a special case (Bugzilla 799152#c4).");
 			return;
+		}
+		
+		// Special case for Red Hat Developer Toolset (for RHEL for IBM POWER) channels *-ppc-*  reference: https://bugzilla.redhat.com/show_bug.cgi?id=869008#c4
+		if (productBaselineProductId.equals("195")) {
+			if (Arrays.asList(	
+					"rhel-ppc-server-dts-5-beta", 
+					"rhel-ppc-server-dts-5-beta-debuginfo").contains(productBaselineRhnChannel)) {
+				log.warning("DTS for ppc was added at DTS 1.1 Beta but then dropped before 1.1 GA");
+				throw new SkipException("DTS for ppc was added at DTS 1.1 Beta but then dropped before 1.1 GA.  Skipping this test for channel '"+productBaselineRhnChannel+"' as instructed in https://bugzilla.redhat.com/show_bug.cgi?id=869008#c4");
+			}
 		}
 		
 		// assert that the subscription-manager-migration-data file has a mapping for this RHN Channel found in the CDN Product Baseline
@@ -1119,6 +1130,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				if (rhnChannel.startsWith("rhel-i386-server-sjis-6")) {	// rhel-i386-server-sjis-6 rhel-i386-server-sjis-6-debuginfo rhel-i386-server-sjis-6-beta rhel-i386-server-sjis-6-beta-debuginfo
 					// Bug 896195 - rhel-i386-server-sjis-6 channels are not yet mapped in channel-cert-mapping.txt
 					bugIds.add("896195");
+				}
+				if (rhnChannel.contains("-dts-5-beta")) {	// rhel-i386-server-dts-5-beta rhel-i386-server-dts-5-beta-debuginfo rhel-x86_64-server-dts-5-beta rhel-x86_64-server-dts-5-beta-debuginfo
+					// Bug 966683 - the dts beta channels should be mapped to the RHB product cert 180
+					bugIds.add("966683");
+				}
+				if (rhnChannel.contains("-rhev-mgmt-agent-5")) {	// rhel-x86_64-rhev-mgmt-agent-5 rhel-x86_64-rhev-mgmt-agent-5-beta
+					// Bug 966696 - Red Hat Enterprise Virtualization (rhev-3.0) 150.pem product certs are missing from subscription-manager-migration-data 
+					bugIds.add("966696");
 				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId

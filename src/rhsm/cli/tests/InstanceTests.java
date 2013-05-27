@@ -1,40 +1,27 @@
 package rhsm.cli.tests;
 
 import java.math.BigInteger;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
-import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
-import com.redhat.qe.auto.testng.TestNGUtils;
-
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
-import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
-import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
+
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -120,8 +107,9 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, currentlyInstalledProducts);
 			if (installedProduct!=null) {
 				providedProductIdsActuallyInstalled.add(installedProduct.productId);
+				List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not covered by a valid subscription."});
 				Assert.assertEquals(installedProduct.status,"Not Subscribed", "Since we have not yet consumed an instance based entitlement, the status of installed product '"+installedProduct.productName+"' should be this value.");
-				Assert.assertEquals(installedProduct.statusDetails,"Not covered by a valid subscription.", "Since we have not yet consumed an instance based entitlement, the status details of installed product '"+installedProduct.productName+"' should be this value.");
+				Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails,"Since we have not yet consumed an instance based entitlement, the status details of installed product '"+installedProduct.productName+"' is expected to be: "+expectedStatusDetails);
 			}
 		}
 		
@@ -138,7 +126,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, currentlyInstalledProducts);
 				if (installedProduct!=null) {
 					Assert.assertEquals(installedProduct.status,"Subscribed", "After attaching 1 instance-based subscription to a virtual system, installed product '"+installedProduct.productName+"' should be immediately compliant.");
-					Assert.assertEquals(installedProduct.statusDetails,"", "Status Details for installed product '"+installedProduct.productName+"'.");
+					Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "Status Details for installed product '"+installedProduct.productName+"' should be empty.  Actual="+installedProduct.statusDetails);
 				}
 			}
 			
@@ -159,7 +147,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, currentlyInstalledProducts);
 				if (installedProduct!=null) {
 					Assert.assertEquals(installedProduct.status,"Subscribed", "After auto-subscribing a virtual system, installed product '"+installedProduct.productName+"' should be immediately compliant.");
-					Assert.assertEquals(installedProduct.statusDetails,"", "Status Details for installed product '"+installedProduct.productName+"'.");
+					Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "Status Details for installed product '"+installedProduct.productName+"' should be empty.  Actual="+installedProduct.statusDetails);
 				}
 			}
 			
@@ -190,9 +178,10 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(productSubscription, "Found a consumed product subscription to '"+pool.subscriptionName+"' after manually subscribing.");
 			Assert.assertEquals(productSubscription.quantityUsed,Integer.valueOf(poolInstanceMultiplier),"The attached quantity of instance based subscription '"+pool.subscriptionName+"' in the list of consumed product subscriptions.");
 			if (poolInstanceMultiplier>=expectedQuantityToAchieveCompliance) {	// compliant when true
-				Assert.assertEquals(productSubscription.statusDetails,"", "Status Details for consumed product subscription '"+productSubscription.productName+"'.");
+				Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "Status Details for consumed product subscription '"+productSubscription.productName+"' should be empty.  Actual="+productSubscription.statusDetails);
 			} else {
-				Assert.assertEquals(productSubscription.statusDetails,String.format("Only covers %s of %s sockets.",poolInstanceMultiplier,systemSockets), "Status Details for consumed product subscription '"+productSubscription.productName+"'.");
+				List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.",poolInstanceMultiplier,systemSockets)});
+				Assert.assertEquals(productSubscription.statusDetails,expectedStatusDetails, "Status Details for consumed product subscription '"+productSubscription.productName+"'.  Expected="+expectedStatusDetails);
 			}
 			
 			// at this point the installed product id should either be "Subscribed" or "Partially Subscribed" since one of the quantity attempts should have succeeded (when qty was equal to poolInstanceMultiplier), let's assert based on the system's sockets
@@ -202,10 +191,11 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				if (installedProduct!=null) {
 					if (poolInstanceMultiplier>=expectedQuantityToAchieveCompliance) {	// compliant when true
 						Assert.assertEquals(installedProduct.status,"Subscribed", "After manually attaching a quantity of '"+poolInstanceMultiplier+"' subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"', the status of installed product '"+installedProduct.productName+"' on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
-						Assert.assertEquals(installedProduct.statusDetails,"", "Status Details for installed product '"+installedProduct.productName+"'.");
+						Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "Status Details for installed product '"+installedProduct.productName+"' should be empty.  Actual="+installedProduct.statusDetails);
 					} else {
+						List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.",poolInstanceMultiplier,systemSockets)});
 						Assert.assertEquals(installedProduct.status,"Partially Subscribed", "After manually attaching a quantity of '"+poolInstanceMultiplier+"' subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"', the status of installed product '"+installedProduct.productName+"' on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
-						Assert.assertEquals(installedProduct.statusDetails,String.format("Only covers %s of %s sockets.",poolInstanceMultiplier,systemSockets), "Status Details for installed product '"+installedProduct.productName+"'.");
+						Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails,"Status Details for installed product '"+installedProduct.productName+" should be this value: "+expectedStatusDetails);
 					}
 				}
 			}
@@ -221,7 +211,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				Integer totalQuantityUsed = 0;
 				for (ProductSubscription prodSub : productSubscriptions) {
 					totalQuantityUsed += prodSub.quantityUsed;
-					Assert.assertEquals(prodSub.statusDetails,"","Status Details of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
+					Assert.assertTrue(prodSub.statusDetails.isEmpty(),"Status Details of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be empty.  Actual="+prodSub.statusDetails);
 				}
 				Assert.assertEquals(totalQuantityUsed,Integer.valueOf(expectedQuantityToAchieveCompliance),"Quantity of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
 			} else log.warning("There are no installed product ids '"+poolProvidedProductIds+"' to assert compliance status of instance-based subscription '"+pool.subscriptionName+"'.");
@@ -232,7 +222,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, currentlyInstalledProducts);
 				if (installedProduct!=null) {
 					Assert.assertEquals(installedProduct.status,"Subscribed", "After auto-subscribing a physical system, installed product '"+installedProduct.productName+"' should be compliant.");
-					Assert.assertEquals(installedProduct.statusDetails,"", "Status Details for installed product '"+installedProduct.productName+"'.");
+					Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "Status Details for installed product '"+installedProduct.productName+"' should be empty.  Actual="+installedProduct.statusDetails);
 				}
 			}
 			

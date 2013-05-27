@@ -1247,7 +1247,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
-		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+		LOOP_FOR_ALL_JSON_SUBSCRIPTIONS: for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String subscriptionId = jsonSubscription.getString("id");
 			Calendar startDate = parseISO8601DateString(jsonSubscription.getString("startDate"),"GMT");	// "startDate":"2012-02-08T00:00:00.000+0000"
@@ -1257,6 +1257,17 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			String productName = jsonProduct.getString("name");
 			String productId = jsonProduct.getString("id");
 			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
+			
+			// skip instance_multiplier subscriptions (test coverage is handled by the InstanceTests.java) 
+			// loop through the attributes of this jsonProduct looking for the "instance_multiplier" attribute
+			for (int j = 0; j < jsonAttributes.length(); j++) {
+				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
+				String attributeName = jsonAttribute.getString("name");
+				if (attributeName.equals("instance_multiplier")) {
+					continue LOOP_FOR_ALL_JSON_SUBSCRIPTIONS;
+				}
+			}
+			
 			// loop through the attributes of this jsonProduct looking for the "virt_limit" attribute
 			for (int j = 0; j < jsonAttributes.length(); j++) {
 				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);

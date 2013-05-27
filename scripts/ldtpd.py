@@ -14,6 +14,7 @@ import fnmatch
 import os
 import subprocess
 import pdb
+import dogtail.tree
 from fnmatch import translate
 
 logger = logging.getLogger("xmlrpcserver.ldtp")
@@ -232,7 +233,7 @@ ldtp3commands = ['activatetext',
 _ldtp_methods = filter(lambda fn: inspect.isfunction(getattr(ldtp,fn)),  dir(ldtp))
 _supported_methods = filter(lambda x: x in ldtp3commands, _ldtp_methods)
 #_unsupported_methods = filter(lambda x: x not in ldtp3commands, _ldtp_methods)
-_additional_methods = ['closewindow', 'maximizewindow']
+_additional_methods = ['closewindow', 'maximizewindow', 'getallitem']
 for item in _additional_methods: _supported_methods.append(item)
 _supported_methods.sort()
 
@@ -399,33 +400,64 @@ class AllMethods:
     os.environ['NO_AT_BRIDGE']='1'
     return process.pid
 
-  #def _gettextvalue(self, window_name, object_name, startPosition=None,
-  #                 endPosition=None):
-  # TODO: implement this with getlabel if object is label
+  def _gettextvalue(self, window_name, object_name, startPosition=None,
+                    endPosition=None):
+    def findFirst(node, search_string):
+      try: children = node.children
+      except: return None
+      for child in children:
+        if self._matches(search_string, child.name):
+          return child
+        else:
+          child = findFirst(child,search_string)
+          if child:
+            return child
+    retval = ""
+    if ldtp.getobjectproperty(window_name, object_name, "class") == "label":
+      f = dogtail.tree.root.application('subscription-manager-gui')
+      w = f.childNamed(window_name)
+      o = findFirst(w, object_name)
+      if o:
+       retval = o.text
+      else:
+       raise Exception("Cannot find object: %s in tree."%(object_name))
+    else:
+      retval = ldtp.gettextvalue(window_name, object_name, startPosition, endPosition)
+    if not ((isinstance(retval, str) or isinstance(retval, unicode))):
+      retval = ""
+    return retval
+
+  def _getallitem(self, window_name, object_name):
+    f = dogtail.tree.root.application("subscription-manager-gui")
+    w = f.childNamed(window_name)
+    o = w.childNamed(object_name)
+    nodes = o.children[0].children
+    return [n.name for n in nodes]
 
   def _dispatch(self, method, params):
     if method in _supported_methods:
       paramslist = list(params)
-      if method == "hasstate":
-        paramslist[2]=self._translate_state(paramslist[2])
-        params = tuple(paramslist)
-      elif method == "closewindow":
+      if method == "closewindow":
         return self._closewindow(paramslist[0])
-      elif method == "maximizewindow":
-        return self._maximizewindow(paramslist[0])
+      elif method == "getallitem":
+        return self._getallitem(*paramslist)
       elif method == "getobjectproperty":
         paramslist[1] = self._getobjectproperty(paramslist[0],paramslist[1])
         params = tuple(paramslist)
+      elif method == "gettextvalue":
+        return self._gettextvalue(*paramslist)
+      elif method == "hasstate":
+        paramslist[2]=self._translate_state(paramslist[2])
+        params = tuple(paramslist)
       elif method == "launchapp":
         return self._launchapp(*paramslist)
+      elif method == "maximizewindow":
+        return self._maximizewindow(paramslist[0])
 
       function = getattr(ldtp,method)
       retval = function(*params)
 
-      if (method == "gettextvalue") and not (isinstance(retval, str) or
-                                             isinstance(retval, unicode)):
-        retval = ""
-      elif (retval == -1) and (method == "gettablerowindex"):
+      if (retval == -1) and (method == "gettablerowindex"):
         paramslist = list(params)
         #use quick method for now
         retval = self._quickgettablerowindex(paramslist[0],
@@ -438,6 +470,8 @@ class AllMethods:
         retval = 0
 
       return retval
+    else:
+      raise Exception("Function '%s' is not supported."%(method))
   pass
 
 for name in _supported_methods:

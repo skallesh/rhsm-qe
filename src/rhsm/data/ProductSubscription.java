@@ -33,7 +33,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 	public Calendar endDate;
 	public String serviceLevel;
 	public String serviceType;
-	public String statusDetails;
+	public List<String> statusDetails;
 	public String poolId;		// added by bug 908671 // Including the pool ID in the certificate required a change to Candlepin.  If the pool ID is not present in the entitlement certificate, subscription-manager will report the pool ID as "Not Available".
 
 	public SubscriptionPool fromSubscriptionPool;
@@ -222,12 +222,12 @@ public class ProductSubscription extends AbstractCommandLineData {
 		regexes.put("provides",				"Provides:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// this assumes that Provides is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
 		regexes.put("contractNumber",		"Contract:(.*)");	// Bug 818355 - Terminology Change: Contract Number -> Contract
 		regexes.put("accountNumber",		"Account:(.*)");	// Bug 818339 - Terminology Change: Account Number -> Account
-		regexes.put("serialNumber",			"Serial Number:(.*)");
+		regexes.put("serialNumber",			"Serial Number:(.*)");	// may need to be changed for Bug 963815
 		regexes.put("isActive",				"Active:(.*)");
 		regexes.put("quantityUsed",			"Quantity Used:(.*)");
 		regexes.put("serviceLevel",			"Service Level:(.*)");
 		regexes.put("serviceType",			"Service Type:(.*)");
-		regexes.put("statusDetails",		"Status Details:(.*)");
+		regexes.put("statusDetails",		"Status Details:(.*(\\n.*?)+)^\\w+\\s?\\w+:");
 		regexes.put("startDate",			"Starts:(.*)");	// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
 		regexes.put("endDate",				"Ends:(.*)");	// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
 		regexes.put("poolId",				"Pool ID:(.*)");	// Bug 908671 - RFE: include pool id in list --consumed

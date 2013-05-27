@@ -1177,7 +1177,7 @@ public class SubscriptionManagerTasks {
 	 * @return list of objects representing the subscription-manager list --avail --ondate
 	 */
 	public List<SubscriptionPool> getAvailableFutureSubscriptionsOndate(String onDateToTest) {
-		return SubscriptionPool.parse(list_(null, true, null, null, null, null, onDateToTest, null, null, null).getStdout());
+		return SubscriptionPool.parse(list_(null, true, null, null, null, onDateToTest, null, null, null).getStdout());
 	}
 	
 	/**
@@ -3310,14 +3310,13 @@ public class SubscriptionManagerTasks {
 	 * @param available TODO
 	 * @param consumed TODO
 	 * @param installed TODO
-	 * @param status TODO
 	 * @param servicelevel TODO
 	 * @param ondate TODO
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, Boolean status, String servicelevel, String ondate, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;		command += " list";	
@@ -3325,7 +3324,6 @@ public class SubscriptionManagerTasks {
 		if (available!=null && available)	command += " --available";
 		if (consumed!=null && consumed)		command += " --consumed";
 		if (installed!=null && installed)	command += " --installed";
-		if (status!=null && status)			command += " --status";
 		if (ondate!=null)					command += " --ondate="+ondate;
 		if (servicelevel!=null)				command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
 		if (proxy!=null)					command += " --proxy="+proxy;
@@ -3336,9 +3334,9 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
-	public SSHCommandResult list(Boolean all, Boolean available, Boolean consumed, Boolean installed, Boolean status, String servicelevel, String ondate, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult list(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = list_(all, available, consumed, installed, status, servicelevel, ondate, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = list_(all, available, consumed, installed, servicelevel, ondate, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		
@@ -3353,7 +3351,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listInstalledProducts() {
 		
-		SSHCommandResult sshCommandResult = list(null,null,null,Boolean.TRUE, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,null,null,Boolean.TRUE, null, null, null, null, null);
 		
 		if (getCurrentProductCertFiles().isEmpty() /*&& getCurrentEntitlementCertFiles().isEmpty() NOT NEEDED AFTER DESIGN CHANGE FROM BUG 736424*/) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed products to list"), "No installed products to list");
@@ -3371,7 +3369,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
 
-		SSHCommandResult sshCommandResult = list(null,Boolean.TRUE,null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,Boolean.TRUE,null, null, null, null, null, null, null);
 
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
@@ -3388,11 +3386,11 @@ public class SubscriptionManagerTasks {
 		String bugId="638266"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null, null, null);
+			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null, null);
 		}
 		// END OF WORKAROUND
 		
-		SSHCommandResult sshCommandResult = list(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null);
 		
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
@@ -3405,7 +3403,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
 
-		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
 
@@ -3422,7 +3420,46 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+	
+	
+	
+	
+	
+	// status module tasks ************************************************************
 
+	/**
+	 * status without asserting results
+	 */
+	public SSHCommandResult status_() {
+
+		// assemble the command
+		String command = this.command;		command += " status";
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * status with asserting results
+	 */
+	public SSHCommandResult status() {
+		
+		SSHCommandResult sshCommandResult = status_();
+		
+		// assert results for a successful call to plugins
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the status command indicates a success.");
+		Assert.assertEquals(sshCommandResult.getStderr(), "", "Stderr from the status command indicates a success.");
+		
+		// assert the banner
+		String bannerRegex;
+		bannerRegex = "\\+-+\\+\\n\\s*System Status Details\\s*\\n\\+-+\\+";
+		Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from status contains the expected banner regex: "+bannerRegex);
+		
+		return sshCommandResult; // from the plugins command
+	}
+	
+	
+	
 	
 
 	

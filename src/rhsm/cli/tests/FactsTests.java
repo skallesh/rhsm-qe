@@ -1,5 +1,6 @@
 package rhsm.cli.tests;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -34,6 +35,25 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author jsefler
+ * 
+ * Notes: on calculation of cpu.* facts <br>
+Here is a breakdown of how subscription-manager uses
+/sys/devices/system/cpu/cpu[num] to determine it's facts.
+
+cpu.cpu(s): The number of /sys/devices/system/cpu/cpu[num] found.
+cpu.cpu_socket(s):
+   - The number of distinct socket_ids found for each cpu above.
+   - Each socket_id is determined by the contents of:
+/sys/devices/system/cpu/cpu[num]/topology/physical_package_id (do not
+count if this doesn't exist)
+   - physical_package_id does not exist on all hypervisors (xen for example)
+   - If no socket_ids can be determined, assume 1.
+cpu.core(s)_per_socket: Calculated from above data: cpu.cpu(s) /
+cpu.cpu_socket(s)
+
+
+--mstead
+ 
  */
 @Test(groups={"FactsTests"})
 public class FactsTests extends SubscriptionManagerCLITestScript{
@@ -780,7 +800,67 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager: subscription-manager should handle malformed custom facts with grace",
+			groups={"MalformedCustomFacts_Test","blockedByBug-966747"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void MalformedCustomFacts_Test() {
+		File malformedFactsFile = new File(clienttasks.factsDir+File.separatorChar+malformedFactsFilename);
+		
+		// create malformed facts
+		Map<String,String> customFactsMap = new HashMap<String,String>();
+		customFactsMap.put("malformed_fact","value\" is \"misquoted");
+		clienttasks.createFactsFileWithOverridingValues(malformedFactsFilename,customFactsMap);
+		log.info("Here is the contents of our malformed custom facts file...");
+		client.runCommandAndWait("cat "+malformedFactsFile);
+		
+		// attempt to register
+		SSHCommandResult result = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		
+		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin --force
+		//	Expecting , delimiter: line 1 column 26 (char 26)
+		
+		// assert results
+		Assert.assertEquals(result.getExitCode(),Integer.valueOf(0),"Exitcode from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
+		Assert.assertEquals(result.getStdout(),"FIXME Need expected stdout message after bug 966747 is fixed","Stdout from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
+		Assert.assertEquals(result.getStderr(),"FIXME Need expected stderr message after bug 966747 is fixed","Stdout from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
+	}
+	@AfterGroups(value={"MalformedCustomFacts_Test"},groups={"setup"})
+	public void afterMalformedCustomFacts_Test() {
+		if (clienttasks==null) return;
+		clienttasks.deleteFactsFileWithOverridingValues(malformedFactsFilename);
+	}
+	private final String malformedFactsFilename = "malformed.facts";
 	
+	
+	@Test(	description="subscription-manager: subscription-manager should handle empty custom facts with grace",
+			groups={"EmptyCustomFacts_Test","blockedByBug-966747"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void EmptyCustomFacts_Test() {
+		File emptyFactsFile = new File(clienttasks.factsDir+File.separatorChar+emptyFactsFilename);
+		
+		// create empty facts
+		client.runCommandAndWait("rm -f "+emptyFactsFile+" && touch "+emptyFactsFile);
+		Assert.assertTrue(RemoteFileTasks.testExists(client, emptyFactsFile.getPath()), "The empty facts file should exist.");
+		
+		// attempt to register
+		SSHCommandResult result = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		
+		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin --force
+		//	No JSON object could be decoded
+		
+		// assert results
+		Assert.assertEquals(result.getExitCode(),Integer.valueOf(0),"Exitcode from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
+		Assert.assertEquals(result.getStdout(),"FIXME Need expected stdout message after bug 966747 is fixed","Stdout from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
+		Assert.assertEquals(result.getStderr(),"FIXME Need expected stderr message after bug 966747 is fixed","Stdout from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
+	}
+	@AfterGroups(value={"EmptyCustomFacts_Test"},groups={"setup"})
+	public void afterEmptyCustomFacts_Test() {
+		if (clienttasks==null) return;
+		clienttasks.deleteFactsFileWithOverridingValues(emptyFactsFilename);
+	}
+	private final String emptyFactsFilename = "empty.facts";
 	
 	
 	// Candidates for an automated Test:

@@ -76,6 +76,7 @@
       (tasks/connect)
       (use 'gnome.ldtp))
     (log/info "INITIALIZATION COMPLETE!!")
+    "INITIALIZATION COMPLETE!!"
     )     ;<< here for all of it
 
   ;not used

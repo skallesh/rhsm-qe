@@ -1,7 +1,5 @@
 package rhsm.cli.tests;
 
-import java.io.File;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,26 +8,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BzChecker;
-import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.InstalledProduct;
-import rhsm.data.ProductCert;
 import rhsm.data.SubscriptionPool;
-import com.redhat.qe.tools.RemoteFileTasks;
+
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.testng.TestNGUtils;
 
 /**
  * @author jsefler
@@ -43,138 +35,30 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance",
-			enabled=false,
-			groups={"blockedByBug-739671", "blockedByBug-740377"},
-			dataProvider="getAvailableStackableSubscriptionPoolsData")
-	//@ImplementsNitrateTest(caseId=)
-	public void StackEachPoolToAchieveCompliance_Test(List<SubscriptionPool> stackableSubscriptionPools) throws JSONException, Exception{
-		
-		// loop through the pools to determine the minimum socket count for which one of each stackable pool is needed to achieve compliance
-		int minimumSockets=0;
-		for (SubscriptionPool pool : stackableSubscriptionPools) {
-			String sockets = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
-			minimumSockets+=Integer.valueOf(sockets);
-		}
-		
-		// override the system facts setting the socket count to a value for which all the stackable subscriptions are needed to achieve compliance
-		Map<String,String> factsMap = new HashMap<String,String>();
-		factsMap.put("cpu.cpu_socket(s)", String.valueOf(minimumSockets));
-		//factsMap.put("lscpu.cpu_socket(s)", String.valueOf(minimumSockets));
-		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null,true,null,null,null);
-		
-		// loop through the stackable pools until we find the first one that covers product certs that are currently installed (put that subscription at the front of the list) (remember the installed product certs)
-		List<ProductCert> installedProductCerts = new ArrayList<ProductCert>();
-		for (int i=0; i<stackableSubscriptionPools.size(); i++) {
-			SubscriptionPool pool = stackableSubscriptionPools.get(i);
-			installedProductCerts = clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(pool);
-			if (installedProductCerts.size()>0) {
-				stackableSubscriptionPools.remove(i);
-				stackableSubscriptionPools.add(0, pool);
-				break;
-			}
-		}
-		if (installedProductCerts.size()==0) throw new SkipException("Could not find any installed products for which stacking these pools would achieve compliance.");
-
-		// reconfigure such that only these product certs are installed (copy them to a /tmp/sm-stackingProductDir)
-		for (ProductCert productCert : installedProductCerts) {
-			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForStacking, 0);
-		}
-		clienttasks.config(null,null,true,new String[]{"rhsm","productCertDir".toLowerCase(),productCertDirForStacking});
-		
-		// subscribe to each pool and assert "Partially Subscribe" status and overall incompliance until the final pool is subscribed
-		Assert.assertEquals(clienttasks.getFactValue(ComplianceTests.factNameForSystemCompliance), ComplianceTests.factValueForSystemNonCompliance,
-			"Prior to subscribing to any of the stackable subscription pools, the overall system entitlement status should NOT be valid/compliant.");
-		int s=0;
-		for (SubscriptionPool pool : stackableSubscriptionPools) {
-			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
-			if (++s < stackableSubscriptionPools.size()) {
-				
-				// assert installed products are Partially Subscribed
-				for (ProductCert installedProductCert : installedProductCerts) {
-					InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(installedProductCert);
-					Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to stackable subscription pool for ProductId '"+pool.productId+"', the status of Installed Product '"+installedProduct.productName+"' should be Partially Subscribed.");
-				}
-				
-				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=739671
-				boolean invokeWorkaroundWhileBugIsOpen = true;
-				String bugId="739671"; 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-				if (invokeWorkaroundWhileBugIsOpen) {
-					log.info("Skipping the value assertion for fact '"+ComplianceTests.factNameForSystemCompliance+"' while bug '"+bugId+"' is open.");
-				} else {
-				// END OF WORKAROUND
-				
-				// assert overall system compliance is not yet valid
-				Assert.assertEquals(clienttasks.getFactValue(ComplianceTests.factNameForSystemCompliance), ComplianceTests.factValueForSystemPartialCompliance,
-					"The overall system entitlement status should NOT be valid/compliant until we have subscribed to enough stackable subscription pools to meet coverage for the system's cpu.socket(s) '"+minimumSockets+"'.");		
-				}
-			}
-		}
-		
-		// assert installed products are fully Subscribed
-		for (ProductCert installedProductCert : installedProductCerts) {
-			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(installedProductCert);
-			Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to enough stackable subscription pools to cover the systems sockets count ("+minimumSockets+"), the status of Installed Product '"+installedProduct.productName+"' should be fully Subscribed.");
-		}
-		// assert overall system compliance is now valid
-		Assert.assertEquals(clienttasks.getFactValue(ComplianceTests.factNameForSystemCompliance), ComplianceTests.factValueForSystemCompliance,
-			"After having subscribed to all the stackable subscription pools needed to meet coverage for the system's cpu.socket(s) '"+minimumSockets+"', the overall system entitlement status should be valid/compliant.");
-
-
-		
-	}
-	
-	
-	@Test(	description="subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance",
 			enabled=true,
-			groups={"debugTest","blockedByBug-739671", "blockedByBug-740377"},
+			groups={"AcceptanceTests","blockedByBug-739671", "blockedByBug-740377"},
 			dataProvider="getAvailableStackableAttributeSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
 	public void StackEachPoolToAchieveAttributeCompliance_Test(Object bugzilla, String attribute, List<SubscriptionPool> stackableAttributeSubscriptionPools) throws JSONException, Exception{
 		
-		// loop through the pools to determine the minimum attribute count for which one of each stackable pool is needed to achieve compliance of the provided products
+		// The strategy in this test is to simulate the facts on the systems so that the attribute being tested ("cores","ram",or "sockets")
+		// will achieve full compliance for all of the provided products after attaching a quantity of one entitlement
+		// from each pool in the list of stackable subscription pools.  As wee incrementally attach from each pool, we will assert
+		// a partial compliance until the final subscription is attached which should achieve full compliance.
+		
+		// loop through the pools to determine the minimum attribute count for which one
+		// of each stackable pool is needed to achieve compliance of the provided products
+		// also keep a list of all the provided productIds
 		Integer minimumAttributeValue=0;
+		Integer minimumSocketsValue=0;
+		Set<String> productIdsProvidedForByAllStackableSubscriptionPools = new HashSet<String>();
 		Map<String,Integer> poolProductAttributeValueMap = new HashMap<String,Integer>();
 		for (SubscriptionPool pool : stackableAttributeSubscriptionPools) {
 			String attributeValue = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, attribute);
+			productIdsProvidedForByAllStackableSubscriptionPools.addAll(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId));
 			minimumAttributeValue+=Integer.valueOf(attributeValue);
 			poolProductAttributeValueMap.put(pool.poolId, Integer.valueOf(attributeValue));
 		}
-		
-		// find all of the currently installed products that these stackable pools commonly provide
-		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
-		List<ProductCert> providedCurrentProductCerts = new ArrayList<ProductCert>(); providedCurrentProductCerts.addAll(currentProductCerts);
-		for (SubscriptionPool pool : stackableAttributeSubscriptionPools) {
-			List<ProductCert> productCertsProvidedForByThisPool = clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(pool);
-			for (ProductCert currentProductCert : currentProductCerts) {
-				if (!productCertsProvidedForByThisPool.contains(currentProductCert)) providedCurrentProductCerts.remove(currentProductCert);
-			}
-		}
-		if (providedCurrentProductCerts.size()==0) throw new SkipException("Could not find any installed products that these stackable pools commonly provide for.");
-
-		
-//		// loop through the stackable pools until we find the first one that covers product certs that are currently installed
-//		// (put that subscription at the front of the list) (remember the installed product certs)
-//		List<ProductCert> installedProductCerts = new ArrayList<ProductCert>();
-//		for (int i=0; i<stackableAttributeSubscriptionPools.size(); i++) {
-//			SubscriptionPool pool = stackableAttributeSubscriptionPools.get(i);
-//			installedProductCerts = clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(pool);
-//			if (installedProductCerts.size()>0) {
-//				stackableAttributeSubscriptionPools.remove(i);
-//				stackableAttributeSubscriptionPools.add(0, pool);
-//				break;
-//			}
-//		}
-//		if (installedProductCerts.size()==0) throw new SkipException("Could not find any installed products for which stacking these pools would achieve compliance.");
-
-//		// reconfigure such that only these product certs are installed (copy them to a /tmp/sm-stackingProductDir)
-//		for (ProductCert productCert : installedProductCerts) {
-//			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForStacking, 0);
-//		}
-//		clienttasks.config(null,null,true,new String[]{"rhsm","productCertDir".toLowerCase(),productCertDirForStacking});
-		
-		
 		
 		// override the system facts setting the attribute count to a value for which all the stackable subscriptions are needed to achieve compliance
 		Map<String,String> factsMap = new HashMap<String,String>();
@@ -190,100 +74,116 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		if (attribute.equals("cores")) {
 			if (Integer.valueOf(minimumAttributeValue)%2==0) {	// configure facts for an even number of cores
 				factsMap.put("cpu.core(s)_per_socket", "2");
-				factsMap.put("cpu.cpu_socket(s)", String.valueOf(Integer.valueOf(minimumAttributeValue)/2));
+				minimumSocketsValue = Integer.valueOf(minimumAttributeValue)/2;
+				factsMap.put("cpu.cpu_socket(s)", String.valueOf(minimumSocketsValue));
 			} else {	// configure facts for an odd number of cores
 				factsMap.put("cpu.core(s)_per_socket", "1");
-				factsMap.put("cpu.cpu_socket(s)",  String.valueOf(minimumAttributeValue));
+				minimumSocketsValue = Integer.valueOf(minimumAttributeValue);
+				factsMap.put("cpu.cpu_socket(s)",  String.valueOf(minimumSocketsValue));
 			}
 		}
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-//		clienttasks.facts(null,true,null,null,null);
+		
+		// register the system which has now been instrumented with facts to test the stack
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,false,null,null,null);
 		
-		
-		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		for (ProductCert providedCurrentProductCert : providedCurrentProductCerts) {
-			InstalledProduct providedInstalledProduct = clienttasks.getInstalledProductCorrespondingToProductCert(providedCurrentProductCert,installedProducts);
-			Assert.assertEquals(providedInstalledProduct.status,"Not Subscribed","Prior to subscribing to any of the stackable subscription pools, Installed product '"+providedInstalledProduct.productName+"' which is provided for by the subscription stack should have this status.");
-			Assert.assertEquals(providedInstalledProduct.statusDetails,"Not covered by a valid subscription.","Prior to subscribing to any of the stackable subscription pools, Installed product '"+providedInstalledProduct.productName+"' which is provided for by the subscription stack should have this status details.");
+		// assert installed product status for all the products that the stacked subscriptions will provide for
+		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		for (String productId : productIdsProvidedForByAllStackableSubscriptionPools) {
+			List<InstalledProduct> installedProducts = InstalledProduct.findAllInstancesWithMatchingFieldFromList("productId", productId, currentlyInstalledProducts);
+			if (installedProducts.isEmpty()) continue; // this productIdProvidedFor is not installed
+			if (installedProducts.size()>1) Assert.fail("Something is seriously wrong.  Found multiple InstalledProduct "+installedProducts+" with a common productId '"+productId+"'.");	// this should be impossible because the would all share the same /etc/pki/product/<productId>.pem file name
+			InstalledProduct installedProduct = installedProducts.get(0);
+			List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not covered by a valid subscription."});
+			Assert.assertEquals(installedProduct.status,"Not Subscribed","Prior to subscribing to any of the stackable subscription pools, Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have this status.");
+			Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails,"Prior to subscribing to any of the stackable subscription pools, Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have these status details: "+expectedStatusDetails);
+			//Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails),"Prior to subscribing to any of the stackable subscription pools, Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have these status details: "+expectedStatusDetails);
 		}
 		
-		
-		// subscribe to each pool and assert "Partially Subscribe" status and overall incompliance until the final pool is subscribed
-//		Assert.assertEquals(clienttasks.getFactValue(ComplianceTests.factNameForSystemCompliance), ComplianceTests.factValueForSystemNonCompliance,
-//			"Prior to subscribing to any of the stackable subscription pools, the overall system entitlement status should NOT be valid/compliant.");
-
-		
+		// incrementally attach one entitlement from each pool in the stack asserting the installed product's status and details along the way
+		// the final attachment should achieve full compliance for the provided products in the stack
 		int s=0;
+		Integer attributeValueStackedThusFar = 0;
+		Integer socketsValueStackedThusFar = 0;
+		Set<String> productIdsProvidedForThusFar = new HashSet<String>();
 		for (SubscriptionPool pool : stackableAttributeSubscriptionPools) {
-//			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 			clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null);
-			Integer attibuteValueStackedThusFar = 0;
-			if (++s < stackableAttributeSubscriptionPools.size()) {
-				
-				attibuteValueStackedThusFar += poolProductAttributeValueMap.get(pool.poolId);
-				
-//				// assert installed products are Partially Subscribed
-//				for (ProductCert installedProductCert : installedProductCerts) {
-//					InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(installedProductCert);
-//					Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to stackable subscription pool for ProductId '"+pool.productId+"', the status of Installed Product '"+installedProduct.productName+"' should be Partially Subscribed.");
-//
-//					// TODO Assert the status details of the consumed subs and/or the installed products and/or the list status
-//					//Status Details:    Only covers 8 of 16 cores.
-//				}
-				// assert provided installed products are Partially Subscribed
-				installedProducts = clienttasks.getCurrentlyInstalledProducts();
-				for (ProductCert providedCurrentProductCert : providedCurrentProductCerts) {
-					InstalledProduct providedInstalledProduct = clienttasks.getInstalledProductCorrespondingToProductCert(providedCurrentProductCert,installedProducts);
-					Assert.assertEquals(providedInstalledProduct.status,"Partially Subscribed","After subscribing to stackable subscription pool '"+pool.subscriptionName+"' id="+pool.poolId+", Installed product '"+providedInstalledProduct.productName+"' which is provided for by the subscription stack should have this status.");
-
-					if (attribute.equals("cores")) {
-						Assert.assertEquals(providedInstalledProduct.statusDetails,String.format("Only covers %s of %s cores.",attibuteValueStackedThusFar,minimumAttributeValue),"After subscribing to stackable subscription pool '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+providedInstalledProduct.productName+"' which is provided for by the subscription stack should have thus far accumulated these status details.");
-					}
-					if (attribute.equals("ram")) {
-						Assert.assertEquals(providedInstalledProduct.statusDetails,String.format("Only covers %sGB of %sGB of RAM.",attibuteValueStackedThusFar,minimumAttributeValue),"After subscribing to stackable subscription pool '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+providedInstalledProduct.productName+"' which is provided for by the subscription stack should have thus far accumulated these status details.");
-					}
-					// TODO Assert the status details of the consumed subs and/or the installed products and/or the list status
-					//Status Details:    Only covers 8 of 16 cores.
+			
+			// keep a running total of how much of the stackable attribute our entitlements have covered thus far
+			attributeValueStackedThusFar += poolProductAttributeValueMap.get(pool.poolId);
+			
+			// special case: when testing cores, we also need to track the sockets stacked thus far since the subscription may potentially includes a sockets attribute too
+			if (attribute.equals("cores")) {
+				String socketsValue = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
+				if (socketsValue!=null) {
+					socketsValueStackedThusFar += Integer.valueOf(socketsValue);
 				}
+			}
+			
+			// keep a running set of which productIdsProvidedFor have been covered by the subscriptions thus far
+			productIdsProvidedForThusFar.addAll(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId));
+			
+			if (++s < stackableAttributeSubscriptionPools.size()) {	// are we still indexing through each pool in the stack (therefore partially compliant)?
 				
+				// assert the installed products that have been provided for by the stack of subscriptions thus far are Partially Subscribed
+				for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+					if (productIdsProvidedForThusFar.contains(installedProduct.productId)) {
+						List<String> expectedStatusDetails = new ArrayList<String>();
+						if (attribute.equals("ram")) {
+							expectedStatusDetails.add(String.format("Only covers %sGB of %sGB of RAM.", attributeValueStackedThusFar,minimumAttributeValue));
+						}
+						if (attribute.equals("sockets")) {
+							expectedStatusDetails.add(String.format("Only covers %s of %s sockets.", attributeValueStackedThusFar,minimumAttributeValue));
+						}
+						if (attribute.equals("cores")) {
+							expectedStatusDetails.add(String.format("Only covers %s of %s cores.", attributeValueStackedThusFar,minimumAttributeValue));
+						}
+						if (attribute.equals("cores") && socketsValueStackedThusFar>0 && socketsValueStackedThusFar<minimumSocketsValue) {	// when a cores stack also includes sockets, we will have more status details
+							expectedStatusDetails.add(String.format("Only covers %s of %s sockets.", socketsValueStackedThusFar,minimumSocketsValue));
+						}
+						Assert.assertEquals(installedProduct.status,"Partially Subscribed","After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have this status.");
+						Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails), "After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have these status details: "+expectedStatusDetails);
+						
+					} else {
+						if (productIdsProvidedForByAllStackableSubscriptionPools.contains(installedProduct.productId)) {
+							List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not covered by a valid subscription."});
+							Assert.assertEquals(installedProduct.status,"Not Subscribed","After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT YET provided for by the subscription stack THUS FAR should have this status.");
+							Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails, "After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT YET provided for by the subscription stack THUS FAR should have these status details: "+expectedStatusDetails);
+							//Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails), "After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT YET provided for by the subscription stack THUS FAR should have these status details: "+expectedStatusDetails);
+						} else {
+							/* These asserts are valid, but not really relevant to this test.  Commented out to reduce noisy logging.
+							List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not covered by a valid subscription."});
+							Assert.assertEquals(installedProduct.status,"Not Subscribed","After subscribing to stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT provided for by the subscription stack should have this status.");
+							Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails), "After subscribing to stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT provided for by the subscription stack should have these status details: "+expectedStatusDetails);
+							*/
+						}
+					}
+				}
+			} else {	// we have now attached the final entitlement (each pool in the stack has been subscribed)
 				
-//				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=739671
-//				boolean invokeWorkaroundWhileBugIsOpen = true;
-//				String bugId="739671"; 
-//				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-//				if (invokeWorkaroundWhileBugIsOpen) {
-//					log.info("Skipping the value assertion for fact '"+ComplianceTests.factNameForSystemCompliance+"' while bug '"+bugId+"' is open.");
-//				} else {
-//				// END OF WORKAROUND
-//				
-//				// assert overall system compliance is not yet valid
-//				Assert.assertEquals(clienttasks.getFactValue(ComplianceTests.factNameForSystemCompliance), ComplianceTests.factValueForSystemPartialCompliance,
-//					"The overall system entitlement status should NOT be valid/compliant until we have subscribed to enough stackable subscription pools to meet coverage for the system's '"+attribute+"' count of '"+minimumAttributeValue+"'.");		
-//				}
-			} else {
-				
-				// assert provided installed products are fully Subscribed
-				installedProducts = clienttasks.getCurrentlyInstalledProducts();
-				for (ProductCert providedCurrentProductCert : providedCurrentProductCerts) {
-					InstalledProduct providedInstalledProduct = clienttasks.getInstalledProductCorrespondingToProductCert(providedCurrentProductCert,installedProducts);
-					Assert.assertEquals(providedInstalledProduct.status,"Subscribed","After subscribing to the final stackable subscription pool '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+providedInstalledProduct.productName+"' which is provided for by the subscription stack should have this status.");
-					Assert.assertEquals(providedInstalledProduct.statusDetails,"","The status details of Installed product '"+providedInstalledProduct.productName+"' which is fully subscribed should now be this.");
+				// assert all of the installed products provided for by the subscription stack are now fully Subscribed
+				for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+					if (productIdsProvidedForByAllStackableSubscriptionPools.contains(installedProduct.productId)) {
+						
+						// special case: when sockets are also stacked with cores, we will have more status details and may not yet have met socket compliance
+						if (attribute.equals("cores") && socketsValueStackedThusFar>0 && socketsValueStackedThusFar<minimumSocketsValue) {
+							List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.", socketsValueStackedThusFar,minimumSocketsValue)});
+							Assert.assertEquals(installedProduct.status,"Partially Subscribed","After attaching the final stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", all system cores should be covered excepty sockets for Installed product '"+installedProduct.productName+"'.");
+							Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails,"After attaching the final stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", all system cores should be covered except sockets for Installed product '"+installedProduct.productName+"'.  Expecting status details: "+expectedStatusDetails);
+							//Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails), "After subscribing to stackable subscription pool '"+pool.subscriptionName+"' id="+pool.poolId+", All system cores should be covered, but not the sockets for Installed product '"+installedProduct.productName+"'.  Expecting status details: "+expectedStatusDetails);
+						} else {
+							
+							// assert this installed product is now fully subscribed
+							Assert.assertEquals(installedProduct.status,"Subscribed","After incrementally attaching the final stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have this status.");
+							Assert.assertTrue(installedProduct.statusDetails.isEmpty(),"The status details of Installed product '"+installedProduct.productName+"' which is fully subscribed should now be empty.");
+						}
+					} else {
+						// installed product should be Not Subscribed since it is not affected by the consumed stack of subscription
+						Assert.assertEquals(installedProduct.status,"Not Subscribed","The stackable subscriptions being tested do NOT provide for installed product '"+installedProduct.productName+"'.");
+					}
 				}
 			}
 		}
-		
-//		// assert installed products are fully Subscribed
-//		for (ProductCert installedProductCert : installedProductCerts) {
-//			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(installedProductCert);
-//			Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to enough stackable subscription pools to cover the system's '"+attribute+"' count ("+minimumAttributeValue+"), the status of Installed Product '"+installedProduct.productName+"' should be fully Subscribed.");
-//		}
-			
-
-		
-//		// assert overall system compliance is now valid
-//		Assert.assertEquals(clienttasks.getFactValue(ComplianceTests.factNameForSystemCompliance), ComplianceTests.factValueForSystemCompliance,
-//			"After having subscribed to all the stackable subscription pools needed to meet coverage for the system's cpu.socket(s) '"+minimumAttributeValue+"', the overall system entitlement status should be valid/compliant.");
 	}
 	
 	@DataProvider(name="getAvailableStackableAttributeSubscriptionPoolsData")
@@ -328,7 +228,6 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 					ll.add(Arrays.asList(new Object[]{null, attribute, stackableAttributeSubscriptionPools}));					
 				}
 			}
-
 		}
 		
 		return ll;
@@ -347,45 +246,22 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 845126 - system.entitlements_valid goes from valid to partial after oversubscribing https://github.com/RedHatQE/rhsm-qe/issues/197
 		
 	// Configuration methods ***********************************************************************
-
 	
-	@BeforeClass(groups={"setup"})
-	public void setupBeforeClass() {
-		
-		// clean out the productCertDirs
-		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+productCertDirForStacking, 0);
-		RemoteFileTasks.runCommandAndAssert(client, "mkdir "+productCertDirForStacking, 0);
-		
-		this.productCertDir = clienttasks.productCertDir;
-	}
-	
-//	@BeforeMethod(groups={"setup"})
 	@AfterClass(groups={"setup"},alwaysRun=true)
 	public void cleanupAfterClass() {
 		if (clienttasks==null) return;
 		
 		// remove overriding test facts from last test
-		clienttasks.deleteFactsFileWithOverridingValues();	
-
-//		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);	// return all entitlements from last test
-		
-		// restore original productCertDir
-		if (this.productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.productCertDir);
-
+		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 	
 	// Protected methods ***********************************************************************
-
-	protected final String productCertDirForStacking = "/tmp/sm-stackingProductDir";
-	protected String productCertDir = null;
-
+	
 	
 	// Data Providers ***********************************************************************
 	
-
 	
-	
-	// FIXME NOT BEING USED
+	// FIXME DELETEME? NOT BEING USED
 	@DataProvider(name="getAllStackableJSONPoolsData")
 	public Object[][] getAllStackableJSONPoolsDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllStackableJSONPoolsDataAsListOfLists());
@@ -420,7 +296,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
-	
+	// FIXME DELETEME? NOT BEING USED
 	@DataProvider(name="getAvailableStackableSubscriptionPoolsData")
 	public Object[][] getAvailableStackableSubscriptionPoolsDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAvailableStackableSubscriptionPoolsDataAsListOfLists());

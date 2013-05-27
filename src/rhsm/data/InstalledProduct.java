@@ -33,7 +33,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 	public String version;
 	public String arch;
 	public String status;
-	public String statusDetails;
+	public List<String> statusDetails;
 	public Calendar startDate;
 	public Calendar endDate;
 	
@@ -41,7 +41,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 		super(productData);
 	}
 	
-	public InstalledProduct(String productName, String productId, String version, String arch, String status, String statusDetails, Calendar startDate, Calendar endDate) {
+	public InstalledProduct(String productName, String productId, String version, String arch, String status, List<String> statusDetails, Calendar startDate, Calendar endDate) {
 		super(null);
 		this.productName = productName;
 		this.productId = productId;
@@ -133,7 +133,19 @@ public class InstalledProduct extends AbstractCommandLineData {
 		Status:               	Subscribed
 		Starts:               	06/26/2012
 		Ends:                 	06/26/2013
-
+		
+		
+		
+		
+		Product Name:   Multi-Attribute Limited Product
+		Product ID:     900
+		Version:        1.0
+		Arch:           x86_64
+		Status:         Partially Subscribed
+		Status Details: Only covers 4 of 22 sockets.
+		                Only covers 16 of 44 cores.
+		Starts:         
+		Ends:     
 		*/
 		
 		Map<String,String> regexes = new HashMap<String,String>();
@@ -144,7 +156,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 		regexes.put("version",		"^Version:(.*)");
 		regexes.put("arch",			"^Arch:(.*)");
 		regexes.put("status",		"^Status:(.*)");
-		regexes.put("statusDetails","^Status Details:(.*)");
+		regexes.put("statusDetails","^Status Details:(.*(\\n.*?)+)^\\w+\\s?\\w+:");
 		regexes.put("startDate",	"^Starts:(.*)");	// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
 		regexes.put("endDate",		"^Ends:(.*)");		// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
 		

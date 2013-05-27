@@ -316,7 +316,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autosubscribe should NOT appear to have subscribed to something when there are no installed products.");
 		Assert.assertTrue(InstalledProduct.parse(sshCommandResult.getStdout()).isEmpty(),
 				"The Installed Product Current Status should be empty when attempting to register with autosubscribe without any product certs installed.");
-		Assert.assertEquals(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null).getStdout().trim(),"No installed products to list",
+		Assert.assertEquals(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null).getStdout().trim(),"No installed products to list",
 				"Since we changed the productCertDir configuration to an empty location, we should not appear to have any products installed.");
 		//List <InstalledProduct> currentlyInstalledProducts = InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null).getStdout());
 		//for (String status : new String[]{"Not Subscribed","Subscribed"}) {
@@ -375,7 +375,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		*/
 
 		// assert that our fake product install appears to have been autosubscribed
-		InstalledProduct autoSubscribedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("status", "Subscribed", InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null).getStdout()));
+		InstalledProduct autoSubscribedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("status", "Subscribed", InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null).getStdout()));
 		Assert.assertNotNull(autoSubscribedProduct,	"We appear to have autosubscribed to our fake product install.");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "The stdout from register with autotosubscribe indicates that we have subscribed to something");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
@@ -421,7 +421,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autosubscribe should NOT appear to have subscribed to something when there are no installed products.");
 		Assert.assertTrue(InstalledProduct.parse(sshCommandResult.getStdout()).isEmpty(),
 				"The Installed Product Current Status should be empty when attempting to register with autosubscribe without any product certs installed.");
-		Assert.assertEquals(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null).getStdout().trim(),"No installed products to list",
+		Assert.assertEquals(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null).getStdout().trim(),"No installed products to list",
 				"Since we changed the productCertDir configuration to an empty location, we should not appear to have any products installed.");
 
 		// subscribe to the first available pool that provides one product (whose product cert was also originally installed)
@@ -470,7 +470,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		*/
 
 		// assert that our tmp product install appears to have been autosubscribed
-		InstalledProduct autoSubscribedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("status", "Subscribed", InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null).getStdout()));
+		InstalledProduct autoSubscribedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("status", "Subscribed", InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null).getStdout()));
 		Assert.assertNotNull(autoSubscribedProduct,	"We appear to have autosubscribed to our fake product install.");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "The stdout from register with autotosubscribe indicates that we have subscribed to something");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");

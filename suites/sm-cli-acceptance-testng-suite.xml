@@ -169,6 +169,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Status Tests">
+		<classes>
+			<class name="rhsm.cli.tests.StatusTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Repos Tests">
 		<classes>
 			<class name="rhsm.cli.tests.ReposTests" />

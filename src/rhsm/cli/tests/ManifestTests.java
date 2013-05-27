@@ -58,7 +58,11 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		dumpResult = RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestFile.getParent()+" && rct dump-manifest "+manifestFile, 0);
 		Assert.assertEquals(dumpResult.getStdout().trim(), "The manifest has been dumped to the current directory", "stdout from rct dump-manifest");
 		dumpResult = RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestFile.getParent()+" && rct dump-manifest "+manifestFile, 0);
-		Assert.assertEquals(dumpResult.getStdout().trim(), "The manifest has been dumped to the current directory (FIXME: exact working is waiting on bug 961124)", "stdout from rct dump-manifest after a second call to dump-manifest is attempted");
+		Assert.assertEquals(dumpResult.getStdout().trim(), "File \""+manifestFile.getParent()+"/signature\" exists. Use -f to force overwriting the file.", "stdout from rct dump-manifest after a second call to dump-manifest is attempted");
+		dumpResult = RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestFile.getParent()+" && rct dump-manifest -f "+manifestFile, 0);
+		Assert.assertEquals(dumpResult.getStdout().trim(), "The manifest has been dumped to the current directory", "stdout from rct dump-manifest");
+		dumpResult = RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestFile.getParent()+" && rct dump-manifest --force "+manifestFile, 0);
+		Assert.assertEquals(dumpResult.getStdout().trim(), "The manifest has been dumped to the current directory", "stdout from rct dump-manifest");
 	}
 	
 	
@@ -133,7 +137,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="execute rct cat-manifest against all of the test manifest files",
-			groups={"blockedByBug-919561","blockedByBug-913720"},
+			groups={"blockedByBug-919561","blockedByBug-913720","blockedByBug-967137"},
 			dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
 			alwaysRun=true,	// run even when there are failures or skips in RCTDumpManifestDestination_Test
 			dataProvider="ManifestFilesData",

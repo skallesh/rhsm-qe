@@ -512,6 +512,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	   }  
 	} 
 
+	/**
+	 * @param <T>
+	 * @param list1
+	 * @param list2
+	 * @return true when lists have the same contents and same size, but not necessarily the same content order
+	 */
+	public static <T> boolean isEqualNoOrder(List<T> list1, List<T> list2) {  
+	   return list1.containsAll(list2) && list2.containsAll(list1) && list1.size()==list2.size();
+	   // similar to Assert.assertEqualsNoOrder(Object[] actual, Object[] expected, String message)
+	}
+	
 	static public String joinListToString(List<String> list, String conjunction) {
 	   StringBuilder sb = new StringBuilder();
 	   boolean first = true;
