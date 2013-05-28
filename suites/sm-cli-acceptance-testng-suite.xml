@@ -676,6 +676,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: InstanceBased Tests">
+		<classes>
+			<class name="rhsm.cli.tests.InstanceBasedTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: SELinux Tests">
 		<classes>
 			<class name="rhsm.cli.tests.SELinuxTests" />
