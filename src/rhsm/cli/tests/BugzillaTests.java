@@ -796,7 +796,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(RemoteFileTasks.testExists(client,"/etc/yum.repos.d/redhat.repo"));
 		String result=client.runCommandAndWait("yum repolist all").getStdout();
-		Assert.assertNoMatch(result, "repolist: 0");
+		Assert.assertContainsMatch(result, "always-enabled-content");
 	}
 	
 	
