@@ -268,18 +268,18 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		System.out.println();
 		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 			int quantity=consumed.quantityUsed;
-			if(ramvalue<=4){
+			if(ramvalue<=8){
 			Assert.assertEquals(quantity, expected);
 			factsMap.put("memory.memtotal", String.valueOf(value*5));
 			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
 			ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
-		}else if(ramvalue>4 && ramvalue<=8){
+		}else if(ramvalue>8 && ramvalue<=16){
 			expected=2;
 			Assert.assertEquals(quantity, expected);
 			factsMap.put("memory.memtotal", String.valueOf(value*9));
 			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
 			ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
-		}else if(ramvalue>8 && ramvalue<=12){
+		}else if(ramvalue>16 && ramvalue<=24){
 			expected=3;
 			Assert.assertEquals(quantity, expected++);
 		}
