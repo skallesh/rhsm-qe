@@ -127,7 +127,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				if(installed.productId.contains("Instance Server")){
 					Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
-					Assert.assertEquals(installed.statusDetails.trim(), messageDetails);
+					Assert.assertEquals(installed.statusDetails, messageDetails);
 				}
 			}
 		}
@@ -235,7 +235,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				if(installed.productId.contains("Instance Server")){
 					Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
-					Assert.assertEquals(installed.statusDetails.trim(), messageDetails);
+					Assert.assertEquals(installed.statusDetails, messageDetails);
 				}
 			}
 			clienttasks.subscribe(null, null, poolId, null, null, "2", null, null, null, null, null);
