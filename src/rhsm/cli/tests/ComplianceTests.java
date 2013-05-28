@@ -48,19 +48,21 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 	
-	@Test(	description="when a product cert is installed that does not match the system (differing arch), assert the installed product status is blocked from going green",
-			groups={"cli.tests","VerifyComplianceOfInstalledProductConsidersSystemArch_Test"/*,"blockedByBug-909467"*/},
+	@Test(	description="when a subscription is attached that does not match the system's arch, assert the installed product status is blocked from going green",
+			groups={"cli.tests","VerifyComplianceConsidersSystemArch_Test","blockedByBug-909467"},
 			dataProvider="getSubscriptionPoolProvidingProductIdOnArchData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyComplianceOfInstalledProductConsidersSystemArch_Test(Object bugzilla, SubscriptionPool pool, String providingProductId, String poolArch) {
+	public void VerifyComplianceConsidersSystemArch_Test(Object bugzilla, SubscriptionPool pool, String providingProductId, String poolArch) {
+		clienttasks.deleteFactsFileWithOverridingValues(fakeArchFactsFilename);
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
-		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
-		Assert.assertEquals(installedProduct.status, "Not Subscribed");
+		//OVERKILL InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
+		//OVERKILL Assert.assertEquals(installedProduct.status, "Not Subscribed");
 		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-		installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
+		ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
+		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
 		
-		// expand the arches that an entitlement from this subscription pool covers
+		// expand the arches that the granted entitlement from this subscription pool covers
 		List<String> poolArches = new ArrayList<String>(Arrays.asList(poolArch.trim().split(" *, *")));	// Note: the arch can be a comma separated list of values
 		// expand the x86 alias
 		if (poolArches.contains("x86")) {poolArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general term to cover all 32-bit intel microprocessors 
@@ -74,6 +76,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// expand the ALL alias
 		if (installedProductArches.contains("ALL")) {installedProductArches.addAll(Arrays.asList("i386","i486","i586","i686","x86_64","ia64","ppc64","s390x"));}
 		
+		// assert the statusDetails for the consumed entitlement
+		if (poolArches.contains(clienttasks.arch)) {
+			Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "The statusDetails from the consumed product subscription should be empty when the system's arch '"+clienttasks.arch+"' is covered by the product subscription arches '"+poolArch.trim()+"'.");
+		} else {
+			Assert.assertEquals(productSubscription.statusDetails.get(0)/*assumes only one detail*/, String.format("Covers architecture %s but the system is %s.", poolArch.trim(), clienttasks.arch), "The statusDetails from the consumed product subscription when the system's arch '"+clienttasks.arch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'.");
+		}
+		
+		/* THIS ASSERTION BLOCK IS NOT ACCURATE SINCE THE ARCH ON THE PRODUCT CERT IS NOT CONSIDERED AT ALL
 		// if the poolArches contains any one element of installedProductArches and contains the system's arch, then status should go "green", otherwise it should be "yellow"
 		String expectedStatus="Partially Subscribed";	// yellow
 		for (String installedProductArch : installedProductArches) {
@@ -83,18 +93,45 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				}
 			}
 		}
-		Assert.assertEquals(installedProduct.status, expectedStatus,"When installed product '"+installedProduct.productName+"' valid on arch(es) '"+installedProduct.arch+"' and the installed system's arch '"+clienttasks.arch+"' do not match the subscription pool's product arch '"+poolArch+"' , the installed product compliance achieveable is limited to yellow after subscribing to '"+pool.subscriptionName+"'.");
+		Assert.assertEquals(installedProduct.status, expectedStatus,"When installed product '"+installedProduct.productName+"' valid on arch(es) '"+installedProduct.arch+"' and the installed system's arch '"+clienttasks.arch+"' do not match the subscription pool's product arch '"+poolArch+"', the installed product compliance achieveable is limited to yellow after subscribing to '"+pool.subscriptionName+"'.");
+		REPLACING THIS ASSERTION BLOCK WITH THE FOLLOWING BLOCK */
+		// assert the status and statusDetails for the installed product
+		if (poolArches.contains(clienttasks.arch)) {
+			Assert.assertEquals(installedProduct.status, "Subscribed", "When installed product '"+installedProduct.productName+"' is covered by subscription '"+pool.subscriptionName+"' whose arches '"+poolArch+"' cover the system's arch '"+clienttasks.arch+"', then the installed product can achieve full green compliance.");
+			Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "The statusDetails for installed product '"+installedProduct.productName+"' productId='"+providingProductId+"' should be empty when the system's arch '"+clienttasks.arch+"' is covered by the product subscription arches '"+poolArch.trim()+"'. (Note: the installed products arches '"+installedProduct.arch+"' are not considered)");
+		} else {
+			Assert.assertEquals(installedProduct.status, "Partially Subscribed", "When installed product '"+installedProduct.productName+"' is covered by subscription '"+pool.subscriptionName+"' whose arches '"+poolArch+"' do NOT cover the system's arch '"+clienttasks.arch+"', then the installed product is limited to yellow compliance.");
+			Assert.assertEquals(installedProduct.statusDetails.get(0)/*assumes only one detail*/, String.format("Covers architecture %s but the system is %s.", poolArch.trim(), clienttasks.arch), "The statusDetails of the installed product '"+installedProduct.productName+"' when the system's arch '"+clienttasks.arch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'.");
+		}
+		
+		// now let's fake the system's arch fact "uname.machine" forcing it to NOT match the providing productSubscription
+		if (productSubscription.statusDetails.isEmpty() && !poolArches.contains("ALL")) {
+			String fakeArch = "amd64";
+			Map<String,String> factsMap = new HashMap<String,String>();
+			factsMap.put("uname.machine",fakeArch);
+			clienttasks.createFactsFileWithOverridingValues(fakeArchFactsFilename,factsMap);
+			clienttasks.facts(null, true, null, null, null);
+			productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
+			Assert.assertEquals(productSubscription.statusDetails.get(0), String.format("Covers architecture %s but the system is %s.", poolArch.trim(), fakeArch), "The statusDetails from the consumed product subscription when the system's arch '"+fakeArch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'.");
+			installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
+			Assert.assertEquals(installedProduct.statusDetails.get(0)/*assumes only one detail*/, String.format("Covers architecture %s but the system is %s.", poolArch.trim(), fakeArch), "The statusDetails of the installed product '"+installedProduct.productName+"' when the system's arch '"+clienttasks.arch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'.");
+		}
 	}
-	@BeforeGroups(groups={"setup"},value="VerifyComplianceOfInstalledProductConsidersSystemArch_Test")
-	public void createFactsFileWithOverridingValuesBeforeVerifyComplianceOfInstalledProductConsidersSystemArch_Test() {
+	@BeforeGroups(groups={"setup"},value="VerifyComplianceConsidersSystemArch_Test")
+	public void createFactsFileWithOverridingValuesBeforeVerifyComplianceConsidersSystemArch_Test() {
+		// these facts will prevent cores, sockets, and ram from interfering with compliance based on the system arch
 		Map<String,String> factsMap = new HashMap<String,String>();
 		factsMap.put("cpu.cpu_socket(s)","1");
+		factsMap.put("cpu.core(s)_per_socket","1");
+		factsMap.put("memory.memtotal","1");
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 	}
-	@AfterGroups(groups={"setup"},value="VerifyComplianceOfInstalledProductConsidersSystemArch_Test")
-	public void deleteFactsFileWithOverridingValuesAfterVerifyComplianceOfInstalledProductConsidersSystemArch_Test() {
+	@AfterGroups(groups={"setup"},value="VerifyComplianceConsidersSystemArch_Test")
+	public void deleteFactsFileWithOverridingValuesAfterVerifyComplianceConsidersSystemArch_Test() {
 		clienttasks.deleteFactsFileWithOverridingValues();
+		clienttasks.deleteFactsFileWithOverridingValues(fakeArchFactsFilename);
 	}
+	protected final String fakeArchFactsFilename = "fake_arch.facts";
 	@DataProvider(name="getSubscriptionPoolProvidingProductIdOnArchData")
 	public Object[][] getSubscriptionPoolProvidingProductIdOnArchDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionPoolProvidingProductIdOnArchDataAsListOfLists());
@@ -127,9 +164,6 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 		return ll;
 	}
-	
-	
-	
 	
 	
 	
@@ -791,7 +825,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
-	@BeforeClass(groups={"setup"})
+//debugTesting	@BeforeClass(groups={"setup"})
 	public void setupProductCertDirsBeforeClass() throws ParseException, JSONException, Exception {
 		
 		// clean out the productCertDirs
