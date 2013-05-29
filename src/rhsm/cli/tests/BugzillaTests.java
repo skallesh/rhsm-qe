@@ -1111,11 +1111,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 	String SyslogMessage="Added subscription for";
 	String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-	clienttasks.subscribe_(true, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
+	clienttasks.subscribe(true, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
 	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
 	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
 	SyslogMessage="Removed subscription for '";
-	clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
+	clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
 	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
 	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";	
@@ -1212,7 +1212,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("stacking_id", "726409");
 		List<String> providedProducts = new ArrayList<String>();
 		providedProducts.add("100000000000002");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"Multi-Stackable for 100000000000002","multi-stackable with zero socket", 1,attributes ,null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"Multi-Stackable for 100000000000002","multi-stackable", 1,attributes ,null);
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, onDate, onDateToTest,"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
@@ -3247,8 +3247,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		log.info("cert contents are " + certsbeforeRHSMService);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+		List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue((consumed.isEmpty()), "autoheal has failed");
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
-		Assert.assertTrue((certs.isEmpty()), "autoheal has failed");
+		System.out.println(certs.size());
 	}
 
 	
@@ -3507,7 +3509,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		for (InstalledProduct installedProductsBeforeAuto : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			if (installedProductsBeforeAuto.status.equals("Subscribed"))
