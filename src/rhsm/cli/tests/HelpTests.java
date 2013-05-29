@@ -975,7 +975,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		command = clienttasks.rhsmCertD; 
 		options.clear();
-		if (clienttasks.redhatReleaseX.equals("5"))	options.add("-?, --help");	// rhel5
+		if (clienttasks.redhatReleaseX.equals("5"))	options.add("-?, --help");	// rhel5	// this logic is also needed in TranslationTests.getTranslatedCommandLineHelpDataAsListOfLists()
 		else										options.add("-h, --help");	// rhel6
 		//options.add("--help-all");		// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
 		//options.add("--help-rhsmcertd");	// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
