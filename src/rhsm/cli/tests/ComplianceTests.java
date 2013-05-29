@@ -825,7 +825,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
-//debugTesting	@BeforeClass(groups={"setup"})
+	@BeforeClass(groups={"setup"})
 	public void setupProductCertDirsBeforeClass() throws ParseException, JSONException, Exception {
 		
 		// clean out the productCertDirs
