@@ -1111,30 +1111,35 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 	String SyslogMessage="Added subscription for";
 	String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
 	clienttasks.subscribe(true, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
-	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
 	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
+
+	
 	SyslogMessage="Removed subscription for '";
-	clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
+	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
-	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";	
+	
+	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 	for (SubscriptionPool available : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 		poolId=available.poolId;
 		productId=available.subscriptionName;
 	}
-	clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null);
 	SyslogMessage="Added subscription for '"+productId+"'";
 	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null);
 	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
-	
+		
 	for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 		serialnums=consumed.serialNumber;
 		productId=consumed.productName;
 	}
-	clienttasks.unsubscribe(null, serialnums, null, null, null);
 	SyslogMessage="Removed subscription for '"+productId+"'";
+	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	clienttasks.unsubscribe(null, serialnums, null, null, null);
 	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
 
 	}
@@ -3230,7 +3235,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				.nextInt(availableServiceLevelData.size()));
 		clienttasks.service_level(null, null, null, null, null, null, null,
 				null, null, null, null, null);
-		clienttasks.subscribe(true, availableService, (String) null, null,
+		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
+		clienttasks.subscribe(true, null, (String) null, null,
 				null, null, null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
@@ -3241,7 +3247,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				moveProductCertFiles(filename);
 			}
 		}
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 		List<EntitlementCert> certsbeforeRHSMService = clienttasks
 				.getCurrentEntitlementCerts();
 		log.info("cert contents are " + certsbeforeRHSMService);
