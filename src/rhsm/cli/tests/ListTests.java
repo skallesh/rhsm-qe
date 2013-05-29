@@ -692,6 +692,22 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		//	[root@jsefler-6 ~]# 
 		
 		
+		// 5/29/2013 Notes: the fix for bug 919584 actually reverted the fix in https://bugzilla.redhat.com/show_bug.cgi?id=800323#c7
+		// which means this test is failing to run subscription-manager within the ssh sub-shell that we use for cli automation.
+		// If I manually edit /usr/sbin/subscription-manager and paste this patch after the imports, then life is good..
+		// If dev does not fix this, then I'm not yet sure what a good work-around solution is for this problem.
+		/*
+		import codecs
+		# Change encoding of output streams when no encoding is forced via
+		# $PYTHONIOENCODING or setting in lib/python{version}/site-packages
+		if sys.getdefaultencoding() == 'ascii':
+		    writer_class = codecs.getwriter('utf-8')
+		if sys.stdout.encoding == None:
+		    sys.stdout = writer_class(sys.stdout)
+		if sys.stderr.encoding == None:
+		    sys.stderr = writer_class(sys.stderr)
+		*/
+		
 		// register and list --available to find the subscription containing a \u2013 character
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
