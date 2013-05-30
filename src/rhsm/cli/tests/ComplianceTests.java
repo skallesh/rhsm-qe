@@ -80,6 +80,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (poolArches.contains(clienttasks.arch)) {
 			Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "The statusDetails from the consumed product subscription should be empty when the system's arch '"+clienttasks.arch+"' is covered by the product subscription arches '"+poolArch.trim()+"'.");
 		} else {
+			if (productSubscription.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 			Assert.assertEquals(productSubscription.statusDetails.get(0)/*assumes only one detail*/, String.format("Covers architecture %s but the system is %s.", poolArch.trim(), clienttasks.arch), "The statusDetails from the consumed product subscription when the system's arch '"+clienttasks.arch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'.");
 		}
 		
@@ -100,6 +101,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(installedProduct.status, "Subscribed", "When installed product '"+installedProduct.productName+"' is covered by subscription '"+pool.subscriptionName+"' whose arches '"+poolArch+"' cover the system's arch '"+clienttasks.arch+"', then the installed product can achieve full green compliance.");
 			Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "The statusDetails for installed product '"+installedProduct.productName+"' productId='"+providingProductId+"' should be empty when the system's arch '"+clienttasks.arch+"' is covered by the product subscription arches '"+poolArch.trim()+"'. (Note: the installed products arches '"+installedProduct.arch+"' are not considered)");
 		} else {
+			if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 			Assert.assertEquals(installedProduct.status, "Partially Subscribed", "When installed product '"+installedProduct.productName+"' is covered by subscription '"+pool.subscriptionName+"' whose arches '"+poolArch+"' do NOT cover the system's arch '"+clienttasks.arch+"', then the installed product is limited to yellow compliance.");
 			Assert.assertEquals(installedProduct.statusDetails.get(0)/*assumes only one detail*/, String.format("Covers architecture %s but the system is %s.", poolArch.trim(), clienttasks.arch), "The statusDetails of the installed product '"+installedProduct.productName+"' when the system's arch '"+clienttasks.arch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'.");
 		}
@@ -112,8 +114,10 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			clienttasks.createFactsFileWithOverridingValues(fakeArchFactsFilename,factsMap);
 			clienttasks.facts(null, true, null, null, null);
 			productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
-			Assert.assertEquals(productSubscription.statusDetails.get(0), String.format("Covers architecture %s but the system is %s.", poolArch.trim(), fakeArch), "The statusDetails from the consumed product subscription when the system's arch '"+fakeArch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'.");
+			if (productSubscription.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
+			Assert.assertEquals(productSubscription.statusDetails.get(0)/*assumes only one detail*/, String.format("Covers architecture %s but the system is %s.", poolArch.trim(), fakeArch), "The statusDetails from the consumed product subscription when the system's arch '"+fakeArch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'.");
 			installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
+			if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 			Assert.assertEquals(installedProduct.statusDetails.get(0)/*assumes only one detail*/, String.format("Covers architecture %s but the system is %s.", poolArch.trim(), fakeArch), "The statusDetails of the installed product '"+installedProduct.productName+"' when the system's arch '"+clienttasks.arch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'.");
 		}
 	}
