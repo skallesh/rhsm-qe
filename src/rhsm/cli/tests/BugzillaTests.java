@@ -84,9 +84,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"StackingFutureSubscriptionWithCurrentSubscription","blockedByBug-966069"},
 			enabled=true)
 	public void StackingFutureSubscriptionWithCurrentSubscription() throws Exception {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		int sockets = 4;
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null, true, null, null, null);
 		Calendar now = new GregorianCalendar();
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		now.add(Calendar.YEAR, 1);
