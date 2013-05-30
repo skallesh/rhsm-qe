@@ -2705,6 +2705,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "Verify if stacking entitlements reports as distinct entries in cli list --installed", groups = {
 			"VerifyDistinct", "blockedByBug-733327" }, enabled = true)
 	public void VerifyDistinctStackingEntires() throws Exception {
+		
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
@@ -2717,38 +2718,41 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
-		
+		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		int sockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+		clienttasks.getFactValue("cpu.cpu_socket(s)");
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.multiEntitlement) {
-				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,	sm_clientPassword, sm_serverUrl, pool.poolId,"sockets");
-				if ((!(poolProductSocketsAttribute == null))&& poolProductSocketsAttribute.equals("1")) {
-					clienttasks.subscribe_(null, null, pool.poolId, null, null,null, null, null, null, null, null);
+				if(pool.productId.equals("awesomeos-x86_64")){
+				System.out.println(pool.multiEntitlement +"   ...."+pool.subscriptionName);
+					clienttasks.subscribe(null, null, pool.poolId, null, null,null, null, null, null, null, null);
 					poolId.add(pool.poolId);
-				}
-			}}
+			}
+		}}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(installed.productId.equals("100000000000002")){
 			Assert.assertEquals(installed.status, "Partially Subscribed");
 			}
-			}
-		clienttasks.subscribe_(null, null, poolId, null, null, null,null, null, null, null, null);
+		}
+		clienttasks.subscribe(null, null, poolId, null, null, null,null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-					if(installedProduct.productId.equals("100000000000002")){
+				
+			if(installedProduct.productId.equals("100000000000002")){
 					List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
 					Assert.assertEquals(consumed.size(), sockets);
 					Assert.assertEquals(installedProduct.status, "Subscribed");
-		}}
+		}
+	  }
 		sockets = 1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 	}
 
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -3233,7 +3237,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				.getCurrentlyAvailableServiceLevels();
 		String availableService = availableServiceLevelData.get(randomGenerator
 				.nextInt(availableServiceLevelData.size()));
-		clienttasks.service_level(null, null, null, null, null, null, null,
+		clienttasks.service_level(null, null, availableService, null, null, null, null,
 				null, null, null, null, null);
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 		clienttasks.subscribe(true, null, (String) null, null,
