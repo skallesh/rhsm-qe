@@ -115,6 +115,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :register-dialog)
         {:redhat-login "account_login"
          :password "account_password"
+         :password-tip "registration_tip_label"
          :system-name "consumer_name"
          :skip-autobind "auto_bind"
          :register "register_button"
