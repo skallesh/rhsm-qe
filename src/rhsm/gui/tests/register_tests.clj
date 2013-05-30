@@ -43,9 +43,9 @@
     (do
       (tasks/ui click :view-system-facts)
       (sleep 5000)
-      (let [result (tasks/ui objectexist :facts-dialog owner)]
+      (let [result (tasks/ui gettextvalue :facts-org)]
         (tasks/ui click :close-facts)
-        (verify (= 1 result))))))
+        (verify (= owner result))))))
 
 (defn register_bad_credentials
   "Checks error messages upon registering with bad credentials."
