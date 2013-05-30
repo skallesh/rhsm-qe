@@ -93,7 +93,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		now.add(Calendar.DATE, 1);
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
 		for(SubscriptionPool availOnDate :getAvailableFutureSubscriptionsOndate(onDateToTest)){
+			if(availOnDate.productId.equals("awesomeos-x86_64")){
+				clienttasks.subscribe(null, null, availOnDate.poolId, null, null,null, null, null, null, null, null);
+		}
+		}
+		for(SubscriptionPool pool :clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			if(pool.productId.equals("awesomeos-x86_64")){
+				clienttasks.subscribe(null, null, pool.poolId, null, null,null, null, null, null, null, null);
+		}
 			
+		}
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(installed.productId.equals("100000000000002")){
+			Assert.assertEquals(installed.status, "Partially Subscribed");
+			}
 		}
 	}
 	
@@ -2725,7 +2738,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.multiEntitlement) {
 				if(pool.productId.equals("awesomeos-x86_64")){
-				System.out.println(pool.multiEntitlement +"   ...."+pool.subscriptionName);
 					clienttasks.subscribe(null, null, pool.poolId, null, null,null, null, null, null, null, null);
 					poolId.add(pool.poolId);
 			}}
