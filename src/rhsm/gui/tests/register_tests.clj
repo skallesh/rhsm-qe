@@ -43,9 +43,9 @@
     (do
       (tasks/ui click :view-system-facts)
       (sleep 5000)
-      (let [result (tasks/ui gettextvalue :facts-org)]
+      (let [result (tasks/ui objectexist :facts-dialog owner)]
         (tasks/ui click :close-facts)
-        (verify (= owner result))))))
+        (verify (= 1 result))))))
 
 (defn register_bad_credentials
   "Checks error messages upon registering with bad credentials."
@@ -146,12 +146,16 @@ verify_password_tip
 (tasks/ui click :register-system)
 (tasks/ui waittillguiexist :register-dialog)
 (tasks/ui click :register)
-(let [tip (tasks/ui gettextvalue :password-tip)]
-  (verify (not (substring? "red.ht" tip)))))
+(try
+  (let [tip (tasks/ui gettextvalue :password-tip)]
+    (verify (not (substring? "red.ht" tip))))
+  (finally
+    (tasks/ui click :register-cancel))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
 ;;;;;;;;;;;;;;;;;;;;
+
 
 (defn ^{DataProvider {:name "userowners"}}
   get_userowners [_]
@@ -163,10 +167,10 @@ verify_password_tip
         (get-userlists (@config :username1) (@config :password1)))
       (if (and (@config :username) (@config :password))
         (get-userlists (@config :username) (@config :password))))
- ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+                                        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
      (if (and (@config :username) (@config :password))
        [(str (@config :username) "   ") (@config :password) nil])
- ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+                                        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
      (if (and (@config :username) (@config :password))
        [(str "   " (@config :username)) (@config :password) nil])))))
 
