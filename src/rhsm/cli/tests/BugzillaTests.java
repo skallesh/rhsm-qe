@@ -1104,12 +1104,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId=68740)
 	public void VerifyBindAndUnbindInSyslog() throws JSONException,Exception {
 		BigInteger serialnums =null;
-		String productId=null;
 		String poolId=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-	String SyslogMessage="Added subscription for";
+	String SyslogMessage="Added subscription for '";
 	String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
 	clienttasks.subscribe(true, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
@@ -1125,18 +1124,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 	for (SubscriptionPool available : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 		poolId=available.poolId;
-		productId=available.subscriptionName;
 	}
-	SyslogMessage="Added subscription for '"+productId+"'";
+	
+	SyslogMessage="Added subscription for '";
 	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
 	clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null);
 	Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, SyslogMessage).trim().equals(""));
 		
 	for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 		serialnums=consumed.serialNumber;
-		productId=consumed.productName;
 	}
-	SyslogMessage="Removed subscription for '"+productId+"'";
+	SyslogMessage="Removed subscription for '";
 	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
 	clienttasks.unsubscribe(null, serialnums, null, null, null);
@@ -2730,8 +2728,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				System.out.println(pool.multiEntitlement +"   ...."+pool.subscriptionName);
 					clienttasks.subscribe(null, null, pool.poolId, null, null,null, null, null, null, null, null);
 					poolId.add(pool.poolId);
-			}
-		}}
+			}}
+		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(installed.productId.equals("100000000000002")){
 			Assert.assertEquals(installed.status, "Partially Subscribed");
@@ -3247,8 +3245,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 			if (installedProduct.status.equalsIgnoreCase("Subscribed") || installedProduct.status.equalsIgnoreCase(
 							"Partially Subscribed")) {
-				filename = installedProduct.productId + ".pem";
-				moveProductCertFiles(filename);
+					moveProductCertFiles(installedProduct.productId + ".pem");
+					moveProductCertFiles(installedProduct.productId + "_.pem");
+
 			}
 		}
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
