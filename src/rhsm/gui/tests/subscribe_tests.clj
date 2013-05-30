@@ -84,6 +84,7 @@
   [_ subscription]
   (tasks/ui selecttab :my-subscriptions)
   (try+ (tasks/unsubscribe subscription)
+        (sleep 1000)
         (verify (= false (tasks/ui rowexist? :my-subscriptions-view subscription)))
         (catch [:type :not-subscribed] _)))
 
@@ -396,6 +397,22 @@
                                   nil
                                   (tasks/unsubscribe subscription))]
       (verify (not (blank? output)))))
+
+(defn ^{Test (:groups ["acceptance"])}
+  check_traceback_unregister
+  "checks for traceback if any during unregister with GUI open"
+  [_]
+  (if (not (tasks/ui showing? :register-system))
+  (tasks/unregister))
+  (let [log "/var/log/rhsm/rhsm.log"
+        output (get-logging @clientcmd
+                            log
+                            "Traceback-register-unregister-GUI-open"
+                            nil
+                            (run-command (str  "subscription-manager register --user=" (@config :username) " --password=" (@config :password) " --org=" (@config :owner-key) " --auto-attach"))
+                            ;(sleep 5000)
+                            (run-command "subscription-manager unregister"))]
+    (verify (not (substring? "Traceback" output)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
