@@ -160,7 +160,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
               {:close-proxy "Close Button"
                :test-connection "Test Connection Button"
                :connection-status "connectionStatusLabel"
-               :proxy-location "Proxy Location:"}))
+               :proxy-location "Proxy Location Text"}))
     (define-elements (windows :information-dialog)
       {:info-ok "OK"})
     (define-elements (windows :warning-dialog)
