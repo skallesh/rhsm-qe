@@ -136,6 +136,19 @@
   (verify (and (tasks/ui showing? :auto-attach)
                (not (tasks/ui showing? :register-system)))))
 
+(defn ^{Test {:groups ["registration"
+                       "blockedByBug-878609"]}}
+verify_password_tip
+"Checks to see if the passeword tip no longer contains red.ht"
+[_]
+(if (not (tasks/ui showing? :register-system))
+  (tasks/unregister))
+(tasks/ui click :register-system)
+(tasks/ui waittillguiexist :register-dialog)
+(tasks/ui click :register)
+(let [tip (tasks/ui gettextvalue :password-tip)]
+  (verify (not (substring? "red.ht" tip)))))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
 ;;;;;;;;;;;;;;;;;;;;
