@@ -2121,6 +2121,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
+		sleep(2*60*1000);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
