@@ -96,6 +96,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 			InstalledProduct installedProduct = installedProducts.get(0);
 			List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not covered by a valid subscription."});
 			Assert.assertEquals(installedProduct.status,"Not Subscribed","Prior to subscribing to any of the stackable subscription pools, Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have this status.");
+			if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 			Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails,"Prior to subscribing to any of the stackable subscription pools, Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have these status details: "+expectedStatusDetails);
 			//Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails),"Prior to subscribing to any of the stackable subscription pools, Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have these status details: "+expectedStatusDetails);
 		}
@@ -141,12 +142,14 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 						if (attribute.equals("cores") && socketsValueStackedThusFar>0 && socketsValueStackedThusFar<minimumSocketsValue) {	// when a cores stack also includes sockets, we will have more status details
 							expectedStatusDetails.add(String.format("Only covers %s of %s sockets.", socketsValueStackedThusFar,minimumSocketsValue));
 						}
+						if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 						Assert.assertEquals(installedProduct.status,"Partially Subscribed","After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have this status.");
 						Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails), "After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have these status details: "+expectedStatusDetails);
 						
 					} else {
 						if (productIdsProvidedForByAllStackableSubscriptionPools.contains(installedProduct.productId)) {
 							List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not covered by a valid subscription."});
+							if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 							Assert.assertEquals(installedProduct.status,"Not Subscribed","After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT YET provided for by the subscription stack THUS FAR should have this status.");
 							Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails, "After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT YET provided for by the subscription stack THUS FAR should have these status details: "+expectedStatusDetails);
 							//Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails), "After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT YET provided for by the subscription stack THUS FAR should have these status details: "+expectedStatusDetails);
@@ -168,6 +171,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 						// special case: when sockets are also stacked with cores, we will have more status details and may not yet have met socket compliance
 						if (attribute.equals("cores") && socketsValueStackedThusFar>0 && socketsValueStackedThusFar<minimumSocketsValue) {
 							List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.", socketsValueStackedThusFar,minimumSocketsValue)});
+							if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 							Assert.assertEquals(installedProduct.status,"Partially Subscribed","After attaching the final stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", all system cores should be covered excepty sockets for Installed product '"+installedProduct.productName+"'.");
 							Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails,"After attaching the final stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", all system cores should be covered except sockets for Installed product '"+installedProduct.productName+"'.  Expecting status details: "+expectedStatusDetails);
 							//Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails), "After subscribing to stackable subscription pool '"+pool.subscriptionName+"' id="+pool.poolId+", All system cores should be covered, but not the sockets for Installed product '"+installedProduct.productName+"'.  Expecting status details: "+expectedStatusDetails);

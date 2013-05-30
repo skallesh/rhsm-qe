@@ -2205,7 +2205,7 @@ public class SubscriptionManagerTasks {
 			this.currentlyRegisteredType = type;
 		} else
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && autosubscribe!=null && autosubscribe) {
-			// https://bugzilla.redhat.com/show_bug.cgi?id=689608
+			// Bug 689608 - Return error code when auto subscribing doesn't find any subscriptions (reported by dgregor)
 			this.currentlyRegisteredUsername = username;
 			this.currentlyRegisteredPassword = password;
 			this.currentlyRegisteredOrg = org;

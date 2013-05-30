@@ -1441,6 +1441,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				// Bug 892711 - rhel-i386-server-sjis-6 channels are available, but not accounted for in product-baseline.json
 				bugIds.add("892711");
 			}
+			if (rhnAvailableChildChannel.matches("rhel-.+-client-dts-5(-.*|$)")) {	// rhel-i386-client-dts-5-debuginfo rhel-i386-client-dts-5-beta-debuginfo rhel-i386-client-dts-5-beta rhel-i386-client-dts-5
+				// Bug 969156 - RHN Channels: [] in product-baseline.json is empty for "Red Hat Developer Toolset (for RHEL Client)"
+				bugIds.add("969156");
+				// Bug 969160 - rhel-*-client-dts-5* channels are not mapped in channel-cert-mapping.txt
+				bugIds.add("969160");
+			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));

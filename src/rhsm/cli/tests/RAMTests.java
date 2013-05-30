@@ -129,7 +129,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify Ram Subscription with disabled certv3 from candlepin ", 
-			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = true)
+			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = false)
 	public void DisableCertV3ForRamBasedSubscription() throws JSONException,Exception {
 		
 		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "false");
@@ -304,13 +304,13 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		 
 		return RAMBasedPools;
 	}
-	 @AfterGroups(groups="setup",value={"DisableCertV3ForRamBasedSubscription"})
+	/* @AfterGroups(groups="setup",value={"DisableCertV3ForRamBasedSubscription"})
 	 public void restartTomcatWithCertV3Enabled() {
 	 clienttasks.unregister(null, null, null);
 	 servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "true");
 	 servertasks.restartTomcat();
 	 clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
-	 }
+	 }*/
 
 	 
 		static public List<EntitlementCert> parseRamInfo(String rawCertificates) {
