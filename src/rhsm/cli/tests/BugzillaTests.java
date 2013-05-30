@@ -2116,20 +2116,22 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyOneCertPerOneSubscription() throws JSONException,
 	Exception {
 		int expected = 0;
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
+		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		
 		clienttasks.deleteFactsFileWithOverridingValues();
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		for (SubscriptionPool subscriptionpool : clienttasks
 				.getCurrentlyAvailableSubscriptionPools()) {
 
 			clienttasks.subscribe_(null, null, subscriptionpool.poolId, null,
-					null, "1", null, null, null, null, null);
+					null, null, null, null, null, null, null);
 			expected = expected + 1;
 			List<File> Cert = clienttasks.getCurrentEntitlementCertFiles();
 			Assert.assertEquals(Cert.size(), expected);
