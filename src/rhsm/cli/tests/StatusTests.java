@@ -261,6 +261,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			
 			// status details from the individual installed products is only included in the status report when the product is Not Subscribed
 			if (installedProduct.status.equals("Not Subscribed")) {
+				if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");	// expectedDetails "Not covered by a valid subscription."
 				Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName+":").isEmpty(),
 						"Installed product '"+installedProduct.productName+"' should be included in the overall status details report when its own status is Not Subscribed.");
 				for (String statusDetail : installedProduct.statusDetails) {
