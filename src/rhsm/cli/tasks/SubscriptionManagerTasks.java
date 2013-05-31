@@ -5036,6 +5036,17 @@ repolist: 3,394
 	 * @param options - any additional options that you want appended when calling "yum repolist enabled" and "yum-config-manager --disable REPO"
 	 */
 	public void yumDisableAllRepos(String options) {
+		
+		// use brute force to disable all repos
+		if (redhatReleaseX.equals("5")) {	// yum-config-manager does not exist on rhel5
+			for (String repoFilepath : Arrays.asList(sshCommandRunner.runCommandAndWait("find /etc/yum.repos.d/ -name '*.repo'").getStdout().trim().split("\n"))) {
+				if (repoFilepath.isEmpty()) continue;
+				updateConfFileParameter(repoFilepath, "enabled", "0");
+			}
+			return;
+		}
+		
+		// use yum-config-manager to disable all the currently enabled repos
 		if (options==null) options="";
 		for (String repo : getYumRepolist(("enabled"+" "+options).trim())) {
 			String command = ("yum-config-manager --disable "+repo+" "+options).trim();
