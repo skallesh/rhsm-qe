@@ -162,7 +162,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client, String.format("wget -O %s %s",localRpmFile,haPackage1Fetch), new Integer(0));
 		
 		// do a yum local install and assert
-		SSHCommandResult yumInstallResult = client.runCommandAndWait(String.format("yum -q -y localinstall %s",localRpmFile));
+		SSHCommandResult yumInstallResult = client.runCommandAndWait(String.format("yum -y --quiet --nogpgcheck localinstall %s",localRpmFile));
 		Assert.assertTrue(clienttasks.isPackageInstalled(haPackage1),"Local install of package '"+haPackage1+"' completed successfully.");
 		
 		// verify that installed products remains unchanged
