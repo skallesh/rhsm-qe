@@ -52,8 +52,12 @@ import com.redhat.qe.tools.SSHCommandResult;
  *	sm.ha.packages = ccs, cluster-cim, cluster-glue, cluster-glue-libs, cluster-glue-libs-devel, cluster-snmp, clusterlib, clusterlib-devel, cman, corosync, corosynclib, corosynclib-devel, fence-agents, fence-virt, fence-virtd-checkpoint, foghorn, libesmtp-devel, libtool, luci, modcluster, omping, openais, openaislib, openaislib-devel, pacemaker, pacemaker-cli, pacemaker-cluster-libs, pacemaker-libs, pacemaker-libs-devel, perl-Net-Telnet, python-repoze-what-plugins-sql, python-repoze-what-quickstart, python-repoze-who-friendlyform, python-repoze-who-plugins-sa, python-suds, python-tw-forms, resource-agents, rgmanager, ricci
  *  # RHEL61 http://download.devel.redhat.com/released/RHEL-6/6.1/Server/i386/os/HighAvailability/listing
  *	sm.ha.packages = ccs, cluster-cim, cluster-glue, cluster-glue-libs, cluster-glue-libs-devel, cluster-snmp, clusterlib, clusterlib-devel, cman, corosync, corosynclib, corosynclib-devel, fence-agents, fence-virt, fence-virtd-checkpoint, foghorn, libesmtp, libesmtp-devel, luci, modcluster, omping, openais, openaislib, openaislib-devel, pacemaker, pacemaker-cli, pacemaker-libs, pacemaker-libs-devel, perl-Net-Telnet, python-repoze-what-plugins-sql, python-repoze-what-quickstart, python-repoze-who-friendlyform, python-repoze-who-plugins-sa, python-tw-forms, resource-agents, rgmanager, ricci
-
- *  FIXME - sm.ha.packages is different on i386
+ *
+ *  # x86_64 i386 ia64 ppc RHEL57 RHEL58 RHEL59
+ *  # http://download.devel.redhat.com/released/RHEL-5-Server/U9/x86_64/os/Cluster/
+ *  # http://download.devel.redhat.com/released/RHEL-5-Server/U8/x86_64/os/Cluster/
+ *  # http://download.devel.redhat.com/released/RHEL-5-Server/U7/x86_64/os/Cluster/
+ *  sm.ha.packages = Cluster_Administration-bn-IN, Cluster_Administration-de-DE, Cluster_Administration-en-US, Cluster_Administration-es-ES, Cluster_Administration-fr-FR, Cluster_Administration-gu-IN, Cluster_Administration-hi-IN, Cluster_Administration-it-IT, Cluster_Administration-ja-JP, Cluster_Administration-kn-IN, Cluster_Administration-ko-KR, Cluster_Administration-ml-IN, Cluster_Administration-mr-IN, Cluster_Administration-or-IN, Cluster_Administration-pa-IN, Cluster_Administration-pt-BR, Cluster_Administration-ru-RU, Cluster_Administration-si-LK, Cluster_Administration-ta-IN, Cluster_Administration-te-IN, Cluster_Administration-zh-CN, Cluster_Administration-zh-TW, cluster-cim, cluster-snmp, ipvsadm, luci, modcluster, piranha, rgmanager, ricci, system-config-cluster
  */
 @Test(groups={"HighAvailabilityTests","AcceptanceTests"})
 public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
@@ -323,7 +327,8 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 
 		// verify High Availability product id is uninstalled
 		InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", haProductId, installedProducts);
-		Assert.assertNull(haInstalledProduct, "The High Availability product id '"+haProductId+"' should no longer be installed after successful removal of High Availability package '"+haPackage1+"' (because no High Availability packages should be installed).");
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) Assert.assertNull(haInstalledProduct, "The High Availability product id '"+haProductId+"' should no longer be installed after successful removal of High Availability package '"+haPackage1+"' (because no High Availability packages should be installed).");
+		else												 Assert.assertNotNull(haInstalledProduct, "The High Availability product id '"+haProductId+"' should no longer be installed after successful removal of High Availability package '"+haPackage1+"' (because no High Availability packages should be installed); HOWEVER on RHEL5 the productId plugin does NOT remove product certs.  This is a known issue.");
 
 		// verify RHEL product server id 69 is installed
 		InstalledProduct serverInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", serverProductId, installedProducts);
@@ -427,21 +432,39 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		if (!clienttasks.releasever.contains("Server")) {	// "5Server" or "6Server"
 			throw new SkipException("High Availability tests are only executable on a RHEL Server.");
 		}
+		
+		serverProductId = "69";	// Red Hat Enterprise Linux Server
+		
+		if (clienttasks.arch.equals("x86_64")) {
+			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/x86_64/os/Cluster/ipvsadm-1.24-13.el5.x86_64.rpm";
+			if (clienttasks.redhatReleaseX.equals("6")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/x86_64/os/Packages/ccs-0.16.2-35.el6.x86_64.rpm";
+		}
+		if (clienttasks.arch.startsWith("i")) {			// i386 i686
+			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/i386/os/Cluster/ipvsadm-1.24-13.el5.i386.rpm";
+			if (clienttasks.redhatReleaseX.equals("6")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/i386/os/Packages/ccs-0.16.2-35.el6.i686.rpm";
+		}
+		if (clienttasks.arch.equals("ia64")) {
+			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/ia64/os/Cluster/ipvsadm-1.24-13.el5.ia64.rpm";
+		}
 		if (clienttasks.arch.startsWith("ppc")) {		// ppc ppc64
 			serverProductId = "74";	// Red Hat Enterprise Linux for IBM POWER
-			throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
+			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/ppc/os/Cluster/ipvsadm-1.24-13.el5.ppc.rpm";
+			if (clienttasks.redhatReleaseX.equals("6")) throw new SkipException("High Availability is not offered on RHEL6 arch '"+clienttasks.arch+"'.");
 		}
-		else if (clienttasks.arch.startsWith("s390")) {	// s390 s390x
+		if (clienttasks.arch.startsWith("s390")) {		// s390 s390x
 			serverProductId = "72";	// Red Hat Enterprise Linux for IBM System z
 			throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
 		}
-		else { 											// i386 x86_64
-			serverProductId = "69";	// Red Hat Enterprise Linux Server
-			if (clienttasks.arch.startsWith("i")) {
-				haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/i386/os/Packages/ccs-0.16.2-35.el6.i686.rpm";
-			} else {
-				haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/x86_64/os/Packages/ccs-0.16.2-35.el6.x86_64.rpm";
-			}
+		
+		if (clienttasks.redhatReleaseX.equals("5")) {
+			haPackage1	= "ipvsadm";	// or  Cluster_Administration-as-IN
+			haPackage2	= "system-config-cluster";	// or Cluster_Administration-bn-IN
+			haSupportedArches	= Arrays.asList("x86_64","x86","i386","i686","ia64","ppc","ppc64");
+		}
+		if (clienttasks.redhatReleaseX.equals("6")) {
+			haPackage1	= "ccs";
+			haPackage2	= "cluster-glue-libs";
+			haSupportedArches	= Arrays.asList("x86_64","x86","i386","i686");
 		}
 	}
 
@@ -501,13 +524,13 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	protected String originalProductCertDir			= null;
 	protected final String haProductCertDir			= "/tmp/sm-haProductCertDir";
 	protected final String backupProductIdJsonFile	= "/tmp/sm-productIdJsonFile";
-	protected /*final*/ String serverProductId		= null;	// set in assertRhelServerBeforeClass()
-	protected final String haPackage1				= "ccs";
-	protected /*final*/ String haPackage1Fetch		= null;	// set in assertRhelServerBeforeClass()	// released RHEL61 package to wget for testing bug 806457
-	protected final String haPackage2				= "cluster-glue-libs";
-	File haEntitlementCertFile = null;
-	public static final List<String> haSupportedArches	= Arrays.asList("x86_64","x86","i386","i686");
-	public static final String haProductId				= "83";	// Red Hat Enterprise Linux High Availability (for RHEL Server)
+	protected String serverProductId				= null;	// set in assertRhelServerBeforeClass()
+	protected String haPackage1						= null;	// set in assertRhelServerBeforeClass()
+	protected String haPackage1Fetch				= null;	// set in assertRhelServerBeforeClass()	// released RHEL61 package to wget for testing bug 806457
+	protected String haPackage2						= null;	// set in assertRhelServerBeforeClass()
+	File haEntitlementCertFile						= null;
+	public List<String> haSupportedArches			= null; // set in assertRhelServerBeforeClass()
+	public static final String haProductId			= "83";	// Red Hat Enterprise Linux High Availability (for RHEL Server)
 
 	
 	
