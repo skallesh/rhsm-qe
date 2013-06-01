@@ -4993,6 +4993,11 @@ repolist: 3,394
 		//	python-suds.noarch            0.4.1-3.el6         rhel-ha-for-rhel-6-server-rpms
 		//	python-tw-forms.noarch        0.9.9-1.el6         rhel-ha-for-rhel-6-server-rpms
 		//	resource-agents.x86_64        3.9.2-12.el6_3.2    rhel-ha-for-rhel-6-server-rpms
+		//	cluster-cim.x86_64                  0.12.1-8.el5_9
+		//	        rhel-ha-for-rhel-5-server-rpms
+		//	cluster-snmp.x86_64                 0.12.1-8.el5_9
+		//	        rhel-ha-for-rhel-5-server-rpms
+		//	ipvsadm.x86_64                      1.24-13.el5   rhel-ha-for-rhel-5-server-rpms
 
 		String availablePackadesTable = result.getStdout();	String prefix = "Available Packages";
 		if (availablePackadesTable.contains(prefix)) {
@@ -5002,7 +5007,8 @@ repolist: 3,394
 		//if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
 		//String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
 		//String regex="^(\\S+) +(\\S+) +(\\S+)$";	// assume all the packages are on a line with three words
-		String regex="^(\\S+)(?:\\n)? +(\\S+) +(\\S+)$";
+		//String regex="^(\\S+)(?:\\n)? +(\\S+) +(\\S+)$";	// works when the second and third word are on the next line, but not just the third 
+		String regex="^(\\S+)(?:\\n)? +(\\S+)(?: +(\\S+)$|\\n +(\\S+)$)";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(availablePackadesTable);
 		if (!matcher.find()) {
