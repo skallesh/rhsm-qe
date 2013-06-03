@@ -316,29 +316,70 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected String selinuxClassMarker = "SM TestClass marker "+String.valueOf(System.currentTimeMillis());	// using a timestamp on the class marker will help identify the test class during which a denial is logged
 	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="Ensure SELinux is Enforcing before running the test suite.")
 	public void ensureSELinuxIsEnforcingBeforeSuite() {
-		if (client1!=null) Assert.assertEquals(client1.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+client1.getConnection().getHostname());
-		if (client2!=null) Assert.assertEquals(client2.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+client2.getConnection().getHostname());
-		if (client1!=null) RemoteFileTasks.markFile(client1, client1tasks.varLogAuditFile, selinuxSuiteMarker);
-		if (client2!=null) RemoteFileTasks.markFile(client2, client2tasks.varLogAuditFile, selinuxSuiteMarker);
+		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
+			if (clienttasks!=null) {
+				Assert.assertEquals(clienttasks.sshCommandRunner.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+clienttasks.sshCommandRunner.getConnection().getHostname());
+				RemoteFileTasks.markFile(clienttasks.sshCommandRunner, clienttasks.varLogAuditFile, selinuxSuiteMarker);
+
+			}
+		}
 	}
+	
 	@BeforeClass(groups={"setup"}, description="Mark the SELinux audit log before running the current class of tests so it can be searched for denials after the test class has run.")
 	public void MarkSELinuxAuditLogBeforeClass() {
-		if (client1!=null) RemoteFileTasks.markFile(client1, client1tasks.varLogAuditFile, selinuxClassMarker);
-		if (client2!=null) RemoteFileTasks.markFile(client2, client2tasks.varLogAuditFile, selinuxClassMarker);
+		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
+			if (clienttasks!=null) {
+				RemoteFileTasks.markFile(clienttasks.sshCommandRunner, clienttasks.varLogAuditFile, selinuxClassMarker);
+			}
+		}
 	}
 	@AfterClass(groups={"setup"}, description="Search the SELinux audit log for denials after running the current class of tests")
 	public void verifyNoSELinuxDenialsWereLoggedAfterClass() {
-		if (client1!=null) Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client1, client1tasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log '"+client1tasks.varLogAuditFile+"' on client "+client1.getConnection().getHostname()+" while executing this test class.");
-		if (client2!=null) Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client2, client2tasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log '"+client2tasks.varLogAuditFile+"' on client "+client2.getConnection().getHostname()+" while executing this test class.");
+		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
+			if (clienttasks!=null) {
+				Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(clienttasks.sshCommandRunner, clienttasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log '"+clienttasks.varLogAuditFile+"' on client "+clienttasks.sshCommandRunner.getConnection().getHostname()+" while executing this test class.");
+			}
+		}
+	}
+	
+	public static String allRegisteredConsumerCertsDir = "/tmp/sm-allRegisteredConsumerCerts";
+	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="Prepare a temporary consumer cert directory where we can track all of the consumers created so we can return their entitlements after the suite.")
+	public void prepareRegisteredConsumerCertsDirectoryBeforeSuite() {
+		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
+			if (clienttasks!=null) {
+				clienttasks.sshCommandRunner.runCommandAndWait("rm -rf "+allRegisteredConsumerCertsDir);
+				clienttasks.sshCommandRunner.runCommandAndWait("mkdir -p "+allRegisteredConsumerCertsDir);
+			}
+		}
+	}
+	@AfterSuite(groups={"cleanup"},description="attempt to delete any abandoned entitlements granted during the run of this suite")
+	public void deleteAllRegisteredConsumerEntitlementsAfterSuite() {
+		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
+			if (clienttasks!=null) {
+				// determine the url to the server
+				String url = "https://"+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname")+":"+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port")+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
+				
+				for (String consumerCertPath : Arrays.asList(clienttasks.sshCommandRunner.runCommandAndWait("find "+allRegisteredConsumerCertsDir+" -name '*cert.pem'").getStdout().trim().split("\n"))) {
+					if (consumerCertPath.isEmpty()) continue;
+					// extract the uuid from the consumerCertPath
+					String uuid = consumerCertPath.replace(allRegisteredConsumerCertsDir, "").replace("_cert.pem", "").replace("/","");
+					// extract the key from the consumerCertPath
+					String consumerKeyPath = consumerCertPath.replace("cert.pem", "key.pem");
+					// curl -k --cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem -X DELETE https://subscription.rhn.stage.redhat.com/subscription/consumers/2f801f45-3b79-42ee-9013-f4ad5bd35c3a/entitlements
+					clienttasks.sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --cert "+consumerCertPath+" --key "+consumerKeyPath+" --request DELETE "+url+"/consumers/"+uuid+"/entitlements");
+				}
+			}
+		}
 	}
 	
 	@AfterSuite(groups={"cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
-		
-		if (client2tasks!=null) client2tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
-		if (client1tasks!=null) client1tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
-		if (client2tasks!=null) client2tasks.clean_(null, null, null);	// in case the unregister fails, also clean the client
-		if (client1tasks!=null) client1tasks.clean_(null, null, null);	// in case the unregister fails, also clean the client
+		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
+			if (clienttasks!=null) {
+				clienttasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
+				clienttasks.clean_(null, null, null);	// in case the unregister fails, also clean the client
+			}
+		}
 	}
 	
 	@AfterSuite(groups={"cleanup"},description="subscription manager tear down")
@@ -363,11 +404,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	@AfterSuite(groups={"return2beaker"/*"cleanup"*/},description="return clients to beaker",dependsOnMethods={"disconnectDatabaseAfterSuite","unregisterClientsAfterSuite"}/*, alwaysRun=true*/)
 	public void return2beaker() {
-		Boolean return2beaker = Boolean.valueOf(getProperty("sm.client.return2beaker","true"));
-		
-		if (return2beaker) {
-			if (client1!=null) client1.runCommandAndWait("return2beaker.sh");	// return this client back to beaker
-			if (client2!=null) client2.runCommandAndWait("return2beaker.sh");	// return this client back to beaker
+		for (SSHCommandRunner client : Arrays.asList(client1,client2)) {
+			if (client!=null) {
+				if (Boolean.valueOf(getProperty("sm.client.return2beaker","true"))) {
+					client.runCommandAndWait("return2beaker.sh");	// return this client back to beaker
+				}
+			}
 		}
 	}
 

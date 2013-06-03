@@ -56,7 +56,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 public class SubscriptionManagerTasks {
 
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
-	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
+	public SSHCommandRunner sshCommandRunner = null;
 	public final String command				= "subscription-manager";
 	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
@@ -2195,6 +2195,11 @@ public class SubscriptionManagerTasks {
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		
+		// copy the current consumer cert and key to allRegisteredConsumerCertsDir for recollection by deleteAllRegisteredConsumerEntitlementsAfterSuite()
+		ConsumerCert consumerCert = getCurrentConsumerCert();
+		sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cp -f "+consumerCert.file+" "+consumerCert.file.getPath().replace(consumerCertDir, SubscriptionManagerCLITestScript.allRegisteredConsumerCertsDir).replaceFirst("cert.pem$", consumerCert.consumerid+"_cert.pem"));
+		sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cp -f "+consumerCert.file.getPath().replace("cert", "key")+" "+consumerCert.file.getPath().replace(consumerCertDir, SubscriptionManagerCLITestScript.allRegisteredConsumerCertsDir).replaceFirst("cert.pem$", consumerCert.consumerid+"_key.pem"));
 		
 		// reset this.currentlyRegistered values
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
