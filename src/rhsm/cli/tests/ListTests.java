@@ -29,6 +29,8 @@ import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
+
+import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
@@ -809,7 +811,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@AfterGroups(groups={"setup"},value="SubscriptionContainingUTF8CharacterTests",alwaysRun=true /* does not seem to have any effect */)
 	public void afterGroupForSubscriptionContainingUTF8CharacterTests() throws JSONException, Exception {
 		clienttasks.unregister_(null, null, null);	// to return any consumed subscriptions containing UTF8 characters
-		if (productIdForSubscriptionContainingUTF8Character!=null) CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForSubscriptionContainingUTF8Character);
+		if (productIdForSubscriptionContainingUTF8Character!=null && !sm_serverType.equals(CandlepinType.hosted)/* we do NOT create/delete subscriptions against hosted */) CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForSubscriptionContainingUTF8Character);
 	}
 	
 	
