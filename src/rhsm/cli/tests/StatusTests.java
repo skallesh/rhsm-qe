@@ -125,9 +125,9 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		// assert the individual installed product status details
 		for (InstalledProduct installedProduct : installedProducts) {
 			for (String statusDetail : installedProduct.statusDetails) {
-				Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName+":(\\n- .*)*?\\n- "+statusDetail).isEmpty(),
+				Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")).isEmpty(),
 						"Expecting the status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' to appear in the list of overall status details.");
-				Assert.assertTrue(!doesStringContainMatches(statusResult.getStdout(), statusDetail+"(\\n- .*)*?\\n- "+statusDetail),
+				Assert.assertTrue(!doesStringContainMatches(statusResult.getStdout(), statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+"(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")),
 						"Status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' should not appear in duplicate.");
 			}
 		}
@@ -261,18 +261,19 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			
 			// status details from the individual installed products is only included in the status report when the product is Not Subscribed
 			if (installedProduct.status.equals("Not Subscribed")) {
-				Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName+":").isEmpty(),
+				if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");	// expectedDetails "Not covered by a valid subscription."
+				Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":").isEmpty(),
 						"Installed product '"+installedProduct.productName+"' should be included in the overall status details report when its own status is Not Subscribed.");
 				for (String statusDetail : installedProduct.statusDetails) {
-					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName+":(\\n- .*)*?\\n- "+statusDetail).isEmpty(),
+					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")).isEmpty(),
 							"Expecting the status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' to appear in the list of overall status details.");
 					//Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+statusDetail+"){2,}"),
 					//		"Status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' should NOT appear in duplicate.");
-					Assert.assertTrue(!doesStringContainMatches(statusResult.getStdout(), statusDetail+"(\\n- .*)*?\\n- "+statusDetail),
+					Assert.assertTrue(!doesStringContainMatches(statusResult.getStdout(), statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+"(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")),
 							"Status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' should not appear in duplicate.");
 				}
 			} else {
-				Assert.assertTrue(getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName+":").isEmpty(),
+				Assert.assertTrue(getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":").isEmpty(),
 						"Installed product '"+installedProduct.productName+"' should NOT be included in the overall status details report when its own status '"+installedProduct.status+"' is something other than Not Subscribed.");
 			}
 		}
@@ -286,11 +287,11 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 						"Expecting the empty status details "+productSubscription.statusDetails+" of consumed subscription '"+productSubscription.productName+" to NOT appear in the list of overall status details.");
 			} else {
 				for (String statusDetail : productSubscription.statusDetails) {
-					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^.*"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+".*:(\\n- .*)*?\\n- "+statusDetail).isEmpty(),
+					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^.*"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+".*:(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")).isEmpty(),
 							"Expecting the status detail '"+statusDetail+"' of consumed subscription '"+productSubscription.productName+"' to appear in the list of overall status details.");
 					//Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+statusDetail+"){2,}"),
 					//		"Status detail '"+statusDetail+"' of consumed subscription '"+productSubscription+"' should NOT appear in duplicate.");
-					Assert.assertTrue(!doesStringContainMatches(statusResult.getStdout(), statusDetail+"(\\n- .*)*?\\n- "+statusDetail),
+					Assert.assertTrue(!doesStringContainMatches(statusResult.getStdout(), statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+"(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")),
 							"Status detail '"+statusDetail+"' of consumed subscription '"+productSubscription.productName+"' should not appear in duplicate.");
 				}
 			}

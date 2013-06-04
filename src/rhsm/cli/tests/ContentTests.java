@@ -751,7 +751,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				if (!arches.isEmpty()) contentBasedArchesFound = true;
 				
 				if (arches.contains("x86")) {arches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
-				Assert.assertTrue(arches.isEmpty() || arches.contains("ALL") || arches.contains(clienttasks.arch), "Content label '"+contentNamespace.label+"' restricted to arches '"+contentNamespace.arches+"' granted by entitlement cert '"+entitlementCert.productNamespaces.get(0).name+"' matches the system's arch '"+clienttasks.arch+"'.");
+				Assert.assertTrue(arches.isEmpty() || arches.contains("ALL") || arches.contains(clienttasks.arch), "Content label '"+contentNamespace.label+"' restricted to arches '"+contentNamespace.arches+"' granted by entitlement cert '"+entitlementCert.orderNamespace.productName+"' matches the system's arch '"+clienttasks.arch+"'.");
 			}
 		}
 		

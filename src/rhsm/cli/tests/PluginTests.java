@@ -548,9 +548,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// subscribe to the High Availability subscription and install an HA package
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
-		if (!HighAvailabilityTests.haSupportedArches.contains(clienttasks.arch)) {
-			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+HighAvailabilityTests.haSupportedArches);
-			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+HighAvailabilityTests.haSupportedArches);
+		if (!getHighAvailabilitySupportArchesForHighAvailability().contains(clienttasks.arch)) {
+			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getHighAvailabilitySupportArchesForHighAvailability());
+			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getHighAvailabilitySupportArchesForHighAvailability());
 		}
 		
 		// Subscribe to the High Availability subscription SKU
@@ -868,7 +868,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(clienttasks.plugins(null,null,null,true).getStdout().contains(expectedPluginReport),
 				"Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
 	}
-
+	
+	List<String> getHighAvailabilitySupportArchesForHighAvailability() {
+		// see HighAvailability.assertRhelServerBeforeClass()
+		if (clienttasks.redhatReleaseX.equals("5")) {
+			return Arrays.asList("x86_64","x86","i386","i686","ia64","ppc","ppc64");
+		}
+		if (clienttasks.redhatReleaseX.equals("6")) {
+			return Arrays.asList("x86_64","x86","i386","i686");
+		}
+		log.warning("FIXME:  Do not know the supported arches are for RHEL "+clienttasks.redhatReleaseX);
+		return Arrays.asList();
+	}
     
 	// Data Providers ***********************************************************************
 	

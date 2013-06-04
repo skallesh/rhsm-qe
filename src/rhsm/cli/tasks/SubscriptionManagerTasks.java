@@ -56,7 +56,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 public class SubscriptionManagerTasks {
 
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
-	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
+	public SSHCommandRunner sshCommandRunner = null;
 	public final String command				= "subscription-manager";
 	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
@@ -2195,6 +2195,11 @@ public class SubscriptionManagerTasks {
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		
+		// copy the current consumer cert and key to allRegisteredConsumerCertsDir for recollection by deleteAllRegisteredConsumerEntitlementsAfterSuite()
+		ConsumerCert consumerCert = getCurrentConsumerCert();
+		sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cp -f "+consumerCert.file+" "+consumerCert.file.getPath().replace(consumerCertDir, SubscriptionManagerCLITestScript.allRegisteredConsumerCertsDir).replaceFirst("cert.pem$", consumerCert.consumerid+"_cert.pem"));
+		sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cp -f "+consumerCert.file.getPath().replace("cert", "key")+" "+consumerCert.file.getPath().replace(consumerCertDir, SubscriptionManagerCLITestScript.allRegisteredConsumerCertsDir).replaceFirst("cert.pem$", consumerCert.consumerid+"_key.pem"));
 		
 		// reset this.currentlyRegistered values
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
@@ -4993,6 +4998,11 @@ repolist: 3,394
 		//	python-suds.noarch            0.4.1-3.el6         rhel-ha-for-rhel-6-server-rpms
 		//	python-tw-forms.noarch        0.9.9-1.el6         rhel-ha-for-rhel-6-server-rpms
 		//	resource-agents.x86_64        3.9.2-12.el6_3.2    rhel-ha-for-rhel-6-server-rpms
+		//	cluster-cim.x86_64                  0.12.1-8.el5_9
+		//	        rhel-ha-for-rhel-5-server-rpms
+		//	cluster-snmp.x86_64                 0.12.1-8.el5_9
+		//	        rhel-ha-for-rhel-5-server-rpms
+		//	ipvsadm.x86_64                      1.24-13.el5   rhel-ha-for-rhel-5-server-rpms
 
 		String availablePackadesTable = result.getStdout();	String prefix = "Available Packages";
 		if (availablePackadesTable.contains(prefix)) {
@@ -5002,7 +5012,8 @@ repolist: 3,394
 		//if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
 		//String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
 		//String regex="^(\\S+) +(\\S+) +(\\S+)$";	// assume all the packages are on a line with three words
-		String regex="^(\\S+)(?:\\n)? +(\\S+) +(\\S+)$";
+		//String regex="^(\\S+)(?:\\n)? +(\\S+) +(\\S+)$";	// works when the second and third word are on the next line, but not just the third 
+		String regex="^(\\S+)(?:\\n)? +(\\S+)(?: +(\\S+)$|\\n +(\\S+)$)";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(availablePackadesTable);
 		if (!matcher.find()) {
@@ -5036,6 +5047,17 @@ repolist: 3,394
 	 * @param options - any additional options that you want appended when calling "yum repolist enabled" and "yum-config-manager --disable REPO"
 	 */
 	public void yumDisableAllRepos(String options) {
+		
+		// use brute force to disable all repos
+		if (redhatReleaseX.equals("5")) {	// yum-config-manager does not exist on rhel5
+			for (String repoFilepath : Arrays.asList(sshCommandRunner.runCommandAndWait("find /etc/yum.repos.d/ -name '*.repo'").getStdout().trim().split("\n"))) {
+				if (repoFilepath.isEmpty()) continue;
+				updateConfFileParameter(repoFilepath, "enabled", "0");
+			}
+			return;
+		}
+		
+		// use yum-config-manager to disable all the currently enabled repos
 		if (options==null) options="";
 		for (String repo : getYumRepolist(("enabled"+" "+options).trim())) {
 			String command = ("yum-config-manager --disable "+repo+" "+options).trim();

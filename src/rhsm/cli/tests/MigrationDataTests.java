@@ -616,6 +616,18 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.matches("rhel-.+-client-dts-5(-.*|$)")) {	// rhel-i386-client-dts-5-debuginfo rhel-i386-client-dts-5-beta-debuginfo rhel-i386-client-dts-5-beta rhel-i386-client-dts-5
+			// Bug 969160 - rhel-*-client-dts-5* channels are not mapped in channel-cert-mapping.txt
+			// Bug 969156 - RHN Channels: [] in product-baseline.json is empty for "Red Hat Developer Toolset (for RHEL Client)"
+			log.warning("(degregor 5/31/2013) DTS for Client got dropped.  Those channels shouldn't be available in RHN. - https://bugzilla.redhat.com/show_bug.cgi?id=969156#c1");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.matches("rhel-.+-client-multimedia-5(-.*|$)")) {	// rhel-i386-client-multimedia-5 rhel-i386-client-multimedia-5-beta
+			log.warning("(degregor 5/31/2013) I don't think we ever added these to CDN.  Please ignore them for now.");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
 		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
