@@ -222,7 +222,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 		regexes.put("provides",				"Provides:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// this assumes that Provides is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
 		regexes.put("contractNumber",		"Contract:(.*)");	// Bug 818355 - Terminology Change: Contract Number -> Contract
 		regexes.put("accountNumber",		"Account:(.*)");	// Bug 818339 - Terminology Change: Account Number -> Account
-		regexes.put("serialNumber",			"Serial Number:(.*)");	// may need to be changed for Bug 963815
+		regexes.put("serialNumber",			"Serial:(.*)");		// Bug 963815 - String Update: 'Serial Number' > 'Serial' in 'list --consumed'
 		regexes.put("isActive",				"Active:(.*)");
 		regexes.put("quantityUsed",			"Quantity Used:(.*)");
 		regexes.put("serviceLevel",			"Service Level:(.*)");
