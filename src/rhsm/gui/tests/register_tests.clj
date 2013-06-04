@@ -152,6 +152,23 @@ verify_password_tip
   (finally
     (tasks/ui click :register-cancel))))
 
+(defn ^{Test (:groups ["registration"
+                       "blockedByBug-920091"])}
+  check_traceback_unregister
+  "checks for traceback if any during unregister with GUI open"
+  [_]
+  (if (not (tasks/ui showing? :register-system))
+  (tasks/unregister))
+  (let [log "/var/log/rhsm/rhsm.log"
+        output (get-logging @clientcmd
+                            log
+                            "Traceback-register-unregister-GUI-open"
+                            nil
+                            (run-command (str  "subscription-manager register --user=" (@config :username) " --password=" (@config :password) " --org=" (@config :owner-key) " --auto-attach"))
+                            ;(sleep 5000)
+                            (run-command "subscription-manager unregister"))]
+    (verify (not (substring? "Traceback" output)))))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
 ;;;;;;;;;;;;;;;;;;;;
