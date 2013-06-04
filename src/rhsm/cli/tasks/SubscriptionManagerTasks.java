@@ -1305,7 +1305,8 @@ public class SubscriptionManagerTasks {
 		return ConsumerCert.parseStdoutFromOpensslX509(certificate);
 	}
 	/**
-	 * @return a ConsumerCert object corresponding to the current identity certificate parsed from the output of: rct cat-cert /etc/pki/consumer/cert.pem
+	 * @return A ConsumerCert object corresponding to the current identity certificate parsed from the output of: rct cat-cert /etc/pki/consumer/cert.pem is returned.
+	 * If no consumer cert exists, null is returned.
 	 */
 	public ConsumerCert getCurrentConsumerCert() {
 		if (!RemoteFileTasks.testExists(sshCommandRunner, this.consumerCertFile())) {
@@ -2198,8 +2199,10 @@ public class SubscriptionManagerTasks {
 		
 		// copy the current consumer cert and key to allRegisteredConsumerCertsDir for recollection by deleteAllRegisteredConsumerEntitlementsAfterSuite()
 		ConsumerCert consumerCert = getCurrentConsumerCert();
-		sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cp -f "+consumerCert.file+" "+consumerCert.file.getPath().replace(consumerCertDir, SubscriptionManagerCLITestScript.allRegisteredConsumerCertsDir).replaceFirst("cert.pem$", consumerCert.consumerid+"_cert.pem"));
-		sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cp -f "+consumerCert.file.getPath().replace("cert", "key")+" "+consumerCert.file.getPath().replace(consumerCertDir, SubscriptionManagerCLITestScript.allRegisteredConsumerCertsDir).replaceFirst("cert.pem$", consumerCert.consumerid+"_key.pem"));
+		if (consumerCert!=null) {
+			sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cp -f "+consumerCert.file+" "+consumerCert.file.getPath().replace(consumerCertDir, SubscriptionManagerCLITestScript.allRegisteredConsumerCertsDir).replaceFirst("cert.pem$", consumerCert.consumerid+"_cert.pem"));
+			sshCommandRunner.runCommandAndWait/*WithoutLogging*/("cp -f "+consumerCert.file.getPath().replace("cert", "key")+" "+consumerCert.file.getPath().replace(consumerCertDir, SubscriptionManagerCLITestScript.allRegisteredConsumerCertsDir).replaceFirst("cert.pem$", consumerCert.consumerid+"_key.pem"));
+		}
 		
 		// reset this.currentlyRegistered values
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
