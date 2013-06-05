@@ -330,6 +330,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, ConsumerType.system)) {
 			Assert.assertEquals(registerResult.getStderr().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+poolId+"'.", "Registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
+			Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
+
 			// now register with the same activation key using the needed ConsumerType
 			type = ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"));
 			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, type, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, false /*was already unregistered by force above*/, null, null, null, null);
@@ -340,6 +342,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (ConsumerType.person.equals(type)) {
 			Assert.assertEquals(registerResult.getStderr().trim(), "A consumer type of 'person' cannot be used with activation keys", "Registering with an activationKey containing a pool that requires_consumer_type=person should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool that requires a person consumer should fail.");
+			Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 			Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),0,"No subscriptions should be consumed after attempting to register with an activationKey containing a pool that requires a person consumer type.");
 			return;
 		}
@@ -349,6 +352,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			//Assert.assertEquals(registerResult.getStderr().trim(), String.format("No entitlements are available from the pool with id '%s'.",poolId), "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");	// expected string changed by bug 876758
 			Assert.assertEquals(registerResult.getStderr().trim(), String.format("No subscriptions are available from the pool with id '%s'.",poolId), "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
+			Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 			return;
 		}
 		
@@ -369,6 +373,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 					// 201111232226:10.300 - FINE: ExitCode: 255
 					Assert.assertTrue(registerResult.getStderr().trim().startsWith("Unable to entitle consumer to the pool with id '"+poolId+"'."), "Expected stderr to start with: \"Unable to entitle consumer to the pool with id '"+poolId+"'.\" because the host has not registered.");
 					Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a virt_only derived_pool on a standalone candlepin server for which our system's host is not registered.");
+					Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 					return;
 				}
 				// END OF WORKAROUND
@@ -379,6 +384,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				//201112021710:31.299 - FINE: ExitCode: 255
 				Assert.assertEquals(registerResult.getStderr().trim(),"Guest's host does not match owner of pool: '"+poolId+"'.");
 				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a virt_only derived_pool on a standalone candlepin server for which our system's host is not registered.");
+				Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 
 				return;
 			}
@@ -496,6 +502,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The expected exit code from the register attempt with activationKey using the wrong org.");
 				//Assert.assertEquals(registerResult.getStdout().trim(), "", "The expected stdout result the register attempt with activationKey using the wrong org.");
 				Assert.assertEquals(registerResult.getStderr().trim(), "Activation key '"+activationKeyName+"' not found for organization '"+differentOrg+"'.", "The expected stderr result from the register attempt with activationKey using the wrong org.");
+				Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 
 			}
 		}
@@ -547,6 +554,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(client.getStderr().trim(), "No entitlements are available from the pool with id '"+jsonCurrentPool.getString("id")+"'.", "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");	// string changed by bug 876758
 		Assert.assertEquals(client.getStderr().trim(), "No subscriptions are available from the pool with id '"+jsonCurrentPool.getString("id")+"'.", "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");
 		Assert.assertEquals(client.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which non enough entitlements remain should fail.");
+		Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 	}
 	
 	
