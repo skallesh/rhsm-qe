@@ -165,7 +165,6 @@ verify_password_tip
                             "Traceback-register-unregister-GUI-open"
                             nil
                             (run-command (str  "subscription-manager register --user=" (@config :username) " --password=" (@config :password) " --org=" (@config :owner-key) " --auto-attach"))
-                            ;(sleep 5000)
                             (run-command "subscription-manager unregister"))]
     (verify (not (substring? "Traceback" output)))))
 
@@ -184,10 +183,10 @@ verify_password_tip
         (get-userlists (@config :username1) (@config :password1)))
       (if (and (@config :username) (@config :password))
         (get-userlists (@config :username) (@config :password))))
-                                        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
      (if (and (@config :username) (@config :password))
        [(str (@config :username) "   ") (@config :password) nil])
-                                        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
      (if (and (@config :username) (@config :password))
        [(str "   " (@config :username)) (@config :password) nil])))))
 
