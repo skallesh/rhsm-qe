@@ -197,7 +197,7 @@
   import_random
   "Asserts that a random file cannot be imported."
   [_]
-  (let [certname "/tmp/randomCert.pem"]
+  (let [certname "/tmp/randomcert.pem"]
     (run-command (str "rm -rf " certname))
     (run-command (str "dd if=/dev/urandom of=" certname " bs=1M count=2"))
     (import-bad-cert certname :invalid-cert)))

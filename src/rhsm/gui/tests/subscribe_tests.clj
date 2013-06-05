@@ -84,6 +84,7 @@
   [_ subscription]
   (tasks/ui selecttab :my-subscriptions)
   (try+ (tasks/unsubscribe subscription)
+        (sleep 1000)
         (verify (= false (tasks/ui rowexist? :my-subscriptions-view subscription)))
         (catch [:type :not-subscribed] _)))
 

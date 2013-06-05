@@ -136,9 +136,42 @@
   (verify (and (tasks/ui showing? :auto-attach)
                (not (tasks/ui showing? :register-system)))))
 
+(defn ^{Test {:groups ["registration"
+                       "blockedByBug-878609"]}}
+verify_password_tip
+"Checks to see if the passeword tip no longer contains red.ht"
+[_]
+(if (not (tasks/ui showing? :register-system))
+  (tasks/unregister))
+(tasks/ui click :register-system)
+(tasks/ui waittillguiexist :register-dialog)
+(tasks/ui click :register)
+(try
+  (let [tip (tasks/ui gettextvalue :password-tip)]
+    (verify (not (substring? "red.ht" tip))))
+  (finally
+    (tasks/ui click :register-cancel))))
+
+(defn ^{Test (:groups ["registration"
+                       "blockedByBug-920091"])}
+  check_traceback_unregister
+  "checks for traceback if any during unregister with GUI open"
+  [_]
+  (if (not (tasks/ui showing? :register-system))
+  (tasks/unregister))
+  (let [log "/var/log/rhsm/rhsm.log"
+        output (get-logging @clientcmd
+                            log
+                            "Traceback-register-unregister-GUI-open"
+                            nil
+                            (run-command (str  "subscription-manager register --user=" (@config :username) " --password=" (@config :password) " --org=" (@config :owner-key) " --auto-attach"))
+                            (run-command "subscription-manager unregister"))]
+    (verify (not (substring? "Traceback" output)))))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
 ;;;;;;;;;;;;;;;;;;;;
+
 
 (defn ^{DataProvider {:name "userowners"}}
   get_userowners [_]
@@ -150,10 +183,10 @@
         (get-userlists (@config :username1) (@config :password1)))
       (if (and (@config :username) (@config :password))
         (get-userlists (@config :username) (@config :password))))
- ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
      (if (and (@config :username) (@config :password))
        [(str (@config :username) "   ") (@config :password) nil])
- ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
      (if (and (@config :username) (@config :password))
        [(str "   " (@config :username)) (@config :password) nil])))))
 
