@@ -223,11 +223,20 @@ Certificate:
 		//	Subject:
 		//		CN: 2f62b61b-9150-4ca2-83c6-72b76a31ad0b
 		
+		//	Issuer:
+		//		C: US
+		//		CN: Red Hat Candlepin Authority
+		//		O: Red Hat, Inc.
+		//		OU: Red Hat Network
+		//		ST: North Carolina
+		//		emailAddress: ca-support@redhat.com
+
+		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
 		regexes.put("consumerid",			"Subject:(?:(?:\\n.+)+)CN: (.+)");
-		//regexes.put("issuer",				"Issuer:\\s*(.*)");
+		regexes.put("issuer",				"Issuer:(?:(?:\\n.+)+)CN: (.+)");	// added by bug 968364
 		regexes.put("name",					"Certificate:(?:(?:\\n.+)+)Alt Name: DirName:/CN=(.+)");
 		regexes.put("serialString",			"Certificate:(?:(?:\\n.+)+)Serial: (.+)");
 		regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");

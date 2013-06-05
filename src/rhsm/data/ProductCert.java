@@ -421,12 +421,19 @@ public class ProductCert extends AbstractCommandLineData {
 		//		Arch: ia64
 		//		Tags: rhel-5,rhel-5-server
 		
-		
+		//	Issuer:
+		//		C: US
+		//		CN: Red Hat Entitlement Product Authority
+		//		O: Red Hat, Inc.
+		//		OU: Red Hat Network
+		//		ST: North Carolina
+		//		emailAddress: ca-support@redhat.com
+
 		Map<String,String> regexes = new HashMap<String,String>();
 
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		regexes.put("id",					"Subject:(?:(?:\\n.+)+)CN: (.+)");
-		//regexes.put("issuer",				"Issuer:\\s*(.*)");
+		regexes.put("issuer",				"Issuer:(?:(?:\\n.+)+)CN: (.+)");	// added by bug 968364
 		regexes.put("serialString",			"Certificate:(?:(?:\\n.+)+)Serial: (.+)");
 		regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
 		regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
