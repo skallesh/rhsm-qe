@@ -33,7 +33,8 @@ public class OrderNamespace extends AbstractCommandLineData {
 	public String quantity;
 	public Calendar startDate;
 	public Calendar endDate;
-	public String ramLimit;	// Bug 861993 - Include RAM value in certificates
+	public String ramLimit;		// Bug 861993 - Include RAM value in certificates
+	public String coreLimit;	// Bug 955142 - Core limit info is not added to the entitlement certs
 	public String virtualizationLimit;
 	public String socketLimit;
 	public Integer contractNumber;
@@ -65,6 +66,7 @@ public class OrderNamespace extends AbstractCommandLineData {
 		if (startDate != null)				string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
 		if (endDate != null)				string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
 		if (ramLimit != null)				string += String.format(" %s='%s'", "ramLimit",ramLimit);
+		if (coreLimit != null)				string += String.format(" %s='%s'", "coreLimit",coreLimit);
 		if (virtualizationLimit != null)	string += String.format(" %s='%s'", "virtualizationLimit",virtualizationLimit);
 		if (socketLimit != null)			string += String.format(" %s='%s'", "socketLimit",socketLimit);
 		if (contractNumber != null)			string += String.format(" %s='%s'", "contractNumber",contractNumber);
@@ -404,6 +406,7 @@ public class OrderNamespace extends AbstractCommandLineData {
 		regexes.put("startDate",			"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
 		regexes.put("endDate",				"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
 		regexes.put("ramLimit",				"Order:(?:(?:\\n.+)+)RAM Limit: (.+)");	// Bug 861993 - Include RAM value in certificates
+		regexes.put("coreLimit",			"Order:(?:(?:\\n.+)+)Core Limit: (.+)");	// Bug 955142 - Core limit info is not added to the entitlement certs
 		regexes.put("virtualizationLimit",	"Order:(?:(?:\\n.+)+)Virt Limit: (.+)");
 		regexes.put("socketLimit",			"Order:(?:(?:\\n.+)+)Socket Limit: (.+)");
 		regexes.put("contractNumber",		"Order:(?:(?:\\n.+)+)Contract: (.+)");

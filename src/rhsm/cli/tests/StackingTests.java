@@ -17,6 +17,7 @@ import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.SubscriptionPool;
 
@@ -36,7 +37,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance",
 			enabled=true,
-			groups={"AcceptanceTests","blockedByBug-739671", "blockedByBug-740377"},
+			groups={"AcceptanceTests","blockedByBug-739671", "blockedByBug-740377", "blockedByBug-861993", "blockedByBug-955142"},
 			dataProvider="getAvailableStackableAttributeSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
 	public void StackEachPoolToAchieveAttributeCompliance_Test(Object bugzilla, String attribute, List<SubscriptionPool> stackableAttributeSubscriptionPools) throws JSONException, Exception{
@@ -109,6 +110,18 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		Set<String> productIdsProvidedForThusFar = new HashSet<String>();
 		for (SubscriptionPool pool : stackableAttributeSubscriptionPools) {
 			clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null);
+			
+			// add some test coverage for bugs 861993 and 955142
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
+			if (attribute.equals("ram")) {
+				Assert.assertEquals(entitlementCert.orderNamespace.ramLimit,poolProductAttributeValueMap.get(pool.poolId).toString(),"rct cat-cert tool reports the expected RAM Limit value in the Order for subscription '"+pool.subscriptionName+"'.");
+			}
+			if (attribute.equals("sockets")) {
+				Assert.assertEquals(entitlementCert.orderNamespace.socketLimit,poolProductAttributeValueMap.get(pool.poolId).toString(),"rct cat-cert tool reports the expected Socket Limit value in the Order for subscription '"+pool.subscriptionName+"'.");
+			}
+			if (attribute.equals("cores")) {
+				Assert.assertEquals(entitlementCert.orderNamespace.coreLimit,poolProductAttributeValueMap.get(pool.poolId).toString(),"rct cat-cert tool reports the expected Core Limit value in the Order for subscription '"+pool.subscriptionName+"'.");
+			}
 			
 			// keep a running total of how much of the stackable attribute our entitlements have covered thus far
 			attributeValueStackedThusFar += poolProductAttributeValueMap.get(pool.poolId);
