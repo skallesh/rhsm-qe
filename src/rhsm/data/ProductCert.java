@@ -35,7 +35,6 @@ public class ProductCert extends AbstractCommandLineData {
 	public ProductNamespace productNamespace;
 	protected String rawCertificate;
 	
-	// TODO get rid of these since they are in productNamespace
 	public String productName;	// comes from the ProductNamespace
 	public String productId;	// comes from the ProductNamespace (this is the OID hash for example the 69 - found in 69.pem)
 

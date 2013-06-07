@@ -1,6 +1,7 @@
 package rhsm.cli.tests;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -320,17 +321,38 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void YumRemoveFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test() {
+		
+		ProductCert haProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",haProductId, clienttasks.getCurrentProductCerts());	
+		// assemble all of the provided tags from the haProductCert
+		List<String> haProductCertProvidedTags = Arrays.asList(haProductCert.productNamespace.providedTags.split("\\s*,\\s*"));
+		boolean haProductCertProvidesATagStartingWithRhel = false;
+		for (String tag : haProductCertProvidedTags) {
+			if (tag.toLowerCase().startsWith("rhel")) {
+				log.info("Found HA ProductCert tag '"+tag+"' that begins with rhel*.");
+				haProductCertProvidesATagStartingWithRhel = true;
+			}
+		}
+		
+		// remove the final package installed from the ha repo
 		clienttasks.yumRemovePackage(haPackage1);
 		
 		// get the currently installed products
 		List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 
 		// verify High Availability product id is uninstalled
+		// but it should only be uninstalled if it does not provide an rhel* tags as stated in https://bugzilla.redhat.com/show_bug.cgi?id=859197#c15
 		InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", haProductId, installedProducts);
+		/* valid before https://bugzilla.redhat.com/show_bug.cgi?id=859197#c15
 		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) Assert.assertNull(haInstalledProduct, "The High Availability product id '"+haProductId+"' should no longer be installed after successful removal of High Availability package '"+haPackage1+"' (because no High Availability packages should be installed).");
 		else												 Assert.assertNotNull(haInstalledProduct, "The High Availability product id '"+haProductId+"' should no longer be installed after successful removal of High Availability package '"+haPackage1+"' (because no High Availability packages should be installed); HOWEVER on RHEL5 the productId plugin does NOT remove product certs.  This is a known issue.");
-
-		// verify RHEL product server id 69 is installed
+		*/
+		if (haProductCertProvidesATagStartingWithRhel) {
+			Assert.assertNotNull(haInstalledProduct, "The High Availability product id '"+haProductId+"' should remain installed despite successful removal of the final High Availability package '"+haPackage1+"' (because the High Availability product cert provides a tag that starts with rhel* even when the last High Availability package installed was removed).");
+		} else {
+			Assert.assertNull(haInstalledProduct, "The High Availability product id '"+haProductId+"' should no longer be installed after successful removal of High Availability package '"+haPackage1+"' (because no High Availability packages should be installed AND because none of its provided tags start with rhel*).");			
+		}
+		
+		// verify RHEL product server id 69 remains installed
 		InstalledProduct serverInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", serverProductId, installedProducts);
 		Assert.assertNotNull(serverInstalledProduct, "The RHEL Server product id '"+serverProductId+"' should remain installed after successful removal of High Availability package '"+haPackage1+"'.");
 	}
