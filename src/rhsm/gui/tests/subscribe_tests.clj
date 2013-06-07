@@ -312,8 +312,7 @@
                        :skip-dropdowns? true))
         hasprod? (fn [s] (substring? product s))
         inmap? (fn [e] (some hasprod? (flatten e)))
-        matches (flatten (filter inmap? @productlist))
-        not-nil? (fn [b] (not (nil? b)))]
+        matches (flatten (filter inmap? @productlist))]
     (doseq [s seen]
       (verify (not-nil? (some #{s} matches))))
     (doseq [e expected]

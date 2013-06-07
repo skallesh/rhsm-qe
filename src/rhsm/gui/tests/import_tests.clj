@@ -28,8 +28,6 @@
 ;  settextvalue's bullshit
 (def tmpcertpath "/tmp/sm-boguscerts/")
 
-(defn not-nil? [b] (not (nil? b)))
-
 (defn ^String str-drop [n ^String s]
   (if (< (count s) n)
     ""
