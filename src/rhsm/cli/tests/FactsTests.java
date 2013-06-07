@@ -807,6 +807,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void MalformedCustomFacts_Test() {
 		File malformedFactsFile = new File(clienttasks.factsDir+File.separatorChar+malformedFactsFilename);
 		
+		// mark the rhsm.log file
+//		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
+		String logMarker = System.currentTimeMillis()+" Testing MalformedCustomFacts_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
+
 		// create malformed facts
 		Map<String,String> customFactsMap = new HashMap<String,String>();
 		customFactsMap.put("malformed_fact","value\" is \"misquoted");
@@ -815,8 +820,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		client.runCommandAndWait("cat "+malformedFactsFile);
 		
 		// attempt to register
-		SSHCommandResult result = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		SSHCommandResult result = clienttasks.register/*_*/(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
 		
+		/* ORIGINAL FAILURE
 		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin --force
 		//	Expecting , delimiter: line 1 column 26 (char 26)
 		
@@ -824,6 +830,15 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(),Integer.valueOf(0),"Exitcode from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
 		Assert.assertEquals(result.getStdout(),"FIXME Need expected stdout message after bug 966747 is fixed","Stdout from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
 		Assert.assertEquals(result.getStderr(),"FIXME Need expected stderr message after bug 966747 is fixed","Stdout from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
+		*/
+		
+		/* FIXED BEHAVIOR */
+		// 2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/malformed.facts
+		// get the tail of the marked rhsm.log file and assert
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "WARNING").trim();
+		String expectedLogMessage = "Unable to load custom facts file: "+malformedFactsFile;
+		Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
+
 	}
 	@AfterGroups(value={"MalformedCustomFacts_Test"},groups={"setup"})
 	public void afterMalformedCustomFacts_Test() {
@@ -844,9 +859,15 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		client.runCommandAndWait("rm -f "+emptyFactsFile+" && touch "+emptyFactsFile);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, emptyFactsFile.getPath()), "The empty facts file should exist.");
 		
-		// attempt to register
-		SSHCommandResult result = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		// mark the rhsm.log file
+//		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
+		String logMarker = System.currentTimeMillis()+" Testing EmptyCustomFacts_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		
+		// attempt to register
+		SSHCommandResult result = clienttasks.register/*_*/(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		
+		/* ORIGINAL FAILURE
 		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin --force
 		//	No JSON object could be decoded
 		
@@ -854,6 +875,15 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(),Integer.valueOf(0),"Exitcode from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
 		Assert.assertEquals(result.getStdout(),"FIXME Need expected stdout message after bug 966747 is fixed","Stdout from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
 		Assert.assertEquals(result.getStderr(),"FIXME Need expected stderr message after bug 966747 is fixed","Stdout from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
+		*/
+		
+		/* FIXED BEHAVIOR */
+		// 2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/empty.facts
+		// get the tail of the marked rhsm.log file and assert
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "WARNING").trim();
+		String expectedLogMessage = "Unable to load custom facts file: "+emptyFactsFile;
+		Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
+
 	}
 	@AfterGroups(value={"EmptyCustomFacts_Test"},groups={"setup"})
 	public void afterEmptyCustomFacts_Test() {
