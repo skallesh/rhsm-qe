@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterGroups;
@@ -21,6 +22,7 @@ import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -133,6 +135,14 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			
 			// now let's unsubscribe from all entitlements and attempt auto-subscribing
 			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+			// TEMPORARY WORKAROUND FOR BUG
+			String bugId = "964332"; boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				// issue a sacrificial autosubscribe call to get most of the entitlements attached.  If it times out, the post_auto_attach hooks will not get called
+				clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null);
+			}
+			// END OF WORKAROUND
 			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
 			
 			// assert the quantity of consumption
@@ -275,8 +285,8 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				
 				// the fact that we are here means that there are multiple pools available for the same instance-based product subscription
 				// let's try testing cpu_sockets size that will require entitlements from both pools when auto-subscribing
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"963227","964332"}),	false,	Integer.valueOf(Math.max(poolProductIdsQuantityMap.get(pool.productId),Integer.valueOf(pool.quantity)))+2,	pool}));
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"963227","964332"}),	false,	Integer.valueOf(pool.quantity)+poolProductIdsQuantityMap.get(pool.productId),	pool}));
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"963227"/*,"964332"*/}),	false,	Integer.valueOf(Math.max(poolProductIdsQuantityMap.get(pool.productId),Integer.valueOf(pool.quantity)))+2,	pool}));
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"963227"/*,"964332"*/}),	false,	Integer.valueOf(pool.quantity)+poolProductIdsQuantityMap.get(pool.productId),	pool}));
 
 				poolProductIdsQuantityMap.put(pool.productId, Integer.valueOf(pool.quantity)+poolProductIdsQuantityMap.get(pool.productId));
 
