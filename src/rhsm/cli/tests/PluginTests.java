@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
@@ -18,6 +19,7 @@ import rhsm.data.ProductCert;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -402,16 +404,16 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(installedPlugin!=null, "The SubscribeTestPlugin is installed.");
 		
 		// hand populate the expected hooks (look for the python def methods inside the plugin.py file and prefix it with the plugin key.)
-		String expectedPreSubscriptionHook = installedPlugin.key+".pre_subscribe_hook";		//    def pre_subscribe_hook(self, conduit):
-		String expectedPostSubscriptionHook = installedPlugin.key+".post_subscribe_hook";	//    def post_subscribe_hook(self, conduit):
+		String expectedPreHook = installedPlugin.key+".pre_subscribe_hook";		//    def pre_subscribe_hook(self, conduit):
+		String expectedPostHook = installedPlugin.key+".post_subscribe_hook";	//    def post_subscribe_hook(self, conduit):
 
 		// verify the plugins --listhooks reports that the pre and post slots contain the expected hooks
 		SSHCommandResult pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
-		List<String> actualPreProductIdInstallHooks = parseHooksForSlotFromPluginsListhooksResult("pre_subscribe", pluginsListhooksResult);
-		Assert.assertTrue(actualPreProductIdInstallHooks.contains(expectedPreSubscriptionHook),"The plugins listhooks report expected pre_subscribe hook '"+expectedPreSubscriptionHook+"'.");
+		List<String> actualPreHooks = parseHooksForSlotFromPluginsListhooksResult("pre_subscribe", pluginsListhooksResult);
+		Assert.assertTrue(actualPreHooks.contains(expectedPreHook),"The plugins listhooks report expected pre_subscribe hook '"+expectedPreHook+"'.");
 		pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
-		List<String> actualPostProductIdInstallHooks = parseHooksForSlotFromPluginsListhooksResult("post_subscribe", pluginsListhooksResult);
-		Assert.assertTrue(actualPostProductIdInstallHooks.contains(expectedPostSubscriptionHook),"The plugins listhooks report expected post_subscribe hook '"+expectedPostSubscriptionHook+"'.");
+		List<String> actualPostHooks = parseHooksForSlotFromPluginsListhooksResult("post_subscribe", pluginsListhooksResult);
+		Assert.assertTrue(actualPostHooks.contains(expectedPostHook),"The plugins listhooks report expected post_subscribe hook '"+expectedPostHook+"'.");
 	}
 	@Test(	description="execute subscription-manager modules and verify the expected SubscribeTestPlugin hooks are called",
 			groups={},
@@ -465,11 +467,107 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	// AutoAttachTestPlugin Tests ********************************************************
+
+	@Test(	description="enable AutoAttachTestPlugin and assert the plugins list reports enablement",
+			groups={},
+			priority=510, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyPluginsListWithEnabledAutoAttachTestPlugin_Test() {
+		
+		// find the plugin from the list of installed plugins
+		Plugin installedPlugin = getPlugin("auto_attach_test.AutoAttachTestPlugin");
+		Assert.assertTrue(installedPlugin!=null, "The AutoAttachTestPlugin is installed.");
+		
+		// enable and verify
+		enableTestPluginAndVerifyListReport(installedPlugin);
+	}
+	@Test(	description="verify plugins listhooks reports all of the expected hooks for AutoAttachTestPlugin",
+			groups={},
+			priority=520, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyPluginsListhooksWithEnabledAutoAttachTestPlugin_Test() {
+		// find the plugin from the list of installed plugins
+		Plugin installedPlugin = getPlugin("auto_attach_test.AutoAttachTestPlugin");
+		Assert.assertTrue(installedPlugin!=null, "The AutoAttachTestPlugin is installed.");
+		
+		// hand populate the expected hooks (look for the python def methods inside the plugin.py file and prefix it with the plugin key.)
+		String expectedPreHook = installedPlugin.key+".pre_auto_attach_hook";	//    def pre_auto_attach_hook(self, conduit):
+		String expectedPostHook = installedPlugin.key+".post_auto_attach_hook";	//    def post_auto_attach_hook(self, conduit):
+
+		// verify the plugins --listhooks reports that the pre and post slots contain the expected hooks
+		SSHCommandResult pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
+		List<String> actualPreHooks = parseHooksForSlotFromPluginsListhooksResult("pre_auto_attach", pluginsListhooksResult);
+		Assert.assertTrue(actualPreHooks.contains(expectedPreHook),"The plugins listhooks report expected pre_auto_attach hook '"+expectedPreHook+"'.");
+		pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
+		List<String> actualPostHooks = parseHooksForSlotFromPluginsListhooksResult("post_auto_attach", pluginsListhooksResult);
+		Assert.assertTrue(actualPostHooks.contains(expectedPostHook),"The plugins listhooks report expected post_auto_attach hook '"+expectedPostHook+"'.");
+	}
+	@Test(	description="execute subscription-manager modules and verify the expected AutoAttachTestPlugin hooks are called",
+			groups={},
+			priority=530, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void verifyEnabledAutoAttachTestPluginHooksAreCalled_Test() {
+		removeRhsmLog();
+		
+		// get the pre-registered facts on the system
+		clienttasks.unregister(null,null,null);
+		Map<String,String> facts = clienttasks.getFacts();
+
+		// register
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "964332"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			// issue a sacrificial autosubscribe call to get most of the entitlements attached.  If it times out, the post_auto_attach hooks will not get called
+			clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
+		}
+		// END OF WORKAROUND
+		
+		// mark the rhsm.log file
+		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledAutoAttachTestPluginHooksAreCalled_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
+		
+		// autosubscribe
+		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null);
+		
+		// get the tail of the marked rhsm.log file
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
+		
+		//	2013-06-07 17:46:16,503 [DEBUG]  @plugins.py:728 - Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin
+		//	2013-06-07 17:46:16,504 [INFO]  @facts_collection_test.py:33 - Running post_facts_collection_hook: consumer facts count is 83
+		//	2013-06-07 17:46:17,129 [DEBUG]  @plugins.py:728 - Running pre_auto_attach_hook in auto_attach_test.AutoAttachTestPlugin
+		//	2013-06-07 17:46:17,130 [INFO]  @auto_attach_test.py:32 - Running pre_auto_attach_hook: system is about to auto-attach
+		//	2013-06-07 17:46:17,130 [INFO]  @auto_attach_test.py:33 - Running pre_auto_attach_hook: auto-attaching consumer is 3f0fba70-e0c2-423d-b51a-ecdb2411587f
+		//	2013-06-07 17:47:13,795 [DEBUG]  @plugins.py:728 - Running post_auto_attach_hook in auto_attach_test.AutoAttachTestPlugin
+		//	2013-06-07 17:47:13,795 [INFO]  @auto_attach_test.py:43 - Running post_auto_attach_hook: system just auto-attached
+		//	2013-06-07 17:47:13,795 [INFO]  @auto_attach_test.py:44 - Running post_auto_attach_hook: auto-attached consumer is 3f0fba70-e0c2-423d-b51a-ecdb2411587f
+		//	2013-06-07 17:47:13,795 [INFO]  @auto_attach_test.py:48 - Running post_auto_attach_hook: auto-attached 15 entitlements
+		
+		// assert the pre/post_subscribe_hooks are called
+		List<String> expectedLogInfo= Arrays.asList(
+				"Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin",	// enabled in prior FactsCollectionTestPlugin Tests 
+				"Running post_facts_collection_hook: consumer facts count is "+facts.values().size(),	// enabled in prior FactsCollectionTestPlugin Tests 
+				"Running pre_auto_attach_hook in auto_attach_test.AutoAttachTestPlugin",
+				"Running pre_auto_attach_hook: system is about to auto-attach",
+				"Running pre_auto_attach_hook: auto-attaching consumer is "+consumerId,
+				"Running post_auto_attach_hook in auto_attach_test.AutoAttachTestPlugin",
+				"Running post_auto_attach_hook: system just auto-attached",
+				"Running post_auto_attach_hook: auto-attached consumer is "+consumerId,
+				"Running post_auto_attach_hook: auto-attached \\d+ entitlements",
+				"");
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
+				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
+	}
+	
+	
 	// ProductIdInstallTestPlugin Tests ***************************************************
 
 	@Test(	description="enable ProductIdInstallTestPlugin and assert the plugins list reports enablement",
 			groups={},
-			priority=510, enabled=true)
+			priority=610, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListWithEnabledProductIdInstallTestPlugin_Test() {
 		
@@ -482,7 +580,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for ProductIdInstallTestPlugin",
 			groups={},
-			priority=520, enabled=true)
+			priority=620, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListhooksWithEnabledProductIdInstallTestPlugin_Test() {
 		// find the plugin from the list of installed plugins
@@ -490,20 +588,20 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(installedPlugin!=null, "The ProductIdInstallTestPlugin is installed.");
 		
 		// hand populate the expected hooks (look for the python def methods inside the plugin.py file and prefix it with the plugin key.)
-		String expectedPreProductIdInstallHook = installedPlugin.key+".pre_product_id_install_hook";	//    def pre_product_id_install_hook(self, conduit):
-		String expectedPostProductIdInstallHook = installedPlugin.key+".post_product_id_install_hook";	//    def post_product_id_install_hook(self, conduit):
+		String expectedPreHook = installedPlugin.key+".pre_product_id_install_hook";	//    def pre_product_id_install_hook(self, conduit):
+		String expectedPostHook = installedPlugin.key+".post_product_id_install_hook";	//    def post_product_id_install_hook(self, conduit):
 
 		// verify the plugins --listhooks reports that the pre and post slots contain the expected hooks
 		SSHCommandResult pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
-		List<String> actualPreProductIdInstallHooks = parseHooksForSlotFromPluginsListhooksResult("pre_product_id_install", pluginsListhooksResult);
-		Assert.assertTrue(actualPreProductIdInstallHooks.contains(expectedPreProductIdInstallHook),"The plugins listhooks report expected pre_facts_collection hook '"+expectedPreProductIdInstallHook+"'.");
+		List<String> actualPreHooks = parseHooksForSlotFromPluginsListhooksResult("pre_product_id_install", pluginsListhooksResult);
+		Assert.assertTrue(actualPreHooks.contains(expectedPreHook),"The plugins listhooks report expected pre_facts_collection hook '"+expectedPreHook+"'.");
 		pluginsListhooksResult = clienttasks.plugins(false, false, true, false);
-		List<String> actualPostProductIdInstallHooks = parseHooksForSlotFromPluginsListhooksResult("post_product_id_install", pluginsListhooksResult);
-		Assert.assertTrue(actualPostProductIdInstallHooks.contains(expectedPostProductIdInstallHook),"The plugins listhooks report expected post_facts_collection hook '"+expectedPostProductIdInstallHook+"'.");
+		List<String> actualPostHooks = parseHooksForSlotFromPluginsListhooksResult("post_product_id_install", pluginsListhooksResult);
+		Assert.assertTrue(actualPostHooks.contains(expectedPostHook),"The plugins listhooks report expected post_facts_collection hook '"+expectedPostHook+"'.");
 	}
 	@Test(	description="execute subscription-manager modules and verify the expected ProductIdInstallTestPlugin hooks are called",
 			groups={"blockedByBug-859197", "blockedByBug-922871", "blockedByBug-922882"},
-			priority=530, enabled=true)
+			priority=630, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test() {
 		removeRhsmLog();
@@ -584,7 +682,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	// CURRENTLY BLOCKED BY BUGZILLA 922882
 	@Test(	description="enable ProductIdRemoveTestPlugin and assert the plugins list reports enablement",
 			groups={"blockedByBug-922882"},
-			priority=610, enabled=true)
+			priority=710, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListWithEnabledProductIdRemoveTestPlugin_Test() {
 		Assert.fail("This test will be implemented after RFE bug 922882 is implemented.");
@@ -596,20 +694,20 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 	@Test(	description="enable AllSlotsTestPlugin and assert the plugins list reports enablement",
 			groups={},
-			priority=710, enabled=true)
+			priority=810, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListWithEnabledAllSlotsTestPlugin_Test() {
 		
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("all_slots_test.AllSlotsTestPlugin");
-		Assert.assertTrue(installedPlugin!=null, "The SubscribePlugintestPlugin is installed.");
+		Assert.assertTrue(installedPlugin!=null, "The AllSlotsTestPlugin is installed.");
 		
 		// enable and verify
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for AllSlotsTestPlugin",
 			groups={},
-			priority=720, enabled=true)
+			priority=820, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListhooksWithEnabledAllSlotsTestPlugin_Test() {
 		// find the plugin from the list of installed plugins
@@ -626,7 +724,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	@Test(	description="execute subscription-manager modules and verify the expected AllSlotsTestPlugin hooks are called",
 			groups={},
-			priority=730, enabled=true)
+			priority=830, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledAllSlotsTestPluginHooksAreCalled_Test() {
 		removeRhsmLog();
@@ -771,6 +869,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			"pre_register_consumer",	"post_register_consumer",
 			"pre_product_id_install",	"post_product_id_install",
 			"pre_subscribe",			"post_subscribe",
+			"pre_auto_attach",			"post_auto_attach",
 			/*"pre_facts_collection",*/"post_facts_collection");
 	
 	
