@@ -177,12 +177,8 @@
         status (tasks/ui getcellvalue
                          :installed-view
                          index 2)
-        not-nil? (fn [b] (not (nil? b)))
         expected (@productmap product)
-        rhel5?   (substring? "release 5"
-                             (:stdout
-                              (run-command
-                               "cat /etc/redhat-release")))
+        rhel5?   (= :rhel5 (get-release))
         boxarch (trim (:stdout
                        (run-command
                         (str

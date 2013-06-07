@@ -40,12 +40,13 @@
        {:keys [unregister-first]} (unregister-first)))
   (verify (not (tasks/ui showing? :register-system)))
   (if owner
-    (do
-      (tasks/ui click :view-system-facts)
-      (sleep 5000)
-      (let [result (tasks/ui objectexist :facts-dialog owner)]
-        (tasks/ui click :close-facts)
-        (verify (= 1 result))))))
+    (try
+      (do
+        (tasks/ui click :view-system-facts)
+        (tasks/ui waittillwindowexist :facts-dialog 10)
+        (verify (= owner (tasks/ui gettextvalue :facts-org))))
+      (finally (if (bool (tasks/ui guiexist :facts-dialog))
+                 (tasks/ui click :close-facts))))))
 
 (defn register_bad_credentials
   "Checks error messages upon registering with bad credentials."
@@ -111,17 +112,6 @@
    ["" "password" :no-username]
    ["sdf" "" :no-password]])
 
-(comment  ;now using testNG dataproviders
-(data-driven simple_register {Test {:groups ["registration"]}}
-  [[(@config :username) (@config :password) "Admin Owner"]
-   [(@config :username) (@config :password) "Snow White"]
-   [(@config :username1) (@config :password1) nil]
-   ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str (@config :username) "   ") (@config :password) nil]
-   ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str "   " (@config :username)) (@config :password) nil]])
-)
-
 (defn ^{Test {:groups ["registration"
                        "blockedByBug-822706"]
               ;:dependsOnMethods ["simple_register"]
@@ -172,22 +162,36 @@ verify_password_tip
 ;; DATA PROVIDERS ;;
 ;;;;;;;;;;;;;;;;;;;;
 
-
 (defn ^{DataProvider {:name "userowners"}}
-  get_userowners [_]
-  (to-array-2d
-   (vec
-    (conj
-     (into
-      (if (and (@config :username1) (@config :password1))
-        (get-userlists (@config :username1) (@config :password1)))
-      (if (and (@config :username) (@config :password))
-        (get-userlists (@config :username) (@config :password))))
-        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
-     (if (and (@config :username) (@config :password))
-       [(str (@config :username) "   ") (@config :password) nil])
-        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
-     (if (and (@config :username) (@config :password))
-       [(str "   " (@config :username)) (@config :password) nil])))))
+  get_userowners [_ & {:keys [debug]
+                       :or {debug false}}]
+  (let [data (vec
+              (conj
+               (into
+                (if (and (@config :username1) (@config :password1))
+                  (get-userlists (@config :username1) (@config :password1)))
+                (if (and (@config :username) (@config :password))
+                  (get-userlists (@config :username) (@config :password))))
+               ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+               (if (and (@config :username) (@config :password))
+                 [(str (@config :username) "   ") (@config :password) nil])
+               ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+               (if (and (@config :username) (@config :password))
+                 [(str "   " (@config :username)) (@config :password) nil])))]
+    (if-not debug
+      (to-array-2d data)
+      data)))
 
 (gen-class-testng)
+
+
+(comment  ;now using testNG dataproviders
+(data-driven simple_register {Test {:groups ["registration"]}}
+  [[(@config :username) (@config :password) "Admin Owner"]
+   [(@config :username) (@config :password) "Snow White"]
+   [(@config :username1) (@config :password1) nil]
+   ^{Test {:groups ["blockedByBug-719378"]}}
+   [(str (@config :username) "   ") (@config :password) nil]
+   ^{Test {:groups ["blockedByBug-719378"]}}
+   [(str "   " (@config :username)) (@config :password) nil]])
+)

@@ -49,6 +49,8 @@
       (= expn 'true)
       (= expn 'false))))
 
+(def not-nil? (fn [b] (not (nil? b))))
+
 (defmacro loop-timeout [timeout bindings & forms]
   `(let [starttime# (System/currentTimeMillis)]
      (loop ~bindings

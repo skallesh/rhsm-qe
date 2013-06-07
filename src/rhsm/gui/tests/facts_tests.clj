@@ -136,7 +136,7 @@
       (let [gui-levels (sort (tasks/ui getallitem :service-level-dropdown))]
         (verify (= expected-levels gui-levels))
         (verify (not (nil? (some #{"Not Set"} gui-levels))))))
-    (finally (if (= 1 (tasks/ui guiexist :system-preferences-dialog))
+    (finally (if (bool (tasks/ui guiexist :system-preferences-dialog))
                (tasks/ui click :close-system-prefs)))))
 
 (defn ^{Test {:groups ["facts"
@@ -159,7 +159,7 @@
       (let [gui-releases (sort (tasks/ui getallitem :release-dropdown))]
         (verify (= expected-releases gui-releases))
         (verify (not (nil? (some #{"Not Set"} gui-releases))))))
-    (finally (if (= 1 (tasks/ui guiexist :system-preferences-dialog))
+    (finally (if (bool (tasks/ui guiexist :system-preferences-dialog))
                (tasks/ui click :close-system-prefs))
              (run-command "subscription-manager unsubscribe --all"))))
 
@@ -185,7 +185,7 @@
       (verify (= gui-pyrhsm cli-pyrhsm))
       (verify (= gui-rhsm cli-rhsm))
       (verify (= gui-rhsm-service cli-rhsm-service)))
-    (finally (if (= 1 (tasks/ui guiexist :about-dialog))
+    (finally (if (bool (tasks/ui guiexist :about-dialog))
                (tasks/ui click :close-about-dialog)))))
 
 (defn ^{BeforeGroups {:groups ["facts"]

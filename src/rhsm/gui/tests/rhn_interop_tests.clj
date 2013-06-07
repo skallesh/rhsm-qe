@@ -16,8 +16,7 @@
 (def systemid "/etc/sysconfig/rhn/systemid")
 
 (defn systemid-exists? []
-  (= 1 (->> (:stdout (run-command (str "test -e " systemid " && echo 1 || echo 0"))) str .trim Integer/parseInt))
-)
+  (bash-bool (:exitcode (run-command (str "test -e " systemid)))))
 
 (defn kill-app []
   (run-command "killall -9 subscription-manager-gui")
@@ -70,7 +69,7 @@
   (tasks/start-app)
   (tasks/ui waittillwindowexist :warning-dialog 30)
   (tasks/ui click :warn-cancel)
-  (verify (= 1 (tasks/ui waittillwindownotexist :main-window 30)))
+  (verify (bool (tasks/ui waittillwindownotexist :main-window 30)))
   (kill-app)
 )
 

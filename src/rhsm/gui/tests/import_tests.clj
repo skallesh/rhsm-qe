@@ -28,8 +28,6 @@
 ;  settextvalue's bullshit
 (def tmpcertpath "/tmp/sm-boguscerts/")
 
-(defn not-nil? [b] (not (nil? b)))
-
 (defn ^String str-drop [n ^String s]
   (if (< (count s) n)
     ""
@@ -96,7 +94,7 @@
                       (:stdout (run-command command))))
                   (trim (:stdout (run-command command))))]
     (import-cert certlocation)
-    (verify (= 1 (tasks/ui guiexist
+    (verify (bool (tasks/ui guiexist
                            :information-dialog
                            "Certificate import was successful.")))
     (tasks/ui click :info-ok)
@@ -234,7 +232,7 @@
   [_]
   (import_random nil)
   (tasks/restart-app)
-  (verify (= 1 (tasks/ui guiexist :main-window))))
+  (verify (bool (tasks/ui guiexist :main-window))))
 
 (defn ^{Test {:groups ["import"
                        "blockedByBug-702075"
