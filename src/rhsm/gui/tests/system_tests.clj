@@ -80,7 +80,7 @@
     (tasks/restart-app)
     (tasks/ui click :getting-started)
     (sleep 3000)
-    (verify (= 1 (tasks/ui guiexist :help-dialog)))
+    (verify (bool (tasks/ui guiexist :help-dialog)))
     (tasks/ui closewindow :help-dialog)
     (finally (tasks/restart-app))))
 
@@ -127,7 +127,7 @@
     (tasks/ui selectmenuitem :main-window "System")
     (tasks/ui selectmenuitem :main-window "Quit")
     (tasks/ui waittillwindownotexist :main-window 5)
-    (verify (= 0 (tasks/ui guiexist :main-window)))
+    (verify (not (bool (tasks/ui guiexist :main-window))))
     (finally (tasks/restart-app))))
 
 (defn ^{Test {:groups ["system"
@@ -143,7 +143,7 @@
                             nil
                             (tasks/ui click :online-documentation)
                             (tasks/ui waittillwindowexist :firefox-help-window 10))]
-       (verify (= 1 (tasks/ui guiexist :firefox-help-window)))
+       (verify (bool (tasks/ui guiexist :firefox-help-window)))
        (verify (not (substring? "Traceback" output))))
     (finally    (tasks/ui closewindow :firefox-help-window)
                 (tasks/restart-app))))
@@ -154,7 +154,7 @@
   "Asserts that the date chooser does not throw a traceback."
   [_]
   (try
-    (if-not (= 1 (tasks/ui guiexist :main-window)) (tasks/restart-app))
+    (if-not (bool (tasks/ui guiexist :main-window)) (tasks/restart-app))
     (try+ (tasks/register-with-creds :re-register? false)
           (catch [:type :already-registered] _))
     (tasks/ui selecttab :all-available-subscriptions)
@@ -164,10 +164,10 @@
                                     "Traceback"
                                     (tasks/ui click :calendar)
                                     (verify
-                                     (= 1 (tasks/ui waittillwindowexist :date-selection-dialog 10)))
+                                     (bool (tasks/ui waittillwindowexist :date-selection-dialog 10)))
                                     (tasks/ui click :today))]
       (verify (clojure.string/blank? output)))
-    (finally (if (= 1 (tasks/ui guiexist :date-selection-dialog))
+    (finally (if (bool (tasks/ui guiexist :date-selection-dialog))
                (tasks/ui closewindow :date-selection-dialog)))))
 
 (defn ^{Test {:groups ["system"

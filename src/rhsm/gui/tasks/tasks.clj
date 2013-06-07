@@ -110,7 +110,7 @@
   Allows for recovery of the error message.
   @wait: specify the time to wait for the error dialog."
   ([wait]
-     (if (= 1 (ui waittillwindowexist :error-dialog wait))
+     (if (bool (ui waittillwindowexist :error-dialog wait))
        (let [message (get-error-msg)
              type (matching-error message)]
          (clear-error-dialog)
@@ -201,10 +201,10 @@
   (try+
    (ui click :register)
    (checkforerror 10)
-   (if (= 1 (ui guiexist :register-dialog))
+   (if (bool (ui guiexist :register-dialog))
      (do
        ;; handle owner selection
-       (if (= 1 (ui waittillshowing :owner-view 30))
+       (if (bool (ui waittillshowing :owner-view 30))
          (do
            (when owner (do
                          (if-not (ui rowexist? :owner-view owner)
@@ -216,12 +216,12 @@
            (checkforerror 10)))
        ;;(ui waittillnotshowing :registering 1800)  ;; 30 minutes
        ))
-   (if ;(= 1 (ui guiexist :subscribe-system-dialog))
-       (= 1 (ui guiexist :register-dialog))
+   (if ;(bool (ui guiexist :subscribe-system-dialog))
+       (bool (ui guiexist :register-dialog))
      (do
        (if auto-select-sla
          (do
-           (if (= 1 (ui guiexist :register-dialog "Confirm Subscriptions")) ;; sla selection is presented
+           (if (bool (ui guiexist :register-dialog "Confirm Subscriptions")) ;; sla selection is presented
              (do (when sla (ui click :register-dialog sla))
                  (ui click :register)))
            (ui click :register))
@@ -267,7 +267,7 @@
                              skip-autosubscribe? true
                              org nil}}]
   (assert  (or (fbshowing? :firstboot-server-entry)
-               (= 1 (ui guiexist :firstboot-window "Subscription Management Registration"))))
+               (bool (ui guiexist :firstboot-window "Subscription Management Registration"))))
   (when server (ui settextvalue :firstboot-server-entry server))
   (if server-default? (ui click :firstboot-server-default))
   (ui (setchecked (or activation-key activation?)) :firstboot-activation-checkbox)
@@ -366,7 +366,7 @@
   (skip-dropdown :all-subscriptions-view s)
   (ui click :attach)
   (checkforerror)
-  (if-not (= 1 (ui waittillwindowexist :contract-selection-dialog 5))
+  (if-not (bool (ui waittillwindowexist :contract-selection-dialog 5))
     (throw+ {:type :contract-selection-not-available
              :name s
              :msg (str s " does not have multiple contracts.")})))
@@ -411,7 +411,7 @@
      (ui click :attach)
      (checkforerror)
      (ui waittillwindowexist :contract-selection-dialog 5)
-     (if (= 1 (ui guiexist :contract-selection-dialog))
+     (if (bool (ui guiexist :contract-selection-dialog))
        (do (ui selectrowindex :contract-selection-table 0)
            (ui click :attach-contract-selection)))
      (checkforerror)
@@ -503,7 +503,7 @@
   "Grabs the number of products that do not have a valid subscription tied to them
   as reported by the GUI."
   []
-  (if (= 1 (max (ui guiexist :main-window "*installed products do not have*")
+  (if (bool (max (ui guiexist :main-window "*installed products do not have*")
                 (ui guiexist :main-window "*installed product does not have*")))
     ;; does not work in rhel5 :-(
     ; (let [countlabel (ui getobjectproperty :main-window "You have*" "label")]
@@ -521,13 +521,13 @@
 (defn compliance?
   "Returns true if the GUI reports that all products have a valid subscription."
   []
-  (or (= 1 (ui guiexist :main-window "System is properly subscribed through*"))
-      (= 1 (ui guiexist :main-window "No installed products detected."))))
+  (or (bool (ui guiexist :main-window "System is properly subscribed through*"))
+      (bool (ui guiexist :main-window "No installed products detected."))))
 
 (defn first-date-of-noncomply
   "Pulls the first date of noncompliance from the subscription assistant dialog."
   []
-  (if (= 1 (ui guiexist :subscription-assistant-dialog))
+  (if (bool (ui guiexist :subscription-assistant-dialog))
     (let [datelabel (ui getobjectproperty :subscription-assistant-dialog "*first date*" "label")]
       (.substring datelabel 0 10))))
 

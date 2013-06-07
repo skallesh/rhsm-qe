@@ -110,7 +110,7 @@
 
 (defn test_proxy [expected-message]
   (tasks/ui click :configure-proxy)
-  (if (= 0 (tasks/ui hasstate :test-connection "SENSITIVE"))
+  (if-not (bool (tasks/ui hasstate :test-connection "SENSITIVE"))
     (try+
      (let [message (tasks/ui gettextvalue :connection-status)]
        (verify (= expected-message message)))
@@ -137,7 +137,7 @@
   [_]
   (disable_proxy nil)
   (tasks/ui click :configure-proxy)
-  (if (= 0 (tasks/ui hasstate :test-connection "SENSITIVE"))
+  (if-not (bool (tasks/ui hasstate :test-connection "SENSITIVE"))
     (try+
      (verify (not (some #(= "sensitive" %)
                         (tasks/ui getallstates :test-connection))))
@@ -194,7 +194,7 @@
                              (catch Object e (:type e)))]
       (verify (= thrown-error :network-error)))
     (finally
-     (if (= 1 (tasks/ui guiexist :register-dialog))
+     (if (bool (tasks/ui guiexist :register-dialog))
        (tasks/ui click :register-cancel))
      (disable_proxy nil))))
 
@@ -217,7 +217,7 @@
                                (:type e)))]
       (verify (= thrown-error :error-updating)))
     (finally
-     (if (= 1 (tasks/ui guiexist :facts-dialog))
+     (if (bool (tasks/ui guiexist :facts-dialog))
        (tasks/ui click :close-facts))
      (disable_proxy nil))))
 

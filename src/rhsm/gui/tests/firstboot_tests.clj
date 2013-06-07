@@ -33,7 +33,7 @@
       (verify (tasks/fbshowing? :register-now))))
   (tasks/ui click :register-now)
   (tasks/ui click :firstboot-forward)
-  (assert ( = 1 (tasks/ui guiexist :firstboot-window "Choose Service"))))
+  (assert ( bool (tasks/ui guiexist :firstboot-window "Choose Service"))))
 
 (defn kill_firstboot []
   (run-command "killall -9 firstboot")
@@ -136,8 +136,8 @@
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
   (tasks/firstboot-register (@config :username) (@config :password))
-  (verify (= 1 (tasks/ui hasstate :firstboot-back "Sensitive")))
-  (verify (= 1 (tasks/ui hasstate :firstboot-forward "Sensitive"))))
+  (verify (bool (tasks/ui hasstate :firstboot-back "Sensitive")))
+  (verify (bool (tasks/ui hasstate :firstboot-forward "Sensitive"))))
 
 (defn ^{Test {:groups ["firstboot" "blockedByBug-872727"]
               :dependsOnMethods ["firstboot_check_back_button_state"]}}
