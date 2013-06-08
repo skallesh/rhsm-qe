@@ -342,14 +342,21 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// assert the issuer of an entitlement cert
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));	// random available pool
-		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
-		Assert.assertNotNull(entitlementCert.issuer, "The rct cat-cert tool reports the issuer of granted entitlement cert: "+entitlementCert);
-		if (sm_serverType.equals(CandlepinType.hosted)) Assert.assertEquals(entitlementCert.issuer, "Red Hat Candlepin Authority", "Issuer of granted entitlement cert: "+entitlementCert.file);
-		else if (sm_serverType.equals(CandlepinType.standalone)) Assert.assertEquals(entitlementCert.issuer, sm_serverHostname, "Issuer of granted entitlement cert: "+entitlementCert.file);
-		else log.warning("Do not know what value to assert for issuer of an entitlement cert from a candlepin type '"+sm_serverType+"'.");
-		entitlementCert=null;
+		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		if (entitlementCerts.isEmpty()) {
+			List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+			if (pools.isEmpty()) log.warning("Cound not find an available pool.");
+			SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));	// randomly pick a pool
+			clienttasks.subscribeToSubscriptionPool(pool);
+			entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		}
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			Assert.assertNotNull(entitlementCert.issuer, "The rct cat-cert tool reports the issuer of granted entitlement cert: "+entitlementCert);
+			if (sm_serverType.equals(CandlepinType.hosted)) Assert.assertEquals(entitlementCert.issuer, "Red Hat Candlepin Authority", "Issuer of granted entitlement cert: "+entitlementCert.file);
+			else if (sm_serverType.equals(CandlepinType.standalone)) Assert.assertEquals(entitlementCert.issuer, sm_serverHostname, "Issuer of granted entitlement cert: "+entitlementCert.file);
+			else log.warning("Do not know what value to assert for issuer of an entitlement cert from a candlepin type '"+sm_serverType+"'.");
+		}
+
 	}
 	
 	
