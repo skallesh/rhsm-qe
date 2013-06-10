@@ -73,7 +73,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 // TODO RE-IMPLEMENT AS AN ALTERNATIVE FOR USE DURING STAGE TESTING
 //	public String sm_clientUsernames			= getProperty("sm.client.usernames","");
 //	public String sm_clientPasswords			= getProperty("sm.client.passwords","");
-	public String sm_clientPasswordDefault		= getProperty("sm.client.passwordDefault","redhat");
+	public String sm_clientPasswordDefault		= getProperty("sm.client.passwordDefault","MISSING_PROPERTY sm.client.passwordDefault");
 	
 	public String sm_rhpersonalUsername			= getProperty("sm.rhpersonal.username", "");
 	public String sm_rhpersonalPassword			= getProperty("sm.rhpersonal.password", "");
