@@ -882,7 +882,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String logMessage = "remote server status code: 500";
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
-		clienttasks.register(clientUsername, clientUsername,null, null, null, null, null, null, null, null,
+		clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();	
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
