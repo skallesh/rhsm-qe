@@ -511,49 +511,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	/**
-	 * @author skallesh
-	 * @throws Exception
-	 * @throws JSONException
-	 */
-	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
-			groups={"AddingExpiredEntitlementToActivationKey","blockedByBug-949419"},
-			enabled=true)
-	public void AddingExpiredEntitlementToActivationKey() throws Exception {
-		int endingMinutesFromNow = 2;
-		Integer addQuantity=1;
-		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
-				sm_clientOrg, System.currentTimeMillis());
-		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
-		mapActivationKeyRequest.put("name", name);
-		JSONObject jsonActivationKeyRequest = new JSONObject(
-				mapActivationKeyRequest);
-		JSONObject jsonActivationKey = new JSONObject(
-				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
-						sm_clientPassword, sm_serverUrl, "/owners/"
-								+ sm_clientOrg + "/activation_keys",
-								jsonActivationKeyRequest.toString()));
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"autoAttachInterval".toLowerCase(), "1440" });
-		clienttasks.config(null, null, true, listOfSectionNameValues);
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId();
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
-		providedProducts.add("100000000000002");
-		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
-
-		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);			
-		for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
-			if(result.productId.equals("100000000000002")){
-				Assert.assertEquals(result.status, "Expired");
-			}
-		}
-	}
+	
 	
 	/**
 	 * @author skallesh
@@ -4155,7 +4113,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		}
 	
-	@BeforeGroups(groups={"setup"}, value = {"ExpirationOfEntitlementCerts","RefreshPoolAfterChangeInProvidedProducts","AddingExpiredEntitlementToActivationKey","SubscribeToexpiredEntitlement"})
+	@BeforeGroups(groups={"setup"}, value = {"ExpirationOfEntitlementCerts","RefreshPoolAfterChangeInProvidedProducts","RegisterWithActivationKeyWithExpiredPool","SubscribeToexpiredEntitlement"})
 	public void findRandomAvailableProductIdBeforeClass() throws Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
