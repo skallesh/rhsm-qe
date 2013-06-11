@@ -74,7 +74,150 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
 	List<String> providedProducts = new ArrayList<String>();
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if Registering with an activation key which has run out of susbcriptions results in a system, but no identity certificate",
+			groups={"RegisterWithActivationKeyWithExpiredPool","blockedByBug-803814"},
+			enabled=true)
+	public void RegisterWithActivationKeyWithExpiredPool() throws Exception {
+		int endingMinutesFromNow = 2;
+		Integer addQuantity=1;
+		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
+				sm_clientOrg, System.currentTimeMillis());
+		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
+		mapActivationKeyRequest.put("name", name);
+		JSONObject jsonActivationKeyRequest = new JSONObject(
+				mapActivationKeyRequest);
+		JSONObject jsonActivationKey = new JSONObject(
+				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
+						sm_clientPassword, sm_serverUrl, "/owners/"
+								+ sm_clientOrg + "/activation_keys",
+								jsonActivationKeyRequest.toString()));
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
 
+		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
+		clienttasks.unregister(null, null, null);
+		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStdout();			
+		String expected_message="No entitlements are available from the pool with id '"+expiringPoolId+"'";
+		Assert.assertEquals(result, expected_message);
+		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
+		Assert.assertEquals(result, clienttasks.msg_ConsumerNotRegistered);
+
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Sytem.UUID fact is Deleted Once Consumer is Deleted",
+			groups={"Sytem_UUIDfactShouldBeDeletedOnceConsumerDeleted"},
+			enabled=true)
+	public void Sytem_UUIDfactShouldBeDeletedOnceConsumerDeleted() throws Exception {
+	clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null).getStderr();
+	String UUID=getSystemUUIDFacts();
+	String consumerid=clienttasks.getCurrentConsumerId();
+	Assert.assertEquals(UUID, consumerid);
+	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/consumers/"+consumerid);
+	clienttasks.restart_rhsmcertd(null, null, false, null);
+	sleep(2*60*1000);
+	 UUID=getSystemUUIDFacts();
+	Assert.assertNull(UUID);
+	
+	}
+	
+	public String getSystemUUIDFacts(){
+	String value=null;
+	SSHCommandResult factsList=client.runCommandAndWait("subscription-manager facts --list | grep -v dmi | grep system.uuid");
+	Map<String,String> factsMap = new HashMap<String,String>();
+	List<String> factNames = new ArrayList<String>();
+	String factsListAsString = factsList.getStdout().trim();
+	String factNameRegex="^[\\w\\.\\(\\)-:]+: ";
+	Pattern pattern = Pattern.compile(factNameRegex, Pattern.MULTILINE);
+	Matcher matcher = pattern.matcher(factsListAsString);
+	while (matcher.find()) {
+		matcher.group();
+		factNames.add(matcher.group());
+	}
+	
+	int fromIndex=0;
+	for (int f = 0; f < factNames.size(); f++) {
+		String thisFactName = factNames.get(f);
+		String thisFactValue;
+		String nextFactName;
+		if (f==factNames.size()-1) {
+			thisFactValue = factsListAsString.substring(factsListAsString.indexOf(thisFactName,fromIndex)+thisFactName.length());	
+		} else {
+			nextFactName = factNames.get(f+1);
+			thisFactValue = factsListAsString.substring(factsListAsString.indexOf(thisFactName,fromIndex)+thisFactName.length(), factsListAsString.indexOf(nextFactName,fromIndex));
+		}
+		fromIndex = factsListAsString.indexOf(thisFactName,fromIndex)+thisFactName.length();
+		thisFactName = thisFactName.replaceFirst(": $", "");
+		thisFactValue = thisFactValue.replaceFirst("\n$","");
+		value=thisFactValue;
+	}
+	return value;
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if Wrong DMI structures Error is filtered from the stderr of subscription-manager command line calls",
+			groups={"WrongDMIstructuresError","blockedByBug-706552"},
+			enabled=true)
+	public void WrongDMIstructuresError() throws Exception {
+	String result=	clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null).getStderr();
+	Assert.assertContainsNoMatch(result, "Wrong DMI");
+	 result=	clienttasks.facts(true, null, null, null, null).getStderr();
+		Assert.assertContainsNoMatch(result, "Wrong DMI");
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if subscription manager cli uses product name comparisons in the list command ",
+			groups={"RHELWorkstationProduct","blockedByBug-709412"},
+			enabled=false)
+	public void InstalledProductMultipliesAfterSubscription() throws Exception {
+		client.runCommand("mkdir /root/generatedCertsFolder");
+		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
+		String clientUsername="stage_test_12";
+		clienttasks.register(clientUsername, sm_clientPassword,null, null, null, null, null, null, null, null,
+				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();
+		moveProductCertFiles("*");
+		client.runCommandAndWait("cp " + "/usr/share/rhsm/product/RHEL-*/Server*.pem" + " "
+				+ "/root/generatedCertsFolder");
+		client.runCommandAndWait("mv" + "/root/generatedCertsFolder" + " "+ clienttasks.productCertDir);
+		List<InstalledProduct> InstalledProducts=clienttasks.getCurrentlyInstalledProducts();
+
+		 List<SubscriptionPool> AvailablePools=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		 for(SubscriptionPool pools:AvailablePools){
+			 clienttasks.subscribe(null, null,pools.poolId, null, null, null, null, null, null, null, null);
+			 List<InstalledProduct> InstalledProductsAfterSubscribing=clienttasks.getCurrentlyInstalledProducts();
+				Assert.assertEquals(InstalledProducts.size(), InstalledProductsAfterSubscribing.size());
+				clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
+		 }
+		}
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -682,31 +825,29 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", 
-			groups = { "ServerUrloptionValuesInRHSMFile","blockedByBug-889573"}, enabled = true)
+			groups = { "ServerUrloptionValuesInRHSMFile","blockedByBug-889573"}, enabled = false)
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException,Exception {
 	
-	String username="stage_test_12";
-	String password="redhat";
-	String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
+	String clientUsername="stage_test_12";
 	String hostnameBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
 	String portBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
 	String prefixBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
-	clienttasks.register(username, password, null, null, null, null, null, null, null, null,(String)null, serverurl,null, null, true, null, null, null, null);
+	clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, null, null, null, null,(String)null, null,null, null, true, null, null, null, null);
 	List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 	listOfSectionNameValues.add(new String[] { "server","hostname".toLowerCase(),hostnameBeforeExecution});
 	listOfSectionNameValues.add(new String[] { "server","port".toLowerCase(), "8443" });
 	listOfSectionNameValues.add(new String[] { "server","prefix".toLowerCase(), "/candlepin" });
 	clienttasks.config(null, null, true, listOfSectionNameValues);
-	clienttasks.orgs(username, password, serverurl, null, null, null, null);
+	clienttasks.orgs(clientUsername, sm_clientPassword, null, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
 	
-	clienttasks.service_level(null, null, null, null, username, password, null, serverurl, null, null, null, null);
+	clienttasks.service_level(null, null, null, null, clientUsername, sm_clientPassword, null, null, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
-	clienttasks.environments(username, password, null, serverurl, null, null, null, null);
+	clienttasks.environments(clientUsername, sm_clientPassword, null, null, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
@@ -718,7 +859,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if CLI lets you set consumer nameto empty string and defaults to username", 
+	@Test(description = "verify if CLI lets you set consumer nameto empty string and defaults to sm_clientUsername", 
 			groups = { "VerifyConsumerNameTest","blockedByBug-669395"}, enabled = true)
 		public void VerifyConsumerNameTest() throws JSONException,Exception {
 		String consumerName="tester";
@@ -775,15 +916,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "Verify500ErrorOnStage","blockedByBug-878994"},
 			enabled = true)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
-		String username="stage_test_12";
-		String password="redhat";
+		
 		//server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
 		clienttasks.unregister(null, null, null);
 		log.info("Fetching the generated product certs...");
 		String logMessage = "remote server status code: 500";
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
-		clienttasks.register(username, password,null, null, null, null, null, null, null, null,
+		String clientUsername="stage_test_12";
+		clienttasks.register(clientUsername, sm_clientPassword,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();	
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
