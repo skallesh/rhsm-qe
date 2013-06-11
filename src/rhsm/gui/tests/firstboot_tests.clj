@@ -141,15 +141,23 @@
   (verify (not (bool (tasks/ui hasstate :firstboot-back "Sensitive"))))
   (verify (not (bool (tasks/ui hasstate :firstboot-forward "Sensitive")))))
 
-(defn ^{Test {:groups ["firstboot" "blockedByBug-872727"]
+(defn ^{Test {:groups ["firstboot"
+                       "blockedByBug-872727"
+                       "blockedByBug-973317"]
               :dependsOnMethods ["firstboot_check_back_button_state"]}}
   firstboot_check_back_button
   "Checks the functionality of the back button during firstboot"
   [_]
+  (reset_firstboot)
+  (tasks/ui click :register-rhsm)
+  (tasks/ui click :firstboot-forward)
+  (tasks/firstboot-register (@config :username) (@config :password))
   (tasks/ui click :firstboot-back)
-  (verify (tasks/ui showing? :register-rhsm))
+  (verify (tasks/fbshowing? :firstboot-window "Choose Service"))
   (let [output (:stdout (run-command "subscription-manager identity"))]
-    (verify (substring? "This system is not yet registered" output))))
+    ;; Functionality of back-button is limited to RHEL5. In RHEL6 its
+    ;; behavior is different
+    (verify (substring? "Current identity is" output))))
 
 ;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
 (defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
