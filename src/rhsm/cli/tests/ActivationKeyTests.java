@@ -194,12 +194,21 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	/**
+	 * @param blockedByBug
+	 * @param keyName
+	 * @param jsonPool
+	 * @param addQuantity
+	 * @return If an attempt to register with the proposed activation key (made with the given keyName, jsonPool, and addQuantity) is made, then the result from the register is returned.  If no attempt is made, then null is returned.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	@Test(	description="create an activation key, add a pool to it with a quantity, and then register with the activation key",
 			groups={},
 			dataProvider="getRegisterWithActivationKeyContainingPoolWithQuantity_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingPoolWithQuantity_Test(Object blockedByBug, String keyName, JSONObject jsonPool, Integer addQuantity) throws JSONException, Exception {
+	public SSHCommandResult RegisterWithActivationKeyContainingPoolWithQuantity_Test(Object blockedByBug, String keyName, JSONObject jsonPool, Integer addQuantity) throws JSONException, Exception {
 //if (!jsonPool.getString("productId").equals("awesomeos-virt-4")) throw new SkipException("debugging...");
 //if (jsonPool.getInt("quantity")!=-1) throw new SkipException("debugging...");
 //if (!jsonPool.getString("productId").equals("awesomeos-virt-unlimited")) throw new SkipException("debugging...");
@@ -245,7 +254,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail since we should be blocked from adding pools that require consumer type person to an activation key.");
 				Assert.assertFalse (keyName.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' which requires a consumer type 'person' should NOT have been added to the following activation key with any quantity: "+jsonActivationKey);
 			}
-			return;
+			return null;
 		}
 		
 		// handle the case when the pool is NOT multi_entitlement and we tried to add the pool to the key with a quantity > 1
@@ -259,7 +268,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to greater than one quantity '"+addQuantity+"'.");
 				Assert.assertFalse (keyName.equals(jsonActivationKey.getString("name")),"Non multi-entitlement pool '"+poolId+"' should NOT have been added to the following activation key with a quantity '"+addQuantity+"' greater than one: "+jsonActivationKey);
 			}
-			return;
+			return null;
 		}
 		
 		// handle the case when the quantity is excessive
@@ -273,7 +282,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an excessive quantity '"+addQuantity+"'.");
 				Assert.assertFalse (keyName.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with an excessive quantity '"+addQuantity+"': "+jsonActivationKey);
 			}
-			return;
+			return null;
 		}
 		
 		// handle the case when the quantity is insufficient (less than one)
@@ -287,7 +296,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to insufficient quantity '"+addQuantity+"'.");
 				Assert.assertFalse (keyName.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with insufficient quantity '"+addQuantity+"': "+jsonActivationKey);
 			}
-			return;
+			return null;
 		}
 		
 		// assert the pool is added
@@ -344,7 +353,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool that requires a person consumer should fail.");
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 			Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),0,"No subscriptions should be consumed after attempting to register with an activationKey containing a pool that requires a person consumer type.");
-			return;
+			return registerResult;
 		}
 		
 		// handle the case when our quantity request exceeds the quantityAvail (when pool quantity is NOT unlimited)
@@ -353,7 +362,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(registerResult.getStderr().trim(), String.format("No subscriptions are available from the pool with id '%s'.",poolId), "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
-			return;
+			return registerResult;
 		}
 		
 		// handle the case when our candlepin is standalone and we have attempted a subscribe to a pool_derived virt_only pool (for which we have not registered our host system)
@@ -374,7 +383,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 					Assert.assertTrue(registerResult.getStderr().trim().startsWith("Unable to entitle consumer to the pool with id '"+poolId+"'."), "Expected stderr to start with: \"Unable to entitle consumer to the pool with id '"+poolId+"'.\" because the host has not registered.");
 					Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a virt_only derived_pool on a standalone candlepin server for which our system's host is not registered.");
 					Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
-					return;
+					return registerResult;
 				}
 				// END OF WORKAROUND
 				
@@ -386,7 +395,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a virt_only derived_pool on a standalone candlepin server for which our system's host is not registered.");
 				Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 
-				return;
+				return registerResult;
 			}
 		}
 		
@@ -396,6 +405,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that only the pool's providedProducts (excluding type=MKT products) are consumed (unless it is a ManagementAddOn product - indicated by no providedProducts)
 		assertProvidedProductsFromPoolAreWithinConsumedProductSubscriptionsUsingQuantity(jsonPool, clienttasks.getCurrentlyConsumedProductSubscriptions(), addQuantity, true);
+		
+		return registerResult;
 	}
 	
 	
@@ -548,12 +559,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// finally do the test...
 		// create an activation key, add the current pool to the activation key with this valid quantity, and attempt to register with it.
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonCurrentPool, quantityAvail);
+		SSHCommandResult registerResult = RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonCurrentPool, quantityAvail);
 		
-		// assume RegisterWithActivationKeyContainingPoolWithQuantity_Test exits with the most recent results on the top of the client stack
 		//Assert.assertEquals(client.getStderr().trim(), "No entitlements are available from the pool with id '"+jsonCurrentPool.getString("id")+"'.", "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");	// string changed by bug 876758
-		Assert.assertEquals(client.getStderr().trim(), "No subscriptions are available from the pool with id '"+jsonCurrentPool.getString("id")+"'.", "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");
-		Assert.assertEquals(client.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which non enough entitlements remain should fail.");
+		Assert.assertEquals(registerResult.getStderr().trim(), "No subscriptions are available from the pool with id '"+jsonCurrentPool.getString("id")+"'.", "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");
+		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which non enough entitlements remain should fail.");
 		Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 	}
 	
@@ -926,6 +936,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 
 				// Object blockedByBug, JSONObject jsonPool)
 				ll.add(Arrays.asList(new Object[] {null, keyName, jsonPool}));
+				
+				// minimize the number of dataProvided rows (useful during automated testcase development)
+				if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
 			}
 		}
 		return ll;
