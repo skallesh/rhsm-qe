@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
@@ -503,8 +504,24 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		List<String> actualPostHooks = parseHooksForSlotFromPluginsListhooksResult("post_auto_attach", pluginsListhooksResult);
 		Assert.assertTrue(actualPostHooks.contains(expectedPostHook),"The plugins listhooks report expected post_auto_attach hook '"+expectedPostHook+"'.");
 	}
+	protected String productCertDirForAutoAttachTestPluginHooks = "/tmp/sm-rhelProductCertDir";
+	protected String productCertDirBeforeAttachTestPluginHooks = null;
+	@BeforeGroups(groups={"setup"},value="verifyEnabledAutoAttachTestPluginHooksAreCalled_Test")
+	public void configureRhelProductCertDirBeforeGroups() {
+		// this before groups task is to avoid silent timeout during autosubscribe that prevent the post_auto_attach hooks from being called
+		// This BeforeGroups is really a WORKAROUND FOR BUG 964332
+		if (clienttasks==null) return;
+		productCertDirBeforeAttachTestPluginHooks = clienttasks.productCertDir;
+		client.runCommandAndWait("rm -rf "+productCertDirForAutoAttachTestPluginHooks+" && mkdir "+productCertDirForAutoAttachTestPluginHooks);
+		for (File productCertFile : clienttasks.getCurrentProductCertFiles(null)) {
+			if (!productCertFile.getPath().endsWith("_.pem")) {
+				client.runCommandAndWait("cp "+productCertFile+" "+productCertDirForAutoAttachTestPluginHooks);				
+			}
+		}
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"productCertDir",productCertDirForAutoAttachTestPluginHooks);	
+	}
 	@Test(	description="execute subscription-manager modules and verify the expected AutoAttachTestPlugin hooks are called",
-			groups={},
+			groups={"verifyEnabledAutoAttachTestPluginHooksAreCalled_Test"},
 			priority=530, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledAutoAttachTestPluginHooksAreCalled_Test() {
@@ -516,15 +533,16 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 		// register
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
-		
-		// TEMPORARY WORKAROUND FOR BUG
-		String bugId = "964332"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			// issue a sacrificial autosubscribe call to get most of the entitlements attached.  If it times out, the post_auto_attach hooks will not get called
-			clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
-		}
-		// END OF WORKAROUND
+
+// A BETTER SOLUTION FOR THIS WORKAROUND IS configureRhelProductCertDirBeforeGroups() unconfigureRhelProductCertDirAfterGroups()
+//		// TEMPORARY WORKAROUND FOR BUG
+//		String bugId = "964332"; boolean invokeWorkaroundWhileBugIsOpen = true;
+//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//		if (invokeWorkaroundWhileBugIsOpen) {
+//			// issue a sacrificial autosubscribe call to get most of the entitlements attached.  If it times out, the post_auto_attach hooks will not get called
+//			clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
+//		}
+//		// END OF WORKAROUND
 		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledAutoAttachTestPluginHooksAreCalled_Test...";
@@ -561,7 +579,14 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
 				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
 	}
-	
+	@AfterGroups(groups={"setup"},value="verifyEnabledAutoAttachTestPluginHooksAreCalled_Test", alwaysRun=true)
+	public void unconfigureRhelProductCertDirAfterGroups() {
+		// This AfterGroups is really a WORKAROUND FOR BUG 964332
+		if (clienttasks==null) return;
+		if (productCertDirBeforeAttachTestPluginHooks==null) return;
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"productCertDir",productCertDirBeforeAttachTestPluginHooks);
+		productCertDirBeforeAttachTestPluginHooks = null;
+	}
 	
 	// ProductIdInstallTestPlugin Tests ***************************************************
 
