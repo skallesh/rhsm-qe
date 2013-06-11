@@ -83,7 +83,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"RegisterWithActivationKeyWithExpiredPool","blockedByBug-803814"},
 			enabled=true)
 	public void RegisterWithActivationKeyWithExpiredPool() throws Exception {
-		int endingMinutesFromNow = 2;
+		int endingMinutesFromNow = 1;
 		Integer addQuantity=1;
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
 				sm_clientOrg, System.currentTimeMillis());
