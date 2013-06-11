@@ -202,7 +202,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommand("mkdir /root/generatedCertsFolder");
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
-		clienttasks.register(clientUsername, sm_clientPassword,null, null, null, null, null, null, null, null,
+		clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();
 		moveProductCertFiles("*");
 		client.runCommandAndWait("cp " + "/usr/share/rhsm/product/RHEL-*/Server*.pem" + " "
@@ -715,7 +715,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 			for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 				clienttasks.unsubscribe(null, consumed.serialNumber, null, null, null);
-		}
+			}
 			for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
 				Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
 			}
@@ -790,22 +790,22 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	String hostnameBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
 	String portBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
 	String prefixBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
-	clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, null, null, null, null,(String)null, null,null, null, true, null, null, null, null);
+	clienttasks.register(clientUsername, sm_rhuiPassword, null, null, null, null, null, null, null, null,(String)null, null,null, null, true, null, null, null, null);
 	List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 	listOfSectionNameValues.add(new String[] { "server","hostname".toLowerCase(),hostnameBeforeExecution});
 	listOfSectionNameValues.add(new String[] { "server","port".toLowerCase(), "8443" });
 	listOfSectionNameValues.add(new String[] { "server","prefix".toLowerCase(), "/candlepin" });
 	clienttasks.config(null, null, true, listOfSectionNameValues);
-	clienttasks.orgs(clientUsername, sm_clientPassword, null, null, null, null, null);
+	clienttasks.orgs(clientUsername, sm_rhuiPassword, null, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
 	
-	clienttasks.service_level(null, null, null, null, clientUsername, sm_clientPassword, null, null, null, null, null, null);
+	clienttasks.service_level(null, null, null, null, clientUsername, sm_rhuiPassword, null, null, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
-	clienttasks.environments(clientUsername, sm_clientPassword, null, null, null, null, null, null);
+	clienttasks.environments(clientUsername, sm_rhuiPassword, null, null, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
@@ -882,7 +882,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String logMessage = "remote server status code: 500";
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
-		clienttasks.register(clientUsername, sm_clientPassword,null, null, null, null, null, null, null, null,
+		clienttasks.register(clientUsername, clientUsername,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();	
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
