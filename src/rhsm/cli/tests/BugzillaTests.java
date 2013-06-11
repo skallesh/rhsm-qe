@@ -783,7 +783,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", 
-			groups = { "ServerUrloptionValuesInRHSMFile","blockedByBug-889573"}, enabled = false)
+			groups = { "ServerUrloptionValuesInRHSMFile","blockedByBug-889573"}, enabled = true)
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException,Exception {
 	
 	String clientUsername="stage_test_12";
