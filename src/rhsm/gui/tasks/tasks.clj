@@ -8,7 +8,8 @@
         [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (split
                                split-lines
-                               trim)]
+                               trim
+                               blank?)]
         rhsm.gui.tasks.tools
         matchure
         gnome.ldtp)
@@ -650,7 +651,16 @@
                  overwrite? true
                  update? true}}]
   (let [redirect (if overwrite? ">" ">>")
-        contents (if (string? facts) facts (json/json-str facts))
+        cur-contents (if (and (not overwrite?)
+                              (bash-bool (:exitcode (run-command
+                                                     (str "test -e " path filename)))))
+                       (let [s (trim (:stdout (run-command (str "cat " path filename))))]
+                         (if (blank? s) {} (json/read-json s)))
+                       nil)
+        newfacts (if (string? facts) (json/read-json facts) facts)
+        contents (if cur-contents
+                   (json/json-str (into cur-contents newfacts))
+                   (json/json-str newfacts))
         command (str "echo '" contents "' " redirect " " path filename)]
     (run-command command)
     (if update?
