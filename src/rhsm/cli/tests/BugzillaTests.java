@@ -787,25 +787,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException,Exception {
 	
 	String clientUsername="stage_test_12";
+	String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 	String hostnameBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
 	String portBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
 	String prefixBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
-	clienttasks.register(clientUsername, sm_rhuiPassword, null, null, null, null, null, null, null, null,(String)null, null,null, null, true, null, null, null, null);
-	List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+	clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
+			(String) null, serverurl, null, null, null, null, null, null, null).getStdout();	List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 	listOfSectionNameValues.add(new String[] { "server","hostname".toLowerCase(),hostnameBeforeExecution});
 	listOfSectionNameValues.add(new String[] { "server","port".toLowerCase(), "8443" });
 	listOfSectionNameValues.add(new String[] { "server","prefix".toLowerCase(), "/candlepin" });
 	clienttasks.config(null, null, true, listOfSectionNameValues);
-	clienttasks.orgs(clientUsername, sm_rhuiPassword, null, null, null, null, null);
+	clienttasks.orgs(clientUsername, sm_rhuiPassword, serverurl, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
 	
-	clienttasks.service_level(null, null, null, null, clientUsername, sm_rhuiPassword, null, null, null, null, null, null);
+	clienttasks.service_level(null, null, null, null, clientUsername, sm_rhuiPassword, null, serverurl, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
-	clienttasks.environments(clientUsername, sm_rhuiPassword, null, null, null, null, null, null);
+	clienttasks.environments(clientUsername, sm_rhuiPassword, null, serverurl, null, null, null, null);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),portBeforeExecution);
 	Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"),prefixBeforeExecution);
