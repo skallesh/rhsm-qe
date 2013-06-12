@@ -410,7 +410,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cpu.cpu_socket(s) fact matches lscpu.socket(s)",
-			groups={"AcceptanceTests","blockedByBug-707292"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
+			groups={"AcceptanceTests","blockedByBug-707292"/*,"blockedByBug-751205"*//*,"blockedByBug-844532"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertCpuCpuSocketsMatchLscpuSockets_Test() {
@@ -427,7 +427,15 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		String socketsCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
 		log.info("The cpu_socket(s) value calculated using the topology algorithm above is '"+socketsCalcualtedUsingTopology+"'.");
 		
-
+		// special case for xen-dom0 hosts
+		// Bug 844532 - subscription-manager register of a RHEL 5.8 Oracle SunFire x4100M2 shows 4 sockets instead of 2 in Certificate-based Management
+		if (client.runCommandAndWait("virt-what").getStdout().contains("xen-dom0")) {
+			log.warning("Detected a xen-dom0 host.  Will use dmidecode information to assert fact "+cpuSocketsFact+" as instructed by https://bugzilla.redhat.com/show_bug.cgi?id=844532#c31");
+			Integer socketsCalculatedUsingDmidecode = Integer.valueOf(client.runCommandAndWait("dmidecode -t processor | grep 'Socket Designation:' | uniq | wc -l").getStdout().trim());
+			Assert.assertEquals(cpuSockets, socketsCalculatedUsingDmidecode, "The fact value for '"+cpuSocketsFact+"' should match the calculation using dmidecode on a xen-dom0 host as instructed by https://bugzilla.redhat.com/show_bug.cgi?id=844532#c31");
+			return;
+		}
+		
 		// assert sockets against the socketsCalcualtedUsingTopology
 		Assert.assertEquals(factsMap.get(cpuSocketsFact), socketsCalcualtedUsingTopology, "The value of system fact '"+cpuSocketsFact+"' should match the value for 'CPU socket(s)' value='"+socketsCalcualtedUsingTopology+"' as calculated using cpu topology.");
 
@@ -631,7 +639,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				//		L3 Cache Handle: Not Provided
 				
 				// in the absense of "Core Count" (system is probably a virt guest), we'll assume 1 core per CPU
-				coresCalculatedUsingDmidecode = Integer.valueOf(client.runCommandAndWait("dmidecode -t processor | grep \"Socket Designation:\" | uniq | wc -l").getStdout().trim());
+				coresCalculatedUsingDmidecode = Integer.valueOf(client.runCommandAndWait("dmidecode -t processor | grep 'Socket Designation:' | uniq | wc -l").getStdout().trim());
 				//coresCalculatedUsingDmidecode = getSubstringMatches(dmidecodeResult.getStdout(), "Socket Designation:").size();
 			}
 		}
