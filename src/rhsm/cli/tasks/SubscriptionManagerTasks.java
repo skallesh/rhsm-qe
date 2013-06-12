@@ -896,11 +896,11 @@ public class SubscriptionManagerTasks {
 			String healMsg = assertCertificatesUpdate? "(Auto-attach) Certificates updated.":"(Auto-attach) Update failed (255), retry will occur on next run.";
 			String certMsg = assertCertificatesUpdate? "(Cert Check) Certificates updated.":"(Cert Check) Update failed (255), retry will occur on next run.";
 			int i=0, delay=10;
-			do {	// retry every 10 seconds (up to a minute) for the expected update messages in the rhsmcertd log
+			do {	// retry every 10 seconds (up to a 90 seconds) for the expected update messages in the rhsmcertd log
 				SubscriptionManagerCLITestScript.sleep(delay*1000);i++;	// wait a few seconds before trying again
 				rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
 				if (rhsmcertdLogResult.contains(healMsg) && rhsmcertdLogResult.contains(certMsg)) break;
-			} while (delay*i < 60);
+			} while (delay*i < 90);	// Note: should wait at least 60+ additional seconds because auto-attach can timeout after 60 seconds.  see bug https://bugzilla.redhat.com/show_bug.cgi?id=964332#c6
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			bugId="861443"; // Bug 861443 - rhsmcertd logging of Healing shows "Certificates updated." when it should fail.
