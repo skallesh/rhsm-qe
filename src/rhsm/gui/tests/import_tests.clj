@@ -69,7 +69,8 @@
                        "blockedByBug-712980"
                        ;checking this one in the function
                        ;"blockedByBug-860344"
-                       "blockedByBug-712978"]}}
+                       "blockedByBug-712978"]
+              :priority (int 10)}}
   import_valid_cert
   "Tests to see if a valid certificate can be imported sucessfully."
   [_]
@@ -118,7 +119,8 @@
              :entname entname})))
 
 (defn ^{Test {:groups ["import"]
-              :dependsOnMethods ["import_valid_cert"]}}
+              :dependsOnMethods ["import_valid_cert"]
+              :priority (int 20)}}
   import_unregister
   "Asserts that imported certs are sucessfully removed after unregister."
   [_]
