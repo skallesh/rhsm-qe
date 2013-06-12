@@ -793,7 +793,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	String portBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
 	String prefixBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
 	clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
-			(String) null, serverurl, null, null, null, null, null, null, null).getStdout();	List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+			(String) null, serverurl, null, null, true, null, null, null, null).getStdout();	List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 	listOfSectionNameValues.add(new String[] { "server","hostname".toLowerCase(),hostnameBeforeExecution});
 	listOfSectionNameValues.add(new String[] { "server","port".toLowerCase(), "8443" });
 	listOfSectionNameValues.add(new String[] { "server","prefix".toLowerCase(), "/candlepin" });
@@ -3784,8 +3784,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests" }, enabled = true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test()
 			throws Exception {
-		clienttasks.register(sm_clientUsername,
-				sm_clientPassword, sm_clientOrg, null, null, null,
+		clienttasks.register(sm_clientUsername,sm_clientPassword, sm_clientOrg, null, null, null,
 				null, null, null, null, (String) null, null, null,
 				null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
