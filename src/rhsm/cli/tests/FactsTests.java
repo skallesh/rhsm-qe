@@ -420,6 +420,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// get the facts
 		Map<String, String> factsMap = clienttasks.getFacts();
 		String cpuSocketsFact = "cpu.cpu_socket(s)";
+		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(factsMap.get(cpuSocketsFact)) && Integer.valueOf(factsMap.get(cpuSocketsFact))>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+factsMap.get(cpuSocketsFact)+"' is a positive integer.");
 		Integer cpuSockets = Integer.valueOf(factsMap.get(cpuSocketsFact));
 		
 		// determine the cpu_socket(s) value using the topology calculation
@@ -455,7 +456,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// get the facts
 		Map<String, String> factsMap = clienttasks.getFacts();
 		String cpuSocketsFact = "cpu.cpu_socket(s)";
+		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(factsMap.get(cpuSocketsFact)) && Integer.valueOf(factsMap.get(cpuSocketsFact))>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+factsMap.get(cpuSocketsFact)+"' is a positive integer.");
 		String cpuCoresPerSocketFact = "cpu.core(s)_per_socket";
+		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(factsMap.get(cpuCoresPerSocketFact)) && Integer.valueOf(factsMap.get(cpuCoresPerSocketFact))>0, "Subscription manager facts '"+cpuCoresPerSocketFact+"' value '"+factsMap.get(cpuCoresPerSocketFact)+"' is a positive integer.");
 		Integer cpuCores = Integer.valueOf(factsMap.get(cpuSocketsFact))*Integer.valueOf(factsMap.get(cpuCoresPerSocketFact));
 		
 		

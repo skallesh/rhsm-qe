@@ -168,13 +168,26 @@ public class SubscriptionManagerTasks {
 	public void initializeRamCoreSockets() {
 		// STORE THE subscription-manager fact for "cpu.cpu_socket(s)".  THIS IS THE VALUE CANDLEPIN USES FOR HARDWARE RULES.
 		removeAllFacts();
+		
+		// sockets
 		String cpuSocketsFact = "cpu.cpu_socket(s)";
 		sockets = getFactValue(cpuSocketsFact);
-		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(sockets) && Integer.valueOf(sockets)>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+sockets+"' is a positive integer.");
+		//Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(sockets) && Integer.valueOf(sockets)>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+sockets+"' is a positive integer.");
+		if (!SubscriptionManagerCLITestScript.isInteger(sockets)) {
+			log.warning("When no '"+cpuSocketsFact+"' fact is present, the hardware rules should treat this system as a 1 socket system.  Therefore automation will assume this is a one socket system.");
+			sockets = "1";
+		}
+		
+		// cores
 		String cpuCoresPerSocketFact = "cpu.core(s)_per_socket";
 		coresPerSocket = getFactValue(cpuCoresPerSocketFact);
-		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(coresPerSocket) && Integer.valueOf(coresPerSocket)>0, "Subscription manager facts '"+cpuCoresPerSocketFact+"' value '"+coresPerSocket+"' is a positive integer.");
+		//Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(coresPerSocket) && Integer.valueOf(coresPerSocket)>0, "Subscription manager facts '"+cpuCoresPerSocketFact+"' value '"+coresPerSocket+"' is a positive integer.");
+		if (!SubscriptionManagerCLITestScript.isInteger(coresPerSocket)) {
+			log.warning("When no '"+cpuCoresPerSocketFact+"' fact is present, the hardware rules should treat this system as a 1 core_per_socket system.  Therefore automation will assume this is a one core_per_socket system.");
+			coresPerSocket = "1";
+		}
 		cores = String.valueOf(Integer.valueOf(sockets)*Integer.valueOf(coresPerSocket));
+		
 		//TODO ram
 	}
 	
