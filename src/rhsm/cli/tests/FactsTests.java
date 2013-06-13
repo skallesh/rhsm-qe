@@ -425,6 +425,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// determine the cpu_socket(s) value using the topology calculation
 		String socketsCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
+		if (!client.getStderr().isEmpty()) log.warning(client.getStderr());
 		log.info("The cpu_socket(s) value calculated using the topology algorithm above is '"+socketsCalcualtedUsingTopology+"'.");
 		
 		// special case for xen-dom0 hosts
@@ -480,7 +481,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		String cpuCoresPerSocketFact = "cpu.core(s)_per_socket";
 		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(factsMap.get(cpuCoresPerSocketFact)) && Integer.valueOf(factsMap.get(cpuCoresPerSocketFact))>0, "Subscription manager facts '"+cpuCoresPerSocketFact+"' value '"+factsMap.get(cpuCoresPerSocketFact)+"' is a positive integer.");
 		Integer cpuCores = Integer.valueOf(factsMap.get(cpuSocketsFact))*Integer.valueOf(factsMap.get(cpuCoresPerSocketFact));
-		
 		
 		// determine the number of cores using dmidecode information
 		Integer coresCalculatedUsingDmidecode = 0;
