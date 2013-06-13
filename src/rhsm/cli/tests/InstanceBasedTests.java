@@ -55,6 +55,30 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@Test(description = "verify if instance_multiplier logic is enforced on virtual guests.", 
+			groups = { "InstanceMultiplierLogicOnVirtmachines","blockedByBug-962933"}, enabled = true)
+	public void InstanceMultiplierLogicOnVirtmachines() throws JSONException,Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		if(clienttasks.getFactValue("virt.is_guest").contains("true")){
+			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+				if(availList.subscriptionName.contains("Instance Based")){
+					SSHCommandResult result=clienttasks.subscribe(null, null, availList.poolId, null, null, "5", null, null, null, null, null);
+					String expectedMessage="Successfully attached a subscription for: "+availList.subscriptionName;
+					Assert.assertEquals(result.getStdout().trim(), expectedMessage);
+					Assert.assertEquals(result.getExitCode(),  Integer.valueOf(0));
+				}
+				
+		}
+	
+		}}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
 	@Test(description = "verify Subscription of instance based subscription", 
 			groups = { "SubscriptionOfInstanceBasedTest"}, enabled = true)
 	public void SubscriptionOfInstanceBasedTest() throws JSONException,Exception {
