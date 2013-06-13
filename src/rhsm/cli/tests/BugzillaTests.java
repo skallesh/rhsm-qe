@@ -339,7 +339,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if refresh pools will not notice change in provided products",
 			groups={"RefreshPoolAfterChangeInProvidedProducts","blockedByBug-665118"},
-			enabled=true)
+			enabled=false)
 	public void RefreshPoolAfterChangeInProvidedProducts() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
