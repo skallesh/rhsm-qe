@@ -4635,7 +4635,9 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public boolean areAllRequiredTagsProvidedByProductCerts(String requiredTagsAsString, List<ProductCert> productCerts) {
-
+		// same some time...  if requiredTagsAsString is null, then effectively the requiredTags are provided by any list of product certs
+		if (requiredTagsAsString==null) return true;
+		
 		// get all of the provided tags from the productCerts
 		List<String> providedTags = new ArrayList<String>();
 		for (ProductCert productCert : productCerts) {
