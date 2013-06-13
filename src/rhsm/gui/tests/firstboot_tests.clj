@@ -66,7 +66,8 @@
   (run-command "subscription-manager clean")
   (zero-proxy-values))
 
-(defn ^{Test {:groups ["firstboot"]}}
+(defn ^{Test {:groups ["firstboot"
+                       "blockedByBug-973269"]}}
   firstboot_enable_proxy_auth
   "Checks whether the proxy and authentication is enabled in rhsm-conf file"
   [_]
@@ -82,7 +83,8 @@
     (tasks/firstboot-register (@config :username) (@config :password))
     (tasks/verify-conf-proxies hostname port username password)))
 
-(defn ^{Test {:groups ["firstboot"]}}
+(defn ^{Test {:groups ["firstboot"
+                       "blockedByBug-973269"]}}
   firstboot_enable_proxy_noauth
   "Checks whether the proxy is enabled and authentication is disabled in rhsm-conf file"
   [_]
@@ -136,18 +138,26 @@
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
   (tasks/firstboot-register (@config :username) (@config :password))
-  (verify (bool (tasks/ui hasstate :firstboot-back "Sensitive")))
-  (verify (bool (tasks/ui hasstate :firstboot-forward "Sensitive"))))
+  (verify (not (bool (tasks/ui hasstate :firstboot-back "Sensitive"))))
+  (verify (not (bool (tasks/ui hasstate :firstboot-forward "Sensitive")))))
 
-(defn ^{Test {:groups ["firstboot" "blockedByBug-872727"]
+(defn ^{Test {:groups ["firstboot"
+                       "blockedByBug-872727"
+                       "blockedByBug-973317"]
               :dependsOnMethods ["firstboot_check_back_button_state"]}}
   firstboot_check_back_button
   "Checks the functionality of the back button during firstboot"
   [_]
+  (reset_firstboot)
+  (tasks/ui click :register-rhsm)
+  (tasks/ui click :firstboot-forward)
+  (tasks/firstboot-register (@config :username) (@config :password))
   (tasks/ui click :firstboot-back)
-  (verify (tasks/ui showing? :register-rhsm))
+  (verify (tasks/fbshowing? :firstboot-window "Choose Service"))
   (let [output (:stdout (run-command "subscription-manager identity"))]
-    (verify (substring? "This system is not yet registered" output))))
+    ;; Functionality of back-button is limited to RHEL5. In RHEL6 its
+    ;; behavior is different
+    (verify (substring? "Current identity is" output))))
 
 ;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
 (defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
@@ -165,23 +175,40 @@
   (tasks/ui click :firstboot-forward)
   (tasks/ui click :license-yes)
   (tasks/ui click :firstboot-forward)
-  (verify (tasks/ui showing?
-                    :firstboot-window
-                    "Your system was registered for updates during installation.")))
+  (if (tasks/fbshowing? :firstboot-window "Firewall")
+    (do
+      (tasks/ui click :firstboot-forward)
+      (tasks/ui click :firstboot-forward)
+      (tasks/ui click :firstboot-forward)
+      (tasks/ui click :firstboot-forward)
+      (sleep 3000) ;; FIXME find a better way than a hard wait...
+      (if (tasks/fbshowing? :firstboot-window "Set Up Software Updates")
+        (do
+          (tasks/ui click :firstboot-forward)
+          (verify (tasks/fbshowing? :firstboot-window "Create User")))))))
 
 ;; https://tcms.engineering.redhat.com/case/72670/?from_plan=2806
-(defn ^{Test {:groups ["firstboot"]}}
+(defn ^{Test {:groups ["firstboot"]
+              :dependsOnMethods ["firstboot_skip_register"]}}
   firstboot_check_register_sm_unregistered
   "Checks whether firstboot navigates to register screen when subscription manager is unregistered"
   [_]
-  (kill_firstboot)
   (run-command "subscription-manager unregister")
-  (reset_firstboot)
-  (tasks/ui click :register-rhsm)
+  (kill_firstboot)
+  (run-command "subscription-manager clean")
+  (zero-proxy-values)
+  (tasks/start-firstboot)
   (tasks/ui click :firstboot-forward)
-  (verify (tasks/fbshowing? :firstboot-server-entry))
+  (tasks/ui click :license-yes)
   (tasks/ui click :firstboot-forward)
-  (verify (tasks/fbshowing? :firstboot-user)))
+  (if (tasks/fbshowing? :firstboot-window "Firewall")
+    (do
+      (tasks/ui click :firstboot-forward)
+      (tasks/ui click :firstboot-forward)
+      (tasks/ui click :firstboot-forward)
+      (tasks/ui click :firstboot-forward)
+      (sleep 3000) ;; FIXME find a better way than a hard wait...
+      (verify (tasks/fbshowing? :register-now)))))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
