@@ -429,6 +429,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// special case for xen-dom0 hosts
 		// Bug 844532 - subscription-manager register of a RHEL 5.8 Oracle SunFire x4100M2 shows 4 sockets instead of 2 in Certificate-based Management
+		// related/duplicate bugs:
+		// Bug 787807 - Dom0 cpu socket count is incorrect
+		// Bug 785011 - Unable to register 2 CPU system
+		//	[root@sun-x4100-1 ~]# hostname
+		//	sun-x4100-1.gsslab.rdu2.redhat.com
+		//	[root@sun-x4100-1 ~]# uname -r
+		//	2.6.18-308.16.1.el5xen
+		//	[root@sun-x4100-1 ~]# virt-what
+		//	xen
+		//	xen-dom0
+		//	[root@sun-x4100-1 ~]# 
+		//  TO REBOOT THIS MACHINE INTO A DIFFERENT KERNEL, vi /boot/grub/grub.conf and change the default=# based on the list; then "reboot"
 		if (client.runCommandAndWait("virt-what").getStdout().contains("xen-dom0")) {
 			log.warning("Detected a xen-dom0 host.  Will use dmidecode information to assert fact "+cpuSocketsFact+" as instructed by https://bugzilla.redhat.com/show_bug.cgi?id=844532#c31");
 			Integer socketsCalculatedUsingDmidecode = Integer.valueOf(client.runCommandAndWait("dmidecode -t processor | grep 'Socket Designation:' | uniq | wc -l").getStdout().trim());
