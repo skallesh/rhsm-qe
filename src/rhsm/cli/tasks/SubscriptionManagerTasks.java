@@ -258,6 +258,9 @@ public class SubscriptionManagerTasks {
 
 	public void installZStreamUpdates(String installOptions, List<String> updatePackages) throws IOException {
 		
+		// make sure installOptions begins with --disablerepo=* to make sure the updates ONLY come from the rhel-zstream repos we are about to define
+		if (!installOptions.contains("--disablerepo=*")) installOptions = "--disablerepo=* "+installOptions;
+		
 		// locally create a yum.repos.d zstream repos file
 		// now dump out the list of userData to a file
 	    File file = new File("tmp/rhel-zstream.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
@@ -331,7 +334,7 @@ public class SubscriptionManagerTasks {
 		}
 		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
 		
-		// assembe the packages to be updated (note: if the list is empty, then all packages will be updated)
+		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
 		String updatePackagesAsString = "";
 		for (String updatePackage : updatePackages) updatePackagesAsString += updatePackage+" "; updatePackagesAsString=updatePackagesAsString.trim();
 
