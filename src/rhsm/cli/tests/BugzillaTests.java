@@ -96,18 +96,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						sm_clientPassword, sm_serverUrl, "/owners/"
 								+ sm_clientOrg + "/activation_keys",
 								jsonActivationKeyRequest.toString()));
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"autoAttachInterval".toLowerCase(), "1440" });
-		clienttasks.config(null, null, true, listOfSectionNameValues);
-		sleep(1*60*1000);
+		
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
-
+		sleep(1*60*1000);
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
 		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStdout();			
@@ -204,7 +200,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
 		clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
-				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();
+				(String) null, serverurl, null, null, true, null, null, null, null).getStdout();
 		moveProductCertFiles("*");
 		client.runCommandAndWait("cp " + "/usr/share/rhsm/product/RHEL-*/Server*.pem" + " "
 				+ "/root/generatedCertsFolder");
@@ -716,7 +712,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 
 			for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-				clienttasks.unsubscribeFromSerialNumber(consumed.serialNumber);
+				System.out.println(consumed.serialNumber);
+				clienttasks.unsubscribe(null, consumed.serialNumber, null, null, null);
 			}
 			for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
 				Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
