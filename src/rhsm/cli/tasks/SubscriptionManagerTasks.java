@@ -382,7 +382,7 @@ public class SubscriptionManagerTasks {
 	
 	
 	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions) {
-
+		
 		// make sure the client's time is accurate
 		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);
@@ -397,6 +397,24 @@ public class SubscriptionManagerTasks {
 			sshCommandRunner.runCommandAndWait("rm -f "+redhatRepoFile);
 		}
 		
+		// 6/15/2013 - including "--disablerepo=*" with yum installOptions to avoid these errors which happen a lot on rhel61 and rhel57
+		//	
+		//	201306141731:15.632 - FINE: ssh root@rhsm-compat-rhel61.usersys.redhat.com yum remove -y subscription-manager-migration (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201306141731:28.980 - FINE: Stderr: 
+		//	This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.
+		//	file://var/cache/yum/x86_64/6Server/rhel-x86_64-server-6/repodata/repomd.xml: [Errno 14] Could not open/read file://var/cache/yum/x86_64/6Server/rhel-x86_64-server-6/repodata/repomd.xml
+		//	Trying other mirror.
+		//	Error: Cannot retrieve repository metadata (repomd.xml) for repository: rhel-x86_64-server-6. Please verify its path and try again
+		//	
+		//	201306141719:42.800 - FINE: ssh root@rhsm-compat-rhel57.usersys.redhat.com yum -y localinstall /tmp/python-rhsm.rpm --nogpgcheck (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201306141719:43.170 - FINE: Stderr: 
+		//	This system is not registered with RHN.
+		//	RHN Satellite or RHN Classic support will be disabled.
+		//	file://var/cache/yum/rhel-x86_64-server-5/repodata/repomd.xml: [Errno 5] OSError: [Errno 2] No such file or directory: '/cache/yum/rhel-x86_64-server-5/repodata/repomd.xml'
+		//	Trying other mirror.
+		//	Error: Cannot retrieve repository metadata (repomd.xml) for repository: rhel-x86_64-server-5. Please verify its path and try again
+		installOptions = "--disablerepo=* "+installOptions;
+
 		// remove current rpms
 		// http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/python-rhsm.noarch.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-gnome.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-firstboot.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-migration.x86_64.rpm,     http://gibson.usersys.redhat.com/latestrpm/?arch=noarch&version=1&rpmname=subscription-manager-migration-data
 		List<String> rpmUrlsReversed = new ArrayList<String>();
@@ -409,7 +427,7 @@ public class SubscriptionManagerTasks {
 			
 			// remove the existing package first
 			log.info("Removing existing package "+pkg+"...");
-			sshCommandRunner.runCommandAndWait("yum remove -y "+pkg);
+			sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
 		}
 		
