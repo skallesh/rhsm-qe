@@ -1312,7 +1312,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				String attributeValue = jsonProductAttribute.isNull("value")? null:jsonProductAttribute.getString("value");
 				if (attributeName.equals("arch")) {
 					productSupportedArches.addAll(Arrays.asList(attributeValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
-					if (productSupportedArches.contains("x86")) {productSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
+					if (productSupportedArches.contains("x86")) {productSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
 					if (!productSupportedArches.contains("ALL") && !productSupportedArches.contains(clienttasks.arch)) {
 						productAttributesPassRulesCheck = false;
 					}

@@ -2972,7 +2972,7 @@ schema generation failed
 	}
 	
 	
-	public static JSONObject createContentRequestBody(String name, String contentId, String label, String type, String vendor, String contentUrl, String gpgUrl, String metadataExpire, String requiredTags, List<String> modifiedProductIds) throws JSONException{
+	public static JSONObject createContentRequestBody(String name, String contentId, String label, String type, String vendor, String contentUrl, String gpgUrl, String metadataExpire, String requiredTags, String arches, List<String> modifiedProductIds) throws JSONException{
 		
 		JSONObject jsonContentData = new JSONObject();
 		if (name!=null)					jsonContentData.put("name", name);
@@ -2984,6 +2984,7 @@ schema generation failed
 		if (gpgUrl!=null)				jsonContentData.put("gpgUrl", gpgUrl);
 		if (metadataExpire!=null)		jsonContentData.put("metadataExpire", metadataExpire);
 		if (requiredTags!=null)			jsonContentData.put("requiredTags", requiredTags);
+		if (arches!=null)				jsonContentData.put("arches", arches);
 		if (modifiedProductIds!=null)	jsonContentData.put("modifiedProductIds", modifiedProductIds);
 	
 		return jsonContentData;
@@ -3060,10 +3061,10 @@ schema generation failed
 		
 	}
 	
-	public static JSONObject createContentUsingRESTfulAPI(String authenticator, String password, String url, String name, String contentId, String label, String type, String vendor, String contentUrl, String gpgUrl, String metadataExpire, String requiredTags, List<String> modifiedProductIds) throws JSONException, Exception  {
+	public static JSONObject createContentUsingRESTfulAPI(String authenticator, String password, String url, String name, String contentId, String label, String type, String vendor, String contentUrl, String gpgUrl, String metadataExpire, String requiredTags, String arches, List<String> modifiedProductIds) throws JSONException, Exception  {
 
 		// create the product
-		String requestBody = CandlepinTasks.createContentRequestBody(name, contentId, label, type, vendor, contentUrl, gpgUrl, metadataExpire, requiredTags, modifiedProductIds).toString();
+		String requestBody = CandlepinTasks.createContentRequestBody(name, contentId, label, type, vendor, contentUrl, gpgUrl, metadataExpire, requiredTags, arches, modifiedProductIds).toString();
 		JSONObject jsonContent = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/content",requestBody));
 		
 		if (jsonContent.has("displayMessage")) {

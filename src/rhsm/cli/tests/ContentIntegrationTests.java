@@ -100,7 +100,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 		// assert non-availability based on arch
 		if (arch!=null) { 
 			List<String> arches = new ArrayList<String>(Arrays.asList(arch.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
-			if (arches.contains("X86")) {arches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
+			if (arches.contains("X86")) {arches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note: x86 is a general term to cover all 32-bit intel microprocessors 
 			if (!arches.contains(clienttasks.arch.toUpperCase())) {
 				SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availablePools);
 				Assert.assertNull(pool, "Subscription pool for product '"+productId+"' is NOT available when the client arch (actual='"+clienttasks.arch+"') is not contained in '"+arches+"'.");

@@ -732,7 +732,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Verify that all content sets granted from a subscription pool that are restricted to specific arches satisfy the current system's arch.",
-			groups={"AcceptanceTests"/*,"blockedByBug-706187"*/},
+			groups={"AcceptanceTests","blockedByBug-706187"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test() throws JSONException, Exception {
@@ -750,39 +750,33 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				if (!contentNamespace.arches.trim().isEmpty()) arches.addAll(Arrays.asList(contentNamespace.arches.trim().split(" *, *")));	// Note: the arches field can be a comma separated list of values
 				if (!arches.isEmpty()) contentBasedArchesFound = true;
 				
-				if (arches.contains("x86")) {arches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
+				if (arches.contains("x86")) {arches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
 				Assert.assertTrue(arches.isEmpty() || arches.contains("ALL") || arches.contains(clienttasks.arch), "Content label '"+contentNamespace.label+"' restricted to arches '"+contentNamespace.arches+"' granted by entitlement cert '"+entitlementCert.orderNamespace.productName+"' matches the system's arch '"+clienttasks.arch+"'.");
 			}
 		}
 		
-		if (!contentBasedArchesFound) throw new SkipException("No entitlements were found containing non-empty arch-based content after subscribing to available pools.");
+		if (!contentBasedArchesFound) throw new SkipException("No entitlements were found containing non-empty arch-based content after subscribing to the available pools.");
 	}
 	
 	
 	@Test(	description="Verify that all content sets granted from a subscription pool satisfy the system arch and subset the provided product's arch",
-			groups={"debugTest","AcceptanceTests"/*,"blockedByBug-706187"*/},
-			dataProvider="getAvailableSubscriptionPoolsData",
-			enabled=true)	// TODO UNDER CONSTRUCTION 5/10/2013 jsefler
+			groups={"AcceptanceTests","blockedByBug-706187"},
+			dataProvider="getAllAvailableSubscriptionPoolsProvidingArchBasedContentData",//"getAvailableSubscriptionPoolsData",
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyContentSetsEntitledFromSubscriptionPoolSatisfyTheSystemArch_Test(SubscriptionPool pool) throws JSONException, Exception {
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId);
 		if (providedProductIds.isEmpty()) throw new SkipException("This test is not applicable for a pool that provides no products.");
-		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
 		
-
 		// maintain a list of expected content sets
-		Set<String> expectedContentLabels = new HashSet<String>();
+		Set<ContentNamespace> expectedContentNamespaceSet = new HashSet<ContentNamespace>();
 		// maintain a list of unexpected content sets
-		Set<String> unexpectedContentLabels = new HashSet<String>();
-		// maintain a hash map of the contentLabel -> arches
-		Map<String,String> contentArchesMap = new HashMap<String,String>();
-		Map<String,String> contentRequiredTagsMap = new HashMap<String,String>();
-		
+		Set<ContentNamespace> unexpectedContentNamespaceSet = new HashSet<ContentNamespace>();
+
 		for (String providedProductId : providedProductIds) {
 			
 			// get the product
 			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
-			
 			
 			// get the product supported arches
 			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
@@ -793,22 +787,29 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				String attributeValue = jsonProductAttribute.isNull("value")? null:jsonProductAttribute.getString("value");
 				if (attributeName.equals("arch")) {
 					productSupportedArches.addAll(Arrays.asList(attributeValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
-					if (productSupportedArches.contains("x86")) {productSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
+					if (productSupportedArches.contains("x86")) {productSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
 				}
 			}
-			
-
 			
 			// get the provided product contents
 			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 			for (int j = 0; j < jsonProductContents.length(); j++) {
 				JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
 				JSONObject jsonContent = jsonProductContent.getJSONObject("content");
-				boolean   enabled = jsonProductContent.getBoolean("enabled");
-				String    contentLabel = jsonContent.getString("label");
-				String    requiredTags = null;
-				if (jsonContent.has("requiredTags") && !jsonContent.isNull("requiredTags")) requiredTags = jsonContent.getString("requiredTags");
-				boolean areAllRequiredTagsProvidedByProductCerts = clienttasks.areAllRequiredTagsProvidedByProductCerts(requiredTags, installedProductCerts);
+				Map<String,String> certData = new HashMap<String,String>();
+				//certData.put("", jsonContent.getString("id"));
+				if (jsonContent.has("type") && !jsonContent.isNull("type")) certData.put("type",jsonContent.getString("type"));
+				if (jsonContent.has("label") && !jsonContent.isNull("label")) certData.put("label",jsonContent.getString("label"));
+				if (jsonContent.has("name") && !jsonContent.isNull("name")) certData.put("name",jsonContent.getString("name"));
+				if (jsonContent.has("vendorId") && !jsonContent.isNull("vendorId")) certData.put("vendorId",jsonContent.getString("vendor"));
+				if (jsonContent.has("downloadUrl") && !jsonContent.isNull("downloadUrl")) certData.put("downloadUrl",jsonContent.getString("contentUrl"));
+				if (jsonContent.has("requiredTags") && !jsonContent.isNull("requiredTags")) certData.put("requiredTags",jsonContent.getString("requiredTags"));
+				//certData.put("", jsonContent.getString("releaseVer"));
+				if (jsonContent.has("gpgKeyUrl") && !jsonContent.isNull("gpgKeyUrl")) certData.put("gpgKeyUrl",jsonContent.getString("gpgUrl"));
+				if (jsonContent.has("metadataExpire") && !jsonContent.isNull("metadataExpire")) certData.put("metadataExpire",String.valueOf(jsonContent.getInt("metadataExpire")));
+				//certData.put("", jsonContent.getString("modifiedProductIds"));
+				if (jsonContent.has("arches") && !jsonContent.isNull("arches")) certData.put("arches",jsonContent.getString("arches"));
+				ContentNamespace contentNamespace = new ContentNamespace(certData);
 
 //				// get modifiedProductIds for each of the productContents
 //				JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
@@ -817,47 +818,49 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 //				}
 				
 				// get this content supported arches
-				List<String> contentSupportedArches = new ArrayList<String>();
+				Set<String> contentSupportedArches = new HashSet<String>();
 				String jsonContentArches = null;
 				if (jsonContent.has("arches") && !jsonContent.isNull("arches") && !jsonContent.getString("arches").isEmpty()) {
 					jsonContentArches = jsonContent.getString("arches");
 					contentSupportedArches.addAll(Arrays.asList(jsonContentArches.split("\\s*,\\s*")));
-					if (contentSupportedArches.contains("x86")) {contentSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
+					if (contentSupportedArches.contains("x86")) contentSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+					if (contentSupportedArches.contains("i386")) contentSupportedArches.add("x86_64");  // Note: all i386 packages are capable of running on an x86_64 system
+					if (contentSupportedArches.contains("i486")) contentSupportedArches.add("x86_64");  // Note: all i486 packages are capable of running on an x86_64 system
+					if (contentSupportedArches.contains("i586")) contentSupportedArches.add("x86_64");  // Note: all i586 packages are capable of running on an x86_64 system
+					if (contentSupportedArches.contains("i686")) contentSupportedArches.add("x86_64");  // Note: all i686 packages are capable of running on an x86_64 system
 					
-					// when arches have been defined on the content set, then add it to the expectedContentLabels when
-					// 1. it contains an arch that matches the system
-					// 2. and all of its required tags are provided by the installed products
-					if ((contentSupportedArches.contains("ALL") || contentSupportedArches.contains(clienttasks.arch)) && areAllRequiredTagsProvidedByProductCerts) {
-						expectedContentLabels.add(contentLabel);
+					// when arches have been defined on the content set, then add contentNamespace to the expectedContentNamespaces if
+					// it contains an arch that matches the system
+					if (contentSupportedArches.contains("ALL") || contentSupportedArches.contains(clienttasks.arch)) {
+						expectedContentNamespaceSet.add(contentNamespace);
 					} else {
-						unexpectedContentLabels.add(contentLabel);
+						unexpectedContentNamespaceSet.add(contentNamespace);
 					}
 					
 				} else {
-					// when no arches have been defined on the content set, then add it to the expectedContentLabels when
-					// 1. it's providedProduct also matches the system  (we are effectively inheriting the arches defined by the product to which this content was added)
-					// 2. and if all it's required tags are installed
-					if ((productSupportedArches.contains("ALL") || productSupportedArches.contains(clienttasks.arch)) && areAllRequiredTagsProvidedByProductCerts) {
-						expectedContentLabels.add(contentLabel);
+					// when no arches have been defined on the content set, then add it to the expectedContentLabels if
+					// it's providedProduct also matches the system  (we are effectively inheriting the arches defined by the product to which this content was added)
+					if (productSupportedArches.contains("ALL") || productSupportedArches.contains(clienttasks.arch)) {
+						expectedContentNamespaceSet.add(contentNamespace);
 					} else {
-						unexpectedContentLabels.add(contentLabel);
+						unexpectedContentNamespaceSet.add(contentNamespace);
 					}
-					
 				}
-				contentArchesMap.put(contentLabel, jsonContentArches);
-				contentRequiredTagsMap.put(contentLabel, requiredTags);
 			}
 		}
 		
 		// conflict siuation: if a subscription provides more than one product that both provide the same content but whose product's arch differs, then it is possible to have the content in both expectedContentLabels and unexpectedContentLabels; expectedContentLabels wins!
-		for (String expectedContentLabel : expectedContentLabels) {
-			if (unexpectedContentLabels.contains(expectedContentLabel)) {
-				log.warning("Based on multiple products '"+providedProductIds+"' from subscription '"+pool.subscriptionName+"' with conflicting arches, content label '"+expectedContentLabel+"' defined for arches '"+contentArchesMap.get(expectedContentLabel)+"' will be provided."); 
-				unexpectedContentLabels.remove(expectedContentLabel);
+		for (ContentNamespace expectedContentNamespace : expectedContentNamespaceSet) {
+			List<ContentNamespace> unexpectedContentNamespaceList = new ArrayList<ContentNamespace>();
+			unexpectedContentNamespaceList.addAll(unexpectedContentNamespaceSet);
+			ContentNamespace unexpectedContentNamespace = ContentNamespace.findFirstInstanceWithMatchingFieldFromList("label", expectedContentNamespace.label, unexpectedContentNamespaceList);
+			if (unexpectedContentNamespace!=null) {
+				log.warning("Based on multiple products '"+providedProductIds+"' from subscription '"+pool.subscriptionName+"' with conflicting arches, content label '"+expectedContentNamespace.label+"' defined for arches '"+expectedContentNamespace.arches+"' will be provided."); 
+				unexpectedContentNamespaceSet.remove(unexpectedContentNamespace);
 			}
 		}
 		
-		if (expectedContentLabels.isEmpty() && unexpectedContentLabels.isEmpty()) throw new SkipException("This test is not applicable for a pool whose provided products have no content sets.");
+		if (expectedContentNamespaceSet.isEmpty() && unexpectedContentNamespaceSet.isEmpty()) throw new SkipException("This test is not applicable for a pool whose provided products have no content sets.");
 		
 		clienttasks.unsubscribe(true,(BigInteger)null,null,null,null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
@@ -865,21 +868,31 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// entitlement asserts
 		List<String> actualEntitledContentLabels = new ArrayList<String>();
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) actualEntitledContentLabels.add(contentNamespace.label);
-		for (String expectedContentLabel : expectedContentLabels) {
-			Assert.assertTrue(actualEntitledContentLabels.contains(expectedContentLabel), "As expected, contentNamespace label '"+expectedContentLabel+"' defined for arches '"+contentArchesMap.get(expectedContentLabel)+"' requiredTags '"+contentRequiredTagsMap.get(expectedContentLabel)+"' is included in the entitlement after subscribing to '"+pool.subscriptionName+"' on a '"+clienttasks.arch+"' system.");
+		for (ContentNamespace contentNamespace : expectedContentNamespaceSet) {
+			Assert.assertTrue(actualEntitledContentLabels.contains(contentNamespace.label), "As expected, contentNamespace label '"+contentNamespace.label+"' defined for arches '"+contentNamespace.arches+"' requiredTags '"+contentNamespace.requiredTags+"' is included in the entitlement after subscribing to '"+pool.subscriptionName+"' on a '"+clienttasks.arch+"' system.");
 		}
-		for (String unexpectedContentLabel : unexpectedContentLabels) {
-			Assert.assertTrue(!actualEntitledContentLabels.contains(unexpectedContentLabel), "As expected, contentNamespace label '"+unexpectedContentLabel+"' defined for arches '"+contentArchesMap.get(unexpectedContentLabel)+"' requiredTags '"+contentRequiredTagsMap.get(unexpectedContentLabel)+"' is NOT included in the entitlement after subscribing to '"+pool.subscriptionName+"' on a '"+clienttasks.arch+"' system.");
+		for (ContentNamespace contentNamespace : unexpectedContentNamespaceSet) {
+			Assert.assertTrue(!actualEntitledContentLabels.contains(contentNamespace.label), "As expected, contentNamespace label '"+contentNamespace.label+"' defined for arches '"+contentNamespace.arches+"' requiredTags '"+contentNamespace.requiredTags+"' is NOT included in the entitlement after subscribing to '"+pool.subscriptionName+"' on a '"+clienttasks.arch+"' system.");
+		}
+				
+		// adjust the expectedContentNamespaces for requiredTags that are not provided by the installed productCerts' providedTags before checking the YumRepos
+		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		for (ContentNamespace contentNamespace : expectedContentNamespaceSet) {
+			if (!clienttasks.areAllRequiredTagsProvidedByProductCerts(contentNamespace.requiredTags, installedProductCerts)) {
+				log.warning("Entitled contentNamespace label '"+contentNamespace.label+"' defined for arches '"+contentNamespace.arches+"' has requiredTags '"+contentNamespace.requiredTags+"' that are NOT provided by the currently installed product certs.  This expected contentNamespace will be moved to the unexpected list when asserting the YumRepos next.");
+				unexpectedContentNamespaceSet.add(contentNamespace);
+				expectedContentNamespaceSet.remove(contentNamespace);
+			}
 		}
 		
 		// YumRepo asserts
 		List<String> actualYumRepoLabels = new ArrayList<String>();
 		for (YumRepo yumRepo : clienttasks.getCurrentlySubscribedYumRepos()) actualYumRepoLabels.add(yumRepo.id);
-		for (String expectedContentLabel : expectedContentLabels) {
-			Assert.assertTrue(actualYumRepoLabels.contains(expectedContentLabel), "As expected, yum repo label '"+expectedContentLabel+"' defined for arches '"+contentArchesMap.get(expectedContentLabel)+"' requiredTags '"+contentRequiredTagsMap.get(expectedContentLabel)+"' is included in "+clienttasks.redhatRepoFile+" after subscribing to '"+pool.subscriptionName+"' on a '"+clienttasks.arch+"' system.");
+		for (ContentNamespace contentNamespace : expectedContentNamespaceSet) {
+			Assert.assertTrue(actualYumRepoLabels.contains(contentNamespace.label), "As expected, yum repo label '"+contentNamespace.label+"' defined for arches '"+contentNamespace.arches+"' requiredTags '"+contentNamespace.requiredTags+"' is included in "+clienttasks.redhatRepoFile+" after subscribing to '"+pool.subscriptionName+"' on a '"+clienttasks.arch+"' system.");
 		}
-		for (String unexpectedContentLabel : unexpectedContentLabels) {
-			Assert.assertTrue(!actualYumRepoLabels.contains(unexpectedContentLabel), "As expected, yum repo label '"+unexpectedContentLabel+"' defined for arches '"+contentArchesMap.get(unexpectedContentLabel)+"' requiredTags '"+contentRequiredTagsMap.get(unexpectedContentLabel)+"' is NOT included in in "+clienttasks.redhatRepoFile+" after subscribing to '"+pool.subscriptionName+"' on a '"+clienttasks.arch+"' system.");
+		for (ContentNamespace contentNamespace : unexpectedContentNamespaceSet) {
+			Assert.assertTrue(!actualYumRepoLabels.contains(contentNamespace.label), "As expected, yum repo label '"+contentNamespace.label+"' defined for arches '"+contentNamespace.arches+"' requiredTags '"+contentNamespace.requiredTags+"' is NOT included in in "+clienttasks.redhatRepoFile+" after subscribing to '"+pool.subscriptionName+"' on a '"+clienttasks.arch+"' system.");
 		}
 	}
 	
@@ -962,8 +975,44 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			if (i%10 == 0) yumVarPath+="$releasever/";
 			if (i%15 == 0) yumVarPath+="$arch/";
 			if (i%20 == 0) yumVarPath+="$uuid/";
+			// include some required tags for the fun of it
+			String requiredTags=null;
+			if (i%4 == 0) requiredTags="rhel-5";
+			if (i%8 == 0) requiredTags="rhel-6";
+			if (i%16 == 0) requiredTags="rhel-7";
+			if (i%44 == 0) requiredTags="";
+			if (i%92 == 0) requiredTags="None";	// this is a legitimate and real tag and is interpreted as a real tag - None has no special meaning here
+			// include some arches for the fun of it
+			//	candlepin=# select * from cp_arch ;
+			//	 id | label  | created | updated
+			//	----+--------+---------+---------
+			//	 0  | ALL    |         |
+			//	 1  | x86_64 |         |
+			//	 2  | i386   |         |
+			//	 3  | i486   |         |
+			//	 4  | i586   |         |
+			//	 5  | i686   |         |
+			//	 6  | ppc    |         |
+			//	 7  | ppc64  |         |
+			//	 8  | ia64   |         |
+			//	 9  | arm    |         |
+			//	 10 | s390   |         |
+			//	 11 | s390x  |         |
+			// ORIGINAL CANDLEPIN DESIGN REQUIRED THAT I SPECIFY A LIST OF ARCH OBJECT IDS AS FOLLOWS: "arches":[{"id":"1"},{"id":"2"}]}
+			//[jsefler@jseflerT510 ~]$ curl --stderr /dev/null --insecure --user admin:admin -/path/to/content-label-199-arch","contentUrl":"/content/path/to/content-label-199-arch","vendor":"Red Hat QE, Inc.","name":"Content Name 199 arch","label":"content-label-199-arch","type":"yum","metadataExpire":"3600","arches":[{"id":"1"},{"id":"2"}]}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/content
+			//{"created":"2013-05-31T16:47:03.342+0000","updated":"2013-05-31T16:47:03.342+0000","id":"27770199","type":"yum","label":"content-label-199-arch","name":"Content Name 199 arch","vendor":"Red Hat QE, Inc.","contentUrl":"/content/path/to/content-label-199-arch","requiredTags":null,"releaseVer":null,"gpgUrl":"/gpg/path/to/content-label-199-arch","metadataExpire":3600,"modifiedProductIds":[],"arches":[{"id":"2","label":"i386"},{"id":"1","label":"x86_64"}]}
+			//[jsefler@jseflerT510 ~]$ 
+			// CURRENT DESIGN IS SIMPLIFIED TO A COMMA SEPARATED STRING
+			String arches=null;
+			if (i%2 == 0) arches="ppc64,arm,s390x,x86_64";
+			if (i%6 == 0) arches="ia64,x86,ppc,s390";
+			if (i%9 == 0) arches="ALL";
+			if (i%16 == 0) arches="i386,i686";
+			if (i%44 == 0) arches="";
+			if (i%92 == 0) arches="None";	// this is a legitimate and real tag and is interpreted as a real arch - None has no special meaning here
+			
 			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
-			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+yumVarPath+contentLabel, "/gpg/path/to/"+yumVarPath+contentLabel, "3600", null, null);
+			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+yumVarPath+contentLabel, "/gpg/path/to/"+yumVarPath+contentLabel, "3600", requiredTags, arches, null);
 		}
 	
 		// recreate Subscription SKUs: subscriptionSKUProvidingA185ContentSetProduct, subscriptionSKUProvidingA186ContentSetProduct
@@ -1241,5 +1290,38 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 		return ll;
 	}
+	
+	
+	
+	@DataProvider(name="getAllAvailableSubscriptionPoolsProvidingArchBasedContentData")
+	public Object[][] getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAs2dArray() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
 
+		for (List<Object> l : getAllAvailableSubscriptionPoolsDataAsListOfLists()) {
+			SubscriptionPool pool = (SubscriptionPool)l.get(0);
+			
+			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
+	
+				// get the product
+				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
+				
+				// get the provided product contents
+				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
+				for (int j = 0; j < jsonProductContents.length(); j++) {
+					JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
+					JSONObject jsonContent = jsonProductContent.getJSONObject("content");
+					
+					// is this arch-based content?
+					if (jsonContent.has("arches") && !jsonContent.isNull("arches")) {
+						ll.add(l);
+						break;
+					}
+				}
+		
+			}
+			
+		}
+		
+		return TestNGUtils.convertListOfListsTo2dArray(ll);
+	}
 }
