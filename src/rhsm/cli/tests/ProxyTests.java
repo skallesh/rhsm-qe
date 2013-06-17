@@ -1498,18 +1498,49 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	@DataProvider(name="getRefreshAttemptsUsingProxyServerData")
 	public Object[][] getRefreshAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
+			
+			// get the existing BlockedByBzBug
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+			// add more BlockedByBzBug to rows that are expecting a network error
+			if (l.get(8)==nErrMsg) {
+				bugIds.add("975164");	// Bug 975164 - subscription-manager refresh with --proxy is silently failing in rhsm.log 
+			}
+			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			
+			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9)}));
+		}
+		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
 	
 	
 	@DataProvider(name="getRefreshAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getRefreshAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
+			
+			// get the existing BlockedByBzBug
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+			// add more BlockedByBzBug to rows that are expecting a network error
+			if (l.get(12)==nErrMsg) {
+				bugIds.add("975164");	// Bug 975164 - subscription-manager refresh with --proxy is silently failing in rhsm.log 
+			}
+			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			
+			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16)}));
+		}
+		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
 	
 	
 	@DataProvider(name="getReposAttemptsUsingProxyServerData")
 	public Object[][] getReposAttemptsUsingProxyServerDataAs2dArray() {
+		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
 			
@@ -1530,6 +1561,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	@DataProvider(name="getReposAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getReposAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
+		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 			
