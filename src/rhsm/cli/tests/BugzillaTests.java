@@ -1824,12 +1824,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
+		
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-
+		String consumerId = clienttasks.getCurrentConsumerId();
+		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(
+				sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,
+				false);
+	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	clienttasks.getCurrentlyAllAvailableSubscriptionPools();
-	String consumerId = clienttasks.getCurrentConsumerId();
 	ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 	String Productname,productId;
 	List<String> providedProductIds = new ArrayList<String>();
@@ -1860,6 +1864,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						sm_clientPassword, sm_serverUrl, "/owners/"
 								+ sm_clientOrg + "/activation_keys",
 								jsonActivationKeyRequest.toString()));
+		
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		for (SubscriptionPool availList : clienttasks
 				.getCurrentlyAllAvailableSubscriptionPools()) {
