@@ -1819,6 +1819,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void AddingVirtualPoolToActivationKey() throws JSONException,Exception {
 		Integer addQuantity=1;
 		int count =0;
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "rhsmcertd",
+				"autoAttachInterval".toLowerCase(), "1440" });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -1855,10 +1860,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						sm_clientPassword, sm_serverUrl, "/owners/"
 								+ sm_clientOrg + "/activation_keys",
 								jsonActivationKeyRequest.toString()));
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"autoAttachInterval".toLowerCase(), "1440" });
-		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		for (SubscriptionPool availList : clienttasks
 				.getCurrentlyAllAvailableSubscriptionPools()) {
