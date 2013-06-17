@@ -1551,6 +1551,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			if (l.get(8)==nErrMsg) {
 				bugIds.add("919255");	// Bug 919255 - negative proxy testing against subscription-manager repos --list 
 			}
+			if (l.get(4)!=null && l.get(4).equals("bad-proxy")) {
+				bugIds.add("975186");	// Bug 975186 - subscription-manager repos --list is failing when specifying a bad --proxy
+			}
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9)}));
@@ -1571,6 +1574,12 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			// add more BlockedByBzBug to rows that are expecting a network error
 			if (l.get(12)==nErrMsg) {
 				bugIds.add("919255");	// Bug 919255 - negative proxy testing against subscription-manager repos --list 
+			}
+			if (l.get(4)==null && l.get(7)!=null && l.get(7).equals("bad-proxy")) {
+				bugIds.add("975186");	// Bug 975186 - subscription-manager repos --list is failing when specifying a bad --proxy
+			}
+			if (l.get(4)!=null && l.get(4).equals("bad-proxy") && l.get(7)!=null && l.get(7).equals(sm_noauthproxyHostname)) {
+				bugIds.add("975186");	// Bug 975186 - subscription-manager repos --list is failing when specifying a bad --proxy
 			}
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
