@@ -313,7 +313,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"consumerCertDir",consumerCertDir);
 		
 		// register and remember the original consumer identity
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		clienttasks.config(null, null, true, new String[]{"rhsmcertd",/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),"240"}); clienttasks.restart_rhsmcertd(null, null, false, true);	// make sure that rhsmcertd will not interfere with test
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		String consumerCert_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerCertFile()).getStdout().trim();
