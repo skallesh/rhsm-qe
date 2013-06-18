@@ -165,7 +165,6 @@
 
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "configureProductCertDirForSomeProductsSubscribable"
                        "blockedByBug-921245"]
               :dataProvider "my-installed-software"}}
   assert_correct_status
@@ -221,6 +220,7 @@
    get_installed_software [_ & {:keys [debug]
                                 :or {debug false}}]
   (log/info "START OF DATA PROVIDER")
+  (.configureProductCertDirForSomeProductsSubscribable @complytests)
   (run-command "subscription-manager unregister")
   (tasks/restart-app)
   (tasks/register-with-creds)
