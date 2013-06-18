@@ -56,7 +56,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="when subscription-manager is run with no args, it should default to the status module",
 			groups={},
-			enabled=true)
+			enabled=false)	// this test was invalided by Bug 974123 - subscription-manager defaults to status and not to help
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusIsTheDefault_Test() {
 		String overallStatusLabel = "Overall Status:";

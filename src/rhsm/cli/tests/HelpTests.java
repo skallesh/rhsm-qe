@@ -31,6 +31,21 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 	
+	@Test(	description="when subscription-manager is run with no args, it should default to the help report",
+			groups={"blockedByBug-974123"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void StatusIsTheDefault_Test() {
+		clienttasks.unregister(null,null,null);
+		SSHCommandResult helpResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command+" --help",Integer.valueOf(0));
+		SSHCommandResult defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
+		Assert.assertTrue(defaultResult.toString().equals(helpResult.toString()), "When not registered, the default output running subscription-manager with no arguments should be identical to output from running subscription-manager with --help.");
+
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
+		Assert.assertTrue(defaultResult.toString().equals(helpResult.toString()), "When registered, the default output running subscription-manager with no arguments should be identical to output from running subscription-manager with --help.");
+	}
+	
 	@Test(	description="subscription-manager-cli: man page",
 			groups={},
 			enabled=true)
