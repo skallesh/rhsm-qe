@@ -219,7 +219,6 @@
 (defn ^{DataProvider {:name "my-installed-software"}}
    get_installed_software [_ & {:keys [debug]
                                 :or {debug false}}]
-  (log/info "START OF DATA PROVIDER")
   (.configureProductCertDirForSomeProductsSubscribable @complytests)
   (run-command "subscription-manager unregister")
   (tasks/restart-app)
@@ -236,8 +235,6 @@
     (setup-product-map)
     (run-command "subscription-manager subscribe --auto")
 
-    (log/info "END OF DATA PROVIDER")
-    
     (comment
       (tasks/unregister)
         (tasks/register user
