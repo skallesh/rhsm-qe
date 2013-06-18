@@ -151,7 +151,7 @@
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
   [_]
   (disable_proxy nil)
-  (tasks/enableproxy " <Backspace>" :close? false)
+  (tasks/enableproxy "" :close? false)
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
     (verify (not (= message proxy-success))))
@@ -164,7 +164,7 @@
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
   [_]
   (disable_proxy nil)
-  (tasks/enableproxy " <Backspace>" :close? false :auth? true :user "" :pass "")
+  (tasks/enableproxy "" :close? false :auth? true :user "" :pass "")
   (tasks/ui click :test-connection)
   (let [message (tasks/ui gettextvalue :connection-status)]
     (verify (not (= message proxy-success))))
