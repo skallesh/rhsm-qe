@@ -5962,7 +5962,7 @@ repolist: 3,394
 						//serials.add(getEntitlementCertFromEntitlementCertFile(entitlementFiles.get(e)).serialNumber);
 						serials.add(getSerialNumberFromEntitlementCertFile(entitlementFiles.get(e)));
 					}
-					unsubscribe(null, serials, null, null, null);
+					unsubscribe_(null, serials, null, null, null);
 					entitlementFiles = getCurrentEntitlementCertFiles();
 					if (avoidInfiniteLoopSize==entitlementFiles.size()) {break; /* because unsubscribe is failing */} else {avoidInfiniteLoopSize=entitlementFiles.size();}
 				} while (entitlementFiles.size()>tooManyEntitlements);
