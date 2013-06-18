@@ -732,35 +732,56 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Verify that all content sets granted from a subscription pool that are restricted to specific arches satisfy the current system's arch.",
-			groups={"AcceptanceTests","blockedByBug-706187"},
+			groups={"AcceptanceTests","blockedByBug-706187","blockedByBug-975520","VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test() throws JSONException, Exception {
-		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-
-		// subscribe to available subscriptions
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		// get a list of all of the available poolIds that provide arch-based content sets
+		List<List<Object>> subscriptionPoolsDataList = getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists();
+		List<String> archBasedSubscriptionPoolIds = new ArrayList<String>();
+		for (List<Object> subscriptionPoolsData: subscriptionPoolsDataList) {
+			SubscriptionPool pool = (SubscriptionPool)subscriptionPoolsData.get(0);
+			archBasedSubscriptionPoolIds.add(pool.poolId);
+		}
+		if (archBasedSubscriptionPoolIds.isEmpty()) throw new SkipException("No subscriptions were found providing non-empty arch-based content.");
 		
-		boolean contentBasedArchesFound = false;
-		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
-			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-				if (contentNamespace.arches==null) Assert.fail("This version of subscription-manager does not appear to parse arch restricted content.  Upgrade to a newer build of subscription-manager.");
-				List<String> arches = new ArrayList<String>();
-				if (!contentNamespace.arches.trim().isEmpty()) arches.addAll(Arrays.asList(contentNamespace.arches.trim().split(" *, *")));	// Note: the arches field can be a comma separated list of values
-				if (!arches.isEmpty()) contentBasedArchesFound = true;
-				
-				if (arches.contains("x86")) {arches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
-				Assert.assertTrue(arches.isEmpty() || arches.contains("ALL") || arches.contains(clienttasks.arch), "Content label '"+contentNamespace.label+"' restricted to arches '"+contentNamespace.arches+"' granted by entitlement cert '"+entitlementCert.orderNamespace.productName+"' matches the system's arch '"+clienttasks.arch+"'.");
+		// iterate over several possible system arches
+		Map<String, String> factsMap = new HashMap<String, String>();
+		for (String systemArch : Arrays.asList(new String[]{"i386","i586","i686","x86_64","ppc","ppc64","ia64","arm","s390","s390x"})) {
+			
+			// return all current entitlements (Note: system is already registered by getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists())
+			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+			
+			// fake the system's arch and update the facts
+			log.info("Manipulating the system facts into thinking this is a '"+systemArch+"' system...");
+			factsMap.put("uname.machine", String.valueOf(systemArch));
+			clienttasks.createFactsFileWithOverridingValues(factsMap);
+			clienttasks.facts(null, true, null, null, null);
+			
+			// subscribe to all the arch-based content set pools
+			clienttasks.subscribe(false, null, archBasedSubscriptionPoolIds, null, null, null, null, null, null, null, null);
+			
+			// iterate over all of the granted entitlements
+			for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+				for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+					if (contentNamespace.arches==null) Assert.fail("This version of subscription-manager does not appear to parse arch restricted content.  Upgrade to a newer build of subscription-manager.");
+					List<String> arches = new ArrayList<String>();
+					if (!contentNamespace.arches.trim().isEmpty()) arches.addAll(Arrays.asList(contentNamespace.arches.trim().split(" *, *")));	// Note: the arches field can be a comma separated list of values
+					if (arches.contains("x86")) {arches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+					Assert.assertTrue(arches.isEmpty() || arches.contains("ALL") || arches.contains(systemArch), "Content label '"+contentNamespace.label+"' restricted to arches '"+contentNamespace.arches+"' granted by entitlement cert '"+entitlementCert.orderNamespace.productName+"' matches the system's arch '"+systemArch+"'.");
+				}
 			}
 		}
-		
-		if (!contentBasedArchesFound) throw new SkipException("No entitlements were found containing non-empty arch-based content after subscribing to the available pools.");
+	}
+	@AfterGroups(groups={"setup"}, value={"VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test"})
+	@AfterClass(groups={"setup"})	// insurance; not really needed
+	public void deleteFactsFileWithOverridingValues() {
+		if (clienttasks!=null) clienttasks.deleteFactsFileWithOverridingValues();
 	}
 	
 	
 	@Test(	description="Verify that all content sets granted from a subscription pool satisfy the system arch and subset the provided product's arch",
-			groups={"AcceptanceTests","blockedByBug-706187"},
+			groups={"AcceptanceTests","blockedByBug-706187","blockedByBug-975520"},
 			dataProvider="getAllAvailableSubscriptionPoolsProvidingArchBasedContentData",//"getAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -786,7 +807,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				String attributeName = jsonProductAttribute.getString("name");
 				String attributeValue = jsonProductAttribute.isNull("value")? null:jsonProductAttribute.getString("value");
 				if (attributeName.equals("arch")) {
-					productSupportedArches.addAll(Arrays.asList(attributeValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+					productSupportedArches.addAll(Arrays.asList(attributeValue.trim().split("\\s*,\\s*")));	// Note: the arch attribute can be a comma separated list of values
 					if (productSupportedArches.contains("x86")) {productSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
 				}
 			}
@@ -824,12 +845,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					jsonContentArches = jsonContent.getString("arches");
 					contentSupportedArches.addAll(Arrays.asList(jsonContentArches.split("\\s*,\\s*")));
 					if (contentSupportedArches.contains("x86")) contentSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+					/* NOPE: THIS CONCEPT IS NOT WHAT RELEASE ENGINEERING WANTS.  DO NOT TOLERATE THIS BEHAVIOR; SEE Bug 975520 - content availability based on arches is currently too tolerant
 					if (contentSupportedArches.contains("i386")) contentSupportedArches.add("x86_64");  // Note: all i386 packages are capable of running on an x86_64 system
 					if (contentSupportedArches.contains("i486")) contentSupportedArches.add("x86_64");  // Note: all i486 packages are capable of running on an x86_64 system
 					if (contentSupportedArches.contains("i586")) contentSupportedArches.add("x86_64");  // Note: all i586 packages are capable of running on an x86_64 system
 					if (contentSupportedArches.contains("i686")) contentSupportedArches.add("x86_64");  // Note: all i686 packages are capable of running on an x86_64 system
+					*/
 					
-					// when arches have been defined on the content set, then add contentNamespace to the expectedContentNamespaces if
+					// when arches have been defined on the content set, then add contentNamespace to the expectedContentNamespaces, but only if
 					// it contains an arch that matches the system
 					if (contentSupportedArches.contains("ALL") || contentSupportedArches.contains(clienttasks.arch)) {
 						expectedContentNamespaceSet.add(contentNamespace);
@@ -838,8 +861,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					}
 					
 				} else {
-					// when no arches have been defined on the content set, then add it to the expectedContentLabels if
+					// when no arches have been defined on the content set, then add it to the expectedContentLabels, but only if
 					// it's providedProduct also matches the system  (we are effectively inheriting the arches defined by the product to which this content was added)
+					
+					// TODO: NOT SURE HOW TOLERATE WE WANT TO BE FOR CONTENT SETS THAT INHERIT FROM THEIR PRODUCTS
 					if (productSupportedArches.contains("ALL") || productSupportedArches.contains(clienttasks.arch)) {
 						expectedContentNamespaceSet.add(contentNamespace);
 					} else {
@@ -975,6 +1000,23 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			if (i%10 == 0) yumVarPath+="$releasever/";
 			if (i%15 == 0) yumVarPath+="$arch/";
 			if (i%20 == 0) yumVarPath+="$uuid/";
+			
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
+			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+yumVarPath+contentLabel, "/gpg/path/to/"+yumVarPath+contentLabel, "3600", null, null, null);
+		}
+		
+		// recreate a lot of arch-based content sets
+		String archBasedContentIdStringFormat = "888%04d";
+		for (int i = 1; i <= 200; i++) {
+			String contentName = "Content Set "+i;
+			String contentId = String.format(archBasedContentIdStringFormat,i);	// must be numeric (and unique)
+			String contentLabel = "content-set-"+i;
+			// include some "yum var"iability for testing bug 906554
+			String yumVarPath="";
+			if (i%5 == 0) yumVarPath+="$basearch/";
+			if (i%10 == 0) yumVarPath+="$releasever/";
+			if (i%15 == 0) yumVarPath+="$arch/";
+			if (i%20 == 0) yumVarPath+="$uuid/";
 			// include some required tags for the fun of it
 			String requiredTags=null;
 			if (i%4 == 0) requiredTags="rhel-5";
@@ -1077,6 +1119,36 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), marketingProductId, Arrays.asList(engineeringProductIdA,engineeringProductIdB));
 
 		
+		// recreate Subscription SKU: subscriptionSKUProvidingArchBasedContentSets
+		int N = 200;
+		marketingProductName = String.format("Subscription providing a Product with Arch-Based ContentSets",N);
+		marketingProductId = "mktProductId-"+N;
+		engineeringProductName = String.format("Product with various Arch-Based ContentSets",N);
+		engineeringProductId = String.valueOf(N);	// must be numeric (and unique)
+		attributes.clear();
+		attributes.put("requires_consumer_type", "system");
+		//attributes.put("sockets", "0");
+		attributes.put("version", N+".0");
+		//attributes.put("variant", "server");
+		//attributes.put("arch", "ALL");
+		attributes.put("arch", "x86_64,ppc64,ia64");	// give the product an arch too
+		//attributes.put("warning_period", "30");
+		// delete already existing subscription and products
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, marketingProductId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+marketingProductId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+engineeringProductId);
+		// create a new marketing product (MKT), engineering product (SVC), content for the engineering product, and a subscription to the marketing product that provides the engineering product
+		attributes.put("type", "MKT");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, marketingProductName, marketingProductId, 1, attributes, null);
+		attributes.put("type", "SVC");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductName, engineeringProductId, 1, attributes, null);
+		for (int i = 1; i <= N; i++) {
+			String contentId = String.format(archBasedContentIdStringFormat,i);	// must be numeric (and unique) defined above
+			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductId, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
+		}
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), marketingProductId, Arrays.asList(engineeringProductId));
+
+		
 		// NOTE: To get the product certs, use the CandlepinTasks REST API:
         //"url": "/products/{product_uuid}/certificate", 
         //"GET"
@@ -1087,6 +1159,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	protected String subscriptionSKUProvidingA185ContentSetProduct = "mktProductId-185";
 	protected String subscriptionSKUProvidingA186ContentSetProduct = "mktProductId-186";
 	protected String subscriptionSKUProvidingTwo93ContentSetProducts = "mktProductId-93x2";
+	protected String subscriptionSKUProvidingArchBasedContent = "mktProductId-200";
 	
 	protected void VerifySubscribabilityOfSKUProvidingTooManyContentSets(String sku, int totalContentSets) {	//TODO remove parameter totalContentSets and make calls to CandepinTasks to find the totalContentSets from the sku
 		
@@ -1295,6 +1368,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	@DataProvider(name="getAllAvailableSubscriptionPoolsProvidingArchBasedContentData")
 	public Object[][] getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 
 		for (List<Object> l : getAllAvailableSubscriptionPoolsDataAsListOfLists()) {
@@ -1317,11 +1393,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 						break;
 					}
 				}
-		
 			}
-			
 		}
 		
-		return TestNGUtils.convertListOfListsTo2dArray(ll);
+		return ll;
 	}
 }
