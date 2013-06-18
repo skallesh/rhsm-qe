@@ -234,12 +234,14 @@
                     (ctasks/get-owner-display-name user pass key))]
     (setup-product-map)
     (run-command "subscription-manager subscribe --auto")
-    (comment
-      (tasks/unregister)
-      (tasks/register user
-                      pass
-                      :skip-autosubscribe false
-                      :owner ownername))
+    
+    ;;    (comment
+    ;;  (tasks/unregister)
+    ;;    (tasks/register user
+    ;;                pass
+    ;;                :skip-autosubscribe false
+    ;;                :owner ownername ))
+
     (if-not debug
       (to-array-2d prods)
       prods)))
