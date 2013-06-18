@@ -1636,12 +1636,13 @@ public class SubscriptionManagerTasks {
 	 * @return List of /etc/pki/entitlement/*.pem files sorted using lsOptions (excluding a key.pem file)
 	 */
 	public List<File> getCurrentEntitlementCertFiles(String lsOptions) {
+		List<File> files = new ArrayList<File>();
+		if (entitlementCertDir==null) {log.warning("The entitlementCertDir has not yet been defined."); return files;}
 		if (lsOptions==null) lsOptions = "";
 		//sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/ -name '*.pem'");
 		//sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+entitlementCertDir+"/*.pem");
 		sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+entitlementCertDir+"/*.pem | grep -v key.pem");
 		String lsFiles = sshCommandRunner.getStdout().trim();
-		List<File> files = new ArrayList<File>();
 		if (!lsFiles.isEmpty()) {
 			for (String lsFile : Arrays.asList(lsFiles.split("\n"))) {
 				
