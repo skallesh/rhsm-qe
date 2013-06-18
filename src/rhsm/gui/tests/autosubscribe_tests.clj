@@ -218,8 +218,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ^{DataProvider {:name "my-installed-software"}}
-  get_installed_software [_ & {:keys [debug]
-                               :or {debug false}}]
+   get_installed_software [_ & {:keys [debug]
+                                :or {debug false}}]
+  (log/info "START OF DATA PROVIDER")
   (run-command "subscription-manager unregister")
   (tasks/restart-app)
   (tasks/register-with-creds)
@@ -234,13 +235,15 @@
                     (ctasks/get-owner-display-name user pass key))]
     (setup-product-map)
     (run-command "subscription-manager subscribe --auto")
+
+    (log/info "END OF DATA PROVIDER")
     
-    ;;    (comment
-    ;;  (tasks/unregister)
-    ;;    (tasks/register user
-    ;;                pass
-    ;;                :skip-autosubscribe false
-    ;;                :owner ownername ))
+    (comment
+      (tasks/unregister)
+        (tasks/register user
+                    pass
+                    :skip-autosubscribe false
+                    :owner ownername))
 
     (if-not debug
       (to-array-2d prods)
