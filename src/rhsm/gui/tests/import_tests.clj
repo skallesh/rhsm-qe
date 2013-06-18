@@ -147,7 +147,8 @@
 (defn ^{Test {:groups ["import"
                        "blockedByBug-691784"
                        "blockedByBug-723363"]
-              :dependsOnMethods ["import_valid_cert"]}}
+              :dependsOnMethods ["import_valid_cert"]
+              :priority (int 30)}}
   import_unsubscribe
   "Tests that an imported cert can be unsubscribed from in the GUI."
   [_]
