@@ -974,6 +974,33 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager : repos list with proxy set to a real server that is not truely a proxy (e.g. www.redhat.com)",
+			groups={"blockedByBug-968820"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void ReposListWithProxyTimeoutBug968820_Test() {
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+
+		// subscribe
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		if (pools.isEmpty()) log.warning("Cound not find an available pool.");
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));	// randomly pick a pool
+		//clienttasks.subscribeToSubscriptionPool(pool);
+		clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null);
+		
+		// repos --list --proxy=www.redhat.com
+		String command = clienttasks.command+" repos --list --proxy=www.redhat.com";
+		Long timeoutMS = Long.valueOf(2/*min*/*60*1000);	// do not wait any longer than this many milliseconds
+		SSHCommandResult result= client.runCommandAndWait(command, timeoutMS);
+		
+		// assert results
+		Assert.assertEquals(result.getStdout().trim(), nErrMsg, "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+	}
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback. https://github.com/RedHatQE/rhsm-qe/issues/179
 	
