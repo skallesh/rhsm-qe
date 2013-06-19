@@ -200,7 +200,8 @@
     (reset! productstatus cli-data)))
 
 (defn ^{Test {:groups ["facts"
-                       "facts-product-status"]
+                       "facts-product-status"
+                       "blockedByBug-964332"]
               :dataProvider "installed-products"}}
   check_product_status
   "Asserts that all product statuses match the known statuses in the CLI."
