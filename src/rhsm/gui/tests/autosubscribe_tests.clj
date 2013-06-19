@@ -165,7 +165,6 @@
 
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "configureProductCertDirForSomeProductsSubscribable"
                        "blockedByBug-921245"]
               :dataProvider "my-installed-software"}}
   assert_correct_status
@@ -218,8 +217,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ^{DataProvider {:name "my-installed-software"}}
-  get_installed_software [_ & {:keys [debug]
-                               :or {debug false}}]
+   get_installed_software [_ & {:keys [debug]
+                                :or {debug false}}]
+  (.configureProductCertDirForSomeProductsSubscribable @complytests)
   (run-command "subscription-manager unregister")
   (tasks/restart-app)
   (tasks/register-with-creds)
@@ -234,12 +234,14 @@
                     (ctasks/get-owner-display-name user pass key))]
     (setup-product-map)
     (run-command "subscription-manager subscribe --auto")
+
     (comment
       (tasks/unregister)
-      (tasks/register user
-                      pass
-                      :skip-autosubscribe false
-                      :owner ownername))
+        (tasks/register user
+                    pass
+                    :skip-autosubscribe false
+                    :owner ownername))
+
     (if-not debug
       (to-array-2d prods)
       prods)))
