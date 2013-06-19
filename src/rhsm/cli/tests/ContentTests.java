@@ -768,7 +768,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					List<String> arches = new ArrayList<String>();
 					if (!contentNamespace.arches.trim().isEmpty()) arches.addAll(Arrays.asList(contentNamespace.arches.trim().split(" *, *")));	// Note: the arches field can be a comma separated list of values
 					if (arches.contains("x86")) {arches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
-					Assert.assertTrue(arches.isEmpty() || arches.contains("ALL") || arches.contains(systemArch), "Content label '"+contentNamespace.label+"' restricted to arches '"+contentNamespace.arches+"' granted by entitlement cert '"+entitlementCert.orderNamespace.productName+"' matches the system's arch '"+systemArch+"'.");
+					Assert.assertTrue(arches.isEmpty() || arches.contains("ALL") || arches.contains("noarch") || arches.contains(systemArch), "Content label '"+contentNamespace.label+"' restricted to arches '"+contentNamespace.arches+"' granted by entitlement cert '"+entitlementCert.orderNamespace.productName+"' matches the system's arch '"+systemArch+"'.");
 				}
 			}
 		}
@@ -854,7 +854,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					
 					// when arches have been defined on the content set, then add contentNamespace to the expectedContentNamespaces, but only if
 					// it contains an arch that matches the system
-					if (contentSupportedArches.contains("ALL") || contentSupportedArches.contains(clienttasks.arch)) {
+					if (contentSupportedArches.contains("ALL") || contentSupportedArches.contains("noarch") || contentSupportedArches.contains(clienttasks.arch)) {
 						expectedContentNamespaceSet.add(contentNamespace);
 					} else {
 						unexpectedContentNamespaceSet.add(contentNamespace);
@@ -864,7 +864,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					// when no arches have been defined on the content set, then add it to the expectedContentLabels, but only if
 					// it's providedProduct also matches the system  (we are effectively inheriting the arches defined by the product to which this content was added)
 					
-					// TODO: NOT SURE HOW TOLERATE WE WANT TO BE FOR CONTENT SETS THAT INHERIT FROM THEIR PRODUCTS
+					// TODO: NOT SURE HOW TOLERANT WE WANT TO BE FOR CONTENT SETS THAT INHERIT FROM THEIR PRODUCTS
 					if (productSupportedArches.contains("ALL") || productSupportedArches.contains(clienttasks.arch)) {
 						expectedContentNamespaceSet.add(contentNamespace);
 					} else {
@@ -1049,6 +1049,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			if (i%2 == 0) arches="ppc64,arm,s390x,x86_64";
 			if (i%6 == 0) arches="ia64,x86,ppc,s390";
 			if (i%9 == 0) arches="ALL";
+			if (i%18 == 0) arches="noarch";
+			if (i%27 == 0) arches="ALL,noarch";
 			if (i%16 == 0) arches="i386,i686";
 			if (i%44 == 0) arches="";
 			if (i%92 == 0) arches="None";	// this is a legitimate and real tag and is interpreted as a real arch - None has no special meaning here
