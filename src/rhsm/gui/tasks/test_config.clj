@@ -26,33 +26,27 @@
               (if (= "" val) nil val)))))
 
 (defn get-properties []
-  (let [m (property-map {:binary-path (DefaultMapKey.
-                                        "sm.gui.binary"
-                                        ;; rename to *-gui in 818397
-                                        "subscription-manager-gui")
-                         :firstboot-binary-path (DefaultMapKey.
-                                                  "sm.firstboot.binary"
-                                                  "firstboot")
-                         :client-hostname "sm.client1.hostname"
-                         :username "sm.client1.username"
-                         :password "sm.client1.password"
-                         :owner-key "sm.client1.org"
-                         :username1 "sm.client2.username"
-                         :password1 "sm.client2.password"
-                         :ssh-user (DefaultMapKey.
-                                     "sm.ssh.user"
-                                     "root")
-                         :ssh-key-private (DefaultMapKey.
-                                            "sm.sshkey.private"
-                                            ".ssh/id_auto_dsa")
-                         :ssh-key-passphrase "sm.sshkey.passphrase"
-                         :ssh-timeout "sm.ssh.emergencyTimeoutMS"
+  (let [m (property-map {
                          :basicauth-proxy-hostname "sm.basicauthproxy.hostname"
+                         :basicauth-proxy-password "sm.basicauthproxy.password"
                          :basicauth-proxy-port "sm.basicauthproxy.port"
                          :basicauth-proxy-username "sm.basicauthproxy.username"
-                         :basicauth-proxy-password "sm.basicauthproxy.password"
+                         :binary-path (DefaultMapKey. "sm.gui.binary" "subscription-manager-gui")
+                         :client-hostname "sm.client1.hostname"
+                         :firstboot-binary-path (DefaultMapKey. "sm.firstboot.binary" "firstboot")
+                         :ldtpd-source-url (DefaultMapKey. "sm.ldtpd.sourceUrl" nil)
                          :noauth-proxy-hostname "sm.noauthproxy.hostname"
-                         :noauth-proxy-port "sm.noauthproxy.port"})]
+                         :noauth-proxy-port "sm.noauthproxy.port"
+                         :owner-key "sm.client1.org"
+                         :password "sm.client1.password"
+                         :password1 "sm.client2.password"
+                         :ssh-key-passphrase "sm.sshkey.passphrase"
+                         :ssh-key-private (DefaultMapKey. "sm.sshkey.private" ".ssh/id_auto_dsa")
+                         :ssh-timeout "sm.ssh.emergencyTimeoutMS"
+                         :ssh-user (DefaultMapKey. "sm.ssh.user" "root")
+                         :username "sm.client1.username"
+                         :username1 "sm.client2.username"
+                         })]
        (merge m (property-map
                  {:ldtp-url (DefaultMapKey. "sm.ldtp.url"
                               (str "http://" (m :client-hostname) ":4118"))}))))

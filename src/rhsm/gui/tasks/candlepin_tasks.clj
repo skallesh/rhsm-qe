@@ -93,6 +93,7 @@
     @productlist))
 
 (defn build-contract-map
+  "Builds a mapping of subscription names to their contract number"
   [& {:keys [all?]
       :or {all? false}}]
   (let [x (map #(list (:productName %) (:contractNumber %))
@@ -101,6 +102,7 @@
     (zipmap (keys y) (map #(map second %) (vals y)))))
 
 (defn build-service-map
+  "Builds a mapping of subscriptions to service levels"
   [& {:keys [all?]
       :or {all? false}}]
   (let [fil (fn [pool]
@@ -117,6 +119,17 @@
         y (group-by first x)
         z (zipmap (keys y) (map #(map second %) (vals y)))]
     (zipmap (keys z) (map first (vals z)))))
+
+(comment
+  (defn bild-virt-type-map
+    "Builds a map of subscriptions to virt type"
+    [& {:keys [all?]
+        :or {all? false}}]
+    (let [virt-pool? (fn [pool]
+                       (some #(and (= "virt_only" (:name %))
+                                   (= "true" (:value %)))
+                             pool))
+          virt-type (fn [pool] (if (virt-pool? pool) "Virtual" "Physical"))])))
 
 (defn get-owners
   "Given a username and password, this function returns a list
