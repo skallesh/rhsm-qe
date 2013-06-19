@@ -423,6 +423,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
+	
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for currently subscribed entitlements",
 			groups={"AcceptanceTests"},
 			enabled=true)
@@ -459,8 +460,127 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
-	
+	@Test(	description="assert the statistic values reported by the rct stat-cert tool for a zero-content set entitlement",
+			groups={"blockedByBug-966137"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AssertEntitlementCertStatisticsForZeroContentSetEntitlement_Test() {
+		File zeroContentSetEntitlementCertFile = new File("/tmp/zeroContentSetEntitlementCert.pem");
+		client.runCommandAndWait("echo \""+zeroContentSetEntitlementCert.trim()+"\" > "+zeroContentSetEntitlementCertFile);
+		
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(zeroContentSetEntitlementCertFile);
+		//	[root@jsefler-5 tmp]# rct cat-cert /tmp/8a85f9843ad21fe4013ae6a01d0b5d3c.pem 
+		//
+		//	+-------------------------------------------+
+		//		Entitlement Certificate
+		//	+-------------------------------------------+
+		//
+		//	Certificate:
+		//		Path: /tmp/8a85f9843ad21fe4013ae6a01d0b5d3c.pem
+		//		Version: 3.0
+		//		Serial: 8429484359950764937
+		//		Start Date: 2012-11-09 05:00:00+00:00
+		//		End Date: 2013-11-09 04:59:59+00:00
+		//		Pool ID: Not Available
+		//
+		//	Subject:
+		//		CN: 8a85f9843e139e8c013e1e24d82f1ed0
+		//
+		//	Issuer:
+		//		C: US
+		//		CN: Red Hat Candlepin Authority
+		//		O: Red Hat, Inc.
+		//		OU: Red Hat Network
+		//		ST: North Carolina
+		//		emailAddress: ca-support@redhat.com
+		Assert.assertEquals(entitlementCert.id, "8a85f9843e139e8c013e1e24d82f1ed0","rct cat-cert reports this id.");
+		Assert.assertEquals(entitlementCert.issuer, "Red Hat Candlepin Authority","rct cat-cert reports this issuer.");
+		Assert.assertEquals(entitlementCert.contentNamespaces.size(), 0, "rct cat-cert reports this number of Content sets.");
+
+
+		CertStatistics certStatistics = clienttasks.getCertStatisticsFromCertFile(zeroContentSetEntitlementCertFile);
+		//	[root@jsefler-5 tmp]# rct stat-cert /tmp/8a85f9843ad21fe4013ae6a01d0b5d3c.pem 
+		//	Type: Entitlement Certificate
+		//	Version: 3.0
+		//	DER size: 1891b
+		//	Subject Key ID size: 20b
+		//	Content sets: 0
+		Assert.assertEquals(certStatistics.type, "Entitlement Certificate","rct stat-cert reports this Type.");
+		Assert.assertEquals(certStatistics.version, entitlementCert.version,"rct stat-cert reports this Version.");
+		Assert.assertEquals(certStatistics.derSize, "1891b", "rct stat-cert reports this DER size.");
+		Assert.assertEquals(certStatistics.subjectKeyIdSize, "20b", "rct stat-cert reports this Subject Key ID size.");	// TODO assert something better than not null
+		Assert.assertEquals(certStatistics.contentSets, Integer.valueOf(0), "rct stat-cert reports this number of Content sets.");
+	}
+	protected static final String zeroContentSetEntitlementCert = 
+		"-----BEGIN CERTIFICATE-----"+"\n"+
+		"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"+"\n"+
+		"gbNTs6MdV3TLHF7zcOhksJiALQ=="+"\n"+
+		"-----END CERTIFICATE-----"+"\n"+
+		"-----BEGIN RSA PRIVATE KEY-----"+"\n"+
+		"MIIEpQIBAAKCAQEA77qX2x+5FMhbEnVo2jqwKYzyVqcEpyV1u0smHoNiTOfGJrLS"+"\n"+
+		"C6lpxzINlOiKns689DGeWgcCR8wyddSYeeoZQezcdXsLhLpLcyYDZO1Iull0ZYCs"+"\n"+
+		"u9o7KVtckJoCzChe6SzUp18rF0OMTxiAPbxv+EHw6breYS86JHZinz4Nf8pHb3sf"+"\n"+
+		"ckFLqZTTRvZ5ctCetfBLAoArQU1P7DP2cB0ShdKEqN0qT2V/QCeoR3TFsypgJWCF"+"\n"+
+		"rxCkMpUfDymQq/z+vFFJlUz2q5sEWFVnY9nAYJysZtFm3Il4IGruvvp/yerQMkuV"+"\n"+
+		"ACRdiscd5p5frmmysNmZQm1WJUHQgPA/2prfAQIDAQABAoIBAQDEJvFKIlLWZnne"+"\n"+
+		"SKNarNqnpORFcrOj8Eq8zWiLXwV3182SrI6hbCVZD+N9DCkgeBiz1kWzdDixdqtz"+"\n"+
+		"Llj0qE+yWZSpq9xo5eYGefwdAOqZT8ilpPuxWYc+97pttxbC5eWC9WOq73vatTKB"+"\n"+
+		"JZMI8L7Na2csV/LNok74tsVLdwKko9EPTdrMdyrxwlKcqjUIuryjV0xIm0BttGC5"+"\n"+
+		"ocAVW2V4KTdHeq3JKme2qle51RBWciluN1V2JdnE1sD7tTUkScbinCOO8iapMZBJ"+"\n"+
+		"RslzHbhtu39UkMcDY+wDjKT2ZIv5jYKF6TV+r27oDGZ2ulbwiWJtS/T5AR1ab/Ca"+"\n"+
+		"8QqtCx6BAoGBAPrxu80ys4HKnP7dkUedQeH1e+1PA7LCkHWUsIkQF6n7IOU2Oo3Y"+"\n"+
+		"42u9K5QIJ8cR74L/L8sCGc63DpwofgslixjinA1Qbk0t5nbOdru8+yW8hCSzn6HJ"+"\n"+
+		"7crygKfxpMZ1nk1mGssl723bm0Ybl2/htaJCcPA3kiLNO5wz78VrVQXFAoGBAPSP"+"\n"+
+		"A+dgWe1FOIGAhDyNVn5Hcaf8F1VuLXz45n0dSIlBVWRmXcOq6AtVX7DtszlQXahA"+"\n"+
+		"bKxASuUDhi2RllIwLLeeCa+1UUmJgWgsYW0pLyI+aQ1yksKSAItEe7803aMv5Rsq"+"\n"+
+		"spYaWHdYHcHbI+W0B6bp2kUvajylTJ2U/FOkEIQNAoGBAKSUgh0UUZKgNdMZsbyM"+"\n"+
+		"MLdnbv22wrAs1t2mxRk/iqWa5Hov1LtPMehpSvltV9lBtBnwD4JPQGnIuTZFgFUD"+"\n"+
+		"LHUHul0pEQ5hOjNVOZ3rVbPsLaZ8gAd2DhT6ctKysuTOIyKUAqKVoLAmRXH3ipyA"+"\n"+
+		"JcXjWXrSl29ntt69WVXbDQoZAoGANoa8hBYDdtd8JcOVuDp7EmSzfpTCTxXlpnuI"+"\n"+
+		"SFUDGzcp5ty8AyhT3FMIptYYo6q7dwwGLtGW4UDL5dUUAvciwT3HQxnWKeMyqxta"+"\n"+
+		"DZClJalsmsb02dTbsjFutc7/q6a+GjSG5Niy6MkIuXQ2qLxfCGQTemF7+lGQp4HU"+"\n"+
+		"UIG//PECgYEArCBreT/TDb4M9tY9K0UoOGr9sfnmkUyenGHkUZ+Z3jaNXTW9TSvD"+"\n"+
+		"fZoRA85ol5M1QdmOHKXuOhZXaresFw9E3M92hFKrp5XBo1cTthWbkPsUrj6WmWf6"+"\n"+
+		"b2h6lEAZ0zjcWjGzwW+W1N/HVs833/qydQ4heQEC60K/gUreSKekA0I="+"\n"+
+		"-----END RSA PRIVATE KEY-----";
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=659735
