@@ -713,7 +713,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 			for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 				System.out.println(consumed.serialNumber);
-				clienttasks.unsubscribe(null, consumed.serialNumber, null, null, null);
+				clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 			}
 			for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
 				Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
@@ -4105,7 +4105,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
 	}
 	
-	@AfterGroups(groups = {"setup"}, value = {"Verify500ErrorOnStage","ServerURLInRHSMFile","DipslayServicelevelWhenRegisteredToDiffrentMachine","ServerUrloptionValuesInRHSMFile","DisplayOfRemoteServerExceptionForServer500Error"})
+	@AfterGroups(groups = {"setup"}, value = {"Verify500ErrorOnStage","ServerURLInRHSMFile","DipslayServicelevelWhenRegisteredToDiffrentMachine","ServerUrloptionValuesInRHSMFile","DisplayOfRemoteServerExceptionForServer500Error","RHELWorkstationProduct"})
 	public void restoreRHSMConfFileValues() {
 		clienttasks.unregister(null, null, null);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
