@@ -40,6 +40,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 
 	@Test(	description="a new system consumer's autoheal attribute defaults to true (on)",
 			groups={},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
@@ -53,10 +54,10 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="using the candlepin api, a consumer's autoheal attribute can be toggled off/on",
 			groups={},
-			dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test"},
+			priority=200, dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutohealAttributeCanBeToggledOffForConsumer_Test() throws Exception {
+	public void VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCandlepinAPI_Test() throws Exception {
 		
 		// get the current registered consumer's id
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -65,6 +66,60 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertFalse(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled off (expected value=false).");
 		jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled on (expected value=true).");
+	}
+	
+	
+	@Test(	description="using autoheal module, a consumer's autoheal attribute can be toggled off/on",
+			groups={"blockedByBug-976867"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCLI_Test() throws Exception {
+		SSHCommandResult result;
+		JSONObject jsonConsumer;
+		
+		// register a new consumer
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,null, true, null, null, null, null));
+		
+		// assert that the default results are equivalent to the show results
+		Assert.assertEquals(
+				clienttasks.auto_heal(null, null, null, null, null, null),
+				clienttasks.auto_heal(true, null, null, null, null, null),
+				"The default behavior should be --show.");
+		
+		// assert the disable option
+		clienttasks.auto_heal(null, null, true, null, null, null);
+		// assert autoheal on the consumer
+		jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		Assert.assertTrue(!jsonConsumer.getBoolean("autoheal"), "As seen by the server, consumer '"+consumerId+"' auto-heal is off.");
+		result = clienttasks.auto_heal(true, null, null, null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), "Auto-heal is currently disabled", "Stdout from the auto-heal --show.");
+		
+		// assert the enable option
+		clienttasks.auto_heal(null, true, null, null, null, null);
+		// assert autoheal on the consumer
+		jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "As seen by the server, consumer '"+consumerId+"' auto-heal is on.");
+		result = clienttasks.auto_heal(true, null, null, null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), "Auto-heal is currently enabled", "Stdout from the auto-heal --show.");
+	}
+	
+	
+	@Test(	description="run autoheal module without being registered",
+			groups={"blockedByBug-976867"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyAutohealWithoutBeingRegistered_Test() throws Exception {
+		
+		// unregister
+		clienttasks.unregister(null, null, null);
+		
+		// assert the disable option
+		SSHCommandResult result = clienttasks.auto_heal_(null, null, null, null, null, null);
+		
+		// assert that the default results are equivalent to the show results
+		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from auto-heal without being registered.");
+		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from auto-heal without being registered.");
+		Assert.assertEquals(result.getExitCode(),Integer.valueOf(255), "ExitCode from auto-heal without being registered.");
 	}
 	
 	

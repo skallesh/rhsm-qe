@@ -2928,42 +2928,11 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = release_(show, list, set, unset, proxy, proxyuser, proxypassword);
 		
 		// assert results...
-		if (list==null)
+		if (list!=null)
 		if (Boolean.valueOf(System.getProperty("sm.server.old","false"))) {
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "ERROR: The 'release' command is not supported by the server.");
 			throw new SkipException(sshCommandResult.getStderr().trim());
  		}
-		
-		
-//TODO
-//		/*
-//		[root@jsefler-r63-server ~]# subscription-manager service-level --show --list
-//		Current service level: 
-//		+-------------------------------------------+
-//          			Available Service Levels
-//		+-------------------------------------------+
-//		Standard
-//		None
-//		Premium
-//		*/
-//		
-//		// assert the banner
-//		String bannerRegex = "\\+-+\\+\\n\\s*Available Service Levels\\s*\\n\\+-+\\+";
-//		if (list!=null && list) {	// when explicitly asked to list
-//			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list) contains the expected banner regex: "+bannerRegex);
-//		} else {
-//			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) should not contains the banner regex: "+bannerRegex);	
-//		}
-//		
-//		// assert the "Current service level: "
-//		String regex = "Current service level: ";
-//		if (show!=null && show) {	// when explicitly asked to show
-//			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --show) contains the expected regex: "+regex);
-//		} else if (list!=null && list) {	// when explicitly asked to list but not show
-//			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list, but not --show) should not contains the regex: "+regex);	
-//		} else if ((show==null || !show) && (list==null || !list)) {	// when no options are explicity asked, then the default behavior is --show
-//			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without options --show --list) contains the expected regex: "+regex);		
-//		}
 		
 		if (set!=null) {
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Release set to: %s", set).trim(),"Stdout from release --set with a value.");
@@ -2975,7 +2944,52 @@ public class SubscriptionManagerTasks {
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the release command indicates a success.");
 		
-		return sshCommandResult; // from the service-level command
+		return sshCommandResult; // from the release command
+	}
+	
+	
+	// auto-heal module tasks ************************************************************
+
+	/**
+	 * SSHCommand subscription-manager auto-heal [parameters] without asserting any results
+	 * @return SSHCommandResult stdout, stderr, exitCode
+	 */
+	public SSHCommandResult auto_heal_(Boolean show, Boolean enable, Boolean disable, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;	command += " autoheal";
+		if (show!=null && show)			command += " --show";
+		if (enable!=null && enable)		command += " --enable";
+		if (disable!=null && disable)	command += " --disable";
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * SSHCommand subscription-manager auto-heal [parameters]
+	 * @return SSHCommandResult stdout, stderr, exitCode
+	 */
+	public SSHCommandResult auto_heal(Boolean show, Boolean enable, Boolean disable, String proxy, String proxyuser, String proxypassword) {
+		
+		SSHCommandResult sshCommandResult = auto_heal_(show, enable, disable, proxy, proxyuser, proxypassword);
+		
+		// assert results...
+		
+		if (enable!=null) {
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Auto-heal is enabled").trim(),"Stdout from auto-heal --enable");
+		}
+		if (disable!=null) {
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Auto-heal is disabled").trim(),"Stdout from auto-heal --disable");
+		}
+		
+		// assert the exit code was a success
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the auto-heal command indicates a success.");
+		
+		return sshCommandResult; // from the auto-heal command
 	}
 	
 	
