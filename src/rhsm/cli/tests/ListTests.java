@@ -256,7 +256,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	@Test(	description="subscription-manager: list of consumed entitlements should display the provided product marketing names",
-			groups={"blockedByBug-878986"},
+			groups={"blockedByBug-878986","blockedByBug-976924"},
 			dataProvider="getAllEntitlementCertsData",
 			enabled=true)	// this new test implementation was implemented due to change in list of consumed product subscriptions (from many to one) - see bug 806986
 	@ImplementsNitrateTest(caseId=48092, fromPlan=2481)
@@ -1067,11 +1067,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// get all the valid service levels available to this org	
 		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
 			Object bugzilla = null;
-			if (serviceLevel.equals("None")) bugzilla = new BlockedByBzBug("842170");
+			if (serviceLevel.equals("None")) bugzilla = new BlockedByBzBug(new String[]{"842170","976924"});
 			ll.add(Arrays.asList(new Object[] {bugzilla,	serviceLevel}));
 		}
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("842170"),	""}));
-		ll.add(Arrays.asList(new Object[] {null,							"FOO"}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"842170","976924"}),	""}));
+		ll.add(Arrays.asList(new Object[] {null, "FOO"}));
 
 		
 		return ll;
