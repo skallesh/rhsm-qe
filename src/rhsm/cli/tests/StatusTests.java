@@ -62,12 +62,12 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		String overallStatusLabel = "Overall Status:";
 		clienttasks.unregister(null,null,null);
 		SSHCommandResult defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
-		SSHCommandResult statusResult = clienttasks.status();
+		SSHCommandResult statusResult = clienttasks.status(null, null, null);
 		Assert.assertTrue(statusResult.getStdout().contains(overallStatusLabel),"Expected status to report '"+overallStatusLabel+"'.");
 		Assert.assertTrue(defaultResult.toString().equals(statusResult.toString()), "When not registered, the default output running subscription-manager with no arguments should be identical to output from the status module.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
-		statusResult = clienttasks.status();
+		statusResult = clienttasks.status(null, null, null);
 		Assert.assertTrue(defaultResult.toString().split(overallStatusLabel)[0].equals(statusResult.toString().split(overallStatusLabel)[0]), "When registered, the default output running subscription-manager with no arguments should default to the status module.");
 	}
 	
@@ -78,7 +78,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	public void StatusWithoutBeingRegistered_Test() {
 		SSHCommandResult statusResult;
 		clienttasks.unregister(null,null,null);
-		statusResult = clienttasks.status();
+		statusResult = clienttasks.status(null, null, null);
 		
 		//	[root@jsefler-5 ~]# subscription-manager status
 		//	+-------------------------------------------+
@@ -101,7 +101,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult statusResult;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		statusResult = clienttasks.status();
+		statusResult = clienttasks.status(null, null, null);
 		
 		//	[root@jsefler-5 ~]# subscription-manager status
 		//	+-------------------------------------------+
@@ -152,7 +152,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		String systemEntitlementsValid = clienttasks.getFactValue("system.entitlements_valid");
-		statusResult = clienttasks.status();
+		statusResult = clienttasks.status(null, null, null);
 		
 		//	[root@jsefler-5 ~]# subscription-manager status
 		//	+-------------------------------------------+

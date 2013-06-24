@@ -589,13 +589,16 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "status";
 		options.clear();
 		options.add("-h, --help");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, optionsRegex, new ArrayList<String>(options)}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("977481"), smHelpCommand, 0, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager refresh OPTIONS
