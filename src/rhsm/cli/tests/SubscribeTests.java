@@ -629,7 +629,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AcceptanceTests","AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049","blockedByBug-743082","blockedByBug-865193","blockedByBug-864383"},
+			groups={"AcceptanceTests","AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049","blockedByBug-743082","blockedByBug-865193","blockedByBug-864383","blockedByBug-977321"},
 			dependsOnMethods={"InititiateAutoSubscribe_Test"},
 			dataProvider="getInstalledProductCertsData",
 			enabled=true)
@@ -677,7 +677,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: autosubscribe consumer more than once and verify we are not duplicately subscribed",
-			groups={"blockedByBug-723044","blockedByBug-743082"},
+			groups={"blockedByBug-723044","blockedByBug-743082","blockedByBug-977321"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeWithAutoMoreThanOnce_Test() throws Exception {
