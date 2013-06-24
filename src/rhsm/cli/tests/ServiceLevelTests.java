@@ -451,7 +451,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: subscribe with auto while specifying an valid service level; assert the entitlements granted match the requested service level",
-			groups={"AcceptanceTests","blockedByBug-859652"},
+			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-977321"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157229)	// 147971
@@ -504,7 +504,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="subscription-manager: after autosubscribing with a service level, assert that another autosubscribe (without specifying service level) uses the service level persisted from the first sutosubscribe",
-			groups={"blockedByBug-859652"},
+			groups={"blockedByBug-859652","blockedByBug-977321"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -541,14 +541,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@Test(	description="subscription-manager: subscribe with auto without specifying any service level; assert the service level used matches whatever the consumer's current preference level is set",
-			groups={"AcceptanceTests","blockedByBug-859652"},
+			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-977321"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeWithNullServiceLevel_Test() throws JSONException, Exception {
 		AutoSubscribeWithServiceLevel_Test(null,null);
 	}
 	@Test(	description="subscription-manager: subscribe with auto specifying a service level of \"\"; assert the service level is unset and the autosubscribe proceeds without any service level preference",
-			groups={"AcceptanceTests","blockedByBug-859652"},
+			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-977321"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeWithBlankServiceLevel_Test() throws JSONException, Exception {
