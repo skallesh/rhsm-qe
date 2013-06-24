@@ -672,7 +672,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productIdForSubscriptionContainingUTF8Character, providedProductIds);
 	}
 	@Test(	description="subscription-manager: subcription manager list available should display subscriptions containing UTF-8 character(s)",
-			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-880070","blockedByBug-919584"},
+			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-880070","blockedByBug-919584","blockedByBug-977535"},
 			priority=110,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
@@ -720,7 +720,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(poolForSubscriptionContainingUTF8Character.subscriptionName, subscriptionNameForSubscriptionContainingUTF8Character, "asserting the subscription name.");
 	}
 	@Test(	description="subscription-manager: subcription manager attach a subscription containing UTF-8 character(s)",
-			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204","blockedByBug-977535"},
+			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204"},
 			dependsOnMethods={"ListSubscriptionContainingUTF8Character_Test"},
 			priority=120,
 			enabled=true)
