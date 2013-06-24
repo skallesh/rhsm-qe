@@ -1095,25 +1095,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCertFiles().isEmpty());
 		}
 	
-	/**
-	 * @author skallesh
-	 * @throws Exception
-	 * @throws JSONException
-	 */
-	@Test(description = "verify if imported certs are deleted after registering", 
-			groups = { "EntitlementCertShouldNotBeDeleted"}, enabled = true)
-		public void EntitlementCertShouldNotBeDeleted() throws JSONException,Exception {
-		clienttasks.unregister(null, null, null);
-		File expectCertFile = new File(System.getProperty("automation.dir",null) + "/expiredcerts/CertV3.pem");
-		RemoteFileTasks.putFile(client.getConnection(),expectCertFile.toString(), "/root/", "0755");
-		clienttasks.importCertificate_("/root/CertV3.pem");
-		List<File> BeforeRegister=clienttasks.getCurrentEntitlementCertFiles();
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, null, null, null, null, null);
-		List<File> AfterRegister=clienttasks.getCurrentEntitlementCertFiles();
-		Assert.assertEquals(BeforeRegister, AfterRegister);
-	}
+	
 	
 	/**
 	 * @author skallesh
