@@ -720,7 +720,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(poolForSubscriptionContainingUTF8Character.subscriptionName, subscriptionNameForSubscriptionContainingUTF8Character, "asserting the subscription name.");
 	}
 	@Test(	description="subscription-manager: subcription manager attach a subscription containing UTF-8 character(s)",
-			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204"},
+			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204","blockedByBug-977535"},
 			dependsOnMethods={"ListSubscriptionContainingUTF8Character_Test"},
 			priority=120,
 			enabled=true)
