@@ -129,7 +129,7 @@
                                  (= "true" (:value %)))
                            p))
         virt-type (fn [p] (if (virt-pool? p) "Virtual" "Physical"))
-        itemize (fn [p] (list (:productName p) {(:contractNumber p) (virt-type p)}))
+        itemize (fn [p] (list (:productName p) {(:contractNumber p) (virt-type (:productAttributes p))}))
         x (map itemize (if all? (list-available true) (list-available false)))
         y (group-by first x)
         overall-status (fn [m] (cond
