@@ -482,187 +482,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(factsMap.get(cpuCoresPerSocketFact)) && Integer.valueOf(factsMap.get(cpuCoresPerSocketFact))>0, "Subscription manager facts '"+cpuCoresPerSocketFact+"' value '"+factsMap.get(cpuCoresPerSocketFact)+"' is a positive integer.");
 		Integer cpuCores = Integer.valueOf(factsMap.get(cpuSocketsFact))*Integer.valueOf(factsMap.get(cpuCoresPerSocketFact));
 		
-		// determine the number of cores using dmidecode information
-		Integer coresCalculatedUsingDmidecode = 0;
-		SSHCommandResult dmidecodeResult = client.runCommandAndWait("dmidecode -t processor");
-		if (dmidecodeResult.getExitCode().equals(Integer.valueOf(0))) { // dmidecode is not always available
-			if (doesStringContainMatches(dmidecodeResult.getStdout(), "Core Count")) {
-				//	[jsefler@jseflerT5400 rhsm-qe]$ sudo dmidecode -t processor
-				//	# dmidecode 2.11
-				//	SMBIOS 2.5 present.
-				//
-				//	Handle 0x0400, DMI type 4, 40 bytes
-				//	Processor Information
-				//		Socket Designation: CPU
-				//		Type: Central Processor
-				//		Family: Xeon
-				//		Manufacturer: Intel
-				//		ID: 7A 06 01 00 FF FB EB BF
-				//		Signature: Type 0, Family 6, Model 23, Stepping 10
-				//		Flags:
-				//			FPU (Floating-point unit on-chip)
-				//			VME (Virtual mode extension)
-				//			DE (Debugging extension)
-				//			PSE (Page size extension)
-				//			TSC (Time stamp counter)
-				//			MSR (Model specific registers)
-				//			PAE (Physical address extension)
-				//			MCE (Machine check exception)
-				//			CX8 (CMPXCHG8 instruction supported)
-				//			APIC (On-chip APIC hardware supported)
-				//			SEP (Fast system call)
-				//			MTRR (Memory type range registers)
-				//			PGE (Page global enable)
-				//			MCA (Machine check architecture)
-				//			CMOV (Conditional move instruction supported)
-				//			PAT (Page attribute table)
-				//			PSE-36 (36-bit page size extension)
-				//			CLFSH (CLFLUSH instruction supported)
-				//			DS (Debug store)
-				//			ACPI (ACPI supported)
-				//			MMX (MMX technology supported)
-				//			FXSR (FXSAVE and FXSTOR instructions supported)
-				//			SSE (Streaming SIMD extensions)
-				//			SSE2 (Streaming SIMD extensions 2)
-				//			SS (Self-snoop)
-				//			HTT (Multi-threading)
-				//			TM (Thermal monitor supported)
-				//			PBE (Pending break enabled)
-				//		Version: Not Specified
-				//		Voltage: 1.1 V
-				//		External Clock: 1333 MHz
-				//		Max Speed: 3800 MHz
-				//		Current Speed: 2000 MHz
-				//		Status: Populated, Enabled
-				//		Upgrade: Socket LGA771
-				//		L1 Cache Handle: 0x0700
-				//		L2 Cache Handle: 0x0701
-				//		L3 Cache Handle: Not Provided
-				//		Serial Number: Not Specified
-				//		Asset Tag: Not Specified
-				//		Part Number: Not Specified
-				//		Core Count: 4
-				//		Core Enabled: 4
-				//		Thread Count: 4
-				//		Characteristics:
-				//			64-bit capable
-				//
-				//	Handle 0x0401, DMI type 4, 40 bytes
-				//	Processor Information
-				//		Socket Designation: CPU
-				//		Type: Central Processor
-				//		Family: Xeon
-				//		Manufacturer: Intel
-				//		ID: 7A 06 01 00 FF FB EB BF
-				//		Signature: Type 0, Family 6, Model 23, Stepping 10
-				//		Flags:
-				//			FPU (Floating-point unit on-chip)
-				//			VME (Virtual mode extension)
-				//			DE (Debugging extension)
-				//			PSE (Page size extension)
-				//			TSC (Time stamp counter)
-				//			MSR (Model specific registers)
-				//			PAE (Physical address extension)
-				//			MCE (Machine check exception)
-				//			CX8 (CMPXCHG8 instruction supported)
-				//			APIC (On-chip APIC hardware supported)
-				//			SEP (Fast system call)
-				//			MTRR (Memory type range registers)
-				//			PGE (Page global enable)
-				//			MCA (Machine check architecture)
-				//			CMOV (Conditional move instruction supported)
-				//			PAT (Page attribute table)
-				//			PSE-36 (36-bit page size extension)
-				//			CLFSH (CLFLUSH instruction supported)
-				//			DS (Debug store)
-				//			ACPI (ACPI supported)
-				//			MMX (MMX technology supported)
-				//			FXSR (FXSAVE and FXSTOR instructions supported)
-				//			SSE (Streaming SIMD extensions)
-				//			SSE2 (Streaming SIMD extensions 2)
-				//			SS (Self-snoop)
-				//			HTT (Multi-threading)
-				//			TM (Thermal monitor supported)
-				//			PBE (Pending break enabled)
-				//		Version: Not Specified
-				//		Voltage: 1.1 V
-				//		External Clock: 1333 MHz
-				//		Max Speed: 3800 MHz
-				//		Current Speed: 2000 MHz
-				//		Status: Populated, Idle
-				//		Upgrade: Socket LGA771
-				//		L1 Cache Handle: 0x0702
-				//		L2 Cache Handle: 0x0703
-				//		L3 Cache Handle: Not Provided
-				//		Serial Number: Not Specified
-				//		Asset Tag: Not Specified
-				//		Part Number: Not Specified
-				//		Core Count: 4
-				//		Core Enabled: 4
-				//		Thread Count: 4
-				//		Characteristics:
-				//			64-bit capable
-				
-				// sum up the value of all the Core Counts
-				coresCalculatedUsingDmidecode=0;
-				for (String coreCountValue : getSubstringMatches(dmidecodeResult.getStdout(), "Core Count:\\s+\\d+")) {
-					coresCalculatedUsingDmidecode += Integer.valueOf(coreCountValue.split(":")[1].trim());
-				}
-	
-			} else {
-				//	[root@rhsm-compat-rhel57 ~]# dmidecode -t processor
-				//	# dmidecode 2.11
-				//	SMBIOS 2.4 present.
-				//
-				//	Handle 0x0401, DMI type 4, 32 bytes
-				//	Processor Information
-				//		Socket Designation: CPU 1
-				//		Type: Central Processor
-				//		Family: Other
-				//		Manufacturer: Bochs
-				//		ID: 23 06 00 00 FD FB 8B 07
-				//		Version: Not Specified
-				//		Voltage: Unknown
-				//		External Clock: Unknown
-				//		Max Speed: 2000 MHz
-				//		Current Speed: 2000 MHz
-				//		Status: Populated, Enabled
-				//		Upgrade: Other
-				//		L1 Cache Handle: Not Provided
-				//		L2 Cache Handle: Not Provided
-				//		L3 Cache Handle: Not Provided
-				//
-				//	Handle 0x0402, DMI type 4, 32 bytes
-				//	Processor Information
-				//		Socket Designation: CPU 2
-				//		Type: Central Processor
-				//		Family: Other
-				//		Manufacturer: Bochs
-				//		ID: 23 06 00 00 FD FB 8B 07
-				//		Version: Not Specified
-				//		Voltage: Unknown
-				//		External Clock: Unknown
-				//		Max Speed: 2000 MHz
-				//		Current Speed: 2000 MHz
-				//		Status: Populated, Enabled
-				//		Upgrade: Other
-				//		L1 Cache Handle: Not Provided
-				//		L2 Cache Handle: Not Provided
-				//		L3 Cache Handle: Not Provided
-				
-				// in the absense of "Core Count" (system is probably a virt guest), we'll assume 1 core per CPU
-				coresCalculatedUsingDmidecode = Integer.valueOf(client.runCommandAndWait("dmidecode -t processor | grep 'Socket Designation:' | uniq | wc -l").getStdout().trim());
-				//coresCalculatedUsingDmidecode = getSubstringMatches(dmidecodeResult.getStdout(), "Socket Designation:").size();
-			}
-		}
-		
-		// assert cpuCores against the coresCalculatedUsingDmidecode when dmidecode is available
-		if (coresCalculatedUsingDmidecode>0) {
-			Assert.assertEquals(cpuCores, coresCalculatedUsingDmidecode, "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using dmidecode data.");
-			assertedCores = true;
-		}
-		
-		
 		// assert cpuCores against the coresCalculatedUsingLscpu when lscpu is available
 		if (factsMap.get("lscpu.socket(s)")!=null && factsMap.get("lscpu.core(s)_per_socket")!=null) {
 			Integer coresCalculatedUsingLscpu = Integer.valueOf(factsMap.get("lscpu.socket(s)"))*Integer.valueOf(factsMap.get("lscpu.core(s)_per_socket"));
@@ -672,6 +491,183 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		if (factsMap.get("lscpu.book(s)")!=null && factsMap.get("lscpu.socket(s)_per_book")!=null && factsMap.get("lscpu.core(s)_per_socket")!=null) {
 			Integer coresCalculatedUsingLscpu = Integer.valueOf(factsMap.get("lscpu.book(s)"))*Integer.valueOf(factsMap.get("lscpu.socket(s)_per_book"))*Integer.valueOf(factsMap.get("lscpu.core(s)_per_socket"));
 			Assert.assertEquals(cpuCores, coresCalculatedUsingLscpu, "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using lscpu facts.");
+			assertedCores = true;
+		}
+		
+		// assert cpuCores against the coresCalculatedUsingDmidecode when dmidecode is available
+		if (!assertedCores) {
+			// determine the number of cores using dmidecode information
+			Integer coresCalculatedUsingDmidecode = 0;
+			SSHCommandResult dmidecodeResult = client.runCommandAndWait("dmidecode -t processor");
+			if (dmidecodeResult.getExitCode().equals(Integer.valueOf(0))) { // dmidecode is not always available
+				if (doesStringContainMatches(dmidecodeResult.getStdout(), "Core Count")) {
+					//	[jsefler@jseflerT5400 rhsm-qe]$ sudo dmidecode -t processor
+					//	# dmidecode 2.11
+					//	SMBIOS 2.5 present.
+					//
+					//	Handle 0x0400, DMI type 4, 40 bytes
+					//	Processor Information
+					//		Socket Designation: CPU
+					//		Type: Central Processor
+					//		Family: Xeon
+					//		Manufacturer: Intel
+					//		ID: 7A 06 01 00 FF FB EB BF
+					//		Signature: Type 0, Family 6, Model 23, Stepping 10
+					//		Flags:
+					//			FPU (Floating-point unit on-chip)
+					//			VME (Virtual mode extension)
+					//			DE (Debugging extension)
+					//			PSE (Page size extension)
+					//			TSC (Time stamp counter)
+					//			MSR (Model specific registers)
+					//			PAE (Physical address extension)
+					//			MCE (Machine check exception)
+					//			CX8 (CMPXCHG8 instruction supported)
+					//			APIC (On-chip APIC hardware supported)
+					//			SEP (Fast system call)
+					//			MTRR (Memory type range registers)
+					//			PGE (Page global enable)
+					//			MCA (Machine check architecture)
+					//			CMOV (Conditional move instruction supported)
+					//			PAT (Page attribute table)
+					//			PSE-36 (36-bit page size extension)
+					//			CLFSH (CLFLUSH instruction supported)
+					//			DS (Debug store)
+					//			ACPI (ACPI supported)
+					//			MMX (MMX technology supported)
+					//			FXSR (FXSAVE and FXSTOR instructions supported)
+					//			SSE (Streaming SIMD extensions)
+					//			SSE2 (Streaming SIMD extensions 2)
+					//			SS (Self-snoop)
+					//			HTT (Multi-threading)
+					//			TM (Thermal monitor supported)
+					//			PBE (Pending break enabled)
+					//		Version: Not Specified
+					//		Voltage: 1.1 V
+					//		External Clock: 1333 MHz
+					//		Max Speed: 3800 MHz
+					//		Current Speed: 2000 MHz
+					//		Status: Populated, Enabled
+					//		Upgrade: Socket LGA771
+					//		L1 Cache Handle: 0x0700
+					//		L2 Cache Handle: 0x0701
+					//		L3 Cache Handle: Not Provided
+					//		Serial Number: Not Specified
+					//		Asset Tag: Not Specified
+					//		Part Number: Not Specified
+					//		Core Count: 4
+					//		Core Enabled: 4
+					//		Thread Count: 4
+					//		Characteristics:
+					//			64-bit capable
+					//
+					//	Handle 0x0401, DMI type 4, 40 bytes
+					//	Processor Information
+					//		Socket Designation: CPU
+					//		Type: Central Processor
+					//		Family: Xeon
+					//		Manufacturer: Intel
+					//		ID: 7A 06 01 00 FF FB EB BF
+					//		Signature: Type 0, Family 6, Model 23, Stepping 10
+					//		Flags:
+					//			FPU (Floating-point unit on-chip)
+					//			VME (Virtual mode extension)
+					//			DE (Debugging extension)
+					//			PSE (Page size extension)
+					//			TSC (Time stamp counter)
+					//			MSR (Model specific registers)
+					//			PAE (Physical address extension)
+					//			MCE (Machine check exception)
+					//			CX8 (CMPXCHG8 instruction supported)
+					//			APIC (On-chip APIC hardware supported)
+					//			SEP (Fast system call)
+					//			MTRR (Memory type range registers)
+					//			PGE (Page global enable)
+					//			MCA (Machine check architecture)
+					//			CMOV (Conditional move instruction supported)
+					//			PAT (Page attribute table)
+					//			PSE-36 (36-bit page size extension)
+					//			CLFSH (CLFLUSH instruction supported)
+					//			DS (Debug store)
+					//			ACPI (ACPI supported)
+					//			MMX (MMX technology supported)
+					//			FXSR (FXSAVE and FXSTOR instructions supported)
+					//			SSE (Streaming SIMD extensions)
+					//			SSE2 (Streaming SIMD extensions 2)
+					//			SS (Self-snoop)
+					//			HTT (Multi-threading)
+					//			TM (Thermal monitor supported)
+					//			PBE (Pending break enabled)
+					//		Version: Not Specified
+					//		Voltage: 1.1 V
+					//		External Clock: 1333 MHz
+					//		Max Speed: 3800 MHz
+					//		Current Speed: 2000 MHz
+					//		Status: Populated, Idle
+					//		Upgrade: Socket LGA771
+					//		L1 Cache Handle: 0x0702
+					//		L2 Cache Handle: 0x0703
+					//		L3 Cache Handle: Not Provided
+					//		Serial Number: Not Specified
+					//		Asset Tag: Not Specified
+					//		Part Number: Not Specified
+					//		Core Count: 4
+					//		Core Enabled: 4
+					//		Thread Count: 4
+					//		Characteristics:
+					//			64-bit capable
+					
+					// sum up the value of all the Core Counts
+					coresCalculatedUsingDmidecode=0;
+					for (String coreCountValue : getSubstringMatches(dmidecodeResult.getStdout(), "Core Count:\\s+\\d+")) {
+						coresCalculatedUsingDmidecode += Integer.valueOf(coreCountValue.split(":")[1].trim());
+					}
+					
+					
+					//	[root@jsefler-5 ~]# dmidecode -t processor
+					//	# dmidecode 2.11
+					//	SMBIOS 2.4 present.
+					//
+					//	Handle 0x0401, DMI type 4, 32 bytes
+					//	Processor Information
+					//		Socket Designation: CPU 1
+					//		Type: Central Processor
+					//		Family: Other
+					//		Manufacturer: Not Specified
+					//		ID: 23 06 00 00 FD FB 8B 07
+					//		Version: Not Specified
+					//		Voltage: Unknown
+					//		External Clock: Unknown
+					//		Max Speed: Unknown
+					//		Current Speed: Unknown
+					//		Status: Populated, Enabled
+					//		Upgrade: Other
+					//		L1 Cache Handle: Not Provided
+					//		L2 Cache Handle: Not Provided
+					//		L3 Cache Handle: Not Provided
+					
+					// THIS IS JUST NOT ENOUGH INFORMATION ABOVE TO FIGURE OUT THE NUMBER OF CORES
+					
+				}
+			}
+			// assert cpuCores against the coresCalculatedUsingDmidecode when dmidecode is available
+			if (coresCalculatedUsingDmidecode>0) {
+				Assert.assertEquals(cpuCores, coresCalculatedUsingDmidecode, "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using dmidecode data.");
+				assertedCores = true;
+			} else {
+				log.warning("Could not figure out how to infer the number of cores from the dmidecode output above.");
+			}
+		}
+		
+		// assert cpuCores against the coresCalcualtedUsingTopology
+		if (!assertedCores) {
+			// determine the number of cores using the topology calculation
+			client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/core_siblings_list; done");
+			String coresCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/core_siblings_list; done | uniq | wc -l").getStdout().trim();
+			if (!client.getStderr().isEmpty()) log.warning(client.getStderr());
+			// FIXME: This topology algorithm will fail (probably on s390x or ppc64) when the core_siblings_list contains individually disabled cores which would affect the uniq output which assumes a symmetric topology
+			log.info("The number of cores calculated using the topology algorithm above is '"+coresCalcualtedUsingTopology+"'.");
+			Assert.assertEquals(cpuCores, Integer.valueOf(coresCalcualtedUsingTopology), "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using the topology algorithm.");	
 			assertedCores = true;
 		}
 		
