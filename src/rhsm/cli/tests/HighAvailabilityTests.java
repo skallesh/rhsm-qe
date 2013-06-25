@@ -536,6 +536,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return;
 		if (!RemoteFileTasks.testExists(client, backupProductIdJsonFile)) return;
 		RemoteFileTasks.runCommandAndAssert(client,"cat "+backupProductIdJsonFile+" > "+clienttasks.productIdJsonFile, Integer.valueOf(0));
+		clienttasks.yumClean("all");
 	}
 	
 	

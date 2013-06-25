@@ -1564,13 +1564,13 @@ public class SubscriptionManagerTasks {
 			List<String> repos = new ArrayList<String>();
 			// two possibilities for backward compatibility...
 			
-			// NEW - after bug 859197 fix https://bugzilla.redhat.com/show_bug.cgi?id=859197#c15
+			// OLD	
 			//	[root@rhsm-compat-rhel58 ~]# cat /var/lib/rhsm/productid.js
 			//	{
 			//	  "69": "anaconda-base-201202021136.x86_64"
 			//	}
 			
-			// OLD
+			// NEW - after bug 859197 fix https://bugzilla.redhat.com/show_bug.cgi?id=859197#c15
 			//	[root@jsefler-5 ~]# cat /var/lib/rhsm/productid.js
 			//	{
 			//	  "69": [
