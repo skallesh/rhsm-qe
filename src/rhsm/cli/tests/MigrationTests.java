@@ -326,7 +326,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=130764,130762) // TODO some expected yum repo assertions are not yet automated
-	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected) {
+	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected) throws JSONException {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
 
 		// make sure our serverUrl is configured to it's original good value
@@ -353,7 +353,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// get a list of the consumed RHN Classic channels
 		List<String> rhnChannelsConsumed = clienttasks.getCurrentRhnClassicChannels();
 		if (rhnChannelsToAdd.size()>0) Assert.assertTrue(rhnChannelsConsumed.containsAll(rhnChannelsToAdd), "All of the RHN Classic channels added appear to be consumed.");
-
+		
+		// get a map of the productid.js file before we attempt migration
+		Map<String,List<String>> productIdRepoMapBeforeMigration = clienttasks.getProductIdToReposMap();
+		
 		// get the product cert filenames that we should expect rhn-migrate-classic-to-rhsm to copy (or use the ones supplied to the @Test)
 		Set<String> expectedMigrationProductCertFilenames = getExpectedMappedProductCertFilenamesCorrespondingToChannels(rhnChannelsConsumed);
 		
@@ -369,6 +372,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// execute rhn-migrate-classic-to-rhsm with options
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,regUsername,regPassword,regOrg,serviceLevelIndex);
+		
+		// get a map of the productid.js file after we attempt migration
+		Map<String,List<String>> productIdRepoMapAfterMigration = clienttasks.getProductIdToReposMap();
 		
 		// assert the exit code
 		checkForKnownBug881952(sshCommandResult);
@@ -392,13 +398,27 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			// assert that the rhnplugin is still enabled
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhnPluginConfFile, "enabled"),"1","The enabled yum plugin configuration for RHN.");
 			
+			// assert that productid.js is unchanged
+			Assert.assertTrue(productIdRepoMapBeforeMigration.keySet().containsAll(productIdRepoMapAfterMigration.keySet()) && productIdRepoMapAfterMigration.keySet().containsAll(productIdRepoMapBeforeMigration.keySet()),"The '"+clienttasks.productIdJsonFile+"' productIds remain unchanged when "+rhnMigrateTool+" requires --force to continue.");
+			for (String productId : productIdRepoMapBeforeMigration.keySet()) {
+				Assert.assertTrue(productIdRepoMapBeforeMigration.get(productId).containsAll(productIdRepoMapAfterMigration.get(productId)) && productIdRepoMapAfterMigration.get(productId).containsAll(productIdRepoMapBeforeMigration.get(productId)), "The '"+clienttasks.productIdJsonFile+"' productIds repos for '"+productId+"' remain unchanged when "+rhnMigrateTool+" requires --force to continue.");
+			}
+			
 			return;
+			
 		} else if (rhnChannelsConsumed.isEmpty()) {
 			log.warning("Modifying expected results when the current RHN Classically registered system is not consuming any RHN channels.");
 			String expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";
 			Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' when no RHN Classic channels are being consumed: "+expectedStdout);
 			//Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' when no RHN Classic channels are being consumed.");		// the exitCode can be altered by the expect script rhn-migrate-classic-to-rhsm.tcl when the final arg slaIndex is non-null; therefore don't bother asserting exitCode; asserting stdout is sufficient
 			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered after '"+rhnMigrateTool+"' exits due to: "+expectedStdout);
+
+			// assert that productid.js is unchanged
+			Assert.assertTrue(productIdRepoMapBeforeMigration.keySet().containsAll(productIdRepoMapAfterMigration.keySet()) && productIdRepoMapAfterMigration.keySet().containsAll(productIdRepoMapBeforeMigration.keySet()),"The '"+clienttasks.productIdJsonFile+"' productIds remain unchanged when "+rhnMigrateTool+" exits due to: "+expectedStdout);
+			for (String productId : productIdRepoMapBeforeMigration.keySet()) {
+				Assert.assertTrue(productIdRepoMapBeforeMigration.get(productId).containsAll(productIdRepoMapAfterMigration.get(productId)) && productIdRepoMapAfterMigration.get(productId).containsAll(productIdRepoMapBeforeMigration.get(productId)), "The '"+clienttasks.productIdJsonFile+"' productIds repos for '"+productId+"' remain unchanged when "+rhnMigrateTool+" exits due to: "+expectedStdout);
+			}
+			
 			return;
 		}
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when all of the channels are mapped.");
@@ -548,6 +568,16 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the rhnplugin has been disabled
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhnPluginConfFile, "enabled"),"0","The enabled yum plugin configuration for RHN.");
+		
+		// assert that productid.js is updated with productid mappings for all of the rhnChannelsConsumed; coverage for Bug 972883 - rhn-migrate-classic-to-rhsm tool neglects to populate /var/lib/rhsm/productid.js
+		client.runCommandAndWait("cat "+clienttasks.productIdJsonFile);
+		for (String rhnChannelConsumed : rhnChannelsConsumed) {
+			if (channelsToProductCertFilenamesMap.containsKey(rhnChannelConsumed)) {
+				String productId = MigrationDataTests.getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnChannelConsumed));
+				Assert.assertTrue(productIdRepoMapAfterMigration.containsKey(productId), "The '"+clienttasks.productIdJsonFile+"' database contains an entry for productId '"+productId+"' which was migrated for consumption of Classic RHN Channel '"+rhnChannelConsumed+"'.");
+				Assert.assertTrue(productIdRepoMapAfterMigration.get(productId).contains(rhnChannelConsumed), "The '"+clienttasks.productIdJsonFile+"' database entry for productId '"+productId+"' contains Classic RHN Channel/Repo '"+rhnChannelConsumed+"'.");
+			}
+		}
 	}
 	
 	
@@ -706,7 +736,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="RhnMigrateClassicToRhsmWithNonDefaultProductCertDirData",	// dataProvider="RhnMigrateClassicToRhsmData",  IS TOO TIME CONSUMING
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
-	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected) {
+	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected) throws JSONException {
 		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
 		RhnMigrateClassicToRhsm_Test(bugzilla,rhnUsername,rhnPassword,rhnServer,rhnChannelsToAdd,options,regUsername,regPassword,regOrg,serviceLevelIndex,serviceLevelExpected);
@@ -717,7 +747,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-786257","blockedByBug-853233","RhnMigrateClassicToRhsm_Test"},
 			dependsOnMethods={},
 			enabled=true)
-	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() {
+	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() throws JSONException {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
 
 		log.info("Red Hat Enterprise Linux Desktop (productId=68) corresponds to the base RHN Channel (rhel-ARCH-client-5) for a 5Client system where ARCH=i386,x86_64.");
@@ -1265,6 +1295,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("mkdir -p "+backupProductCertDir+"; rm -f "+backupProductCertDir+"/*.pem");
 		client.runCommandAndWait("cp "+originalProductCertDir+"/*.pem "+backupProductCertDir);
 	}
+	@BeforeClass(groups="setup", dependsOnMethods={/*NOT TRUE "setupBeforeClass"*/})
+	public void backupProductIdJsonFileBeforeClass() {
+		if (clienttasks==null) return;
+		RemoteFileTasks.runCommandAndAssert(client,"cat "+clienttasks.productIdJsonFile+" > "+backupProductIdJsonFile, Integer.valueOf(0));
+	}
 	
 	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithInstNumber_Test","InstallNumMigrateToRhsm_Test","RhnMigrateClassicToRhsm_Test"})
 	public void configOriginalRhsmProductCertDir() {
@@ -1380,6 +1415,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@AfterClass(groups="setup")
+	public void restoreProductIdJsonFileAfterClass() {
+		if (clienttasks==null) return;
+		if (!RemoteFileTasks.testExists(client, backupProductIdJsonFile)) return;
+		RemoteFileTasks.runCommandAndAssert(client,"cat "+backupProductIdJsonFile+" > "+clienttasks.productIdJsonFile, Integer.valueOf(0));
+		clienttasks.yumClean("all");
+	}
+	
+	@AfterClass(groups="setup")
 	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsm_Test"})
 	public void restoreOriginallyConfiguredServerUrl() {
 		if (clienttasks==null) return;
@@ -1420,21 +1463,26 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
+	
+	
+	
+	
 	// Protected methods ***********************************************************************
 	protected String baseProductsDir = "/usr/share/rhsm/product/RHEL";
 	protected String channelCertMappingFilename = "channel-cert-mapping.txt";
 	protected List<String> mappedProductCertFilenames = new ArrayList<String>();	// list of all the mapped product cert file names in the mapping file (e.g. Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 	protected Map<String,String> channelsToProductCertFilenamesMap = new HashMap<String,String>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
-	protected Map<String,List<String>> cdnProductBaselineChannelMap = new HashMap<String,List<String>>();	// map of all the channels to list of productIds (e.g. key=rhn-tools-rhel-x86_64-server-5 value=[69,169,269])
-	protected Map<String,File> cdnProductCertsChannelMap = new HashMap<String,File>();	// map generated from cdn/product-certs.json of all the channels to product cert files (e.g. key=jb-ewp-5-i386-server-5-rpm value=/jbewp-5.0/Server-JBEWP-i386-bca12d9b039b-184.pem)
+//	protected Map<String,List<String>> cdnProductBaselineChannelMap = new HashMap<String,List<String>>();	// map of all the channels to list of productIds (e.g. key=rhn-tools-rhel-x86_64-server-5 value=[69,169,269])
+//	protected Map<String,File> cdnProductCertsChannelMap = new HashMap<String,File>();	// map generated from cdn/product-certs.json of all the channels to product cert files (e.g. key=jb-ewp-5-i386-server-5-rpm value=/jbewp-5.0/Server-JBEWP-i386-bca12d9b039b-184.pem)
 //	protected Map<String,ProductCert> cdnProductCertsChannelToProductCertMap = new HashMap<String,ProductCert>();	// map generated from cdn/product-certs.json of all the channels to product cert files (e.g. key=jb-ewp-5-i386-server-5-rpm value=/jbewp-5.0/Server-JBEWP-i386-bca12d9b039b-184.pem)
-	protected Map<String,List<String>> cdnProductBaselineProductIdMap = new HashMap<String,List<String>>();	// map of all the productIds to list of channels (e.g. key=69 value=[rhn-tools-rhel-x86_64-server-5, rhn-tools-rhel-x86_64-server-5-debug-info])	// inverse of cdnProductBaselineChannelMap
+//	protected Map<String,List<String>> cdnProductBaselineProductIdMap = new HashMap<String,List<String>>();	// map of all the productIds to list of channels (e.g. key=69 value=[rhn-tools-rhel-x86_64-server-5, rhn-tools-rhel-x86_64-server-5-debug-info])	// inverse of cdnProductBaselineChannelMap
 	protected List<ProductCert> originallyInstalledRedHatProductCerts = new ArrayList<ProductCert>();
 	protected String migrationFromFact				= "migration.migrated_from";
 	protected String migrationSystemIdFact			= "migration.classic_system_id";
 	protected String migrationDateFact				= "migration.migration_date";
 	protected String originalProductCertDir			= null;
-	protected String backupProductCertDir			= "/tmp/backupOfProductCertDir";
+	protected final String backupProductCertDir		= "/tmp/backupOfProductCertDir";
+	protected final String backupProductIdJsonFile	= "/tmp/backupOfProductIdJsonFile";
 	protected String nonDefaultProductCertDir		= "/tmp/migratedProductCertDir";
 	protected String machineInstNumberFile			= "/etc/sysconfig/rhn/install-num";
 	protected String backupMachineInstNumberFile	= machineInstNumberFile+".bak";
