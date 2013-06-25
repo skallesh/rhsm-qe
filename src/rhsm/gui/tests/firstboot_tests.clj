@@ -210,6 +210,20 @@
       (sleep 3000) ;; FIXME find a better way than a hard wait...
       (verify (tasks/fbshowing? :register-now)))))
 
+(defn ^{Test {:groups ["firstboot"
+                       "blockedByBug-973317"]}}
+  firstboot_back_button_after_register
+  "Verifies that on clicking backbutton after registering from Create User menu should navigte to Choose Service menu"
+  [_]
+  (reset_firstboot)
+  (tasks/ui click :register-rhsm)
+  (tasks/ui click :firstboot-forward)
+  (tasks/firstboot-register (@config :username) (@config :password))
+  (tasks/ui click :firstboot-forward)
+  (verify (tasks/fbshowing? :firstboot-window "Create User"))
+  (tasks/ui click :firstboot-back)
+  (verify (tasks/fbshowing? :firstboot-window "Choose Service")))
+
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
    ["sdf" "sdf" :invalid-credentials]
