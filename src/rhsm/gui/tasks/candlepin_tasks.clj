@@ -120,16 +120,23 @@
         z (zipmap (keys y) (map #(map second %) (vals y)))]
     (zipmap (keys z) (map first (vals z)))))
 
-(comment
-  (defn bild-virt-type-map
-    "Builds a map of subscriptions to virt type"
-    [& {:keys [all?]
-        :or {all? false}}]
-    (let [virt-pool? (fn [pool]
-                       (some #(and (= "virt_only" (:name %))
-                                   (= "true" (:value %)))
-                             pool))
-          virt-type (fn [pool] (if (virt-pool? pool) "Virtual" "Physical"))])))
+(defn build-virt-type-map
+  "Builds a map of subscriptions to virt type"
+  [& {:keys [all?]
+      :or {all? false}}]
+  (let [virt-pool? (fn [p]
+                     (some #(and (= "virt_only" (:name %))
+                                 (= "true" (:value %)))
+                           p))
+        virt-type (fn [p] (if (virt-pool? p) "Virtual" "Physical"))
+        itemize (fn [p] (list (:productName p) {(:contractNumber p) (virt-type p)}))
+        x (map itemize (if all? (list-available true) (list-available false)))
+        y (group-by first x)
+        overall-status (fn [m] (cond
+                               (every? #(= "Physical" %) (vals m)) (merge m {:overall "Physical"})
+                               (every? #(= "Virtual" %) (vals m)) (merge m {:overall "Virtual"})
+                               :else (merge m {:overall "Both"})))]
+    (zipmap (keys y) (map #(overall-status (reduce merge (map second %))) (vals y)))))
 
 (defn get-owners
   "Given a username and password, this function returns a list
