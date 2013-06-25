@@ -21,12 +21,20 @@
 
 (def productlist (atom {}))
 (def servicelist (atom {}))
+(def contractlist (atom {}))
 (def sys-log "/var/log/rhsm/rhsm.log")
 
 (defn build-subscription-map
+  "Builds the product map and updates the productlist atom"
   []
   (reset! productlist (ctasks/build-product-map :all? true))
   @productlist)
+
+(defn build-contract-map
+  "Builds the contract/virt-type map and updates the cont"
+  []
+  (reset! contractlist (ctasks/build-virt-type-map :all? true))
+  @contractlist)
 
 (defn allsearch
   ([filter]
@@ -38,7 +46,8 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
   (tasks/register-with-creds)
-  (reset! servicelist (ctasks/build-service-map :all? true)))
+  (reset! servicelist (ctasks/build-service-map :all? true))
+  (build-contract-map))
 
 (defn subscribe_all
   "Subscribes to everything available"
@@ -368,6 +377,33 @@
     (verify (= guiservice service))))
 
 (defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-874624"
+                       "blockedByBug-753057"]
+              :dataProvider "subscriptions"}}
+  check_contracts_and_virt_type
+  "Asserts that the contract number and virt type of each subscription is displayed properly"
+  [_ subscription]
+  (tasks/ui selecttab :all-available-subscriptions)
+  (let [row (tasks/skip-dropdown :all-subscriptions-view subscription)
+        overall-type (tasks/ui getcellvalue :all-subscriptions-view row 1)]
+    (verify (= overall-type (:overall (get @contractlist subscription)))))
+  (try+
+    (tasks/open-contract-selection subscription)
+    (tasks/do-to-all-rows-in
+     :contract-selection-table
+     0
+     (fn [contract]
+       (verify (not-nil? (some #{contract}
+                               (keys (get @contractlist subscription)))))
+       (verify (= (tasks/ui getcellvalue :contract-selection-table
+                            (tasks/ui gettablerowindex :contract-selection-table contract)
+                            1)
+                  (get (get @contractlist subscription) contract)))))
+    (catch [:type :contract-selection-not-available] _)
+    (finally (if (tasks/ui showing? :contract-selection-table)
+               (tasks/ui click :cancel-contract-selection)))))
+
+(defn ^{Test {:groups ["subscribe"
                        "blockedByBug-918617"]
               :priority (int 10)}}
   subscribe_check_syslog
@@ -395,7 +431,7 @@
                                   "unsubscribe_check_syslog"
                                   nil
                                   (tasks/unsubscribe subscription))]
-      (verify (not (blank? output)))))
+    (verify (not (blank? output)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
@@ -443,7 +479,7 @@
                           :or {debug false}}]
   (tasks/restart-app)
   (register nil)
-  (tasks/search)
+  (allsearch)
   (let [subs (into [] (map vector (tasks/get-table-elements
                                    :all-subscriptions-view
                                    0
