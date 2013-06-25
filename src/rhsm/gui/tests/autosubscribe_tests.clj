@@ -165,7 +165,8 @@
 
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "blockedByBug-921245"]
+                       "blockedByBug-921245"
+                       "blockedByBug-964332"]
               :dataProvider "my-installed-software"}}
   assert_correct_status
   "Tests that the status for each product is correct after subscribing to everything."
