@@ -953,6 +953,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			options.add("-n, --no-auto");
 			options.add("-s SERVICELEVEL, --servicelevel=SERVICELEVEL");
 			options.add("--serverurl=SERVERURL");
+			options.add("--no-proxy");	// added by Bug 915847 - rhn-migrate-classic-to-rhsm fails when used with a proxy with an internal SAM
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();

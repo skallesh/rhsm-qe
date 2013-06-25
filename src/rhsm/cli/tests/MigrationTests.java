@@ -559,14 +559,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId=130763)
 	public void RhnMigrateClassicToRhsmUsingProxyServer_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
-
+		
 		// make sure we are NOT registered to RHSM
 		clienttasks.unregister_(null,null,null);
 		clienttasks.removeAllCerts(true, true, true);
 		clienttasks.removeAllFacts();
 		
-//		// reset all of the proxy server configuration (RHN and RHSM)
-//		removeProxyServerConfigurations();
 		// remove proxy settings from up2date
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxy", "0");		// enableProxyAuth[comment]=To use an authenticated proxy or not
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "httpProxy", "");			// httpProxy[comment]=HTTP proxy in host:port format, e.g. squid.redhat.com:3128
@@ -574,8 +572,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyUser", "");			// proxyUser[comment]=The username for an authenticated proxy
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyPassword", "");		// proxyPassword[comment]=The password to use for an authenticated proxy
 		iptablesAcceptPort(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port"));
-
-
+		
 		// enable/set proxy settings for RHN up2date
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxy",		"1");											// enableProxyAuth[comment]=To use an authenticated proxy or not
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "httpProxy",		proxy_hostnameConfig+":"+proxy_portConfig);		// httpProxy[comment]=HTTP proxy in host:port format, e.g. squid.redhat.com:3128
@@ -592,12 +589,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// mark the tail of proxyLog with a message
 		String proxyLogMarker = System.currentTimeMillis()+" Testing RhnMigrateClassicToRhsmUsingProxyServer_Test.registerToRhnClassic from "+clienttasks.hostname+"...";
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
-
+		
 		// register to RHN Classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(rhnUsername, rhnPassword, rhnHostname);
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
-
-		// assert that traffic to RHN is went through the proxy
+		
+		// assert that traffic to RHN went through the proxy
 		String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
 		Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHN.");
 		
@@ -607,21 +604,27 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// get a list of the consumed RHN Classic channels
 		List<String> rhnChannelsConsumed = clienttasks.getCurrentRhnClassicChannels();
 		if (!rhnChannelsToAdd.isEmpty()) Assert.assertTrue(rhnChannelsConsumed.containsAll(rhnChannelsToAdd), "All of the RHN Classic channels added appear to be consumed.");
-
-		// reject traffic through the server.port
-		iptablesRejectPort(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port"));
-
+		
+		// reject traffic through the server.port (when not testing with --no-proxy)
+		if (!options.contains("--no-proxy")) {
+			iptablesRejectPort(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port"));
+		}
+		
 		// mark the tail of proxyLog with a message
 		proxyLogMarker = System.currentTimeMillis()+" Testing RhnMigrateClassicToRhsmUsingProxyServer_Test.executeRhnMigrateClassicToRhsmWithOptions from "+clienttasks.hostname+"...";
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
-
+		
 		// execute rhn-migrate-classic-to-rhsm with options
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,regUsername,regPassword,regOrg,null);
 		
-		// assert that traffic to RHSM went through the proxy
+		// assert that traffic to RHSM went through the proxy (unless testing --no-proxy)
 		proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
-		Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHN.");
-
+		if (options.contains("--no-proxy"))	{
+			Assert.assertContainsNoMatch(proxyLogResult, proxyLogRegex, "The proxy server should NOT be logging the connection attempts to RHSM when --no-proxy option is used.");
+		} else {
+			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHSM.");
+		}
+		
 		// assert the exit code
 		checkForKnownBug881952(sshCommandResult);
 		String expectedMsg;
@@ -641,16 +644,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			return;
 		}
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when all of the channels are mapped.");
-
-		// assert that proxy configurations from RHN up2date have been copied to RHSM rhsm.conf
-		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_hostname"), proxy_hostnameConfig.replace("http://", ""), "The RHN hostname component from the httpProxy configuration in "+clienttasks.rhnUp2dateFile+" has been copied to the RHSM server.proxy_hostname configuration in "+clienttasks.rhsmConfFile+" (with prefix \"http://\" removed; reference bug 798015).");
-		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_port"), proxy_portConfig, "The RHN port component from the httpProxy configuration in "+clienttasks.rhnUp2dateFile+" has been copied to the RHSM server.proxy_port configuration in "+clienttasks.rhsmConfFile+".");
-		if (clienttasks.getConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth").equals("0") || clienttasks.getConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth").equalsIgnoreCase("false")) {
-			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_user"), "", "The RHSM server.proxy_user configuration in "+clienttasks.rhsmConfFile+" is removed when RHN configuration enableProxyAuth is false.");
-			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_password"), "", "The RHSM server.proxy_password configuration in "+clienttasks.rhsmConfFile+" is removed when RHN configuration enableProxyAuth is false.");
+		
+		// assert that proxy configurations from RHN up2date have been copied to RHSM rhsm.conf (unless testing --no-proxy)
+		if (options.contains("--no-proxy")) {
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_hostname"),	"", "When --no-proxy is specified, the RHN hostname component from the httpProxy configuration in "+clienttasks.rhnUp2dateFile+" should NOT be copied to the RHSM server.proxy_hostname configuration in "+clienttasks.rhsmConfFile+".");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_port"),		"", "When --no-proxy is specified, the RHN port component from the httpProxy configuration in "+clienttasks.rhnUp2dateFile+" should NOT be copied to the RHSM server.proxy_port configuration in "+clienttasks.rhsmConfFile+".");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_user"), 	"", "When --no-proxy is specified, the RHN proxyUser configuration in "+clienttasks.rhnUp2dateFile+" should NOT be copied to the RHSM server.proxy_user configuration in "+clienttasks.rhsmConfFile+".");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_password"), "", "When --no-proxy is specified, the RHN proxyPassword configuration in "+clienttasks.rhnUp2dateFile+" should NOT be copied to the RHSM server.proxy_password configuration in "+clienttasks.rhsmConfFile+".");
 		} else {
-			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_user"), proxy_userConfig, "The RHN proxyUser configuration in "+clienttasks.rhnUp2dateFile+" has been copied to the RHSM server.proxy_user configuration in "+clienttasks.rhsmConfFile+" when RHN configuration enableProxyAuth is true.");
-			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_password"), proxy_passwordConfig, "The RHN proxyPassword configuration in "+clienttasks.rhnUp2dateFile+" has been copied to the RHSM server.proxy_password configuration in "+clienttasks.rhsmConfFile+" when RHN configuration enableProxyAuth is true.");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_hostname"), proxy_hostnameConfig.replace("http://", ""), "The RHN hostname component from the httpProxy configuration in "+clienttasks.rhnUp2dateFile+" has been copied to the RHSM server.proxy_hostname configuration in "+clienttasks.rhsmConfFile+" (with prefix \"http://\" removed; reference bug 798015).");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_port"), proxy_portConfig, "The RHN port component from the httpProxy configuration in "+clienttasks.rhnUp2dateFile+" has been copied to the RHSM server.proxy_port configuration in "+clienttasks.rhsmConfFile+".");
+			if (clienttasks.getConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth").equals("0") || clienttasks.getConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth").equalsIgnoreCase("false")) {
+				Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_user"), "", "The RHSM server.proxy_user configuration in "+clienttasks.rhsmConfFile+" is removed when RHN configuration enableProxyAuth is false.");
+				Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_password"), "", "The RHSM server.proxy_password configuration in "+clienttasks.rhsmConfFile+" is removed when RHN configuration enableProxyAuth is false.");
+			} else {
+				Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_user"), proxy_userConfig, "The RHN proxyUser configuration in "+clienttasks.rhnUp2dateFile+" has been copied to the RHSM server.proxy_user configuration in "+clienttasks.rhsmConfFile+" when RHN configuration enableProxyAuth is true.");
+				Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_password"), proxy_passwordConfig, "The RHN proxyPassword configuration in "+clienttasks.rhnUp2dateFile+" has been copied to the RHSM server.proxy_password configuration in "+clienttasks.rhsmConfFile+" when RHN configuration enableProxyAuth is true.");
+			}
 		}
 		
 		// assert we are no longer registered to RHN Classic
@@ -685,7 +695,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 		expectedMsg = String.format("System '%s' successfully registered to Red Hat Subscription Management.",	clienttasks.hostname);
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
-
+		
 		log.info("No need to assert any more details of the migration since they are covered in the non-proxy test.");
 	}
 	
@@ -1998,16 +2008,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex
 
 		// basic auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	"http://"+sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",				regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("915847"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto --no-proxy",		regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",				regUsername,	regPassword,	regOrg,	"http://"+sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
 		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
 		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
 			ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
 		}
 		
 		// no auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	"http://"+sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",				regUsername,	regPassword,	regOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("915847"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto --no-proxy",		regUsername,	regPassword,	regOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",				regUsername,	regPassword,	regOrg,	"http://"+sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
 		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
 		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
 			ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	"--no-auto --force",	regUsername,	regPassword,	regOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
