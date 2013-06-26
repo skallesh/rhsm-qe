@@ -70,7 +70,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="using autoheal module, a consumer's autoheal attribute can be toggled off/on",
-			groups={"blockedByBug-976867"},
+			groups={"AcceptanceTests","blockedByBug-976867"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCLI_Test() throws Exception {
