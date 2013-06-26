@@ -1983,25 +1983,25 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize),	"-n -f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
 		}
 
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"",			regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
-		//ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"",			regUsername,	regPassword,	regOrg,	/*areAllChannelsMapped(rhnAvailableChildChannels)?noServiceLevelIndex:*/null,	defaultServiceLevel}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"",			regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
+		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"",			regUsername,	regPassword,	regOrg,	/*areAllChannelsMapped(rhnAvailableChildChannels)?noServiceLevelIndex:*/null,	defaultServiceLevel}));
 		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
-			ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize),	"-f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize),	"-f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
 		}
 		
 		// test variations of a valid serverUrl
 		for (String serverUrl : regServerUrls) {
 			List<String> availableChildChannelList = rhnAvailableChildChannels.isEmpty()? rhnAvailableChildChannels : Arrays.asList(rhnAvailableChildChannels.get(randomGenerator.nextInt(rhnAvailableChildChannels.size())));	// randomly choose an available child channel just to add a little fun
-			ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	availableChildChannelList,	"-f --serverurl="+serverUrl,		sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,	defaultServiceLevel}));		
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),		sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	availableChildChannelList,	"-f --serverurl="+serverUrl,		sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,	defaultServiceLevel}));		
 		}
 
 		// test each servicelevel
 		for (String serviceLevel : regServiceLevels) {
 			String options;
 			options = String.format("--force --servicelevel=%s",serviceLevel); if (serviceLevel.contains(" ")) options = String.format("--force --servicelevel \"%s\"", serviceLevel);
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options,	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options,	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
 			options = String.format("-f -s %s",randomizeCaseOfCharactersInString(serviceLevel)); if (serviceLevel.contains(" ")) options = String.format("-f -s \"%s\"", randomizeCaseOfCharactersInString(serviceLevel));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options,	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options,	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));
 		}
 		
 		// attempt an unavailable servicelevel, then choose an available one from the index table
@@ -2009,13 +2009,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			int serviceLevelIndex = randomGenerator.nextInt(regServiceLevels.size());
 			String serviceLevel = regServiceLevels.get(serviceLevelIndex);
 			serviceLevelIndex++;	// since the interactive menu of available service-levels to choose from is indexed starting at 1.
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA",				regUsername,	regPassword,	regOrg,	serviceLevelIndex,	serviceLevel}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA",				regUsername,	regPassword,	regOrg,	serviceLevelIndex,	serviceLevel}));	
 		}
 		
 		// attempt an unavailable servicelevel, then choose no service level
 		if (!regServiceLevels.isEmpty()) {
 			int noServiceLevelIndex = regServiceLevels.size()+1;	// since the last item in the interactive menu of available service-levels is "#. No service level preference"
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA",				regUsername,	regPassword,	regOrg,	noServiceLevelIndex,	""}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA",				regUsername,	regPassword,	regOrg,	noServiceLevelIndex,	""}));	
 		}
 		
 		
