@@ -22,6 +22,7 @@
 (def rhsm-log "/var/log/rhsm/rhsm.log")
 (def tmpCAcertpath "/tmp/CA-certs/")
 (def CAcertpath "/etc/rhsm/ca/")
+(def unregStatus "Keep your system up to date by regestering.")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
@@ -218,7 +219,7 @@
      (run-command (str "mv " CAcertpath "*.* " tmpCAcertpath))
      (verify (= 1 (tasks/start-app)))
      (finally
-      ;(run-command (str "mv " tmpCAcertpath "*.* " CAcertpath))
+      (run-command (str "mv " tmpCAcertpath "*.* " CAcertpath))
       )))
 
 (gen-class-testng)
