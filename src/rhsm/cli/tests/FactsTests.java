@@ -414,7 +414,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertCpuCpuSocketsMatchLscpuSockets_Test() {
-//		boolean assertedSockets = false;
+		boolean assertedSockets = false;
 		clienttasks.deleteFactsFileWithOverridingValues();
 		
 		// get the facts
@@ -422,11 +422,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		String cpuSocketsFact = "cpu.cpu_socket(s)";
 		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(factsMap.get(cpuSocketsFact)) && Integer.valueOf(factsMap.get(cpuSocketsFact))>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+factsMap.get(cpuSocketsFact)+"' is a positive integer.");
 		Integer cpuSockets = Integer.valueOf(factsMap.get(cpuSocketsFact));
-		
-		// determine the cpu_socket(s) value using the topology calculation
-		String socketsCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
-		if (!client.getStderr().isEmpty()) log.warning(client.getStderr());
-		log.info("The cpu_socket(s) value calculated using the topology algorithm above is '"+socketsCalcualtedUsingTopology+"'.");
 		
 		// special case for xen-dom0 hosts
 		// Bug 844532 - subscription-manager register of a RHEL 5.8 Oracle SunFire x4100M2 shows 4 sockets instead of 2 in Certificate-based Management
@@ -449,20 +444,30 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			return;
 		}
 		
-		// assert sockets against the socketsCalcualtedUsingTopology
-		Assert.assertEquals(factsMap.get(cpuSocketsFact), socketsCalcualtedUsingTopology, "The value of system fact '"+cpuSocketsFact+"' should match the value for 'CPU socket(s)' value='"+socketsCalcualtedUsingTopology+"' as calculated using cpu topology.");
-
 		// assert sockets against the socketsCalculatedUsingLscpu when lscpu is available
 		if (factsMap.get("lscpu.socket(s)")!=null) {
 			Integer socketsCalculatedUsingLscpu = Integer.valueOf(factsMap.get("lscpu.socket(s)"));
 			Assert.assertEquals(cpuSockets, socketsCalculatedUsingLscpu, "The fact value for '"+cpuSocketsFact+"' should match the calculation using lscpu facts.");
-//			assertedSockets = true;
+			assertedSockets = true;
 		}
 		if (factsMap.get("lscpu.book(s)")!=null && factsMap.get("lscpu.socket(s)_per_book")!=null) {
 			Integer socketsCalculatedUsingLscpu = Integer.valueOf(factsMap.get("lscpu.book(s)"))*Integer.valueOf(factsMap.get("lscpu.socket(s)_per_book"));
 			Assert.assertEquals(cpuSockets, socketsCalculatedUsingLscpu, "The fact value for '"+cpuSocketsFact+"' should match the calculation using lscpu facts.");
-//			assertedSockets = true;
+			assertedSockets = true;
 		}
+		
+		// assert sockets against the socketsCalcualtedUsingTopology
+		if (!assertedSockets) {
+			// determine the cpu_socket(s) value using the topology calculation
+			String socketsCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
+			if (!client.getStderr().isEmpty()) log.warning(client.getStderr());
+			log.info("The cpu_socket(s) value calculated using the topology algorithm above is '"+socketsCalcualtedUsingTopology+"'.");
+
+			Assert.assertEquals(factsMap.get(cpuSocketsFact), socketsCalcualtedUsingTopology, "The value of system fact '"+cpuSocketsFact+"' should match the value for 'CPU socket(s)' value='"+socketsCalcualtedUsingTopology+"' as calculated using cpu topology.");
+			assertedSockets = true;
+		}
+		
+		if (!assertedSockets) Assert.fail("Could not figure out how to assert the expected number of sockets.");
 	}
 	
 	
