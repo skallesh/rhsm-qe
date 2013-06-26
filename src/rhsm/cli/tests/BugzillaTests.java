@@ -1087,7 +1087,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
-	//	providedProducts.add("100000000000002");
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
 		sleep(1*60*1000);
 		clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null);
@@ -3271,11 +3270,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
-		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(
-				sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,
-				true);
-		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"),
-				"A consumer's autoheal attribute value=true.");
+		clienttasks.auto_heal(null, true, null, null, null, null);
 
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,
@@ -3319,8 +3314,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String consumerId = clienttasks.getCurrentConsumerId();
-		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,true);
-		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"),"A consumer's autoheal attribute value=true.");
+		clienttasks.auto_heal(null, true, null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
