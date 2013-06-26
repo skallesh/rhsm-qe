@@ -207,7 +207,7 @@
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
-                         "blockedByBug-960465"]}}
+                       "blockedByBug-960465"]}}
     launch_gui_with_invalid_cert
     "Test to verify GUI can be launched with invalid certs"
     [_]
