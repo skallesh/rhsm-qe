@@ -720,7 +720,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(hostPool,"Host pool id '"+hostPoolId+"', derived from the virtualization-aware subscription id '"+subscriptionId+"', is listed in all available subscriptions: "+hostPool);
 
 			// assert hostPoolId quantity
-			Assert.assertEquals(Integer.valueOf(hostPool.quantity), Integer.valueOf(quantity-jsonHostPoolQuantityConsumed), "Assuming '"+jsonHostPoolQuantityConsumed+"' entitlements are currently being consumed from this host pool '"+hostPool.poolId+"', the quantity of available entitlements should be '"+quantity+"' minus '"+jsonHostPoolQuantityConsumed+"'.");
+			Assert.assertEquals(Integer.valueOf(hostPool.quantity), Integer.valueOf(quantity-jsonHostPoolQuantityConsumed), "Assuming '"+jsonHostPoolQuantityConsumed+"' entitlements are currently being consumed from this host pool '"+hostPool.poolId+"', the quantity of available entitlements should be '"+quantity+"' minus '"+jsonHostPoolQuantityConsumed+"' (COULD BE DIFFERENT IF ANOTHER PHYSICAL HOST SYSTEM IS SIMULTANEOUSLY SUBSCRIBING TO THE SAME POOL).");
 		}
 		
 		// get the guestPool
@@ -741,7 +741,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(guestPool,"Guest pool id '"+guestPoolId+"', derived from the virtualization-aware subscription id '"+subscriptionId+"', is listed in all available subscriptions: "+guestPool);
 
 			// assert guestPoolId quantity
-			Assert.assertEquals(Integer.valueOf(guestPool.quantity), Integer.valueOf((quantity-jsonHostPoolQuantityExported)*Integer.valueOf(virtLimit)-jsonGuestPoolQuantityConsumed), "Assuming '"+jsonGuestPoolQuantityConsumed+"' entitlements are currently being consumed from guest pool '"+guestPool.poolId+"', the quantity of available entitlements for this guest pool should be the host pool's virt_limit of '"+virtLimit+"' times (the host's total quantity '"+quantity+"' minus those exported '"+jsonHostPoolQuantityExported+"') minus the number of already consumed from the pool '"+jsonGuestPoolQuantityConsumed+"'.");
+			Assert.assertEquals(Integer.valueOf(guestPool.quantity), Integer.valueOf((quantity-jsonHostPoolQuantityExported)*Integer.valueOf(virtLimit)-jsonGuestPoolQuantityConsumed), "Assuming '"+jsonGuestPoolQuantityConsumed+"' entitlements are currently being consumed from guest pool '"+guestPool.poolId+"', the quantity of available entitlements for this guest pool should be the host pool's virt_limit of '"+virtLimit+"' times (the host's total quantity '"+quantity+"' minus those exported '"+jsonHostPoolQuantityExported+"') minus the number of already consumed from the pool '"+jsonGuestPoolQuantityConsumed+"'  (COULD BE DIFFERENT IF ANOTHER VIRTUAL GUEST SYSTEM IS SIMULTANEOUSLY SUBSCRIBING TO THE SAME POOL).");
 		}
 	}
 		
