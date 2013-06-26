@@ -72,7 +72,10 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 				
 		}
 	
-		}}
+		}else {
+			throw new SkipException("This test is not applicable on a Physical system.");
+		}
+		}
 	
 	/**
 	 * @author skallesh
