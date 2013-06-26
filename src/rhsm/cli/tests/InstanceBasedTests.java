@@ -59,11 +59,11 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 			groups = { "InstanceMultiplierLogicOnVirtmachines","blockedByBug-962933"}, enabled = true)
 	public void InstanceMultiplierLogicOnVirtmachines() throws JSONException,Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, true, null, null,
+				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		if(clienttasks.getFactValue("virt.is_guest").contains("true")){
+		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
-				if(availList.subscriptionName.contains("Instance Based")){
+				if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
 					SSHCommandResult result=clienttasks.subscribe(null, null, availList.poolId, null, null, "5", null, null, null, null, null);
 					String expectedMessage="Successfully attached a subscription for: "+availList.subscriptionName;
 					Assert.assertEquals(result.getStdout().trim(), expectedMessage);
@@ -72,9 +72,9 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 				
 		}
 	
-		}else {
+		}else 
 			throw new SkipException("This test is not applicable on a Physical system.");
-		}
+		
 		}
 	
 	/**
@@ -90,10 +90,10 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		
-		if(clienttasks.getFactValue("virt.is_guest").contains("false")){
+		if(clienttasks.getFactValue("virt.is_guest").equalsIgnoreCase("false")){
 			String socket=clienttasks.getFactValue("cpu.cpu_socket(s)");
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
-						if(availList.subscriptionName.contains("Instance Based")){
+						if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
 							clienttasks.subscribe(null, null, availList.poolId, null, null, socket, null, null, null, null, null);
 					
 			}
@@ -105,9 +105,9 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 					
 				}	
 		}
-	}if(clienttasks.getFactValue("virt.is_guest").contains("true")){
+	}if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
-			if(availList.subscriptionName.contains("Instance Based")){
+			if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
 				clienttasks.subscribe(null, null, availList.poolId, null, null, null, null, null, null, null, null);
 		
 }
@@ -137,13 +137,13 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				(String) null, null, null, null, true, null, null, null, null);
 		int healFrequency=2;
 		
-		if(clienttasks.getFactValue("virt.is_guest").contains("false")){
+		if(clienttasks.getFactValue("virt.is_guest").equalsIgnoreCase("false")){
 			Integer sockets = 4;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
 			clienttasks.facts(null, true, null, null, null);
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
-						if(availList.subscriptionName.contains("Instance Based")){
+						if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
 							clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null);
 					
 			}
@@ -165,7 +165,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				Assert.assertEquals(installed.status.trim(), "Subscribed");
 		}
 	}
-		if(clienttasks.getFactValue("virt.is_guest").contains("true")){
+		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			Integer sockets = 4;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
@@ -196,7 +196,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		if(clienttasks.getFactValue("virt.is_guest").contains("false")){
+		if(clienttasks.getFactValue("virt.is_guest").equalsIgnoreCase("false")){
 			Integer sockets = 4;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
@@ -212,7 +212,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				Assert.assertEquals(consumed.quantityUsed, "sockets");
 			}}
 			
-			}if(clienttasks.getFactValue("virt.is_guest").contains("true")){
+			}if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 				Integer sockets = 4;
 				factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 				clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
@@ -243,7 +243,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		
-		if(clienttasks.getFactValue("virt.is_guest").contains("false")){
+		if(clienttasks.getFactValue("virt.is_guest").equalsIgnoreCase("false")){
 			Integer sockets = 4;
 			String poolId=null;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
@@ -272,7 +272,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 					
 				}	
 		}
-	}if(clienttasks.getFactValue("virt.is_guest").contains("true")){
+	}if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 		Integer sockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
