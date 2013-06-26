@@ -214,12 +214,11 @@
     (tasks/kill-app)
     (run-command "subscription-manager unregister")
     (try+
-     (run-command (str "rmdir " tmpCAcertpath))
+     (when tmpCAcertpath (run-command (str "rm -rf " tmpCAcertpath)))
      (run-command (str "mkdir " tmpCAcertpath))
-     (run-command (str "mv " CAcertpath "*.* " tmpCAcertpath))
+     (tasks/set-conf-file-value "ca_cert_dir" tmpCAcertpath)
      (verify (= 1 (tasks/start-app)))
      (finally
-      (run-command (str "mv " tmpCAcertpath "*.* " CAcertpath))
-      )))
+      (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
 
 (gen-class-testng)
