@@ -68,7 +68,7 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 					String expectedMessage="Successfully attached a subscription for: "+availList.subscriptionName;
 					Assert.assertEquals(result.getStdout().trim(), expectedMessage);
 					Assert.assertEquals(result.getExitCode(),  Integer.valueOf(0));
-				}
+				}else throw new SkipException("no Instance based subscriptions are available for testing");
 				
 		}
 	
