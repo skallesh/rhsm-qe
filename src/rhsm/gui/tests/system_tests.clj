@@ -20,6 +20,9 @@
 
 (def ldtpd-log "/var/log/ldtpd/ldtpd.log")
 (def rhsm-log "/var/log/rhsm/rhsm.log")
+(def tmpCAcertpath "/tmp/CA-certs/")
+(def CAcertpath "/etc/rhsm/ca/")
+(def unregStatus "Keep your system up to date by regestering.")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
@@ -202,5 +205,20 @@
                                   (run-command "subscription-manager unregister"))]
     (verify (not (substring? "Traceback" output))))
   (tasks/kill-app))
+
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-960465"]}}
+    launch_gui_with_invalid_cert
+    "Test to verify GUI can be launched with invalid certs"
+    [_]
+    (tasks/kill-app)
+    (run-command "subscription-manager unregister")
+    (try+
+     (when tmpCAcertpath (run-command (str "rm -rf " tmpCAcertpath)))
+     (run-command (str "mkdir " tmpCAcertpath))
+     (tasks/set-conf-file-value "ca_cert_dir" tmpCAcertpath)
+     (verify (= 1 (tasks/start-app)))
+     (finally
+      (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
 
 (gen-class-testng)

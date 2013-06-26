@@ -59,7 +59,8 @@
   (.configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel @atest/complytests))
 
 (defn ^{Test {:groups ["acceptance"
-                       "acceptance_autosubscribe"]}}
+                       "acceptance_autosubscribe"
+                       "blockedByBug-977851"]}}
   simple_autosubscribe
   "Attempts a simple autosubscibe and verifys results."
   [_]
