@@ -3077,7 +3077,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(description = "Auto-heal for partial subscription", groups = {
-			"autohealPartial", "blockedByBug-746218","blockedByBug-907638"}, enabled = true)
+			"autohealPartial", "blockedByBug-746218","blockedByBug-907638"/*,"blockedByBug-907400"*/}, enabled = true)
 	public void VerifyAutohealForPartialSubscription() throws Exception {
 		Integer healFrequency = 3;
 		Integer moreSockets = 0;
@@ -3147,7 +3147,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@Test(description = "Auto-heal with SLA", groups = { "AutoHealWithSLA","blockedByBug-907638"}, enabled = true)
+	@Test(description = "Auto-heal with SLA", groups = { "AutoHealWithSLA","blockedByBug-907638"/*,"blockedByBug-907400"*/}, enabled = true)
 	public void VerifyAutohealWithSLA() throws JSONException, Exception {
 		Integer autoAttachInterval = 2;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -3262,7 +3262,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "Auto-heal for Expired subscription", groups = {
-			"AutohealForExpired", "blockedByBug-746088","blockedByBug-907638"}, enabled = true)
+			"AutohealForExpired", "blockedByBug-746088","blockedByBug-907638"/*,"blockedByBug-907400"*/}, enabled = true)
 	public void VerifyAutohealForExpiredSubscription() throws JSONException,
 	Exception {
 		int healFrequency = 2;
@@ -3312,7 +3312,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Auto-heal for subscription", groups = { "AutoHeal","blockedByBug-907638","blockedByBug-726411"}, enabled = true)
+	@Test(description = "Auto-heal for subscription", groups = { "AutoHeal","blockedByBug-907638","blockedByBug-726411"/*,"blockedByBug-907400"*/}, enabled = true)
 	@ImplementsNitrateTest(caseId = 119327)
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
 		Integer healFrequency = 2;
