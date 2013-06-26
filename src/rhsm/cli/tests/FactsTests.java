@@ -410,7 +410,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cpu.cpu_socket(s) fact matches lscpu.socket(s)",
-			groups={"AcceptanceTests","blockedByBug-707292"/*,"blockedByBug-751205"*//*,"blockedByBug-844532"*/}, dependsOnGroups={},
+			groups={"AcceptanceTests","blockedByBug-707292"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-844532"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertCpuCpuSocketsMatchLscpuSockets_Test() {
@@ -420,6 +420,16 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// get the facts
 		Map<String, String> factsMap = clienttasks.getFacts();
 		String cpuSocketsFact = "cpu.cpu_socket(s)";
+		// TEMPORARY WORKAROUND FOR BUG
+		if (!factsMap.containsKey(cpuSocketsFact) && (factsMap.get("uname.machine").equalsIgnoreCase("ppc64") || factsMap.get("uname.machine").equalsIgnoreCase("s390x"))) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="978466"; // Bug 978466 - subscription-manager fact 'cpu.cpu_socket(s)' is missing in ppc64 and s390x
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test on '"+factsMap.get("uname.machine")+"' while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
 		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(factsMap.get(cpuSocketsFact)) && Integer.valueOf(factsMap.get(cpuSocketsFact))>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+factsMap.get(cpuSocketsFact)+"' is a positive integer.");
 		Integer cpuSockets = Integer.valueOf(factsMap.get(cpuSocketsFact));
 		
@@ -472,7 +482,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cores calculation using facts cpu.cpu_socket(s)*cpu.core(s)_per_socket matches the cores calculation using lscpu facts",
-			groups={"AcceptanceTests"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
+			groups={"AcceptanceTests"/*,"blockedByBug-751205","blockedByBug-978466"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertCoresCalculatedUsingCpuFactsMatchCoresCalculatedUsingLscpu_Test() {
@@ -482,6 +492,16 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// get the facts
 		Map<String, String> factsMap = clienttasks.getFacts();
 		String cpuSocketsFact = "cpu.cpu_socket(s)";
+		// TEMPORARY WORKAROUND FOR BUG
+		if (!factsMap.containsKey(cpuSocketsFact) && (factsMap.get("uname.machine").equalsIgnoreCase("ppc64") || factsMap.get("uname.machine").equalsIgnoreCase("s390x"))) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="978466"; // Bug 978466 - subscription-manager fact 'cpu.cpu_socket(s)' is missing in ppc64 and s390x
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test on '"+factsMap.get("uname.machine")+"' while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
 		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(factsMap.get(cpuSocketsFact)) && Integer.valueOf(factsMap.get(cpuSocketsFact))>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+factsMap.get(cpuSocketsFact)+"' is a positive integer.");
 		String cpuCoresPerSocketFact = "cpu.core(s)_per_socket";
 		Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(factsMap.get(cpuCoresPerSocketFact)) && Integer.valueOf(factsMap.get(cpuCoresPerSocketFact))>0, "Subscription manager facts '"+cpuCoresPerSocketFact+"' value '"+factsMap.get(cpuCoresPerSocketFact)+"' is a positive integer.");
