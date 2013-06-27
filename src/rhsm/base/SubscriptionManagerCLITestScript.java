@@ -357,7 +357,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (client!=null) {
 			client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin && tar -cf hw_info_dump.tar --ignore-failed-read --sparse dmi_dump.bin /proc/cpuinfo /proc/sysinfo /sys/devices/system/cpu/");
 			File remoteFile = new File("/root/hw_info_dump.tar");
-			File localFile = new File((getProperty("automation.dir", "/tmp")+"/"+remoteFile.getName()));
+			File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
 			RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
 		}
 	}

@@ -134,7 +134,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	public void generateRegistrationReportTableAfterRegisterWithCredentials_Test() {
 		
 		// now dump out the list of userData to a file
-	    File file = new File("CandlepinRegistrationReport.html"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+	    File file = new File("test-output/registration_report.html"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
 	    DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm:ss yyyy z");
 	    try {
 	    	Writer output = new BufferedWriter(new FileWriter(file));
