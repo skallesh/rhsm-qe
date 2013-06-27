@@ -114,6 +114,7 @@
   (verify (tasks/compliance?)))
 
 (defn ^{Test {:groups ["autosubscribe"
+                       "acceptance"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
                        "blockedByBug-857147"]}}
   simple_autosubscribe
