@@ -410,6 +410,7 @@
                        "acceptance"
                        "blockedByBug-877579"]
               :dataProvider "unlimited-pools"}}
+  check_unlimited_quantities
   "Tests that unlimted pools are displayed properly"
   [_ subscription contract]
   (let [row (tasks/skip-dropdown :all-subscriptions-view subscription)
