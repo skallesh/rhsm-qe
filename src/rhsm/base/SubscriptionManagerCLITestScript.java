@@ -352,6 +352,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 		}
 	}
+	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="Dump the system's hardware info to a tar file and upload it for archival review.")
+	public void dumpHardwareInfoBeforeSuite() throws IOException {
+		if (client!=null) {
+			client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin && tar -cf hw_info_dump.tar --ignore-failed-read --sparse dmi_dump.bin /proc/cpuinfo /proc/sysinfo /sys/devices/system/cpu/");
+			File remoteFile = new File("/root/hw_info_dump.tar");
+			File localFile = new File((getProperty("automation.dir", "/tmp")+"/"+remoteFile.getName()));
+			RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
+		}
+	}
 	@AfterSuite(groups={"cleanup"},description="attempt to delete any abandoned entitlements granted during the run of this suite")
 	public void deleteAllRegisteredConsumerEntitlementsAfterSuite() {
 		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
