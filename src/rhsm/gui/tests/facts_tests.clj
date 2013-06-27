@@ -163,6 +163,19 @@
                (tasks/ui click :close-system-prefs))
              (run-command "subscription-manager unsubscribe --all"))))
 
+(defn ^{Test {:groups ["acceptance"]}}
+  check_releases
+  "Tests that all available releases are shown in the GUI"
+  [_]
+  (let [certdir (tasks/conf-file-value "productCertDir")
+        rhelcerts ["68" "69" "71" "72" "74" "76"]
+        certlist (map #(str certdir "/" % ".pem") rhelcerts)
+        certexist? (map #(= 0 (:exitcode
+                               (run-command (str "test -f " %))))
+                        certlist)]
+    (verify (some true? certexist?)))
+  (check_available_releases nil))
+
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-829900"]}}
   verify_about_information
@@ -223,20 +236,6 @@
   [_ product row]
   (let [gui-status (tasks/ui getcellvalue :installed-view row 2)]
     (verify (= gui-status "Not Subscribed"))))
-
-(defn ^{Test {:groups ["acceptance"]}}
-  check_releases
-  "Tests that all available releases are shown in the GUI"
-  [_]
-  (check-register)
-  (let [certdir (tasks/conf-file-value "productCertDir")
-        rhelcerts ["68" "69" "71" "72" "74" "76"]
-        certlist (map #(str certdir "/" % ".pem") rhelcerts)
-        certexist? (map #(= 0 (:exitcode
-                               (run-command (str "test -f " %))))
-                        certlist)]
-    (verify (some true? certexist?)))
-  (ftest/check_available_releases nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
