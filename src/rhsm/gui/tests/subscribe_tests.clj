@@ -404,6 +404,25 @@
                (tasks/ui click :cancel-contract-selection)))))
 
 (defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-877579"]
+              :dataProvider "unlimited-pools"}}
+  "Tests that unlimted pools are displayed properly"
+  [_ subscription contract]
+  (let [row (tasks/skip-dropdown :all-subscriptions-view subscription)
+        quantity (tasks/ui getcellvalue :all-subscriptions-view row 2)]
+    (verify (= "Unlimited" quantity)))
+  (try+
+   (tasks/open-contract-selection subscription)
+   (let [row (tasks/ui gettablerowindex :contract-selection-table contract)
+         total (last (split (tasks/ui getcellvalue :contract-selection-table row 2) #" / "))
+         quantity (first (split (tasks/ui getcellvalue :contract-selection-table row 5) #" "))]
+     (verify (= "Unlimited" total))
+     (verify (= "Unlimited" quantity)))
+   (catch [:type :contract-selection-not-available] _)
+   (finally (if (tasks/ui showing? :contract-selection-table)
+              (tasks/ui click :cancel-contract-selection)))))
+
+(defn ^{Test {:groups ["subscribe"
                        "blockedByBug-918617"]
               :priority (int 10)}}
   subscribe_check_syslog
@@ -538,6 +557,22 @@
     (if-not debug
       (to-array-2d prods)
       prods)))
+
+(defn ^{DataProvider {:name "unlimited-pools"}}
+  get_unlimited_pools [_ & {:keys [debug]
+                               :or {debug false}}]
+  (run-command "subscription-manager unregister")
+  (tasks/restart-app)
+  (tasks/register-with-creds)
+  (let [all (ctasks/list-available true)
+        unlimited? (fn [p] (< (:quantity p) 0))
+        all-unlimited (filter unlimited? all)
+        itemize (fn [p] (vector (:productName p) (:contractNumber p)))
+        pools (into [] (map itemize all-unlimited))]
+    (allsearch)
+    (if-not debug
+      (to-array-2d pools)
+      pools)))
 
   ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=683550
   ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=691784

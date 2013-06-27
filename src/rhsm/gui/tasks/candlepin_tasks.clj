@@ -8,6 +8,14 @@
            [rhsm.cli.tasks CandlepinTasks]
            [rhsm.base SubscriptionManagerBaseTestScript]))
 
+(defn is-true-value? [value]
+  (let [val (clojure.string/lower-case value)]
+    (cond
+     (= "1" val) true
+     (= "true" val) true
+     (= "yes" val) true
+     :else false)))
+
 (defn server-url
   "Returns the server url as used by the automation. As used by API calls."
   []
@@ -126,7 +134,7 @@
       :or {all? false}}]
   (let [virt-pool? (fn [p]
                      (some #(and (= "virt_only" (:name %))
-                                 (= "true" (:value %)))
+                                 (is-true-value? (:value %)))
                            p))
         virt-type (fn [p] (if (virt-pool? p) "Virtual" "Physical"))
         itemize (fn [p] (list (:productName p) {(:contractNumber p) (virt-type (:productAttributes p))}))
@@ -209,4 +217,6 @@
   (let [attr (get-pool-attributes username password pool)
         quantity (Integer. (:quantity attr))
         consumed (Integer. (:consumed attr))]
-    (- quantity consumed)))
+    (if (>= quantity 0)
+      (- quantity consumed)
+      quantity)))
