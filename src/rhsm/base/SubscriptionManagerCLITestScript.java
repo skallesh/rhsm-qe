@@ -355,8 +355,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="Dump the system's hardware info to a tar file and upload it for archival review.")
 	public void dumpHardwareInfoBeforeSuite() throws IOException {
 		if (client!=null) {
-			client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin && tar -cf hw_info_dump.tar --ignore-failed-read --sparse dmi_dump.bin /proc/cpuinfo /proc/sysinfo /sys/devices/system/cpu/");
 			File remoteFile = new File("/root/hw_info_dump.tar");
+			client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin && tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin /proc/cpuinfo /proc/sysinfo /sys/devices/system/cpu/");
 			File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
 			RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
 		}
