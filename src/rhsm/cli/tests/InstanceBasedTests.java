@@ -58,19 +58,23 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify if instance_multiplier logic is enforced on virtual guests.", 
 			groups = { "InstanceMultiplierLogicOnVirtmachines","blockedByBug-962933"}, enabled = true)
 	public void InstanceMultiplierLogicOnVirtmachines() throws JSONException,Exception {
+		Boolean flag = false;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+				
 				if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
+					flag=true;
 					SSHCommandResult result=clienttasks.subscribe(null, null, availList.poolId, null, null, "5", null, null, null, null, null);
 					String expectedMessage="Successfully attached a subscription for: "+availList.subscriptionName;
 					Assert.assertEquals(result.getStdout().trim(), expectedMessage);
 					Assert.assertEquals(result.getExitCode(),  Integer.valueOf(0));
-				}else throw new SkipException("no Instance based subscriptions are available for testing");
+				}
 				
-		}
+				
+		}if(!flag) throw new SkipException("no Instance based subscriptions are available for testing");
 	
 		}else 
 			throw new SkipException("This test is not applicable on a Physical system.");
