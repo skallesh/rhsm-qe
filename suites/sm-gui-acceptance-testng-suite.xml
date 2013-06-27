@@ -34,7 +34,7 @@
       <package name="rhsm.base" />
     </packages>
     <classes>
-      <class name="rhsm.gui.tests.register-tests" />
+      <class name="rhsm.gui.tests.register_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
@@ -51,7 +51,7 @@
       <package name="rhsm.base" />
     </packages>
     <classes>
-      <class name="rhsm.gui.tests.subscribe-tests" />
+      <class name="rhsm.gui.tests.subscribe_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
@@ -69,7 +69,7 @@
       <package name="rhsm.cli.tests" />
     </packages>
     <classes>
-      <class name="rhsm.gui.tests.autosubscribe-tests" />
+      <class name="rhsm.gui.tests.autosubscribe_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
@@ -88,7 +88,7 @@
       <package name="rhsm.base" />
     </packages>
     <classes>
-      <class name="rhsm.gui.tests.facts-tests" />
+      <class name="rhsm.gui.tests.facts_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>

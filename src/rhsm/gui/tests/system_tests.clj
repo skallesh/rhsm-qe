@@ -1,4 +1,4 @@
-(ns rhsm.gui.tests.system-tests
+(ns rhsm.gui.tests.system_tests
   (:use [test-clj.testng :only (gen-class-testng
                                 data-driven)]
         [rhsm.gui.tasks.test-config :only (config
