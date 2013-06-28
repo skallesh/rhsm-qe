@@ -1,4 +1,4 @@
-(ns rhsm.gui.tests.register-tests
+(ns rhsm.gui.tests.register_tests
   (:use [test-clj.testng :only [gen-class-testng
                                 data-driven]]
         [rhsm.gui.tasks.test-config :only (config
@@ -27,7 +27,8 @@
   (try+ (tasks/unregister)
         (catch [:type :not-registered] _)))
 
-(defn ^{Test {:groups ["registration"]
+(defn ^{Test {:groups ["registration"
+                       "acceptance"]
               :dataProvider "userowners"}}
   simple_register
   "Simple register with known username, password and owner."
@@ -63,7 +64,8 @@
           register-button :register-system]
      (verify (and (= thrown-error expected-error) (action exists? register-button))))))
 
-(defn ^{Test {:groups ["registration"]}}
+(defn ^{Test {:groups ["registration"
+                       "acceptance"]}}
   unregister
   "Simple unregister."
   [_]

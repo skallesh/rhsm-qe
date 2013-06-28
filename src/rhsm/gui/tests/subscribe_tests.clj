@@ -1,4 +1,4 @@
-(ns rhsm.gui.tests.subscribe-tests
+(ns rhsm.gui.tests.subscribe_tests
   (:use [test-clj.testng :only (gen-class-testng
                                 data-driven)]
         [rhsm.gui.tasks.test-config :only (config
@@ -75,7 +75,8 @@
       (catch [:type :not-subscribed] _)))
    :skip-dropdowns? true))
 
-(defn ^{Test {:groups ["subscribe"]
+(defn ^{Test {:groups ["subscribe"
+                       "acceptance"]
               :dataProvider "subscriptions"}}
   subscribe_each
   "Asserts that each subscripton can be subscribed to sucessfully."
@@ -86,7 +87,8 @@
    (catch [:type :wrong-consumer-type]
        {:keys [log-warning]} (log-warning))))
 
-(defn ^{Test {:groups ["subscribe"]
+(defn ^{Test {:groups ["subscribe"
+                       "acceptance"]
               :dataProvider "subscribed"}}
   unsubscribe_each
   "Asserts that each subscripton can be unsubscribed from sucessfully."
@@ -377,6 +379,7 @@
     (verify (= guiservice service))))
 
 (defn ^{Test {:groups ["subscribe"
+                       "acceptance"
                        "blockedByBug-874624"
                        "blockedByBug-753057"]
               :dataProvider "subscriptions"}}
@@ -404,8 +407,10 @@
                (tasks/ui click :cancel-contract-selection)))))
 
 (defn ^{Test {:groups ["subscribe"
+                       "acceptance"
                        "blockedByBug-877579"]
               :dataProvider "unlimited-pools"}}
+  check_unlimited_quantities
   "Tests that unlimted pools are displayed properly"
   [_ subscription contract]
   (let [row (tasks/skip-dropdown :all-subscriptions-view subscription)

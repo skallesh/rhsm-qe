@@ -1,4 +1,4 @@
-(ns rhsm.gui.tests.acceptance-tests
+(ns rhsm.gui.tests.acceptance_tests
   (:use [test-clj.testng :only [gen-class-testng
                                 data-driven]]
         [rhsm.gui.tasks.test-config :only (config
@@ -7,10 +7,10 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
-            [rhsm.gui.tests.register-tests :as rtest]
-            [rhsm.gui.tests.subscribe-tests :as stest]
-            [rhsm.gui.tests.autosubscribe-tests :as atest]
-            [rhsm.gui.tests.facts-tests :as ftest])
+            [rhsm.gui.tests.register_tests :as rtest]
+            [rhsm.gui.tests.subscribe_tests :as stest]
+            [rhsm.gui.tests.autosubscribe_tests :as atest]
+            [rhsm.gui.tests.facts_tests :as ftest])
   (:import [org.testng.annotations
             Test
             BeforeClass

@@ -1,4 +1,4 @@
-(ns rhsm.gui.tests.autosubscribe-tests
+(ns rhsm.gui.tests.autosubscribe_tests
   (:use [test-clj.testng :only (gen-class-testng)]
         [rhsm.gui.tasks.test-config :only (config
                                            clientcmd)]
@@ -114,6 +114,7 @@
   (verify (tasks/compliance?)))
 
 (defn ^{Test {:groups ["autosubscribe"
+                       "acceptance"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
                        "blockedByBug-857147"]}}
   simple_autosubscribe

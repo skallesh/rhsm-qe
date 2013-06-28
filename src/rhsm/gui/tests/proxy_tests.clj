@@ -1,4 +1,4 @@
-(ns rhsm.gui.tests.proxy-tests
+(ns rhsm.gui.tests.proxy_tests
   (:use [test-clj.testng :only (gen-class-testng)]
         [rhsm.gui.tasks.test-config :only (config
                                            clientcmd

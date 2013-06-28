@@ -1,4 +1,4 @@
-(ns rhsm.gui.tests.facts-tests
+(ns rhsm.gui.tests.facts_tests
   (:use [test-clj.testng :only (gen-class-testng
                                 data-driven)]
         [rhsm.gui.tasks.test-config :only (config
@@ -162,6 +162,19 @@
     (finally (if (bool (tasks/ui guiexist :system-preferences-dialog))
                (tasks/ui click :close-system-prefs))
              (run-command "subscription-manager unsubscribe --all"))))
+
+(defn ^{Test {:groups ["acceptance"]}}
+  check_releases
+  "Tests that all available releases are shown in the GUI"
+  [_]
+  (let [certdir (tasks/conf-file-value "productCertDir")
+        rhelcerts ["68" "69" "71" "72" "74" "76"]
+        certlist (map #(str certdir "/" % ".pem") rhelcerts)
+        certexist? (map #(= 0 (:exitcode
+                               (run-command (str "test -f " %))))
+                        certlist)]
+    (verify (some true? certexist?)))
+  (check_available_releases nil))
 
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-829900"]}}

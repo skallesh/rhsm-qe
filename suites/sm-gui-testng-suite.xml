@@ -96,6 +96,7 @@
       <run>
         <include name="facts"/>
         <include name="setup" />
+        <include name="cleanup" />
       </run>
     </groups>
   </test>
