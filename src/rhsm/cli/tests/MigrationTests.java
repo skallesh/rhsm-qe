@@ -1243,6 +1243,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 863428 - Migration failed with message Organization A has more than one environment. https://github.com/RedHatQE/rhsm-qe/issues/174
 	// TODO Bug 866579 - rhn-migrate-classic-to-rhsm leaves system unregistered when a non-existant environment is specified/mistyped https://github.com/RedHatQE/rhsm-qe/issues/175
 	// TODO Bug 881952 - ssl.SSLError: The read operation timed out (during large rhn-migrate-classic-to-rhsm) https://github.com/RedHatQE/rhsm-qe/issues/176
+	// TODO Bug 967863 - subscription-manager-migration package should depend on subscription-manager-migration-data
 	
 	// Configuration methods ***********************************************************************
 	
