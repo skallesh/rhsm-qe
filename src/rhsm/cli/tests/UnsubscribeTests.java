@@ -49,7 +49,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Unsubscribe product entitlement and re-subscribe",
-			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791"},
+			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791","blockedByBug-979492"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
 	@ImplementsNitrateTest(caseId=41898)
 	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription) throws Exception{

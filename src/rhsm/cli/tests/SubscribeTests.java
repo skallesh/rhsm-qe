@@ -301,7 +301,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Subscribed for Already subscribed Entitlement.",
-			groups={"blockedByBug-584137"},
+			groups={"blockedByBug-584137","blockedByBug-979492"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41897)
@@ -870,7 +870,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe using --quantity option and assert the available quantity is properly decremented/incremeneted as multiple consumers subscribe/unsubscribe.",
-			groups={},
+			groups={"blockedByBug-979492"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void MultiConsumerSubscribeWithQuantity_Test() throws NumberFormatException, JSONException, Exception {
@@ -991,7 +991,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 		
 	@Test(	description="subscription-manager: subscribe to future subscription pool",
-			groups={},
+			groups={"blockedByBug-979492"},
 			dataProvider="getAllFutureSystemSubscriptionPoolsData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)

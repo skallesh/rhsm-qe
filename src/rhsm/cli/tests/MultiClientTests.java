@@ -28,7 +28,7 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 
 	// FIXME Redesign this test to use only one client box and use clean and register --consumerid to switch users  (see SubscribeTests.MultiConsumerSubscribeWithQuantity_Test as an example)
 	@Test(	description="bind/unbind with two users/consumers",
-			groups={},
+			groups={"blockedByBug-979492"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsNitrateTest(caseId=53217)
 	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) throws JSONException, Exception {

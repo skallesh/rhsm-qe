@@ -38,7 +38,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="test compliance using variations on sockets and system type when subscribing to an instance-based subscription",
-			groups={"AcceptanceTests","QuantityNeededToAchieveSocketCompliance_Test"},
+			groups={"AcceptanceTests","QuantityNeededToAchieveSocketCompliance_Test","blockedByBug-979492"},
 			dataProvider="getAvailableInstanceBasedSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
