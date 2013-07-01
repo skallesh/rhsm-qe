@@ -74,6 +74,28 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
 	List<String> providedProducts = new ArrayList<String>();
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if subscription manager CLI does not display all facts",
+			groups={"SystemFactsInCLI","blockedByBug-722239"},
+			enabled=true)
+	public void SystemFactsInCLI() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		Map<String, String> result=clienttasks.getFacts("system");
+		Assert.assertNotNull(result.get("system.certificate_version"));
+		Assert.assertNotNull(result.get("system.name"));
+		Assert.assertNotNull("system.uuid");
+
+	
+	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -219,6 +241,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
 		 }
 		}
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -263,6 +287,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -299,6 +324,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Map<String, String> ipv4=clienttasks.getFacts("ipv4_address");
 		Assert.assertFalse(ipv4.containsValue("unknown"));
 	}
+	
 	
 	/**
 	 * @author skallesh
