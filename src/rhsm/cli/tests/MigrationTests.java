@@ -371,7 +371,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// execute rhn-migrate-classic-to-rhsm with options
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,regUsername,regPassword,regOrg,serviceLevelIndex);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,regUsername,regPassword,regOrg,null, serviceLevelIndex);
 		
 		// get a map of the productid.js file after we attempt migration
 		Map<String,List<String>> productIdRepoMapAfterMigration = clienttasks.getProductIdToReposMap();
@@ -645,7 +645,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 		
 		// execute rhn-migrate-classic-to-rhsm with options
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,regUsername,regPassword,regOrg,null);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,regUsername,regPassword,regOrg,null, null);
 		
 		// assert that traffic to RHSM went through the proxy (unless testing --no-proxy)
 		proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
@@ -1032,7 +1032,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(rhnChannelsConsumed.containsAll(rhnChannelsToAdd), "All of the RHN Classic channels added appear to be consumed.");
 
 		// execute rhn-migrate-classic-to-rhsm and assert the results
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername, sm_rhnPassword,regUsername,regPassword,regOrg,null);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername, sm_rhnPassword,regUsername,regPassword,regOrg,null, null);
 		String expectedMsg = "You are subscribed to more than one jbappplatform channel.  This script does not support that configuration.  Exiting.";
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" when consuming RHN Channels for multiple versions of JBEAP contains message: "+expectedMsg);	
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" when consuming RHN Channels for multiple versions of JBEAP "+rhnChannelsToAdd);
@@ -1058,7 +1058,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		String regUsername=null, regPassword=null, regOrg=null;
 		if (!sm_serverType.equals(CandlepinType.hosted)) {regUsername="foo"; regPassword="bar";}
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",regUsername,regPassword,regOrg,null);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",regUsername,regPassword,regOrg,null, null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' with invalid credentials.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to connect to certificate server.  See "+clienttasks.rhsmLogFile+" for more details.", "The expected stdout result from call to "+rhnMigrateTool+" with invalid credentials.");		// valid prior to bug fix 789008
 		String expectedStdout = "Unable to connect to certificate server: "+servertasks.invalidCredentialsMsg()+".  See "+clienttasks.rhsmLogFile+" for more details.";
@@ -1074,7 +1074,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithInvalidRhnCredentials_Test() {
 		if (sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server NOT be a hosted RHN Classic system.");
 		clienttasks.unregister(null,null,null);
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",sm_clientUsername,sm_clientPassword,sm_clientOrg,null);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",sm_clientUsername,sm_clientPassword,sm_clientOrg,null, null);
 		String expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid rhn credentials and valid subscription-manager credentials ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' with invalid credentials.");
@@ -1099,7 +1099,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			regOrg = sm_clientOrg;
 		}
 		
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,regUsername,regPassword,regOrg,null);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,regUsername,regPassword,regOrg,null, null);
 		String expectedStdout = "Unable to locate SystemId file. Is this system registered?";
 		expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";	// changed to this value by subscription-manager commit 53c7f0745d1857cd5e1e080e06d577e67e76ecdd for the benefit of unit testing on Fedora
 		
@@ -1127,7 +1127,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithNoAutoAndServiceLevel_Test() {
 		clienttasks.unregister(null,null,null);
 		
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm("--no-auto --servicelevel=foo", sm_rhnUsername, sm_rhnPassword,null,null,null,null);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm("--no-auto --servicelevel=foo", sm_rhnUsername, sm_rhnPassword,null,null,null,null, null);
 		String expectedStdout = "The --servicelevel and --no-auto options cannot be used together.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "Stdout from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
@@ -1145,9 +1145,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult;
 		if (isCurrentlyConfiguredServerTypeHosted()) {
 			// note that the validity of the username and password really do not matter for this test
-			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,null,null,null,null);
+			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,null,null,null,null, null);
 		} else {
-			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,sm_clientUsername,sm_clientPassword,sm_clientOrg,null);
+			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,sm_clientUsername,sm_clientPassword,sm_clientOrg,null, null);
 		}
 		String expectedStdout;
 		expectedStdout = "This machine appears to be already registered to Certificate-based RHN.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 847380
@@ -1192,7 +1192,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// Step 6: attempt to run rhn-migrate-classic-to-rhsm should fail with a 'certificate verify failed' error
 		SSHCommandResult sshCommandResult;
-		sshCommandResult = executeRhnMigrateClassicToRhsm("--serverurl="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null);
+		sshCommandResult = executeRhnMigrateClassicToRhsm("--serverurl="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
 		String expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from a call to '"+rhnMigrateTool+"' with a man-in-the-middle attacker should be: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The expected exitcode from a call to '"+rhnMigrateTool+"' with a man-in-the-middle attacker: "+expectedStdout);
@@ -1214,7 +1214,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		deleteManInTheMiddleAttackerFromIptables();
 		
 		// Step 8: attempt to run rhn-migrate-classic-to-rhsm should now pass
-		sshCommandResult = executeRhnMigrateClassicToRhsm("--serverurl="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null);
+		sshCommandResult = executeRhnMigrateClassicToRhsm("--serverurl="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after the man-in-the-middle attacker is removed.");
 		Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
 		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
@@ -1243,6 +1243,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 863428 - Migration failed with message Organization A has more than one environment. https://github.com/RedHatQE/rhsm-qe/issues/174
 	// TODO Bug 866579 - rhn-migrate-classic-to-rhsm leaves system unregistered when a non-existant environment is specified/mistyped https://github.com/RedHatQE/rhsm-qe/issues/175
 	// TODO Bug 881952 - ssl.SSLError: The read operation timed out (during large rhn-migrate-classic-to-rhsm) https://github.com/RedHatQE/rhsm-qe/issues/176
+	// TODO Bug 967863 - subscription-manager-migration package should depend on subscription-manager-migration-data
 	
 	// Configuration methods ***********************************************************************
 	
@@ -1656,10 +1657,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	 * @param regUsername - enter at the prompt for System Engine Username (will be used for subscription-manager register credentials)
 	 * @param regPassword - enter at the prompt for System Engine Password (will be used for subscription-manager register credentials)
 	 * @param regOrg - enter at the prompt for Org (will be used for subscription-manager register credentials)
+	 * @param regEnv - enter at the prompt for Environment (will be used for subscription-manager register credentials)
 	 * @param serviceLevelIndex - index number to enter at the prompt for choosing servicelevel
 	 * @return
 	 */
-	protected SSHCommandResult executeRhnMigrateClassicToRhsm(String options, String rhnUsername, String rhnPassword, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex) {
+	protected SSHCommandResult executeRhnMigrateClassicToRhsm(String options, String rhnUsername, String rhnPassword, String regUsername, String regPassword, String regOrg, String regEnv, Integer serviceLevelIndex) {
 
 		// 8/4/2012 new behavior...
 		// the migration tool will always prompt rhn credentials to migrate the system "from"
@@ -1678,7 +1680,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (regPassword!=null && regPassword.isEmpty())		regPassword	= String.format("\"%s\"", regPassword);
 		if (regOrg!=null && regOrg.contains(" ")) 			regOrg		= String.format("\"%s\"", regOrg);
 		if (regOrg!=null && regOrg.isEmpty())				regOrg		= String.format("\"%s\"", regOrg);
-		String command = String.format("rhn-migrate-classic-to-rhsm.tcl %s %s %s %s %s %s %s", options, rhnUsername, rhnPassword, regUsername, regPassword, regOrg, serviceLevelIndex);
+		if (regEnv!=null && regEnv.contains(" ")) 			regEnv		= String.format("\"%s\"", regEnv);
+		if (regEnv!=null && regEnv.isEmpty())				regEnv		= String.format("\"%s\"", regEnv);
+		String command = String.format("rhn-migrate-classic-to-rhsm.tcl %s %s %s %s %s %s %s %s", options, rhnUsername, rhnPassword, regUsername, regPassword, regOrg, regEnv, serviceLevelIndex);
 		return client.runCommandAndWait(command);
 	}
 
@@ -2018,6 +2022,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA",				regUsername,	regPassword,	regOrg,	noServiceLevelIndex,	""}));	
 		}
 		
+		// test --org as a command line option
+		if (regOrg!=null) {
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"849644","877331"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto --org="+regOrg,			regUsername,	regPassword,	null,	null,	defaultServiceLevel}));
+		}
 		
 		// when regOrg is not null, add bug BlockedByBzBug 849483 to all rows
 		if (regOrg!=null) for (List<Object> l : ll) {

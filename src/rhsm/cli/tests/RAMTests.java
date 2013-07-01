@@ -93,7 +93,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify healing of partially subscribed Ram/socket based subscription", 
-			groups = { "RamSocketSubscription","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
+			groups = { "RamSocketSubscription","blockedByBug-907638"}, enabled = true)
 	public void HealingPartialRamSocketSubscription() throws JSONException,Exception {
 		factsMap.put("memory.memtotal", String.valueOf(value*10));
 		Integer sockets = 4;
@@ -154,9 +154,10 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify Auto Heal for Ram subscription .", 
-			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
+			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638"}, enabled = true)
 	public void AutoHealRamBasedSubscription() throws JSONException,Exception {
 		int healFrequency=2;
+		clienttasks.auto_heal(null, true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -167,7 +168,6 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 			if(installed.productName.contains("RAM")){
 				Assert.assertEquals(installed.status.trim(), "Subscribed");
 		}}
-		
 		
 	}
 	

@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
-<suite name="SM GUI TestSuite">
+<suite name="SM GUI Acceptance TestSuite">
 
   <!-- the hudson.groovy script already includes these listeners
        <listeners>
@@ -11,8 +11,9 @@
   -->
 
 
-  <!-- GUI TESTS -->
+  <!-- GUI ACCEPTANCE TESTS -->
 
+  <!-- OLD ACCEPTANCE TESTS
   <test name="GUI: Acceptance">
     <packages>
       <package name="rhsm.gui.tests" />
@@ -26,5 +27,151 @@
       </run>
     </groups>
   </test>
+  -->
+
+  <test name="GUI: Registration">
+    <packages>
+      <package name="rhsm.base" />
+    </packages>
+    <classes>
+      <class name="rhsm.gui.tests.register_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="acceptance"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Subscribe/Unsubscribe">
+    <packages>
+      <package name="rhsm.base" />
+    </packages>
+    <classes>
+      <class name="rhsm.gui.tests.subscribe_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="acceptance"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Autosubscribe">
+    <packages>
+      <package name="rhsm.base" />
+      <package name="rhsm.cli.tests" />
+    </packages>
+    <classes>
+      <class name="rhsm.gui.tests.autosubscribe_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="acceptance"/>
+        <include name="ComplianceTests" />
+        <exclude name="cli.tests" />
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Facts">
+    <packages>
+      <package name="rhsm.base" />
+    </packages>
+    <classes>
+      <class name="rhsm.gui.tests.facts_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="acceptance"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <!-- NOT YET USED IN ACCEPTANCE SUITE 
+
+  <test name="GUI: Proxy">
+    <packages>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
+    </packages>
+    <groups>
+      <run>
+        <include name="proxy"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Interop">
+    <packages>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
+    </packages>
+    <groups>
+      <run>
+        <include name="acceptance"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Firstboot">
+    <packages>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
+    </packages>
+    <groups>
+      <run>
+        <include name="acceptance"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Import">
+    <packages>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
+    </packages>
+    <groups>
+      <run>
+        <include name="acceptance"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: System">
+    <packages>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
+    </packages>
+    <groups>
+      <run>
+        <include name="acceptance"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+  
+  -->
 
 </suite>

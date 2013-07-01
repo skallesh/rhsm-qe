@@ -954,6 +954,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			options.add("-s SERVICELEVEL, --servicelevel=SERVICELEVEL");
 			options.add("--serverurl=SERVERURL");
 			options.add("--no-proxy");	// added by Bug 915847 - rhn-migrate-classic-to-rhsm fails when used with a proxy with an internal SAM
+			options.add("--org=ORG");					// added by Bug 877331 - missing --org --environment arguments for migration script
+			options.add("--environment=ENVIRONMENT");	// added by Bug 877331 - missing --org --environment arguments for migration script
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();

@@ -1,5 +1,5 @@
 (comment
-(ns rhsm.gui.tests.test-tests
+(ns rhsm.gui.tests.test_tests
   (:use [test-clj.testng :only (gen-class-testng)]))
 
 (defn ^{:test {} } faketest [_]

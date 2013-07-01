@@ -12,9 +12,10 @@ set rhnPassword  [lindex $argv 2]
 set regUsername  [lindex $argv 3]
 set regPassword  [lindex $argv 4]
 set regOrg       [lindex $argv 5]
-set slaIndex     [lindex $argv 6]
-if {$argc != 7} {
-  puts "Usage: ${argv0} ${tool}-options rhnUsername rhnPassword regUsername regPassword regOrg slaIndex"
+set regEnv       [lindex $argv 6]
+set slaIndex     [lindex $argv 7]
+if {$argc != 8} {
+  puts "Usage: ${argv0} ${tool}-options rhnUsername rhnPassword regUsername regPassword regOrg regEnv slaIndex"
   puts "(pass \"null\" for argument values that you do not expect $tool to interactively prompt for)"
   exit -1
 }
@@ -26,6 +27,7 @@ if {$argc != 7} {
 #puts regUsername=$regUsername
 #puts regPassword=$regPassword
 #puts regOrg=$regOrg
+#puts regEnv=$regEnv
 #puts slaIndex=$slaIndex
 
 # launch rhn-migrate-classic-to-rhsm with options
@@ -58,6 +60,10 @@ if {$regUsername != "null"} {
 if {$regOrg != "null"} {
   set prompt "Org:";
   expect $prompt {send "${regOrg}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+}
+if {$regEnv != "null"} {
+  set prompt "Environment:";
+  expect $prompt {send "${regEnv}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
 if {$slaIndex != "null"} {
   set prompt "Please select a service level agreement for this system.";
