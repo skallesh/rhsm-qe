@@ -625,7 +625,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(actualPostHooks.contains(expectedPostHook),"The plugins listhooks report expected post_facts_collection hook '"+expectedPostHook+"'.");
 	}
 	@Test(	description="execute subscription-manager modules and verify the expected ProductIdInstallTestPlugin hooks are called",
-			groups={"blockedByBug-859197", "blockedByBug-922871", "blockedByBug-922882"},
+			groups={"blockedByBug-859197", "blockedByBug-922871"/*, "blockedByBug-922882"*/},
 			priority=630, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test() {
@@ -706,10 +706,21 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	// TODO ProductIdRemoveTestPlugin Tests ***************************************************
 	// CURRENTLY BLOCKED BY BUGZILLA 922882
 	@Test(	description="enable ProductIdRemoveTestPlugin and assert the plugins list reports enablement",
-			groups={"blockedByBug-922882"},
+			groups={/*"blockedByBug-922882"*/},
 			priority=710, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListWithEnabledProductIdRemoveTestPlugin_Test() {
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "922882"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			// remove the HA package that was installed by prior test verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test
+			clienttasks.yumRemovePackage(sm_haPackages.get(0));	// yum -y remove ccs
+			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
+		
+		
 		Assert.fail("This test will be implemented after RFE bug 922882 is implemented.");
 	}
 	
