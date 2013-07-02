@@ -574,6 +574,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (String rhnChannelConsumed : rhnChannelsConsumed) {
 			if (channelsToProductCertFilenamesMap.containsKey(rhnChannelConsumed)) {
 				String productId = MigrationDataTests.getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnChannelConsumed));
+				
+				// special case (see RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test)
+				if (clienttasks.releasever.equals("5Client")) {
+					String productIdForDesktop = "68";
+					String productIdForWorkstation = "71";
+					if (productId.equals(productIdForDesktop)) {
+						log.info("Encountered a special case for migration of a 5Client system from RHN Classic to RHSM...");
+						log.info("Red Hat Enterprise Linux Desktop (productId=68) corresponds to the base RHN Channel (rhel-ARCH-client-5) for a 5Client system where ARCH=i386,x86_64.");
+						log.info("Red Hat Enterprise Linux Workstation (productId=71) corresponds to child RHN Channel (rhel-ARCH-client-workstation-5) for a 5Client system where ARCH=i386,x86_64.");	
+						log.info("After migrating from RHN Classic to RHSM, these two product certs should not be installed at the same time; Workstation should prevail.");
+						if (productIdRepoMapAfterMigration.containsKey(productIdForWorkstation)) {
+							Assert.assertTrue(!productIdRepoMapAfterMigration.containsKey(productId), "The '"+clienttasks.productIdJsonFile+"' database should NOT contain an entry for productId '"+productId+"' which was migrated for consumption of Classic RHN Channel '"+rhnChannelConsumed+"' when Workstation channels for product '"+productIdForWorkstation+"' have also been migrated (Workstation wins).");
+							continue;
+						}
+					}
+				}
+				
 				Assert.assertTrue(productIdRepoMapAfterMigration.containsKey(productId), "The '"+clienttasks.productIdJsonFile+"' database contains an entry for productId '"+productId+"' which was migrated for consumption of Classic RHN Channel '"+rhnChannelConsumed+"'.");
 				Assert.assertTrue(productIdRepoMapAfterMigration.get(productId).contains(rhnChannelConsumed), "The '"+clienttasks.productIdJsonFile+"' database entry for productId '"+productId+"' contains Classic RHN Channel/Repo '"+rhnChannelConsumed+"'.");
 			}
@@ -744,7 +761,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="migrating a RHEL5 Client - Desktop versus Workstation",
-			groups={"blockedByBug-786257","blockedByBug-853233","RhnMigrateClassicToRhsm_Test"},
+			groups={"blockedByBug-786257","blockedByBug-853233","RhnMigrateClassicToRhsm_Test","AcceptanceTests"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() throws JSONException {
@@ -752,7 +769,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		log.info("Red Hat Enterprise Linux Desktop (productId=68) corresponds to the base RHN Channel (rhel-ARCH-client-5) for a 5Client system where ARCH=i386,x86_64.");
 		log.info("Red Hat Enterprise Linux Workstation (productId=71) corresponds to child RHN Channel (rhel-ARCH-client-workstation-5) for a 5Client system where ARCH=i386,x86_64.");	
-		log.info("After migrating from RHN Classic to RHSM, these two product certs should not be installed at the same time.");
+		log.info("After migrating from RHN Classic to RHSM, these two product certs should not be installed at the same time; Workstation shoul prevail.");
 
 		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
 		String regUsername=null, regPassword=null, regOrg=null;
