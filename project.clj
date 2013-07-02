@@ -61,7 +61,6 @@
       (require :reload-all '[rhsm.gui.tests.autosubscribe_tests :as atest])
       (require :reload-all '[rhsm.gui.tests.firstboot_tests :as fbtest])
       (require :reload-all '[rhsm.gui.tests.facts_tests :as ftest])
-      (require :reload-all '[rhsm.gui.tests.acceptance_tests :as actest])
       (require :reload-all '[rhsm.gui.tests.import_tests :as itest])
       (require :reload-all '[rhsm.gui.tests.system_tests :as systest])
 
@@ -81,4 +80,5 @@
 
   ;not used
   (require :reload-all '[rhsm.gui.tests.subscription-assistant-tests :as satest])
+  (require :reload-all '[rhsm.gui.tests.acceptance_tests :as actest])
 )
