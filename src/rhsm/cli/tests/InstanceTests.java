@@ -120,7 +120,11 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		if (systemIsGuest) {
 			
 			// virtual systems -----------------------------------------------------------------------------------
-			// virt guests will be allowed to consume 1 entitlement from the instance based pool and be compliant regardless of sockets
+
+			// virtual systems will be allowed to consume 1 entitlement from the instance based pool and be compliant
+			// regardless of sockets (this effectively satisfies the "either-or" behavior when a virtual system
+			// consumes from the instance based pool - the quantity consumed decrements by one)
+
 			clienttasks.subscribe(false,null,pool.poolId,null,null,"1",null,null,null,null,null);
 			
 			// assert the installed provided products are compliant
@@ -165,6 +169,11 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		} else {
 			
 			// physical systems -----------------------------------------------------------------------------------
+			
+			// physical systems must consume entitlements from the instance based pool in quantities that are evenly
+			// divisible by the instance_multiplier.  Moreover, sockets matter for compliance.  In addition, when a
+			// physical system consumes from the instance based pool, a subpool with unlimited quantity available only
+			// to the guests on this physical system will be generated.
 			
 			// start by attempting to subscribe in quantities that are NOT evenly divisible by the instance_multiplier
 			for (int qty=0; qty<=poolInstanceMultiplier+1; qty++) {
