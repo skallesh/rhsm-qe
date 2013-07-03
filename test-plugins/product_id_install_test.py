@@ -44,12 +44,13 @@ class ProductIdInstallTestPlugin(SubManPlugin):
         conduit.log.info("Running post_product_id_install_hook: %s product_ids were just installed" % len(conduit.product_list))
 
         # print out the product cert list
-        #for product_cert in conduit.product_list:
-        #    print "product_cert ", product_cert
-        #    print "dir(product_cert) ", dir(product_cert)
-        #    print "products ", product_cert.products
-        #    print "products length", len(product_cert.products)
-        #    print product_cert.products[0]
-        #    print dir(product_cert.products[0])
-        #    #print product_cert.products[0]['id']
+        for product_cert in conduit.product_list:
+            #print "product_cert ", product_cert
+            #print "dir(product_cert) ", dir(product_cert)
+            #print "products ", product_cert.products
+            #print "products length", len(product_cert.products)
+            #print product_cert.products[0]
+            #print dir(product_cert.products[0])
+            for product in product_cert.products:
+                conduit.log.info("Running post_product_id_install_hook: product_id %s was just installed" % product.id)
         
