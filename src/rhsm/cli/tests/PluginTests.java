@@ -631,9 +631,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	public void verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test() {
 		removeRhsmLog();
 		
-		// register and get the current installed product list
+		// register
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
-		List<ProductCert> installedProducts = clienttasks.getCurrentProductCerts();
 		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test...";
@@ -666,6 +665,12 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			if (clienttasks.isPackageInstalled(haPackage)) clienttasks.yumRemovePackage(haPackage);
 		}
 		InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+		if (haInstalledProduct!=null) {
+			ProductCert haInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentProductCerts());
+			log.warning("Manually removing installed High Availability product cert (you are probably running a RHEL5 client)...");
+			client.runCommandAndWait("rm -f "+haInstalledProductCert.file.getPath());
+			haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+		}
 		Assert.assertNull(haInstalledProduct, "The High Availability product id '"+HighAvailabilityTests.haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
 		
 		// subscribe to the High Availability subscription and install an HA package
@@ -696,8 +701,11 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 				"Running pre_product_id_install_hook: yum product-id plugin is about to install a product cert",
 				"Running post_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin",
 				"Running post_product_id_install_hook: yum product-id plugin just installed a product cert",
-				"Running post_product_id_install_hook: 1 product_ids were just installed",
+				//"Running post_product_id_install_hook: 1 product_ids were just installed",	// probably correct, but not necessary to verify post_product_id_install_hook was called
+				"Running post_product_id_install_hook: product_id "+HighAvailabilityTests.haProductId+" was just installed",
 				"");
+		// Product Name:   Red Hat Enterprise Linux High Availability (for RHEL Server)
+		// Product ID:     83
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
 				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);	
 	}
