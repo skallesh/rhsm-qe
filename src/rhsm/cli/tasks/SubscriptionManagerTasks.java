@@ -3780,6 +3780,15 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		String stdoutMessage;
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "981689"; // 'SubscribeCommand' object has no attribute 'sorter'
+		boolean invokeWorkaroundWhileBugIsOpen = true;		
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("All tests that attempt to subscribe are blockedByBug '"+bugId+"'.");
+		}
+		// END OF WORKAROUND
+		
 		// just return the result for the following cases:
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed") ||	// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
 			sshCommandResult.getStdout().startsWith("No entitlements are available") ||			// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.   (Bug 719743)
