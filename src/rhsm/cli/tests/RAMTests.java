@@ -154,7 +154,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify Auto Heal for Ram subscription .", 
-			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638"}, enabled = true)
+			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638","blockedByBug-976867"}, enabled = true)
 	public void AutoHealRamBasedSubscription() throws JSONException,Exception {
 		int healFrequency=2;
 		clienttasks.auto_heal(null, true, null, null, null, null);
