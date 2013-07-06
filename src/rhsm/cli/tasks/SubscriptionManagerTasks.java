@@ -3750,7 +3750,21 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "981689"; // 'SubscribeCommand' object has no attribute 'sorter'
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		if (sshCommandResult.getStderr().trim().equals("'SubscribeCommand' object has no attribute 'sorter'") ||
+			sshCommandResult.getStderr().trim().equals("'AttachCommand' object has no attribute 'sorter'")	) {
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("All tests that attempt to subscribe are blockedByBug '"+bugId+"'.");
+			}
+		}
+		// END OF WORKAROUND
+		
+		return sshCommandResult;
 	}
 
 	/**
@@ -3779,15 +3793,6 @@ public class SubscriptionManagerTasks {
 
 		// assert results...
 		String stdoutMessage;
-		
-		// TEMPORARY WORKAROUND FOR BUG
-		String bugId = "981689"; // 'SubscribeCommand' object has no attribute 'sorter'
-		boolean invokeWorkaroundWhileBugIsOpen = true;		
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			throw new SkipException("All tests that attempt to subscribe are blockedByBug '"+bugId+"'.");
-		}
-		// END OF WORKAROUND
 		
 		// just return the result for the following cases:
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed") ||	// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.

@@ -1012,10 +1012,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe and attach can be used interchangably",
-			groups={"blockedByBug-874804"},
+			groups={"blockedByBug-874804","blockedByBug-981689"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttachDeprecatesSubscribe_Test() throws Exception {
+	public void AttachDeprecatedSubscribe_Test() throws Exception {
 		SSHCommandResult result = client.runCommandAndWait(clienttasks.command+" --help");
 		Assert.assertContainsMatch(result.getStdout(), "^\\s*subscribe\\s+Deprecated, see attach$");
 		
