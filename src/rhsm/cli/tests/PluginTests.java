@@ -723,7 +723,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// remove the HA package that was installed by prior test verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test
-			clienttasks.yumRemovePackage(sm_haPackages.get(0));	// yum -y remove ccs
+			if (!sm_haPackages.isEmpty()) clienttasks.yumRemovePackage(sm_haPackages.get(0));	// yum -y remove ccs
 			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
 		}
 		// END OF WORKAROUND

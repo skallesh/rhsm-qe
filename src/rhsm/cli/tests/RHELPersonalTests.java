@@ -696,7 +696,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			log.info("Register client1 under username '"+username+"' as a person and find the personal subscription PoolId with ProductId '"+personProductId+"'...");
 			client1tasks.register(username, password, owner, null, ConsumerType.person, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
 			SubscriptionPool personalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAvailableSubscriptionPools());
-			Assert.assertNotNull(personalPool,"Personal Subscription with ProductId '"+personProductId+"' (PoolId="+personalPool.poolId+") is available to user '"+username+"' registered as a person.");
+			Assert.assertNotNull(personalPool,"Personal Subscription with ProductId '"+personProductId+"' (pool="+personalPool+") is available to user '"+username+"' registered as a person.");
 			
 			log.info("Now register client1 under username '"+username+"' as a system and assert that personal pool can NOT be subscribed to...");
 			client1tasks.register(username, password, owner, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
