@@ -142,8 +142,7 @@
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-909294"
                        "blockedByBug-908954"
-                       "blockedByBug-839772"
-                       "blockedByBug-982370"]}}
+                       "blockedByBug-839772"]}}
   check_available_releases
   "Checks that all avaiable releases are shown in the GUI properly."
   [_]
