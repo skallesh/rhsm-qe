@@ -444,7 +444,7 @@
 
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-918617"]
-              :priority (int 10)}}
+              :priority (int -2)}}
   subscribe_check_syslog
   "Asserts that subscribe events are logged in the syslog."
   [_]
@@ -460,7 +460,7 @@
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-918617"]
               :dependsOnMethods ["subscribe_check_syslog"]
-              :priority (int 20)}}
+              :priority (int -1)}}
   unsubscribe_check_syslog
   "Asserts that unsubscribe events are logged in the syslog."
   [_]
