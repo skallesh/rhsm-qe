@@ -179,7 +179,7 @@
                          :installed-view
                          index 2)
         expected (@productmap product)
-        rhel5?   (= :rhel5 (get-release))
+        rhel5?   (= "RHEL5" (get-release))
         boxarch (trim (:stdout
                        (run-command
                         (str

@@ -82,7 +82,7 @@
             (ui waittillwindownotexist :main-window 30))))
       (sleep 1000))
   ([]
-     (if (= :rhel7 (get-release))
+     (if (= "RHEL7" (get-release))
        (kill-app false) ;; force quitting on rhel7 destroys ldtp
        (kill-app true))))
 
