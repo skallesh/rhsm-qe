@@ -16,7 +16,8 @@
             BeforeGroups
             Test
             DataProvider
-            AfterClass]))
+            AfterClass]
+            org.testng.SkipException))
 
 (def ldtpd-log "/var/log/ldtpd/ldtpd.log")
 (def rhsm-log "/var/log/rhsm/rhsm.log")
@@ -38,13 +39,14 @@
   check_libglade_warnings
   "Asserts that the libglade-WARNINGs are corrected."
   [_]
-  (let [output (get-logging @clientcmd
-                                  ldtpd-log
-                                  "check_libglade_warnings"
-                                  "libglade-WARNING"
-                                  (tasks/start-app))]
-    (verify (not (substring? "libglade-WARNING" output))))
-  (tasks/kill-app))
+  (try
+    (let [output (get-logging @clientcmd
+                              ldtpd-log
+                              "check_libglade_warnings"
+                              "libglade-WARNING"
+                              (tasks/start-app))]
+     (verify (not (substring? "libglade-WARNING" output))))
+   (finally (tasks/kill-app))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-909823"]}}
@@ -140,15 +142,22 @@
   [_]
   (try
     (tasks/restart-app)
+    (tasks/ui click :online-documentation)
+    (if (bool (tasks/ui waittillwindowexist "Error" 10))
+      (do (tasks/ui click "Error" "OK")
+          (tasks/ui waittillwindowexist "Preferred Applications" 10)
+          (tasks/ui click "Preferred Applications" "Close")
+          (throw (SkipException. (str "Firefox does not exist on this machine"))))
+      (tasks/ui closewindow :firefox-help-window))
     (let [output (get-logging @clientcmd
-                            ldtpd-log
-                            "check_online_documentation"
-                            nil
-                            (tasks/ui click :online-documentation)
-                            (tasks/ui waittillwindowexist :firefox-help-window 10))]
-       (verify (bool (tasks/ui guiexist :firefox-help-window)))
-       (verify (not (substring? "Traceback" output))))
-    (finally    (tasks/ui closewindow :firefox-help-window)
+                              ldtpd-log
+                              "check_online_documentation"
+                              nil
+                              (tasks/ui click :online-documentation)
+                              (tasks/ui waittillwindowexist :firefox-help-window 10))]
+      (verify (bool (tasks/ui guiexist :firefox-help-window)))
+      (verify (not (substring? "Traceback" output))))
+    (finally    (if (tasks/ui guiexist :firefox-help-window) (tasks/ui closewindow :firefox-help-window))
                 (tasks/restart-app))))
 
 (defn ^{Test {:groups ["system"
