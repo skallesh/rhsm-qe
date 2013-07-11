@@ -77,7 +77,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		
 		// subscribe the host to the data center pool
 		File hostEntitlementFile = clienttasks.subscribeToSubscriptionPool(pool);
-		EntitlementCert hostEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(hostEntitlementFile);
+		EntitlementCert hostEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(hostEntitlementFile); client.runCommandAndWait("rct cat-cert "+hostEntitlementFile);
 		
 		// in general the data center pool will not provide any engineering products
 		Assert.assertTrue(poolProvidedProductIds.isEmpty(), "In general, a data center product subscription will not provide any engineering products (productId= '"+pool.productId+"').  Asserting the providedProducts from the subscription is empty...");		
@@ -119,7 +119,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		
 		// subscribe the guest to the derived product subscription
 		File derivedEntitlementFile = clienttasks.subscribeToSubscriptionPool(derivedPool);
-		EntitlementCert derivedEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(derivedEntitlementFile);
+		EntitlementCert derivedEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(derivedEntitlementFile); client.runCommandAndWait("rct cat-cert "+derivedEntitlementFile);
 		
 		// assert all of the derived provided products are included in the entitlement
 		List<String> actualDerivedProvidedProductIds = new ArrayList<String>();
