@@ -1258,12 +1258,12 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			String productId = jsonProduct.getString("id");
 			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
 			
-			// skip instance_multiplier subscriptions (test coverage is handled by the InstanceTests.java) 
-			// loop through the attributes of this jsonProduct looking for the "instance_multiplier" attribute
+			// skip host_limited subscriptions (host_limited subscriptions are exercised by InstanceTests and DataCenterTests)
+			// loop through the attributes of this jsonProduct looking for the "host_limited" attribute
 			for (int j = 0; j < jsonAttributes.length(); j++) {
 				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
 				String attributeName = jsonAttribute.getString("name");
-				if (attributeName.equals("instance_multiplier")) {
+				if (attributeName.equals("host_limited")) {
 					continue LOOP_FOR_ALL_JSON_SUBSCRIPTIONS;
 				}
 			}
