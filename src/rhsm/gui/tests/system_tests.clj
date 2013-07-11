@@ -230,4 +230,20 @@
      (finally
       (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
 
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-923873"]}}
+  check_status_when_unregistered
+  "To verify that status in MyInstalledProducts icon color and product status are appropriately displayed when client is unregistered"
+  [_]
+  (tasks/kill-app)
+  (run-command "subscription-manager unregister")
+  (run-command "subscription-manager clean")
+  (tasks/start-app)
+  (verify (= 1 (tasks/ui guiexist :main-window "Keep your system*")))
+  (tasks/do-to-all-rows-in
+   :installed-view 2
+   (fn [subscription]
+     (try
+      (verify (= (tasks/ui getcellvalue :installed-view subscription 2) "Unknown"))))))
+
 (gen-class-testng)
