@@ -3271,7 +3271,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
-		clienttasks.auto_heal(null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null);
 
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,
@@ -3315,7 +3315,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String consumerId = clienttasks.getCurrentConsumerId();
-		clienttasks.auto_heal(null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);

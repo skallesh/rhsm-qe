@@ -82,29 +82,29 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the default results are equivalent to the show results
 		Assert.assertEquals(
-				clienttasks.auto_heal(null, null, null, null, null, null),
-				clienttasks.auto_heal(true, null, null, null, null, null),
+				clienttasks.autoheal(null, null, null, null, null, null).toString(),
+				clienttasks.autoheal(true, null, null, null, null, null).toString(),
 				"The default behavior should be --show.");
 		
 		// assert the disable option
-		clienttasks.auto_heal(null, null, true, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
 		// assert autoheal on the consumer
 		jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
-		Assert.assertTrue(!jsonConsumer.getBoolean("autoheal"), "As seen by the server, consumer '"+consumerId+"' auto-heal is off.");
-		result = clienttasks.auto_heal(true, null, null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "Auto-heal is currently disabled", "Stdout from the auto-heal --show.");
+		Assert.assertTrue(!jsonConsumer.getBoolean("autoheal"), "As seen by the server, consumer '"+consumerId+"' autoheal is off.");
+		result = clienttasks.autoheal(true, null, null, null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), "Auto-attach preference: disabled", "Stdout from the auto-attach --show.");
 		
 		// assert the enable option
-		clienttasks.auto_heal(null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null);
 		// assert autoheal on the consumer
 		jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
-		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "As seen by the server, consumer '"+consumerId+"' auto-heal is on.");
-		result = clienttasks.auto_heal(true, null, null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "Auto-heal is currently enabled", "Stdout from the auto-heal --show.");
+		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "As seen by the server, consumer '"+consumerId+"' autoheal is on.");
+		result = clienttasks.autoheal(true, null, null, null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), "Auto-attach preference: enabled", "Stdout from the auto-attach --show.");
 	}
 	
 	
-	@Test(	description="run autoheal module without being registered",
+	@Test(	description="run auto-attach module without being registered",
 			groups={"blockedByBug-976867"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -114,12 +114,12 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// assert the disable option
-		SSHCommandResult result = clienttasks.auto_heal_(null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.autoheal_(null, null, null, null, null, null);
 		
 		// assert that the default results are equivalent to the show results
 		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from auto-heal without being registered.");
-		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from auto-heal without being registered.");
-		Assert.assertEquals(result.getExitCode(),Integer.valueOf(255), "ExitCode from auto-heal without being registered.");
+		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from auto-attach without being registered.");
+		Assert.assertEquals(result.getExitCode(),Integer.valueOf(255), "ExitCode from auto-attach without being registered.");
 	}
 	
 	
