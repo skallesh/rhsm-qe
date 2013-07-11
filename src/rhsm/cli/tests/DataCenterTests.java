@@ -118,7 +118,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		// now subscribe to the derived subpool and we'll asserting the entitlement values come from the derived product and not the originating data center subscription
 		
 		// subscribe the guest to the derived product subscription
-		File derivedEntitlementFile = clienttasks.subscribeToSubscriptionPool(availablePoolsForDerivedProductId.get(0));
+		File derivedEntitlementFile = clienttasks.subscribeToSubscriptionPool(derivedPool);
 		EntitlementCert derivedEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(derivedEntitlementFile);
 		
 		// assert all of the derived provided products are included in the entitlement
