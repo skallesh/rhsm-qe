@@ -302,7 +302,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="Subscribed for Already subscribed Entitlement.",
 			groups={"blockedByBug-584137","blockedByBug-979492"},
-			dataProvider="getAvailableSubscriptionPoolsData",
+			// dataProvider="getAvailableSubscriptionPoolsData", TAKES TOO LONG AND RARELY REVEALS A BUG - changing to getRandomSubsetOfAvailableSubscriptionPoolsData
+			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41897)
 	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool) throws JSONException, Exception{
