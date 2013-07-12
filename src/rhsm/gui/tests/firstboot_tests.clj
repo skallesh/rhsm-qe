@@ -15,7 +15,10 @@
             BeforeClass
             BeforeGroups
             Test]
+            org.testng.SkipException
             [com.redhat.qe.auto.bugzilla BzChecker]))
+
+(def window-name "Choose Service")
 
 (defn start_firstboot []
   (tasks/start-firstboot)
@@ -33,7 +36,7 @@
       (verify (tasks/fbshowing? :register-now))))
   (tasks/ui click :register-now)
   (tasks/ui click :firstboot-forward)
-  (assert ( bool (tasks/ui guiexist :firstboot-window "Choose Service"))))
+  (assert ( bool (tasks/ui guiexist :firstboot-window window-name))))
 
 (defn kill_firstboot []
   (run-command "killall -9 firstboot")
@@ -53,6 +56,8 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
+  (if (= "5.7" (:version (get-release :true)))
+    (throw (SkipException. (str "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))))
   (verify (not (.isBugOpen (BzChecker/getInstance) "922806")))
   ;; new rhsm and classic have to be totally clean for this to run
   (run-command "subscription-manager clean")
@@ -153,7 +158,7 @@
   (tasks/ui click :firstboot-forward)
   (tasks/firstboot-register (@config :username) (@config :password))
   (tasks/ui click :firstboot-back)
-  (verify (tasks/fbshowing? :firstboot-window "Choose Service"))
+  (verify (tasks/fbshowing? :firstboot-window window-name))
   (let [output (:stdout (run-command "subscription-manager identity"))]
     ;; Functionality of back-button is limited to RHEL5. In RHEL6 its
     ;; behavior is different
@@ -222,7 +227,7 @@
   (tasks/ui click :firstboot-forward)
   (verify (tasks/fbshowing? :firstboot-window "Create User"))
   (tasks/ui click :firstboot-back)
-  (verify (tasks/fbshowing? :firstboot-window "Choose Service")))
+  (verify (tasks/fbshowing? :firstboot-window window-name)))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
