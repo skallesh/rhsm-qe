@@ -128,8 +128,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		sleep(1*60*1000);
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
-		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStdout();			
-		String expected_message="No entitlements are available from the pool with id '"+expiringPoolId+"'";
+		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStderr();			
+		String expected_message=" Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: 7/9/13 6:34 PM";
 		Assert.assertEquals(result, expected_message);
 		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
 		Assert.assertEquals(result, clienttasks.msg_ConsumerNotRegistered);
@@ -568,7 +568,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify the first system is unregistered when the second system is registered using consumerid of the first",
 			groups={"RegisterTwoClientsUsingSameConsumerId","blockedByBug-949990"},
-			enabled=true)
+			enabled=false)
 	public void RegisterTwoClientsUsingSameConsumerId() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
