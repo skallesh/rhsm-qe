@@ -128,7 +128,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=55702)
 //	@ImplementsNitrateTest(caseId={55702,55718})
 	public void EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test() throws JSONException {
-		if (true) throw new SkipException("Support for the RHELPersonalTests will be yanked in favor of new DataCenter SKUs.  These RHELPersonalTests are obsolete.  Reference: CLOSED WONTFIX Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1");
+		if (true) throw new SkipException("Support for the RHELPersonalTests was yanked in favor of new DataCenter SKUs.  These RHELPersonalTests are obsolete.  Reference: CLOSED WONTFIX Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1");
 //		if (!isServerOnPremises) throw new SkipException("Currently this test is designed only for on-premises.");	//TODO Make this work for IT too.  jsefler 8/12/2010 
 		if (client2tasks==null) throw new SkipException("These tests are designed to use a second client.");
 		if (username.equals(sm_serverAdminUsername)) throw new SkipException("This test requires that the client user ("+username+") is NOT "+sm_serverAdminUsername);
@@ -685,6 +685,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureSystemCannotSubscribeToPersonalPool_Test() throws JSONException {
+		if (true) throw new SkipException("Support for the RHELPersonalTests was yanked in favor of new DataCenter SKUs.  These RHELPersonalTests are obsolete.  Reference: CLOSED WONTFIX Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1");
 //		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
 				
 		for (int j=0; j<sm_personSubscriptionPoolProductData.length(); j++) {
