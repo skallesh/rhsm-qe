@@ -234,6 +234,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: DataCenter Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="DataCenterTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: ServiceLevel Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />

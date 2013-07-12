@@ -68,6 +68,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			.toLowerCase();
 	protected final String myEmptyCaCertFile = "/etc/rhsm/ca/myemptycert.pem";
 	protected Integer configuredHealFrequency = null;
+	protected Integer configuredCertFrequency = null;
 	protected String configuredHostname=null;
 	protected String factname="system.entitlements_valid";
 	protected String RemoteServerError="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
@@ -3296,7 +3297,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
-		clienttasks.auto_heal(null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null);
 
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,
@@ -3340,7 +3341,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String consumerId = clienttasks.getCurrentConsumerId();
-		clienttasks.auto_heal(null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
@@ -3804,20 +3805,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 
 	@BeforeClass(groups = "setup")
-	public void rememberConfiguredHealFrequency() {
-		if (clienttasks == null)
-			return;
+	public void rememberConfiguredFrequencies() {
+		if (clienttasks == null) return;
 		configuredHealFrequency = Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd","autoAttachInterval"));
+		configuredCertFrequency = Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd","certCheckInterval"));
 		configuredHostname=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server","hostname");
 	}
 	
 
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
 	@AfterClass(groups = "setup")
-	public void restoreConfiguredHealFrequency() {
-		if (clienttasks == null)
-			return;
-		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
+	public void restoreConfiguredFrequencies() {
+		if (clienttasks == null) return;
+		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, false,null);
 	}
 	
 	

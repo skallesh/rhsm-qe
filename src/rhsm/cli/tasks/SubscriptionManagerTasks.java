@@ -2954,10 +2954,10 @@ public class SubscriptionManagerTasks {
 	 * SSHCommand subscription-manager auto-heal [parameters] without asserting any results
 	 * @return SSHCommandResult stdout, stderr, exitCode
 	 */
-	public SSHCommandResult auto_heal_(Boolean show, Boolean enable, Boolean disable, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult autoheal_(Boolean show, Boolean enable, Boolean disable, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
-		String command = this.command;	command += " autoheal";
+		String command = this.command;	command += " auto-attach";		// command += " autoheal"; changed by Bug 976867
 		if (show!=null && show)			command += " --show";
 		if (enable!=null && enable)		command += " --enable";
 		if (disable!=null && disable)	command += " --disable";
@@ -2970,26 +2970,26 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * SSHCommand subscription-manager auto-heal [parameters]
+	 * SSHCommand subscription-manager auto-attach [parameters]
 	 * @return SSHCommandResult stdout, stderr, exitCode
 	 */
-	public SSHCommandResult auto_heal(Boolean show, Boolean enable, Boolean disable, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult autoheal(Boolean show, Boolean enable, Boolean disable, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = auto_heal_(show, enable, disable, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = autoheal_(show, enable, disable, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		
 		if (enable!=null) {
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Auto-heal is enabled").trim(),"Stdout from auto-heal --enable");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Auto-attach preference: enabled").trim(),"Stdout from auto-attach --enable");
 		}
 		if (disable!=null) {
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Auto-heal is disabled").trim(),"Stdout from auto-heal --disable");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Auto-attach preference: disabled").trim(),"Stdout from auto-attach --disable");
 		}
 		
 		// assert the exit code was a success
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the auto-heal command indicates a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the auto-attach command indicates a success.");
 		
-		return sshCommandResult; // from the auto-heal command
+		return sshCommandResult; // from the auto-attach command
 	}
 	
 	
@@ -3750,7 +3750,21 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "981689"; // 'SubscribeCommand' object has no attribute 'sorter'
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		if (sshCommandResult.getStderr().trim().equals("'SubscribeCommand' object has no attribute 'sorter'") ||
+			sshCommandResult.getStderr().trim().equals("'AttachCommand' object has no attribute 'sorter'")	) {
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("All tests that attempt to subscribe are blockedByBug '"+bugId+"'.");
+			}
+		}
+		// END OF WORKAROUND
+		
+		return sshCommandResult;
 	}
 
 	/**

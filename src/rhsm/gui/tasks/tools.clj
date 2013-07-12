@@ -3,7 +3,9 @@
                                            clientcmd
                                            cli-tasks)]
         [slingshot.slingshot :only [throw+ try+]]
-        [clojure.string :only (trim)])
+        [clojure.string :only (trim
+                               split
+                               join)])
   (:require [clojure.tools.logging :as log])
   (:import [com.redhat.qe.tools RemoteFileTasks]
                org.testng.SkipException
@@ -23,14 +25,22 @@
 
 (defn get-release
   "Returns a key representing the RHEL release on the client."
-  []
-  (let [release (:stdout (run-command "cat /etc/redhat-release"))
-        matcher (re-find #"release \d" release)]
-    (case matcher
-      "release 5" :rhel5
-      "release 6" :rhel6
-      "release 7" :rhel7
-      :unknown)))
+  ([verbose?]
+     (let [release (:stdout (run-command "cat /etc/redhat-release"))
+           fm (re-find #"release \d" release)
+           family (case fm
+                    "release 5" "RHEL5"
+                    "release 6" "RHEL6"
+                    "release 7" "RHEL7"
+                    :unknown)
+           variant (join " " (take-while #(not= "release" %) (drop 4 (split release #" "))))
+           version (re-find #"\d.\d+" release)]
+       (if verbose?
+         {:family family
+          :variant variant
+          :version version}
+         family)))
+  ([] (get-release false)))
 
 (defn sleep
   "Sleeps for a given ammount of miliseconds."

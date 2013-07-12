@@ -469,7 +469,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// assert sockets against the socketsCalcualtedUsingTopology
 		if (!assertedSockets) {
 			// determine the cpu_socket(s) value using the topology calculation
-			String socketsCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
+			client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu").getStdout().trim();
+			String socketsCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | sort | uniq | wc -l").getStdout().trim();
 			if (!client.getStderr().isEmpty()) log.warning(client.getStderr());
 			log.info("The cpu_socket(s) value calculated using the topology algorithm above is '"+socketsCalcualtedUsingTopology+"'.");
 
@@ -687,8 +688,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// assert cpuCores against the coresCalcualtedUsingTopology
 		if (!assertedCores) {
 			// determine the number of cores using the topology calculation
-			client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/core_siblings_list; done");
-			String coresCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/core_siblings_list; done | uniq | wc -l").getStdout().trim();
+			client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/thread_siblings_list; done");
+			String coresCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/thread_siblings_list; done | sort | uniq | wc -l").getStdout().trim();
 			if (!client.getStderr().isEmpty()) log.warning(client.getStderr());
 			// FIXME: This topology algorithm will fail (probably on s390x or ppc64) when the core_siblings_list contains individually disabled cores which would affect the uniq output which assumes a symmetric topology
 			log.info("The number of cores calculated using the topology algorithm above is '"+coresCalcualtedUsingTopology+"'.");

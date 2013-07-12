@@ -11,7 +11,7 @@
 (defn restart-vnc
   "function that restarts the vnc server"
   []
-  (if (= :rhel7 (get-release))
+  (if (= "RHEL7" (get-release))
     (do (run-command "systemctl restart vncserver@:2.service"))
     (do
       (run-command "service vncserver stop")
@@ -31,7 +31,7 @@
   "This function updates ldtpd on the client"
   [url]
   (when url
-    (if (= :rhel5 (get-release))
+    (if (= "RHEL5" (get-release))
       (let [path "/root/bin/ldtpd"]
         (run-and-assert (str "wget " url " -O " path))
         (run-and-assert (str "chmod +x " path))))))

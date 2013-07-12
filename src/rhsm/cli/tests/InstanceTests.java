@@ -120,7 +120,11 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		if (systemIsGuest) {
 			
 			// virtual systems -----------------------------------------------------------------------------------
-			// virt guests will be allowed to consume 1 entitlement from the instance based pool and be compliant regardless of sockets
+
+			// virtual systems will be allowed to consume 1 entitlement from the instance based pool and be compliant
+			// regardless of sockets (this effectively satisfies the "either-or" behavior when a virtual system
+			// consumes from the instance based pool - the quantity consumed decrements by one)
+
 			clienttasks.subscribe(false,null,pool.poolId,null,null,"1",null,null,null,null,null);
 			
 			// assert the installed provided products are compliant
@@ -165,6 +169,11 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		} else {
 			
 			// physical systems -----------------------------------------------------------------------------------
+			
+			// physical systems must consume entitlements from the instance based pool in quantities that are evenly
+			// divisible by the instance_multiplier.  Moreover, sockets matter for compliance.  In addition, when a
+			// physical system consumes from the instance based pool, a subpool with unlimited quantity available only
+			// to the guests on this physical system will be generated.
 			
 			// start by attempting to subscribe in quantities that are NOT evenly divisible by the instance_multiplier
 			for (int qty=0; qty<=poolInstanceMultiplier+1; qty++) {
@@ -240,7 +249,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			}
 			
 			// now we can assert that a host_limited subpool was generated from consumption of this physical pool and is only available to guests of this physical system
-			// first, let's flip the virt.is_guest to true and assert that the virtual guest subpool is not available since the virtUuid is not on the consumer's list of guestIds
+			// first, let's flip the virt.is_guest to true and assert that the virtual guest subpool is not (yet) available since the virtUuid is not on the host consumer's list of guestIds
 			// factsMap.clear(); // do not clear since it will already contain cpu.cpu_socket(s)
 			factsMap.put("virt.is_guest",String.valueOf(true));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
@@ -261,7 +270,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			// now the host_limited subpool for this virtual system should be available
 			availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", pool.productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 			availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("machineType", "Virtual", availableInstanceBasedSubscriptionPools);
-			Assert.assertTrue(!availableInstanceBasedSubscriptionPools.isEmpty(),"Host_limited Virtial subpool to instance based subscription '"+pool.subscriptionName+"' is available to its guest.");
+			Assert.assertTrue(!availableInstanceBasedSubscriptionPools.isEmpty(),"Host_limited Virtual subpool to instance based subscription '"+pool.subscriptionName+"' is available to its guest.");
 			Assert.assertEquals(availableInstanceBasedSubscriptionPools.size(),1,"Only one host_limited Virtual subpool to instance based subscription '"+pool.subscriptionName+"' is available to its guest.");
 			Assert.assertEquals(availableInstanceBasedSubscriptionPools.get(0).quantity,poolVirtLimit,"The quantity of entitlements from the host_limited Virtual subpool to instance based subscription '"+pool.subscriptionName+"' should be equal to the subscription's virt_limit '"+poolVirtLimit+"'.");
 		}

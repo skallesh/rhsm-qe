@@ -300,7 +300,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.add("remove");	// added by bug 874749
 		modules.add("plugins");	// added by https://engineering.redhat.com/trac/Entitlement/wiki/SubscriptionManagerPlugins
 		modules.add("status");
-		modules.add("autoheal");
+		modules.add("auto-attach");	//modules.add("autoheal"); changed by Bug 976867 - subscription-manager autoheal needs feedback and a review of options
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
 			Integer exitCode = smHelpCommand.contains("--help")?0:1;	// coverage for bug 906124; the usage statement permits only "--help" and therefore any differing option (including "-h") should return non-zero exit code
 			List <String> usages = new ArrayList<String>();
@@ -825,8 +825,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
-		// subscription-manager autoheal OPTIONS
-		module = "autoheal";
+		// subscription-manager auto-attach OPTIONS
+		module = "auto-attach";	//module = "autoheal";	// changed by Bug 976867 - subscription-manager autoheal needs feedback and a review of options
 		options.clear();
 		options.add("-h, --help");
 		options.add("--proxy=PROXY_URL");

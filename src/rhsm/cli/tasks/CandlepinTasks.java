@@ -2232,6 +2232,15 @@ schema generation failed
 		return true;
 	}
 	
+	public static boolean isPoolADataCenter (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		String value = (String) getPoolValue(authenticator,password,url,poolId,"derivedProductId");
+		
+		// the absence of a "derivedProductId" means this pool is NOT a data center pool
+		if (value==null) return false;
+		
+		return true;
+	}
+	
 	public static boolean isPoolProductConsumableByConsumerType (String authenticator, String password, String url, String poolId, ConsumerType consumerType) throws JSONException, Exception {
 		String value = getPoolProductAttributeValue(authenticator,password,url,poolId,"requires_consumer_type");
 		
@@ -2239,6 +2248,16 @@ schema generation failed
 		if (value==null) value = ConsumerType.system.toString();
 
 		return value.equalsIgnoreCase(consumerType.toString());
+	}
+	
+	public static String getPoolDerivedProductAttributeValue (String authenticator, String password, String url, String poolId, String derivedProductAttributeName) throws JSONException, Exception {
+
+		// get the pool for the authenticator
+		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
+		
+		// return the value for the named derivedProductAttribute
+		return getPoolDerivedProductAttributeValue(jsonPool,derivedProductAttributeName);
 	}
 	
 	public static String getPoolProductAttributeValue (String authenticator, String password, String url, String poolId, String productAttributeName) throws JSONException, Exception {
@@ -2251,6 +2270,26 @@ schema generation failed
 		return getPoolProductAttributeValue(jsonPool,productAttributeName);
 	}
 	
+	public static List<String> getPoolDerivedProvidedProductIds (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		List<String> derivedProvidedProductIds = new ArrayList<String>();
+		
+		// get the pool for the authenticator
+		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
+		
+		// loop through all of the derivedProvidedProducts for this jsonPool
+		JSONArray jsonDerivedProvidedProducts = jsonPool.getJSONArray("derivedProvidedProducts");
+		for (int j = 0; j < jsonDerivedProvidedProducts.length(); j++) {
+			JSONObject jsonProvidedProduct = (JSONObject) jsonDerivedProvidedProducts.get(j);
+			String productId = jsonProvidedProduct.getString("productId");
+			
+			// append the productId for this provided product
+			derivedProvidedProductIds.add(productId);
+		}
+		
+		// return the value for the named productAttribute
+		return derivedProvidedProductIds;
+	}
 	public static List<String> getPoolProvidedProductIds (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
 		List<String> providedProductIds = new ArrayList<String>();
 		
@@ -2314,6 +2353,47 @@ schema generation failed
 		
 		// return the value for the named json parameter
 		return getPoolValue(jsonPool,jsonName);
+	}
+	
+	/**
+	 * @param jsonPool
+	 * @param derivedProductAttributeName
+	 * @return the value of the pool's derivedProductAttribute with the name "derivedProductAttributeName".  null is returned when the derivedProductAttributeName is not found.  null can also be returned when the value for derivedProductAttributeName is actually null.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static String getPoolDerivedProductAttributeValue (JSONObject jsonPool, String derivedProductAttributeName) throws JSONException, Exception {
+		//    "derivedProductAttributes": [
+		//         {
+		//             "created": "2013-07-09T18:57:46.312+0000", 
+		//             "id": "8a90f8203fc4ca73013fc4cbed48045b", 
+		//             "name": "support_type", 
+		//             "productId": "awesomeos-server-basic-vdc", 
+		//             "updated": "2013-07-09T18:57:46.312+0000", 
+		//             "value": "Drive-Through"
+		//         }, 
+		//         {
+		//             "created": "2013-07-09T18:57:46.312+0000", 
+		//             "id": "8a90f8203fc4ca73013fc4cbed48045c", 
+		//             "name": "sockets", 
+		//             "productId": "awesomeos-server-basic-vdc", 
+		//             "updated": "2013-07-09T18:57:46.312+0000", 
+		//             "value": "2"
+		//         }
+		//    ]
+		String attributeValue = null;
+		JSONArray jsonAttributes = jsonPool.getJSONArray("derivedProductAttributes");
+		for (int j = 0; j < jsonAttributes.length(); j++) {
+			JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
+			if (jsonAttribute.getString("name").equals(derivedProductAttributeName)) {
+				if (jsonAttribute.isNull("value")) return null;	// the actual attribute value is null, return null
+				attributeValue = jsonAttribute.getString("value"); break;
+			}
+		}
+		if (attributeValue==null) {
+			log.finer("Pool id='"+jsonPool.getString("id")+"' does not have a derivedProductAttribute named '"+derivedProductAttributeName+"'.");
+		}
+		return attributeValue;
 	}
 	
 	/**
@@ -2543,12 +2623,7 @@ schema generation failed
 	 * @throws Exception
 	 */
 	public static Object getPoolValue (JSONObject jsonPool, String jsonName) throws JSONException, Exception {
-		String value = null;	// indicates that the pool does NOT have the "name" json parameter
-
-		// get the pool for the authenticator
-		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
-//		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
-	
+		if (!jsonPool.has(jsonName) || jsonPool.isNull(jsonName)) return null;	
 		return jsonPool.get(jsonName);
 	}
 	

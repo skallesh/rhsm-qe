@@ -52,7 +52,7 @@
 (defn subscribe_all
   "Subscribes to everything available"
   []
-  (tasks/search)
+  (allsearch)
   (tasks/do-to-all-rows-in
    :all-subscriptions-view 1
    (fn [subscription]
@@ -88,8 +88,23 @@
        {:keys [log-warning]} (log-warning))))
 
 (defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-924766"]
+              :dataProvider "subscribed"
+              :priority (int 100)}}
+  check_subscribed_virt_type
+  "Asserts that the virt type is displayed properly for all of 'My Subscriptions'"
+  [_ subscription]
+  (tasks/ui selecttab :my-subscriptions)
+  (tasks/skip-dropdown :my-subscriptions-view subscription)
+  (let [contract (tasks/ui gettextvalue :contract-number)
+        type (tasks/ui gettextvalue :support-type)
+        reference (get (get @contractlist subscription) contract)]
+    (verify (= type reference))))
+
+(defn ^{Test {:groups ["subscribe"
                        "acceptance"]
-              :dataProvider "subscribed"}}
+              :dataProvider "subscribed"
+              :priority (int 101)}}
   unsubscribe_each
   "Asserts that each subscripton can be unsubscribed from sucessfully."
   [_ subscription]
