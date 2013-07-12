@@ -24,8 +24,6 @@
 (def tmpCAcertpath "/tmp/CA-certs/")
 (def CAcertpath "/etc/rhsm/ca/")
 (def unregStatus "Keep your system up to date by regestering.")
-(def logtime "")
-(def newtime "")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
@@ -144,13 +142,8 @@
   [_]
   (try
     (tasks/restart-app)
-    (tasks/ui click :online-documentation)
-    (if (bool (tasks/ui waittillwindowexist "Error" 10))
-      (do (tasks/ui click "Error" "OK")
-          (tasks/ui waittillwindowexist "Preferred Applications" 10)
-          (tasks/ui click "Preferred Applications" "Close")
-          (throw (SkipException. (str "Firefox does not exist on this machine"))))
-      (tasks/ui closewindow :firefox-help-window))
+    (if (substring? "not installed" (:stdout (run-command "rpm -q firefox")))
+      (throw (SkipException. (str "Firefox does not exist on this machine"))))
     (let [output (get-logging @clientcmd
                               ldtpd-log
                               "check_online_documentation"
@@ -271,27 +264,25 @@
                                 (sleep 90000)))
           log-timestamp (re-find #"\d+:\d+:\d+" output)
           ;; The following steps add 4 hours as it is the default
-          ;; interval in conf file. The following step is comversion of time
+          ;; interval in conf file. The step which follows is comversion of time
           ;; formats as the logs have 24hrs time format and in the GUI it
           ;; 12hrs time format. The last step adds a zero if the time
           ;; is less than 10hrs which makes sting comparison easier
           new-time (+ 4 (read-string (first (clojure.string/split log-timestamp #":")))) 
           hours (if (> new-time 12) (- new-time 12) new-time)
-          compare-time (str (if ( < hours 10) (str "0" hours) hours)(re-find #":\d+:\d+" log-timestamp))]
-      (def logtime log-timestamp)
-      (def newtime compare-time))
-    (tasks/ui click :about)
-    (tasks/ui waittillwindowexist :about-dialog 10)
-    (verify ( = newtime (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check))))
-    (tasks/ui click :close-about-dialog)
-    (tasks/ui click :view-system-facts)
-    (tasks/ui waittillwindowexist :facts-dialog 10)
-    (verify (= logtime (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :update-time))))
-    (tasks/ui click :close-facts)
+         compare-time (str (if ( < hours 10) (str "0" hours) hours)(re-find #":\d+:\d+" log-timestamp))]
+      (tasks/ui click :about)
+      (tasks/ui waittillwindowexist :about-dialog 10)
+      (verify ( = new-time (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check))))
+      (tasks/ui click :close-about-dialog)
+      (tasks/ui click :view-system-facts)
+      (tasks/ui waittillwindowexist :facts-dialog 10)
+      (verify (= log-timestamp (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :update-time))))
+      (tasks/ui click :close-facts))
     (finally
-     (if-not (tasks/ui showing? :register-system) (tasks/unregister))
      (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
      (if (bool (tasks/ui guiexist :facts-dialog)) (tasks/ui click :close-facts))
+     (if-not (tasks/ui showing? :register-system) (tasks/unregister))
      (tasks/restart-app)
      ;; Worstcase scenario if service rhsmcertd is stopped we have to
      ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
