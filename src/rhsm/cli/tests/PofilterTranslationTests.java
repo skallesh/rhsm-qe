@@ -437,7 +437,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/es_ES/"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","No","%s: error: %s","General:"));
 			if (translationFile.getPath().contains("/te/"))		ignorableMsgIds.addAll(Arrays.asList("page 2"));
 			if (translationFile.getPath().contains("/pa/"))		ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
-			if (translationFile.getPath().contains("/fr/"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Architectures","Version","page 2"));
+			if (translationFile.getPath().contains("/fr/"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Arches","Architectures","Version","page 2"));
 			if (translationFile.getPath().contains("/it/"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","org id: %s","org ID: %s","Account","<b>Account:</b>","Account:              \\t%s","Account","<b>Arch:</b>","Arch:                 \\t%s","Arch:","Arch","Login:","No","Password:","Release: %s","Password: ","Server"));
 			if (translationFile.getPath().contains("/zh_TW/"))	ignorableMsgIds.addAll(Arrays.asList("Auto-attach"));
 			if (translationFile.getPath().contains("/zh_CN/"))	ignorableMsgIds.addAll(Arrays.asList("Section: %s, Name: %s"));
