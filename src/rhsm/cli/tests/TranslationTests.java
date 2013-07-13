@@ -464,7 +464,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			
 			// Bug 957195 - [or] bad translation for msgid "proxy URL in the form of proxy_hostname:proxy_port" 
 			if (translationFile.getPath().contains("/or/")) bugIds.add("957195");
-					
+			
+			// Bug 984203 - [de_DE] [es_ES] do not translate "subscription-manager-migration-data"
+			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("984203");
+			if (translationFile.getPath().contains("/de_DE/")) bugIds.add("984203");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
 		}
