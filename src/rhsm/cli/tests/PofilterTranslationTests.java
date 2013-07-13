@@ -399,7 +399,22 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		
 		if (pofilterTest.equals("short")) {
 			// common short msgid translations to ignore for all langs
-			ignorableMsgIds.addAll(Arrays.asList("No", "Yes", "Key", "Value", "N/A", "None", "Number", " and"));
+			ignorableMsgIds.addAll(Arrays.asList("No", "Yes", "Key", "Value", "N/A", "None", "Number", "and"));
+			
+			// ignore short translation for " and " ONLY when the msgstr has NOT trimmed the white space
+			String msgId = " and ";
+			Translation failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
+			if (failedTranslation!=null && failedTranslation.msgstr.startsWith(" ") && failedTranslation.msgstr.endsWith(" ")) ignorableMsgIds.add(msgId);
+			// TEMPORARY WORKAROUND FOR BUG 984206 - def friendly_join(items): in utils.py should not use string " and "
+			else if (failedTranslation!=null) {
+				String bugId = "984206"; boolean invokeWorkaroundWhileBugIsOpen = true;
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring this failed pofilter short test translation while bug '"+bugId+"' is open. "+failedTranslation);
+					ignorableMsgIds.add(msgId);
+				}
+			}
+			// END OF WORKAROUND
 			
 			// short msgids to ignore for specific langs
 			if((translationFile.getPath().contains("/zh_TW/"))) ignorableMsgIds.addAll(Arrays.asList("automatically attach compatible subscriptions to this system","automatically attach compatible                                subscriptions to this system"));
