@@ -457,10 +457,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/pa/")) bugIds.add("906967");
 			if (translationFile.getPath().contains("/ko/")) bugIds.add("906967");
 			
-			// Bug 950099 - [ml][zh_CN][ru] locales should not translate "RHN"
+			// Bug 950099 - [ml][zh_CN][ru][pt_BR] locales should not translate "RHN"
 			if (translationFile.getPath().contains("/ml/")) bugIds.add("950099");
 			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("950099");
 			if (translationFile.getPath().contains("/ru/")) bugIds.add("950099");
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("950099");
 			
 			// Bug 957195 - [or] bad translation for msgid "proxy URL in the form of proxy_hostname:proxy_port" 
 			if (translationFile.getPath().contains("/or/")) bugIds.add("957195");
