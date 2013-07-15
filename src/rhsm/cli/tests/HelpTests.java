@@ -161,14 +161,21 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager-gui --help with no X-Display",
+			groups={"blockedByBug-976689"/*,"blockedByBug-881095" ALSO INCLUDED IN ExpectedCommandLineOptionsData */},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void CommandLineHelpForGUIWithoutDisplay_Test() {
+		RemoteFileTasks.runCommandAndAssert(client,"subscription-manager-gui --help ",1,"Unable to open a display","");
+	}
 	
 	
-	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
+	@Test(	description="subscription-manager, subscription-manager-gui, rhn-migrate-classic-to-rhsm, and other CLI tools: assert only expected command line options are available",
 			groups={},
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
 	//@ImplementsNitrateTest(caseId=46707)
-	public void ExpectedCommandLineOptions_Test(Object meta, String command, Integer exitCode, String stdoutRegex, List<String> expectedOptions) {
+	public void CommandLineHelpForCLI_Test(Object meta, String command, Integer exitCode, String stdoutRegex, List<String> expectedOptions) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying the exit code and that ONLY the expected options are available.");
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command,exitCode);
 		
