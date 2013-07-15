@@ -302,7 +302,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="Subscribed for Already subscribed Entitlement.",
 			groups={"blockedByBug-584137","blockedByBug-979492"},
-			dataProvider="getAvailableSubscriptionPoolsData",
+			// dataProvider="getAvailableSubscriptionPoolsData", TAKES TOO LONG AND RARELY REVEALS A BUG - changing to getRandomSubsetOfAvailableSubscriptionPoolsData
+			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41897)
 	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool) throws JSONException, Exception{
@@ -1046,6 +1047,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test(Object bugzilla, SubscriptionPool pool) throws JSONException, Exception {
+		/*FIXME*/log.warning("This test is now obsolete due to RFE Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=888866");
 		/*
 		The way that this works is that all attributes that are specified on a
 		pool are version checked. Here are the current versions:

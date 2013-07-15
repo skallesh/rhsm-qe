@@ -379,6 +379,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(username, password, owner, null, ConsumerType.person, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
 
+		if (true) throw new SkipException("Support for RHELPersonal Subscriptions was yanked in favor of new DataCenter SKUs.");
+
 		// assert that subscriptions with personal productIds are available to this person consumer
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (String personProductId : getPersonProductIds()) {

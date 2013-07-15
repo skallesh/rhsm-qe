@@ -399,7 +399,22 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		
 		if (pofilterTest.equals("short")) {
 			// common short msgid translations to ignore for all langs
-			ignorableMsgIds.addAll(Arrays.asList("No", "Yes", "Key", "Value", "N/A", "None", "Number", " and"));
+			ignorableMsgIds.addAll(Arrays.asList("No", "Yes", "Key", "Value", "N/A", "None", "Number", "and"));
+			
+			// ignore short translation for " and " ONLY when the msgstr has NOT trimmed the white space
+			String msgId = " and ";
+			Translation failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
+			if (failedTranslation!=null && failedTranslation.msgstr.startsWith(" ") && failedTranslation.msgstr.endsWith(" ")) ignorableMsgIds.add(msgId);
+			// TEMPORARY WORKAROUND FOR BUG 984206 - def friendly_join(items): in utils.py should not use string " and "
+			else if (failedTranslation!=null) {
+				String bugId = "984206"; boolean invokeWorkaroundWhileBugIsOpen = true;
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring this failed pofilter short test translation while bug '"+bugId+"' is open. "+failedTranslation);
+					ignorableMsgIds.add(msgId);
+				}
+			}
+			// END OF WORKAROUND
 			
 			// short msgids to ignore for specific langs
 			if((translationFile.getPath().contains("/zh_TW/"))) ignorableMsgIds.addAll(Arrays.asList("automatically attach compatible subscriptions to this system","automatically attach compatible                                subscriptions to this system"));
@@ -433,11 +448,11 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/bn_IN/"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Validity Applet","Auto-attach"));
 			if (translationFile.getPath().contains("/ta_IN/"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","Repo Id:              \\t%s","Repo Url:             \\t%s","Auto-attach"));
 			if (translationFile.getPath().contains("/pt_BR/"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","<b>Status:</b>","Login:","Virtual","_Help","virtual", "Repo Id:              \\t%s", "Arch:                 \\t%s"/* omaciel says "Arquitetura:" is better */, "Pool Id:              \\t%s"/* omaciel says "ID do pool:" is better */));
-			if (translationFile.getPath().contains("/de_DE/"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","Status","<b>Status:</b>","Status:               \\t%s","Status:","Version: %s","Version","Version:              \\t%s","Version:","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server"));
+			if (translationFile.getPath().contains("/de_DE/"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","Status","<b>Status:</b>","Status:               \\t%s","Status:","<b>Status Details:</b>","Status Details","Status Details:","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server"));
 			if (translationFile.getPath().contains("/es_ES/"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","No","%s: error: %s","General:"));
 			if (translationFile.getPath().contains("/te/"))		ignorableMsgIds.addAll(Arrays.asList("page 2"));
 			if (translationFile.getPath().contains("/pa/"))		ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
-			if (translationFile.getPath().contains("/fr/"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Architectures","Version","page 2"));
+			if (translationFile.getPath().contains("/fr/"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Arches","Architectures","Version","page 2"));
 			if (translationFile.getPath().contains("/it/"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","org id: %s","org ID: %s","Account","<b>Account:</b>","Account:              \\t%s","Account","<b>Arch:</b>","Arch:                 \\t%s","Arch:","Arch","Login:","No","Password:","Release: %s","Password: ","Server"));
 			if (translationFile.getPath().contains("/zh_TW/"))	ignorableMsgIds.addAll(Arrays.asList("Auto-attach"));
 			if (translationFile.getPath().contains("/zh_CN/"))	ignorableMsgIds.addAll(Arrays.asList("Section: %s, Name: %s"));

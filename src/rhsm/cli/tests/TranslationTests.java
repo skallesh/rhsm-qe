@@ -457,14 +457,19 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/pa/")) bugIds.add("906967");
 			if (translationFile.getPath().contains("/ko/")) bugIds.add("906967");
 			
-			// Bug 950099 - [ml][zh_CN][ru] locales should not translate "RHN"
+			// Bug 950099 - [ml][zh_CN][ru][pt_BR] locales should not translate "RHN"
 			if (translationFile.getPath().contains("/ml/")) bugIds.add("950099");
 			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("950099");
 			if (translationFile.getPath().contains("/ru/")) bugIds.add("950099");
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("950099");
 			
 			// Bug 957195 - [or] bad translation for msgid "proxy URL in the form of proxy_hostname:proxy_port" 
 			if (translationFile.getPath().contains("/or/")) bugIds.add("957195");
-					
+			
+			// Bug 984203 - [de_DE] [es_ES] do not translate "subscription-manager-migration-data"
+			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("984203");
+			if (translationFile.getPath().contains("/de_DE/")) bugIds.add("984203");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
 		}

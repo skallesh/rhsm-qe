@@ -408,7 +408,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed after subscribing to a personal subpool",
 			groups={"InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test"},
-			dataProvider="getPackageFromEnabledRepoAndSubscriptionSubPoolData",
+			dataProvider="getPackageFromEnabledRepoAndPersonalSubscriptionSubPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
@@ -1307,14 +1307,15 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@DataProvider(name="getPackageFromEnabledRepoAndSubscriptionSubPoolData")
-	public Object[][] getPackageFromEnabledRepoAndSubscriptionSubPoolDataAs2dArray() throws Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getPackageFromEnabledRepoAndSubscriptionSubPoolDataAsListOfLists());
+	@DataProvider(name="getPackageFromEnabledRepoAndPersonalSubscriptionSubPoolData")
+	public Object[][] getPackageFromEnabledRepoAndPersonalSubscriptionSubPoolDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getPackageFromEnabledRepoAndPersonalSubscriptionSubPoolDataAsListOfLists());
 	}
-	protected List<List<Object>> getPackageFromEnabledRepoAndSubscriptionSubPoolDataAsListOfLists() throws Exception {
+	protected List<List<Object>> getPackageFromEnabledRepoAndPersonalSubscriptionSubPoolDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (client1tasks==null) return ll;
 		if (client2tasks==null) return ll;
+		if (true) throw new SkipException("Support for the Personal Subscriptions was yanked in favor of new DataCenter SKUs.");
 		
 		// assure we are registered (as a person on client2 and a system on client1)
 		
