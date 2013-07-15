@@ -126,6 +126,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
+		Calendar endCalendar = new GregorianCalendar();
+		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
+		Date endDate = endCalendar.getTime();
+		System.out.println(endDate);
 		sleep(1*60*1000);
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
