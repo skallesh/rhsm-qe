@@ -308,9 +308,20 @@ Example jsonProduct:
 		  
 */
 	
-	
+/* NOTES:
+As shown above, the Modifier subscription provide extra content for 
+product ids "27060" and "37060"
 
-	
+[root@jsefler-5 ~]# rct cat-cert /etc/pki/product/27060_.pem | grep Name
+Name: Awesome OS Workstation Bits
+[root@jsefler-5 ~]# rct cat-cert /etc/pki/product/37060_.pem | grep Name
+Name: Awesome OS Server Bits
+
+The Non-modifier subscriptions that provide content for these two products are:
+
+	Awesome OS Workstation Basic       awesomeos-workstation-basic
+	Awesome OS Server Basic            awesomeos-server-basic
+*/
 	
 
 }
