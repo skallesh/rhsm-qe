@@ -230,9 +230,17 @@
          (when sla (ui click :register-dialog sla)))))
    (checkforerror)
    (catch Object e
-     (if (substring? "No service levels" (:msg e))
-       (throw+ (assoc e :type :no-sla-available))
-       (throw+ (into e {:cancel (fn [] (ui click :register-cancel))})))))
+     ;; this was rewritten, though hackey, this is prefered over adding a hard wait.
+     (let [recovery (fn [h]
+                      (if (= :no-sla-available (:type h))
+                        (throw+ h)
+                        (throw+ (into e {:cancel (fn [] (ui click :register-cancel))}))))]
+       (if-not (:msg e)
+         (let [error (checkforerror)]
+           (if (nil? error)
+             (throw+ e)
+             (recovery error)))
+         (recovery e)))))
   (sleep 10000))
 
 (defn fbshowing?

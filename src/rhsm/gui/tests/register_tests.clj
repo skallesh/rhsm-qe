@@ -64,6 +64,16 @@
           register-button :register-system]
      (verify (and (= thrown-error expected-error) (action exists? register-button))))))
 
+(data-driven register_bad_credentials {Test {:groups ["registration"]}}
+  [^{Test {:groups ["blockedByBug-718045"]}}
+   ["sdf" "sdf" :invalid-credentials]
+   ;need to add a case with a space in the middle re: 719378
+   ;^{Test {:groups ["blockedByBug-719378"]}}
+   ;["test user" :invalid-credentials]
+   ["" "" :no-username]
+   ["" "password" :no-username]
+   ["sdf" "" :no-password]])
+
 (defn ^{Test {:groups ["registration"
                        "acceptance"]}}
   unregister
@@ -103,16 +113,6 @@
                                   nil
                                   (tasks/unregister))]
       (verify (not (blank? output)))))
-
-(data-driven register_bad_credentials {Test {:groups ["registration"]}}
-  [^{Test {:groups ["blockedByBug-718045"]}}
-   ["sdf" "sdf" :invalid-credentials]
-   ;need to add a case with a space in the middle re: 719378
-   ;^{Test {:groups ["blockedByBug-719378"]}}
-   ;["test user" :invalid-credentials]
-   ["" "" :no-username]
-   ["" "password" :no-username]
-   ["sdf" "" :no-password]])
 
 (defn ^{Test {:groups ["registration"
                        "blockedByBug-822706"]
