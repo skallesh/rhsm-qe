@@ -902,7 +902,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				
 		// adjust the expectedContentNamespaces for requiredTags that are not provided by the installed productCerts' providedTags before checking the YumRepos
 		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
-		for (ContentNamespace contentNamespace : expectedContentNamespaceSet) {
+		for (ContentNamespace contentNamespace : new HashSet<ContentNamespace>(expectedContentNamespaceSet)) {
 			if (!clienttasks.areAllRequiredTagsProvidedByProductCerts(contentNamespace.requiredTags, installedProductCerts)) {
 				log.warning("Entitled contentNamespace label '"+contentNamespace.label+"' defined for arches '"+contentNamespace.arches+"' has requiredTags '"+contentNamespace.requiredTags+"' that are NOT provided by the currently installed product certs.  This expected contentNamespace will be moved to the unexpected list when asserting the YumRepos next.");
 				unexpectedContentNamespaceSet.add(contentNamespace);
