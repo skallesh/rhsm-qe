@@ -357,7 +357,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (client!=null) {
 			File remoteFile = new File("/root/hw_info_dump.tar");
 			client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin");
-			client.runCommandAndWait("tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin /proc/cpuinfo /proc/sysinfo /sys/devices/system/cpu/");
+			//client.runCommandAndWait("tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin /proc/cpuinfo /proc/sysinfo /sys/devices/system/cpu/");	// appears to falsely treat /proc/cpuinfo as 0 size on ppc and s390
+			// [root@jsefler-5 ~]# TMPDIR=`mktemp -d`; mkdir "$TMPDIR/proc"; cp /proc/cpuinfo "$TMPDIR/proc/"; cp /proc/sysinfo "$TMPDIR/proc/" || tar -cf hw_info_dump.tar --ignore-failed-read --sparse dmi_dump.bin "$TMPDIR/proc/cpuinfo" "$TMPDIR/proc/sysinfo" /sys/devices/system/cpu
+			client.runCommandAndWait("TMPDIR=`mktemp -d`; mkdir \"$TMPDIR/proc\"; cp /proc/cpuinfo \"$TMPDIR/proc/\"; cp /proc/sysinfo \"$TMPDIR/proc/\" || tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin \"$TMPDIR/proc/cpuinfo\" \"$TMPDIR/proc/sysinfo\" /sys/devices/system/cpu");
+			client.runCommandAndWait("tar -tvf "+remoteFile.getName());
 			File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
 			RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
 		}
