@@ -1044,10 +1044,19 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="Make sure that older subscription-managers are denied attempts to attach a subscription based on: ram, cores",
 			groups={"VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test","blockedByBug-957218" },
 			dataProvider="getAllAvailableRamCoresSubscriptionPoolsData",
-			enabled=true)
+			enabled=true)	// TODO THIS TEST IS A CANDIDATE FOR DISABLEMENT AFTER IMPLEMENTATION OF BUG 957218
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test(Object bugzilla, SubscriptionPool pool) throws JSONException, Exception {
-		/*FIXME*/log.warning("This test is now obsolete due to RFE Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=888866");
+		if (true) {
+			log.warning("Effectively, this test is now obsolete due to RFE Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=888866 which reversed the original intent of this test.");
+			String systemCertificateVersion = clienttasks.getFactValue("system.certificate_version");
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
+			Assert.assertEquals(entitlementCert.version, "1.0", "RAM and Core based subscriptions are now granted to older subscription-manager clients regardless of version.  See RFE bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=888866");
+			Assert.assertNull(entitlementCert.orderNamespace.coreLimit, "Core limit included in an entitlement cert when system.certificate_version is old '"+systemCertificateVersion+"'.");
+			Assert.assertNull(entitlementCert.orderNamespace.ramLimit, "RAM limit included in an entitlement cert when system.certificate_version is old '"+systemCertificateVersion+"'.");
+			return;
+		}
+		
 		/*
 		The way that this works is that all attributes that are specified on a
 		pool are version checked. Here are the current versions:
@@ -1080,7 +1089,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		--mstead
 		*/
-		
+
 		//	[root@jsefler-5 ~]# subscription-manager subscribe --pool=8a90f8313e472bce013e472d22150352
 		//	The client must support at least v3.1 certificates in order to use subscription: Multi-Attribute (non-stackable) (24 cores, 6 sockets, 8GB RAM). A newer client may be available to address this problem.
 		//	[root@jsefler-5 ~]# 

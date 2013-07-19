@@ -2,20 +2,20 @@ package rhsm.cli.tests;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONException;
-import org.testng.SkipException;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import rhsm.base.SubscriptionManagerCLITestScript;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
-import rhsm.base.SubscriptionManagerCLITestScript;
-import rhsm.data.SubscriptionPool;
-
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -104,6 +104,52 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"ExitCode from command '"+command+"'.");
 		Assert.assertTrue(result.getStdout().isEmpty(),"Stdout from command '"+command+"' is empty.");
 		Assert.assertTrue(result.getStderr().isEmpty(),"Stderr from command '"+command+"' is empty.");
+	}
+	
+	
+	@Test(	description="assert rhsmd is logged to both /var/log/rhsm/rhsm.log and /var/log/messages",
+			groups={"blockedbyBug-976868"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRhsmdForceSignalsToRhsmlogAndSyslog_Test() {
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null,null,null,null);
+		
+		Map<String,String> signalMap = new HashMap<String,String>();
+		signalMap.put("valid", "");
+		signalMap.put("expired", "This system is missing one or more subscriptions. Please run subscription-manager for more information.");
+		signalMap.put("warning", "This system's subscriptions are about to expire. Please run subscription-manager for more information.");
+		signalMap.put("partial", "This system is missing one or more subscriptions to fully cover its products. Please run subscription-manager for more information.");
+		
+		for (String signal : signalMap.keySet()) {
+			String command = clienttasks.rhsmComplianceD+" -s -d -i -f "+signal;
+			String marker = System.currentTimeMillis()+" Testing VerifyRhsmdLogsToRhsmlogAndSyslog_Test...";
+			RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, marker);
+			RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, marker);
+
+			// run and verify the command result
+			String expectedStdout = "forcing status signal from cli arg";
+			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), expectedStdout, null);
+			
+			// verify the logs
+			sleep(100);	// give the message thread time to be logged
+			String logResult;
+			if (signalMap.get(signal).isEmpty()) {
+				String unExpectedMessage = "Please run subscription-manager for more information.";
+				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, null).trim();
+				Assert.assertTrue(!logResult.contains(unExpectedMessage),clienttasks.varLogMessagesFile+" does NOT contain message '"+unExpectedMessage+"'.");
+				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, marker, null).trim();
+				Assert.assertTrue(!logResult.contains(unExpectedMessage),clienttasks.rhsmLogFile+" does NOT contain message '"+unExpectedMessage+"'.");
+				Assert.assertTrue(logResult.contains(expectedStdout),clienttasks.rhsmLogFile+" contains expected message '"+expectedStdout+"'.");
+
+			} else {
+				String expectedMessage = signalMap.get(signal);
+				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, null).trim();
+				Assert.assertTrue(logResult.contains(expectedMessage),clienttasks.varLogMessagesFile+" contains expected message '"+expectedMessage+"'.");
+				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, marker, null).trim();
+				Assert.assertTrue(logResult.contains(expectedMessage),clienttasks.rhsmLogFile+" contains expected message '"+expectedMessage+"'.");
+				Assert.assertTrue(logResult.contains(expectedStdout),clienttasks.rhsmLogFile+" contains expected message '"+expectedStdout+"'.");
+			}
+		}
 	}
 	
 	
