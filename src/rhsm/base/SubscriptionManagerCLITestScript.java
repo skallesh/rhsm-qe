@@ -356,11 +356,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void dumpHardwareInfoBeforeSuite() throws IOException {
 		if (client!=null) {
 			File remoteFile = new File("/root/hw_info_dump.tar");
-			client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin");
-			//client.runCommandAndWait("tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin /proc/cpuinfo /proc/sysinfo /sys/devices/system/cpu/");	// appears to falsely treat /proc/cpuinfo as 0 size on ppc and s390
-			// [root@jsefler-5 ~]# TMPDIR=`mktemp -d`; mkdir "$TMPDIR/proc"; cp /proc/cpuinfo "$TMPDIR/proc/"; cp /proc/sysinfo "$TMPDIR/proc/" || tar -cf hw_info_dump.tar --ignore-failed-read --sparse dmi_dump.bin "$TMPDIR/proc/cpuinfo" "$TMPDIR/proc/sysinfo" /sys/devices/system/cpu
-			client.runCommandAndWait("TMPDIR=`mktemp -d`; mkdir \"$TMPDIR/proc\"; cp /proc/cpuinfo \"$TMPDIR/proc/\"; cp /proc/sysinfo \"$TMPDIR/proc/\" || tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin \"$TMPDIR/proc/cpuinfo\" \"$TMPDIR/proc/sysinfo\" /sys/devices/system/cpu");
-			client.runCommandAndWait("tar -tvf "+remoteFile.getName());
+			// [root@jsefler-5 ~]# dmidecode --dump-bin dmi_dump.bin; TMPDIR=`mktemp -d` && mkdir $TMPDIR/proc; cp /proc/cpuinfo $TMPDIR/proc/; cp /proc/sysinfo $TMPDIR/proc/; mkdir -p $TMPDIR/sys/devices/system/cpu; cp -r /sys/devices/system/cpu $TMPDIR/sys/devices/system/; tar -cf hw_info_dump.tar --ignore-failed-read --sparse dmi_dump.bin $TMPDIR  && tar -tvf hw_info_dump.tar && rm -rf $TMPDIR
+			client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin; TMPDIR=`mktemp -d`; mkdir $TMPDIR/proc; cp /proc/cpuinfo $TMPDIR/proc/; cp /proc/sysinfo $TMPDIR/proc/; mkdir -p $TMPDIR/sys/devices/system/cpu; cp -r /sys/devices/system/cpu $TMPDIR/sys/devices/system/; tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin $TMPDIR  && tar -tvf "+remoteFile.getName()+" && rm -rf $TMPDIR");
+			if (!RemoteFileTasks.testExists(client, remoteFile.getPath())) client.runCommandAndWait("touch "+remoteFile.getPath());
 			File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
 			RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
 		}
