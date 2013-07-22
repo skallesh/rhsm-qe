@@ -141,7 +141,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionPoolProvidingProductIdOnArchDataAsListOfLists());
 	}
 	protected List<List<Object>> getSubscriptionPoolProvidingProductIdOnArchDataAsListOfLists() throws JSONException, Exception{
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		//configureProductCertDirAfterClass(); is not needed since the priority of this test is implied as 0 and run first before the other tests alter the productCertDir
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		List<String> productIdArchTested = new ArrayList<String>();
