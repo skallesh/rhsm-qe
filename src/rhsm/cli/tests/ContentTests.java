@@ -1315,7 +1315,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (client1tasks==null) return ll;
 		if (client2tasks==null) return ll;
-		if (true) throw new SkipException("Support for the Personal Subscriptions was yanked in favor of new DataCenter SKUs.");
+		if (true) {
+			log.warning("Support for the Personal Subscriptions was yanked in favor of new DataCenter SKUs.");
+			return ll;
+		}
 		
 		// assure we are registered (as a person on client2 and a system on client1)
 		
