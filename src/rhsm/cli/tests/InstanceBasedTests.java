@@ -183,7 +183,8 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 	}
 			for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 				if(consumed.productName.contains("Instance Based")){
-				Assert.assertEquals(consumed.quantityUsed, "1");
+				Integer quantity =1;		
+				Assert.assertEquals(consumed.quantityUsed,quantity );
 			}}
 	}
 	}
@@ -229,7 +230,8 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 		}
 				for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 					if(consumed.productName.contains("Instance Based")){
-					Assert.assertEquals(consumed.quantityUsed, "1");
+						Integer quantity=1;
+					Assert.assertEquals(consumed.quantityUsed, quantity);
 				}}
 		}
 		}
