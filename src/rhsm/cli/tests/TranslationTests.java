@@ -388,7 +388,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationsDoNotTranslateSubStrings_Test(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
-		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat","RHN",/*"RHN Classic", TRANSLATORS CHOICE*/"subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
+		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat",/*"RHN","RHN Classic", TRANSLATORS CHOICE see https://bugzilla.redhat.com/show_bug.cgi?id=950099#c7 */"subscription-manager-migration-data","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
 		// TODO CONSIDER ADDING THESE TOO List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Management", "Red Hat Global Support Services" "Red Hat Customer Portal", "RHN Satellite");
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();
