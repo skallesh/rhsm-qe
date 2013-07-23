@@ -67,7 +67,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="make sure there are no High Availability packages installed",
-			groups={"blockedByBug-904193"},
+			groups={/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			priority=10,
 			dependsOnMethods={},
 			enabled=true)

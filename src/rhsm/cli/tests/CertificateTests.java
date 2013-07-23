@@ -50,7 +50,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that a base product cert corresponding to the /etc/redhat-release is installed",
-			groups={"AcceptanceTests","blockedByBug-706518","blockedByBug-844368","blockedByBug-904193"},
+			groups={"AcceptanceTests","blockedByBug-706518","blockedByBug-844368"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyBaseRHELProductCertIsInstalled_Test() {
@@ -98,7 +98,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that no more than one RHEL product cert is ever installed.",
-			groups={"AcceptanceTests","blockedByBug-854879","blockedByBug-904193"},
+			groups={"AcceptanceTests","blockedByBug-854879"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOnlyOneBaseRHELProductCertIsInstalled_Test() {
