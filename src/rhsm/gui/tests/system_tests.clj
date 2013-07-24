@@ -268,7 +268,7 @@
           ;; formats as the logs have 24hrs time format and in the GUI it
           ;; 12hrs time format. The last step adds a zero if the time
           ;; is less than 10hrs which makes sting comparison easier
-          new-time (+ 4 (read-string (first (clojure.string/split log-timestamp #":")))) 
+          new-time (+ 4 (read-string (first (clojure.string/split log-timestamp #":"))))
           hours (if (> new-time 12) (- new-time 12) new-time)
          compare-time (str (if ( < hours 10) (str "0" hours) hours)(re-find #":\d+:\d+" log-timestamp))]
       (tasks/ui click :about)
@@ -334,5 +334,19 @@
          (tasks/checkforerror)))
      (if-not (tasks/ui showing? :register-system) (tasks/unregister))
      (tasks/restart-app))))
+
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-977850"]}}
+  check_preferences_menu_state
+  "Asserts that the preferences menu behaves properly when unregistered"
+  [_]
+  (try
+    (tasks/restart-app :unregister? true)
+    (tasks/ui click :main-window "System")
+    (verify (not (tasks/ui showing? :preferences)))
+    (tasks/register-with-creds)
+    (tasks/ui click :main-window "System")
+    (verify (bool (tasks/ui waittillshowing :preferences 10)))
+    (finally (tasks/restart-app))))
 
 (gen-class-testng)
