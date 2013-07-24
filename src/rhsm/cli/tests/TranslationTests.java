@@ -8,12 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.CandlepinType;
@@ -70,6 +72,13 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getTranslatedCommandLineHelpData")
 	//@ImplementsNitrateTest(caseId=)
 	public void TranslatedCommandLineHelp_Test(Object bugzilla, String lang, String command, Integer exitCode, List<String> stdoutRegexs) {
+		// Bug 969608 - [kn_IN][mr_IN][fr_FR][as_IN] missing usage translations for rhsmcertd tool
+		if ((lang.equals("kn_IN")||lang.equals("mr_IN")||lang.equals("fr_FR")||lang.equals("as_IN")) && bugzilla!=null) {
+			if (Arrays.asList(((BlockedByBzBug)bugzilla).getBugIds()).contains("969608")) {
+				throw new SkipException("Skipping Test since Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=969608 was CLOSED WONTFIX.");
+			}
+		}
+		
 		clienttasks.runCommandWithLangAndAssert(lang,command,exitCode,stdoutRegexs,null);
 	}
 	
@@ -388,7 +397,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationsDoNotTranslateSubStrings_Test(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
-		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat","RHN",/*"RHN Classic", TRANSLATORS CHOICE*/"subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
+		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat",/*"RHN","RHN Classic", TRANSLATORS CHOICE see https://bugzilla.redhat.com/show_bug.cgi?id=950099#c7 */"subscription-manager-migration-data","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port");
 		// TODO CONSIDER ADDING THESE TOO List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Management", "Red Hat Global Support Services" "Red Hat Customer Portal", "RHN Satellite");
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();

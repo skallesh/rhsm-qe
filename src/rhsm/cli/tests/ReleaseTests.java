@@ -308,7 +308,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-818298","blockedByBug-820639","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193"},
+			groups={"blockedByBug-818298","blockedByBug-820639","blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			dataProvider="getCredentialsToVerifyReleaseListMatchesCDN_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -421,7 +421,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="using a no auth proxy server, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-844368","blockedByBug-893746","blockedByBug-904193"},
+			groups={"blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyReleaseListMatchesCDNUsingNoAuthProxyCommandLineArgs_Test() throws JSONException, Exception {
@@ -430,7 +430,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="using a basic auth proxy server, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-844368","blockedByBug-893746","blockedByBug-904193"},
+			groups={"blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyReleaseListMatchesCDNUsingBasicAuthProxyCommandLineArgs_Test() {
@@ -439,7 +439,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="using a no auth proxy server set within rhsm.conf, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-822965","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193"},
+			groups={"blockedByBug-822965","blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyReleaseListMatchesCDNUsingNoAuthProxyViaRhsmConfFile_Test() throws JSONException, Exception {
@@ -451,7 +451,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="using a basic auth proxy server set within rhsm.conf, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-822965","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193"},
+			groups={"blockedByBug-822965","blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyReleaseListMatchesCDNUsingBasicAuthProxyViaRhsmConfFile_Test() {

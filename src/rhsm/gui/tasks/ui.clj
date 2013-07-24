@@ -208,6 +208,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :import-cancel "Cancel"})
     (define-elements (windows :system-preferences-dialog)
       {:close-system-prefs "Close"
+       :autoheal-checkbox "autoheal_checkbox"
        :service-level-dropdown "sla_selection_combobox"
        :release-dropdown "release_selection_combobox"})
     (define-elements (windows :date-selection-dialog)

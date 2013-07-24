@@ -237,6 +237,42 @@
   (let [gui-status (tasks/ui getcellvalue :installed-view row 2)]
     (verify (= gui-status "Not Subscribed"))))
 
+(defn ^{Test {:groups ["facts"
+                       "blockedByBug-977855"]}}
+  check_persistant_autoheal
+  "Asserts that the selection made in the autohal checkbox is persistant."
+  [_]
+  (try
+    (let [is-checked? (fn [] (bool (tasks/ui verifycheck :autoheal-checkbox)))
+          waittillcheck (fn [b s]
+                          (try
+                            (loop-timeout
+                             (* s 1000) []
+                             (if-not (= b (is-checked?))
+                               (do (sleep 500)
+                                   (recur))
+                               b))
+                            (catch RuntimeException e (not b))))
+          cpa (fn [c b]
+                (tasks/ui click :preferences)
+                (tasks/ui waittillwindowexist :system-preferences-dialog 5)
+                (tasks/ui c :autoheal-checkbox)
+                ;(println (str "first - c:" c " b:" b))
+                (verify (= b (waittillcheck b 5)))
+                (tasks/ui click :close-system-prefs)
+                (tasks/ui waittillwindownotexist :system-preferences-dialog 5)
+                (tasks/ui click :preferences)
+                (tasks/ui waittillwindowexist :system-preferences-dialog 5)
+                ;(println (str "second - c:" c " b:" b))
+                (verify (= b (waittillcheck b 5)))
+                (tasks/ui click :close-system-prefs)
+                (tasks/ui waittillwindownotexist :system-preferences-dialog 5))]
+      (cpa uncheck false)
+      (cpa check true))
+    (finally
+      (if (bool (tasks/ui guiexist :system-preferences-dialog))
+        (tasks/ui click :close-system-prefs)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -244,7 +244,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		return TestNGUtils.convertListOfListsTo2dArray(getAvailableDataCenterSubscriptionPoolsDataAsListOfLists());
 	}
 	protected List<List<Object>> getAvailableDataCenterSubscriptionPoolsDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// instrument the system to be a Physical host
 		factsMap.clear();

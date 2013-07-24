@@ -183,7 +183,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 	}
 			for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 				if(consumed.productName.contains("Instance Based")){
-						
+				Integer quantity =1;		
 				Assert.assertEquals(consumed.quantityUsed,quantity );
 			}}
 	}
