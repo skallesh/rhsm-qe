@@ -163,7 +163,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
 		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.productName.contains("RAM")){
 				Assert.assertEquals(installed.status.trim(), "Subscribed");
