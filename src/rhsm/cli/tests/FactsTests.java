@@ -535,6 +535,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			assertedCores = true;
 		}
 		
+/* THIS ALGORTITHM DOES NOT ALWAYS WORK
 		// assert cpuCores against the coresCalculatedUsingDmidecode when dmidecode is available
 		if (!assertedCores) {
 			// determine the number of cores using dmidecode information
@@ -699,6 +700,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				log.warning("Could not figure out how to infer the number of cores from the dmidecode output above.");
 			}
 		}
+*/
 		
 		// assert cpuCores against the coresCalcualtedUsingTopology
 		if (!assertedCores) {
