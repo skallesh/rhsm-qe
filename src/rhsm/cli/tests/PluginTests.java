@@ -724,6 +724,17 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// remove the HA package that was installed by prior test verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test
 			if (!sm_haPackages.isEmpty()) clienttasks.yumRemovePackage(sm_haPackages.get(0));	// yum -y remove ccs
+			
+			// remove the HA product cert too
+			InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+			if (haInstalledProduct!=null) {
+				ProductCert haInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentProductCerts());
+				log.warning("Manually removing installed High Availability product cert (you are probably running a RHEL5 client)...");
+				client.runCommandAndWait("rm -f "+haInstalledProductCert.file.getPath());
+				haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+			}
+			Assert.assertNull(haInstalledProduct, "The High Availability product id '"+HighAvailabilityTests.haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
+			
 			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
 		}
 		// END OF WORKAROUND
