@@ -4626,12 +4626,18 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * version without asserting results
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 * @return result of the command line call to subscription-manager version
 	 */
-	public SSHCommandResult version_() {
+	public SSHCommandResult version_(String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " version";	
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -4639,11 +4645,14 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * version with asserting results
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 * @return result of the command line call to subscription-manager version
 	 */
-	public SSHCommandResult version() {
+	public SSHCommandResult version(String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = version_();
+		SSHCommandResult sshCommandResult = version_(proxy, proxyuser, proxypassword);
 
 		// assert results for a successful version
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the version command indicates a success.");
