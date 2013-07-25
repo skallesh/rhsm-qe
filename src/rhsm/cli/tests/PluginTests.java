@@ -676,9 +676,11 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// subscribe to the High Availability subscription and install an HA package
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
-		if (!getHighAvailabilitySupportArchesForHighAvailability().contains(clienttasks.arch)) {
-			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getHighAvailabilitySupportArchesForHighAvailability());
-			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getHighAvailabilitySupportArchesForHighAvailability());
+		if (!clienttasks.variant.equals("Server")) {
+			throw new SkipException("High Availability is only available for Server.");
+		} else if (!getSupportArchesForHighAvailability().contains(clienttasks.arch)) {
+			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a '"+clienttasks.variant+"' system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getSupportArchesForHighAvailability());
+			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a '"+clienttasks.variant+"' system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getSupportArchesForHighAvailability());
 		}
 		
 		// Subscribe to the High Availability subscription SKU
@@ -1023,7 +1025,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 				"Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
 	}
 	
-	List<String> getHighAvailabilitySupportArchesForHighAvailability() {
+	List<String> getSupportArchesForHighAvailability() {
 		// see HighAvailability.assertRhelServerBeforeClass()
 		if (clienttasks.redhatReleaseX.equals("5")) {
 			return Arrays.asList("x86_64","x86","i386","i686","ia64","ppc","ppc64");
