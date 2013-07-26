@@ -16,9 +16,11 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -425,7 +427,133 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 
 
-	
+	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="delete selected secondary/duplicate subscriptions to reduce the number of available pools against a standalone candlepin server")
+	public void deleteSomeSecondarySubscriptionsBeforeSuite() throws JSONException, Exception {
+		Set<String> secondarySkusSkipped = new HashSet<String>();
+		Set<String> secondarySkusToDelete = new HashSet<String>(Arrays.asList(new String[]{
+		//	[root@jsefler-5 ~]# subscription-manager register --username admin --password admin --org admin --type system
+		//	The system has been registered with ID: 9581087a-1b3a-483e-9756-c94142119d22 
+		//	[root@jsefler-5 ~]# subscription-manager list --all --avail | egrep "SKU" | sort | wc -l
+		//	86
+		//  [root@jsefler-5 ~]# subscription-manager list --all --avail | egrep "SKU" | sort | awk '{print $2}' | xargs -i[] echo \"[]\",  
+			"2cores-2ram-multiattr",
+			"2cores-2ram-multiattr",
+			"awesomeos-all-just-86_64-cont",
+			"awesomeos-all-just-86_64-cont",
+			"awesomeos-all-no-86_64-cont",
+			"awesomeos-all-no-86_64-cont",
+			"awesomeos-all-x86-cont",
+			"awesomeos-all-x86-cont",
+			"awesomeos-everything",
+			"awesomeos-everything",
+			"awesomeos-i386",
+			"awesomeos-i386",
+			"awesomeos-i686",
+			"awesomeos-i686",
+			"awesomeos-ia64",
+			"awesomeos-ia64",
+		//	"awesomeos-instancebased",		// kept because it will help test bug 963227
+		//	"awesomeos-instancebased",
+			"awesomeos-modifier",
+			"awesomeos-modifier",
+			"awesomeos-per-arch-cont",
+			"awesomeos-per-arch-cont",
+			"awesomeos-ppc64",
+			"awesomeos-ppc64",
+			"awesomeos-s390",
+			"awesomeos-s390",
+			"awesomeos-s390x",
+			"awesomeos-s390x",
+			"awesomeos-server",
+			"awesomeos-server",
+			"awesomeos-server-2-socket-std",
+			"awesomeos-server-2-socket-std",
+		//	"awesomeos-server-basic",		// kept because it is Multi-Entitlement: No
+		//	"awesomeos-server-basic",
+			"awesomeos-server-basic-dc",
+			"awesomeos-server-basic-dc",
+		//	"awesomeos-server-basic-me",	// kept because it is Multi-Entitlement: Yes
+		//	"awesomeos-server-basic-me",
+		//	"awesomeos-virt-4",				// kept because it is virt
+		//	"awesomeos-virt-4",
+		//	"awesomeos-virt-4",
+		//	"awesomeos-virt-4",
+		//	"awesomeos-virt-unlimited",
+		//	"awesomeos-virt-unlimited",
+		//	"awesomeos-virt-unlimited",
+		//	"awesomeos-virt-unlimited",
+			"awesomeos-workstation-basic",
+			"awesomeos-workstation-basic",
+			"awesomeos-x86",
+			"awesomeos-x86",
+			"awesomeos-x86_64",
+			"awesomeos-x86_64",
+			"cores-26",
+			"cores-26",
+			"cores4-multiattr",
+			"cores4-multiattr",
+			"cores-8-stackable",
+			"cores-8-stackable",
+			"management-100",
+			"management-100",
+			"non-stacked-6core8ram-multiattr",
+			"non-stacked-6core8ram-multiattr",
+			"non-stacked-8core4ram-multiattr",
+			"non-stacked-8core4ram-multiattr",
+			"non-stacked-multiattr",
+			"non-stacked-multiattr",
+			"ram-2gb-stackable",
+			"ram-2gb-stackable",
+			"ram2-multiattr",
+			"ram2-multiattr",
+			"ram-4gb-stackable",
+			"ram-4gb-stackable",
+			"ram-8gb",
+			"ram-8gb",
+			"ram-cores-8gb-4cores",
+			"ram-cores-8gb-4cores",
+			"sfs",
+			"sfs",
+			"sock2-multiattr",
+			"sock2-multiattr",
+			"sock-core-ram-multiattr",
+			"sock-core-ram-multiattr",
+			"stackable-with-awesomeos-x86_64",
+			"stackable-with-awesomeos-x86_64",
+		//	"virt-awesomeos-i386",			// kept because it is virt
+		//	"virt-awesomeos-i386",
+			""}));
+		
+		if (sm_clientOrg==null) return;
+		if (!CandlepinType.standalone.equals(sm_serverType)) return;
+		
+		// process all of the pools belonging to ownerKey
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String productId = jsonPool.getString("productId");
+			String subscriptionId = jsonPool.getString("subscriptionId");
+			
+			// skip pools that were generated from consumption of a parent pool
+			if (!jsonPool.isNull("sourceEntitlement")) continue;
+			
+			// skip pools that we do not want to delete
+			if (!secondarySkusToDelete.contains(productId)) continue;
+			
+			// skip the first secondarySkusToDelete encountered
+			if (!secondarySkusSkipped.contains(productId)) {
+				secondarySkusSkipped.add(productId);
+				continue;
+			}
+						
+			// delete the subscription
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/subscriptions/"+subscriptionId);
+		}
+		
+		// refresh the pools
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,sm_clientOrg);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+	}
 	// Protected Methods ***********************************************************************
 
 
