@@ -676,7 +676,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)	
 	public void StatusAttemptsUsingProxyServerViaRhsmConfig_Test(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern) {
 		// setup for test
-		String moduleTask = "autoheal";
+		String moduleTask = "status";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 	
@@ -694,6 +694,63 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult attemptResult = clienttasks.status/*_*/(proxy, proxyuser, proxypassword);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+
+		// assert the tail of proxyLog shows the proxyLogGrepPattern
+		if (proxyLogGrepPattern!=null) {
+			//SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+			//SSHCommandResult proxyLogResult = proxyRunner.runCommandAndWait("(LINES=''; IFS=$'\n'; for line in $(tac "+proxyLog+"); do if [[ $line = '"+proxyLogMarker+"' ]]; then break; fi; LINES=${LINES}'\n'$line; done; echo -e $LINES) | grep "+clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy simultaneously
+			//Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogGrepPattern, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+			String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+			//Assert.assertContainsMatch(proxyLogResult, proxyLogGrepPattern, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");	// TOO MUCH LOGGING
+			Assert.assertTrue(proxyLogResult.contains(proxyLogGrepPattern), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains expected connection '"+proxyLogGrepPattern+"' attempts from "+clienttasks.ipaddr+" to the candlepin server.");
+		}
+	}
+	
+	
+	// VERSION Test methods ***********************************************************************
+	
+	@Test(	description="subscription-manager : version using a proxy server (Positive and Negative Variations)",
+			groups={"blockedByBug-977481"},
+			dataProvider="getVersionAttemptsUsingProxyServerData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void VersionAttemptsUsingProxyServer_Test(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr) {
+		// setup for test
+		String moduleTask = "version";
+		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		
+		// NOTE: Because the status module should return a cached status report when connectivity has been interrupted, this call should always pass
+		SSHCommandResult attemptResult = clienttasks.version/*_*/(proxy, proxyuser, proxypassword);
+		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdout!=null)	Assert.assertTrue(attemptResult.getStdout().contains(stdout), "The stdout from an attempt to "+moduleTask+" using a proxy server contains expected report '"+stdout+"'.");
+		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+	}
+	
+	
+	@Test(	description="subscription-manager : status using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
+			groups={"blockedByBug-977481"},
+			dataProvider="getVersionAttemptsUsingProxyServerViaRhsmConfigData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void VersionAttemptsUsingProxyServerViaRhsmConfig_Test(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern) {
+		// setup for test
+		String moduleTask = "version";
+		
+		// pad the tail of basicauthproxyLog with a message
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
+		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
+		
+		// set the config parameters
+		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
+
+		// attempt the moduleTask with the proxy options
+		// NOTE: Because the status module should return a cached status report when connectivity has been interrupted, this call should always pass
+		SSHCommandResult attemptResult = clienttasks.version/*_*/(proxy, proxyuser, proxypassword);
+		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdout!=null)	Assert.assertTrue(attemptResult.getStdout().contains(stdout), "The stdout from an attempt to "+moduleTask+" using a proxy server contains expected report '"+stdout+"'.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 
 		// assert the tail of proxyLog shows the proxyLogGrepPattern
@@ -1534,6 +1591,41 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
 			// Note: Because the status module should return cached results when it fails to connect to the server, the exitCode should always be 0 and we'll null out the asserts on stdout and stderr
 			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,null/*stdout*/,null/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+		}
+		return TestNGUtils.convertListOfListsTo2dArray(ll);
+	}
+	
+	
+	@DataProvider(name="getVersionAttemptsUsingProxyServerData")
+	public Object[][] getVersionAttemptsUsingProxyServerDataAs2dArray() {
+		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {			
+			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			// Note: The version module should always succeed, yet report subscription management server: Unknown when connection fails to the server
+			if (l.get(8)==nErrMsg) {
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	Integer.valueOf(0)/*exitCode*/,"subscription management server: Unknown"/*stdout*/,""/*stderr*/}));
+			} else {
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	Integer.valueOf(0)/*exitCode*/,"subscription management server: "+servertasks.statusVersion/*stdout*/,""/*stderr*/}));
+			}
+		}
+		return TestNGUtils.convertListOfListsTo2dArray(ll);
+	}
+	
+	
+	@DataProvider(name="getVersionAttemptsUsingProxyServerViaRhsmConfigData")
+	public Object[][] getVersionAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
+		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		// Note: The version module should always succeed, yet report subscription management server: Unknown when connection fails to the server
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
+			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			// Note: The version module should always succeed, yet report subscription management server: Unknown when connection fails to the server
+			if (l.get(12)==nErrMsg) {
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,"subscription management server: Unknown"/*stdout*/,""/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+			} else {
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,"subscription management server: "+servertasks.statusVersion/*stdout*/,""/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+			}
 		}
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}

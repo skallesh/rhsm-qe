@@ -676,9 +676,11 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// subscribe to the High Availability subscription and install an HA package
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
-		if (!getHighAvailabilitySupportArchesForHighAvailability().contains(clienttasks.arch)) {
-			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getHighAvailabilitySupportArchesForHighAvailability());
-			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getHighAvailabilitySupportArchesForHighAvailability());
+		if (!clienttasks.variant.equals("Server")) {
+			throw new SkipException("High Availability is only available for Server.");
+		} else if (!getSupportArchesForHighAvailability().contains(clienttasks.arch)) {
+			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a '"+clienttasks.variant+"' system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getSupportArchesForHighAvailability());
+			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a '"+clienttasks.variant+"' system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getSupportArchesForHighAvailability());
 		}
 		
 		// Subscribe to the High Availability subscription SKU
@@ -723,7 +725,20 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// remove the HA package that was installed by prior test verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test
-			if (!sm_haPackages.isEmpty()) clienttasks.yumRemovePackage(sm_haPackages.get(0));	// yum -y remove ccs
+			if (!sm_haPackages.isEmpty() && clienttasks.isPackageInstalled(sm_haPackages.get(0))) {
+				clienttasks.yumRemovePackage(sm_haPackages.get(0));	// yum -y remove ccs
+			}
+			
+			// remove the HA product cert too
+			InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+			if (haInstalledProduct!=null) {
+				ProductCert haInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentProductCerts());
+				log.warning("Manually removing installed High Availability product cert (you are probably running a RHEL5 client)...");
+				client.runCommandAndWait("rm -f "+haInstalledProductCert.file.getPath());
+				haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+			}
+			Assert.assertNull(haInstalledProduct, "The High Availability product id '"+HighAvailabilityTests.haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
+			
 			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
 		}
 		// END OF WORKAROUND
@@ -1012,7 +1027,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 				"Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
 	}
 	
-	List<String> getHighAvailabilitySupportArchesForHighAvailability() {
+	List<String> getSupportArchesForHighAvailability() {
 		// see HighAvailability.assertRhelServerBeforeClass()
 		if (clienttasks.redhatReleaseX.equals("5")) {
 			return Arrays.asList("x86_64","x86","i386","i686","ia64","ppc","ppc64");

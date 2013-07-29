@@ -46,7 +46,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		String expectedReport = client.runCommandAndWait("rpm -q subscription-manager --queryformat '%{NAME}: %{VERSION}-%{RELEASE}'").getStdout().trim();
 		
 		// get the actual version results from subscription-manager
-		SSHCommandResult actualResult = clienttasks.version();
+		SSHCommandResult actualResult = clienttasks.version(null, null, null);
 		
 		// assert results
 		Assert.assertTrue(actualResult.getStdout().contains(expectedReport),"The version report contains the expected string '"+expectedReport+"'");
@@ -63,7 +63,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		String expectedReport = client.runCommandAndWait("rpm -q python-rhsm --queryformat '%{NAME}: %{VERSION}-%{RELEASE}'").getStdout().trim();
 		
 		// get the actual version results from subscription-manager
-		SSHCommandResult actualResult = clienttasks.version();
+		SSHCommandResult actualResult = clienttasks.version(null, null, null);
 
 		// assert results
 		Assert.assertTrue(actualResult.getStdout().contains(expectedReport),"The version report contains the expected string '"+expectedReport+"'");
@@ -219,13 +219,13 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		// assert results from version do not contain an error (while unregistered)
 		String error = "Error";
 		clienttasks.unregister(null,null,null);
-		SSHCommandResult versionResult = clienttasks.version();
+		SSHCommandResult versionResult = clienttasks.version(null, null, null);
 		Assert.assertTrue(!versionResult.getStdout().contains(error),"Stdout from the version report does NOT contain an '"+error+"' message (while unregistered).");
 		Assert.assertTrue(!versionResult.getStderr().contains(error),"Stderr from the version report does NOT contain an '"+error+"' message (while unregistered).");
 		
 		// assert results from version do not contain an error (while registered)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null);
-		versionResult = clienttasks.version();
+		versionResult = clienttasks.version(null, null, null);
 		Assert.assertTrue(!versionResult.getStdout().contains(error),"Stdout from the version report does NOT contain an '"+error+"' message (while registered).");
 		Assert.assertTrue(!versionResult.getStderr().contains(error),"Stderr from the version report does NOT contain an '"+error+"' message (while registered).");
 	
@@ -256,7 +256,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		expectedType = "server type: "+serverType;
 		
 		// get the actual version results from subscription-manager
-		SSHCommandResult actualResult = clienttasks.version();
+		SSHCommandResult actualResult = clienttasks.version(null, null, null);
 		
 		// assert results
 		Assert.assertTrue(actualResult.getStdout().contains(expectedVersion),"The version report contains the expected string '"+expectedVersion+"'");
