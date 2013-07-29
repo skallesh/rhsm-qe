@@ -771,7 +771,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		System.out.println(sm_serverAdminUsername +"  server username and password "+ sm_serverAdminUsername);
+
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 		String name,productId;
 		List<String> providedProductIds = new ArrayList<String>();
 		name = "Test product to check subscription-removal";
@@ -785,10 +787,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
 		File entitlementCertFile=null;
-		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
-		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(pool.productId.equals(productId)){
@@ -800,6 +800,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertFalse(consumedSusbscription.isEmpty());
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		clienttasks.restart_rhsmcertd(null, null, false, null);
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
 		for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
 			Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
