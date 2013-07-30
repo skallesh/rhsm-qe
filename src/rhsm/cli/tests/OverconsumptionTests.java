@@ -86,8 +86,10 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.
 		Assert.assertNull(client1tasks.subscribeToSubscriptionPool(testPool),"No entitlement cert is granted when the pool is already fully subscribed.");
 		// try again
-		//Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),"No entitlements are available from the pool with id '"+testPool.poolId+"'.");	// expected string changed by bug 876758
-		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),"No subscriptions are available from the pool with id '"+testPool.poolId+"'.");
+		String expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",testPool.poolId); // expected string changed by bug 876758
+		expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",testPool.poolId);
+		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",testPool.poolId);
+		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),expectedStdout);
 		// assert the consumed quantity again
 		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),
