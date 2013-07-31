@@ -7,7 +7,9 @@
         [slingshot.slingshot :only (try+
                                     throw+)]
         [clojure.string :only (split
-                               blank?)]
+                               blank?
+                               join
+                               trim-newline)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
@@ -52,32 +54,40 @@
 (defn subscribe_all
   "Subscribes to everything available"
   []
-  (allsearch)
-  (tasks/do-to-all-rows-in
-   :all-subscriptions-view 1
-   (fn [subscription]
-     (try+ (tasks/subscribe subscription)
-           (catch [:type :item-not-available] _)
-           (catch [:type :wrong-consumer-type]
-               {:keys [log-warning]} (log-warning))))
-   :skip-dropdowns? true))
+  (comment ;; No longer used just here for reference
+    (allsearch)
+    (tasks/do-to-all-rows-in
+     :all-subscriptions-view 1
+     (fn [subscription]
+       (try+ (tasks/subscribe subscription)
+             (catch [:type :item-not-available] _)
+             (catch [:type :wrong-consumer-type]
+                 {:keys [log-warning]} (log-warning))))
+     :skip-dropdowns? true))
+  (let [all-pools (map :id (ctasks/list-available true))
+        syntax (fn [item] (str "--pool=" item " "))
+        command (str "subscription-manager subscribe " (clojure.string/join (map syntax all-pools)))]
+    (run-command command)))
 
 (defn unsubscribe_all
   "Unsubscribes from everything available"
   []
-  (tasks/ui selecttab :my-subscriptions)
-  (tasks/do-to-all-rows-in
-   :my-subscriptions-view 0
-   (fn [subscription]
-     (try+
-      (tasks/unsubscribe subscription)
-      (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))
-      (catch [:type :not-subscribed] _)))
-   :skip-dropdowns? true))
+  (comment  ;; No longer used just here for reference
+    (tasks/ui selecttab :my-subscriptions)
+    (tasks/do-to-all-rows-in
+     :my-subscriptions-view 0
+     (fn [subscription]
+       (try+
+        (tasks/unsubscribe subscription)
+        (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))
+        (catch [:type :not-subscribed] _)))
+     :skip-dropdowns? true))
+  (run-command "subscription-manager unsubscribe --all"))
 
 (defn ^{Test {:groups ["subscribe"
                        "acceptance"]
-              :dataProvider "subscriptions"}}
+              :dataProvider "subscriptions"
+              :priority (int 104)}}
   subscribe_each
   "Asserts that each subscripton can be subscribed to sucessfully."
   [_ subscription]
@@ -471,6 +481,60 @@
                                   nil
                                   (tasks/unsubscribe subscription))]
     (verify (not (blank? output)))))
+
+(defn ^{Test {:group ["subscribe"
+                      "blockedByBug-951633"]
+              :dependsOnMethods ["subscribe_each"]
+              :priority (int 105)}}
+  product_with_comma_separated_arch
+  "This is to assert products with comma seperated products when subscribed are fully subscribed"
+  [_]
+  (tasks/do-to-all-rows-in :installed-view 0
+                           (fn [subscription]
+                             (let [index (tasks/skip-dropdown :installed-view subscription)]
+                               (if (substring? "," (tasks/ui gettextvalue :arch))
+                                 (verify ( = "Subscribed" (tasks/ui getcellvalue :installed-view index 2))))))))
+
+(defn ^{Test {:group ["subscribe"
+                      "blockedByBug-950672"
+                      "blockedByBug-988411"]
+              :dependsOnMethods ["subscribe_each"]
+              :priority (int 106)}}
+  check_subscription_in_subscribed_products
+  "Asserts there is a valid subscription value for all Subscribed products"
+  [_]
+  (tasks/do-to-all-rows-in :installed-view 0
+                           (fn [subscription]
+                             (tasks/skip-dropdown :installed-view subscription)
+                             (if (not (= "Not Subscribed" (tasks/ui gettextvalue :certificate-status)))
+                               (verify (not (blank? (tasks/ui gettextvalue :providing-subscriptions))))))))
+
+(defn ^{Test {:group ["subscribe"
+                      "blockedByBug-909467"
+                      "blockedByBug-988411"]
+              :dependsOnMethods ["subscribe-each"]
+              :priority (int 107)}}
+  check_subscription_compliance
+  "Checks for status of subscriptions when archs dont match that of the system"
+  [_]
+  (let [machine-arch (trim-newline (:stdout (run-command "uname -m")))]
+    (tasks/do-to-all-rows-in :installed-view 0
+                             (fn [subscription]
+                               (tasks/skip-dropdown :installed-view subscription)
+                               (let
+                                   [sub-name (tasks/ui gettextvalue :providing-subscriptions)
+                                    sub-arch (tasks/ui gettextvalue :arch)
+                                    check-arch (or (substring? sub-arch machine-arch)
+                                                   (substring? machine-arch sub-arch))
+                                    arch-all (= "ALL" (tasks/ui gettextvalue :arch))
+                                    status (not (= "Not Subscribed" (tasks/ui gettextvalue :certificate-status)))]
+                                 (if (and (not (or check-arch arch-all)) status)
+                                   (do
+                                     (tasks/ui selecttab :my-subscriptions)
+                                     (tasks/skip-dropdown :my-subscriptions-view sub-name)
+                                     (verify (substring? (str "Covers architecture " sub-arch " but the system is " machine-arch)
+                                                         (tasks/ui gettextvalue :status-details)))
+                                     (tasks/ui selecttab :my-installed-products))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
