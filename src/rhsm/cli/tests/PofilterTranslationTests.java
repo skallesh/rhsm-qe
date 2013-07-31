@@ -434,7 +434,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		if (pofilterTest.equals("unchanged")) {
 			// common unchanged translations to ignore for all langs
 			ignorableMsgIds.addAll(Arrays.asList(
-						"connectionStatusLabel","progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox",
+						"connectionStatusLabel","progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox","autoheal_checkbox",
 						"hostname[:port][/prefix]",
 						"python-rhsm: %s","subscription-manager: %s", "python-rhsm: %s", "%s of %s",
 						"<b>SKU:</b>", "<b>HTTP Proxy</b>", "<b>python-rhsm version:</b> %s", "<b>python-rhsm Version:</b> %s",
