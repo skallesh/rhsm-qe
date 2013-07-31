@@ -224,7 +224,6 @@
   (try
     (tasks/restart-app)
     (tasks/register-with-creds)
-    (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel @complytests)
     (tasks/ui click :auto-attach)
     (sleep 10000)
     (tasks/ui waittillwindowexist :register-dialog 80)
