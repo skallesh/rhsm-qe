@@ -75,7 +75,82 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
 	List<String> providedProducts = new ArrayList<String>();
+	protected List<File> entitlementCertFiles = new ArrayList<File>();
+	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if update facts button won't recreate facts.json file",
+			groups={"VerifyFactsFileExistenceAfterUpdate","blockedByBug-627707"},
+			enabled=true)
+	public void VerifyFactsFileExistenceAfterUpdate() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		client.runCommand("rm -rf "+clienttasks.rhsmFactsJsonFile);
+		Assert.assertFalse(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
+		clienttasks.facts(null, true, null, null, null);
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
+
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if unsubscribe does not delete entitlement cert from location /etc/pki/entitlement/product for consumer type candlepin ",
+			groups={"unsubscribeTheRegisteredConsumerTypeCandlepin","blockedByBug-621962"},
+			enabled=true)
+	public void unsubscribeTheRegisteredConsumerTypeCandlepin() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, ConsumerType.candlepin, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		 clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		 List<File> files=clienttasks.getCurrentEntitlementCertFiles();
+		 Assert.assertNotNull(files.size());	
+		 clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		 files=clienttasks.getCurrentEntitlementCertFiles();
+		 Assert.assertTrue(files.isEmpty());
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if you can unsubscribe from imported cert",
+			groups={"unsubscribeImportedcert","blockedByBug-691784"},
+			enabled=true)
+	public void unsubscribeImportedcert() throws Exception {
+		clienttasks.autoheal(null, null, true, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String pool = null;
+		client.runCommand("mkdir "+importCertificatesDir1);
+		 for(SubscriptionPool AvailablePools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			 pool=AvailablePools.poolId;
+		 }
+		
+		 clienttasks.subscribe(null, null, pool, null, null, null, null, null, null, null, null);
+		 entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
+		 File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
+		 File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
+		 File importCertificateFile = new File(importCertificatesDir1+File.separator+importEntitlementCertFile.getName());
+		 client.runCommandAndWait("cat "+importEntitlementCertFile+" "+importEntitlementKeyFile+" >> "+importCertificateFile);
+		 String path =importCertificateFile.getPath();
+		 clienttasks.clean(null, null, null);
+		 clienttasks.importCertificate(path);
+         String result=clienttasks.unsubscribe(true,(BigInteger)null, null, null, null).getStdout();
+         String expected_result="1 subscriptions removed from this system.";
+		 Assert.assertEquals(result, expected_result);
+		
+	}
 	
 	/**
 	 * @author skallesh
@@ -134,7 +209,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
 		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStderr();			
-		String expected_message=" Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: 7/9/13 6:34 PM";
+		String expected_message=" Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate;
 		Assert.assertEquals(result, expected_message);
 		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
 		Assert.assertEquals(result, clienttasks.msg_ConsumerNotRegistered);
@@ -220,7 +295,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify if subscription manager cli uses product name comparisons in the list command ",
-			groups={"RHELWorkstationProduct","blockedByBug-709412"},
+			groups={"RHELWorkstationProduct","blockedByBug-709412","AcceptanceTests"},
 			enabled=true)
 	public void InstalledProductMultipliesAfterSubscription() throws Exception {
 		client.runCommand("mkdir /root/generatedCertsFolder");
@@ -814,7 +889,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", 
-			groups = { "ServerUrloptionValuesInRHSMFile","blockedByBug-889573"}, enabled = true)
+			groups = { "ServerUrloptionValuesInRHSMFile","blockedByBug-889573","AcceptanceTests"}, enabled = true)
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException,Exception {
 	
 	String clientUsername="stage_test_12";
@@ -903,7 +978,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	//To be tested against stage
 	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe",
-			groups = { "Verify500ErrorOnStage","blockedByBug-878994"},
+			groups = { "Verify500ErrorOnStage","blockedByBug-878994","AcceptanceTests"},
 			enabled = true)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
 		
@@ -949,7 +1024,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(RemoteFileTasks.testExists(client,"/etc/yum.repos.d/redhat.repo"));
 		String result=client.runCommandAndWait("yum repolist all").getStdout();
-		Assert.assertContainsMatch(result, "always-enabled-content");
+		Assert.assertContainsMatch(result, "repo id");
 	}
 	
 	
@@ -3434,6 +3509,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	"blockedByBug-670831" }, enabled = true)
 	public void VerifyEntitlementStartDate_Test() throws JSONException,
 	Exception {
+		clienttasks.autoheal(null, null, true, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -3784,7 +3860,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 	}
 	
-	@BeforeGroups(groups = "setup", value = { "BugzillaTests" }, enabled = true)
+	@BeforeGroups(groups = "setup", value = { "BugzillaTests","VerifyEntitlementStartDateIsSubStartDate_Test","unsubscribeImportedcert" }, enabled = true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test()
 			throws Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword, sm_clientOrg, null, null, null,
