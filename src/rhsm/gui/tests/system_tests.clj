@@ -32,6 +32,7 @@
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   restart_env [_]
+  (assert-valid-testing-arch)
   (tasks/restart-app :unregister? true))
 
 (defn ^{Test {:groups ["system"

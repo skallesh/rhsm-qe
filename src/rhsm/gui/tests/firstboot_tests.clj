@@ -67,6 +67,7 @@
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   firstboot_cleanup [_]
+  (assert-valid-testing-arch)
   (kill_firstboot)
   (run-command "subscription-manager clean")
   (zero-proxy-values))

@@ -30,6 +30,8 @@ import org.testng.SkipException;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.jul.TestRecords;
+
+import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -5940,6 +5942,11 @@ repolist: 3,394
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
 	}
 	
+	/**
+	 * Bug 906550 - Any local-only certificates have been deleted.
+	 * @param stdoutMsg
+	 * @return
+	 */
 	public String workaroundForBug906550(String stdoutMsg) {
 		// TEMPORARY WORKAROUND FOR BUG
 		// subscription-manager commit 7bb3751ad6f398b044efd095af61cd605d9831bf
@@ -5973,6 +5980,9 @@ repolist: 3,394
 		return stdoutMsg;
 	}
 	
+	/**
+	 *  Bug 844455 - when consuming many entitlements, subscription-manager unsubscribe --all throws SSLTimeoutError: timed out
+	 */
 	protected void workaroundForBug844455() {
 		
 		if (false) { // DISABLE THIS WORKAROUND BECAUSE IT IS SLOW
@@ -6018,6 +6028,11 @@ repolist: 3,394
 		// END OF WORKAROUND
 	}
 	
+	/**
+	 * Bug 844455 - when consuming many entitlements, subscription-manager unsubscribe --all throws SSLTimeoutError: timed out
+	 * @param jsonPools
+	 * @return
+	 */
 	public JSONArray workaroundForBug844455(JSONArray jsonPools) {
 		// TEMPORARY WORKAROUND FOR BUG
 		int tooManyPools = 30;
@@ -6034,5 +6049,19 @@ repolist: 3,394
 		}
 		// END OF WORKAROUND
 		return jsonPools;
+	}
+	
+	/**
+	 * Bug 876764 - String Updates: consumer -> unit
+	 * @param type
+	 * @return
+	 */
+	public boolean workaroundForBug876764(CandlepinType type) {
+		// Bug 876764 - String Updates: consumer -> unit
+		// This is a candlepin side bug that affects many messages sent back to the client.
+		// Unfortunately these changes are present in candlepin master, but have not been deployed
+		// to hosted candlepin.
+		// For a short time the expected consumer/unit strings will be different depending on CandlepinType
+		return type.equals(CandlepinType.standalone);
 	}
 }

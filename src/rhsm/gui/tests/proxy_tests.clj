@@ -258,6 +258,7 @@
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   cleanup [_]
+  (assert-valid-testing-arch)
   (disable_proxy nil)
   (tasks/restart-app))
 

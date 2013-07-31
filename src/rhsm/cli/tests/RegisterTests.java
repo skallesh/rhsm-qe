@@ -644,6 +644,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String invalidNameStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";	// bugzilla 672233
 		       invalidNameStderr = "System name cannot contain most special characters.";	// bugzilla 677405
 		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters\\.";
+		if (clienttasks.workaroundForBug876764(sm_serverType)) maxCharsStderr = "Name of the unit must be shorter than 250 characters\\.";
 		String name;
 		String successfulStdout = "The system has been registered with id: [a-f,0-9,\\-]{36}";	// msg changed by bug 878634
 		       successfulStdout = "The system has been registered with ID: [a-f,0-9,\\-]{36}";
@@ -776,7 +777,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				*/
 				ll.add(Arrays.asList(new Object[]{null,  	username,	password,	owner,	name,	type,	Integer.valueOf(0),	"The system has been registered with ID: [a-f,0-9,\\-]{36}",	null}));			
 			} else {
-				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	Integer.valueOf(255),	null,	"No such consumer type: "+type}));			
+				String expectedStderrRegex = "No such consumer type: "+type;
+				if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStderrRegex = "No such unit type: "+type;
+				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	Integer.valueOf(255),	null,	expectedStderrRegex}));			
 	
 			}
 		}

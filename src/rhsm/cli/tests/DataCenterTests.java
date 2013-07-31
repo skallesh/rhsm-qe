@@ -235,6 +235,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 	
 	@AfterGroups(value={"VerifyAvailabilityOfDerivedProductSubpools_Test"},groups={"setup"})
 	public void afterVerifyAvailabilityOfDerivedProductSubpools_Test() {
+		clienttasks.unregister(null,null,null);
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 	Map<String,String> factsMap = new HashMap<String,String>();

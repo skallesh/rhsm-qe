@@ -1,6 +1,7 @@
 .project
 .classpath
 .lein-deps-sum
+.lein-repl-history
 .pydevproject
 pom.xml
 bin

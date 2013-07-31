@@ -45,6 +45,7 @@
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   cleanup_import [_]
+  (assert-valid-testing-arch)
   (.cleanupAfterClass @importtests)
   (tasks/restart-app))
 

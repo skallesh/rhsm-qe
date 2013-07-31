@@ -63,6 +63,7 @@
 (defn ^{AfterClass {:groups ["cleanup"]
                     :alwaysRun true}}
   cleanup [_]
+  (assert-valid-testing-arch)
   (run-command "subscription-manager unregister")
   (.configureProductCertDirAfterClass @complytests)
   (tasks/restart-app))
