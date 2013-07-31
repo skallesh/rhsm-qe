@@ -73,36 +73,48 @@
   (zero-proxy-values))
 
 (defn ^{Test {:groups ["firstboot"
-                       "blockedByBug-973269"]}}
+                       "blockedByBug-973269"
+                       "blockedByBug-988411"]}}
   firstboot_enable_proxy_auth
   "Checks whether the proxy and authentication is enabled in rhsm-conf file"
   [_]
-  (reset_firstboot)
-  (tasks/ui click :register-rhsm)
-  (let [hostname (@config :basicauth-proxy-hostname)
-        port (@config :basicauth-proxy-port)
-        username (@config :basicauth-proxy-username)
-        password (@config :basicauth-proxy-password)]
-    (tasks/enableproxy hostname :port port :user username :pass password :firstboot? true)
-    (tasks/ui click :firstboot-forward)
-    (tasks/checkforerror)
-    (tasks/firstboot-register (@config :username) (@config :password))
-    (tasks/verify-conf-proxies hostname port username password)))
+  (try
+    (reset_firstboot)
+    (tasks/ui click :register-rhsm)
+    (let [hostname (@config :basicauth-proxy-hostname)
+          port (@config :basicauth-proxy-port)
+          username (@config :basicauth-proxy-username)
+          password (@config :basicauth-proxy-password)]
+      (tasks/enableproxy hostname :port port :user username :pass password :firstboot? true)
+      (tasks/ui click :firstboot-forward)
+      (tasks/checkforerror)
+      (tasks/firstboot-register (@config :username) (@config :password))
+      (tasks/verify-conf-proxies hostname port username password))
+    (finally
+     (reset_firstboot)
+     (tasks/disableproxy true)
+     (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot"
-                       "blockedByBug-973269"]}}
+                       "blockedByBug-973269"
+                       "blockedByBug-988411"]}}
   firstboot_enable_proxy_noauth
   "Checks whether the proxy is enabled and authentication is disabled in rhsm-conf file"
   [_]
-  (reset_firstboot)
-  (tasks/ui click :register-rhsm)
-  (let [hostname (@config :noauth-proxy-hostname)
-        port (@config :noauth-proxy-port)]
-    (tasks/enableproxy hostname :port port :firstboot? true)
-    (tasks/ui click :firstboot-forward)
-    (tasks/checkforerror)
-    (tasks/firstboot-register (@config :username) (@config :password))
-    (tasks/verify-conf-proxies hostname port "" "")))
+  (try
+    (reset_firstboot)
+    (tasks/ui click :register-rhsm)
+    (let [hostname (@config :noauth-proxy-hostname)
+          port (@config :noauth-proxy-port)]
+      (tasks/enableproxy hostname :port port :firstboot? true)
+      (tasks/ui click :firstboot-forward)
+      (tasks/checkforerror)
+      (tasks/firstboot-register (@config :username) (@config :password))
+      (tasks/verify-conf-proxies hostname port "" ""))
+    (finally
+     (reset_firstboot)
+     (tasks/disableproxy true)
+     (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot"]}}
   firstboot_disable_proxy
