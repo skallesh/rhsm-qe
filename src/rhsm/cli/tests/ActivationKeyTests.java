@@ -565,8 +565,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// create an activation key, add the current pool to the activation key with this valid quantity, and attempt to register with it.
 		SSHCommandResult registerResult = RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonCurrentPool, quantityAvail);
 		
-		//Assert.assertEquals(client.getStderr().trim(), "No entitlements are available from the pool with id '"+jsonCurrentPool.getString("id")+"'.", "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");	// string changed by bug 876758
-		Assert.assertEquals(registerResult.getStderr().trim(), "No subscriptions are available from the pool with id '"+jsonCurrentPool.getString("id")+"'.", "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");
+		String expectedStderr = String.format("No entitlements are available from the pool with id '%s'.", jsonCurrentPool.getString("id"));
+		expectedStderr = String.format("No subscriptions are available from the pool with id '%s'.", jsonCurrentPool.getString("id"));	// string changed by bug 876758
+		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("No subscriptions are available from the pool with ID '%s'.", jsonCurrentPool.getString("id"));
+		Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");
 		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which non enough entitlements remain should fail.");
 		Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 	}
