@@ -489,14 +489,15 @@
   product_with_comma_separated_arch
   "This is to assert products with comma seperated products when subscribed are fully subscribed"
   [_]
-  (tasks/do-to-all-rows-in :installed-view 0
-                           (fn [subscription]
-                             (let [index (tasks/skip-dropdown :installed-view subscription)
-                                   sub-arch (tasks/ui gettextvalue :arch)
-                                   machine-arch (trim-newline (:stdout (run-command "uname -m")))]
-                               (if (and (substring? "," (tasks/ui gettextvalue :arch))
-                                        (or (substring? sub-arch machine-arch) substring? machine-arch sub-arch()))
-                                 (verify ( = "Subscribed" (tasks/ui getcellvalue :installed-view index 2))))))))
+  (tasks/do-to-all-rows-in
+   :installed-view 0
+   (fn [subscription]
+     (let [index (tasks/skip-dropdown :installed-view subscription)
+           sub-arch (tasks/ui gettextvalue :arch)
+           machine-arch (trim-newline (:stdout (run-command "uname -m")))]
+       (if (and (substring? "," (tasks/ui gettextvalue :arch))
+                (or (substring? sub-arch machine-arch) substring? machine-arch sub-arch()))
+         (verify ( = "Subscribed" (tasks/ui getcellvalue :installed-view index 2))))))))
 
 (defn ^{Test {:group ["subscribe"
                       "blockedByBug-950672"
@@ -506,11 +507,12 @@
   check_subscription_in_subscribed_products
   "Asserts there is a valid subscription value for all Subscribed products"
   [_]
-  (tasks/do-to-all-rows-in :installed-view 0
-                           (fn [subscription]
-                             (tasks/skip-dropdown :installed-view subscription)
-                             (if (not (= "Not Subscribed" (tasks/ui gettextvalue :certificate-status)))
-                               (verify (not (blank? (tasks/ui gettextvalue :providing-subscriptions))))))))
+  (tasks/do-to-all-rows-in
+   :installed-view 0
+   (fn [subscription]
+     (tasks/skip-dropdown :installed-view subscription)
+     (if (not (= "Not Subscribed" (tasks/ui gettextvalue :certificate-status)))
+       (verify (not (blank? (tasks/ui gettextvalue :providing-subscriptions))))))))
 
 (defn ^{Test {:group ["subscribe"
                       "blockedByBug-909467"
@@ -521,23 +523,24 @@
   "Checks for status of subscriptions when archs dont match that of the system"
   [_]
   (let [machine-arch (trim-newline (:stdout (run-command "uname -m")))]
-    (tasks/do-to-all-rows-in :installed-view 0
-                             (fn [subscription]
-                               (tasks/skip-dropdown :installed-view subscription)
-                               (let
-                                   [sub-name (tasks/ui gettextvalue :providing-subscriptions)
-                                    sub-arch (tasks/ui gettextvalue :arch)
-                                    check-arch (or (substring? sub-arch machine-arch)
-                                                   (substring? machine-arch sub-arch))
-                                    arch-all (= "ALL" (tasks/ui gettextvalue :arch))
-                                    status (not (= "Not Subscribed" (tasks/ui gettextvalue :certificate-status)))]
-                                 (if (and (not (or check-arch arch-all)) status)
-                                   (do
-                                     (tasks/ui selecttab :my-subscriptions)
-                                     (tasks/skip-dropdown :my-subscriptions-view sub-name)
-                                     (verify (substring? (str "Covers architecture " sub-arch " but the system is " machine-arch)
-                                                         (tasks/ui gettextvalue :status-details)))
-                                     (tasks/ui selecttab :my-installed-products))))))))
+    (tasks/do-to-all-rows-in
+     :installed-view 0
+     (fn [subscription]
+       (tasks/skip-dropdown :installed-view subscription)
+       (let
+           [sub-name (tasks/ui gettextvalue :providing-subscriptions)
+            sub-arch (tasks/ui gettextvalue :arch)
+            check-arch (or (substring? sub-arch machine-arch)
+                           (substring? machine-arch sub-arch))
+            arch-all (= "ALL" (tasks/ui gettextvalue :arch))
+            status (not (= "Not Subscribed" (tasks/ui gettextvalue :certificate-status)))]
+         (if (and (not (or check-arch arch-all)) status)
+           (do
+             (tasks/ui selecttab :my-subscriptions)
+             (tasks/skip-dropdown :my-subscriptions-view sub-name)
+             (verify (substring? (str "Covers architecture " sub-arch " but the system is " machine-arch)
+                                 (tasks/ui gettextvalue :status-details)))
+             (tasks/ui selecttab :my-installed-products))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
