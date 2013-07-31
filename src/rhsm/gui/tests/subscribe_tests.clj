@@ -491,8 +491,11 @@
   [_]
   (tasks/do-to-all-rows-in :installed-view 0
                            (fn [subscription]
-                             (let [index (tasks/skip-dropdown :installed-view subscription)]
-                               (if (substring? "," (tasks/ui gettextvalue :arch))
+                             (let [index (tasks/skip-dropdown :installed-view subscription)
+                                   sub-arch (tasks/ui gettextvalue :arch)
+                                   machine-arch (trim-newline (:stdout (run-command "uname -m")))]
+                               (if (and (substring? "," (tasks/ui gettextvalue :arch))
+                                        (or (substring? sub-arch machine-arch) substring? machine-arch sub-arch()))
                                  (verify ( = "Subscribed" (tasks/ui getcellvalue :installed-view index 2))))))))
 
 (defn ^{Test {:group ["subscribe"
