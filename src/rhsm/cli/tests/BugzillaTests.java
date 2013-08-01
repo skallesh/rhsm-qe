@@ -379,7 +379,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerid=clienttasks.getCurrentConsumerId();
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/consumers/"+consumerid);
 		String complianceStatus = CandlepinTasks.getConsumerCompliance(sm_serverAdminUsername, sm_serverAdminPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerid).getString("displayMessage");
-		String message="Unit "+consumerid+" has been deleted";
+	
+		String message="Consumer "+consumerid+" has been deleted";
+		if (clienttasks.workaroundForBug876764(sm_serverType)) message = "Unit "+consumerid+" has been deleted";
+		
 		Assert.assertContainsMatch(message, complianceStatus);
 		
 	}
@@ -2049,7 +2052,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_serverAdminPassword, sm_serverUrl, "/consumers/"
 						+ consumerId);
 		String result=clienttasks.facts_(null, true, null, null, null).getStderr();
-		String ExpectedMsg="Unit "+consumerId+" has been deleted";
+		String ExpectedMsg="Consumer "+consumerId+" has been deleted";
+		if (clienttasks.workaroundForBug876764(sm_serverType)) ExpectedMsg = "Unit "+consumerId+" has been deleted";
+		
 		Assert.assertEquals(result.trim(), ExpectedMsg);
 	}
 	/**
@@ -2070,7 +2075,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/" + orgname);
 		clienttasks.clean_(null, null, null);
 		SSHCommandResult result=clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword, orgname, null, null, null, consumerId, null, null, null,(String)null, null, null, null, null, null, null, null, null);
-		String expected="Unit "+consumerId+" has been deleted";
+		String expected="Consumer "+consumerId+" has been deleted";
+		if (clienttasks.workaroundForBug876764(sm_serverType)) expected = "Unit "+consumerId+" has been deleted";
 		Assert.assertEquals(result.getStderr().trim(), expected);
 	}
 

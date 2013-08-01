@@ -157,13 +157,13 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638","blockedByBug-976867"}, enabled = true)
 	public void AutoHealRamBasedSubscription() throws JSONException,Exception {
 		int healFrequency=2;
-		clienttasks.autoheal(null, true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
+		SubscriptionManagerCLITestScript.sleep( healFrequency* 65 * 1000);
 		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.productName.contains("RAM")){
 				Assert.assertEquals(installed.status.trim(), "Subscribed");
