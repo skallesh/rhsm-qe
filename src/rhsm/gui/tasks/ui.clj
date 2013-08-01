@@ -79,7 +79,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :remove
                                     :search
                                     :update-certificates
-                                    :view-system-facts])
+                                    :view-system-facts
+                                    :status-details])
                     {:date-entry "date-entry"
                      :register-system "Register System"
                      :redeem "Redeem a Subscription"
@@ -100,6 +101,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                  :support-level
                                  :provides-management
                                  :account
+                                 :providing-subscriptions
                                  ;; changed BZ 826735
                                  :start-end-date
                                  :subscription

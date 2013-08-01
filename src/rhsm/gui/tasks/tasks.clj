@@ -50,6 +50,18 @@
   ([url] (set-url url))
   ([] (connect (@config :ldtp-url))))
 
+(defn settext
+  "RHEL5 SUCKS"
+  [location text]
+  (try
+    (ui settextvalue location text)
+    (catch Exception e
+      (if (substring? "not implemented" (.getMessage e))
+        (do (sleep 2000)
+            (if (= text "")(ui generatekeyevent "<bksp>")
+                (ui generatekeyevent text)))
+        (throw e)))))
+
 (defn start-app
   "starts the subscription-manager-gui
   @path: lauch the application at [path]"
@@ -474,17 +486,11 @@
         (ui click :firstboot-proxy-config)
         (ui waittillwindowexist :firstboot-proxy-dialog 60)
         (ui check :firstboot-proxy-checkbox)
-        (try
-             (ui settextvalue :firstboot-proxy-location (str server (when port (str ":" port))))
-             (catch Exception e
-               (if (substring? "not implemented" (.getMessage e))
-                 (do (sleep 2000)
-                     (ui generatekeyevent (str server (when port (str ":" port)))))
-                 (throw e))))
+        (settext :firstboot-proxy-location (str server (when port (str ":" port))))
         (if (or auth? user pass)
           (do (ui check :firstboot-auth-checkbox)
-              (when user (ui settextvalue :firstboot-proxy-user user))
-              (when pass (ui settextvalue :firstboot-proxy-pass pass)))
+              (when user (settext :firstboot-proxy-user user))
+              (when pass (settext :firstboot-proxy-pass pass)))
           (ui uncheck :firstboot-auth-checkbox))
         (if close? (ui click :firstboot-proxy-close)))))
 
@@ -495,7 +501,12 @@
      (if firstboot
        (do (ui click :firstboot-proxy-config)
            (ui waittillwindowexist :firstboot-proxy-dialog 60)
+           (ui check :firstboot-proxy-checkbox)
+           (settext :firstboot-proxy-location "")
            (ui uncheck :firstboot-proxy-checkbox)
+           (ui check :firstboot-auth-checkbox)
+           (settext :firstboot-proxy-user "")
+           (settext :firstboot-proxy-pass "")
            (ui uncheck :firstboot-auth-checkbox)
            (ui click :firstboot-proxy-close)
            (checkforerror))
