@@ -1177,7 +1177,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="attempt to execute migration tool rhn-migrate-classic-to-rhsm while while under attack by a man-in-the-middle security vulnerability",
-			groups={"blockedByBug-966745","blockedByBug-885130","blockedByBug-918967","blockedByBug-918969", "RhnMigrateClassicToRhsmCertificateVerification_Test"},
+			groups={"blockedByBug-966745","blockedByBug-885130","blockedByBug-918967","blockedByBug-918968","blockedByBug-918969","RhnMigrateClassicToRhsmCertificateVerification_Test"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmCertificateVerification_Test() {
