@@ -70,6 +70,9 @@
 
 (def not-nil? (fn [b] (not (nil? b))))
 
+(defn xor [& args]
+  (odd? (count (filter identity args))))
+
 (defmacro loop-timeout [timeout bindings & forms]
   `(let [starttime# (System/currentTimeMillis)]
      (loop ~bindings
