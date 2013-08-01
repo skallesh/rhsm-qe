@@ -611,6 +611,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister_(null,null,null);
 		clienttasks.removeAllCerts(true, true, true);
 		clienttasks.removeAllFacts();
+		String candlepinServerPort = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
+		String candlepinServerHostname = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
 		
 		// remove proxy settings from up2date
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxy", "0");		// enableProxyAuth[comment]=To use an authenticated proxy or not
@@ -618,7 +620,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth", "0");	// enableProxyAuth[comment]=To use an authenticated proxy or not
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyUser", "");			// proxyUser[comment]=The username for an authenticated proxy
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyPassword", "");		// proxyPassword[comment]=The password to use for an authenticated proxy
-		iptablesAcceptPort(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port"));
+		iptablesAcceptPort(candlepinServerPort);
 		
 		// enable/set proxy settings for RHN up2date
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxy",		"1");											// enableProxyAuth[comment]=To use an authenticated proxy or not
@@ -653,9 +655,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (!rhnChannelsToAdd.isEmpty()) Assert.assertTrue(rhnChannelsConsumed.containsAll(rhnChannelsToAdd), "All of the RHN Classic channels added appear to be consumed.");
 		
 		// reject traffic through the server.port (when not testing with --no-proxy)
-		if (!options.contains("--no-proxy")) {
-			iptablesRejectPort(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port"));
-		}
+		if (!options.contains("--no-proxy")) iptablesRejectPort(candlepinServerPort);
 		
 		// mark the tail of proxyLog with a message
 		proxyLogMarker = System.currentTimeMillis()+" Testing RhnMigrateClassicToRhsmUsingProxyServer_Test.executeRhnMigrateClassicToRhsmWithOptions from "+clienttasks.hostname+"...";
@@ -667,9 +667,60 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// assert that traffic to RHSM went through the proxy (unless testing --no-proxy)
 		proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
 		if (options.contains("--no-proxy"))	{
-			Assert.assertContainsNoMatch(proxyLogResult, proxyLogRegex, "The proxy server should NOT be logging the connection attempts to RHSM when --no-proxy option is used.");
+			//Assert.assertContainsNoMatch(proxyLogResult, proxyLogRegex, "The proxy server should NOT be logging the connection attempts to RHSM when --no-proxy option is used, but should be logging connection attempts to RHN.");
+
+			// /var/log/squid/access.log
+			//	1375391532.170    437 10.16.120.123 TCP_MISS/200 1859 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
+			//	1375391532.530    349 10.16.120.123 TCP_MISS/200 2067 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
+			//	1375391532.900    356 10.16.120.123 TCP_MISS/200 3571 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
+			//	1375391533.435    514 10.16.120.123 TCP_MISS/200 1811 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
+			if (proxyLogRegex.equals("TCP_MISS") && !proxyLogResult.trim().isEmpty()) for (String proxyLogEntry : proxyLogResult.trim().split("\n")) {
+				Assert.assertTrue(proxyLogEntry.contains(rhnHostname), "Running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
+			}
+			// /var/log/tinyproxy.log
+			//	CONNECT   Aug 01 17:44:56 [10139]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:44:56 [10137]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:44:57 [10138]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:44:57 [10136]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			Assert.assertEquals(proxyLogResult.split("\n").length, 4, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy will yield this number of connection attempts through the proxy.");
 		} else {
-			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHSM.");
+			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHSM from the subscription-manager client ip '"+clienttasks.ipaddr+"'.");
+
+			// /var/log/squid/access.log
+			//	1375391369.882     52 10.16.120.123 TCP_MISS/200 1710 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
+			//	1375391369.940     44 10.16.120.123 TCP_MISS/200 1710 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
+			//	1375391369.987     32 10.16.120.123 TCP_MISS/200 2110 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
+			//	1375391370.469    471 10.16.120.123 TCP_MISS/200 1859 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
+			//	1375391370.830    347 10.16.120.123 TCP_MISS/200 2067 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
+			//	1375391371.203    361 10.16.120.123 TCP_MISS/200 3571 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
+			//	1375391371.657    428 10.16.120.123 TCP_MISS/200 1811 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
+			//	1375391372.273     32 10.16.120.123 TCP_MISS/200 2110 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
+			//	1375391372.330     43 10.16.120.123 TCP_MISS/200 1374 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
+			//	1375391374.452   1880 10.16.120.123 TCP_MISS/200 8766 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
+			//	1375391374.517     40 10.16.120.123 TCP_MISS/200 1374 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
+			//	1375391374.579     51 10.16.120.123 TCP_MISS/200 2110 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
+			//	1375391374.701    106 10.16.120.123 TCP_MISS/200 1518 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
+			if (proxyLogRegex.equals("TCP_MISS") && !proxyLogResult.trim().isEmpty()) {
+				Assert.assertTrue(proxyLogResult.contains(rhnHostname) && proxyLogResult.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should log proxy attempts to '"+rhnHostname+"' and '"+candlepinServerHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
+				for (String proxyLogEntry : proxyLogResult.trim().split("\n")) Assert.assertTrue(proxyLogEntry.contains(rhnHostname)||proxyLogEntry.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname+"' or '"+candlepinServerHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
+				Assert.assertEquals(getSubstringMatches(proxyLogResult,rhnHostname).size(), 4, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield exactly this number of connection attempts through the proxy to RHN hostname '"+rhnHostname+"'.");
+			}
+			// /var/log/tinyproxy.log
+			//	CONNECT   Aug 01 17:40:55 [10134]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:55 [10140]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:55 [10133]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:55 [10139]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:56 [10137]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:56 [10138]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:57 [10136]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:58 [10141]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:58 [10135]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:58 [10132]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:59 [10134]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:59 [10140]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+			//	CONNECT   Aug 01 17:40:59 [10133]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
+//			Assert.assertEquals(proxyLogResult.split("\n").length, 13, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield this number of connection attempts through the proxy.");
+			Assert.assertTrue(proxyLogResult.split("\n").length>4, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield more than 4 connection attempts through the proxy.  The 4 proxy connection attempts are to RHN.");
 		}
 		
 		// assert the exit code
