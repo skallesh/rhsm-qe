@@ -53,7 +53,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertMore(expiringProductSubscriptions.size(),0, "Found ProductSubscriptions corresponding to the just subscribed SubscriptionPool: "+expiringPool);
 
 		// wait for pool to expire
-		sleep(endingMinutesFromNow*60*1000 + 10*1000); // plus a 10 sec buffer
+		sleep(endingMinutesFromNow*65*1000 + 10*1000); // plus a 10 sec buffer
 		
 		// verify that that the pool expired
 		SubscriptionPool expiredPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", expiringPoolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -66,12 +66,12 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// verify that the expired entitlement cert file is gone after a trigger of rhsmcertd.certFrequency
-		SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
+		SubscriptionManagerCLITestScript.sleep(certFrequency*65*1000);
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,expiringCertFile.getPath()),"The expired entitlement cert file has been cleaned off the system by rhsmcertd");
 		
 		// final test in honor of bug 854312 - rhsmcertd removes, then puts, then removes, then puts, then removes, etc... an expired entitlement cert 
 		// verify that the expired entitlement cert file is still gone after another trigger a rhsmcertd.certFrequency
-		SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
+		SubscriptionManagerCLITestScript.sleep(certFrequency*65*1000);
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,expiringCertFile.getPath()),"After another trigger of the cert frequency, the expired entitlement cert file remains cleaned from the system.");
 	}
 	
