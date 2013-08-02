@@ -3117,7 +3117,8 @@ public class SubscriptionManagerTasks {
 				//	[root@jsefler-7 ~]# subscription-manager config --remove=server.repo_ca_cert
 				//	Section server and name repo_ca_cert cannot be removed.
 				String value = getSectionParameterFromConfigFileContents(section, name, rhsmConfFileContents);
-				if (value!=null) {
+				// if (value!=null) {
+				if (value!=null || Integer.valueOf(redhatReleaseX)<7) {  // added OR check after Bug 927350 was CLOSED NOTABUG
 					Assert.assertTrue(sshCommandResult.getStdout().contains(String.format("You have removed the value for section %s and name %s.",section,name.toLowerCase())), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
 					Assert.assertEquals(sshCommandResult.getStdout().contains(String.format("The default value for %s will now be used.",name.toLowerCase())), defaultConfFileParameterNames(true).contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
 				} else {
