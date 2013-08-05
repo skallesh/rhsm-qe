@@ -734,7 +734,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		log.info("An exempt service level should be treated as an unavailable service level when attempting to set.");
 		String expectedStderr = String.format("Service level %s is not available to consumers of organization admin.",exemptServiceLevel);	// valid before bug fix 864508
 		expectedStderr = String.format("Service level '%s' is not available to consumers of organization admin.",exemptServiceLevel);
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Service level '%s' is not available to consumers of organization admin.",exemptServiceLevel);
+		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Service level '%s' is not available to units of organization admin.",exemptServiceLevel);
 
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set with exempt serviceLevel");
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from service-level --set with exempt serviceLevel");

@@ -86,7 +86,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.
 		Assert.assertNull(client1tasks.subscribeToSubscriptionPool(testPool),"No entitlement cert is granted when the pool is already fully subscribed.");
 		// try again
-		String expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",testPool.poolId); // expected string changed by bug 876758
+		String expectedStdout = String.format("No entitlements are available from the pool with ID '%s'.",testPool.poolId); // expected string changed by bug 876758
 		expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",testPool.poolId);
 		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",testPool.poolId);
 		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),expectedStdout);
@@ -261,8 +261,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 //		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt was handled gracefully.");	// assertion valid prior to RHEL63 fix for bug 689608
 		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt successfully granted an entitlement.");
 		log.info("SSHCommandResult from '"+smtLoser.hostname+"': "+sshLoser);
-		String expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",testPool.poolId); // expected string changed by bug 876758
-		expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",testPool.poolId);
+		String expectedStdout = String.format("No entitlements are available from the pool with ID '%s'.",testPool.poolId); // expected string changed by bug 876758
+		expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",testPool.poolId);
 		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",testPool.poolId);
 		Assert.assertEquals(sshLoser.getStdout().trim(), expectedStdout, "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left from poolId '"+testPool.poolId+"'.");
 		Assert.assertEquals(sshLoser.getStderr().trim(), "","No stderr information is expected on '"+smtLoser.hostname+"'.");
