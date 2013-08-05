@@ -173,7 +173,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by more than one common service level",
-			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","blockedbyBug-859652","cli.tests"},
+			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","cli.tests","blockedbyBug-859652"},
 			dataProvider="getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesData",
 			priority=100,
 			enabled=true)
@@ -211,7 +211,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by more than one common service level",
-			groups={"cli.tests"},
+			groups={"cli.tests","blockedByBug-991580"},
 			priority=110,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},			
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -249,7 +249,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by one common service level",
-			groups={"configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","blockedbyBug-859652","cli.tests"},
+			groups={"configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","cli.tests","blockedbyBug-859652"},
 			priority=200,
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -258,7 +258,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by one common service level",
-			groups={"cli.tests","blockedByBug-864383","blockedByBug-865193"},
+			groups={"cli.tests","blockedByBug-864383","blockedByBug-865193","blockedByBug-991580"},
 			priority=210,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -313,7 +313,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when some installed products are subscribable",
-			groups={"blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","cli.tests"},
+			groups={"cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580"},
 			priority=310,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -382,7 +382,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable (or an appropriate warning period status if an entitlement is within its warning period status)",
-			groups={"blockedbyBug-723336","cli.tests"},
+			groups={"cli.tests","blockedbyBug-723336","blockedByBug-991580"},
 			priority=410,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -439,7 +439,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when no installed products are subscribable",
-			groups={"blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","cli.tests"},
+			groups={"cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580"},
 			priority=510,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -506,7 +506,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed (and a warning period status when at least one entitlement cert is within its warning period)",
-			groups={"blockedbyBug-723336","cli.tests"},
+			groups={"cli.tests","blockedbyBug-723336","blockedByBug-991580"},
 			priority=610,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},		
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -582,7 +582,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact when system is already registered to RHN Classic",
-			groups={"blockedByBug-742027","RHNClassicTests","cli.tests"},
+			groups={"RHNClassicTests","cli.tests","blockedByBug-742027"},
 			priority=710,//dependsOnMethods={"VerifySystemCompliantFactWhenUnregistered_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -620,7 +620,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact remains False when all installed products are subscribable in the future",
-			groups={"blockedbyBug-737553","blockedbyBug-649068","configureProductCertDirForAllProductsSubscribableInTheFuture","cli.tests"},
+			groups={"configureProductCertDirForAllProductsSubscribableInTheFuture","cli.tests","blockedbyBug-737553","blockedbyBug-649068"},
 			priority=800,
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -659,7 +659,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when all installed products are subscribable in the future",
-			groups={"cli.tests"},
+			groups={"cli.tests","blockedByBug-991580"},
 			priority=810,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
