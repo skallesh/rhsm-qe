@@ -3120,7 +3120,7 @@ public class SubscriptionManagerTasks {
 				// if (value!=null) {
 				if (value!=null || Integer.valueOf(redhatReleaseX)<7) {  // added OR check after Bug 927350 was CLOSED NOTABUG
 					Assert.assertTrue(sshCommandResult.getStdout().contains(String.format("You have removed the value for section %s and name %s.",section,name.toLowerCase())), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
-					Assert.assertEquals(sshCommandResult.getStdout().contains(String.format("The default value for %s will now be used.",name.toLowerCase())), defaultConfFileParameterNames(true).contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
+					Assert.assertEquals(sshCommandResult.getStdout().contains(String.format("The default value for %s will now be used.",name.toLowerCase())), defaultConfFileParameterNames(section,true).contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
 				} else {
 					Assert.assertTrue(sshCommandResult.getStdout().contains(String.format("Section %s and name %s cannot be removed.",section,name.toLowerCase())), "The stdout indicates that config parameter name '"+name+"' from section '"+section+"' cannot be removed since it is not set.");
 				}
@@ -3137,6 +3137,7 @@ public class SubscriptionManagerTasks {
 		return config(list, remove, set, listOfSectionNameValues);
 	}
 	
+	@Deprecated
 	public List<String> defaultConfFileParameterNames(Boolean toLowerCase) {
 		if (toLowerCase==null) toLowerCase=false;	// return the defaultConfFileParameterNames in lowerCase
 		
@@ -3217,6 +3218,108 @@ public class SubscriptionManagerTasks {
 		defaultNames.add("report_package_profile");
 		defaultNames.add("pluginDir");
 		defaultNames.add("pluginConfDir");
+		
+		// lowercase all of the defaultNames when requested
+		if (toLowerCase) for (String defaultName : defaultNames) {
+			defaultNames.set(defaultNames.indexOf(defaultName), defaultName.toLowerCase());
+		}
+		
+		return defaultNames;
+	}
+	
+	public List<String> defaultConfFileParameterNames(String section, Boolean toLowerCase) {
+		if (toLowerCase==null) toLowerCase=false;	// return the defaultConfFileParameterNames in lowerCase
+		
+		// hard-coded list of parameter called DEFAULTS in: 
+		//    /usr/lib/python2.6/site-packages/rhsm/config.py
+		//    /usr/lib64/python2.4/site-packages/rhsm/config.py
+		// this list of hard-coded parameter names have a hard-coded value (not listed here) that will be used
+		// after a user calls subscription-manager --remove section.name otherwise the remove will set the value to ""
+		List<String> defaultNames = new ArrayList<String>();
+
+		// BEFORE FIX FOR BUG 807721
+		// initialize defaultNames (will appear in all config sections and have a default value)
+		//	DEFAULTS = {
+		//	        'hostname': 'localhost',
+		//	        'prefix': '/candlepin',
+		//	        'port': '8443',
+		//	        'ca_cert_dir': '/etc/rhsm/ca/',
+		//	        'repo_ca_cert': '/etc/rhsm/ca/redhat-uep.pem',
+		//	        'ssl_verify_depth': '3',
+		//	        'proxy_hostname': '',
+		//	        'proxy_port': '',
+		//	        'proxy_user': '',
+		//	        'proxy_password': '',
+		//	        'insecure': '0'
+		//	        }
+		/*
+		defaultNames.add("hostname");
+		defaultNames.add("prefix");
+		defaultNames.add("port");
+		defaultNames.add("ca_cert_dir");
+		defaultNames.add("repo_ca_cert");
+		defaultNames.add("ssl_verify_depth");
+		defaultNames.add("proxy_hostname");
+		defaultNames.add("proxy_port");
+		defaultNames.add("proxy_user");
+		defaultNames.add("proxy_password");
+		defaultNames.add("insecure");
+		*/
+		
+		// AFTER FIX FOR BUG 807721
+		//# Defaults are applied to each section in the config file.
+		//DEFAULTS = {
+		//                'hostname': 'localhost',
+		//                'prefix': '/candlepin',
+		//                'port': '8443',
+		//                'ca_cert_dir': '/etc/rhsm/ca/',
+		//                'repo_ca_cert': '/etc/rhsm/ca/redhat-uep.pem',
+		//                'ssl_verify_depth': '3',
+		//                'proxy_hostname': '',
+		//                'proxy_port': '',
+		//                'proxy_user': '',
+		//                'proxy_password': '',
+		//                'insecure': '0',
+		//                'baseurl': 'https://cdn.redhat.com',
+		//                'manage_repos': '1',
+		//                'productCertDir': '/etc/pki/product',
+		//                'entitlementCertDir': '/etc/pki/entitlement',
+		//                'consumerCertDir': '/etc/pki/consumer',
+		//                'certFrequency': '240',
+		//                'healFrequency': '1440',
+		//            }
+		
+		// AFTER FIX FOR BUG 988476
+		if (section.equalsIgnoreCase("server")) {
+			defaultNames.add("hostname");
+			defaultNames.add("prefix");
+			defaultNames.add("port");
+			defaultNames.add("insecure");
+			defaultNames.add("ssl_verify_depth");
+			defaultNames.add("proxy_hostname");
+			defaultNames.add("proxy_port");
+			defaultNames.add("proxy_user");
+			defaultNames.add("proxy_password");
+
+		}
+		if (section.equalsIgnoreCase("rhsm")) {
+			defaultNames.add("baseurl");
+			defaultNames.add("ca_cert_dir");
+			defaultNames.add("repo_ca_cert");
+			defaultNames.add("productCertDir");
+			defaultNames.add("entitlementCertDir");
+			defaultNames.add("consumerCertDir");
+			defaultNames.add("manage_repos");
+			defaultNames.add("report_package_profile");
+			defaultNames.add("pluginDir");
+			defaultNames.add("pluginConfDir");
+		}
+		if (section.equalsIgnoreCase("rhsmcertd")) {
+			defaultNames.add(/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");
+			defaultNames.add(/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval");
+		}
+
+
 		
 		// lowercase all of the defaultNames when requested
 		if (toLowerCase) for (String defaultName : defaultNames) {
