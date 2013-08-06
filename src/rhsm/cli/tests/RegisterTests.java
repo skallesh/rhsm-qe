@@ -1406,8 +1406,8 @@ Expected Results:
 	}
 	@AfterGroups(value={"RegisterWithInsecure_Test"},groups={"setup"})
 	public void afterRegisterWithInsecure_Test() {
-		clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
-		clienttasks.config(null, null, true, new String[]{"server","insecure",server_insecure});
+		if (rhsm_ca_cert_dir!=null) clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
+		if (server_insecure!=null) clienttasks.config(null, null, true, new String[]{"server","insecure",server_insecure});
 	}
 	
 	

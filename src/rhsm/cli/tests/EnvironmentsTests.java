@@ -204,7 +204,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	}
 	@AfterGroups(value={"EnvironmentsWithInsecure_Test"},groups={"setup"})
 	public void afterEnvironmentsWithInsecure_Test() {
-		clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
+		if (rhsm_ca_cert_dir!=null) clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
 	}
 	
 	

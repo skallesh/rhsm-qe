@@ -834,7 +834,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	@AfterGroups(value={"EnablementOfReportPackageProfile_Test"},groups={"setup"})
 	public void afterEnablementOfReportPackageProfile_Test() {
-		clienttasks.config(null, null, true, new String[]{"rhsm","report_package_profile",rhsm_report_package_profile});
+		if (rhsm_report_package_profile!=null) clienttasks.config(null, null, true, new String[]{"rhsm","report_package_profile",rhsm_report_package_profile});
 	}
 	
 	

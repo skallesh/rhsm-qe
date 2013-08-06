@@ -234,7 +234,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 	@AfterGroups(value={"OrgsWithInsecure_Test"},groups={"setup"})
 	public void afterOrgsWithInsecure_Test() {
-		clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
+		if (rhsm_ca_cert_dir!=null) clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
 	}
 	
 	
