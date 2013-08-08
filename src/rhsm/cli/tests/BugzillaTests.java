@@ -83,6 +83,37 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@Test(	description="verify if Status displays product name multiple times when the system had inactive stack subscriptions",
+			groups={"VerifyIfStatusDisplaysProductNameMultipleTimes","blockedByBug-972752"},
+			enabled=true)
+	public void VerifyIfStatusDisplaysProductNameMultipleTimes() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		int sockets = 4;
+		clienttasks.autoheal(null, null, true, null, null, null);
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null, true, null, null, null);
+		 for(SubscriptionPool AvailablePools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			 if(AvailablePools.productId.equals("awesomeos-x86_64")){
+			 clienttasks.subscribe(null, null, AvailablePools.poolId, null, null, "1", null, null, null, null, null);
+			 }
+		 
+		 }
+		 String result=clienttasks.status(null, null, null).getStdout();
+		 clienttasks.autoheal(null, true, null, null, null, null);
+		 System.out.println(result);
+		
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
 	@Test(	description="verify if update facts button won't recreate facts.json file",
 			groups={"VerifyFactsFileExistenceAfterUpdate","blockedByBug-627707"},
 			enabled=true)
