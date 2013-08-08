@@ -1315,6 +1315,24 @@ public class SubscriptionManagerTasks {
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+redhatReleaseX;
 		List<ProductCert> rhelProductCerts = getCurrentProductCerts(providingTag);
+		// special case (Rhel5ClientDesktopVersusWorkstation)
+		if (rhelProductCerts.isEmpty() && releasever.equals("5Client")) {
+			//	Product:
+			//		ID: 68
+			//		Name: Red Hat Enterprise Linux Desktop
+			//		Version: 5.10
+			//		Arch: i386
+			//		Tags: rhel-5,rhel-5-client
+
+			//	Product:
+			//		ID: 71
+			//		Name: Red Hat Enterprise Linux Workstation
+			//		Version: 5.10
+			//		Arch: i386
+			//		Tags: rhel-5-client-workstation,rhel-5-workstation
+			providingTag = "rhel-5-client-workstation";
+			rhelProductCerts = getCurrentProductCerts(providingTag);
+		}
 		Assert.assertTrue(rhelProductCerts.size()<=1, "No more than one product cert is installed that provides RHEL tag '"+providingTag+"' (actual='"+rhelProductCerts.size()+"').");
 		if (rhelProductCerts.isEmpty()) return null; 
 		return rhelProductCerts.get(0);
