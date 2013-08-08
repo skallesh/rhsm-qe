@@ -321,13 +321,22 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, TestRecords.action());
-
+		SSHCommandResult sshCommandResult;
+		
 		// verify the stdout message
-		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
+		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
+		sshCommandResult = client.runCommandAndWait(command);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenNonCompliant, "Stdout from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		
 		// also verify the /var/syslog/messages
 		sleep(100);	// give the message thread time to be logged
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
+		//RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
+		sshCommandResult = client.runCommandAndWait(command);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDSyslogMessageWhenNonCompliant, "Stdout from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
 	
 	@Test(	description="when some installed products are subscribable and system is NOT compliant, auto-subscribing again should try but not get any new entitlements",
@@ -447,13 +456,22 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, TestRecords.action());
-
+		SSHCommandResult sshCommandResult;
+		
 		// verify the stdout message
-		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
+		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
+		sshCommandResult = client.runCommandAndWait(command);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenNonCompliant, "Stdout from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		
 		// also verify the /var/syslog/messages
 		sleep(100);	// give the message thread time to be logged
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
+		//RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
+		sshCommandResult = client.runCommandAndWait(command);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDSyslogMessageWhenNonCompliant, "Stdout from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
 	
 	@Test(	description="when no installed products are subscribable and system is NOT compliant, auto-subscribing again should try but not get any new entitlements",
@@ -513,6 +531,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled_Test() {
 		if (!configureProductCertDirForNoProductsInstalledCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsInstalledCompleted="+configureProductCertDirForNoProductsInstalledCompleted);
 		String command = clienttasks.rhsmComplianceD+" -s -d";
+		SSHCommandResult sshCommandResult;
 
 		// verify the rhsmcomplianced status when there are entitlement certs within their warning period
 		List<EntitlementCert> entitlementCertsWithinWarningPeriod = clienttasks.getCurrentEntitlementCertsWithinWarningPeriod();
@@ -523,7 +542,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			//Stderr:
 			//ExitCode: 0
 			log.info("Asserting RhsmComplianced while at least one of the current entitlement certs is within its warning period...");
-			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, null);
+			//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, null);
+			sshCommandResult = client.runCommandAndWait(command);
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, "Stdout from command '"+command+"'");
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 			
 			// unsubscribe from the serial
 			EntitlementCert entitlementCert = entitlementCertsWithinWarningPeriod.remove(0);
@@ -532,12 +555,20 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 		// verify the stdout message
 		log.info("Asserting RhsmComplianced status before unsubscribing from all currently consumed subscriptions...");
-		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+		sshCommandResult = client.runCommandAndWait(command);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenCompliant, "Stdout from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		
 		// also assert RhsmComplianced when not consuming any subscriptions
 		log.info("Also asserting RhsmComplianced status after unsubscribing from all currently consumed subscriptions...");
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+		sshCommandResult = client.runCommandAndWait(command);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenCompliant, "Stdout from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		
 	}
 	
@@ -609,10 +640,15 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenRegisteredToRHNClassic_Test() {
-		String command = clienttasks.rhsmComplianceD+" -s -d";
+		String command = clienttasks.rhsmComplianceD+" -s --debug";
+		SSHCommandResult sshCommandResult;
 
 		// verify the stdout message
-		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic, null);
+		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic, null);
+		sshCommandResult = client.runCommandAndWait(command);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic, "Stdout from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
 	
 	
@@ -666,9 +702,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribableInTheFuture_Test() {
 		if (!configureProductCertDirForAllProductsSubscribableInTheFutureCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableInTheFutureCompleted="+configureProductCertDirForAllProductsSubscribableInTheFutureCompleted);
 		String command = clienttasks.rhsmComplianceD+" -s -d";
+		SSHCommandResult sshCommandResult;
 
 		// verify the stdout message
-		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
+		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
+		sshCommandResult = client.runCommandAndWait(command);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenNonCompliant, "Stdout from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
 	
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
@@ -719,12 +760,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public static List<String> allProductsSubscribableByMoreThanOneCommonServiceLevelValues= new ArrayList<String>();	// the service_level values to expect subscription-manager-gui to prompt the user to choose from when autosubscribing after calling configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
 
 	protected String productCertDir = null;
-	protected final String rhsmComplianceDStdoutMessageWhenNonCompliant = "System has one or more certificates that are not valid";
-	protected final String rhsmComplianceDStdoutMessageWhenCompliant = "System entitlements appear valid";
-	protected final String rhsmComplianceDStdoutMessageWhenInsideWarningPeriod = "System has one or more entitlements in their warning period";
-	protected final String rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic = "System is already registered to another entitlement system";
-	protected final String rhsmComplianceDSyslogMessageWhenNonCompliant = "This system is missing one or more subscriptions. Please run subscription-manager for more information.";	// "This system is missing one or more valid entitlement certificates. Please run subscription-manager for more information.";
 	protected List<SubscriptionPool> futureSystemSubscriptionPools = null;
+	
+	// 8/7/2013 the following rhsmComplianceDStdoutMessages changed after ckozak altered the dbus implementation to display compliance messages in the rhsm-icon
+	protected final String rhsmComplianceDStdoutMessageWhenNonCompliant = "This system is missing one or more subscriptions. Please run subscription-manager for more information.";	//"System has one or more certificates that are not valid";
+	protected final String rhsmComplianceDStdoutMessageWhenCompliant = "";	//"System entitlements appear valid";
+	protected final String rhsmComplianceDStdoutMessageWhenInsideWarningPeriod = "This system's subscriptions are about to expire. Please run subscription-manager for more information.";	//"System has one or more entitlements in their warning period";
+	protected final String rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic = "System is already registered to another entitlement system\nThis system is registered to RHN Classic.";
+	protected final String rhsmComplianceDSyslogMessageWhenNonCompliant = "This system is missing one or more subscriptions. Please run subscription-manager for more information.";	// "This system is missing one or more valid entitlement certificates. Please run subscription-manager for more information.";
 	
 	
 	
@@ -802,13 +845,22 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	protected void verifyRhsmCompliancedWhenAllProductsAreSubscribable() {
 		String command = clienttasks.rhsmComplianceD+" -s -d";
+		SSHCommandResult sshCommandResult;
 
 		if (clienttasks.getCurrentEntitlementCertsWithinWarningPeriod().isEmpty()) {
 			// otherwise verify the rhsmcomplianced status when we should be fully compliant
-			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+			//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+			sshCommandResult = client.runCommandAndWait(command);
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenCompliant, "Stdout from command '"+command+"'");
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		} else {
 			// verify the rhsmcomplianced status when there are entitlement certs within their warning period
-			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, null);
+			//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, null);
+			sshCommandResult = client.runCommandAndWait(command);
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, "Stdout from command '"+command+"'");
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		}
 	}
 	

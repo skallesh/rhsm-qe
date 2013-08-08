@@ -39,6 +39,21 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
+	
+	@Test(	description="subscription-manager: use config --list to get the value of /etc/rhsm.rhsm.conf [server]ca_cert_dir (should not exist)",
+			groups={"blockedByBug-993202"},
+			priority=5,
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void GetCaCertDirValue_Test() {
+		String section, parameter="ca_cert_dir";
+		section="server";
+		Assert.assertNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, parameter), "Config file '"+clienttasks.rhsmConfFile+"' section '"+section+"' parameter '"+parameter+"' should NOT be set.");
+		section="rhsm";
+		Assert.assertNotNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, parameter), "Config file '"+clienttasks.rhsmConfFile+"' section '"+section+"' parameter '"+parameter+"' should be set.");		
+	}
+	
+	
 	@Test(	description="subscription-manager: use config to set each of the rhsm.conf parameter values and verify it is persisted to /etc/rhsm.rhsm.conf",
 			groups={"AcceptanceTests"},
 			dataProvider="getConfigSectionNameData",
@@ -165,7 +180,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ConfigGetSectionNameValueAndVerifyDefault_Test(Object bugzilla, String section, String name, String ignoreValue) {
 
-		// get a the config list (only once to save some unnecessary logging)
+		// get the config list (only once to save some unnecessary logging)
 		// SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = clienttasks.config(true,null,null,(String[])null);
 		if (sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test == null) {
 			sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test = clienttasks.config(true,null,null,(String[])null);
@@ -195,7 +210,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		String regexForName = "("+name+"|"+name.toLowerCase()+")";	// note: python will write and tolerate all lowercase parameter names
 		String regexForValue = null;
 		String assertMsg = "";
-		if (clienttasks.defaultConfFileParameterNames(true).contains(name.toLowerCase())) {	// case 1:
+//		if (clienttasks.defaultConfFileParameterNames(true).contains(name.toLowerCase())) {	// case 1:	// valid before bug 988476
+		if (clienttasks.defaultConfFileParameterNames(section,true).contains(name.toLowerCase())) {	// case 1:
 			// value listed for name after having removed a parameter that has a default defined
 			//   ca_cert_dir = [/etc/rhsm/ca/]
 			regexForValue = "\\[.*\\]";
@@ -248,7 +264,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			String name		= (String) row.get(2);
 			String value	= (String) row.get(3);
 			String newValue = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name);
-			if (clienttasks.defaultConfFileParameterNames(true).contains(name.toLowerCase())) {
+//			if (clienttasks.defaultConfFileParameterNames(true).contains(name.toLowerCase())) {	// before bug 988476
+			if (clienttasks.defaultConfFileParameterNames(section,true).contains(name.toLowerCase())) {
 				Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
 			} else {
 				Assert.assertEquals(newValue, "", "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter value is blanked from config file '"+clienttasks.rhsmConfFile+"'. (e.g. parameter_name = )");			
@@ -391,9 +408,9 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// Object blockedByBug, Boolean list, Boolean remove, Boolean set, String[] section_name_value
-		ll.add(Arrays.asList(new Object[]{null,	true,	true,	true,	new String[]{"rhsmcertd", "insecure", "1"}}));
-		ll.add(Arrays.asList(new Object[]{null,	true,	false,	true,	new String[]{"rhsmcertd", "insecure", "1"}}));
-		ll.add(Arrays.asList(new Object[]{null,	true,	true,	false,	new String[]{"rhsmcertd", "insecure", "1"}}));
+		ll.add(Arrays.asList(new Object[]{null,	true,	true,	true,	new String[]{"server", "insecure", "1"}}));
+		ll.add(Arrays.asList(new Object[]{null,	true,	false,	true,	new String[]{"server", "insecure", "1"}}));
+		ll.add(Arrays.asList(new Object[]{null,	true,	true,	false,	new String[]{"server", "insecure", "1"}}));
 		
 		return ll;
 	}
@@ -410,7 +427,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 			
 		// Object bugzilla,	String section,	String name, String testValue
-		ll.add(Arrays.asList(new Object[]{null,							"server",		"ca_cert_dir",			"/tmp/server/ca_cert_dir"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"server",		"ca_cert_dir",			"/tmp/server/ca_cert_dir"}));
 		ll.add(Arrays.asList(new Object[]{null,							"server",		"hostname",				"server.hostname.redhat.com"}));
 		ll.add(Arrays.asList(new Object[]{null,							"server",		"insecure",				"0"}));
 		ll.add(Arrays.asList(new Object[]{null,							"server",		"port",					"2000"}));
@@ -419,56 +436,56 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,							"server",		"proxy_port",			"200"}));
 		ll.add(Arrays.asList(new Object[]{null,							"server",		"proxy_password",		"server_proxy_password"}));
 		ll.add(Arrays.asList(new Object[]{null,							"server",		"proxy_user",			"server_proxy_user"}));
-		ll.add(Arrays.asList(new Object[]{null,							"server",		"repo_ca_cert",			"/tmp/server/repo_ca_cert.pem"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"server",		"repo_ca_cert",			"/tmp/server/repo_ca_cert.pem"}));
 		ll.add(Arrays.asList(new Object[]{null,							"server",		"ssl_verify_depth",		"2"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"manage_repos",			"1"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"baseurl",				"http://server.baseurl.com"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"entitlementcertdir",	"/tmp/server/entitlementcertdir"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"productcertdir",		"/tmp/server/productcertdir"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"consumercertdir",		"/tmp/server/consumercertdir"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"server",		/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"200"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"server",		/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"2000"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"manage_repos",			"1"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"baseurl",				"http://server.baseurl.com"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"entitlementcertdir",	"/tmp/server/entitlementcertdir"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"productcertdir",		"/tmp/server/productcertdir"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"server",		"consumercertdir",		"/tmp/server/consumercertdir"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"server",		/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"200"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"server",		/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"2000"}));
 		
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"baseurl",				"https://rhsm.baseurl.com"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"ca_cert_dir",			"/tmp/rhsm/ca_cert_dir"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"consumerCertDir",		"/tmp/rhsm/consumercertdir"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"entitlementCertDir",	"/tmp/rhsm/entitlementcertdir"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"hostname",				"rhsm.hostname.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"insecure",				"1"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"port",					"1000"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"prefix",				"/rhsm/prefix"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"hostname",				"rhsm.hostname.redhat.com"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"insecure",				"1"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"port",					"1000"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"prefix",				"/rhsm/prefix"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"productCertDir",		"/tmp/rhsm/productcertdir"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_hostname",		"rhsm.proxy.hostname.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_password",		"rhsm_proxy_password"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_port",			"100"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_user",			"rhsm_proxy_user"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_hostname",		"rhsm.proxy.hostname.redhat.com"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_password",		"rhsm_proxy_password"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_port",			"100"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_user",			"rhsm_proxy_user"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"repo_ca_cert",			"/tmp/rhsm/repo_ca_cert.pem"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"ssl_verify_depth",		"1"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"ssl_verify_depth",		"1"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("797996"),	"rhsm",			"manage_repos",			"0"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"report_package_profile",	"0"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"plugindir",				"/tmp/rhsm/plugindir"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"pluginconfdir",			"/tmp/rhsm/pluginconfdir"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"100"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"1000"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"100"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"1000"}));
 		
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"ca_cert_dir",			"/tmp/rhsmcertd/ca_cert_dir"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"ca_cert_dir",			"/tmp/rhsmcertd/ca_cert_dir"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"300"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"3000"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"hostname",				"rhsmcertd.hostname.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"insecure",				"0"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"port",					"3000"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"prefix",				"/rhsmcertd/prefix"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"proxy_hostname",		"rhsmcertd.proxy.hostname.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"proxy_password",		"rhsmcertd_proxy_password"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"proxy_port",			"300"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"proxy_user",			"rhsmcertd_proxy_user"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"repo_ca_cert",			"/tmp/rhsmcertd/repo_ca_cert.pem"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"ssl_verify_depth",		"3"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsmcertd",	"manage_repos",			"1"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsmcertd",	"baseurl",				"http://rhsmcertd.baseurl.com"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsmcertd",	"entitlementcertdir",	"/tmp/rhsmcertd/entitlementcertdir"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsmcertd",	"productcertdir",		"/tmp/rhsmcertd/productcertdir"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsmcertd",	"consumercertdir",		"/tmp/rhsmcertd/consumercertdir"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"hostname",				"rhsmcertd.hostname.redhat.com"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"insecure",				"0"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"port",					"3000"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"prefix",				"/rhsmcertd/prefix"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"proxy_hostname",		"rhsmcertd.proxy.hostname.redhat.com"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"proxy_password",		"rhsmcertd_proxy_password"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"proxy_port",			"300"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"proxy_user",			"rhsmcertd_proxy_user"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"repo_ca_cert",			"/tmp/rhsmcertd/repo_ca_cert.pem"}));
+//988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"ssl_verify_depth",		"3"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsmcertd",	"manage_repos",			"1"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsmcertd",	"baseurl",				"http://rhsmcertd.baseurl.com"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsmcertd",	"entitlementcertdir",	"/tmp/rhsmcertd/entitlementcertdir"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsmcertd",	"productcertdir",		"/tmp/rhsmcertd/productcertdir"}));
+//988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("807721"),	"rhsmcertd",	"consumercertdir",		"/tmp/rhsmcertd/consumercertdir"}));
 		
 		return ll;
 	}

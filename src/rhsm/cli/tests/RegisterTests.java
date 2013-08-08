@@ -1368,16 +1368,16 @@ Expected Results:
 	}
 	
 	
-	protected String server_ca_cert_dir = null;
+	protected String rhsm_ca_cert_dir = null;
 	protected String server_insecure = null;
 	@BeforeGroups(value={"RegisterWithInsecure_Test"}, groups={"setup"})
 	public void beforeRegisterWithInsecure_Test() {
 		if (clienttasks==null) return;
-		server_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "ca_cert_dir");
+		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 		server_insecure		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure");
 	}
 	@Test(	description="subscription-manager: register with --insecure",
-			groups={"RegisterWithInsecure_Test","blockedByBug-844411"},
+			groups={"RegisterWithInsecure_Test","blockedByBug-844411","blockedByBug-993202"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithInsecure_Test() {
@@ -1387,15 +1387,15 @@ Expected Results:
 		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,false,null,true,null,null,null,null);
 		clienttasks.unregister(null, null, null);
 		
-		// change the server.ca_cert_dir configuration to simulate a missing candlepin ca cert
+		// change the rhsm.ca_cert_dir configuration to simulate a missing candlepin ca cert
 		client.runCommandAndWait("mkdir -p /tmp/emptyDir");
-		sshCommandResult = clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir","/tmp/emptyDir"});
+		sshCommandResult = clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir","/tmp/emptyDir"});
 		
 		// calling register without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,false,null,null,null,null,null,null);
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the register command when configuration server.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration server.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the register command when configuration server.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		
 		// calling register with insecure should now pass
 		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,true,null,null,null,null,null,null);
@@ -1406,10 +1406,9 @@ Expected Results:
 	}
 	@AfterGroups(value={"RegisterWithInsecure_Test"},groups={"setup"})
 	public void afterRegisterWithInsecure_Test() {
-		clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir",server_ca_cert_dir});
-		clienttasks.config(null, null, true, new String[]{"server","insecure",server_insecure});
+		if (rhsm_ca_cert_dir!=null) clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
+		if (server_insecure!=null) clienttasks.config(null, null, true, new String[]{"server","insecure",server_insecure});
 	}
-	
 	
 	
 	

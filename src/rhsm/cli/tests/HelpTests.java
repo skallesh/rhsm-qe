@@ -388,11 +388,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		*/
 		// add the expected default configurations
 		for (String section : new String[]{"server","rhsm","rhsmcertd"}) {
-			for (String confFileParameterName : clienttasks.defaultConfFileParameterNames(null)) {
+//			for (String confFileParameterName : clienttasks.defaultConfFileParameterNames(null)) {	// valid before bug 988476
+			for (String confFileParameterName : clienttasks.defaultConfFileParameterNames(section,null)) {
 				options.add(String.format("--%s.%s=%s.%s",section.toLowerCase(),confFileParameterName.toLowerCase(),section.toUpperCase(),confFileParameterName.toUpperCase()));
 			}
 		}
-		// add the unexpected configurations that were  added manually or remain as deprecated configurations from a subscription-manager upgrade
+		// add the unexpected configurations that were added manually or remain as deprecated configurations from a subscription-manager upgrade
 		String confFileContents = RemoteFileTasks.runCommandAndAssert(client, "egrep -v  \"^\\s*(#|$)\" "+clienttasks.rhsmConfFile, 0).getStdout();
 		String section=null;
 		for (String line : confFileContents.split("\n")) {
@@ -400,7 +401,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			if (line.isEmpty()) continue;
 			if (line.matches("\\[\\w+\\]")) {section=line.replaceFirst("\\[","").replaceFirst("\\]",""); continue;}
 			String parameterName = line.split("=|:",2)[0].trim();
-			if (clienttasks.defaultConfFileParameterNames(true).contains(parameterName.toLowerCase())) continue;
+//			if (clienttasks.defaultConfFileParameterNames(true).contains(parameterName.toLowerCase())) continue;	// valid before bug 988476
+			if (clienttasks.defaultConfFileParameterNames(section,true).contains(parameterName.toLowerCase())) continue;
 			options.add(String.format("--%s.%s=%s.%s",section.toLowerCase(),parameterName.toLowerCase(),section.toUpperCase(),parameterName.toUpperCase()));
 		}
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {

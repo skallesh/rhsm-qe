@@ -200,14 +200,14 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	protected String server_ca_cert_dir = null;
+	protected String rhsm_ca_cert_dir = null;
 	@BeforeGroups(value={"OrgsWithInsecure_Test"}, groups={"setup"})
 	public void beforeOrgsWithInsecure_Test() {
 		if (clienttasks==null) return;
-		server_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "ca_cert_dir");
+		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 	}
 	@Test(	description="subscription-manager: orgs with --insecure",
-			groups={"OrgsWithInsecure_Test","blockedByBug-844411"},
+			groups={"OrgsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void OrgsWithInsecure_Test() {
@@ -216,15 +216,15 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		// calling orgs without insecure should pass
 		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, false, null, null, null);
 		
-		// change the server.ca_cert_dir configuration to simulate a missing candlepin ca cert
+		// change the rhsm.ca_cert_dir configuration to simulate a missing candlepin ca cert
 		client.runCommandAndWait("mkdir -p /tmp/emptyDir");
-		sshCommandResult = clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir","/tmp/emptyDir"});
+		sshCommandResult = clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir","/tmp/emptyDir"});
 		
 		// calling orgs without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword, null, false, null, null, null);
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the orgs command when configuration server.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the orgs command when configuration server.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the orgs command when configuration server.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
 		
 		// calling orgs with insecure should now pass
 		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, true, null, null, null);
@@ -234,7 +234,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 	@AfterGroups(value={"OrgsWithInsecure_Test"},groups={"setup"})
 	public void afterOrgsWithInsecure_Test() {
-		clienttasks.config(null, null, true, new String[]{"server","ca_cert_dir",server_ca_cert_dir});
+		if (rhsm_ca_cert_dir!=null) clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
 	}
 	
 	
