@@ -469,7 +469,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// assert sockets against the socketsCalcualtedUsingTopology (using core_siblings_list files)
 		if (!assertedSockets) {
 			// determine the number of cpu_socket(s) using the topology calculation
-			client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/core_siblings_list; done");
+//			client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/core_siblings_list; done");
 			String socketsCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/core_siblings_list; done | sort | uniq | wc -l").getStdout().trim();
 			// FIXME: This topology algorithm will fail (probably on s390x or ppc64) when the core_siblings_list contains individually disabled cores which would affect the uniq output which assumes a symmetric topology
 			if (client.getStderr().isEmpty()) {
@@ -484,13 +484,15 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// assert sockets against the socketsCalcualtedUsingTopology (using physical_package_id files)
 		if (!assertedSockets) {
 			// determine the cpu_socket(s) value using the topology calculation
-			client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu").getStdout().trim();
+//			client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu").getStdout().trim();
 			String socketsCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | sort | uniq | wc -l").getStdout().trim();
-			if (!client.getStderr().isEmpty()) log.warning(client.getStderr());
-			log.info("The expected cpu_socket(s) value calculated using the topology algorithm above is '"+socketsCalcualtedUsingTopology+"'.");
-
-			Assert.assertEquals(factsMap.get(cpuSocketsFact), socketsCalcualtedUsingTopology, "The value of system fact '"+cpuSocketsFact+"' should match the value for 'CPU socket(s)' value='"+socketsCalcualtedUsingTopology+"' as calculated using cpu topology.");
-			assertedSockets = true;
+			if (client.getStderr().isEmpty()) {
+				log.info("The expected cpu_socket(s) value calculated using the topology algorithm above is '"+socketsCalcualtedUsingTopology+"'.");
+				Assert.assertEquals(factsMap.get(cpuSocketsFact), socketsCalcualtedUsingTopology, "The value of system fact '"+cpuSocketsFact+"' should match the value for 'CPU socket(s)' value='"+socketsCalcualtedUsingTopology+"' as calculated using cpu topology.");
+				assertedSockets = true;
+			} else {
+				log.warning(client.getStderr());
+			}
 		}
 		
 		if (!assertedSockets) Assert.fail("Could not figure out how to assert the expected number of sockets.");
@@ -705,13 +707,15 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// assert cpuCores against the coresCalcualtedUsingTopology
 		if (!assertedCores) {
 			// determine the number of cores using the topology calculation
-			client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/thread_siblings_list; done");
+//			client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/thread_siblings_list; done");
 			String coresCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/thread_siblings_list; done | sort | uniq | wc -l").getStdout().trim();
-			if (!client.getStderr().isEmpty()) log.warning(client.getStderr());
-			// FIXME: This topology algorithm will fail (probably on s390x or ppc64) when the core_siblings_list contains individually disabled cores which would affect the uniq output which assumes a symmetric topology
-			log.info("The expected number of cores calculated using the topology algorithm above is '"+coresCalcualtedUsingTopology+"'.");
-			Assert.assertEquals(cpuCores, Integer.valueOf(coresCalcualtedUsingTopology), "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using the topology algorithm.");	
-			assertedCores = true;
+			if (client.getStderr().isEmpty()) {
+				log.info("The expected number of cores calculated using the topology algorithm above is '"+coresCalcualtedUsingTopology+"'.");
+				Assert.assertEquals(cpuCores, Integer.valueOf(coresCalcualtedUsingTopology), "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using the topology algorithm.");	
+				assertedCores = true;
+			} else {
+				log.warning(client.getStderr());
+			}
 		}
 		
 		if (!assertedCores) Assert.fail("Could not figure out how to assert the expected number of cores.");
