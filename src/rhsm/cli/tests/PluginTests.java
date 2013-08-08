@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
@@ -667,8 +668,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
 		if (haInstalledProduct!=null) {
 			ProductCert haInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentProductCerts());
-			log.warning("Manually removing installed High Availability product cert (you are probably running a RHEL5 client)...");
+			log.warning("Manually removing installed High Availability product cert and restoring '"+clienttasks.productIdJsonFile+"' (you are probably running a RHEL5 client)...");
 			client.runCommandAndWait("rm -f "+haInstalledProductCert.file.getPath());
+			restoreProductIdJsonFileAfterClass();
 			haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
 		}
 		Assert.assertNull(haInstalledProduct, "The High Availability product id '"+HighAvailabilityTests.haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
@@ -733,8 +735,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
 			if (haInstalledProduct!=null) {
 				ProductCert haInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentProductCerts());
-				log.warning("Manually removing installed High Availability product cert (you are probably running a RHEL5 client)...");
+				log.warning("Manually removing installed High Availability product cert and restoring '"+clienttasks.productIdJsonFile+"' (you are probably running a RHEL5 client)...");
 				client.runCommandAndWait("rm -f "+haInstalledProductCert.file.getPath());
+				restoreProductIdJsonFileAfterClass();
 				haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
 			}
 			Assert.assertNull(haInstalledProduct, "The High Availability product id '"+HighAvailabilityTests.haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
@@ -868,7 +871,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	// Configuration methods ***********************************************************************
 	
 	//@BeforeClass(groups={"setup"})	// not often enough due to recently added noisy logging:    2013-05-25 02:04:06,091 [DEBUG]  @injection.py:64 - Returning callable provider for feature ENT_DIR: <class 'subscription_manager.certdirectory.EntitlementDirectory'>
-	public void removeRhsmLog() {
+	protected void removeRhsmLog() {
 		if (client==null) return;
 		
 		// remove the rhsm.log before this class to effectively reduce its size because it occasionally gets backed up to rhsm.log.1
@@ -877,7 +880,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@BeforeClass(groups={"setup"})
-	public void removeAllPluginsBeforeClass() {
+	protected void removeAllPluginsBeforeClass() {
 		if (clienttasks==null) return;
 		// get the plugin configuration directories
 		pluginDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "pluginDir");
@@ -891,7 +894,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 		
 	@BeforeGroups(groups={"setup"}, value="DisabledPluginTests")
-	public void fetchAndDisableAllPluginsBeforeGroups() {
+	protected void fetchAndDisableAllPluginsBeforeGroups() {
 		if (clienttasks==null) return;
 		SSHCommandResult result;
 		
@@ -916,11 +919,25 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 
 	}
+	
+	@BeforeClass(groups="setup")
+	protected void backupProductIdJsonFileBeforeClass() {
+		if (clienttasks==null) return;
+		RemoteFileTasks.runCommandAndAssert(client,"cat "+clienttasks.productIdJsonFile+" > "+backupProductIdJsonFile, Integer.valueOf(0));
+	}
+	//AFTERCLASS ANNOTATION SHOULD NOT BE NEEDED SINCE THIS METHOD IS CALLED ON DEMAND	@AfterClass(groups="setup")
+	protected void restoreProductIdJsonFileAfterClass() {
+		if (clienttasks==null) return;
+		if (!RemoteFileTasks.testExists(client, backupProductIdJsonFile)) return;
+		RemoteFileTasks.runCommandAndAssert(client,"cat "+backupProductIdJsonFile+" > "+clienttasks.productIdJsonFile, Integer.valueOf(0));
+		clienttasks.yumClean("all");
+	}
 
 
 	
 	// Protected methods ***********************************************************************
-	
+
+	protected final String backupProductIdJsonFile	= "/tmp/sm-productIdJsonFile";
 	protected String pluginDir = null;
 	protected String pluginConfDir = null;
 	protected List<Plugin> installedPlugins = new ArrayList<Plugin>();
