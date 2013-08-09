@@ -591,8 +591,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					}
 				}
 				
-				Assert.assertTrue(productIdRepoMapAfterMigration.containsKey(productId), "The '"+clienttasks.productIdJsonFile+"' database contains an entry for productId '"+productId+"' which was migrated for consumption of Classic RHN Channel '"+rhnChannelConsumed+"'.");
-				Assert.assertTrue(productIdRepoMapAfterMigration.get(productId).contains(rhnChannelConsumed), "The '"+clienttasks.productIdJsonFile+"' database entry for productId '"+productId+"' contains Classic RHN Channel/Repo '"+rhnChannelConsumed+"'.");
+				if (productId.equalsIgnoreCase("none")) {
+					Assert.assertTrue(!productIdRepoMapAfterMigration.containsKey(productId), "The '"+clienttasks.productIdJsonFile+"' database does NOT contain an entry for productId '"+productId+"' after migration while consuming Classic RHN Channel '"+rhnChannelConsumed+"'.");
+				} else {
+					Assert.assertTrue(productIdRepoMapAfterMigration.containsKey(productId), "The '"+clienttasks.productIdJsonFile+"' database contains an entry for productId '"+productId+"' which was migrated for consumption of Classic RHN Channel '"+rhnChannelConsumed+"'.");
+					Assert.assertTrue(productIdRepoMapAfterMigration.get(productId).contains(rhnChannelConsumed), "The '"+clienttasks.productIdJsonFile+"' database entry for productId '"+productId+"' contains Classic RHN Channel/Repo '"+rhnChannelConsumed+"'.");
+				}
 			}
 		}
 	}
