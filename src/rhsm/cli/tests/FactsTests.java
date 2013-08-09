@@ -409,6 +409,16 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager: assert presence of the new fact cpu.topology_source use to tell us what algorithm subscription-manager employed",
+			groups={"AcceptanceTests","blockedByBug-978466"}, dependsOnGroups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AssertFactForCpuTopology_Test() {
+		String cpuTopologyFact = "cpu.topology_source";	// this fact was invented as a result of the fix for Bug 978466 - subscription-manager fact 'cpu.cpu_socket(s)' is missing in ppc64 and s390x
+		Assert.assertNotNull(clienttasks.getFactValue(cpuTopologyFact), "The '"+cpuTopologyFact+"' is set by subscription-manager to tell us what algorthm was used to determine the facts for cpu.cpu_socket(s) and cpu.core(s)_per_socket.");
+	}
+	
+	
 	@Test(	description="subscription-manager: assert that the cpu.cpu_socket(s) fact matches lscpu.socket(s)",
 			groups={"AcceptanceTests","blockedByBug-707292"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-844532"*/}, dependsOnGroups={},
 			enabled=true)
@@ -488,6 +498,22 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			String socketsCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | sort | uniq | wc -l").getStdout().trim();
 			if (client.getStderr().isEmpty()) {
 				log.info("The expected cpu_socket(s) value calculated using the topology algorithm above is '"+socketsCalcualtedUsingTopology+"'.");
+				Assert.assertEquals(factsMap.get(cpuSocketsFact), socketsCalcualtedUsingTopology, "The value of system fact '"+cpuSocketsFact+"' should match the value for 'CPU socket(s)' value='"+socketsCalcualtedUsingTopology+"' as calculated using cpu topology.");
+				assertedSockets = true;
+			} else {
+				log.warning(client.getStderr());
+			}
+		}
+		
+		// last resort... cpu.topology_source: fallback one socket
+		if (!assertedSockets) {
+			// the "fallback one socket" algorithm means that we assume 1 socket per cpu, therefore let's count the number of cpus, then cpu_socket(s) should equal cpu.cpu(s)
+			//String cpusFact = "cpu.cpu(s)";
+			//String cpus = factsMap.get(cpusFact);
+			// determine the cpu_socket(s) value using the topology calculation (counting cpus)
+			String socketsCalcualtedUsingTopology = client.runCommandAndWait("ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]] | sort | wc -l").getStdout().trim();
+			if (client.getStderr().isEmpty()) {
+				log.info("The expected cpu_socket(s) value calculated using fallback algorithm above is '"+socketsCalcualtedUsingTopology+"'.");
 				Assert.assertEquals(factsMap.get(cpuSocketsFact), socketsCalcualtedUsingTopology, "The value of system fact '"+cpuSocketsFact+"' should match the value for 'CPU socket(s)' value='"+socketsCalcualtedUsingTopology+"' as calculated using cpu topology.");
 				assertedSockets = true;
 			} else {
@@ -711,6 +737,22 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			String coresCalcualtedUsingTopology = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do cat /sys/devices/system/cpu/$cpu/topology/thread_siblings_list; done | sort | uniq | wc -l").getStdout().trim();
 			if (client.getStderr().isEmpty()) {
 				log.info("The expected number of cores calculated using the topology algorithm above is '"+coresCalcualtedUsingTopology+"'.");
+				Assert.assertEquals(cpuCores, Integer.valueOf(coresCalcualtedUsingTopology), "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using the topology algorithm.");	
+				assertedCores = true;
+			} else {
+				log.warning(client.getStderr());
+			}
+		}
+		
+		// last resort... cpu.topology_source: fallback one socket
+		if (!assertedCores) {
+			// the "fallback one socket" algorithm means that we assume 1 core per socket and 1 socket per cpu, therefore let's count the number of cpus, then cpuCores should equal cpu.cpu(s)
+			//String cpusFact = "cpu.cpu(s)";
+			//String cpus = factsMap.get(cpusFact);
+			// determine the cores value using the topology calculation (counting cpus)
+			String coresCalcualtedUsingTopology = client.runCommandAndWait("ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]] | sort | wc -l").getStdout().trim();
+			if (client.getStderr().isEmpty()) {
+				log.info("The expected number of cores calculated using the fallback topology algorithm above is '"+coresCalcualtedUsingTopology+"'.");
 				Assert.assertEquals(cpuCores, Integer.valueOf(coresCalcualtedUsingTopology), "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using the topology algorithm.");	
 				assertedCores = true;
 			} else {
