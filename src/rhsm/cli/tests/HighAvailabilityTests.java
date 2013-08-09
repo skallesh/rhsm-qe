@@ -455,6 +455,17 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("High Availability tests are only executable on a RHEL Server.");
 		}
 		
+		//	[root@ibm-js22-vios-02-lp2 ~]# curl -k -u stage_test_2:PASSWORD http://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/pools/8a99f9843c01ccba013c037a0fa0015a | python -msimplejson/tool
+		//    "productAttributes": [
+		//                          {
+		//                              "created": "2013-07-22T19:47:22.000+0000", 
+		//                              "id": "8a99f98340076c17014007ec04435b89", 
+		//                              "name": "arch", 
+		//                              "productId": "RH1149049", 
+		//                              "updated": "2013-07-22T19:47:22.000+0000", 
+		//                              "value": "x86,x86_64,ia64,ppc,ppc64"       <====  NOTE THAT RH1149049 WILL BE AVAILABLE FOR CONSUMPTION ON THESE ARCHES FOR ALL RELEASES OF RHEL (RHEL6 Server ppc64 WILL NOT HAVE ANY CONTENT)
+		//                          }, 
+		
 		serverProductId = "69";	// Red Hat Enterprise Linux Server
 		
 		if (clienttasks.arch.equals("x86_64")) {
@@ -471,7 +482,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.arch.startsWith("ppc")) {		// ppc ppc64
 			serverProductId = "74";	// Red Hat Enterprise Linux for IBM POWER
 			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/ppc/os/Cluster/ipvsadm-1.24-13.el5.ppc.rpm";
-			if (clienttasks.redhatReleaseX.equals("6")) throw new SkipException("High Availability is not offered on RHEL6 arch '"+clienttasks.arch+"'.");
+			if (clienttasks.redhatReleaseX.equals("6")) throw new SkipException("Although available for consumption, High Availability content is not offered on RHEL6 arch '"+clienttasks.arch+"'.");
 		}
 		if (clienttasks.arch.startsWith("s390")) {		// s390 s390x
 			serverProductId = "72";	// Red Hat Enterprise Linux for IBM System z

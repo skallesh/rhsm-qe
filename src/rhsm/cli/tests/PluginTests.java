@@ -680,9 +680,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
 		if (!clienttasks.variant.equals("Server")) {
 			throw new SkipException("High Availability is only available for Server.");
-		} else if (!getSupportArchesForHighAvailability().contains(clienttasks.arch)) {
-			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a '"+clienttasks.variant+"' system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getSupportArchesForHighAvailability());
-			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a '"+clienttasks.variant+"' system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+getSupportArchesForHighAvailability());
+		} else if (!getArchesOfferringHighAvailabilityContent().contains(clienttasks.arch)) {
+			throw new SkipException("High Availability subscription SKU '"+sm_haSku+"' does not offer content on a '"+clienttasks.variant+"' system with arch '"+clienttasks.arch+"'.");
 		}
 		
 		// Subscribe to the High Availability subscription SKU
@@ -1044,13 +1043,13 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 				"Stdout from the verbose plugins list command reports expected plugin report: \n"+expectedPluginReport);
 	}
 	
-	List<String> getSupportArchesForHighAvailability() {
+	List<String> getArchesOfferringHighAvailabilityContent() {
 		// see HighAvailability.assertRhelServerBeforeClass()
 		if (clienttasks.redhatReleaseX.equals("5")) {
 			return Arrays.asList("x86_64","x86","i386","i686","ia64","ppc","ppc64");
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
-			return Arrays.asList("x86_64","x86","i386","i686");
+			return Arrays.asList("x86_64","x86","i386","i686"/*,"ia64","ppc","ppc64" IS AVAILABLE FOR CONSUMPTION, HOWEVER SUBSCRIPTION-MANAGER REPOS --LIST WILL BE EMPTY*/);
 		}
 		log.warning("FIXME:  Do not know the supported arches are for RHEL "+clienttasks.redhatReleaseX);
 		return Arrays.asList();
