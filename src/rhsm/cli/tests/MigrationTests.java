@@ -321,16 +321,16 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// rhn-migrate-classic-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-966745","blockedByBug-840169","blockedbyBug-878986"},
+			groups={"debugTest","AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-966745","blockedByBug-840169","blockedbyBug-878986"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=130764,130762) // TODO some expected yum repo assertions are not yet automated
 	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected) throws JSONException {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
-
+		
+		if (false) {	// TODO maybe this should go after the unregister and removeAll commands
 		// make sure our serverUrl is configured to it's original good value
-		// TODO maybe this should go after the unregister and removeAll commands
 		restoreOriginallyConfiguredServerUrl();
 		
 		// make sure we are NOT registered to RHSM
@@ -339,6 +339,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// deleting the currently installed product certs
 		clienttasks.removeAllCerts(false, false, true);
 		clienttasks.removeAllFacts();
+		} else {	// TODO: 8/12/2013 Attempting the following logic in response to above TODO
+		// make sure we are NOT registered to RHSM (and system is clean from prior test) ignoring errors like: 
+		//	ssh root@cloud-qe-9.idm.lab.bos.redhat.com subscription-manager unregister
+		//	Stdout: Runtime Error Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect): [org.candlepin.model.Pool#8a99f9823fc4919b013fc49408a302b7] at org.hibernate.persister.entity.AbstractEntityPersister.check:1,782
+		//	Stderr:
+		//	ExitCode: 255
+		clienttasks.unregister_(null,null,null);
+		clienttasks.removeAllCerts(true,true,true);
+		clienttasks.removeAllFacts();
+		restoreOriginallyConfiguredServerUrl();
+		}
 		
 		// make sure that rhnplugin is enabled /etc/yum/pluginconf.d/rhnplugin.conf
 		// NOT NECESSARY! enablement of rhnplugin.conf is done by rhnreg_ks
