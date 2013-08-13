@@ -65,9 +65,12 @@
                  {:keys [log-warning]} (log-warning))))
      :skip-dropdowns? true))
   (let [all-pools (map :id (ctasks/list-available true))
+        all-prods (map :productName (ctasks/list-available true))
+        mapify (fn [key val] (zipmap key val))
         syntax (fn [item] (str "--pool=" item " "))
-        command (str "subscription-manager subscribe " (clojure.string/join (map syntax all-pools)))]
-    (run-command command)))
+        command (str "subscription-manager subscribe "
+                     (clojure.string/join (map syntax (vals (mapify all-prods all-pools)))))]
+        (run-command command)))
 
 (defn unsubscribe_all
   "Unsubscribes from everything available"
@@ -82,7 +85,7 @@
         (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))
         (catch [:type :not-subscribed] _)))
      :skip-dropdowns? true))
-  (run-command "subscription-manager unsubscribe --all"))
+  (:stdout (run-command "subscription-manager unsubscribe --all")))
 
 (defn ^{Test {:groups ["subscribe"
                        "acceptance"]
@@ -120,7 +123,7 @@
   [_ subscription]
   (tasks/ui selecttab :my-subscriptions)
   (try+ (tasks/unsubscribe subscription)
-        (sleep 3000)
+        (sleep 4000)
         (verify (= false (tasks/ui rowexist? :my-subscriptions-view subscription)))
         (catch [:type :not-subscribed] _)))
 
