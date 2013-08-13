@@ -231,6 +231,7 @@
     (tasks/ui click :register)
     (if (tasks/ui showing? :register-dialog "Select Service Level")
       (do
+        (sleep 3000)
         (tasks/ui click :register)
         (tasks/ui waittillwindowexist :register-dialog 80)))
     (tasks/ui click :register)
