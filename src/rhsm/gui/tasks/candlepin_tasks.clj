@@ -100,6 +100,19 @@
                     (into (@productlist (:productName p)) [(:productName s)]))))))
     @productlist))
 
+(defn build-subscripton-contract-map
+  [& {:keys [all?]
+      :or {all? false}}]
+  (let [everything (if all?
+                     (list-available true)
+                     (list-available))
+        raw (map (fn [s] (list (:productName s)
+                              (vec (map (fn [p] (:productName p))
+                                        (:providedProducts s))))) everything)
+        subs (map first raw)
+        prods (map second raw)]
+    (zipmap subs prods)))
+
 (defn build-contract-map
   "Builds a mapping of subscription names to their contract number"
   [& {:keys [all?]
