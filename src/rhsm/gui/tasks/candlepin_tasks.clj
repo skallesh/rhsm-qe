@@ -16,6 +16,23 @@
      (= "yes" val) true
      :else false)))
 
+(defn merge-zipmap
+  "Returns a map with the keys mapped to the corresponding vals.
+   This merges repeated vals for the same key."
+  [keys vals]
+    (loop [map {}
+           ks (seq keys)
+           vs (seq vals)]
+      (if (and ks vs)
+        (recur (assoc map (first ks)
+                      (if (get map (first ks))
+                        (vec (flatten (conj (get map (first ks))
+                                            (first vs))))
+                        (first vs)))
+               (next ks)
+               (next vs))
+        map)))
+
 (defn server-url
   "Returns the server url as used by the automation. As used by API calls."
   []
@@ -100,7 +117,7 @@
                     (into (@productlist (:productName p)) [(:productName s)]))))))
     @productlist))
 
-(defn build-subscripton-contract-map
+(defn build-subscripton-product-map
   [& {:keys [all?]
       :or {all? false}}]
   (let [everything (if all?
@@ -112,7 +129,7 @@
                  everything)
         subs (map first raw)
         prods (map second raw)]
-    (zipmap subs prods)))
+    (merge-zipmap subs prods)))
 
 (defn build-contract-map
   "Builds a mapping of subscription names to their contract number"
