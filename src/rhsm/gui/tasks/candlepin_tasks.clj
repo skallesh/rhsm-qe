@@ -26,8 +26,10 @@
       (if (and ks vs)
         (recur (assoc map (first ks)
                       (if (get map (first ks))
-                        (vec (distinct (concat (get map (first ks))
-                                               (first vs))))
+                        (vec (distinct
+                              (flatten
+                               (conj (get map (first ks))
+                                     (first vs)))))
                         (first vs)))
                (next ks)
                (next vs))
