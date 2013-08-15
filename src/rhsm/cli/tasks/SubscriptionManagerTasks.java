@@ -5174,6 +5174,22 @@ repolist: 3,394
 		log.fine("Using a timeout of "+min+" minutes for next command...");
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command,Long.valueOf(min*60000));
 		
+		// Example result
+		//	FINE: ssh root@ibm-x3550m3-13.lab.eng.brq.redhat.com yum list available --disablerepo=rhel-5-workstation-desktop-rpms selinux-policy-mls.noarch --disableplugin=rhnplugin
+		//	FINE: Stdout: 
+		//	Loaded plugins: product-id, security, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	FINE: Stderr: 
+		//	This system is receiving updates from Red Hat Subscription Management.
+		//	https://cdn.rcm-qa.redhat.com/content/dist/rhel/workstation/5/5Client/x86_64/os/repodata/repomd.xml: [Errno 14] HTTP Error 500: Internal Server Error
+		//	Trying other mirror.
+		//	Error: Cannot retrieve repository metadata (repomd.xml) for repository: rhel-5-workstation-rpms. Please verify its path and try again
+		//	FINE: ExitCode: 1
+		if (result.getStderr().contains("Error 500: Internal Server Error")) {
+			log.warning(result.getStderr());
+			Assert.fail("Encountered an Internal Server Error while running: "+command);
+		}
+		
 		// Example result.getStderr() 
 		//	INFO:repolib:repos updated: 0
 		//	This system is not registered with RHN.
