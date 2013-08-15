@@ -108,7 +108,8 @@
                      (list-available))
         raw (map (fn [s] (list (:productName s)
                               (vec (map (fn [p] (:productName p))
-                                        (:providedProducts s))))) everything)
+                                        (:providedProducts s)))))
+                 everything)
         subs (map first raw)
         prods (map second raw)]
     (zipmap subs prods)))
