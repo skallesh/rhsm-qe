@@ -158,7 +158,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 	}
 	@Test(	description="Make sure the entitlement cert contains all expected OIDs",
-			groups={"VerifyEntitlementCertContainsExpectedOIDs_Test","AcceptanceTests","blockedByBug-744259","blockedByBug-754426","blockedByBug-962520"},
+			groups={"VerifyEntitlementCertContainsExpectedOIDs_Test","AcceptanceTests","blockedByBug-744259","blockedByBug-754426","blockedByBug-962520","blockedByBug-997970"},
 			dataProvider="getAllAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
