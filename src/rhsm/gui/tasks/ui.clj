@@ -110,7 +110,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                     {:product-id "Product ID Text"
                      ;;stacking id removed in BZ 821544
                      :stacking-id "Stacking ID Text"
-                     :contract-number "Contract Number"
+                     :contract-number "Contract Number Text"
                      :bundled-products "Bundeled Products Table"
                      :all-available-bundled-products "All Available Bundled Products Table"}))
                     {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}

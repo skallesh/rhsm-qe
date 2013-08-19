@@ -137,7 +137,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","blockedByBug-799103","blockedByBug-849274","blockedByBug-909436"},
+			groups={"AcceptanceTests","blockedByBug-799103","blockedByBug-849274"/*,"blockedByBug-909436"UNCOMMENT FOR RHEL7.0*/},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

@@ -320,6 +320,24 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
 		List<ProductCert> rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
+		// special case (Rhel5ClientDesktopVersusWorkstation)
+		if (rhelProductCerts.isEmpty() && clienttasks.releasever.equals("5Client")) {
+			//	Product:
+			//		ID: 68
+			//		Name: Red Hat Enterprise Linux Desktop
+			//		Version: 5.10
+			//		Arch: i386
+			//		Tags: rhel-5,rhel-5-client
+
+			//	Product:
+			//		ID: 71
+			//		Name: Red Hat Enterprise Linux Workstation
+			//		Version: 5.10
+			//		Arch: i386
+			//		Tags: rhel-5-client-workstation,rhel-5-workstation
+			providingTag = "rhel-5-client-workstation";
+			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
+		}
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
 		ProductCert rhelProductCert = rhelProductCerts.get(0);
 		

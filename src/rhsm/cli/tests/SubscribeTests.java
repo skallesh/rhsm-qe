@@ -340,7 +340,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to multiple/duplicate/bad pools in one call",
-			groups={"blockedByBug-622851"},
+			groups={"blockedByBug-622851","blockedByBug-995597"},
 			enabled=true)
 	public void SubscribeToMultipleDuplicateAndBadPools_Test() throws JSONException, Exception {
 		

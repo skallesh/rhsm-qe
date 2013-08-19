@@ -28,7 +28,8 @@
         (catch [:type :not-registered] _)))
 
 (defn ^{Test {:groups ["registration"
-                       "acceptance"]
+                       "acceptance"
+                       "blockedByBug-995242"]
               :dataProvider "userowners"}}
   simple_register
   "Simple register with known username, password and owner."

@@ -1315,6 +1315,24 @@ public class SubscriptionManagerTasks {
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+redhatReleaseX;
 		List<ProductCert> rhelProductCerts = getCurrentProductCerts(providingTag);
+		// special case (Rhel5ClientDesktopVersusWorkstation)
+		if (rhelProductCerts.isEmpty() && releasever.equals("5Client")) {
+			//	Product:
+			//		ID: 68
+			//		Name: Red Hat Enterprise Linux Desktop
+			//		Version: 5.10
+			//		Arch: i386
+			//		Tags: rhel-5,rhel-5-client
+
+			//	Product:
+			//		ID: 71
+			//		Name: Red Hat Enterprise Linux Workstation
+			//		Version: 5.10
+			//		Arch: i386
+			//		Tags: rhel-5-client-workstation,rhel-5-workstation
+			providingTag = "rhel-5-client-workstation";
+			rhelProductCerts = getCurrentProductCerts(providingTag);
+		}
 		Assert.assertTrue(rhelProductCerts.size()<=1, "No more than one product cert is installed that provides RHEL tag '"+providingTag+"' (actual='"+rhelProductCerts.size()+"').");
 		if (rhelProductCerts.isEmpty()) return null; 
 		return rhelProductCerts.get(0);
@@ -5155,6 +5173,22 @@ repolist: 3,394
 		int min = 5;
 		log.fine("Using a timeout of "+min+" minutes for next command...");
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command,Long.valueOf(min*60000));
+		
+		// Example result
+		//	FINE: ssh root@ibm-x3550m3-13.lab.eng.brq.redhat.com yum list available --disablerepo=rhel-5-workstation-desktop-rpms selinux-policy-mls.noarch --disableplugin=rhnplugin
+		//	FINE: Stdout: 
+		//	Loaded plugins: product-id, security, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	FINE: Stderr: 
+		//	This system is receiving updates from Red Hat Subscription Management.
+		//	https://cdn.rcm-qa.redhat.com/content/dist/rhel/workstation/5/5Client/x86_64/os/repodata/repomd.xml: [Errno 14] HTTP Error 500: Internal Server Error
+		//	Trying other mirror.
+		//	Error: Cannot retrieve repository metadata (repomd.xml) for repository: rhel-5-workstation-rpms. Please verify its path and try again
+		//	FINE: ExitCode: 1
+		if (result.getStderr().contains("Error 500: Internal Server Error")) {
+			log.warning(result.getStderr());
+			Assert.fail("Encountered an Internal Server Error while running: "+command);
+		}
 		
 		// Example result.getStderr() 
 		//	INFO:repolib:repos updated: 0
