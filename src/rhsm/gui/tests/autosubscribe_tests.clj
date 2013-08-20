@@ -261,7 +261,7 @@
                     nil
                     (ctasks/get-owner-display-name user pass key))]
     (setup-product-map)
-    (run-command "subscription-manager subscribe --auto")
+    (run-command "subscription-manager attach --auto")
 
     (comment
       (tasks/unregister)
