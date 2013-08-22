@@ -4,12 +4,16 @@
         [rhsm.gui.tasks.test-config :only (config
                                            clientcmd)]
         [com.redhat.qe.verify :only (verify)]
+        [clojure.string :only (split
+                               trim
+                               trim-newline)]
         [slingshot.slingshot :only [throw+
                                     try+]]
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [clojure.tools.logging :as log]
+            [rhsm.gui.tasks.candlepin-tasks :as ctasks]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
@@ -349,5 +353,63 @@
     (tasks/ui click :main-window "System")
     (verify (bool (tasks/ui waittillshowing :preferences 10)))
     (finally (tasks/restart-app))))
+
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-977850"]}}
+  check_system_preference_dialog
+  "Verifies behavior of system preference dialog and its content"
+  [_]
+  (try+ (tasks/unregister)
+        (catch [:type :not-registered] _))
+  (try
+    (tasks/ui selectmenuitem :preferences)
+    (catch Exception e
+      (substring? "Select menu item failed" (.getMessage e))))
+  (if (bool (tasks/ui guiexist :system-preferences-dialog))
+    (do
+      (tasks/ui click :close-system-prefs)
+      (throw (Exception. "Preference-dialog should not be displayed when system is unregistered"))))
+  (tasks/register-with-creds)
+  (tasks/ui click :preferences)
+  (tasks/ui waittillwindowexist :system-preferences-dialog 60)
+  (if (bool (tasks/ui guiexist :system-preferences-dialog))
+    (try
+      (verify (tasks/ui showing? :system-preferences-dialog "Enable auto-attach preference"))
+      (verify (tasks/ui check :autoheal-checkbox))
+      (finally (bool (tasks/ui guiexist :system-preferences-dialog))
+               (do 
+                 (tasks/ui check :autoheal-checkbox)
+                 (tasks/ui click :close-system-prefs))))))
+
+(defn ^{Test {:groups ["system"
+                       "acceptance"
+                       "blockedByBug-818282"]}}
+  check_ordered_contract_options
+  "Checks if contracts in contract selection dialog are ordered based on host type"
+  [_]
+  (tasks/register-with-creds)
+  (tasks/ui selecttab :all-available-subscriptions)
+  (tasks/search)
+  (let
+      [sub-map (zipmap (range 0 (tasks/ui getrowcount :all-subscriptions-view))
+                       (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? true))
+       both? (fn [pair] (= "Both" (tasks/ui getcellvalue :all-subscriptions-view (key pair) 1)))
+       row-sub-map (into {} (filter both? sub-map))
+       cli-out (:stdout (run-command "subscription-manager facts --list | grep virt.is_guest"))
+       virt? (= true (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
+    (if-not (empty? row-sub-map)
+      (do
+        (doseq [map-entry row-sub-map]
+          (try
+            (tasks/ui selectrowindex :all-subscriptions-view (key map-entry))
+            (tasks/ui click :attach)
+            (tasks/ui waittillguiexist :contract-selection-dialog)
+            (let [type-list (tasks/get-table-elements :contract-selection-table 1)]
+              (if virt?
+                (verify (not (sorted? type-list)))
+                  (verify (sorted? type-list))))
+            (finally
+             (if (bool (tasks/ui guiexist :contract-selection-dialog))
+               (tasks/ui click :cancel-contract-selection)))))))))
 
 (gen-class-testng)
