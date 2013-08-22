@@ -17,7 +17,6 @@
             DataProvider]))
 
 (def sys-log "/var/log/rhsm/rhsm.log")
-(def reg-label "Please enter your Red Hat account information:")
 
 (defn get-userlists [username password]
   (let [owners (ctasks/get-owners username password)]
@@ -164,8 +163,9 @@ verify_password_tip
 
 (defn ^{Test {:groups ["registration"
                        "blockedByBug-891621"]}}
-  register_click_default_url
-  "checks whether after checking followed by unchecking activation key option it proceeds to register dialog"
+  check_activation_key_register_dialog
+  "checks whether checking activation key option followed by clicking default during
+     register proceeds to register dialog and not to activation-key register dialog"
   [_]
   (try
     (if (not (tasks/ui showing? :register-system))
@@ -176,7 +176,8 @@ verify_password_tip
     (tasks/ui click :default-server)
     (tasks/ui click :register)
     (tasks/ui waittillguiexist :register-dialog)
-    (verify (= reg-label (tasks/ui gettextvalue :register-dialog "registration_header_label")))
+    (verify (= "Please enter your Red Hat account information:" 
+      (tasks/ui gettextvalue :register-dialog "registration_header_label")))
     (finally
      (if (bool (tasks/ui guiexist :register-dialog))
        (tasks/ui click :register-cancel)))))
