@@ -385,6 +385,7 @@
                        "acceptance"
                        "blockedByBug-818282"]}}
   check_ordered_contract_options
+  "Checks if contracts in contract selection dialog are ordered based on host type"
   [_]
   (tasks/register-with-creds)
   (tasks/ui selecttab :all-available-subscriptions)
