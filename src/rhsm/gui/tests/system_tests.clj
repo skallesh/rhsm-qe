@@ -395,7 +395,7 @@
        both? (fn [pair] (= "Both" (tasks/ui getcellvalue :all-subscriptions-view (key pair) 1)))
        row-sub-map (into {} (filter both? sub-map))
        cli-out (:stdout (run-command "subscription-manager facts --list | grep virt.is_guest"))
-       virt? (trim (last (split (trim-newline cli-out) #":")))]
+       virt? (= true (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
     (if-not (empty? row-sub-map)
       (do
         (doseq [map-entry row-sub-map]
@@ -404,7 +404,8 @@
             (tasks/ui click :attach)
             (tasks/ui waittillguiexist :contract-selection-dialog)
             (let [type-list (tasks/get-table-elements :contract-selection-table 1)]
-              (if virt? (verify (not (sorted? type-list)))
+              (if virt?
+                (verify (not (sorted? type-list)))
                   (verify (sorted? type-list))))
             (finally
              (if (bool (tasks/ui guiexist :contract-selection-dialog))
