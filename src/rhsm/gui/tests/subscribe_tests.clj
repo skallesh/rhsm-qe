@@ -50,7 +50,7 @@
   register [_]
   (tasks/register-with-creds)
   (reset! servicelist (ctasks/build-service-map :all? true))
-  (reset! subs-contractlist (ctasks/build-subscription-contract-map :all? true))
+  (reset! subs-contractlist (ctasks/build-subscription-product-map :all? true))
   (build-contract-map))
 
 (defn subscribe_all
