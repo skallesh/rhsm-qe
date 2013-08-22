@@ -24,6 +24,7 @@
 (def productlist (atom {}))
 (def servicelist (atom {}))
 (def contractlist (atom {}))
+(def subs-contractlist (atom {}))
 (def sys-log "/var/log/rhsm/rhsm.log")
 
 (defn build-subscription-map
@@ -49,6 +50,7 @@
   register [_]
   (tasks/register-with-creds)
   (reset! servicelist (ctasks/build-service-map :all? true))
+  (reset! subs-contractlist (ctasks/build-subscription-contract-map :all? true))
   (build-contract-map))
 
 (defn subscribe_all
@@ -544,6 +546,17 @@
              (verify (substring? (str "Covers architecture " sub-arch " but the system is " machine-arch)
                                  (tasks/ui gettextvalue :status-details)))
              (tasks/ui selecttab :my-installed-products))))))))
+
+(defn ^{Test {:group ["subscribe"
+                      "blockedByBug-865193"]
+              :dataProvider "subscriptions"
+              :priority (int 99)}}
+  check_provides_products
+  "Checks if provide products is populated in all available subscriptions view"
+  [_ subscription]
+  (tasks/skip-dropdown :all-subscriptions-view subscription)
+  (verify ( = (sort (get @subs-contractlist subscription))
+              (sort (tasks/get-table-elements :all-available-bundled-products 0)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
