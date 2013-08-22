@@ -68,7 +68,7 @@
         all-prods (map :productName (ctasks/list-available true))
         mapify (fn [key val] (zipmap key val))
         syntax (fn [item] (str "--pool=" item " "))
-        command (str "subscription-manager subscribe "
+        command (str "subscription-manager attach "
                      (clojure.string/join (map syntax (vals (mapify all-prods all-pools)))))]
         (run-command command)))
 

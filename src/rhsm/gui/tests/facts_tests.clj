@@ -205,7 +205,7 @@
                       :value ["facts-product-status"]}}
   before_check_product_status [_]
   (let [output (:stdout
-                (run-command "subscription-manager subscribe --auto"))
+                (run-command "subscription-manager attach --auto"))
         not-blank? (fn [s] (not (blank? s)))
         raw-cli-data (filter not-blank? (drop 1 (split-lines output)))
         grab-value (fn [item] (trim (last (split item #":"))))
