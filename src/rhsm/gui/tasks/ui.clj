@@ -112,7 +112,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :stacking-id "Stacking ID Text"
                      :contract-number "Contract Number Text"
                      :bundled-products "Bundeled Products Table"
-                     :all-available-bundled-products "All Available Bundled Products Table"}))
+                     :all-available-bundled-products "All Available Bundled Product Table"}))
                     {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
     (define-elements (windows :register-dialog)
         {:redhat-login "account_login"
@@ -128,6 +128,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :register-server "server_entry"
          :default-server "default_button"
          ;;activation-key section
+         :activation-key-checkbox "I will use an Activation Key"
          :organization "organization_entry"
          :activation-key "activation_key_entry"
          :activation-system-name "consumer_entry"
