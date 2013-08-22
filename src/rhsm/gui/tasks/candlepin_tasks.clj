@@ -119,7 +119,7 @@
                     (into (@productlist (:productName p)) [(:productName s)]))))))
     @productlist))
 
-(defn build-subscription-contract-map
+(defn build-subscription-product-map
   [& {:keys [all?]
       :or {all? false}}]
   (let [everything (if all?
