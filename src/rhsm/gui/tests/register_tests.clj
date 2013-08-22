@@ -17,6 +17,7 @@
             DataProvider]))
 
 (def sys-log "/var/log/rhsm/rhsm.log")
+(def reg-label "Please enter your Red Hat account information:")
 
 (defn get-userlists [username password]
   (let [owners (ctasks/get-owners username password)]
@@ -145,8 +146,8 @@ verify_password_tip
   (finally
     (tasks/ui click :register-cancel))))
 
-(defn ^{Test (:groups ["registration"
-                       "blockedByBug-920091"])}
+(defn ^{Test {:groups ["registration"
+                       "blockedByBug-920091"]}}
   check_traceback_unregister
   "checks for traceback if any during unregister with GUI open"
   [_]
@@ -160,6 +161,25 @@ verify_password_tip
                             (run-command (str  "subscription-manager register --user=" (@config :username) " --password=" (@config :password) " --org=" (@config :owner-key) " --auto-attach"))
                             (run-command "subscription-manager unregister"))]
     (verify (not (substring? "Traceback" output)))))
+
+(defn ^{Test {:groups ["registration"
+                       "blockedByBug-891621"]}}
+  register_click_default_url
+  "checks whether after checking followed by unchecking activation key option it proceeds to register dialog"
+  [_]
+  (try
+    (if (not (tasks/ui showing? :register-system))
+      (tasks/unregister))
+    (tasks/ui click :register-system)
+    (tasks/ui settextvalue :register-server (ctasks/server-path))
+    (tasks/ui check :activation-key-checkbox)
+    (tasks/ui click :default-server)
+    (tasks/ui click :register)
+    (tasks/ui waittillguiexist :register-dialog)
+    (verify (= reg-label (tasks/ui gettextvalue :register-dialog "registration_header_label")))
+    (finally
+     (if (bool (tasks/ui guiexist :register-dialog))
+       (tasks/ui click :register-cancel)))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
