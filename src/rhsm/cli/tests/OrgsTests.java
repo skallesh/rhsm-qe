@@ -2,22 +2,26 @@ package rhsm.cli.tests;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
-import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.Org;
+import rhsm.data.SubscriptionPool;
+
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -238,16 +242,50 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
-	
-	
-	
+	@BeforeGroups(value={"AttemptToAttachSubscriptionsFromOtherOrgs_Test"}, groups={"setup"})
+	public void beforeAttemptToAttachSubscriptionsFromOtherOrgs_Test() throws Exception {
+		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
+		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
+		// This also allows us to individually run this Test Class on Hudson.
+		RegisterWithCredentials_Test(); // needed to populate registrationDataList
+	}
+	@Test(	description="consumers should NOT be able to attach subscriptions from other orgs",
+			groups={"AttemptToAttachSubscriptionsFromOtherOrgs_Test","blockedByBug-994711"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AttemptToAttachSubscriptionsFromOtherOrgs_Test() throws JSONException, Exception {
+		boolean skipTest = true;
+		Set<String> poolIdsTested = new HashSet<String>();
 		
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		String ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+		for (RegistrationData registrationDatum :  getRandomSubsetOfList(findGoodRegistrationData(false, sm_clientUsername,false, ownerKey),3)) {
+			for (SubscriptionPool subscriptionPool : getRandomSubsetOfList(registrationDatum.allAvailableSubscriptionPools,3)) {
+				if (!poolIdsTested.contains(subscriptionPool.poolId)) {
+					SSHCommandResult sshCommandResult = clienttasks.subscribe_(false, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null);
+					Assert.assertEquals(sshCommandResult.getStdout().trim(), "Insufficient permissions", "Stdout from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' belonging to a different org '"+registrationDatum.ownerKey+"'.");
+					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' belonging to a different org '"+registrationDatum.ownerKey+"'.");
+					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "Exitcode from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' from a different org '"+registrationDatum.ownerKey+"'.");
+					Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "The currently consumed subscriptions should be empty.");
+					
+					poolIdsTested.add(subscriptionPool.poolId);	// remember what pool ids were tested so we only test it once
+					skipTest = false;
+				}
+			}
+		}
+		if (skipTest) throw new SkipException("Could not find any subscription pools from orgs other than '"+ownerKey+"' to execute this test.");		
+	}
+	
+	
+	
+	
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 789344 - subscription-manager doesn't support spaces in --org parameter unless --environment parameter is given https://github.com/RedHatQE/rhsm-qe/issues/178
 	
 	// Configuration methods ***********************************************************************
-	
+
 	
 	
 	// Protected methods ***********************************************************************
