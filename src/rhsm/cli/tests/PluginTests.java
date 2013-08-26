@@ -692,8 +692,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 
 		// do a yum install of an ha package
-		clienttasks.yumInstallPackage(sm_haPackages.get(0));	// yum -y install ccs
+		// WARNING! Package ccs also belongs to Resilient Storage which may cause productId 90 to also be installed from one of the beaker repos, therefore --disablerepo=beaker*
+		clienttasks.yumInstallPackage(sm_haPackages.get(0),"--disablerepo=beaker-*");	// yum -y install ccs --disablerepo=beaker-*
 		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
+		
 
 		// get the tail of the marked rhsm.log file
  		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
