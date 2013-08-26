@@ -5866,6 +5866,17 @@ repolist: 3,394
 	}
 	
 	/**
+	 * yum -y install pkg installOptions <br>
+	 * Assert the install is Complete! and pkg is installed.
+	 * @param pkg
+	 * @param installOptions
+	 * @return
+	 */
+	public SSHCommandResult yumInstallPackage (String pkg, String installOptions) {
+		return yumInstallPackageFromRepo(pkg,null,installOptions);
+	}
+	
+	/**
 	 * yum -y remove pkg<br>
 	 * Assert the removal is Complete! and no longer installed.
 	 * @param pkg
