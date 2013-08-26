@@ -325,7 +325,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyIssuerOfConsumerProductAndEntitlementCerts_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// assert the issuer of the consumer cert
