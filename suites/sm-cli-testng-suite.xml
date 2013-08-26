@@ -3,14 +3,13 @@
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
 <suite name="SM CLI TestSuite">
 
-	<!-- the hudson.groovy script already includes these listeners
 	<listeners>
-  		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
-  		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
+		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+		<listener class-name="org.uncommons.reportng.HTMLReporter" />
+		<listener class-name="org.testng.reporters.XMLReporter" />
 	</listeners>
-	-->
-	
-	
+
 	<!-- CLI TESTS -->
 		
 	<test name="CLI: Help Tests">
