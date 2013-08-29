@@ -752,6 +752,15 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+	/**
+	 * Use subscription-manager config to get the interpolated parameter value.
+	 * @param parameter
+	 * @return
+	 */
+	public String getConfParameter(String parameter){
+		String parameterValue = sshCommandRunner.runCommandAndWait(command+" config | grep "+parameter.toLowerCase()).getStdout().trim();
+		return parameterValue.split(" = ")[1].replaceAll("\\[","").replaceAll("\\]","");	// a value wrapped in brackets [] indicates a default value is being used
+	}
 	
 	/**
 	 * Update the rhsmcertd frequency configurations in /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
