@@ -476,10 +476,17 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// get the current consumer object and assert that the serviceLevel persisted
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+clienttasks.getCurrentConsumerId()));
+		/* DELETEME ERRONEOUS ASSERTS
 		if (serviceLevel==null || serviceLevel.equals("")) {
 			Assert.assertEquals(jsonConsumer.get("serviceLevel"), initialConsumerServiceLevel, "The consumer's serviceLevel preference should remain unchanged when calling subscribe with auto and a servicelevel of null or \"\".");
 		} else {
 			Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel persisted the servicelevel setting on the current consumer object.");			
+		}
+		*/
+		if (serviceLevel==null) {
+			Assert.assertEquals(jsonConsumer.get("serviceLevel"), initialConsumerServiceLevel, "The consumer's serviceLevel preference should remain unchanged when calling subscribe with auto and a servicelevel of null.");
+		} else {
+			Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel of '"+serviceLevel+"' persisted the servicelevel setting on the current consumer object.");			
 		}
 		
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
@@ -493,6 +500,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 				continue;
 			}
 			
+			/* DELETEME ERRONEOUS ASSERTS
 			if ((serviceLevel==null || serviceLevel.equals("")) && initialConsumerServiceLevel.equals("")) {
 				log.info("When specifying a servicelevel of null or \"\" during an autosubscribe and the current consumer's has no servicelevel preference, then the servicelevel of the granted entitlement certs can be anything.  This one is '"+entitlementCert.orderNamespace.supportLevel+"'.");
 			} else if ((serviceLevel==null || serviceLevel.equals("")) && !initialConsumerServiceLevel.equals("")){
@@ -502,6 +510,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			} else {
 				//CASE SENSITIVE ASSERTION Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel, "This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
 				//Assert.assertTrue(entitlementCert.orderNamespace.supportLevel.equalsIgnoreCase(serviceLevel), "Ignoring case, this autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+				Assert.assertTrue(serviceLevel.equalsIgnoreCase(entitlementCert.orderNamespace.supportLevel), "Ignoring case, this autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+			}
+			*/
+			if ("".equals(serviceLevel) || (serviceLevel==null && initialConsumerServiceLevel.equals(""))) {
+				log.info("When specifying a servicelevel of \"\" during an autosubscribe (or specifying a servicelevel of null and the current consumer's has no servicelevel preference), then the servicelevel of the granted entitlement certs can be anything.  This one is '"+entitlementCert.orderNamespace.supportLevel+"'.");
+			} else if (serviceLevel==null && !initialConsumerServiceLevel.equals("")){
+				Assert.assertTrue(initialConsumerServiceLevel.equalsIgnoreCase(entitlementCert.orderNamespace.supportLevel), "When specifying a servicelevel of null during an autosubscribe and the current consumer has a servicelevel preference set, then the servicelevel from the orderNamespace of this granted entitlement cert ("+entitlementCert.orderNamespace.supportLevel+") must match the current consumer's service level preference ("+initialConsumerServiceLevel+").");
+			} else {
 				Assert.assertTrue(serviceLevel.equalsIgnoreCase(entitlementCert.orderNamespace.supportLevel), "Ignoring case, this autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
 			}
 		}
@@ -552,10 +568,17 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		AutoSubscribeWithServiceLevel_Test(null,null);
 	}
 	@Test(	description="subscription-manager: subscribe with auto specifying a service level of \"\"; assert the service level is unset and the autosubscribe proceeds without any service level preference",
-			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-977321"},
+			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-977321","blockedByBug-1001169"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeWithBlankServiceLevel_Test() throws JSONException, Exception {
+		AutoSubscribeWithServiceLevel_Test(null,"");
+		
+		// adding the following instructions specifically to force the testing of bug 1001169
+		List<String> availableServiceLevels = clienttasks.getCurrentlyAvailableServiceLevels();
+		if (availableServiceLevels.isEmpty()) throw new SkipException("Skipping the remainder of this test when there are no available service levels.");
+		String randomAvailableServiceLevel = availableServiceLevels.get(randomGenerator.nextInt(availableServiceLevels.size()));
+		clienttasks.service_level(null, null, randomAvailableServiceLevel, null, null, null, null, null, null, null, null, null);
 		AutoSubscribeWithServiceLevel_Test(null,"");
 	}
 	
