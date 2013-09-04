@@ -147,7 +147,7 @@
   "Checks that all avaiable releases are shown in the GUI properly."
   [_]
   (try
-    (.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively @cli-tasks)
+    (tasks/subscribe_all)
     (let [result (run-command "subscription-manager release --list")
           stdout (:stdout result)
           cli-releases  (if (clojure.string/blank? stdout)
@@ -161,7 +161,7 @@
         (verify (not (nil? (some #{"Not Set"} gui-releases))))))
     (finally (if (bool (tasks/ui guiexist :system-preferences-dialog))
                (tasks/ui click :close-system-prefs))
-             (run-command "subscription-manager unsubscribe --all"))))
+             (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["acceptance"]}}
   check_releases

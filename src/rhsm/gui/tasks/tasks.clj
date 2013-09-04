@@ -453,6 +453,42 @@
   (ui click :yes)
   (checkforerror))
 
+(defn subscribe_all
+  "Subscribes to everything available"
+  []
+  (comment ;; No longer used just here for reference
+    (allsearch)
+    (tasks/do-to-all-rows-in
+     :all-subscriptions-view 1
+     (fn [subscription]
+       (try+ (tasks/subscribe subscription)
+             (catch [:type :item-not-available] _)
+             (catch [:type :wrong-consumer-type]
+                 {:keys [log-warning]} (log-warning))))
+     :skip-dropdowns? true))
+  (let [all-pools (map :id (ctasks/list-available true))
+        all-prods (map :productName (ctasks/list-available true))
+        mapify (fn [key val] (zipmap key val))
+        syntax (fn [item] (str "--pool=" item " "))
+        command (str "subscription-manager attach "
+                     (clojure.string/join (map syntax (vals (mapify all-prods all-pools)))))]
+        (run-command command)))
+
+(defn unsubscribe_all
+  "Unsubscribes from everything available"
+  []
+  (comment  ;; No longer used just here for reference
+    (tasks/ui selecttab :my-subscriptions)
+    (tasks/do-to-all-rows-in
+     :my-subscriptions-view 0
+     (fn [subscription]
+       (try+
+        (tasks/unsubscribe subscription)
+        (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))
+        (catch [:type :not-subscribed] _)))
+     :skip-dropdowns? true))
+  (:stdout (run-command "subscription-manager unsubscribe --all")))
+
 (defn enableproxy
   "Configures a proxy that uses authentication through subscription-manager-gui."
   [server & {:keys [port user pass auth? close? firstboot?]
