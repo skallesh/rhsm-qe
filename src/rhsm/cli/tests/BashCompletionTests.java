@@ -43,11 +43,11 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 	
 	@Test(	description="when subscription-manager is run with no args, it should default to the help report",
-			groups={"debugTest"},
+			groups={},
 			dataProvider="BashCompletionData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void BashCompletion_Test(Object bugzilla, String bashCommand, Set<String>expectedCompletions) {
+	public void BashCompletion_Test(Object bugzilla, String bashCommand, Set<String> expectedCompletions) {
 		// inspired by https://github.com/lacostej/unity3d-bash-completion/blob/master/lib/completion.py
 		List<String> program_args =  Arrays.asList(bashCommand.split("\\s+"));
 		String program = program_args.get(0);
@@ -131,7 +131,7 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 		
 		//ll.add(Arrays.asList(new Object[] {null,	"subscription-manager attach -", new HashSet<String>(Arrays.asList(new String[]{"--pool","--quantity","--servicelevel","--help","--proxy","--proxyuser","--proxypassword"})) }));
 		//ll.add(Arrays.asList(new Object[] {null,	"subscription-manager --help", new HashSet<String>(Arrays.asList(new String[]{"--pool","--quantity","--servicelevel","--help","--proxy","--proxyuser","--proxypassword"})) }));
-		// LET'S NOT BUILD THE ROWS OF THE DATA PROVIDER THIS WAY.
+		// LET'S NOT BUILD THE ROWS OF THE DATA PROVIDER THIS^ WAY....
 		// LET'S REUSE THE DATA PROVIDER FROM HelpTests.getExpectedCommandLineOptionsDataAsListOfLists() TO MINIMIZE MAINTENANCE.
 		
 		// interpret the expected bash completion data from the HelpTests dataProvider getExpectedCommandLineOptionsDataAsListOfLists
@@ -143,25 +143,21 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			//String stdoutRegex = (String) l.get(3);
 			List<String> expectedHelpOptions = (List<String>) l.get(4);
 			
-			// skip all Usage help tests (indicated by only one expectedOptions entry)
-			// Usage: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]
-			if (expectedHelpOptions.size()==1) continue;
-			
 			// skip all the help tests with expectedOptions that do not come from --help
 			if (!helpCommand.contains("--help")) continue;
 			
 			// transcribe the helpCommand into a bashCommand
-			String bashCommand = helpCommand.replaceFirst("\\s*--help\\s*", " ").trim();	// strip out "--help"
-//			if (bashCommand.trim().contains(" ")) { // append chars that prefix the <tab><tab> completion
-//				bashCommand += " -";
-//			} else {
-//				bashCommand += " ";
-//			}
+			String bashCommand = helpCommand.replaceFirst("\\s*(--help-all|--help-gtk|--help)\\s*", " ").trim();	// strip out "--help"
 			bashCommand += " "; // append chars as a prefix to <tab><tab> complete the expected command line options
 			
 			// transcribe the expectedHelpOptions into expectedCompletions
 			Set<String>expectedCompletions = new HashSet<String>();
 			for (String expectedHelpOption: expectedHelpOptions) {
+				
+				// skip all Usage help tests
+				if (expectedHelpOption.toUpperCase().startsWith("USAGE:")) continue;	// Usage: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]
+				if (expectedHelpOption.startsWith(bashCommand)) continue;				// Usage:
+																						//   rhsm-icon [OPTION...]
 				
 				// split expectedHelpOption of this form: -h, --help
 				// split expectedHelpOption of this form: -s SERVICELEVEL, --servicelevel=SERVICELEVEL
@@ -173,7 +169,8 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 					expectedCompletions.add(expectedOption);
 				}
 			}
-			
+			// skip this data provided row when there are no expectedCompletions left
+			if (expectedCompletions.isEmpty()) continue;
 			
 			// mark dataProvider rows with a blockedByBzBug where appropriate
 			Set<String> bugIds = new HashSet<String>();
@@ -192,10 +189,12 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1003010 - --status should be removed from bash-completion of subscription-manager list --<TAB><TAB>
 			if (bashCommand.startsWith("subscription-manager list ")) bugIds.add("1003010");
 			
-			//Bug 1001820 - Tab Completion: subscription-manager attach <tab tab>
+			// Bug 1001820 - Tab Completion: subscription-manager attach <tab tab>
 			if (bashCommand.startsWith("subscription-manager attach ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager auto-attach ")) bugIds.add("1001820");
+			if (bashCommand.startsWith("subscription-manager clean ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager config ")) bugIds.add("1001820");
+			if (bashCommand.startsWith("subscription-manager environments ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager import ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager list ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager orgs ")) bugIds.add("1001820");
@@ -204,6 +203,20 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			if (bashCommand.startsWith("subscription-manager remove ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager service-level ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager subscribe ")) bugIds.add("1001820");
+			if (bashCommand.startsWith("subscription-manager unsubscribe ")) bugIds.add("1001820");
+			
+			// Bug 1004318 - rct [cat-cert cat-manifest dump-manifest stat-cert] does not bash complete its options
+			if (bashCommand.startsWith("rct ")) bugIds.add("1004318");
+			
+			// Bug 1004341 - subscription-manager-gui does not bash complete its options
+			if (bashCommand.startsWith("subscription-manager-gui ")) bugIds.add("1004341");
+			
+			// Bug 1004385 - rhsm-icon bash completions should not end with a comma
+			if (bashCommand.startsWith("rhsm-icon ")) bugIds.add("1004385");
+			
+			// Bug 1004402 - rhsmd and rhsmcertd-worker does not bash complete its options
+			if (bashCommand.startsWith("/usr/libexec/rhsmcertd-worker ")) bugIds.add("1004402");
+			if (bashCommand.startsWith("/usr/libexec/rhsmd ")) bugIds.add("1004402");
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
@@ -214,5 +227,4 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 		return ll;
 	}
 	
-
 }
