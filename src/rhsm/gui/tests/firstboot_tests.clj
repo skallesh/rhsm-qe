@@ -150,14 +150,19 @@
                        "blockedByBug-642660"
                        "blockedByBug-863572"]}}
   firstboot_check_back_button_state
-  "Checks the state of back and forward button (whether disabled) when firstboot is regestering (when progress-bar is displayed) to to a server"
+  "Checks the state of back and forward button (whether disabled) when firstboot is
+   regestering (when progress-bar is displayed) to to a server. This check is performed
+   only in RHEL5 for RHEL6 and above this would be a part of firstboot-register"
   [_]
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
-  (tasks/firstboot-register (@config :username) (@config :password))
-  (verify (not (bool (tasks/ui hasstate :firstboot-back "Sensitive"))))
-  (verify (not (bool (tasks/ui hasstate :firstboot-forward "Sensitive")))))
+  (if (= "RHEL5" (get-release))
+    (do
+      (tasks/firstboot-register (@config :username) (@config :password))
+      (verify (not (bool (tasks/ui hasstate :firstboot-back "Sensitive"))))
+      (verify (not (bool (tasks/ui hasstate :firstboot-forward "Sensitive")))))
+    (tasks/firstboot-register (@config :username) (@config :password) :back-button? true)))
 
 (defn ^{Test {:groups ["firstboot"
                        "blockedByBug-872727"
@@ -242,7 +247,8 @@
       (tasks/ui click :firstboot-forward)
       (verify (tasks/fbshowing? :firstboot-window "Create User"))
       (tasks/ui click :firstboot-back)
-      (verify (tasks/fbshowing? :firstboot-window window-name)))))
+      (verify (not (tasks/fbshowing? :firstboot-window window-name))))))
+
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
