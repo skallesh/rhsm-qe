@@ -63,7 +63,8 @@ public class RolesTests extends SubscriptionManagerCLITestScript {
 				sshCommandResult = clienttasks.register_(username, password, orgKey, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that user '"+username+"' with role '"+roleName+"' to org '"+orgKey+"' can NOT register with access '"+access+"'.");
 				//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User "+username+" cannot access organization/owner "+orgKey);	// before string translation files were committed
-				Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User "+username+" cannot access organization "+orgKey);
+				//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User "+username+" cannot access organization "+orgKey);
+				Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User '"+username+"' cannot access organization '"+orgKey+"'.");
 				
 				// TODO beav suggested another test to try here
 				/*
