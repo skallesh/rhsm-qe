@@ -97,7 +97,11 @@
 (defn check_escape_window
   "Asserts that windows correctly render after exiting them with a shortcut."
   [window shortcut]
-  (tasks/restart-app :unregister? true)
+  (if (or (substring? "quest" (str window))
+          (substring? "pref" (str window)))
+    (tasks/restart-app :reregister? true)
+    (tasks/restart-app :unregister? true))
+  (sleep 3000)
   (let [exec-shortcut (fn [s] (tasks/ui generatekeyevent s))
         count-objects (fn [w] (count (tasks/ui getobjectlist w)))
         beforecount (do (exec-shortcut shortcut)
@@ -114,8 +118,12 @@
     (log/info (str "Items: " beforecount))
     (fuckcache)
     (exec-shortcut "<ESC>")
+    (tasks/ui waittillguinotexist window 10)
     (exec-shortcut shortcut)
     (tasks/ui waittillwindowexist window 10)
+    (if (substring? "quest" (str window))
+      (verify (tasks/ui showing? :question-dialog
+                        "Are you sure you want to unregister?")))
     (sleep 3000)
     (let [newcount (count-objects window)]
       (verify (= beforecount newcount)))))
@@ -124,7 +132,11 @@
  check_escape_window {Test {:groups ["system"
                                      "blockedByBug-862099"]}}
  [[:register-dialog "<CTRL>r"]
-  [:import-dialog "<CTRL>i"]])
+  [:import-dialog "<CTRL>i"]
+  [:system-preferences-dialog "<CTRL>p"]
+  [:proxy-config-dialog "<CTRL>x"]
+  [:question-dialog "<CTRL>u"]
+  [:about-dialog "<CTRL>a"]])
 
 
 (defn ^{Test {:groups ["system"
@@ -242,9 +254,8 @@
   (verify (= 1 (tasks/ui guiexist :main-window "Keep your system*")))
   (tasks/do-to-all-rows-in
    :installed-view 2
-   (fn [subscription]
-     (try
-       (verify (= (tasks/ui getcellvalue :installed-view subscription 2) "Unknown"))))))
+   (fn [status]
+     (verify (= status "Unknown")))))
 
 (defn ^{Test {:groups ["system"
                         "blockedByBug-916666"]}}
@@ -392,8 +403,10 @@
   (tasks/search)
   (let
       [sub-map (zipmap (range 0 (tasks/ui getrowcount :all-subscriptions-view))
-                       (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? true))
-       both? (fn [pair] (= "Both" (tasks/ui getcellvalue :all-subscriptions-view (key pair) 1)))
+                       (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? false))
+       both? (fn [pair] (=  "Both" (try
+                                    (tasks/ui getcellvalue :all-subscriptions-view (key pair) 1)
+                                    (catch Exception e))))
        row-sub-map (into {} (filter both? sub-map))
        cli-out (:stdout (run-command "subscription-manager facts --list | grep virt.is_guest"))
        virt? (= true (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
