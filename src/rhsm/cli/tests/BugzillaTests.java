@@ -847,7 +847,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
 		List<SubscriptionPool> availPools = clienttasks.getCurrentlyAvailableSubscriptionPools(); 
-			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools.get(randomGenerator.nextInt(availPools.size())));
+			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools.get(randomGenerator.nextInt(availPools.size())),sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 			clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 
@@ -899,7 +899,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(pool.productId.equals(productId)){
-				 entitlementCertFile=	clienttasks.subscribeToSubscriptionPool(pool);
+				 entitlementCertFile=	clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 			}
 		}
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
@@ -3132,7 +3132,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					"Cannot randomly pick a pool for subscribing when there are no available pools for testing.");
 		SubscriptionPool pool = pools
 				.get(randomGenerator.nextInt(pools.size()));
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToSubscriptionPool(pool);
 		List<ProductSubscription> consumedSubscriptionsBeforeregister = clienttasks
 				.getCurrentlyConsumedProductSubscriptions();
 		clienttasks.clean_(null, null, null);
@@ -4078,7 +4078,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
-			File entitlementCertFile = 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+			File entitlementCertFile = 		clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {

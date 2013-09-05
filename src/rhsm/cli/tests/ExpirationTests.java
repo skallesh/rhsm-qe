@@ -47,7 +47,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(expiringPool,"The expiring SubscriptionPool is currently available for subscribing: "+expiringPool);
 
 		// subscribe
-		File expiringCertFile = clienttasks.subscribeToSubscriptionPool(expiringPool);
+		File expiringCertFile = clienttasks.subscribeToSubscriptionPool(expiringPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		/*EntitlementCert*/ expiringCert = clienttasks.getEntitlementCertFromEntitlementCertFile(expiringCertFile);
 		List <ProductSubscription> expiringProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber", expiringCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertMore(expiringProductSubscriptions.size(),0, "Found ProductSubscriptions corresponding to the just subscribed SubscriptionPool: "+expiringPool);

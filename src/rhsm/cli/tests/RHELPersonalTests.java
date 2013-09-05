@@ -288,7 +288,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(personSubscriptionPool,"Personal subscription with ProductId '"+personProductId+"' is available to user '"+username+"' registered as a person.");
 			//client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null);
 			//personalEntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1tasks.subscribeToSubscriptionPool(personSubscriptionPool));
-			personEntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1tasks.subscribeToSubscriptionPool(personSubscriptionPool));
+			personEntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1tasks.subscribeToSubscriptionPool(personSubscriptionPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
 	
 			log.info("Register "+multipleSystems+" new systems under username '"+username+"' and subscribe to sub productId '"+systemProductId+"'...");
 			systemConsumerIds = new ArrayList<String>();
@@ -300,7 +300,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				systemConsumerIds.add(consumerId);
 				SubscriptionPool subPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",systemProductId,client2tasks.getCurrentlyAvailableSubscriptionPools());
 				log.info("Subscribing system '"+systemNum+"' ('"+consumerId+"' under username '"+username+"') to sub pool for productId '"+systemProductId+"'...");
-				client2tasks.subscribeToSubscriptionPoolUsingPoolId(subPool);
+				client2tasks.subscribeToSubscriptionPool(subPool);
 				
 				/* OLD ASSERTION BEFORE IMPLEMENTATION OF Bug 801187 - collapse list of provided products for subscription-manager list --consumed
 				for (int k=0; k<bundledProductData.length(); k++) {

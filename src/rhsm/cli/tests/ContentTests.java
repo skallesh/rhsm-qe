@@ -893,7 +893,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (expectedContentNamespaceSet.isEmpty() && unexpectedContentNamespaceSet.isEmpty()) throw new SkipException("This test is not applicable for a pool whose provided products have no content sets.");
 		
 		clienttasks.unsubscribe(true,(BigInteger)null,null,null,null);
-		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
 		
 		// entitlement asserts
 		List<String> actualEntitledContentLabels = new ArrayList<String>();

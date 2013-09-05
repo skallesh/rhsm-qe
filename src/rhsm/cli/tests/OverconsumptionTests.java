@@ -84,7 +84,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// now attempt to oversubscribe
 		log.info("Now we will attempt to oversubscribe to original pool: "+testPool);
 		// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.
-		Assert.assertNull(client1tasks.subscribeToSubscriptionPool(testPool),"No entitlement cert is granted when the pool is already fully subscribed.");
+		Assert.assertNull(client1tasks.subscribeToSubscriptionPool(testPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl),"No entitlement cert is granted when the pool is already fully subscribed.");
 		// try again
 		String expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",testPool.poolId); // expected string changed by bug 876758
 		expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",testPool.poolId);

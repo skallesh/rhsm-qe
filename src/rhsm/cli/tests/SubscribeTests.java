@@ -94,7 +94,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// subscribe to the pool
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
 		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -1061,7 +1061,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (true) {
 			log.warning("Effectively, this test is now obsolete due to RFE Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=888866 which reversed the original intent of this test.");
 			String systemCertificateVersion = clienttasks.getFactValue("system.certificate_version");
-			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
 			Assert.assertEquals(entitlementCert.version, "1.0", "RAM and Core based subscriptions are now granted to older subscription-manager clients regardless of version.  See RFE bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=888866");
 			Assert.assertNull(entitlementCert.orderNamespace.coreLimit, "Core limit included in an entitlement cert when system.certificate_version is old '"+systemCertificateVersion+"'.");
 			Assert.assertNull(entitlementCert.orderNamespace.ramLimit, "RAM limit included in an entitlement cert when system.certificate_version is old '"+systemCertificateVersion+"'.");

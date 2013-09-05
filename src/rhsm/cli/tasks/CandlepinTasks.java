@@ -435,8 +435,8 @@ schema generation failed
 		return getHTTPResponseAsString(client, post, authenticator, password);
 	}
 	
-	static public JSONObject getEntitlementUsingRESTfulAPI(String owner, String password, String url, String dbid) throws Exception {
-		return new JSONObject(getResourceUsingRESTfulAPI(owner, password, url, "/entitlements/"+dbid));
+	static public JSONObject getEntitlementUsingRESTfulAPI(String authenticator, String password, String url, String dbid) throws Exception {
+		return new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/entitlements/"+dbid));
 	}
 
 //	static public JSONObject curl_hateoas_ref_ASJSONOBJECT(SSHCommandRunner runner, String server, String port, String prefix, String owner, String password, String ref) throws JSONException {

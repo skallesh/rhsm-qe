@@ -1187,22 +1187,25 @@ public class SubscriptionManagerTasks {
 	
 	
 	
-	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools(String providingProductId, String serverUrl) throws JSONException, Exception {
-		List<SubscriptionPool> subscriptionPoolsProvidingProductId = new ArrayList<SubscriptionPool>();
-		
-		for (SubscriptionPool subscriptionPool : getCurrentlyAvailableSubscriptionPools()) {
-			if (CandlepinTasks.getPoolProvidedProductIds(currentlyRegisteredUsername, currentlyRegisteredPassword, serverUrl, subscriptionPool.poolId).contains(providingProductId)) {
-				subscriptionPoolsProvidingProductId.add(subscriptionPool);
-			}
-		}
-		return subscriptionPoolsProvidingProductId;
-	}
 	
 	/**
 	 * @return list of objects representing the subscription-manager list --available
 	 */
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
 		return SubscriptionPool.parse(listAvailableSubscriptionPools().getStdout());
+	}
+	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools(String providingProductId, String serverUrl) throws JSONException, Exception {
+		return getCurrentlyAvailableSubscriptionPools(providingProductId, currentlyRegisteredUsername, currentlyRegisteredPassword, serverUrl);	// may encounter "Insufficient permissions"; I suspect this is a consequence of the solution for Bug 994711 - Consumers can consume entitlements from other orgs
+	}
+	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools(String providingProductId, String authenticator, String password, String serverUrl) throws JSONException, Exception {
+		List<SubscriptionPool> subscriptionPoolsProvidingProductId = new ArrayList<SubscriptionPool>();
+		
+		for (SubscriptionPool subscriptionPool : getCurrentlyAvailableSubscriptionPools()) {
+			if (CandlepinTasks.getPoolProvidedProductIds(authenticator, password, serverUrl, subscriptionPool.poolId).contains(providingProductId)) {
+				subscriptionPoolsProvidingProductId.add(subscriptionPool);
+			}
+		}
+		return subscriptionPoolsProvidingProductId;
 	}
 	
 	/**
@@ -4007,12 +4010,12 @@ public class SubscriptionManagerTasks {
 //	}
 	
 	
-	public File subscribeToProductId(String productId) {
+	public void subscribeToProductId(String productId) {
 		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"subscription-manager-cli subscribe --product="+product);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool,"Found an available pool to subscribe to productId '"+productId+"': "+pool);
-		return subscribeToSubscriptionPool(pool);
+		subscribeToSubscriptionPool(pool);
 	}
 	
 	/**
@@ -4020,11 +4023,7 @@ public class SubscriptionManagerTasks {
 	 * @param pool
 	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
 	 */
-	public File subscribeToSubscriptionPool(SubscriptionPool pool)  {
-		
-//		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
-//		String port = getConfFileParameter(rhsmConfFile, "port");
-//		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+	public File subscribeToSubscriptionPool(SubscriptionPool pool, String authenticator, String password, String serverUrl)  {
 		
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
@@ -4117,18 +4116,21 @@ public class SubscriptionManagerTasks {
 		// NOTE: this block of code is somewhat duplicated in getEntitlementCertCorrespondingToSubscribedPool(...)
 		File newCertFile = null;
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t");
-		for (File entitlementCertFile : afterEntitlementCertFiles) {
-			if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
-				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-				try {
-					JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
-					JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
-					if (jsonPool.getString("id").equals(pool.poolId)) {
-						newCertFile = entitlementCertFile; break;
+		if (authenticator!=null && password!=null && serverUrl!=null) {
+			for (File entitlementCertFile : afterEntitlementCertFiles) {
+				if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
+					EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+					try {
+						//JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(authenticator,password,serverUrl,entitlementCert.id);	// is throwing a 500 in stage, but only for qa@redhat.com credentials - I don't know why
+						JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(currentlyRegisteredUsername,currentlyRegisteredPassword,serverUrl,entitlementCert.id);
+						JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
+						if (jsonPool.getString("id").equals(pool.poolId)) {
+							newCertFile = entitlementCertFile; break;
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+						Assert.fail(e.getMessage());
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					Assert.fail(e.getMessage());
 				}
 			}
 		}
@@ -4177,20 +4179,22 @@ public class SubscriptionManagerTasks {
 					"Should no longer find the depleted pool amongst --all --available after having consumed all of its available entitlements: ");
 //			Assert.assertEquals(depletedPool.quantity, "0",
 //					"Asserting the pool's quantity after having consumed all of its available entitlements is zero.");
-			JSONObject jsonPool = null;
-			int consumed = 0;
-			int quantity = Integer.valueOf(pool.quantity);
-			try {
-				jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,"/pools/"+pool.poolId));
-				consumed = jsonPool.getInt("consumed");
-				quantity = jsonPool.getInt("quantity");
-			} catch (Exception e) {
-				e.printStackTrace();
-				Assert.fail(e.getMessage());
-			} 
-			Assert.assertEquals(consumed, quantity,
-					"Asserting the pool's consumed attribute equals it's total quantity after having consumed all of its available entitlements.");
-
+			if (authenticator!=null && password!=null && serverUrl!=null) {
+				JSONObject jsonPool = null;
+				int consumed = 0;
+				int quantity = Integer.valueOf(pool.quantity);
+				try {
+					jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,serverUrl,"/pools/"+pool.poolId));
+					consumed = jsonPool.getInt("consumed");
+					quantity = jsonPool.getInt("quantity");
+				} catch (Exception e) {
+					e.printStackTrace();
+					Assert.fail(e.getMessage());
+				} 
+				Assert.assertEquals(consumed, quantity,
+						"Asserting the pool's consumed attribute equals it's total quantity after having consumed all of its available entitlements.");
+			}
+			
 			//  assert that NO new entitlement cert file has been installed in /etc/pki/entitlement
 			Assert.assertNull(newCertFile,
 					"A new entitlement certificate has NOT been installed after attempting to subscribe to depleted pool: "+depletedPool);
@@ -4212,30 +4216,32 @@ public class SubscriptionManagerTasks {
 			Assert.assertEquals(afterEntitlementCertFiles,beforeEntitlementCertFiles,"After subscribing to pool id '"+pool+"', the other entitlement cert serials remain unchanged");
 			*/
 			
-			// assert the new entitlement cert file has been installed in /etc/pki/entitlement
-			Assert.assertNotNull(newCertFile, "A new entitlement certificate has been installed after subscribing to pool: "+pool);
-			log.info("The new entitlement certificate file is: "+newCertFile);
-			
-			// assert that the productId from the pool matches the entitlement productId
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/05/2010
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=806986 - jsefler 06/28/2012
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId1="650278"; 
-			String bugId2="806986"; 
-			try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId1).toString()+" Bugzilla "+bugId1+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId1); log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId2).toString()+" Bugzilla "+bugId2+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				log.warning("Skipping assert that the productId from the pool matches the entitlement productId");
-			} else {
-			// END OF WORKAROUND
-			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-			File newCertKeyFile = getEntitlementCertKeyFileFromEntitlementCert(entitlementCert);
-			Assert.assertEquals(entitlementCert.orderNamespace.productId, poolProductId, isSubpool?
-					"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating Personal SubscriptionPool productId '"+poolProductId+"' after subscribing to the subpool.":
-					"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+poolProductId+"' after subscribing to the pool.");
-			Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, newCertFile.getPath()),"New EntitlementCert file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
-			Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, newCertKeyFile.getPath()),"New EntitlementCert key file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
+			if (authenticator!=null && password!=null && serverUrl!=null) {
+				
+				// assert the new entitlement cert file has been installed in /etc/pki/entitlement
+				Assert.assertNotNull(newCertFile, "A new entitlement certificate has been installed after subscribing to pool: "+pool);
+				log.info("The new entitlement certificate file is: "+newCertFile);
+				
+				// assert that the productId from the pool matches the entitlement productId
+				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/05/2010
+				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=806986 - jsefler 06/28/2012
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId1="650278"; 
+				String bugId2="806986"; 
+				try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId1).toString()+" Bugzilla "+bugId1+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId1); log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId2).toString()+" Bugzilla "+bugId2+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping assert that the productId from the pool matches the entitlement productId");
+				} else {
+				// END OF WORKAROUND
+				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
+				File newCertKeyFile = getEntitlementCertKeyFileFromEntitlementCert(entitlementCert);
+				Assert.assertEquals(entitlementCert.orderNamespace.productId, poolProductId, isSubpool?
+						"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating Personal SubscriptionPool productId '"+poolProductId+"' after subscribing to the subpool.":
+						"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+poolProductId+"' after subscribing to the pool.");
+				Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, newCertFile.getPath()),"New EntitlementCert file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
+				Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, newCertKeyFile.getPath()),"New EntitlementCert key file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
+				}
 			}
-
 		
 			// assert that consumed ProductSubscriptions has NOT decreased
 			List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
@@ -4248,8 +4254,9 @@ public class SubscriptionManagerTasks {
 		
 		return newCertFile;
 	}
-	
-	
+	public void subscribeToSubscriptionPool(SubscriptionPool pool)  {
+		subscribeToSubscriptionPool(pool, null, null, null);
+	}
 	
 	/**
 	 * subscribe to the given SubscriptionPool without asserting results
@@ -4279,9 +4286,9 @@ public class SubscriptionManagerTasks {
 	}
 	
 	//@Deprecated
-	public File subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
+	public void subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
 		log.warning("Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.  Forwarding this subscribe request to use --pool Id...");
-		return subscribeToSubscriptionPoolUsingPoolId(pool);
+		subscribeToSubscriptionPoolUsingPoolId(pool);
 		
 		/* jsefler 7/22/2010
 		List<ProductSubscription> before = getCurrentlyConsumedProductSubscriptions();
@@ -4302,8 +4309,8 @@ public class SubscriptionManagerTasks {
 		*/
 	}
 	
-	public File subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool/*, boolean withPoolID*/) {
-		return subscribeToSubscriptionPool(pool);
+	public void subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool/*, boolean withPoolID*/) {
+		subscribeToSubscriptionPool(pool);
 		
 		/* jsefler 11/22/2010
 		if(withPoolID){

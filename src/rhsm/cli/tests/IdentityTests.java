@@ -324,7 +324,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		if (pools.size()<=0) throw new SkipException("No susbcriptions are available for which an entitlement could be granted.");
 		log.info("Subscribe to a randomly available pool...");
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
 		// do a server-side consumer deletion 

@@ -336,7 +336,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));	
 			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
 			if (jsonProvidedProducts.length()==1) {
-				entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+				entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 				break;
 			}
 		}
@@ -587,7 +587,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToSubscriptionPool(pool);
 		
 		// attempt to register again and assert that you are warned that the system is already registered
 		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, (String)null, null, null, null, null, false, null, null, null);
@@ -831,7 +831,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToSubscriptionPool(pool);
 		
 		// get a list of the consumed products
 		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -890,7 +890,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToSubscriptionPool(pool);
 		
 		// get a list of the consumed products
 		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();

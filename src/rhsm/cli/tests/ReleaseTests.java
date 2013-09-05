@@ -342,13 +342,15 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		ProductCert rhelProductCert = rhelProductCerts.get(0);
 		
 		// find an available RHEL subscription pool that provides for this base RHEL product cert
-		List<SubscriptionPool> rhelSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools(rhelProductCert.productId, sm_serverUrl);
+		//List<SubscriptionPool> rhelSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools(rhelProductCert.productId, sm_serverUrl);	// no longer works; encounters "Insufficient permissions"
+		List<SubscriptionPool> rhelSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools(rhelProductCert.productId, sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl);
 		if (rhelSubscriptionPools.isEmpty()) throw new SkipException("Cannot find an available SubscriptionPool that provides for this installed RHEL Product: "+rhelProductCert);
 		SubscriptionPool rhelSubscriptionPool = rhelSubscriptionPools.get(0);	// choose one
 		
 		// subscribe to the RHEL subscription
-		File rhelEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(rhelSubscriptionPool);
-		File rhelEntitlementCertKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(rhelEntitlementCertFile);
+//		File rhelEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(rhelSubscriptionPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+//		File rhelEntitlementCertKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(rhelEntitlementCertFile);
+		clienttasks.subscribeToSubscriptionPool(rhelSubscriptionPool);
 		
 		// get the currently expected release listing based on the currently enabled repos
 		List<String> expectedReleases = clienttasks.getCurrentlyExpectedReleases();

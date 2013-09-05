@@ -65,7 +65,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription,sm_clientUsername,sm_clientPassword);
 		if (clienttasks.unsubscribeFromProductSubscription(productSubscription)) {
 			Assert.assertNotNull(pool, "Successfully determined what SubscriptionPool ProductSubscription '"+productSubscription+"' was consumed from.");
-			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
+			clienttasks.subscribeToSubscriptionPool/*UsingProductId*/(pool);	// only re-subscribe when unsubscribe was a success
 		}
 	}
 	
@@ -80,7 +80,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		client.runCommandAndWait("killall -9 yum");
 		
 		// subscribe to a pool
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(subscriptionPool);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(subscriptionPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		List <EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
 		entitlementCerts.add(entitlementCert);
@@ -170,7 +170,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));	// random available pool
-		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
 		
 		// now remove the consumer cert to simulate an unregister
 		clienttasks.removeAllCerts(true,false, false);

@@ -211,7 +211,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' is available for consumption on a system whose arch '"+clienttasks.arch+"' is among the supported arches "+haSupportedArches);
 		
 		// Subscribe to the High Availability subscription SKU
-		haEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(haPool);
+		haEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(haPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 	}
 	
 	

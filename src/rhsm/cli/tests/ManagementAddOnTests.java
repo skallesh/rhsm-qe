@@ -40,7 +40,7 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 	public void VerifyManagementAddOnEntitlementsContainNoContentNamespace (SubscriptionPool managementAddOnPool) {
 		
 		// subscribe to a management add-on pool
-		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(managementAddOnPool));
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(managementAddOnPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
 
 		// assert that there are no content namespaces in the granted entitlement cert
 		Assert.assertTrue(entitlementCert.contentNamespaces.isEmpty(),"There are no content namespaces in the entitlement cert granted after subscribing to management add-on subscription pool: "+managementAddOnPool);
@@ -55,7 +55,7 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 	public void VerifyManagementAddOnEntitlementsContainNoProductNamespace (SubscriptionPool managementAddOnPool) {
 		
 		// subscribe to a management add-on pool
-		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(managementAddOnPool));
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(managementAddOnPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
 
 		// assert that there are no product namespaces contained within the granted entitlement cert
 		Assert.assertTrue(entitlementCert.productNamespaces.isEmpty(),"There are no product namespaces in the entitlement cert granted after subscribing to management add-on subscription pool: "+managementAddOnPool);
