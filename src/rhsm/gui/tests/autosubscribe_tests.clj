@@ -232,9 +232,7 @@
     (if (tasks/ui showing? :register-dialog "Select Service Level")
       (do
         (sleep 3000)
-        (tasks/ui click :register)
-        (tasks/ui waittillwindowexist :register-dialog 80)))
-    (tasks/ui click :register)
+        (tasks/ui click :register)))
     (verify (= 1 (tasks/ui guiexist :main-window "System is properly subscribed*")))
     (finally
      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
