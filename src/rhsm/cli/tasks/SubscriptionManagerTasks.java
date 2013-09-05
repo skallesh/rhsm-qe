@@ -3930,15 +3930,16 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		String stdoutMessage;
 		
-		// just return the result for the following cases:
-		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed") ||	// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
-			sshCommandResult.getStdout().startsWith("No entitlements are available") ||			// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.   (Bug 719743)
-			sshCommandResult.getStdout().startsWith("No subscriptions are available") ||		// No subscriptions are available from the pool with id '8a90f8303c98703a013c98715ca80494'.   (Bug 846758)
-			sshCommandResult.getStdout().startsWith("Pool is restricted") ||					// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
-			sshCommandResult.getStdout().startsWith("All installed products are covered") ||	// All installed products are covered by valid entitlements. No need to update subscriptions at this time.
-			sshCommandResult.getStdout().startsWith("No Installed products on system.") ||		// No Installed products on system. No need to attach subscriptions.
-			sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) {			// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
-																								// Unable to entitle consumer to the pool with id '8a90f85734160df3013417ac68bb7108'.: Entitlements for awesomeos-virt-4 expired on: 12/7/11 3:43 AM
+		// just return the result for any of the following cases:
+		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed") ||			// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
+			sshCommandResult.getStdout().startsWith("This unit has already had the subscription") ||	// This unit has already had the subscription matching pool ID '8a99f98340114f880140766376dc00cf' attached.
+			sshCommandResult.getStdout().startsWith("No entitlements are available") ||					// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.   (Bug 719743)
+			sshCommandResult.getStdout().startsWith("No subscriptions are available") ||				// No subscriptions are available from the pool with id '8a90f8303c98703a013c98715ca80494'.   (Bug 846758)
+			sshCommandResult.getStdout().startsWith("Pool is restricted") ||							// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
+			sshCommandResult.getStdout().startsWith("All installed products are covered") ||			// All installed products are covered by valid entitlements. No need to update subscriptions at this time.
+			sshCommandResult.getStdout().startsWith("No Installed products on system.") ||				// No Installed products on system. No need to attach subscriptions.
+			sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) {					// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
+																										// Unable to entitle consumer to the pool with id '8a90f85734160df3013417ac68bb7108'.: Entitlements for awesomeos-virt-4 expired on: 12/7/11 3:43 AM
 			log.warning(sshCommandResult.getStdout().trim());
 			return sshCommandResult;	
 		}
