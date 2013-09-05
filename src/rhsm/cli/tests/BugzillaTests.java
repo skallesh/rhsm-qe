@@ -412,7 +412,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String complianceStatus = CandlepinTasks.getConsumerCompliance(sm_serverAdminUsername, sm_serverAdminPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerid).getString("displayMessage");
 	
 		String message="Consumer "+consumerid+" has been deleted";
-		if (clienttasks.workaroundForBug876764(sm_serverType)) message = "Unit "+consumerid+" has been deleted";
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) message = "Unit "+consumerid+" has been deleted";
 		
 		Assert.assertContainsMatch(message, complianceStatus);
 		
@@ -2082,7 +2082,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						+ consumerId);
 		String result=clienttasks.facts_(null, true, null, null, null).getStderr();
 		String ExpectedMsg="Consumer "+consumerId+" has been deleted";
-		if (clienttasks.workaroundForBug876764(sm_serverType))
+		if (!clienttasks.workaroundForBug876764(sm_serverType))
 		ExpectedMsg = "Unit "+consumerId+" has been deleted";
 		Assert.assertEquals(result.trim(), ExpectedMsg);
 	}
@@ -2105,7 +2105,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.clean_(null, null, null);
 		SSHCommandResult result=clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword, orgname, null, null, null, consumerId, null, null, null,(String)null, null, null, null, null, null, null, null, null);
 		String expected="Consumer "+consumerId+" has been deleted";
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expected = "Unit "+consumerId+" has been deleted";
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) expected = "Unit "+consumerId+" has been deleted";
 		Assert.assertEquals(result.getStderr().trim(), expected);
 	}
 

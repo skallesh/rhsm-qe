@@ -335,7 +335,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// assert that all subscription-manager calls are blocked by a message stating that the consumer has been deleted
 		// Original Stderr: Consumer with id b0f1ed9f-3dfa-4eea-8e04-72ab8075d533 could not be found
 		String expectedMsg = String.format("Consumer %s has been deleted",consumerCert.consumerid);
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedMsg = String.format("Unit %s has been deleted",consumerCert.consumerid);
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedMsg = String.format("Unit %s has been deleted",consumerCert.consumerid);
 		String ignoreStderr = "stty: standard input: Invalid argument";
 		SSHCommandResult result;
 

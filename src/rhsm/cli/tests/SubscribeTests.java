@@ -330,7 +330,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				"After subscribing to multi-entitlement pool '"+pool.poolId+"' for the second time, the second granted entilement cert file exists.");
 		} else {
 			String expectedStdout = String.format("This consumer is already subscribed to the product matching pool with id '%s'.",pool.poolId);
-			if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("This unit has already had the subscription matching pool ID '%s' attached.",pool.poolId);
+			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("This unit has already had the subscription matching pool ID '%s' attached.",pool.poolId);
 			Assert.assertEquals(subscribeStdout, expectedStdout,
 				"subscribe command returns proper message when the same consumer attempts to subscribe to a non-multi-entitlement pool more than once.");
 			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.entitlementCertDir+File.separator+serial1+".pem"),
@@ -395,7 +395,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //				subscribeResultMessage = String.format("Successfully consumed a subscription for: %s",poolNames.get(poolId));	// changed by Bug 874804 Subscribe -> Attach
 				subscribeResultMessage = String.format("Successfully attached a subscription for: %s",poolNames.get(poolId));
 				String subscribeResultSubMessage = String.format("This consumer is already subscribed to the product matching pool with id '%s'.",poolId);
-				if (clienttasks.workaroundForBug876764(sm_serverType)) subscribeResultSubMessage = String.format("This unit has already had the subscription matching pool ID '%s' attached.",poolId);
+				if (!clienttasks.workaroundForBug876764(sm_serverType)) subscribeResultSubMessage = String.format("This unit has already had the subscription matching pool ID '%s' attached.",poolId);
 				subscribeResultMessage += "\n"+subscribeResultSubMessage;
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for pool '"+poolId+"' contains: "+subscribeResultMessage);			
 			}
@@ -722,7 +722,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		String expectedDryrunResult = String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg);	// valid before bug fix 864508
 		expectedDryrunResult = String.format("Service level '%s' is not available to consumers of organization %s.","FOO",sm_clientOrg);
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedDryrunResult = String.format("Service level '%s' is not available to units of organization %s.","FOO",sm_clientOrg);
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedDryrunResult = String.format("Service level '%s' is not available to units of organization %s.","FOO",sm_clientOrg);
 		Assert.assertEquals(jsonDryrunResult.getString("displayMessage"),expectedDryrunResult, "JSON results from a Candlepin Restful API call to dry-run with an unavailable service level.");
 	}
 	
@@ -986,7 +986,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (SubscriptionPool pool : pools) {
 			if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
 				String expectedSubscribeResultStdoutSubString = String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId);
-				if (clienttasks.workaroundForBug876764(sm_serverType)) expectedSubscribeResultStdoutSubString = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
+				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedSubscribeResultStdoutSubString = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
 				Assert.assertTrue(subscribeResult.getStdout().contains(expectedSubscribeResultStdoutSubString),"Subscribe attempt to non-multi-entitlement pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than one.");				
 			} else if (pool.quantity.equalsIgnoreCase("unlimited") || quantity <= Integer.valueOf(pool.quantity)) {
 //				Assert.assertTrue(subscribeResult.getStdout().contains(String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");	// Bug 812410 - Subscription-manager subscribe CLI feedback 
@@ -995,7 +995,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			} else {
 				String expectedSubscribeResultStdoutSubString = String.format("No entitlements are available from the pool with id '%s'.",pool.poolId);	// expected string changed by bug 876758
 				expectedSubscribeResultStdoutSubString = String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId);
-				if (clienttasks.workaroundForBug876764(sm_serverType)) expectedSubscribeResultStdoutSubString = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
+				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedSubscribeResultStdoutSubString = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
 				Assert.assertTrue(subscribeResult.getStdout().contains(expectedSubscribeResultStdoutSubString),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
 			}
 		}
@@ -1336,7 +1336,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
 			expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",pool.poolId);	// expected string changed by bug 876758
 			expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId);
-			if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
+			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
 			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
 		} else {
@@ -1349,7 +1349,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));	// changed by Bug 874804 Subscribe -> Attach
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
 			expectedStdout = String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId);
-			if (clienttasks.workaroundForBug876764(sm_serverType))  expectedStdout = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
+			if (!clienttasks.workaroundForBug876764(sm_serverType))  expectedStdout = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to no."}));
@@ -1361,7 +1361,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));	// changed by Bug 874804 Subscribe -> Attach
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
 			expectedStdout = String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId);
-			if (clienttasks.workaroundForBug876764(sm_serverType))  expectedStdout = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
+			if (!clienttasks.workaroundForBug876764(sm_serverType))  expectedStdout = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool without a \"multi-entitlement\" product attribute."}));

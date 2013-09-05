@@ -88,7 +88,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// try again
 		String expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",testPool.poolId); // expected string changed by bug 876758
 		expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",testPool.poolId);
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",testPool.poolId);
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",testPool.poolId);
 		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),expectedStdout);
 		// assert the consumed quantity again
 		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
@@ -263,7 +263,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		log.info("SSHCommandResult from '"+smtLoser.hostname+"': "+sshLoser);
 		String expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",testPool.poolId); // expected string changed by bug 876758
 		expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",testPool.poolId);
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",testPool.poolId);
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",testPool.poolId);
 		Assert.assertEquals(sshLoser.getStdout().trim(), expectedStdout, "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left from poolId '"+testPool.poolId+"'.");
 		Assert.assertEquals(sshLoser.getStderr().trim(), "","No stderr information is expected on '"+smtLoser.hostname+"'.");
 //		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt was handled gracefully.");	// assertion valid prior to RHEL63 fix for bug 689608

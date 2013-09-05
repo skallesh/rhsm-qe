@@ -6227,7 +6227,7 @@ repolist: 3,394
 		// Unfortunately these changes are present in candlepin master, but have not been deployed
 		// to hosted candlepin.
 		// For a short time the expected consumer/unit strings will be different depending on CandlepinType
-		//return type.equals(CandlepinType.standalone);
+		//return !type.equals(CandlepinType.standalone);
 		return false;	// as of 9/4/2013, candlepin-0.8.25-1 has been deployed in stage which includes POST Bug 876764
 	}
 }
