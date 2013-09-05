@@ -238,12 +238,12 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 				log.warning("Expected High Availability package '"+expectedPkg+"' to be available for yum install.");
 			}
 		}
-		Assert.assertTrue(foundAllExpectedPkgs,"All expected High Availability packages are available for yum install.");
+		Assert.assertTrue(foundAllExpectedPkgs,"All expected High Availability packages are available for yum install.");	// see top of this file for determining the expected sm_haPackages
 	}
 	
 	
 	@Test(	description="yum install a High Availability package ccs and assert installed products",
-			groups={"blockedByBug-859197","blockedByBug-958548"},
+			groups={"blockedByBug-859197","blockedByBug-958548","blockedByBug-1004893"},
 			priority=40,
 			//dependsOnMethods={"VerifyHighAvailabilityPackagesAreAvailabile_Test"},
 			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
@@ -267,7 +267,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="yum install a second High Availability package cman and assert installed products",
-			groups={"blockedByBug-859197","blockedByBug-958548"},
+			groups={"blockedByBug-859197","blockedByBug-958548","blockedByBug-1004893"},
 			priority=50,
 			//dependsOnMethods={"YumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
 			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
