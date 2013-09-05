@@ -81,6 +81,7 @@
               (catch AssertionError e
                 (reset! rhsm-gui-pid nil)
                 (throw e)))
+         (sleep 500)
          (ui maximizewindow window)))))
 
 (defn kill-app
@@ -279,14 +280,16 @@
                                activation?
                                system-name-input
                                skip-autosubscribe?
-                               org]
+                               org
+                               back-button?]
                         :or {server nil
                              server-default? false
                              activation-key nil
                              activation? false
                              system-name-input nil
                              skip-autosubscribe? true
-                             org nil}}]
+                             org nil
+                             back-button? false}}]
   (assert  (or (fbshowing? :firstboot-server-entry)
                (bool (ui guiexist :firstboot-window "Subscription Management Registration"))))
   (when server (ui settextvalue :firstboot-server-entry server))
@@ -307,10 +310,14 @@
           (if org (ui selectrow :firstboot-owner-table org))
           (ui click :firstboot-forward)))
       ;;TODO: write autosubscribe selection methods
-      )
+       (if back-button? 
+        (do
+        (verify (not (bool (ui hasstate :firstboot-back "sensitive"))))
+        (verify (not (bool (ui hasstate :firstboot-forward "sensitive")))))))
     ;;TODO: write activation key path
     )
   (checkforerror))
+
 
 (defn wait-for-progress-bar
   "Waits for a progress bar to finish."
