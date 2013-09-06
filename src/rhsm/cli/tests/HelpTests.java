@@ -175,25 +175,25 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
 	//@ImplementsNitrateTest(caseId=46707)
-	public void CommandLineHelpForCLI_Test(Object meta, String command, Integer exitCode, String stdoutRegex, List<String> expectedOptions) {
-		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying the exit code and that ONLY the expected options are available.");
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command,exitCode);
+	public void CommandLineHelpForCLI_Test(Object bugzilla, String helpCommand, Integer exitCode, String stdoutRegex, List<String> expectedOptions) {
+		log.info("Testing subscription-manager-cli command line options '"+helpCommand+"' and verifying the exit code and that ONLY the expected options are available.");
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,helpCommand,exitCode);
 		
 		Pattern pattern = Pattern.compile(stdoutRegex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(result.getStdout());
-		Assert.assertTrue(matcher.find(),"Available command line options matching regex '"+stdoutRegex+"' are shown with command: "+command);
+		Assert.assertTrue(matcher.find(),"Available command line options matching regex '"+stdoutRegex+"' are shown with command: "+helpCommand);
 		
 		// find all the matches to stderrRegex
 		List <String> actualOptions = new ArrayList<String>();
 		do {
 			
 			// TEMPORARY WORKAROUND FOR BUG
-			if (!command.contains(" register") && !command.contains(" config") && (matcher.group().contains("--serverurl")||matcher.group().contains("--baseurl"))) {
+			if (!helpCommand.contains(" register") && !helpCommand.contains(" config") && (matcher.group().contains("--serverurl")||matcher.group().contains("--baseurl"))) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="842768"; 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					log.warning("Ignoring the presence of option '"+matcher.group()+"' for command '"+command+"' while bug '"+bugId+"' is open.");
+					log.warning("Ignoring the presence of option '"+matcher.group()+"' for command '"+helpCommand+"' while bug '"+bugId+"' is open.");
 					continue;
 				}
 			}
@@ -205,17 +205,17 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// assert all of the expectedOptions were found and that no unexpectedOptions were found
 		for (String expectedOption : expectedOptions) {
 			if (!actualOptions.contains(expectedOption)) {
-				log.warning("Could not find the expected command '"+command+"' option '"+expectedOption+"'.");
+				log.warning("Could not find the expected command '"+helpCommand+"' option '"+expectedOption+"'.");
 			} else {
-				Assert.assertTrue(actualOptions.contains(expectedOption),"The expected command '"+command+"' option '"+expectedOption+"' is available.");
+				Assert.assertTrue(actualOptions.contains(expectedOption),"The expected command '"+helpCommand+"' option '"+expectedOption+"' is available.");
 			}
 		}
 		for (String actualOption : actualOptions) {
 			if (!expectedOptions.contains(actualOption))
-				log.warning("Found an unexpected command '"+command+"' option '"+actualOption+"'.");
+				log.warning("Found an unexpected command '"+helpCommand+"' option '"+actualOption+"'.");
 		}
-		Assert.assertTrue(actualOptions.containsAll(expectedOptions), "All of the expected command '"+command+"' line options are available.");
-		Assert.assertTrue(expectedOptions.containsAll(actualOptions), "All of the available command '"+command+"' line options are expected.");
+		Assert.assertTrue(actualOptions.containsAll(expectedOptions), "All of the expected command '"+helpCommand+"' line options are available.");
+		Assert.assertTrue(expectedOptions.containsAll(actualOptions), "All of the available command '"+helpCommand+"' line options are expected.");
 	}
 	
 	
@@ -225,9 +225,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	// Candidates for an automated Test:
 	// TODO Bug 694662 - the whitespace in the title line of man subscription-manager-gui is completely consumed https://github.com/RedHatQE/rhsm-qe/issues/151
 	// TODO Bug 765905 - add man pages for subscription-manager-migration https://github.com/RedHatQE/rhsm-qe/issues/152
-	// TODO Bug 812104 - Unable to tab complete new subscription-manager modules (release and service-level) https://github.com/RedHatQE/rhsm-qe/issues/153
-	// TODO Bug 817117 - bash-completion of subscription-manager environments --<TAB><TAB> is not working https://github.com/RedHatQE/rhsm-qe/issues/154
-	// TODO Bug 817390 - bash-completion of subscription-manager subscribe --<TAB><TAB> is not finding --servicelevel option https://github.com/RedHatQE/rhsm-qe/issues/155
 	
 	
 	// Configuration Methods ***********************************************************************
@@ -257,7 +254,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	public Object[][] getExpectedCommandLineOptionsDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getExpectedCommandLineOptionsDataAsListOfLists());
 	}
-	protected List<List<Object>> getExpectedCommandLineOptionsDataAsListOfLists() {
+	protected static List<List<Object>> getExpectedCommandLineOptionsDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
 		
@@ -423,7 +420,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=733873
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="733873"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			options.add("--proxy=PROXY_URL");
 			options.add("--proxyuser=PROXY_USER");

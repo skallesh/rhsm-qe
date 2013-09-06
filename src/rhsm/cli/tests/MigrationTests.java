@@ -118,7 +118,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 //		// TEMPORARY WORKAROUND FOR BUG
 //		String bugId = "840415"; boolean invokeWorkaroundWhileBugIsOpen = true;
-//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 //		if (invokeWorkaroundWhileBugIsOpen) {
 //			if (clienttasks.productCertDir.equals(nonDefaultProductCertDir))
 //			log.warning("Skipping the removal of the non default productCertDir '"+nonDefaultProductCertDir+"' before Testing without the dryrun option...");
@@ -134,10 +134,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "783278"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		String bugPkg = "subscription-manager-migration";
 		String bugVer = "subscription-manager-migration-0.98";	// RHEL58
-		try {if (clienttasks.installedPackageVersion.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")"); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (clienttasks.installedPackageVersion.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the assertion of the fact '"+migrationFromFact+"' fact.");
 		} else
@@ -246,10 +246,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "773707"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		String bugPkg = "subscription-manager-migration";
 		String bugVer = "subscription-manager-migration-0.98";	// RHEL58
-		try {if (clienttasks.installedPackageVersion.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")"); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (clienttasks.installedPackageVersion.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			throw new SkipException("There is no workaround for this installed version of "+bugVer+".  Blocked by Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
 		}
@@ -280,10 +280,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (expectedStderr!=null) Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from running :"+command);
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId="783542"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		String bugPkg = "subscription-manager-migration";
 		String bugVer = "subscription-manager-migration-0.98";	// RHEL58
-		try {if (clienttasks.installedPackageVersion.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")"); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (clienttasks.installedPackageVersion.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the exitCode assertion from running: "+command);
 		} else
@@ -1271,14 +1271,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// Step 4: verify that traffic to rhn is being redirected to bugzilla
 		Assert.assertEquals(client.runCommandAndWait("curl --stderr /dev/null -k https://xmlrpc."+sm_rhnHostname+" | grep \"<title>\"").getStdout().trim(), "<title>Red Hat Bugzilla Main Page</title>", "curl calls to rhn ipAddress '"+rhnHostnameIpAddress+"' are being re-directed to bugzilla ipAddress '"+bugzillaHostnameIpAddress+"'.");
 		
-		// Step 5: no neccessary
+		// Step 5: not neccessary
 		
 		// Step 6: attempt to run rhn-migrate-classic-to-rhsm should fail with a 'certificate verify failed' error
 		SSHCommandResult sshCommandResult;
 		sshCommandResult = executeRhnMigrateClassicToRhsm("--serverurl="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
 		String expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from a call to '"+rhnMigrateTool+"' with a man-in-the-middle attacker should be: "+expectedStdout);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The expected exitcode from a call to '"+rhnMigrateTool+"' with a man-in-the-middle attacker: "+expectedStdout);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The expected exitcode from a call to '"+rhnMigrateTool+"' with a man-in-the-middle attacker.");
 		sshCommandResult = client.runCommandAndWait("tail "+clienttasks.rhsmLogFile);
 		//	[root@rhsm-compat-rhel59 ~]# tail /var/log/rhsm/rhsm.log
 		//	  File "/usr/lib64/python2.4/httplib.py", line 804, in endheaders
@@ -1316,8 +1316,49 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 
 
+	@Test(	description="attempt to execute migration tool rhn-migrate-classic-to-rhsm when subscription-manager-migration-data is not installed",
+			groups={"blockedByBug-967863","RhnMigrateClassicToRhsmWithoutDataInstalled_Test"},
+			dependsOnMethods={},
+			enabled=true)
+	public void RhnMigrateClassicToRhsmWithoutDataInstalled_Test() {
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
+		clienttasks.unregister(null, null, null);
+		
+		// move the mapping file (to make it appear that subscription-manager-migration-data is not installed)
+		log.info("Instead of destructively uninstalling subscription-manager-migration-data, we will simply move the mapping file...");
+		client.runCommandAndWait("mv -f "+channelCertMappingFilename+" "+backupChannelCertMappingFilename);
+		RemoteFileTasks.runCommandAndAssert(client, "rpm --verify --query subscription-manager-migration-data",1);
+		
+		// register to rhn classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
+		
+		// attempt to run rhn-migrate-classic-to-rhsm should fail
+		SSHCommandResult sshCommandResult;
+		sshCommandResult = executeRhnMigrateClassicToRhsm("--serverurl="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		String expectedStdout = "Unable to read mapping file: "+channelCertMappingFilename+"."+"\n"+"Do you have the subscription-manager-migration-data package installed?";
+		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from a call to '"+rhnMigrateTool+"' without subscription-manager-migration-data installed should be: "+expectedStdout);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The expected exitcode from a call to '"+rhnMigrateTool+"' without subscription-manager-migration-data installed.");
+		
+		// verify that we have not yet migrated since subscription-manager-migration-data was not installed
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is still registered on the RHN Classic server after failing to migrate from RHN Classic using '"+rhnMigrateTool+"'.");
+		Assert.assertNull(clienttasks.getCurrentConsumerCert(),"Confirmed that system is NOT registered with Subscription Manager after failing to migrate from RHN Classic using '"+rhnMigrateTool+"'.");
+	}
+	@AfterGroups(groups="setup", value="RhnMigrateClassicToRhsmWithoutDataInstalled_Test")
+	public void restoreChannelCertMappingFileAfterRhnMigrateClassicToRhsmWithoutDataInstalled_Test() {
+		
+		// backup the channelCertMappingFile
+		log.info("Restoring channelCertMappingFile...");
+		client.runCommandAndWait("mv -f "+backupChannelCertMappingFilename+" "+channelCertMappingFilename);
+		RemoteFileTasks.runCommandAndAssert(client, "rpm --verify --query subscription-manager-migration-data",0);
+	}
 	
-
+	
+	
+	
+	
+	
+	
 	
 	// Candidates for an automated Test:
 	// TODO Bug 789007 - Migrate with normal user (non org admin) user . https://github.com/RedHatQE/rhsm-qe/issues/171
@@ -1326,11 +1367,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 863428 - Migration failed with message Organization A has more than one environment. https://github.com/RedHatQE/rhsm-qe/issues/174
 	// TODO Bug 866579 - rhn-migrate-classic-to-rhsm leaves system unregistered when a non-existant environment is specified/mistyped https://github.com/RedHatQE/rhsm-qe/issues/175
 	// TODO Bug 881952 - ssl.SSLError: The read operation timed out (during large rhn-migrate-classic-to-rhsm) https://github.com/RedHatQE/rhsm-qe/issues/176
-	// TODO Bug 967863 - subscription-manager-migration package should depend on subscription-manager-migration-data
 	
 	// Configuration methods ***********************************************************************
 	
-
+	
 	@BeforeClass(groups="setup")
 	public void setupBeforeClass() {
 		if (clienttasks==null) return;
@@ -1338,13 +1378,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// determine the full path to the channelCertMappingFile
 		baseProductsDir+="-"+clienttasks.redhatReleaseX;
 		channelCertMappingFilename = baseProductsDir+"/"+channelCertMappingFilename;
+		backupChannelCertMappingFilename = baseProductsDir+"/"+backupChannelCertMappingFilename;
 		
 		// make sure needed rpms are installed
 		for (String pkg : new String[]{"subscription-manager-migration", "subscription-manager-migration-data", "expect"}) {
 			Assert.assertTrue(clienttasks.isPackageInstalled(pkg),"Required package '"+pkg+"' is installed for MigrationTests.");
 		}
 	}
-	
 	
 	@BeforeClass(groups="setup", dependsOnMethods={/*NOT TRUE "setupBeforeClass"*/})
 	public void rememberOriginallyInstalledRedHatProductCertsBeforeClass() {
@@ -1554,6 +1594,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Protected methods ***********************************************************************
 	protected String baseProductsDir = "/usr/share/rhsm/product/RHEL";
 	protected String channelCertMappingFilename = "channel-cert-mapping.txt";
+	protected String backupChannelCertMappingFilename = channelCertMappingFilename+".bak";
 	protected List<String> mappedProductCertFilenames = new ArrayList<String>();	// list of all the mapped product cert file names in the mapping file (e.g. Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 	protected Map<String,String> channelsToProductCertFilenamesMap = new HashMap<String,String>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 //	protected Map<String,List<String>> cdnProductBaselineChannelMap = new HashMap<String,List<String>>();	// map of all the channels to list of productIds (e.g. key=rhn-tools-rhel-x86_64-server-5 value=[69,169,269])

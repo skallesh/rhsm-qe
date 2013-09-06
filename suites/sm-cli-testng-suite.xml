@@ -25,6 +25,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: BashCompletion Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="BashCompletionTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: General Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />

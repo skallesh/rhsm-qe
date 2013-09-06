@@ -292,7 +292,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 				if (serviceLevel.equalsIgnoreCase(sm_exemptServiceLevel) && sm_serverType.equals(CandlepinType.hosted)) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="840022"; 
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						throw new SkipException("Skipping this test with serviceLevel='"+serviceLevel+"' against a hosted candlepin while bug "+bugId+" is open.");
 					}
@@ -342,7 +342,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		msg = "Cannot set a service level for a consumer that is not available to its organization."; // valid before bug fix 795798 - Cannot set a service level for a consumer that is not available to its organization.
 		msg = String.format("Service level %s is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);	// valid before bug fix 864508 - Service level {0} is not available to consumers....
 		msg = String.format("Service level '%s' is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);
-		if (clienttasks.workaroundForBug876764(sm_serverType)) msg = String.format("Service level '%s' is not available to units of organization %s.",unavailableServiceLevel,sm_clientOrg);
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) msg = String.format("Service level '%s' is not available to units of organization %s.",unavailableServiceLevel,sm_clientOrg);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255));
 		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(msg), "Stdout message contains: "+msg);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr message from an attempt to register with autosubscribe and an unavailable servicelevel.");
@@ -393,7 +393,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG
 		if (sm_serverType.equals(CandlepinType.hosted)) {
 		String bugId = "818319"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			throw new SkipException("Hosted candlepin server '"+sm_serverHostname+"' does not yet support this test execution.");
 		}
@@ -446,7 +446,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "Cannot set a service level for a consumer that is not available to its organization.";
 		expectedStdout = String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg);	// valid before bug fix 864508
 		expectedStdout = String.format("Service level '%s' is not available to consumers of organization %s.","FOO",sm_clientOrg);	// valid before bug fix 864508
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("Service level '%s' is not available to units of organization %s.","FOO",sm_clientOrg);
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("Service level '%s' is not available to units of organization %s.","FOO",sm_clientOrg);
 
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to subscribe with auto and an unavailable service level.");
@@ -476,10 +476,17 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// get the current consumer object and assert that the serviceLevel persisted
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+clienttasks.getCurrentConsumerId()));
+		/* DELETEME ERRONEOUS ASSERTS
 		if (serviceLevel==null || serviceLevel.equals("")) {
 			Assert.assertEquals(jsonConsumer.get("serviceLevel"), initialConsumerServiceLevel, "The consumer's serviceLevel preference should remain unchanged when calling subscribe with auto and a servicelevel of null or \"\".");
 		} else {
 			Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel persisted the servicelevel setting on the current consumer object.");			
+		}
+		*/
+		if (serviceLevel==null) {
+			Assert.assertEquals(jsonConsumer.get("serviceLevel"), initialConsumerServiceLevel, "The consumer's serviceLevel preference should remain unchanged when calling subscribe with auto and a servicelevel of null.");
+		} else {
+			Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel of '"+serviceLevel+"' persisted the servicelevel setting on the current consumer object.");			
 		}
 		
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
@@ -493,6 +500,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 				continue;
 			}
 			
+			/* DELETEME ERRONEOUS ASSERTS
 			if ((serviceLevel==null || serviceLevel.equals("")) && initialConsumerServiceLevel.equals("")) {
 				log.info("When specifying a servicelevel of null or \"\" during an autosubscribe and the current consumer's has no servicelevel preference, then the servicelevel of the granted entitlement certs can be anything.  This one is '"+entitlementCert.orderNamespace.supportLevel+"'.");
 			} else if ((serviceLevel==null || serviceLevel.equals("")) && !initialConsumerServiceLevel.equals("")){
@@ -502,6 +510,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			} else {
 				//CASE SENSITIVE ASSERTION Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel, "This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
 				//Assert.assertTrue(entitlementCert.orderNamespace.supportLevel.equalsIgnoreCase(serviceLevel), "Ignoring case, this autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+				Assert.assertTrue(serviceLevel.equalsIgnoreCase(entitlementCert.orderNamespace.supportLevel), "Ignoring case, this autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+			}
+			*/
+			if ("".equals(serviceLevel) || (serviceLevel==null && initialConsumerServiceLevel.equals(""))) {
+				log.info("When specifying a servicelevel of \"\" during an autosubscribe (or specifying a servicelevel of null and the current consumer's has no servicelevel preference), then the servicelevel of the granted entitlement certs can be anything.  This one is '"+entitlementCert.orderNamespace.supportLevel+"'.");
+			} else if (serviceLevel==null && !initialConsumerServiceLevel.equals("")){
+				Assert.assertTrue(initialConsumerServiceLevel.equalsIgnoreCase(entitlementCert.orderNamespace.supportLevel), "When specifying a servicelevel of null during an autosubscribe and the current consumer has a servicelevel preference set, then the servicelevel from the orderNamespace of this granted entitlement cert ("+entitlementCert.orderNamespace.supportLevel+") must match the current consumer's service level preference ("+initialConsumerServiceLevel+").");
+			} else {
 				Assert.assertTrue(serviceLevel.equalsIgnoreCase(entitlementCert.orderNamespace.supportLevel), "Ignoring case, this autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
 			}
 		}
@@ -552,10 +568,17 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		AutoSubscribeWithServiceLevel_Test(null,null);
 	}
 	@Test(	description="subscription-manager: subscribe with auto specifying a service level of \"\"; assert the service level is unset and the autosubscribe proceeds without any service level preference",
-			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-977321"},
+			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-977321","blockedByBug-1001169"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeWithBlankServiceLevel_Test() throws JSONException, Exception {
+		AutoSubscribeWithServiceLevel_Test(null,"");
+		
+		// adding the following instructions specifically to force the testing of bug 1001169
+		List<String> availableServiceLevels = clienttasks.getCurrentlyAvailableServiceLevels();
+		if (availableServiceLevels.isEmpty()) throw new SkipException("Skipping the remainder of this test when there are no available service levels.");
+		String randomAvailableServiceLevel = availableServiceLevels.get(randomGenerator.nextInt(availableServiceLevels.size()));
+		clienttasks.service_level(null, null, randomAvailableServiceLevel, null, null, null, null, null, null, null, null, null);
 		AutoSubscribeWithServiceLevel_Test(null,"");
 	}
 	
@@ -570,7 +593,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG
 		if (sm_serverType.equals(CandlepinType.hosted)) {
 		String bugId = "818319"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			throw new SkipException("This test is blocked by Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id="+bugId);
 		}
@@ -631,7 +654,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG
 		if (sm_serverType.equals(CandlepinType.hosted)) {
 		String bugId = "818319"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			seRvICElevEl = serviceLevel;
 			log.warning("This test will NOT be conducted with a randomized serviceLevel value.  Testing with serviceLevel: "+seRvICElevEl);
@@ -712,7 +735,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.service_level_(null, null, unavailableSericeLevel, null, null, null, null, null, null, null, null, null);
 		String expectedStderr = String.format("Service level %s is not available to consumers of organization %s.",unavailableSericeLevel,org); 	// valid before bug fix 864508
 		expectedStderr = String.format("Service level '%s' is not available to consumers of organization %s.",unavailableSericeLevel,org);
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Service level '%s' is not available to units of organization %s.",unavailableSericeLevel,org);
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Service level '%s' is not available to units of organization %s.",unavailableSericeLevel,org);
 		
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set with unavailable serviceLevel");
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from service-level --set with unavailable serviceLevel");
@@ -734,7 +757,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		log.info("An exempt service level should be treated as an unavailable service level when attempting to set.");
 		String expectedStderr = String.format("Service level %s is not available to consumers of organization admin.",exemptServiceLevel);	// valid before bug fix 864508
 		expectedStderr = String.format("Service level '%s' is not available to consumers of organization admin.",exemptServiceLevel);
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Service level '%s' is not available to units of organization admin.",exemptServiceLevel);
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Service level '%s' is not available to units of organization admin.",exemptServiceLevel);
 
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set with exempt serviceLevel");
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from service-level --set with exempt serviceLevel");

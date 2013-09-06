@@ -312,7 +312,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //		// vncviewer <client1tasks.hostname>:2
 //	}
 	
-
 	
 	protected String selinuxSuiteMarker = "SM TestSuite marker";	// do not use a timestamp on the whole suite marker
 	protected String selinuxClassMarker = "SM TestClass marker "+String.valueOf(System.currentTimeMillis());	// using a timestamp on the class marker will help identify the test class during which a denial is logged
@@ -554,6 +553,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,sm_clientOrg);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 	}
+	
+	protected static ArrayList<String> invokedWorkaroundBugs = new ArrayList<String>();;
+	@AfterSuite(groups={"cleanup"},description="log all the invoked bugzilla workarounds")
+	public void logInvokedWorkaroundsAfterSuite() {
+		if (!invokedWorkaroundBugs.isEmpty()) log.info(String.format("There were %s workarounds invoked for bugs in this run: https://bugzilla.redhat.com/buglist.cgi?bug_id=%s",invokedWorkaroundBugs.size(),joinListToString(invokedWorkaroundBugs,",")));
+	}
+	public static void addInvokedWorkaround(String bugId) {
+		if (!invokedWorkaroundBugs.contains(bugId)) invokedWorkaroundBugs.add(bugId);
+	}
+	
 	// Protected Methods ***********************************************************************
 
 
@@ -1284,7 +1293,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (username.equals("anonymous")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="741961"; 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring the presence of user '"+username+"'.  No automated testing with this user will be executed.");
 					continue;

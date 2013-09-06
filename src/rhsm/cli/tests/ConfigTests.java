@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -351,7 +352,34 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
+	@Test(	description="subscription-manager: config for repo_ca_cert should interpolate the default value for ca_cert_dir",
+			groups={"blockedByBug-997194","ConfigForRepoCaCertUsesDefaultCaCertDir_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ConfigForRepoCaCertUsesDefaultCaCertDir_Test() {
+		
+		// this bug is specifically designed to test Bug 997194 - repo_ca_cert configuration ignored using older configuration
+		
+		repoCaCertConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "repo_ca_cert");
+		String caCertDirSubString = "%(ca_cert_dir)s";
+		Assert.assertTrue(repoCaCertConfigured.startsWith(caCertDirSubString), "Configuration in '"+clienttasks.rhsmConfFile+"' for rhsm.repo_ca_cert ("+repoCaCertConfigured+") should start with '"+caCertDirSubString+"'.");
+		
+		String caCertDirInterpolated = clienttasks.getConfParameter("ca_cert_dir");
+		String repoCaCertInterpolated = clienttasks.getConfParameter("repo_ca_cert");
+		Assert.assertTrue(repoCaCertInterpolated.startsWith(caCertDirInterpolated), "subscription-manager config for repo_ca_cert ("+repoCaCertInterpolated+") should start with '"+caCertDirInterpolated+"'.");
+		
+		// now let's comment out the ca_cert_dir configuration as a alternative way to reproduce bug 997194
+		clienttasks.commentConfFileParameter(clienttasks.rhsmConfFile, "ca_cert_dir");
+		caCertDirInterpolated = clienttasks.getConfParameter("ca_cert_dir");
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "repo_ca_cert", caCertDirSubString+"candlepin-local.pem");
+		Assert.assertEquals(clienttasks.getConfParameter("repo_ca_cert"), caCertDirInterpolated+"candlepin-local.pem", "After commenting out the config file '"+clienttasks.rhsmConfFile+"' parameter for ca_cert_dir, the interpolated value for repo_ca_cert should use the default value for ca_cert_dir.");
+	}
+	@AfterGroups(value={"ConfigForRepoCaCertUsesDefaultCaCertDir_Test"},groups={"setup"})
+	public void afterConfigForRepoCaCertUsesDefaultCaCertDir_Test() {
+		clienttasks.uncommentConfFileParameter(clienttasks.rhsmConfFile, "ca_cert_dir");
+		if (repoCaCertConfigured!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "repo_ca_cert", repoCaCertConfigured);
+	}
+	protected String repoCaCertConfigured = null;
 	
 	
 	// Candidates for an automated Test:

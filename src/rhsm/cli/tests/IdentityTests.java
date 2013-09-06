@@ -324,7 +324,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		if (pools.size()<=0) throw new SkipException("No susbcriptions are available for which an entitlement could be granted.");
 		log.info("Subscribe to a randomly available pool...");
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
 		// do a server-side consumer deletion 
@@ -335,7 +335,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// assert that all subscription-manager calls are blocked by a message stating that the consumer has been deleted
 		// Original Stderr: Consumer with id b0f1ed9f-3dfa-4eea-8e04-72ab8075d533 could not be found
 		String expectedMsg = String.format("Consumer %s has been deleted",consumerCert.consumerid);
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expectedMsg = String.format("Unit %s has been deleted",consumerCert.consumerid);
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedMsg = String.format("Unit %s has been deleted",consumerCert.consumerid);
 		String ignoreStderr = "stty: standard input: Invalid argument";
 		SSHCommandResult result;
 
@@ -376,7 +376,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		result = clienttasks.facts_(null, true, null, null, null);	// Bug 798788:  Error updating system data, see /var/log/rhsm/rhsm.log for more details.
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "798788"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping stderr assertion from subscription-manager facts --update.");
 		} else {

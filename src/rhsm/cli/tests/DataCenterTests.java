@@ -76,7 +76,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// subscribe the host to the data center pool
-		File hostEntitlementFile = clienttasks.subscribeToSubscriptionPool(pool);
+		File hostEntitlementFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		EntitlementCert hostEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(hostEntitlementFile); client.runCommandAndWait("rct cat-cert "+hostEntitlementFile);
 		
 		// in general the data center pool will not provide any engineering products
@@ -118,7 +118,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		// now subscribe to the derived subpool and we'll asserting the entitlement values come from the derived product and not the originating data center subscription
 		
 		// subscribe the guest to the derived product subscription
-		File derivedEntitlementFile = clienttasks.subscribeToSubscriptionPool(derivedPool);
+		File derivedEntitlementFile = clienttasks.subscribeToSubscriptionPool(derivedPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		EntitlementCert derivedEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(derivedEntitlementFile); client.runCommandAndWait("rct cat-cert "+derivedEntitlementFile);
 		
 		// assert all of the derived provided products are included in the entitlement
@@ -179,7 +179,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		//		Quantity: 5										Quantity: 5
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "983193"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the assertion of quantity while bug '"+bugId+"' is open.");
 		} else {

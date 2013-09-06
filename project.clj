@@ -2,31 +2,33 @@
   :description "Automated tests for Red Hat Subsciption Manager CLI and GUI"
   :java-source-path "src" ;lein1
   :java-source-paths ["src"]
+  :main rhsm.runtestng
   :aot [#"^rhsm.gui.tests"] ;regex to find tests that testng will run
   :keep-non-project-classes true
-  :dependencies [[org.clojure/clojure "1.4.0"]
-                 [org.clojure/tools.logging "0.2.3"]
-                 [org.clojure/data.json "0.1.2"]
-                 [slingshot "0.8.0"]
-                 [net.java.dev.rome/rome "1.0.0"]
-                 [com.redhat.qe/json-java "20110202"]
-                 [org.jdom/jdom "1.1"]
-                 [postgresql/postgresql "8.4-701.jdbc4"]
-                 [com.redhat.qe/testng-listeners "1.0.0"]
-                 [com.redhat.qe/ssh-tools "1.0.1-SNAPSHOT"]
-                 [com.redhat.qe/assertions "1.0.2"]
-                 [com.redhat.qe/bz-checker "1.0.3-SNAPSHOT"]
-                 [org.testng/testng "6.8"] ;;forcing new testng
-                 ;[testng-bigtest "6.8.2-SNAPSHOT"]
+  :dependencies [[clj-http "0.5.5"]
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
+                 [com.redhat.qe/assertions "1.0.2"]
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
+                 [com.redhat.qe/bz-checker "1.0.3-SNAPSHOT"]
+                 [com.redhat.qe/json-java "20110202"]
+                 [com.redhat.qe/ssh-tools "1.0.1-SNAPSHOT"]
+                 [com.redhat.qe/testng-listeners "1.0.0"]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
-                 [org.uncommons/reportng "1.1.3"]
                  [gnome.ldtp "1.2.0-SNAPSHOT"
                   :exclusions [org.clojure/clojure]]
-                 [test_clj.testng "1.0.1-SNAPSHOT"]
-                 [clj-http "0.5.5"]
-                 [matchure "0.10.1"]]
+                 [matchure "0.10.1"]
+                 [net.java.dev.rome/rome "1.0.0"]
+                 [org.clojure/clojure "1.4.0"]
+                 [org.clojure/data.json "0.1.2"]
+                 [org.clojure/tools.cli "0.2.4"]
+                 [org.clojure/tools.logging "0.2.3"]
+                 [org.jdom/jdom "1.1"]
+                 [org.testng/testng "6.8"] ;;forcing new testng
+                 ;[testng-bigtest "6.8.2-SNAPSHOT"] ;;experimental testng
+                 [org.uncommons/reportng "1.1.3"]
+                 [postgresql/postgresql "8.4-701.jdbc4"]
+                 [slingshot "0.8.0"]
+                 [test_clj.testng "1.0.1-SNAPSHOT"]]
   ;lein1
   :dev-dependencies [[slamhound "1.2.0"]
                      [fn.trace "1.3.2.0-SNAPSHOT"]

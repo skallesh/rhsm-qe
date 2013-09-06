@@ -365,7 +365,7 @@ public class SubscriptionManagerTasks {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			String pkg = "subscription-manager-migration-data";
 			log.warning("Skipping the install of "+pkg+".");
@@ -752,6 +752,15 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+	/**
+	 * Use subscription-manager config to get the interpolated parameter value.
+	 * @param parameter
+	 * @return
+	 */
+	public String getConfParameter(String parameter){
+		String parameterValue = sshCommandRunner.runCommandAndWait(command+" config | grep "+parameter.toLowerCase()).getStdout().trim();
+		return parameterValue.split(" = ")[1].replaceAll("\\[","").replaceAll("\\]","");	// a value wrapped in brackets [] indicates a default value is being used
+	}
 	
 	/**
 	 * Update the rhsmcertd frequency configurations in /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
@@ -780,7 +789,7 @@ public class SubscriptionManagerTasks {
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId="804227"; //  Status: 	CLOSED ERRATA
 		boolean invokeWorkaroundWhileBugIsOpen = false;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			throw new SkipException("Restart rhsmcertd has no workaround for Bugzilla "+bugId+".");
 		}
@@ -794,7 +803,7 @@ public class SubscriptionManagerTasks {
 		if (this.arch.equals("s390x") || this.arch.equals("ppc64")) {
 			bugId="691137";	// Status: 	CLOSED ERRATA
 			invokeWorkaroundWhileBugIsOpen = false;
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				RemoteFileTasks.runCommandAndWait(sshCommandRunner,"service rhsmcertd restart", TestRecords.action());
 			} else {
@@ -839,7 +848,7 @@ public class SubscriptionManagerTasks {
 		String bugId1="752572";	// Status: 	CLOSED ERRATA
 		String bugId2="759199";	// Status: 	CLOSED ERRATA
 		invokeWorkaroundWhileBugIsOpen = false;
-		try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for Bugzillas:  https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+" https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for Bugzillas:  https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+" https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2);SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId1);SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping assert of the rhsmcertd logging of the started: interval certFrequency and healFrequency while bug "+bugId1+" or "+bugId2+" is open.");
 		} else {
@@ -941,7 +950,7 @@ public class SubscriptionManagerTasks {
 			// TEMPORARY WORKAROUND FOR BUG
 			bugId="861443"; // Bug 861443 - rhsmcertd logging of Healing shows "Certificates updated." when it should fail.
 			invokeWorkaroundWhileBugIsOpen = true;
-			try {if (!assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (!assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (!assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Skipping assertion: "+"Tail of rhsmcertd log contains the expected restart message '"+healMsg+"'.");
 			} else
@@ -1178,22 +1187,25 @@ public class SubscriptionManagerTasks {
 	
 	
 	
-	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools(String providingProductId, String serverUrl) throws JSONException, Exception {
-		List<SubscriptionPool> subscriptionPoolsProvidingProductId = new ArrayList<SubscriptionPool>();
-		
-		for (SubscriptionPool subscriptionPool : getCurrentlyAvailableSubscriptionPools()) {
-			if (CandlepinTasks.getPoolProvidedProductIds(currentlyRegisteredUsername, currentlyRegisteredPassword, serverUrl, subscriptionPool.poolId).contains(providingProductId)) {
-				subscriptionPoolsProvidingProductId.add(subscriptionPool);
-			}
-		}
-		return subscriptionPoolsProvidingProductId;
-	}
 	
 	/**
 	 * @return list of objects representing the subscription-manager list --available
 	 */
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
 		return SubscriptionPool.parse(listAvailableSubscriptionPools().getStdout());
+	}
+	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools(String providingProductId, String serverUrl) throws JSONException, Exception {
+		return getCurrentlyAvailableSubscriptionPools(providingProductId, currentlyRegisteredUsername, currentlyRegisteredPassword, serverUrl);	// may encounter "Insufficient permissions"; I suspect this is a consequence of the solution for Bug 994711 - Consumers can consume entitlements from other orgs
+	}
+	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools(String providingProductId, String authenticator, String password, String serverUrl) throws JSONException, Exception {
+		List<SubscriptionPool> subscriptionPoolsProvidingProductId = new ArrayList<SubscriptionPool>();
+		
+		for (SubscriptionPool subscriptionPool : getCurrentlyAvailableSubscriptionPools()) {
+			if (CandlepinTasks.getPoolProvidedProductIds(authenticator, password, serverUrl, subscriptionPool.poolId).contains(providingProductId)) {
+				subscriptionPoolsProvidingProductId.add(subscriptionPool);
+			}
+		}
+		return subscriptionPoolsProvidingProductId;
 	}
 	
 	/**
@@ -1673,7 +1685,7 @@ public class SubscriptionManagerTasks {
 				if (lsFile.matches(".*\\(\\d+\\)\\.pem")) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="640338"; 
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						continue;
 					}
@@ -2371,7 +2383,7 @@ public class SubscriptionManagerTasks {
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED CURRENTRELEASE
 		String bugId="639417"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			restart_rhsmcertd(Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency")), null, false, null);
 		}
@@ -2380,7 +2392,7 @@ public class SubscriptionManagerTasks {
 		// TEMPORARY WORKAROUND FOR Bug 797243 - manual changes to redhat.repo are too sticky
 		invokeWorkaroundWhileBugIsOpen = true;
 		bugId="797243"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Triggering a yum transaction to insure the redhat.repo file is wiped clean");
 			sshCommandRunner.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
@@ -2692,7 +2704,7 @@ public class SubscriptionManagerTasks {
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=719109 - jsefler 7/05/2011
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="719109"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// skip the assertion of user feedback in stdout
 			return sshCommandResult;
@@ -2880,7 +2892,7 @@ public class SubscriptionManagerTasks {
 		} else {
 			// TEMPORARY WORKAROUND FOR BUG
 			boolean invokeWorkaroundWhileBugIsOpen = true;
-			try {String bugId="835050"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {String bugId="835050"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Skipping service-level unset feedback message while this bug is open.");
 			} else
@@ -3447,13 +3459,13 @@ public class SubscriptionManagerTasks {
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	VERIFIED
-			try {String bugId="878657"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {String bugId="878657"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) unregisterSuccessMsg = "System has been un-registered.";
 			// END OF WORKAROUND
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED ERRATA
-			try {String bugId="800121"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {String bugId="800121"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("If 'NoneType' object message was thrown to stdout during unregister, we will ignore it while this bug is open.");
 				Assert.assertTrue(sshCommandResult.getStdout().trim().contains(unregisterSuccessMsg), "The unregister command was a success.");
@@ -3565,7 +3577,7 @@ public class SubscriptionManagerTasks {
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=638266 - jsefler 9/28/2010
 		boolean invokeWorkaroundWhileBugIsOpen = false;
 		String bugId="638266"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null, null);
 		}
@@ -3881,7 +3893,7 @@ public class SubscriptionManagerTasks {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		if (sshCommandResult.getStderr().trim().equals("'SubscribeCommand' object has no attribute 'sorter'") ||
 			sshCommandResult.getStderr().trim().equals("'AttachCommand' object has no attribute 'sorter'")	) {
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("All tests that attempt to subscribe are blockedByBug '"+bugId+"'.");
 			}
@@ -3918,15 +3930,16 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		String stdoutMessage;
 		
-		// just return the result for the following cases:
-		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed") ||	// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
-			sshCommandResult.getStdout().startsWith("No entitlements are available") ||			// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.   (Bug 719743)
-			sshCommandResult.getStdout().startsWith("No subscriptions are available") ||		// No subscriptions are available from the pool with id '8a90f8303c98703a013c98715ca80494'.   (Bug 846758)
-			sshCommandResult.getStdout().startsWith("Pool is restricted") ||					// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
-			sshCommandResult.getStdout().startsWith("All installed products are covered") ||	// All installed products are covered by valid entitlements. No need to update subscriptions at this time.
-			sshCommandResult.getStdout().startsWith("No Installed products on system.") ||		// No Installed products on system. No need to attach subscriptions.
-			sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) {			// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
-																								// Unable to entitle consumer to the pool with id '8a90f85734160df3013417ac68bb7108'.: Entitlements for awesomeos-virt-4 expired on: 12/7/11 3:43 AM
+		// just return the result for any of the following cases:
+		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed") ||			// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
+			sshCommandResult.getStdout().startsWith("This unit has already had the subscription") ||	// This unit has already had the subscription matching pool ID '8a99f98340114f880140766376dc00cf' attached.
+			sshCommandResult.getStdout().startsWith("No entitlements are available") ||					// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.   (Bug 719743)
+			sshCommandResult.getStdout().startsWith("No subscriptions are available") ||				// No subscriptions are available from the pool with id '8a90f8303c98703a013c98715ca80494'.   (Bug 846758)
+			sshCommandResult.getStdout().startsWith("Pool is restricted") ||							// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
+			sshCommandResult.getStdout().startsWith("All installed products are covered") ||			// All installed products are covered by valid entitlements. No need to update subscriptions at this time.
+			sshCommandResult.getStdout().startsWith("No Installed products on system.") ||				// No Installed products on system. No need to attach subscriptions.
+			sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) {					// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
+																										// Unable to entitle consumer to the pool with id '8a90f85734160df3013417ac68bb7108'.: Entitlements for awesomeos-virt-4 expired on: 12/7/11 3:43 AM
 			log.warning(sshCommandResult.getStdout().trim());
 			return sshCommandResult;	
 		}
@@ -3998,12 +4011,12 @@ public class SubscriptionManagerTasks {
 //	}
 	
 	
-	public File subscribeToProductId(String productId) {
+	public void subscribeToProductId(String productId) {
 		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"subscription-manager-cli subscribe --product="+product);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool,"Found an available pool to subscribe to productId '"+productId+"': "+pool);
-		return subscribeToSubscriptionPool(pool);
+		subscribeToSubscriptionPool(pool);
 	}
 	
 	/**
@@ -4011,11 +4024,7 @@ public class SubscriptionManagerTasks {
 	 * @param pool
 	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
 	 */
-	public File subscribeToSubscriptionPool(SubscriptionPool pool)  {
-		
-//		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
-//		String port = getConfFileParameter(rhsmConfFile, "port");
-//		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+	public File subscribeToSubscriptionPool(SubscriptionPool pool, String authenticator, String password, String serverUrl)  {
 		
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
@@ -4108,18 +4117,21 @@ public class SubscriptionManagerTasks {
 		// NOTE: this block of code is somewhat duplicated in getEntitlementCertCorrespondingToSubscribedPool(...)
 		File newCertFile = null;
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t");
-		for (File entitlementCertFile : afterEntitlementCertFiles) {
-			if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
-				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-				try {
-					JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
-					JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
-					if (jsonPool.getString("id").equals(pool.poolId)) {
-						newCertFile = entitlementCertFile; break;
+		if (authenticator!=null && password!=null && serverUrl!=null) {
+			for (File entitlementCertFile : afterEntitlementCertFiles) {
+				if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
+					EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+					try {
+						//JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(authenticator,password,serverUrl,entitlementCert.id);	// is throwing a 500 in stage, but only for qa@redhat.com credentials - I don't know why
+						JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(currentlyRegisteredUsername,currentlyRegisteredPassword,serverUrl,entitlementCert.id);
+						JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
+						if (jsonPool.getString("id").equals(pool.poolId)) {
+							newCertFile = entitlementCertFile; break;
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+						Assert.fail(e.getMessage());
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					Assert.fail(e.getMessage());
 				}
 			}
 		}
@@ -4168,20 +4180,22 @@ public class SubscriptionManagerTasks {
 					"Should no longer find the depleted pool amongst --all --available after having consumed all of its available entitlements: ");
 //			Assert.assertEquals(depletedPool.quantity, "0",
 //					"Asserting the pool's quantity after having consumed all of its available entitlements is zero.");
-			JSONObject jsonPool = null;
-			int consumed = 0;
-			int quantity = Integer.valueOf(pool.quantity);
-			try {
-				jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,"/pools/"+pool.poolId));
-				consumed = jsonPool.getInt("consumed");
-				quantity = jsonPool.getInt("quantity");
-			} catch (Exception e) {
-				e.printStackTrace();
-				Assert.fail(e.getMessage());
-			} 
-			Assert.assertEquals(consumed, quantity,
-					"Asserting the pool's consumed attribute equals it's total quantity after having consumed all of its available entitlements.");
-
+			if (authenticator!=null && password!=null && serverUrl!=null) {
+				JSONObject jsonPool = null;
+				int consumed = 0;
+				int quantity = Integer.valueOf(pool.quantity);
+				try {
+					jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,serverUrl,"/pools/"+pool.poolId));
+					consumed = jsonPool.getInt("consumed");
+					quantity = jsonPool.getInt("quantity");
+				} catch (Exception e) {
+					e.printStackTrace();
+					Assert.fail(e.getMessage());
+				} 
+				Assert.assertEquals(consumed, quantity,
+						"Asserting the pool's consumed attribute equals it's total quantity after having consumed all of its available entitlements.");
+			}
+			
 			//  assert that NO new entitlement cert file has been installed in /etc/pki/entitlement
 			Assert.assertNull(newCertFile,
 					"A new entitlement certificate has NOT been installed after attempting to subscribe to depleted pool: "+depletedPool);
@@ -4203,30 +4217,32 @@ public class SubscriptionManagerTasks {
 			Assert.assertEquals(afterEntitlementCertFiles,beforeEntitlementCertFiles,"After subscribing to pool id '"+pool+"', the other entitlement cert serials remain unchanged");
 			*/
 			
-			// assert the new entitlement cert file has been installed in /etc/pki/entitlement
-			Assert.assertNotNull(newCertFile, "A new entitlement certificate has been installed after subscribing to pool: "+pool);
-			log.info("The new entitlement certificate file is: "+newCertFile);
-			
-			// assert that the productId from the pool matches the entitlement productId
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/05/2010
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=806986 - jsefler 06/28/2012
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId1="650278"; 
-			String bugId2="806986"; 
-			try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId1).toString()+" Bugzilla "+bugId1+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+")"); log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId2).toString()+" Bugzilla "+bugId2+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				log.warning("Skipping assert that the productId from the pool matches the entitlement productId");
-			} else {
-			// END OF WORKAROUND
-			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-			File newCertKeyFile = getEntitlementCertKeyFileFromEntitlementCert(entitlementCert);
-			Assert.assertEquals(entitlementCert.orderNamespace.productId, poolProductId, isSubpool?
-					"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating Personal SubscriptionPool productId '"+poolProductId+"' after subscribing to the subpool.":
-					"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+poolProductId+"' after subscribing to the pool.");
-			Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, newCertFile.getPath()),"New EntitlementCert file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
-			Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, newCertKeyFile.getPath()),"New EntitlementCert key file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
+			if (authenticator!=null && password!=null && serverUrl!=null) {
+				
+				// assert the new entitlement cert file has been installed in /etc/pki/entitlement
+				Assert.assertNotNull(newCertFile, "A new entitlement certificate has been installed after subscribing to pool: "+pool);
+				log.info("The new entitlement certificate file is: "+newCertFile);
+				
+				// assert that the productId from the pool matches the entitlement productId
+				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/05/2010
+				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=806986 - jsefler 06/28/2012
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId1="650278"; 
+				String bugId2="806986"; 
+				try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId1).toString()+" Bugzilla "+bugId1+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId1); log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId2).toString()+" Bugzilla "+bugId2+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping assert that the productId from the pool matches the entitlement productId");
+				} else {
+				// END OF WORKAROUND
+				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
+				File newCertKeyFile = getEntitlementCertKeyFileFromEntitlementCert(entitlementCert);
+				Assert.assertEquals(entitlementCert.orderNamespace.productId, poolProductId, isSubpool?
+						"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating Personal SubscriptionPool productId '"+poolProductId+"' after subscribing to the subpool.":
+						"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+poolProductId+"' after subscribing to the pool.");
+				Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, newCertFile.getPath()),"New EntitlementCert file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
+				Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, newCertKeyFile.getPath()),"New EntitlementCert key file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
+				}
 			}
-
 		
 			// assert that consumed ProductSubscriptions has NOT decreased
 			List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
@@ -4239,8 +4255,9 @@ public class SubscriptionManagerTasks {
 		
 		return newCertFile;
 	}
-	
-	
+	public void subscribeToSubscriptionPool(SubscriptionPool pool)  {
+		subscribeToSubscriptionPool(pool, null, null, null);
+	}
 	
 	/**
 	 * subscribe to the given SubscriptionPool without asserting results
@@ -4270,9 +4287,9 @@ public class SubscriptionManagerTasks {
 	}
 	
 	//@Deprecated
-	public File subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
+	public void subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
 		log.warning("Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.  Forwarding this subscribe request to use --pool Id...");
-		return subscribeToSubscriptionPoolUsingPoolId(pool);
+		subscribeToSubscriptionPoolUsingPoolId(pool);
 		
 		/* jsefler 7/22/2010
 		List<ProductSubscription> before = getCurrentlyConsumedProductSubscriptions();
@@ -4293,8 +4310,8 @@ public class SubscriptionManagerTasks {
 		*/
 	}
 	
-	public File subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool/*, boolean withPoolID*/) {
-		return subscribeToSubscriptionPool(pool);
+	public void subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool/*, boolean withPoolID*/) {
+		subscribeToSubscriptionPool(pool);
 		
 		/* jsefler 11/22/2010
 		if(withPoolID){
@@ -4414,7 +4431,7 @@ public class SubscriptionManagerTasks {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		invokeWorkaroundWhileBugIsOpen = false; // true;	// Status: CLOSED ERRATA	// Bug 613635 - “connection.UEPConnection instance “ displays while availability check
-		try {String bugId="613635"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {String bugId="613635"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No available subscription pools to list$",assertMsg);
 			return;
@@ -4423,7 +4440,7 @@ public class SubscriptionManagerTasks {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		invokeWorkaroundWhileBugIsOpen = false; // true;	// Status: CLOSED ERRATA	// Bug 622839 - extraneous user hash code appears in stdout after executing list --available
-		try {String bugId="622839"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {String bugId="622839"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No available subscription pools to list$",assertMsg);
 			return;
@@ -4432,7 +4449,7 @@ public class SubscriptionManagerTasks {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		invokeWorkaroundWhileBugIsOpen = false; // true;	// Status: CLOSED DUPLICATE of bug 623481	// Bug 623657 - extraneous self.conn output appears in stdout after executing list --available
-		try {String bugId="623657"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {String bugId="623657"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No available subscription pools to list$",assertMsg);
 			return;
@@ -4548,7 +4565,7 @@ public class SubscriptionManagerTasks {
 			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639320 - jsefler 10/1/2010
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="639320"; 
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				regexForSerialNumber = "[\\d,]*";
 			}
@@ -4578,7 +4595,7 @@ public class SubscriptionManagerTasks {
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=708362 - jsefler 08/25/2011
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="708362"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		boolean assertCertKeyFilePathIsRemoved = true;
 		if (invokeWorkaroundWhileBugIsOpen) log.warning("Skipping the assertion that the Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed while bug is open."); else
 		// END OF WORKAROUND
@@ -4926,7 +4943,7 @@ repolist: 3,394
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="697087"; 
 			// NOTE: LET'S MAKE THIS A PERMANENT WORKAROUND FOR THIS METHOD
-			// try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			// try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				
 				List<String> yumRepoListAll			= this.getYumRepolist("all");
@@ -5001,7 +5018,7 @@ repolist: 3,394
 		if (this.redhatReleaseX.equals("5")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="697087"; // Bug 697087 - yum repolist is not producing a list when one of the repo baseurl causes a forbidden 403
-			try {if (invokeWorkaroundWhileBugIsOpen && BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen && BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				
 				// avoid "yum repolist" and assemble the list of repos directly from the redhat repo file
@@ -5022,7 +5039,7 @@ repolist: 3,394
 //		if (this.redhatReleaseX.equals("7") && (options.startsWith("all") || options.startsWith("disabled"))) {
 //			boolean invokeWorkaroundWhileBugIsOpen = true;
 //			String bugId="905546"; // Bug 905546 - yum repolist all|disabled is throwing a traceback 
-//			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 //			if (invokeWorkaroundWhileBugIsOpen) {
 //				throw new SkipException("There is no workaround for yum repolist "+options+" bug "+bugId+".");
 //			}
@@ -6100,7 +6117,7 @@ repolist: 3,394
 		// TEMPORARY WORKAROUND FOR BUG
 		// subscription-manager commit 7bb3751ad6f398b044efd095af61cd605d9831bf
 		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// Any local-only certificates have been deleted.
 			String subString = "Any local-only certificates have been deleted.";
@@ -6141,7 +6158,7 @@ repolist: 3,394
 		if (entitlementFiles.size()>tooManyEntitlements) { 
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="844455";	// Bug 844455 - when consuming many entitlements, subscription-manager unsubscribe --all throws SSLTimeoutError: timed out
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("The workaround to avoid an SSLTimeoutError during an unregister or unsubscribe --all is to incrementally unsubscribe reducing the current entitlements to approximately "+tooManyEntitlements+".  Then resume the unregister or unsubscribe --all.");
 				for (int i=entitlementFiles.size()-1; i>=tooManyEntitlements; i--) {
@@ -6158,7 +6175,7 @@ repolist: 3,394
 		if (entitlementFiles.size()>tooManyEntitlements) { 
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="844455";	// Bug 844455 - when consuming many entitlements, subscription-manager unsubscribe --all throws SSLTimeoutError: timed out
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("The workaround to avoid an SSLTimeoutError during an unregister or unsubscribe --all is to reduced the total consumed entitlements by unsubscribing from multiple serials until we are under "+tooManyEntitlements+" remaining.  Then resume the unregister or unsubscribe --all.");
 				int avoidInfiniteLoopSize=entitlementFiles.size();
@@ -6188,7 +6205,7 @@ repolist: 3,394
 		if (jsonPools.length()>tooManyPools) { 
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="844455";	// Bug 844455 - when consuming many entitlements, subscription-manager unsubscribe --all throws SSLTimeoutError: timed out
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("The workaround is to reducing the number of multiple pools approximately "+tooManyPools+".  Then resume the unregister or unsubscribe --all.");
 				for (int i=jsonPools.length()-1; i>=30; i--) {
@@ -6211,6 +6228,7 @@ repolist: 3,394
 		// Unfortunately these changes are present in candlepin master, but have not been deployed
 		// to hosted candlepin.
 		// For a short time the expected consumer/unit strings will be different depending on CandlepinType
-		return type.equals(CandlepinType.standalone);
+		//return !type.equals(CandlepinType.standalone);
+		return false;	// as of 9/4/2013, candlepin-0.8.25-1 has been deployed in stage which includes POST Bug 876764
 	}
 }

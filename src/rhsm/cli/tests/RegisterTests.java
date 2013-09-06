@@ -106,7 +106,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=718205 - jsefler 07/01/2011
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="718205"; 
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				// When org==null, then this user has no access to any org/owner
 				// 1. the user has only READ_ONLY access to one org:
@@ -336,7 +336,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));	
 			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
 			if (jsonProvidedProducts.length()==1) {
-				entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+				entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 				break;
 			}
 		}
@@ -530,7 +530,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				if (installedProduct.arch.contains(",")) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="951633"; // Bug 951633 - installed product with comma separated arch attribute fails to go green
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						log.warning("Skipping assertion for autosubscribed status of Installed Product name='"+installedProduct.productName+"' while Bugzilla '"+bugId+"' is open.");
 						continue;
@@ -553,7 +553,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				if (installedProduct.arch.contains(",")) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="951633"; // Bug 951633 - installed product with comma separated arch attribute fails to go green
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {			
 						log.warning("Skipping assertion for autosubscribed status of Installed Product name='"+installedProduct.productName+"' while Bugzilla '"+bugId+"' is open.");
 						continue;
@@ -587,7 +587,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToSubscriptionPool(pool);
 		
 		// attempt to register again and assert that you are warned that the system is already registered
 		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, (String)null, null, null, null, null, false, null, null, null);
@@ -644,7 +644,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String invalidNameStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";	// bugzilla 672233
 		       invalidNameStderr = "System name cannot contain most special characters.";	// bugzilla 677405
 		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters\\.";
-		if (clienttasks.workaroundForBug876764(sm_serverType)) maxCharsStderr = "Name of the unit must be shorter than 250 characters\\.";
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) maxCharsStderr = "Name of the unit must be shorter than 250 characters\\.";
 		String name;
 		String successfulStdout = "The system has been registered with id: [a-f,0-9,\\-]{36}";	// msg changed by bug 878634
 		       successfulStdout = "The system has been registered with ID: [a-f,0-9,\\-]{36}";
@@ -778,7 +778,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				ll.add(Arrays.asList(new Object[]{null,  	username,	password,	owner,	name,	type,	Integer.valueOf(0),	"The system has been registered with ID: [a-f,0-9,\\-]{36}",	null}));			
 			} else {
 				String expectedStderrRegex = "No such consumer type: "+type;
-				if (clienttasks.workaroundForBug876764(sm_serverType)) expectedStderrRegex = "No such unit type: "+type;
+				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderrRegex = "No such unit type: "+type;
 				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	Integer.valueOf(255),	null,	expectedStderrRegex}));			
 	
 			}
@@ -831,7 +831,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToSubscriptionPool(pool);
 		
 		// get a list of the consumed products
 		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -890,7 +890,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToSubscriptionPool(pool);
 		
 		// get a list of the consumed products
 		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();

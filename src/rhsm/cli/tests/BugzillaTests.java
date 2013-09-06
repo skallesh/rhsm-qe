@@ -432,7 +432,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String complianceStatus = CandlepinTasks.getConsumerCompliance(sm_serverAdminUsername, sm_serverAdminPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerid).getString("displayMessage");
 	
 		String message="Consumer "+consumerid+" has been deleted";
-		if (clienttasks.workaroundForBug876764(sm_serverType)) message = "Unit "+consumerid+" has been deleted";
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) message = "Unit "+consumerid+" has been deleted";
 		
 		Assert.assertContainsMatch(message, complianceStatus);
 		
@@ -868,7 +868,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
 		List<SubscriptionPool> availPools = clienttasks.getCurrentlyAvailableSubscriptionPools(); 
-			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools.get(randomGenerator.nextInt(availPools.size())));
+			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools.get(randomGenerator.nextInt(availPools.size())),sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 			clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 
@@ -920,7 +920,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(pool.productId.equals(productId)){
-				 entitlementCertFile=	clienttasks.subscribeToSubscriptionPool(pool);
+				 entitlementCertFile=	clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 			}
 		}
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
@@ -2103,7 +2103,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						+ consumerId);
 		String result=clienttasks.facts_(null, true, null, null, null).getStderr();
 		String ExpectedMsg="Consumer "+consumerId+" has been deleted";
-		if (clienttasks.workaroundForBug876764(sm_serverType))
+		if (!clienttasks.workaroundForBug876764(sm_serverType))
 		ExpectedMsg = "Unit "+consumerId+" has been deleted";
 		Assert.assertEquals(result.trim(), ExpectedMsg);
 	}
@@ -2126,7 +2126,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.clean_(null, null, null);
 		SSHCommandResult result=clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword, orgname, null, null, null, consumerId, null, null, null,(String)null, null, null, null, null, null, null, null, null);
 		String expected="Consumer "+consumerId+" has been deleted";
-		if (clienttasks.workaroundForBug876764(sm_serverType)) expected = "Unit "+consumerId+" has been deleted";
+		if (!clienttasks.workaroundForBug876764(sm_serverType)) expected = "Unit "+consumerId+" has been deleted";
 		Assert.assertEquals(result.getStderr().trim(), expected);
 	}
 
@@ -3153,7 +3153,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					"Cannot randomly pick a pool for subscribing when there are no available pools for testing.");
 		SubscriptionPool pool = pools
 				.get(randomGenerator.nextInt(pools.size()));
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToSubscriptionPool(pool);
 		List<ProductSubscription> consumedSubscriptionsBeforeregister = clienttasks
 				.getCurrentlyConsumedProductSubscriptions();
 		clienttasks.clean_(null, null, null);
@@ -4099,7 +4099,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
-			File entitlementCertFile = 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+			File entitlementCertFile = 		clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
