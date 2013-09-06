@@ -1,5 +1,7 @@
 package rhsm.cli.tests;
 
+import java.awt.Robot;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 
@@ -77,6 +79,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	List<String> providedProducts = new ArrayList<String>();
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if Status displays product name multiple times when the system had inactive stack subscriptions",
+			groups={"VerifyKeyPressEvent"},
+			enabled=true)
+	public void VerifyKeyPressEvent() throws Exception {
+	Robot robot = new Robot();
+	client.runCommandAndWait(clienttasks.command +" list --");
+	robot.keyPress(KeyEvent.VK_TAB);
+	robot.keyRelease(KeyEvent.VK_TAB);
+	robot.keyPress(KeyEvent.VK_TAB);
+	robot.keyRelease(KeyEvent.VK_TAB);
+	}
+
 	
 	/**
 	 * @author skallesh
@@ -559,8 +579,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void DisplayOfRemoteServerExceptionForServer500Error() throws Exception {
 		String prefixValueBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "server",
-				"prefix".toLowerCase(), "/foo" });
+		listOfSectionNameValues.add(new String[] { "server","prefix", "/foo" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		String RemoteError=clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -660,18 +679,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"SubscriptionManagerAccess","blockedByBug-878588"},
 			enabled=true)
 	public void SubscriptionManagerAccess() throws Exception {
-		String username="testuser";
+		String username="testuserlogin";
 		String passwords="123testpassword";
 		client.runCommandAndWait("useradd "+username);
 		client.runCommandAndWait("echo "+passwords+" | passwd "+username + " --stdin");
-		client=new SSHCommandRunner(sm_clientHostname, username, passwords,null);
-		SSHCommandResult result=client.runCommandAndWait("");
-		result=client.runCommandAndWait(clienttasks.command);
-		client.runCommandAndWait("logout");
-		client.runCommandAndWait("userdel -r "+username);
-		client=new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		 client=new SSHCommandRunner(sm_clientHostname, username, passwords,clienttasks.command);
+		// SSHCommandResult result=client.runCommandAndWait();
 		String expectedMessage="Error: this command requires root access to execute";
-//		Assert.assertEquals(result.getStderr().trim(), expectedMessage);
+		Assert.assertEquals(client.getStderr().trim(), expectedMessage);
+		//SSHCommandResult result=client.runCommandAndWait("su "+username);
+		//result=client.runCommandAndWait(clienttasks.command);
+		//client.runCommandAndWait("logout");
+		client=new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		client.runCommandAndWait("userdel -r "+username);
+		
 		
 	}
 	
@@ -894,8 +915,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
 		File entitlementCertFile=null;
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
-		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(pool.productId.equals(productId)){
