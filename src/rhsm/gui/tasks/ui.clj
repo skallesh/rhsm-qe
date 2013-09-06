@@ -138,6 +138,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :sla-next "Next"
          :sla-cancel "Cancel"
          :sla-back "Back"
+         ;;:sla-selection-table ""  ** waiting for table name Bug 1005329 **
          })
     (define-elements (windows :question-dialog)
       (same-name capitalize [:yes
