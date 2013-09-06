@@ -138,6 +138,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :sla-next "Next"
          :sla-cancel "Cancel"
          :sla-back "Back"
+         ;;:sla-selection-table ""  ** waiting for table name Bug 1005329 **
          })
     (define-elements (windows :question-dialog)
       (same-name capitalize [:yes
@@ -189,7 +190,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :register-rhn "Red Hat Network (RHN) Classic"
        :register-satellite "An RHN Satellite or RHN Proxy"
        :satelite-location "Location:"
-       :firstboot-proxy-config "Proxy Setup"
+       :firstboot-proxy-config "Proxy Setup Button"
        :firstboot-server-entry "server_entry"
        :firstboot-server-default "default_button"
        :firstboot-activation-checkbox "I will use an Activation Key"

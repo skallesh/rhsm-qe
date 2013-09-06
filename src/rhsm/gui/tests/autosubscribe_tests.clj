@@ -217,7 +217,8 @@
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel"
-                       "blockedByBug-812903"]}}
+                       "blockedByBug-812903"
+                       "blockedByBug-1005329"]}}
   autosubscribe_select_product_sla
   "Asserts if autosubscribe works with selecting product sla"
   [_]
@@ -232,9 +233,10 @@
     (if (tasks/ui showing? :register-dialog "Select Service Level")
       (do
         (sleep 3000)
+        (tasks/ui selectrowindex :sla-selection-table
+                  (rand-int (tasks/ui getrowcount :sla-selection-table)))
         (tasks/ui click :register)
-        (tasks/ui waittillwindowexist :register-dialog 80)))
-    (tasks/ui click :register)
+        (tasks/ui waittillwindownotexist :register-dialog 80))) 
     (verify (= 1 (tasks/ui guiexist :main-window "System is properly subscribed*")))
     (finally
      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
