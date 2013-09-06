@@ -48,6 +48,7 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
+  (assert-valid-testing-arch)
   (tasks/register-with-creds)
   (reset! servicelist (ctasks/build-service-map :all? true))
   (reset! subs-contractlist (ctasks/build-subscription-product-map :all? true))
