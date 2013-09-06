@@ -339,6 +339,9 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			// Bug 914843 - rct cat-manifest fails to report Provided Products from the embedded entitlement cert
 			if (manifestFile.getName().equals("manifest_SYS0395_RH0197181.zip")) bugIds.add("914843");
 			
+			// Bug 1005430 - rct cat-manifest fails to display all the provided products from the embedded entitlement cert
+			if (manifestFile.getName().equals("manifest_SER0406.zip")) bugIds.add("1005430");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, manifestFile}));				
 		}
