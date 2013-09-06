@@ -97,8 +97,8 @@
 (defn check_escape_window
   "Asserts that windows correctly render after exiting them with a shortcut."
   [window shortcut]
-  (if (or (substring? "quest" (str window))
-          (substring? "pref" (str window)))
+  (if (or (= window :question-dialog)
+          (= window :system-preference-dialog))
     (tasks/restart-app :reregister? true)
     (tasks/restart-app :unregister? true))
   (sleep 3000)
@@ -121,7 +121,7 @@
     (tasks/ui waittillguinotexist window 10)
     (exec-shortcut shortcut)
     (tasks/ui waittillwindowexist window 10)
-    (if (substring? "quest" (str window))
+    (if (= window :question-dialog)
       (verify (tasks/ui showing? :question-dialog
                         "Are you sure you want to unregister?")))
     (sleep 3000)
