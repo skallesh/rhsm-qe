@@ -318,7 +318,6 @@
     )
   (checkforerror))
 
-
 (defn wait-for-progress-bar
   "Waits for a progress bar to finish."
   []
