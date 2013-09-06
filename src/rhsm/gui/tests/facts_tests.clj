@@ -147,6 +147,7 @@
   "Checks that all avaiable releases are shown in the GUI properly."
   [_]
   (try
+    (tasks/register-with-creds)
     (tasks/subscribe_all)
     (let [result (run-command "subscription-manager release --list")
           stdout (:stdout result)
