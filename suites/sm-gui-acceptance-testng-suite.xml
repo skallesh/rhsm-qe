@@ -29,10 +29,8 @@
   -->
 
   <test name="GUI: Registration">
-    <packages>
-      <package name="rhsm.base" />
-    </packages>
     <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
       <class name="rhsm.gui.tests.register_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -46,10 +44,8 @@
   </test>
 
   <test name="GUI: Subscribe/Unsubscribe">
-    <packages>
-      <package name="rhsm.base" />
-    </packages>
     <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	 
       <class name="rhsm.gui.tests.subscribe_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -63,11 +59,9 @@
   </test>
 
   <test name="GUI: Autosubscribe">
-    <packages>
-      <package name="rhsm.base" />
-      <package name="rhsm.cli.tests" />
-    </packages>
     <classes>
+      <class name="rhsm.cli.tests.ComplianceTests"/>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>		
       <class name="rhsm.gui.tests.autosubscribe_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -97,16 +91,13 @@
     </groups>
   </test>
 
-  <!-- NOT YET USED IN ACCEPTANCE SUITE 
-
   <test name="GUI: Proxy">
-    <packages>
-      <package name="rhsm.gui.tests" />
-      <package name="rhsm.base"></package>
-    </packages>
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+    </classes>
     <groups>
       <run>
-        <include name="proxy"/>
+	      <include name="acceptance"/>
         <include name="setup" />
         <include name="cleanup" />
       </run>
@@ -114,10 +105,9 @@
   </test>
 
   <test name="GUI: Interop">
-    <packages>
-      <package name="rhsm.gui.tests" />
-      <package name="rhsm.base"></package>
-    </packages>
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+    </classes>
     <groups>
       <run>
         <include name="acceptance"/>
@@ -128,10 +118,9 @@
   </test>
 
   <test name="GUI: Firstboot">
-    <packages>
-      <package name="rhsm.gui.tests" />
-      <package name="rhsm.base"></package>
-    </packages>
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+    </classes>
     <groups>
       <run>
         <include name="acceptance"/>
@@ -142,10 +131,9 @@
   </test>
 
   <test name="GUI: Import">
-    <packages>
-      <package name="rhsm.gui.tests" />
-      <package name="rhsm.base"></package>
-    </packages>
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+    </classes>
     <groups>
       <run>
         <include name="acceptance"/>
@@ -156,10 +144,9 @@
   </test>
 
   <test name="GUI: System">
-    <packages>
-      <package name="rhsm.gui.tests" />
-      <package name="rhsm.base"></package>
-    </packages>
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+    </classes>
     <groups>
       <run>
         <include name="acceptance"/>
@@ -168,7 +155,5 @@
       </run>
     </groups>
   </test>
-  
-  -->
 
 </suite>
