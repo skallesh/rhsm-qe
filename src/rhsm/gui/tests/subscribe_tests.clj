@@ -558,6 +558,8 @@
               (recur (dec row)))))
         (tasks/ui click :cancel-contract-selection)
         (catch [:type :subscription-not-available] _)
+        (catch [:type :item-not-available] _)
+        (catch [:type :contract-selection-not-available] _)
         (catch [:type :wrong-consumer-type]
             {:keys [log-warning]} (log-warning))))
     (if-not debug
