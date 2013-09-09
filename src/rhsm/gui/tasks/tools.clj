@@ -47,8 +47,7 @@
   []
   (let [arch (.arch @cli-tasks)
         ;; currently due to ldtp, gui testing is only supported on these arches
-        ;supported-arches '("i386" "i486" "i586" "i686" "x86_64")]
-        supported-arches '("i386" "i486" "i586" "i686")]
+        supported-arches '("i386" "i486" "i586" "i686" "x86_64")]
     (if-not (some #(= arch %) supported-arches)
       (throw (SkipException. (str "Arch '" arch "' is not supported for GUI testing."))))))
 
