@@ -98,7 +98,7 @@
   "Asserts that windows correctly render after exiting them with a shortcut."
   [window shortcut]
   (if (or (= window :question-dialog)
-          (= window :system-preference-dialog))
+          (= window :system-preferences-dialog))
     (tasks/restart-app :reregister? true)
     (tasks/restart-app :unregister? true))
   (sleep 3000)
