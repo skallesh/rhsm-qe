@@ -83,10 +83,8 @@
   </test>
 
   <test name="GUI: Facts">
-    <packages>
-      <package name="rhsm.base" />
-    </packages>
     <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
       <class name="rhsm.gui.tests.facts_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
