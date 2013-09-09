@@ -345,7 +345,11 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 		if (entitlementCerts.isEmpty()) {
 			List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-			if (pools.isEmpty()) log.warning("Cound not find an available pool.");
+			if (pools.isEmpty()) {
+				log.warning("Cound not find an available pool.");
+				clienttasks.listConsumedProductSubscriptions();
+				Assert.fail("Expected at least one available pool.  Maybe all subscriptions available to '"+sm_clientUsername+"' are being utilized.");
+			}
 			SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));	// randomly pick a pool
 			clienttasks.subscribeToSubscriptionPool(pool);
 			entitlementCerts = clienttasks.getCurrentEntitlementCerts();
