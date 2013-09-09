@@ -196,9 +196,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 						Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.endDate), ProductSubscription.formatDateString(consumedProductSubscription.endDate), "Installed Product '"+bundledProductName+"' expires on the same DAY as the consumed ProductSubscription: "+consumedProductSubscription);
 						Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.startDate), ProductSubscription.formatDateString(consumedProductSubscription.startDate), "Installed Product '"+bundledProductName+"' starts on the same DAY as the consumed ProductSubscription: "+consumedProductSubscription);
 					} else {
+						/* valid assertion before Bug 990639 - Update information displayed on My Installed Products tab when product is partially subscribed
 						// assert the date range on the installed product is None
-						Assert.assertNull(installedProduct.startDate, "Installed Product '"+bundledProductName+"' start date range should be None/null when today's status is NOT fully Subscribed.");
-						Assert.assertNull(installedProduct.endDate, "Installed Product '"+bundledProductName+"' end date range should be None/null when today's status is NOT fully Subscribed.");
+						Assert.assertNull(installedProduct.startDate, "Installed Product '"+bundledProductName+"' start date range should be None/null when today's status '"+installedProduct.status+"' is NOT fully Subscribed.");
+						Assert.assertNull(installedProduct.endDate, "Installed Product '"+bundledProductName+"' end date range should be None/null when today's status '"+installedProduct.status+"' is NOT fully Subscribed.");
+						*/
+						// assert the date range on the installed product is NOT None
+						Assert.assertNotNull(installedProduct.startDate, "Installed Product '"+bundledProductName+"' start date range should NOT be None/null even when today's status '"+installedProduct.status+"' is NOT fully Subscribed.");
+						Assert.assertNotNull(installedProduct.endDate, "Installed Product '"+bundledProductName+"' end date range should NOT be None/null even when today's status '"+installedProduct.status+"' is NOT fully Subscribed.");
 					}
 				}
 				if (productCerts.isEmpty()) {
