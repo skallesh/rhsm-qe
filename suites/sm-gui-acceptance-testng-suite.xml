@@ -97,7 +97,7 @@
     </classes>
     <groups>
       <run>
-	<include name="acceptance"/>
+	      <include name="acceptance"/>
         <include name="setup" />
         <include name="cleanup" />
       </run>
