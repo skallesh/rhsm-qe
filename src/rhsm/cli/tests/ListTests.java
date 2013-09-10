@@ -716,7 +716,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
 		//List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.runCommandWithLang(null, clienttasks.command+" list --available").getStdout());
+		//	9/9/2013 Notes: During the RHEL65 test cycle, it appears that the following PYTHONIOENCODING=ascii workaround is
+		//	no longer needed (last altered by Bug fix 977535).  In fact if the workaround remains in place, the codec error is thrown:
+		//	'ascii' codec can't encode character u'\u2013' in position 51: ordinal not in range(128)
+		//	Reverting back to the original method for listing available pools without using PYTHONIOENCODING=ascii on the command line...
+		//List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.runCommandWithLang(null, clienttasks.command+" list --available").getStdout());
+		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		poolForSubscriptionContainingUTF8Character = SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", productIdForSubscriptionContainingUTF8Character, availableSubscriptionPools);
 		Assert.assertNotNull(poolForSubscriptionContainingUTF8Character, "Found subscription product '"+productIdForSubscriptionContainingUTF8Character+"' from the list of available subscriptions whose name contains a UTF8 character.");
 		Assert.assertEquals(poolForSubscriptionContainingUTF8Character.subscriptionName, subscriptionNameForSubscriptionContainingUTF8Character, "asserting the subscription name.");

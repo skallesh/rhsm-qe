@@ -48,46 +48,11 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
+  (assert-valid-testing-arch)
   (tasks/register-with-creds)
   (reset! servicelist (ctasks/build-service-map :all? true))
   (reset! subs-contractlist (ctasks/build-subscription-product-map :all? true))
   (build-contract-map))
-
-(defn subscribe_all
-  "Subscribes to everything available"
-  []
-  (comment ;; No longer used just here for reference
-    (allsearch)
-    (tasks/do-to-all-rows-in
-     :all-subscriptions-view 1
-     (fn [subscription]
-       (try+ (tasks/subscribe subscription)
-             (catch [:type :item-not-available] _)
-             (catch [:type :wrong-consumer-type]
-                 {:keys [log-warning]} (log-warning))))
-     :skip-dropdowns? true))
-  (let [all-pools (map :id (ctasks/list-available true))
-        all-prods (map :productName (ctasks/list-available true))
-        mapify (fn [key val] (zipmap key val))
-        syntax (fn [item] (str "--pool=" item " "))
-        command (str "subscription-manager attach "
-                     (clojure.string/join (map syntax (vals (mapify all-prods all-pools)))))]
-        (run-command command)))
-
-(defn unsubscribe_all
-  "Unsubscribes from everything available"
-  []
-  (comment  ;; No longer used just here for reference
-    (tasks/ui selecttab :my-subscriptions)
-    (tasks/do-to-all-rows-in
-     :my-subscriptions-view 0
-     (fn [subscription]
-       (try+
-        (tasks/unsubscribe subscription)
-        (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))
-        (catch [:type :not-subscribed] _)))
-     :skip-dropdowns? true))
-  (:stdout (run-command "subscription-manager unsubscribe --all")))
 
 (defn ^{Test {:groups ["subscribe"
                        "acceptance"]
@@ -593,6 +558,8 @@
               (recur (dec row)))))
         (tasks/ui click :cancel-contract-selection)
         (catch [:type :subscription-not-available] _)
+        (catch [:type :item-not-available] _)
+        (catch [:type :contract-selection-not-available] _)
         (catch [:type :wrong-consumer-type]
             {:keys [log-warning]} (log-warning))))
     (if-not debug
@@ -619,7 +586,7 @@
   (tasks/restart-app)
   (register nil)
   (tasks/ui selecttab :my-subscriptions)
-  (subscribe_all)
+  (tasks/subscribe_all)
   (tasks/ui selecttab :my-subscriptions)
   (let [subs (into [] (map vector (tasks/get-table-elements
                                    :my-subscriptions-view

@@ -1,6 +1,7 @@
 package rhsm.cli.tests;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -94,7 +95,11 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void AttemptToGetReleaseListWithoutHavingAnyEntitlements_Test() {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true, null, null, null, null);		
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true, null, null, null, null);
+		
+		// make sure we are not auto healing ourself with any entitlements
+		clienttasks.autoheal(null,null,true,null,null,null);
+		clienttasks.unsubscribe(true, (List<BigInteger>)null, null, null, null);
 		
 		// assert no releases are listed
 		Assert.assertTrue(clienttasks.getCurrentlyAvailableReleases(null, null, null).isEmpty(), "No releases should be available without having been entitled to anything.");

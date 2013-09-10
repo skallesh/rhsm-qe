@@ -1086,7 +1086,14 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			
 			// special assert case
 			if (NON_NEG_INTEGER_FACT_LIST.contains(key)) {
-				Assert.assertTrue(isInteger(consumerFactsMap.get(key)) && Integer.valueOf(consumerFactsMap.get(key))>=0, "Consumer fact '"+key+"' value '"+consumerFactsMap.get(key)+"' is a non-negative integer.  ( If this test fails, then the remote candlepin API is failing to drop the fact entirely from the consumer when the system uploads this fact; see Candlepin commit 5d4d30753ab209b82181c267a94dd833f24b24c9 https://github.com/candlepin/candlepin/pull/157; see Bugzillas https://bugzilla.redhat.com/buglist.cgi?bug_id=803757%2C858286 )");
+				// special special assert case lscpu.numa_node0_cpu(s): 0,1
+				if (key.equals("lscpu.numa_node0_cpu(s)") || key.equals("lscpu.numa_node(s)")) {
+					for (String subvalue : consumerFactsMap.get(key).split(",")) {
+						Assert.assertTrue(isInteger(subvalue) && Integer.valueOf(subvalue)>=0, "Consumer fact '"+key+"' subvalue '"+subvalue+"' from fact "+key+":"+consumerFactsMap.get(key)+" is a non-negative integer.  ( If this test fails, then the remote candlepin API is failing to drop the fact entirely from the consumer when the system uploads this fact; see Candlepin commit 5d4d30753ab209b82181c267a94dd833f24b24c9 https://github.com/candlepin/candlepin/pull/157; see Bugzillas https://bugzilla.redhat.com/buglist.cgi?bug_id=803757%2C858286 )");
+					}
+				} else {
+					Assert.assertTrue(isInteger(consumerFactsMap.get(key)) && Integer.valueOf(consumerFactsMap.get(key))>=0, "Consumer fact '"+key+"' value '"+consumerFactsMap.get(key)+"' is a non-negative integer.  ( If this test fails, then the remote candlepin API is failing to drop the fact entirely from the consumer when the system uploads this fact; see Candlepin commit 5d4d30753ab209b82181c267a94dd833f24b24c9 https://github.com/candlepin/candlepin/pull/157; see Bugzillas https://bugzilla.redhat.com/buglist.cgi?bug_id=803757%2C858286 )");
+				}
 			}
 			
 			if (systemFactsMap.containsKey(key) && !systemFactsMap.get(key).equals(consumerFactsMap.get(key))) {

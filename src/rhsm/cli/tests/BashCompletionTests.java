@@ -43,7 +43,7 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 	
 	@Test(	description="when subscription-manager is run with no args, it should default to the help report",
-			groups={},
+			groups={"AcceptanceTests"},
 			dataProvider="BashCompletionData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)

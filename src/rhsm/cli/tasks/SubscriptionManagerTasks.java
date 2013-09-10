@@ -4581,6 +4581,7 @@ public class SubscriptionManagerTasks {
 			expectedStdoutMsg = "Serial numbers unsuccessfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
 			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
 			expectedStdoutMsg = "   Entitlement Certificate with serial number "+serialNumber+" could not be found.";
+			expectedStdoutMsg = "   Entitlement Certificate with serial number '"+serialNumber+"' could not be found.";
 			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
 			Assert.assertEquals(result.getStderr(),"", "Stderr from unsubscribe.");
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from unsubscribe when the serial's entitlement cert file ("+certFilePath+") does not exist.");	// changed by bug 873791
