@@ -598,6 +598,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		options.add("--ondate=ON_DATE");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);

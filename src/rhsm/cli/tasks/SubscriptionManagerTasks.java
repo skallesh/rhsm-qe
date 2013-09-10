@@ -3622,14 +3622,16 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * status without asserting results
+	 * @param ondate TODO
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult status_(String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult status_(String ondate, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " status";
+		if (ondate!=null)				command += " --ondate="+ondate;
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
@@ -3640,13 +3642,14 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * status with asserting results
+	 * @param ondate TODO
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult status(String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult status(String ondate, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = status_(proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = status_(ondate, proxy, proxyuser, proxypassword);
 		
 		// assert results for a successful call to plugins
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the status command indicates a success.");
