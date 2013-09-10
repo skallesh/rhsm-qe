@@ -94,6 +94,8 @@
   <test name="GUI: Proxy">
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.proxy_tests" />
+      <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
@@ -107,6 +109,8 @@
   <test name="GUI: Interop">
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.rhn_interop_tests" />
+      <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
@@ -120,6 +124,8 @@
   <test name="GUI: Firstboot">
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.firstboot_tests" />
+      <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
@@ -133,6 +139,8 @@
   <test name="GUI: Import">
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.import_tests" />
+      <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
@@ -146,6 +154,8 @@
   <test name="GUI: System">
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.system_tests" />
+      <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
