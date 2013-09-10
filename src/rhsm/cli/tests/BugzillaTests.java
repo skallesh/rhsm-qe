@@ -80,24 +80,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	
-	/**
-	 * @author skallesh
-	 * @throws Exception
-	 * @throws JSONException
-	 */
-	@Test(	description="verify if Status displays product name multiple times when the system had inactive stack subscriptions",
-			groups={"VerifyKeyPressEvent"},
-			enabled=true)
-	public void VerifyKeyPressEvent() throws Exception {
-	Robot robot = new Robot();
-	client.runCommandAndWait(clienttasks.command +" list --");
-	robot.keyPress(KeyEvent.VK_TAB);
-	robot.keyRelease(KeyEvent.VK_TAB);
-	robot.keyPress(KeyEvent.VK_TAB);
-	robot.keyRelease(KeyEvent.VK_TAB);
-	}
-
-	
+		
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -198,7 +181,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 clienttasks.clean(null, null, null);
 		 clienttasks.importCertificate(path);
          String result=clienttasks.unsubscribe(true,(BigInteger)null, null, null, null).getStdout();
-         String expected_result="1 subscriptions removed from this system.";
+         String expected_result="1 subscriptions removed from this system";
 		 Assert.assertEquals(result, expected_result);
 		
 	}
@@ -260,7 +243,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
 		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStderr();			
-		String expected_message=" Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate;
+		String EndingDate=CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,	sm_clientPassword, sm_serverUrl, expiringPoolId,"endDate");
+		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate;
 		Assert.assertEquals(result, expected_message);
 		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
 		Assert.assertEquals(result, clienttasks.msg_ConsumerNotRegistered);
@@ -1690,6 +1674,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "ValidityAfterOversubscribing","blockedByBug-845126"}, enabled = true)
 	public void systemEntitlementsValidityAfterOversubscribing() throws JSONException,Exception {
 		Boolean noMultiEntitlements=true;
+		int sockets=2;
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
@@ -1698,8 +1687,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				moveProductCertFiles(installed.productId + ".pem");
 				moveProductCertFiles(installed.productId+"_" + ".pem");
 		}		
-		String actual=clienttasks.getFactValue(factname).trim();
-		Assert.assertEquals(actual, "invalid");
+	//	String actual=clienttasks.getFactValue(factname).trim();
+	//	Assert.assertEquals(actual, "invalid");
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
@@ -1717,9 +1706,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					|| installed.status.equals("Partially Subscribed"))
 				moveProductCertFiles(installed.productId + ".pem");
 				moveProductCertFiles(installed.productId+"_"+ ".pem");
+				clienttasks.refresh(null, null, null);
 		}
 		
-		actual=clienttasks.getFactValue(factname).trim();
+		String actual=clienttasks.getFactValue(factname).trim();
 		if(!noMultiEntitlements) throw new SkipException("No mutli-entitled subscriptions available for testing");
 		Assert.assertEquals(actual, "valid");
 	}
