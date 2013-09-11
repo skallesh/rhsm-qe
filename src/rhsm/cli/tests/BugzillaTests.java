@@ -2928,7 +2928,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String facts = clienttasks.facts_(null, true, basicauthproxyUrl, null,
 				null).getStdout();
-		String Expect = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
+		String Expect = "Network error, unable to connect to server.Please see /var/log/rhsm/rhsm.log for more information.";
 		Assert.assertEquals(facts.trim(), Expect);
 
 	}
@@ -2984,7 +2984,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.multiEntitlement) {
 				if(pool.productId.equals("awesomeos-x86_64")){
-					clienttasks.subscribe(null, null, pool.poolId, null, null,null, null, null, null, null, null);
+					clienttasks.subscribe(null, null, pool.poolId, null, null,"2", null, null, null, null, null);
 					poolId.add(pool.poolId);
 			}}
 		}
@@ -2993,7 +2993,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(installed.status, "Partially Subscribed");
 			}
 		}
-		clienttasks.subscribe(null, null, poolId, null, null, null,null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolId, null, null, "2",null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 				
 			if(installedProduct.productId.equals("100000000000002")){
@@ -3862,7 +3862,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Pattern p = Pattern.compile("[,\\s]+");
 		String[] result = p.split(subscribeResult);
 		for (int i = 0; i < result.length; i++) {
-			Assert.assertEquals(result[i], "-rw-------",
+			Assert.assertEquals(result[i], "-rw-------.",
 					"permission for etc/pki/entitlement/<serial>-key.pem is -rw-------");
 			i++;
 		}
