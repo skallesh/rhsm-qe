@@ -390,6 +390,40 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// assert the exit code
 		checkForKnownBug881952(sshCommandResult);
 		String expectedMsg;
+		if (!getProductCertFilenamesContainingNonUniqueProductIds(expectedMigrationProductCertFilenames).isEmpty()) {
+			log.warning("The RHN Classic channels currently consumed map to multiple product certs that share the same product ID "+getProductCertFilenamesContainingNonUniqueProductIds(expectedMigrationProductCertFilenames)+".  We must abort in this case.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
+			// TEMPORARY WORKAROUND FOR BUG
+			String bugId = "1006985"; boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("The remainder of this test is blocked by bug "+bugId+".  There is no workaround.");
+			}
+			// END OF WORKAROUND
+			expectedMsg = "FIXME AFTER BUG 1006985 IS IMPLEMENTED";
+			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);	
+			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classicwhen currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+			
+			// assert that no product certs have been copied yet
+			Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+
+			// assert that we are not yet registered to RHSM
+			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+			
+			// assert that we are still registered to RHN
+			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+			
+			// assert that the rhnplugin is still enabled
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhnPluginConfFile, "enabled"),"1","The enabled yum plugin configuration for RHN.");
+			
+			// assert that productid.js is unchanged
+			Assert.assertTrue(productIdRepoMapBeforeMigration.keySet().containsAll(productIdRepoMapAfterMigration.keySet()) && productIdRepoMapAfterMigration.keySet().containsAll(productIdRepoMapBeforeMigration.keySet()),"The '"+clienttasks.productIdJsonFile+"' productIds remain unchanged when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+			for (String productId : productIdRepoMapBeforeMigration.keySet()) {
+				Assert.assertTrue(productIdRepoMapBeforeMigration.get(productId).containsAll(productIdRepoMapAfterMigration.get(productId)) && productIdRepoMapAfterMigration.get(productId).containsAll(productIdRepoMapBeforeMigration.get(productId)), "The '"+clienttasks.productIdJsonFile+"' productIds repos for '"+productId+"' remain unchanged when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+			}
+			
+			return;
+		} else
 		if (!areAllChannelsMapped(rhnChannelsConsumed) && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
 			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
@@ -417,7 +451,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			
 			return;
 			
-		} else if (rhnChannelsConsumed.isEmpty()) {
+		} else
+		if (rhnChannelsConsumed.isEmpty()) {
 			log.warning("Modifying expected results when the current RHN Classically registered system is not consuming any RHN channels.");
 			String expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";
 			Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' when no RHN Classic channels are being consumed: "+expectedStdout);
@@ -484,7 +519,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
 		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
-		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running "+rhnMigrateTool+" with "+options+".");
+		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running "+rhnMigrateTool+" with "+options+".  (If this fails, one of these migration certs may have clobbered the other "+expectedMigrationProductCertFilenames+")");
 		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
 			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
 			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly installed product certs includes the expected migration productCert: "+expectedMigrationProductCert);
@@ -1597,10 +1632,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String backupChannelCertMappingFilename = channelCertMappingFilename+".bak";
 	protected List<String> mappedProductCertFilenames = new ArrayList<String>();	// list of all the mapped product cert file names in the mapping file (e.g. Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 	protected Map<String,String> channelsToProductCertFilenamesMap = new HashMap<String,String>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
-//	protected Map<String,List<String>> cdnProductBaselineChannelMap = new HashMap<String,List<String>>();	// map of all the channels to list of productIds (e.g. key=rhn-tools-rhel-x86_64-server-5 value=[69,169,269])
-//	protected Map<String,File> cdnProductCertsChannelMap = new HashMap<String,File>();	// map generated from cdn/product-certs.json of all the channels to product cert files (e.g. key=jb-ewp-5-i386-server-5-rpm value=/jbewp-5.0/Server-JBEWP-i386-bca12d9b039b-184.pem)
-//	protected Map<String,ProductCert> cdnProductCertsChannelToProductCertMap = new HashMap<String,ProductCert>();	// map generated from cdn/product-certs.json of all the channels to product cert files (e.g. key=jb-ewp-5-i386-server-5-rpm value=/jbewp-5.0/Server-JBEWP-i386-bca12d9b039b-184.pem)
-//	protected Map<String,List<String>> cdnProductBaselineProductIdMap = new HashMap<String,List<String>>();	// map of all the productIds to list of channels (e.g. key=69 value=[rhn-tools-rhel-x86_64-server-5, rhn-tools-rhel-x86_64-server-5-debug-info])	// inverse of cdnProductBaselineChannelMap
 	protected List<ProductCert> originallyInstalledRedHatProductCerts = new ArrayList<ProductCert>();
 	protected String migrationFromFact				= "migration.migrated_from";
 	protected String migrationSystemIdFact			= "migration.classic_system_id";
@@ -1706,6 +1737,26 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		return mappedProductCertFilenamesCorrespondingToChannels;
+	}
+	
+	protected Set<String> getProductCertFilenamesContainingNonUniqueProductIds(Set<String> productCertFilenames) {
+		// Given a set of product cert file names, this method will return those that do not have a unique product ID.
+		// For example:
+		//    input  [Server-Server-x86_64-23d36f276d57-69.pem, product-x86_64-4d1f929972d7-150.pem, Server-Server-x86_64-323beb20e916-69.pem]
+		//    return [Server-Server-x86_64-23d36f276d57-69.pem, Server-Server-x86_64-323beb20e916-69.pem]
+		Set<String> productCertFilenamesWithDuplicateProductIds = new HashSet<String>();
+		Set<String> allProductIds = new HashSet<String>();
+		Set<String> dupProductIds = new HashSet<String>();
+		for (String productCertFilename: productCertFilenames) {
+			String productId = MigrationDataTests.getProductIdFromProductCertFilename(productCertFilename);
+			if (allProductIds.contains(productId)) dupProductIds.add(productId);
+			allProductIds.add(productId);
+		}
+		for (String productCertFilename: productCertFilenames) {
+			String productId = MigrationDataTests.getProductIdFromProductCertFilename(productCertFilename);
+			if (dupProductIds.contains(productId)) productCertFilenamesWithDuplicateProductIds.add(productCertFilename);
+		}
+		return productCertFilenamesWithDuplicateProductIds;
 	}
 	
 	protected boolean areAllChannelsMapped(List<String> channels) {
@@ -2108,13 +2159,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"-n",		regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
 		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"-n",		regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
 		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"849644","980209"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize),	"-n -f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
+			List<String> rhnSubsetOfAvailableChildChannels = rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize);
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"849644","980209"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnSubsetOfAvailableChildChannels,	"-n -f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
+			List<String> rhnNonBetaSubsetOfAvailableChildChannels = new ArrayList<String>(); for (String rhnChannel: rhnSubsetOfAvailableChildChannels) if (!rhnChannel.contains("-beta")) rhnNonBetaSubsetOfAvailableChildChannels.add(rhnChannel);
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"849644","980209"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnNonBetaSubsetOfAvailableChildChannels,	"-n -f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
 		}
 
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"",			regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));
 		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"",			regUsername,	regPassword,	regOrg,	/*areAllChannelsMapped(rhnAvailableChildChannels)?noServiceLevelIndex:*/null,	defaultServiceLevel}));
 		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize),	"-f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
+			List<String> rhnSubsetOfAvailableChildChannels = rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize);
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnSubsetOfAvailableChildChannels,	"-f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
+			List<String> rhnNonBetaSubsetOfAvailableChildChannels = new ArrayList<String>(); for (String rhnChannel: rhnSubsetOfAvailableChildChannels) if (!rhnChannel.contains("-beta")) rhnNonBetaSubsetOfAvailableChildChannels.add(rhnChannel);
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnNonBetaSubsetOfAvailableChildChannels,	"-f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel}));		
 		}
 		
 		// test variations of a valid serverUrl
