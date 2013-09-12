@@ -181,9 +181,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
 			groups={"AcceptanceTests","blockedByBug-782208"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
-			enabled=true)
+			enabled=false)	// 9/12/2013 RHEL65: disabled in favor of new VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test; this old test was based on the generation of subscription-manager-migration-data from product-baseline.json
 	@ImplementsNitrateTest(caseId=130940)
-	public void VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test() {
+	public void VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test_OLD() {
 		
 		// process all the migration product cert files into ProductCerts and assert their version
 		boolean verifiedVersionOfAllMigrationProductCertFiles = true;
@@ -202,13 +202,37 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
+	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
+			groups={"AcceptanceTests","blockedByBug-782208","blockedByBug-1006060"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=130940)
+	public void VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test() {
+		
+		// process all the migration product cert files into ProductCerts and assert their version
+		boolean verifiedVersionOfAllMigrationProductCertFiles = false;
+		int numberOfMigrationProductCertsSupportingThisRelease = 0;
+		for (ProductCert productCert : clienttasks.getProductCerts(baseProductsDir)) {
+			if (!productCert.productNamespace.providedTags.toLowerCase().contains("rhel")) {
+				log.info("Migration productCert '"+productCert+"' does not provide RHEL tags.  Skipping assertion that its version matches this system's RHEL version.");
+				continue;
+			}
+			if (productCert.productNamespace.version.equals(clienttasks.redhatReleaseXY)) {
+				Assert.assertTrue(true,"Migration productCert '"+productCert+"' supports this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
+				numberOfMigrationProductCertsSupportingThisRelease++;
+			} else {
+				log.warning("Migration productCert '"+productCert+"' does NOT support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
+			}
+		}
+		Assert.assertTrue(numberOfMigrationProductCertsSupportingThisRelease>0,"At least one 'actual="+numberOfMigrationProductCertsSupportingThisRelease+"' migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
+	}
 	
 	
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
 			groups={"AcceptanceTests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802"},
-			enabled=true)
+			enabled=false)	// 9/9/2013 RHEL65: disabled in favor of new VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test() {
+	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test_OLD() {
 		
 		// process all the migration product cert files into ProductCerts and assert they match those from the RHN Definitions
 
@@ -271,15 +295,98 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		
 		Assert.assertTrue(verifiedMatchForAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' match the current ["+sm_rhnDefinitionsGitRepository+"] product certs for this RHEL release '"+clienttasks.redhatReleaseXY+"' ");
 	}
+	@Test(	description="Verify that the migration product certs match those from rhn definitions",
+			groups={"AcceptanceTests"/*,"blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802"*/},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test() {
+		
+		// assemble a list of rhnDefinitionsProductCertsDirs that we care about under [rcm/rcm-metadata.git] / product_ids /
+		// Note: we care about all of the productCertsDirs
+		SSHCommandResult result = client.runCommandAndWait("find "+clienttasks.rhnDefinitionsDir+"/product_ids -maxdepth 1 -type d");
+		List<String> rhnDefinitionsProductCertsDirs = new ArrayList<String>();
+		for (String productIdsDir : result.getStdout().split("\\n")) {
+			if (!productIdsDir.equals(clienttasks.rhnDefinitionsDir+"/product_ids")) {
+				// put logic here to exclude specific directories
+				
+				rhnDefinitionsProductCertsDirs.add(productIdsDir);
+			}
+		}
+		Assert.assertTrue(!rhnDefinitionsProductCertsDirs.isEmpty(),"The "+clienttasks.rhnDefinitionsDir+"/product_ids is not empty.");
+		
+		
+		// process all the migration product cert files into ProductCerts and assert they match those from the RHN Definitions
+
+		// get all of the rhnDefnition product certs
+		List<ProductCert> rhnDefnitionProductCerts = new ArrayList<ProductCert>();
+		for (String rhnDefinitionsProductCertsDir : /*sm_*/rhnDefinitionsProductCertsDirs) {
+			String tmpRhnDefinitionsProductCertsDir = /*clienttasks.rhnDefinitionsDir+*/rhnDefinitionsProductCertsDir;
+			Assert.assertTrue(RemoteFileTasks.testExists(client, tmpRhnDefinitionsProductCertsDir),"The rhn definitions product certs dir '"+rhnDefinitionsProductCertsDir+"' has been locally cloned to '"+tmpRhnDefinitionsProductCertsDir+"'.");
+			rhnDefnitionProductCerts.addAll(clienttasks.getProductCerts(tmpRhnDefinitionsProductCertsDir));
+		}
+		/* ALTERNATIVE WAY OF GETTING ALL rhnDefnition PRODUCT CERTS FROM ALL DIRECTORIES
+		SSHCommandResult result = client.runCommandAndWait("find "+clienttasks.rhnDefinitionsDir+"/product_ids/ -name '*.pem'");
+		String[] rhnDefnitionProductCertPaths = result.getStdout().trim().split("\\n");
+		if (rhnDefnitionProductCertPaths.length==1 && rhnDefnitionProductCertPaths[0].equals("")) rhnDefnitionProductCertPaths = new String[]{};
+		for (String rhnDefnitionProductCertPath : rhnDefnitionProductCertPaths) {
+			rhnDefnitionProductCerts.add(clienttasks.getProductCertFromProductCertFile(new File(rhnDefnitionProductCertPath)));
+		}
+		*/
+		
+		// get the local migration product certs available for install
+		List<ProductCert> migrationProductCerts = clienttasks.getProductCerts(baseProductsDir);
+
+		// test that these local migration product certs came from the current rhnDefinitions structure
+		boolean verifiedMatchForAllMigrationProductCertFiles = true;
+		for (ProductCert migrationProductCert : migrationProductCerts) {
+			if (rhnDefnitionProductCerts.contains(migrationProductCert)) {
+				Assert.assertTrue(true, "Migration product cert '"+migrationProductCert.file+"' was found among the product certs declared for this release from ["+sm_rhnDefinitionsGitRepository+"] "+/*sm_*/rhnDefinitionsProductCertsDirs);
+			} else {
+				log.warning("Migration product cert '"+migrationProductCert.file+"' was NOT found among the product certs declared for this release from ["+sm_rhnDefinitionsGitRepository+"] "+/*sm_*/rhnDefinitionsProductCertsDirs+".  It may have been re-generated by release engineering.");
+				verifiedMatchForAllMigrationProductCertFiles = false;
+			}
+		}
+		
+		// now assert that all of product certs from the current rhnDefinitions structure are locally available for install
+		if (false) {	// NOT A VALID TEST since all product certs from the current rhnDefinitions structure may not be mapped in product-certs.json file 
+		for (ProductCert rhnDefinitionProductCert : rhnDefnitionProductCerts) {
+			if (migrationProductCerts.contains(rhnDefinitionProductCert)) {
+				Assert.assertTrue(true, "CDN product cert ["+sm_rhnDefinitionsGitRepository+"] "+rhnDefinitionProductCert.file.getPath().replaceFirst(clienttasks.rhnDefinitionsDir, "")+" was found among the local migration product certs available for installation.");
+			} else {
+				
+				// determine if the rhnDefinitionProductCert is not mapped to any RHEL [5|6] RHN Channels defined in the product baseline file
+				List<String> rhnChannels = cdnProductBaselineProductIdMap.get(rhnDefinitionProductCert.productId);
+				if (rhnChannels==null) {
+					log.warning("CDN Product Baseline has an empty list of RHN Channels for Product ID '"+rhnDefinitionProductCert.productId+"' Name '"+rhnDefinitionProductCert.productName+"'.  This could be a rel-eng defect.");
+					rhnChannels = new ArrayList<String>();
+				}
+				Set<String> rhnChannelsFilteredForRhelRelease = new HashSet<String>();
+				for (String rhnChannel : rhnChannels) {
+					// filter out all RHN Channels not associated with this release  (e.g., assume that an rhn channel containing "-5-" or ends in "-5" is only applicable to rhel5 
+					if (!(rhnChannel.contains("-"+clienttasks.redhatReleaseX+"-") || rhnChannel.endsWith("-"+clienttasks.redhatReleaseX))) continue;
+					rhnChannelsFilteredForRhelRelease.add(rhnChannel);
+				}
+				if (rhnChannelsFilteredForRhelRelease.isEmpty()) {
+					log.info("CDN product cert ["+sm_rhnDefinitionsGitRepository+"] "+rhnDefinitionProductCert.file.getPath().replaceFirst(clienttasks.rhnDefinitionsDir, "")+" was NOT found among the current migration product certs.  No RHEL '"+clienttasks.redhatReleaseX+"' RHN Channels in '"+sm_rhnDefinitionsProductBaselineFile+"' map to Product ID '"+rhnDefinitionProductCert.productId+"' Name '"+rhnDefinitionProductCert.productName+"'.");	
+				} else {
+					log.warning("CDN product cert ["+sm_rhnDefinitionsGitRepository+"] "+rhnDefinitionProductCert.file.getPath().replaceFirst(clienttasks.rhnDefinitionsDir, "")+" was NOT found among the current migration product certs.  It is probably a new product cert generated by release engineering and therefore subscription-manager-migration-data needs a regeneration.");
+					verifiedMatchForAllMigrationProductCertFiles = false;
+				}
+			}
+		}
+		}
+		
+		Assert.assertTrue(verifiedMatchForAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' match the current ["+sm_rhnDefinitionsGitRepository+"] product certs for this RHEL release '"+clienttasks.redhatReleaseXY+"' ");
+	}
 	
 	
 	@Test(	description="Verify that all of the required RHN Channels in the ProductBaseline file are accounted for in channel-cert-mapping.txt",
 			groups={},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnChannelFromProductBaselineData",
-			enabled=true)
+			enabled=false)	// 9/9/2013 RHEL65: disabling this test in favor of new VerifyChannelCertMappingFileSupportsRhnChannelFromProductCerts_Test
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyChannelCertMappingFileSupportsRhnChannelFromProductBaseline_Test(Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId) throws JSONException {
+	public void VerifyChannelCertMappingFileSupportsRhnChannelFromProductBaseline_Test_OLD(Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId) throws JSONException {
 		
 		// does the cdn indicate that this channel maps to more than one product?
 		if (cdnProductBaselineChannelMap.get(productBaselineRhnChannel).size()>1) {
@@ -384,13 +491,11 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)), productBaselineProductId,
 				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productBaselineRhnChannel+"' to the same productId as dictated in the CDN Product Baseline.");
 	}
-	
-	
 	@Test(	description="Verify that all of the required RHN Channels in the ProductCerts file are accounted for in channel-cert-mapping.txt",
 			groups={},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnChannelFromProductCertsData",
-			enabled=false /* TODO OUT OF ORDER UNTIL WE LEARN FROM dgregor WHAT TO DO ABOUT DESCREPANCIES BEWTEEN product-certs.json AND product-baseline.json */)
+			enabled=true) // Starting in RHEL65, we are moving away from product-baseline.json and replacing it with product-certs.json
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileSupportsRhnChannelFromProductCerts_Test(Object bugzilla, String productCertsRhnChannel, File productCertsProductFile) throws JSONException {
 
