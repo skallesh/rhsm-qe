@@ -1,5 +1,7 @@
 package rhsm.cli.tests;
 
+import java.awt.Robot;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 
@@ -78,6 +80,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	
+		
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -178,7 +181,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 clienttasks.clean(null, null, null);
 		 clienttasks.importCertificate(path);
          String result=clienttasks.unsubscribe(true,(BigInteger)null, null, null, null).getStdout();
-         String expected_result="1 subscriptions removed from this system.";
+         String expected_result="1 subscriptions removed from this system";
 		 Assert.assertEquals(result, expected_result);
 		
 	}
@@ -240,7 +243,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
 		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStderr();			
-		String expected_message=" Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate;
+		String EndingDate=CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,	sm_clientPassword, sm_serverUrl, expiringPoolId,"endDate");
+		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate;
 		Assert.assertEquals(result, expected_message);
 		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
 		Assert.assertEquals(result, clienttasks.msg_ConsumerNotRegistered);
@@ -559,8 +563,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void DisplayOfRemoteServerExceptionForServer500Error() throws Exception {
 		String prefixValueBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "server",
-				"prefix".toLowerCase(), "/foo" });
+		listOfSectionNameValues.add(new String[] { "server","prefix", "/foo" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		String RemoteError=clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -660,18 +663,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"SubscriptionManagerAccess","blockedByBug-878588"},
 			enabled=true)
 	public void SubscriptionManagerAccess() throws Exception {
-		String username="testuser";
+		String username="testuserlogin";
 		String passwords="123testpassword";
 		client.runCommandAndWait("useradd "+username);
 		client.runCommandAndWait("echo "+passwords+" | passwd "+username + " --stdin");
-		client=new SSHCommandRunner(sm_clientHostname, username, passwords,null);
-		SSHCommandResult result=client.runCommandAndWait("");
-		result=client.runCommandAndWait(clienttasks.command);
-		client.runCommandAndWait("logout");
-		client.runCommandAndWait("userdel -r "+username);
-		client=new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		 client=new SSHCommandRunner(sm_clientHostname, username, passwords,clienttasks.command);
+		// SSHCommandResult result=client.runCommandAndWait();
 		String expectedMessage="Error: this command requires root access to execute";
-//		Assert.assertEquals(result.getStderr().trim(), expectedMessage);
+		Assert.assertEquals(client.getStderr().trim(), expectedMessage);
+		//SSHCommandResult result=client.runCommandAndWait("su "+username);
+		//result=client.runCommandAndWait(clienttasks.command);
+		//client.runCommandAndWait("logout");
+		client=new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		client.runCommandAndWait("userdel -r "+username);
+		
 		
 	}
 	
@@ -894,8 +899,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
 		File entitlementCertFile=null;
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
-		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(pool.productId.equals(productId)){
@@ -1669,6 +1674,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "ValidityAfterOversubscribing","blockedByBug-845126"}, enabled = true)
 	public void systemEntitlementsValidityAfterOversubscribing() throws JSONException,Exception {
 		Boolean noMultiEntitlements=true;
+		int sockets=2;
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
@@ -1677,8 +1687,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				moveProductCertFiles(installed.productId + ".pem");
 				moveProductCertFiles(installed.productId+"_" + ".pem");
 		}		
-		String actual=clienttasks.getFactValue(factname).trim();
-		Assert.assertEquals(actual, "invalid");
+	//	String actual=clienttasks.getFactValue(factname).trim();
+	//	Assert.assertEquals(actual, "invalid");
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
@@ -1696,9 +1706,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					|| installed.status.equals("Partially Subscribed"))
 				moveProductCertFiles(installed.productId + ".pem");
 				moveProductCertFiles(installed.productId+"_"+ ".pem");
+				clienttasks.refresh(null, null, null);
 		}
 		
-		actual=clienttasks.getFactValue(factname).trim();
+		String actual=clienttasks.getFactValue(factname).trim();
 		if(!noMultiEntitlements) throw new SkipException("No mutli-entitled subscriptions available for testing");
 		Assert.assertEquals(actual, "valid");
 	}
@@ -2917,7 +2928,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String facts = clienttasks.facts_(null, true, basicauthproxyUrl, null,
 				null).getStdout();
-		String Expect = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
+		String Expect = "Network error, unable to connect to server.Please see /var/log/rhsm/rhsm.log for more information.";
 		Assert.assertEquals(facts.trim(), Expect);
 
 	}
@@ -2973,7 +2984,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.multiEntitlement) {
 				if(pool.productId.equals("awesomeos-x86_64")){
-					clienttasks.subscribe(null, null, pool.poolId, null, null,null, null, null, null, null, null);
+					clienttasks.subscribe(null, null, pool.poolId, null, null,"2", null, null, null, null, null);
 					poolId.add(pool.poolId);
 			}}
 		}
@@ -2982,7 +2993,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(installed.status, "Partially Subscribed");
 			}
 		}
-		clienttasks.subscribe(null, null, poolId, null, null, null,null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolId, null, null, "2",null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 				
 			if(installedProduct.productId.equals("100000000000002")){
@@ -3851,7 +3862,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Pattern p = Pattern.compile("[,\\s]+");
 		String[] result = p.split(subscribeResult);
 		for (int i = 0; i < result.length; i++) {
-			Assert.assertEquals(result[i], "-rw-------",
+			Assert.assertEquals(result[i], "-rw-------.",
 					"permission for etc/pki/entitlement/<serial>-key.pem is -rw-------");
 			i++;
 		}
