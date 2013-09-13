@@ -78,7 +78,7 @@
 
   <test name="GUI: Facts">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/> 
       <class name="rhsm.gui.tests.facts_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -88,7 +88,7 @@
         <include name="setup" />
         <include name="cleanup" />
       </run>
-    </groups>
+    </groups>  
   </test>
 
   <test name="GUI: Proxy">

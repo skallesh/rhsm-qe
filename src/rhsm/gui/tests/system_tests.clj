@@ -398,7 +398,7 @@
   check_ordered_contract_options
   "Checks if contracts in contract selection dialog are ordered based on host type"
   [_]
-  (tasks/register-with-creds)
+  (tasks/restart-app :reregister? true)
   (tasks/ui selecttab :all-available-subscriptions)
   (tasks/search)
   (let
@@ -409,7 +409,7 @@
                                     (catch Exception e))))
        row-sub-map (into {} (filter both? sub-map))
        cli-out (:stdout (run-command "subscription-manager facts --list | grep virt.is_guest"))
-       virt? (= true (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
+       virt? (= "true" (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
     (if-not (empty? row-sub-map)
       (do
         (doseq [map-entry row-sub-map]
