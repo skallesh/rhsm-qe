@@ -105,7 +105,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			 }
 		 
 		 }
-		 String result=clienttasks.status(null, null, null).getStdout();
+		 String result=clienttasks.status(null, null, null, null).getStdout();
 		 clienttasks.autoheal(null, true, null, null, null, null);
 		 System.out.println(result);
 		

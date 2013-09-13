@@ -62,12 +62,12 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		String overallStatusLabel = "Overall Status:";
 		clienttasks.unregister(null,null,null);
 		SSHCommandResult defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
-		SSHCommandResult statusResult = clienttasks.status(null, null, null);
+		SSHCommandResult statusResult = clienttasks.status(null, null, null, null);
 		Assert.assertTrue(statusResult.getStdout().contains(overallStatusLabel),"Expected status to report '"+overallStatusLabel+"'.");
 		Assert.assertTrue(defaultResult.toString().equals(statusResult.toString()), "When not registered, the default output running subscription-manager with no arguments should be identical to output from the status module.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
-		statusResult = clienttasks.status(null, null, null);
+		statusResult = clienttasks.status(null, null, null, null);
 		Assert.assertTrue(defaultResult.toString().split(overallStatusLabel)[0].equals(statusResult.toString().split(overallStatusLabel)[0]), "When registered, the default output running subscription-manager with no arguments should default to the status module.");
 	}
 	
@@ -78,7 +78,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	public void StatusWithoutBeingRegistered_Test() {
 		SSHCommandResult statusResult;
 		clienttasks.unregister(null,null,null);
-		statusResult = clienttasks.status(null, null, null);
+		statusResult = clienttasks.status(null, null, null, null);
 		
 		//	[root@jsefler-5 ~]# subscription-manager status
 		//	+-------------------------------------------+
@@ -101,7 +101,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult statusResult;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		statusResult = clienttasks.status(null, null, null);
+		statusResult = clienttasks.status(null, null, null, null);
 		
 		//	[root@jsefler-5 ~]# subscription-manager status
 		//	+-------------------------------------------+
@@ -138,7 +138,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="run subscription-manager status when registered with entitlements",
-			groups={"AcceptanceTests"/*, "blockedByBug-958827"*/,"StatusWhileRegisteredWithEntitlements_Test"},
+			groups={"AcceptanceTests", "blockedByBug-958827","StatusWhileRegisteredWithEntitlements_Test"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusWhileRegisteredWithEntitlements_Test() throws JSONException, Exception {
@@ -152,7 +152,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		String systemEntitlementsValid = clienttasks.getFactValue("system.entitlements_valid");
-		statusResult = clienttasks.status(null, null, null);
+		statusResult = clienttasks.status(null, null, null, null);
 		
 		//	[root@jsefler-5 ~]# subscription-manager status
 		//	+-------------------------------------------+
@@ -304,8 +304,68 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="run subscription-manager status ondate (tomorrow and a future date after one of today's entitlements expire)",
+			groups={"AcceptanceTests"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void StatusOnFutureDate_Test() throws JSONException, Exception {
+		
+		// register with autosubscribe to establish today's status
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		
+		// get today's status
+		SSHCommandResult statusResultToday = clienttasks.status(null,null,null, null);
+		
+		// get tomorrow's status
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Calendar tomorrow = new GregorianCalendar(); tomorrow.add(Calendar.HOUR, 24);
+		String onDateTomorrow = yyyy_MM_dd_DateFormat.format(tomorrow.getTime());
+		SSHCommandResult statusResultTommorow = clienttasks.status(onDateTomorrow,null,null, null);
+		
+		// assert tomorrow's status is identical to today's (assumes no change in coverage)
+		Assert.assertEquals(statusResultTommorow.toString(), statusResultToday.toString(),"Asserting the assumption that the status --ondate=tommorrw will be identical to the status ondate=today (default).");
+		
+		// now let's find the endDate of any current entitlement and assert that the status on the following day is different
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		if (consumedProductSubscriptions.isEmpty()) throw new SkipException("The remainder of this test cannot be executed because we expect this system to have at least one consumed entitlement.");
+		Calendar future = consumedProductSubscriptions.get(randomGenerator.nextInt(consumedProductSubscriptions.size())).endDate; future.add(Calendar.HOUR, 24);
+		String onDateFuture = yyyy_MM_dd_DateFormat.format(future.getTime());
+		SSHCommandResult statusResultFuture = clienttasks.status(onDateFuture,null,null, null);
+		
+		// assert future status is NOT identical to today's (assumes entitlements have expired)
+		Assert.assertTrue(!statusResultFuture.toString().equals(statusResultToday.toString()),"Asserting the assumption that the status --ondate=future (the day after an entitlement expires) will NOT be identical to the status ondate=today (default).");
+	}
 	
+	@Test(	description="run subscription-manager status ondate (yesterday)",
+			groups={},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void StatusOnPastDate_Test() throws JSONException, Exception {
+		// get yeterday's status
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Calendar yesterday = new GregorianCalendar(); yesterday.add(Calendar.HOUR, -24);
+		String onDateYesterday = yyyy_MM_dd_DateFormat.format(yesterday.getTime());
+		SSHCommandResult statusResultYesterday = clienttasks.status_(onDateYesterday,null,null, null);
+		
+		Assert.assertEquals(statusResultYesterday.getStdout().trim(), "Past dates are not allowed", "Stdout from call to status ondate yesterday.");
+		Assert.assertEquals(statusResultYesterday.getStderr().trim(), "", "Stderr from call to status ondate yesterday.");
+		Assert.assertEquals(statusResultYesterday.getExitCode(), Integer.valueOf(1), "ExitCode from call to status ondate yesterday.");
+	}
 	
+	@Test(	description="run subscription-manager status ondate (invalid)",
+			groups={},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void StatusOnInvalidDate_Test() throws JSONException, Exception {
+		
+		// call status with an invalid ondate
+		SSHCommandResult statusResultYesterday = clienttasks.status_("2000-13-01",null,null, null);	// lucky month 13
+		
+		Assert.assertEquals(statusResultYesterday.getStdout().trim(), "Date entered is invalid. Date should be in YYYY-MM-DD format (example: 2013-09-10 )", "Stdout from call to status ondate invalid.");
+		Assert.assertEquals(statusResultYesterday.getStderr().trim(), "", "Stderr from call to status ondate invalid.");
+		Assert.assertEquals(statusResultYesterday.getExitCode(), Integer.valueOf(1), "ExitCode from call to status ondate invalid.");
+	}
 	
 	// Candidates for an automated Test:
 	

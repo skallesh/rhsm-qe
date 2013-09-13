@@ -129,7 +129,8 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 
 		// assert the sshCommandResult here
 		// User testuser1 has already registered a personal consumer
-		Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), String.format("User %s has already registered a personal consumer", username),"stderr after attempt to register same person from a second different client:");
+		//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), String.format("User %s has already registered a personal consumer", username),"stderr after attempt to register same person from a second different client:");
+		Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), String.format("User '%s' has already registered a personal consumer", username),"stderr after attempt to register same person from a second different client:");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255),"exitCode after attempt to register same person from a second different client");
 
 	}

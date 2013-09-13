@@ -202,8 +202,10 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			if (bashCommand.startsWith("subscription-manager register ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager remove ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager service-level ")) bugIds.add("1001820");
+			if (bashCommand.startsWith("subscription-manager status ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager subscribe ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager unsubscribe ")) bugIds.add("1001820");
+
 			
 			// Bug 1004318 - rct [cat-cert cat-manifest dump-manifest stat-cert] does not bash complete its options
 			if (bashCommand.startsWith("rct ")) bugIds.add("1004318");
