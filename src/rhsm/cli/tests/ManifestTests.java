@@ -273,6 +273,43 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="execute rct cat-manifest against a non-zip file (e.g. the identity cert)",
+			groups={"blockedByBug-994344"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RCTCatManifestWithNonZipFile_Test() {
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
+		
+		// execute and assert rct cat-manifest against the consumer cert pem file
+		SSHCommandResult result = client.runCommandAndWait("rct cat-manifest "+clienttasks.consumerCertFile());
+		Assert.assertEquals(result.getStdout().trim(), "Manifest zip is invalid.", "Stdout from rct cat-manifest with a non-zip file.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from rct cat-manifest with a non-zip file.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "Exitcode from rct cat-manifest with a non-zip file.");
+	}
+	
+	
+	@Test(	description="execute rct dump-manifest against a non-zip file (e.g. the identity cert)",
+			groups={"blockedByBug-994344"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RCTDumpManifestWithNonZipFile_Test() {
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
+		
+		// execute and assert rct dump-manifest against the consumer cert pem file
+		SSHCommandResult result = client.runCommandAndWait("rct dump-manifest "+clienttasks.consumerCertFile());
+		Assert.assertEquals(result.getStdout().trim(), "Manifest zip is invalid.", "Stdout from rct dump-manifest with a non-zip file.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from rct dump-manifest with a non-zip file.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "Exitcode from rct dump-manifest with a non-zip file.");
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	// Candidates for an automated Test:
 	// see https://github.com/RedHatQE/rhsm-qe/issues
 	
