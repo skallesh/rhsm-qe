@@ -779,6 +779,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			} else {
 				String expectedStderrRegex = "No such consumer type: "+type;
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderrRegex = "No such unit type: "+type;
+				expectedStderrRegex = String.format("Unit type '%s' could not be found.",type);	// changed to this by bug 876758 comment 5; https://bugzilla.redhat.com/show_bug.cgi?id=876758#c5
 				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	Integer.valueOf(255),	null,	expectedStderrRegex}));			
 	
 			}
