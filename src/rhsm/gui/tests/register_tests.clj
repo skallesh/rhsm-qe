@@ -189,6 +189,7 @@ verify_password_tip
 (defn ^{DataProvider {:name "userowners"}}
   get_userowners [_ & {:keys [debug]
                        :or {debug false}}]
+  (assert-valid-testing-arch)
   (let [data (vec
               (conj
                (into
