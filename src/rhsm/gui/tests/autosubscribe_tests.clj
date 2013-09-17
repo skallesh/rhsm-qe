@@ -49,7 +49,6 @@
   ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
   ;; this bug crashes everything, so fail the BeforeClass if this is open
   (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
-
   (tasks/kill-app)
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
