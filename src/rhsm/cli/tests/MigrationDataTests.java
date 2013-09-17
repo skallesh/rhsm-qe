@@ -1578,6 +1578,50 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1009071");
 			}
 			
+			List<String> variousAvailableChildChannels = Arrays.asList(new String[]{
+			"rhel-x86_64-server-6-rhevm-3-beta",
+			"rhel-x86_64-rhev-mgmt-agent-6-beta-debuginfo",
+			"rhel-x86_64-rhev-mgmt-agent-6-beta",
+			"rhel-x86_64-server-6-cf-ce-1-beta-debuginfo",
+			"rhel-x86_64-server-6-cf-ce-1-beta",
+			"rhel-x86_64-server-6-cf-se-1-beta-debuginfo",
+			"rhel-x86_64-server-6-cf-se-1-beta",
+			"rhel-x86_64-server-6-ose-1.2-infrastructure-debuginfo",
+			"rhel-x86_64-server-6-ose-1.2-infrastructure",
+			"rhel-x86_64-server-6-ose-1.2-jbosseap-debuginfo",
+			"rhel-x86_64-server-6-ose-1.2-jbosseap",
+			"rhel-x86_64-server-6-ose-1.2-node-debuginfo",
+			"rhel-x86_64-server-6-ose-1.2-node",
+			"rhel-x86_64-server-6-ose-1.2-rhc-debuginfo",
+			"rhel-x86_64-server-6-ose-1.2-rhc",
+			"rhel-x86_64-server-6-osop-1-infrastructure-beta-debuginfo",
+			"rhel-x86_64-server-6-osop-1-infrastructure-beta",
+			"rhel-x86_64-server-6-osop-1-jbosseap-beta-debuginfo",
+			"rhel-x86_64-server-6-osop-1-jbosseap-beta",
+			"rhel-x86_64-server-6-osop-1-node-beta-debuginfo",
+			"rhel-x86_64-server-6-osop-1-node-beta",
+			"rhel-x86_64-server-6-osop-1-rhc-beta-debuginfo",
+			"rhel-x86_64-server-6-osop-1-rhc-beta",
+			"rhel-x86_64-server-6-ost-3-cts-debuginfo",
+			"rhel-x86_64-server-6-ost-3-cts",
+			"rhel-x86_64-server-6-ost-3-debuginfo",
+			"rhel-x86_64-server-6-ost-3",
+			"rhel-x86_64-server-6-ovs-supplemental-beta-debuginfo",
+			"rhel-x86_64-server-6-ovs-supplemental-beta",
+			"rhel-x86_64-server-6-ovs-supplemental-debuginfo",
+			"rhel-x86_64-server-6-ovs-supplemental",
+			"rhel-x86_64-server-6-rhevh-beta-debuginfo",
+			"rhel-x86_64-server-6-rhevh-beta",
+			"rhel-x86_64-server-6-rhevm-3-beta-debuginfo",
+			"rhel-x86_64-server-6-rhscl-1-beta-debuginfo",
+			"rhel-x86_64-server-6-rhscl-1-beta",
+			"rhel-x86_64-server-6-rhscl-1-debuginfo",
+			"rhel-x86_64-server-6-rhscl-1"});
+			if (variousAvailableChildChannels.contains(rhnAvailableChildChannel)) {
+				// Bug 1009109 - various available RHN Classic child channels that are not accounted for in product-certs.json
+				bugIds.add("1009109");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
