@@ -62,6 +62,7 @@
   "Asserts that each subscripton can be subscribed to sucessfully."
   [_ subscription]
   (try+
+   (assert-valid-testing-arch)
    (tasks/subscribe subscription)
    (catch [:type :item-not-available] _)
    (catch [:type :wrong-consumer-type]
@@ -88,6 +89,7 @@
   unsubscribe_each
   "Asserts that each subscripton can be unsubscribed from sucessfully."
   [_ subscription]
+  (assert-valid-testing-arch)
   (tasks/ui selecttab :my-subscriptions)
   (try+ (tasks/unsubscribe subscription)
         (sleep 4000)
@@ -381,6 +383,7 @@
   check_contracts_and_virt_type
   "Asserts that the contract number and virt type of each subscription is displayed properly"
   [_ subscription]
+  (assert-valid-testing-arch)
   (tasks/ui selecttab :all-available-subscriptions)
   (let [row (tasks/skip-dropdown :all-subscriptions-view subscription)
         overall-type (tasks/ui getcellvalue :all-subscriptions-view row 1)]
@@ -408,6 +411,7 @@
   check_unlimited_quantities
   "Tests that unlimted pools are displayed properly"
   [_ subscription contract]
+  (assert-valid-testing-arch)
   (let [row (tasks/skip-dropdown :all-subscriptions-view subscription)
         quantity (tasks/ui getcellvalue :all-subscriptions-view row 2)]
     (verify (= "Unlimited" quantity)))
