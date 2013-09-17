@@ -48,7 +48,6 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
-  (assert-valid-testing-arch)
   (tasks/register-with-creds)
   (reset! servicelist (ctasks/build-service-map :all? true))
   (reset! subs-contractlist (ctasks/build-subscription-product-map :all? true))
@@ -62,7 +61,6 @@
   "Asserts that each subscripton can be subscribed to sucessfully."
   [_ subscription]
   (try+
-   (assert-valid-testing-arch)
    (tasks/subscribe subscription)
    (catch [:type :item-not-available] _)
    (catch [:type :wrong-consumer-type]
@@ -89,7 +87,6 @@
   unsubscribe_each
   "Asserts that each subscripton can be unsubscribed from sucessfully."
   [_ subscription]
-  (assert-valid-testing-arch)
   (tasks/ui selecttab :my-subscriptions)
   (try+ (tasks/unsubscribe subscription)
         (sleep 4000)
@@ -383,7 +380,6 @@
   check_contracts_and_virt_type
   "Asserts that the contract number and virt type of each subscription is displayed properly"
   [_ subscription]
-  (assert-valid-testing-arch)
   (tasks/ui selecttab :all-available-subscriptions)
   (let [row (tasks/skip-dropdown :all-subscriptions-view subscription)
         overall-type (tasks/ui getcellvalue :all-subscriptions-view row 1)]
@@ -411,7 +407,6 @@
   check_unlimited_quantities
   "Tests that unlimted pools are displayed properly"
   [_ subscription contract]
-  (assert-valid-testing-arch)
   (let [row (tasks/skip-dropdown :all-subscriptions-view subscription)
         quantity (tasks/ui getcellvalue :all-subscriptions-view row 2)]
     (verify (= "Unlimited" quantity)))
@@ -573,6 +568,7 @@
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
+  (assert-valid-testing-arch)
   (tasks/restart-app)
   (register nil)
   (allsearch)
@@ -637,7 +633,8 @@
 
 (defn ^{DataProvider {:name "unlimited-pools"}}
   get_unlimited_pools [_ & {:keys [debug]
-                               :or {debug false}}]
+                            :or {debug false}}]
+  (assert-valid-testing-arch)
   (run-command "subscription-manager unregister")
   (tasks/restart-app)
   (tasks/register-with-creds)
