@@ -26,10 +26,10 @@
   "asserts whether the before suite and before class were executed"
   ([group]
      (if (or (assert-skip)
-             (get skip-groups group))
+             @(get skip-groups group))
        true false))
   ([]
-     (if (get skip-groups :suite) true false)))
+     (if @(get skip-groups :suite) true false)))
 
 (defn run-command
   "Runs a given command on the client using SSHCommandRunner()."
