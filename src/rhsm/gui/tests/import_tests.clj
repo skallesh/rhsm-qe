@@ -25,7 +25,7 @@
 (def importtests (atom nil))
 (def importedcert (atom nil))
 ; paths here have to be lowercase because of rhel5 ldtp's
-;  settextvalue's bullshit
+; settextvalue's bullshit
 (def tmpcertpath "/tmp/sm-boguscerts/")
 
 (defn ^String str-drop [n ^String s]
@@ -35,12 +35,16 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
-  (reset! importtests (ImportTests.))
-  (.restartCertFrequencyBeforeClass @importtests)
-  (.setupEntitlemenCertsForImportBeforeClass @importtests)
-  (run-command "subscripton-manager unregister")
-  (run-command (str "rm -rf " tmpcertpath))
-  (run-command (str "mkdir " tmpcertpath)))
+  (try
+    (reset! importtests (ImportTests.))
+    (.restartCertFrequencyBeforeClass @importtests)
+    (.setupEntitlemenCertsForImportBeforeClass @importtests)
+    (run-command "subscripton-manager unregister")
+    (run-command (str "rm -rf " tmpcertpath))
+    (run-command (str "mkdir " tmpcertpath))
+    (catch Exception e
+      (reset! (skip-groups :import) true)
+      (throw e))))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
