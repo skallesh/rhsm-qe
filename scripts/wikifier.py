@@ -1,4 +1,7 @@
 #!/usr/bin/python
+#Author: J.C. Molet
+#Example usage:
+#python wikifier.py --link="http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/RHSM-qe/job/subscription-manager-1.9-AcceptanceTests-OnRHEL6.5-OnAllDistros-UsingStage/23/PLATFORM=RedHatEnterpriseLinux6@Server@i386,label=rhsm/TestNG_Report/" --build="blah-1.342.3"
 
 import sys
 import re
