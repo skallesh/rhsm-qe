@@ -11,7 +11,7 @@ from optparse import OptionParser
 from pprint import pprint
 
 if __name__ == "__main__":
-    usage = "Usage: %prog [options]"
+    usage = 'Usage: %prog [--build="<build number>"] --link="<results url>"'
     parser = OptionParser(usage=usage)
     parser.add_option("-l", "--link", action = "store", type = "string", dest = "link",
                       help = "Link to the test report.")
