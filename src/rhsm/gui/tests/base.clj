@@ -8,8 +8,6 @@
             AfterSuite]
            org.testng.SkipException))
 
-(def before-suite (atom nil))
-
 (defn restart-vnc
   "function that restarts the vnc server"
   []
