@@ -46,18 +46,22 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
-  ;; this bug crashes everything, so fail the BeforeClass if this is open
-  (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
-  (tasks/kill-app)
-  (reset! complytests (ComplianceTests. ))
-  (.setupProductCertDirsBeforeClass @complytests)
-  (reset! common-sla (.toUpperCase
-                      (ComplianceTests/allProductsSubscribableByOneCommonServiceLevelValue)))
-  (reset! sla-list (map #(.toUpperCase %)
-                        (seq (ComplianceTests/allProductsSubscribableByMoreThanOneCommonServiceLevelValues))))
-  (run-command "subscription-manager unregister")
-  (tasks/start-app))
+  (try
+    ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
+    ;; this bug crashes everything, so fail the BeforeClass if this is open
+    (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
+    (tasks/kill-app)
+    (reset! complytests (ComplianceTests. ))
+    (.setupProductCertDirsBeforeClass @complytests)
+    (reset! common-sla (.toUpperCase
+                        (ComplianceTests/allProductsSubscribableByOneCommonServiceLevelValue)))
+    (reset! sla-list (map #(.toUpperCase %)
+                          (seq (ComplianceTests/allProductsSubscribableByMoreThanOneCommonServiceLevelValues))))
+    (run-command "subscription-manager unregister")
+    (tasks/start-app)
+    (catch Exception e
+      (reset! (skip-groups :autosubscribe) true)
+      (throw e))))
 
 (defn ^{AfterClass {:groups ["cleanup"]
                     :alwaysRun true}}
@@ -248,32 +252,33 @@
 (defn ^{DataProvider {:name "my-installed-software"}}
    get_installed_software [_ & {:keys [debug]
                                 :or {debug false}}]
-  (.configureProductCertDirForSomeProductsSubscribable @complytests)
-  (run-command "subscription-manager unregister")
-  (tasks/restart-app)
-  (tasks/register-with-creds)
-  (let [prods (into [] (map vector (tasks/get-table-elements
-                                    :installed-view
-                                    0)))
-        user (@config :username)
-        pass (@config :password)
-        key  (@config :owner-key)
-        ownername (if (= "" key)
-                    nil
-                    (ctasks/get-owner-display-name user pass key))]
-    (setup-product-map)
-    (run-command "subscription-manager attach --auto")
-
-    (comment
-      (tasks/unregister)
-        (tasks/register user
-                    pass
-                    :skip-autosubscribe false
-                    :owner ownername))
-
-    (if-not debug
-      (to-array-2d prods)
-      prods)))
+   (if-not (assert-skip :autosubscribe)
+     (do
+       (.configureProductCertDirForSomeProductsSubscribable @complytests)
+       (run-command "subscription-manager unregister")
+       (tasks/restart-app)
+       (tasks/register-with-creds)
+       (let [prods (into [] (map vector (tasks/get-table-elements
+                                         :installed-view
+                                         0)))
+             user (@config :username)
+             pass (@config :password)
+             key  (@config :owner-key)
+             ownername (if (= "" key)
+                         nil
+                         (ctasks/get-owner-display-name user pass key))]
+         (setup-product-map)
+         (run-command "subscription-manager attach --auto")
+         
+         (comment
+           (tasks/unregister)
+           (tasks/register user
+                           pass
+                           :skip-autosubscribe false
+                           :owner ownername))
+         (if-not debug
+           (to-array-2d prods)
+           prods)))))
 
 (gen-class-testng)
 
