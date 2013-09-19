@@ -26,7 +26,10 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (try+ (tasks/unregister)
-        (catch [:type :not-registered] _)))
+        (catch [:type :not-registered] _)
+        (catch Exception e
+          (reset! (skip-groups :proxy) true)
+          (throw e))))
 
 (defn register []
   (try+ (tasks/register (@config :username) (@config :password))
