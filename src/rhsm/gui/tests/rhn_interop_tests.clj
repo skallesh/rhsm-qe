@@ -20,22 +20,23 @@
 
 (defn kill-app []
   (run-command "killall -9 subscription-manager-gui")
-  (tasks/ui waittillwindownotexist :main-window 30)
-)
+  (tasks/ui waittillwindownotexist :main-window 30))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (if (tasks/ui exists? :main-window "*")
-    (kill-app))
-  (run-command (str "touch " systemid))
-)
+  (try
+    (if (tasks/ui exists? :main-window "*")
+      (kill-app))
+    (run-command (str "touch " systemid))
+    (catch Exception e
+      (reset! (skip-groups :interop) true)
+      (throw e))))
 
 (defn ^{AfterClass {:groups ["setup"]}}
   cleanup [_]
     (if-not (tasks/ui exists? :main-window "*")
       (tasks/start-app))
-    (run-command (str "rm -f " systemid))
-)
+    (run-command (str "rm -f " systemid)))
 
 (defn ^{Test {:groups ["interop"]}}
   check_warning
@@ -45,8 +46,7 @@
   (tasks/ui waittillwindowexist :warning-dialog 30)
   (verify (systemid-exists?))
   (verify (tasks/ui exists? :warning-dialog "*"))
-  (kill-app)
-)
+  (kill-app))
 
 (defn ^{Test {:groups ["interop" "blockedByBug-667991"]
               :dependsOnMethods ["check_warning"] }}
@@ -58,8 +58,7 @@
   (tasks/ui click :warn-ok)
   (verify (tasks/ui waittillwindownotexist :warning-dialog 30))
   (verify (tasks/ui exists? :main-window "*"))
-  (kill-app)
-)
+  (kill-app))
 
 (defn ^{Test {:groups ["interop"  "blockedByBug-667991"]
               :dependsOnMethods ["check_warning"]}}
@@ -70,8 +69,7 @@
   (tasks/ui waittillwindowexist :warning-dialog 30)
   (tasks/ui click :warn-cancel)
   (verify (bool (tasks/ui waittillwindownotexist :main-window 30)))
-  (kill-app)
-)
+  (kill-app))
 
 (defn ^{Test {:groups ["interop"  "blockedByBug-667991"]
               :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}}
@@ -81,7 +79,6 @@
   (run-command (str "rm -f " systemid))
   (verify (not (systemid-exists?)))
   (tasks/start-app)
-  (verify (not (tasks/ui exists? :warning-dialog "*")))
-)
+  (verify (not (tasks/ui exists? :warning-dialog "*"))))
 
 (gen-class-testng)
