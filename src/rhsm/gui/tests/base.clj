@@ -8,6 +8,8 @@
             AfterSuite]
            org.testng.SkipException))
 
+(def before-suite (atom nil))
+
 (defn restart-vnc
   "function that restarts the vnc server"
   []
@@ -38,12 +40,16 @@
 
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
-  (config/init)
-  (assert-valid-testing-arch)
-  (update-ldtpd (:ldtpd-source-url @config/config))
-  (restart-vnc)
-  (connect)
-  (start-app))
+  (try
+    (config/init)
+    (assert-valid-testing-arch)
+    (update-ldtpd (:ldtpd-source-url @config/config))
+    (restart-vnc)
+    (connect)
+    (start-app)
+    (catch Exception e
+      (reset! (skip-groups :suite) true)
+      (throw e))))
 
 (defn ^{AfterSuite {:groups ["setup"]}}
   killGUI [_]
