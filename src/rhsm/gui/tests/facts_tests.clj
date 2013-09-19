@@ -56,10 +56,14 @@
 
 (defn ^{BeforeClass {:groups ["facts"]}}
   register [_]
-  (tasks/register-with-creds)
-  (reset! gui-facts (tasks/get-all-facts))
-  (reset! cli-facts (get-cli-facts))
-  (reset! installed-certs (map-installed-certs)))
+  (try
+    (tasks/register-with-creds)
+    (reset! gui-facts (tasks/get-all-facts))
+    (reset! cli-facts (get-cli-facts))
+    (reset! installed-certs (map-installed-certs))
+    (catch Exception e
+      (reset! (skip-groups :facts) true)
+      (throw e))))
 
 (defn ^{Test {:groups ["facts"]
               :dataProvider "guifacts"}}
@@ -281,25 +285,31 @@
 (defn ^{DataProvider {:name "guifacts"}}
   get_facts [_ & {:keys [debug]
                   :or {debug false}}]
-  (if-not debug
-    (to-array-2d (vec @gui-facts))
-    (vec @gui-facts)))
+  (if-not (assert-skip :facts)
+    (do
+      (if-not debug
+        (to-array-2d (vec @gui-facts))
+        (vec @gui-facts)))))
 
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
-  (let [prods (tasks/get-table-elements :installed-view 0)
-        indexes (range 0 (tasks/ui getrowcount :installed-view))
-        prodlist (map (fn [item index] [item index]) prods indexes)]
-    (if-not debug
-      (to-array-2d (vec prodlist))
-      prodlist)))
+  (if-not (assert-skip :facts)
+    (do
+      (let [prods (tasks/get-table-elements :installed-view 0)
+            indexes (range 0 (tasks/ui getrowcount :installed-view))
+            prodlist (map (fn [item index] [item index]) prods indexes)]
+        (if-not debug
+          (to-array-2d (vec prodlist))
+          prodlist)))))
 
 (defn printfact []
-  (pprint (sort @gui-facts))
-  (println (str "cli-facts: " (count @cli-facts)))
-  (println (str "gui-facts: " (count @gui-facts)))
-  (println (str "fact: " (@cli-facts "virt.is_guest")))
-  (println (str "fact: " (@gui-facts "virt.is_guest"))))
+  (if-not (assert-skip :facts)
+    (do
+      (pprint (sort @gui-facts))
+      (println (str "cli-facts: " (count @cli-facts)))
+      (println (str "gui-facts: " (count @gui-facts)))
+      (println (str "fact: " (@cli-facts "virt.is_guest")))
+      (println (str "fact: " (@gui-facts "virt.is_guest"))))))
 
 (gen-class-testng)
