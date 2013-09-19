@@ -25,7 +25,10 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (try+ (tasks/unregister)
-        (catch [:type :not-registered] _)))
+        (catch [:type :not-registered] _)
+        (catch Exception e
+          (reset! (skip-groups :register) true)
+          (throw e))))
 
 (defn ^{Test {:groups ["registration"
                        "acceptance"
@@ -189,23 +192,24 @@ verify_password_tip
 (defn ^{DataProvider {:name "userowners"}}
   get_userowners [_ & {:keys [debug]
                        :or {debug false}}]
-  (assert-valid-testing-arch)
-  (let [data (vec
-              (conj
-               (into
-                (if (and (@config :username1) (@config :password1))
-                  (get-userlists (@config :username1) (@config :password1)))
-                (if (and (@config :username) (@config :password))
-                  (get-userlists (@config :username) (@config :password))))
-               ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
-               (if (and (@config :username) (@config :password))
-                 [(str (@config :username) "   ") (@config :password) nil])
-               ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
-               (if (and (@config :username) (@config :password))
-                 [(str "   " (@config :username)) (@config :password) nil])))]
-    (if-not debug
-      (to-array-2d data)
-      data)))
+  (if-not (assert-skip :register)
+    (do
+      (let [data (vec
+                  (conj
+                   (into
+                    (if (and (@config :username1) (@config :password1))
+                      (get-userlists (@config :username1) (@config :password1)))
+                    (if (and (@config :username) (@config :password))
+                      (get-userlists (@config :username) (@config :password))))
+                                        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+                   (if (and (@config :username) (@config :password))
+                     [(str (@config :username) "   ") (@config :password) nil])
+                                        ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+                   (if (and (@config :username) (@config :password))
+                     [(str "   " (@config :username)) (@config :password) nil])))]
+        (if-not debug
+          (to-array-2d data)
+          data)))))
 
 (gen-class-testng)
 
@@ -218,5 +222,4 @@ verify_password_tip
    ^{Test {:groups ["blockedByBug-719378"]}}
    [(str (@config :username) "   ") (@config :password) nil]
    ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str "   " (@config :username)) (@config :password) nil]])
-)
+   [(str "   " (@config :username)) (@config :password) nil]]))
