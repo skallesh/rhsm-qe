@@ -48,10 +48,14 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
-  (tasks/register-with-creds)
-  (reset! servicelist (ctasks/build-service-map :all? true))
-  (reset! subs-contractlist (ctasks/build-subscription-product-map :all? true))
-  (build-contract-map))
+  (try
+    (tasks/register-with-creds)
+    (reset! servicelist (ctasks/build-service-map :all? true))
+    (reset! subs-contractlist (ctasks/build-subscription-product-map :all? true))
+    (build-contract-map)
+    (catch Exception e
+      (reset! (skip-groups :subscribe) true)
+      (throw e))))
 
 (defn ^{Test {:groups ["subscribe"
                        "acceptance"]
@@ -533,120 +537,130 @@
 (defn ^{DataProvider {:name "multi-entitle"}}
   get_multi_entitle_subscriptions [_ & {:keys [debug]
                                         :or {debug false}}]
-  (tasks/restart-app)
-  (register nil)
-  (tasks/search)
-  (let [subs (atom [])
-        subscriptions (tasks/get-table-elements
-                       :all-subscriptions-view
-                       0
-                       :skip-dropdowns? true)]
-    (doseq [s subscriptions]
-      (try+
-        (tasks/open-contract-selection s)
-        (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
-          (if (>= row 0)
-            (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
-                  pool (ctasks/get-pool-id (@config :username)
-                                           (@config :password)
-                                           (@config :owner-key)
-                                           s
-                                           contract)]
-              (if (ctasks/multi-entitlement? (@config :username) (@config :password) pool)
-                (swap! subs conj [s contract]))
-              (recur (dec row)))))
-        (tasks/ui click :cancel-contract-selection)
-        (catch [:type :subscription-not-available] _)
-        (catch [:type :item-not-available] _)
-        (catch [:type :contract-selection-not-available] _)
-        (catch [:type :wrong-consumer-type]
-            {:keys [log-warning]} (log-warning))))
-    (if-not debug
-      (to-array-2d @subs)
-      @subs)))
+  (if-not (assert-skip :subscribe)
+    (do
+      (tasks/restart-app)
+      (register nil)
+      (tasks/search)
+      (let [subs (atom [])
+            subscriptions (tasks/get-table-elements
+                           :all-subscriptions-view
+                           0
+                           :skip-dropdowns? true)]
+        (doseq [s subscriptions]
+          (try+
+           (tasks/open-contract-selection s)
+           (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
+             (if (>= row 0)
+               (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
+                     pool (ctasks/get-pool-id (@config :username)
+                                              (@config :password)
+                                              (@config :owner-key)
+                                              s
+                                              contract)]
+                 (if (ctasks/multi-entitlement? (@config :username) (@config :password) pool)
+                   (swap! subs conj [s contract]))
+                 (recur (dec row)))))
+           (tasks/ui click :cancel-contract-selection)
+           (catch [:type :subscription-not-available] _)
+           (catch [:type :item-not-available] _)
+           (catch [:type :contract-selection-not-available] _)
+           (catch [:type :wrong-consumer-type]
+               {:keys [log-warning]} (log-warning))))
+        (if-not debug
+          (to-array-2d @subs)
+          @subs)))))
 
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
-  (assert-valid-testing-arch)
-  (tasks/restart-app)
-  (register nil)
-  (allsearch)
-  (let [subs (into [] (map vector (tasks/get-table-elements
-                                   :all-subscriptions-view
-                                   0
-                                   :skip-dropdowns? true)))]
-    (if-not debug
-      (to-array-2d subs)
-      subs)))
+  (if-not (assert-skip :subscribe)
+    (do
+      (tasks/restart-app)
+      (register nil)
+      (allsearch)
+      (let [subs (into [] (map vector (tasks/get-table-elements
+                                       :all-subscriptions-view
+                                       0
+                                       :skip-dropdowns? true)))]
+        (if-not debug
+          (to-array-2d subs)
+          subs)))))
 
 (defn ^{DataProvider {:name "subscribed"}}
   get_subscribed [_ & {:keys [debug]
                        :or {debug false}}]
-  (tasks/restart-app)
-  (register nil)
-  (tasks/ui selecttab :my-subscriptions)
-  (tasks/subscribe_all)
-  (tasks/ui selecttab :my-subscriptions)
-  (let [subs (into [] (map vector (tasks/get-table-elements
-                                   :my-subscriptions-view
-                                   0
-                                   :skip-dropdowns? true)))]
-    (if-not debug
-      (to-array-2d subs)
-      subs)))
+  (if-not (assert-skip :subscribe)
+    (do                     
+      (tasks/restart-app)
+      (register nil)
+      (tasks/ui selecttab :my-subscriptions)
+      (tasks/subscribe_all)
+      (tasks/ui selecttab :my-subscriptions)
+      (let [subs (into [] (map vector (tasks/get-table-elements
+                                       :my-subscriptions-view
+                                       0
+                                       :skip-dropdowns? true)))]
+        (if-not debug
+          (to-array-2d subs)
+          subs)))))
 
 (defn ^{DataProvider {:name "multi-contract"}}
   get_multi_contract_subscriptions [_ & {:keys [debug]
                                          :or {debug false}}]
-  (tasks/restart-app)
-  (register nil)
-  (tasks/search :do-not-overlap? false)
-  (let [subs (atom [])
-        allsubs (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? true)]
-    (doseq [s allsubs]
-      (try+
-       (tasks/open-contract-selection s)
-       (tasks/ui click :cancel-contract-selection)
-       (swap! subs conj [s])
-       (catch [:type :subscription-not-available] _)
-       (catch [:type :contract-selection-not-available] _
-           (tasks/unsubscribe s))))
-    (if-not debug
-      (to-array-2d @subs)
-      @subs)))
+  (if-not (assert-skip :subscribe)
+    (do
+      (tasks/restart-app)
+      (register nil)
+      (tasks/search :do-not-overlap? false)
+      (let [subs (atom [])
+            allsubs (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? true)]
+        (doseq [s allsubs]
+          (try+
+           (tasks/open-contract-selection s)
+           (tasks/ui click :cancel-contract-selection)
+           (swap! subs conj [s])
+           (catch [:type :subscription-not-available] _)
+           (catch [:type :contract-selection-not-available] _
+             (tasks/unsubscribe s))))
+        (if-not debug
+          (to-array-2d @subs)
+          @subs)))))
 
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
-  (run-command "subscription-manager unregister")
-  (tasks/restart-app)
-  (tasks/register-with-creds)
-  (let [prods (into [] (map vector (tasks/get-table-elements
-                                    :installed-view
-                                    0)))]
-    (build-subscription-map)
-    (tasks/search)
-    (if-not debug
-      (to-array-2d prods)
-      prods)))
+  (if-not (assert-skip :subscribe)
+    (do
+      (run-command "subscription-manager unregister")
+      (tasks/restart-app)
+      (tasks/register-with-creds)
+      (let [prods (into [] (map vector (tasks/get-table-elements
+                                        :installed-view
+                                        0)))]
+        (build-subscription-map)
+        (tasks/search)
+        (if-not debug
+          (to-array-2d prods)
+          prods)))))
 
 (defn ^{DataProvider {:name "unlimited-pools"}}
   get_unlimited_pools [_ & {:keys [debug]
                             :or {debug false}}]
-  (assert-valid-testing-arch)
-  (run-command "subscription-manager unregister")
-  (tasks/restart-app)
-  (tasks/register-with-creds)
-  (let [all (ctasks/list-available true)
-        unlimited? (fn [p] (< (:quantity p) 0))
-        all-unlimited (filter unlimited? all)
-        itemize (fn [p] (vector (:productName p) (:contractNumber p)))
-        pools (into [] (map itemize all-unlimited))]
-    (allsearch)
-    (if-not debug
-      (to-array-2d pools)
-      pools)))
+  (if-not (assert-skip :subscribe)
+    (do
+      (run-command "subscription-manager unregister")
+      (tasks/restart-app)
+      (tasks/register-with-creds)
+      (let [all (ctasks/list-available true)
+            unlimited? (fn [p] (< (:quantity p) 0))
+            all-unlimited (filter unlimited? all)
+            itemize (fn [p] (vector (:productName p) (:contractNumber p)))
+            pools (into [] (map itemize all-unlimited))]
+        (allsearch)
+        (if-not debug
+          (to-array-2d pools)
+          pools)))))
 
   ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=683550
   ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=691784
