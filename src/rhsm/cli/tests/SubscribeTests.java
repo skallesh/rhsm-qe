@@ -383,21 +383,22 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (String poolId : poolIds) {
 			String subscribeResultMessage;
 			if (poolId.equals(badPoolId1) || poolId.equals(badPoolId2)) {
-				//subscribeResultMessage = "No such entitlement pool: "+poolId;
-				subscribeResultMessage = "Subscription pool "+poolId+" does not exist.";
+				subscribeResultMessage = String.format("No such entitlement pool: %s",poolId);
+				subscribeResultMessage = String.format("Subscription pool %s does not exist.",poolId);
+				subscribeResultMessage = String.format("Pool with id %s could not be found.",poolId);
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The subscribe result for an invalid pool '"+poolId+"' contains: "+subscribeResultMessage);
 			}
 			else if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,poolId)) {
-//				subscribeResultMessage = String.format("Successfully consumed a subscription from the pool with id %s.",poolId);	// Bug 812410 - Subscription-manager subscribe CLI feedback 
-//				subscribeResultMessage = String.format("Successfully consumed a subscription for: %s",poolNames.get(poolId));	// changed by Bug 874804 Subscribe -> Attach
+				subscribeResultMessage = String.format("Successfully consumed a subscription from the pool with id %s.",poolId);	// Bug 812410 - Subscription-manager subscribe CLI feedback 
+				subscribeResultMessage = String.format("Successfully consumed a subscription for: %s",poolNames.get(poolId));	// changed by Bug 874804 Subscribe -> Attach
 				subscribeResultMessage = String.format("Successfully attached a subscription for: %s",poolNames.get(poolId));
 				subscribeResultMessage += "\n"+subscribeResultMessage;
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for a multi-entitlement pool '"+poolId+"' contains: "+subscribeResultMessage);
 			} else if (false) {
 				// TODO case when there are no entitlements remaining for the duplicate subscribe
 			} else {
-//				subscribeResultMessage = String.format("Successfully consumed a subscription from the pool with id %s.",poolId);	// Bug 812410 - Subscription-manager subscribe CLI feedback 
-//				subscribeResultMessage = String.format("Successfully consumed a subscription for: %s",poolNames.get(poolId));	// changed by Bug 874804 Subscribe -> Attach
+				subscribeResultMessage = String.format("Successfully consumed a subscription from the pool with id %s.",poolId);	// Bug 812410 - Subscription-manager subscribe CLI feedback 
+				subscribeResultMessage = String.format("Successfully consumed a subscription for: %s",poolNames.get(poolId));	// changed by Bug 874804 Subscribe -> Attach
 				subscribeResultMessage = String.format("Successfully attached a subscription for: %s",poolNames.get(poolId));
 				String subscribeResultSubMessage = String.format("This consumer is already subscribed to the product matching pool with id '%s'.",poolId);
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) subscribeResultSubMessage = String.format("This unit has already had the subscription matching pool ID '%s' attached.",poolId);
