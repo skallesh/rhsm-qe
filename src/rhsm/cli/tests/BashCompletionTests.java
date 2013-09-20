@@ -155,6 +155,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			for (String expectedHelpOption: expectedHelpOptions) {
 				
 				// skip all Usage help tests
+				if (expectedHelpOption.equals("Attach a specified subscription to the registered system")) continue;	// from the attach module usage test
+				if (expectedHelpOption.equals("Remove all or specific subscriptions from this system")) continue;		// from the remove module usage test
+				if (expectedHelpOption.startsWith("Deprecated, see")) continue;			// from the subscribe and unsubscribe module usage test
 				if (expectedHelpOption.toUpperCase().startsWith("USAGE:")) continue;	// Usage: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]
 				if (expectedHelpOption.startsWith(bashCommand)) continue;				// Usage:
 																						//   rhsm-icon [OPTION...]
