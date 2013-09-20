@@ -69,7 +69,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="assert the exit code from service rhsmcertd status when running and stopped",
-			groups={"AcceptanceTests","blockedByBug-913118","blockedByBug-912707"})
+			groups={"AcceptanceTests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113"})
 	protected void verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
 		String marker = System.currentTimeMillis()+" Testing verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test...";
