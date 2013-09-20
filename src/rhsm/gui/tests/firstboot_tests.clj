@@ -56,13 +56,17 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
-  (if (= "5.7" (:version (get-release :true)))
-    (throw (SkipException. (str "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))))
-  (verify (not (.isBugOpen (BzChecker/getInstance) "922806")))
-  ;; new rhsm and classic have to be totally clean for this to run
-  (run-command "subscription-manager clean")
-  (let [sysidpath "/etc/sysconfig/rhn/systemid"]
-    (run-command (str "[ -f " sysidpath " ] && rm " sysidpath ))))
+  (try
+    (if (= "5.7" (:version (get-release :true)))
+      (throw (SkipException. (str "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))))
+    (verify (not (.isBugOpen (BzChecker/getInstance) "922806")))
+    ;; new rhsm and classic have to be totally clean for this to run
+    (run-command "subscription-manager clean")
+    (let [sysidpath "/etc/sysconfig/rhn/systemid"]
+      (run-command (str "[ -f " sysidpath " ] && rm " sysidpath )))
+    (catch Exception e
+      (reset! (skip-groups :firstboot) true)
+      (throw e))))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
@@ -252,10 +256,12 @@
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
-   ["sdf" "sdf" :invalid-credentials]
-   ["" "" :no-username]
-   ["" "password" :no-username]
-   ["sdf" "" :no-password]])
+   (if-not (assert-skip :firstboot)
+     (do
+       ["sdf" "sdf" :invalid-credentials]
+       ["" "" :no-username]
+       ["" "password" :no-username]
+       ["sdf" "" :no-password]))])
 
 ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=700601
 

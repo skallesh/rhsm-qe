@@ -31,7 +31,11 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
-  (tasks/kill-app))
+  (try
+    (tasks/kill-app)
+    (catch Exception e
+      (reset! (skip-groups :system) true)
+      (throw e))))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}

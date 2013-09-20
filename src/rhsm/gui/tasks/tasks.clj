@@ -396,10 +396,7 @@
       (let [repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))]
         (ui generatekeyevent (str
                               (repeat-cmd 3 "<right> ")
-                              "<space>"))
-        (ui generatekeyevent (str
-                              (repeat-cmd 1 "<up> ")
-                              "<enter>")))))
+                              "<space> " "<up> " "<enter>")))))
   (ui click :attach)
   (checkforerror)
   (if-not (bool (ui waittillwindowexist :contract-selection-dialog 5))
@@ -449,10 +446,7 @@
          (let [repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))]
            (ui generatekeyevent (str
                                  (repeat-cmd 3 "<right> ")
-                                 "<space>"))
-           (ui generatekeyevent (str
-                                 (repeat-cmd 1 "<up> ")
-                                 "<enter>")))))
+                                 "<space> " "<up> " "<enter>")))))
      (ui click :attach)
      (checkforerror)
      (ui waittillwindowexist :contract-selection-dialog 5)

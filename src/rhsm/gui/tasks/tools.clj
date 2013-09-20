@@ -11,6 +11,24 @@
                org.testng.SkipException
                [com.redhat.qe.auto.bugzilla BzChecker]))
 
+(def skip-groups {:suite (atom false)
+                  :autosubscribe (atom false)
+                  :facts (atom false)
+                  :firstboot (atom false)
+                  :import (atom false)
+                  :interop (atom false)
+                  :proxy (atom false)
+                  :register (atom false)
+                  :subscribe (atom false)
+                  :system (atom false)})
+
+(defn assert-skip
+  "asserts whether the before suite and before class were executed"
+  ([group]
+     (or (assert-skip) @(get skip-groups group)))
+  ([]
+     @(get skip-groups :suite)))
+
 (defn run-command
   "Runs a given command on the client using SSHCommandRunner()."
   [command & {:keys [runner]
