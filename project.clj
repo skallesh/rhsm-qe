@@ -11,6 +11,7 @@
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
                  [com.redhat.qe/bz-checker "1.0.3-SNAPSHOT"]
                  [com.redhat.qe/json-java "20110202"]
+                 [com.redhat.qe/jul.test.records "1.0.1"]
                  [com.redhat.qe/ssh-tools "1.0.1-SNAPSHOT"]
                  [com.redhat.qe/testng-listeners "1.0.0"]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
