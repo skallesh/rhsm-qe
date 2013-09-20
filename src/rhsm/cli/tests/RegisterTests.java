@@ -640,6 +640,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getRegisterWithName_TestDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
 		
 		String invalidNameStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";	// bugzilla 672233
 		       invalidNameStderr = "System name cannot contain most special characters.";	// bugzilla 677405
@@ -694,7 +695,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		name = "s p a c e s";			ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
 
 		// special case (pound sign at the beginning is a limitation in the x509 certificates)
-		name = "#poundSign";				ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(255),	null,	"System name cannot begin with # character"}));
+		name = "#poundSign";			ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(255),	null,	"System name cannot begin with # character"}));
 
 		//	
 		// http://www.ascii.cl/htmlcodes.htm
