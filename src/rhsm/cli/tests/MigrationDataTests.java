@@ -728,6 +728,11 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.matches("rhel-.+-client-dts-6(-.*|$)")) {	// rhel-x86_64-client-dts-6-beta-debuginfo rhel-x86_64-client-dts-6-beta rhel-x86_64-client-dts-6-debuginfo rhel-x86_64-client-dts-6 rhel-i386-client-dts-6-beta rhel-i386-client-dts-6-beta-debuginfo rhel-i386-client-dts-6-debuginfo rhel-i386-client-dts-6
+			log.warning("(degregor 9/17/2013) rhel-x86_64-client-dts-6* is no longer used.  please ignore those.  I'll make a note to remove them from stage.");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
 		if (classicRhnChannel.matches("rhel-.+-client-multimedia-5(-.*|$)")) {	// rhel-i386-client-multimedia-5 rhel-i386-client-multimedia-5-beta
 			log.warning("(degregor 5/31/2013) I don't think we ever added these to CDN.  Please ignore them for now.");
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
@@ -1563,6 +1568,58 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("969156");
 				// Bug 969160 - rhel-*-client-dts-5* channels are not mapped in channel-cert-mapping.txt
 				bugIds.add("969160");
+			}
+			if (rhnAvailableChildChannel.startsWith("rhel-i386-server-sjis-6-beta")) {	// rhel-i386-server-sjis-6-beta rhel-i386-server-sjis-6-beta-debuginfo
+				// Bug 1009011 - some "Red Hat S-JIS Support (for RHEL Server)" channels are not mapped in product-certs.json
+				bugIds.add("1009011");
+			}
+			if (rhnAvailableChildChannel.startsWith("rhel-x86_64-client-6-rhscl-1")) {	// rhel-x86_64-client-6-rhscl-1 rhel-x86_64-client-6-rhscl-1-debuginfo rhel-x86_64-client-6-rhscl-1-beta rhel-x86_64-client-6-rhscl-1-beta-debuginfo
+				// Bug 1009071 - the RHN Classic rhel-x86_64-client-6-rhscl-1 channels are not accounted for in product-certs.json
+				bugIds.add("1009071");
+			}
+			
+			List<String> variousAvailableChildChannels = Arrays.asList(new String[]{
+			"rhel-x86_64-server-6-rhevm-3-beta",
+			"rhel-x86_64-rhev-mgmt-agent-6-beta-debuginfo",
+			"rhel-x86_64-rhev-mgmt-agent-6-beta",
+			"rhel-x86_64-server-6-cf-ce-1-beta-debuginfo",
+			"rhel-x86_64-server-6-cf-ce-1-beta",
+			"rhel-x86_64-server-6-cf-se-1-beta-debuginfo",
+			"rhel-x86_64-server-6-cf-se-1-beta",
+			"rhel-x86_64-server-6-ose-1.2-infrastructure-debuginfo",
+			"rhel-x86_64-server-6-ose-1.2-infrastructure",
+			"rhel-x86_64-server-6-ose-1.2-jbosseap-debuginfo",
+			"rhel-x86_64-server-6-ose-1.2-jbosseap",
+			"rhel-x86_64-server-6-ose-1.2-node-debuginfo",
+			"rhel-x86_64-server-6-ose-1.2-node",
+			"rhel-x86_64-server-6-ose-1.2-rhc-debuginfo",
+			"rhel-x86_64-server-6-ose-1.2-rhc",
+			"rhel-x86_64-server-6-osop-1-infrastructure-beta-debuginfo",
+			"rhel-x86_64-server-6-osop-1-infrastructure-beta",
+			"rhel-x86_64-server-6-osop-1-jbosseap-beta-debuginfo",
+			"rhel-x86_64-server-6-osop-1-jbosseap-beta",
+			"rhel-x86_64-server-6-osop-1-node-beta-debuginfo",
+			"rhel-x86_64-server-6-osop-1-node-beta",
+			"rhel-x86_64-server-6-osop-1-rhc-beta-debuginfo",
+			"rhel-x86_64-server-6-osop-1-rhc-beta",
+			"rhel-x86_64-server-6-ost-3-cts-debuginfo",
+			"rhel-x86_64-server-6-ost-3-cts",
+			"rhel-x86_64-server-6-ost-3-debuginfo",
+			"rhel-x86_64-server-6-ost-3",
+			"rhel-x86_64-server-6-ovs-supplemental-beta-debuginfo",
+			"rhel-x86_64-server-6-ovs-supplemental-beta",
+			"rhel-x86_64-server-6-ovs-supplemental-debuginfo",
+			"rhel-x86_64-server-6-ovs-supplemental",
+			"rhel-x86_64-server-6-rhevh-beta-debuginfo",
+			"rhel-x86_64-server-6-rhevh-beta",
+			"rhel-x86_64-server-6-rhevm-3-beta-debuginfo",
+			"rhel-x86_64-server-6-rhscl-1-beta-debuginfo",
+			"rhel-x86_64-server-6-rhscl-1-beta",
+			"rhel-x86_64-server-6-rhscl-1-debuginfo",
+			"rhel-x86_64-server-6-rhscl-1"});
+			if (variousAvailableChildChannels.contains(rhnAvailableChildChannel)) {
+				// Bug 1009109 - various available RHN Classic child channels that are not accounted for in product-certs.json
+				bugIds.add("1009109");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));

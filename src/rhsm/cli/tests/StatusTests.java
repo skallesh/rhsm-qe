@@ -362,7 +362,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		// call status with an invalid ondate
 		SSHCommandResult statusResultYesterday = clienttasks.status_("2000-13-01",null,null, null);	// lucky month 13
 		
-		Assert.assertEquals(statusResultYesterday.getStdout().trim(), "Date entered is invalid. Date should be in YYYY-MM-DD format (example: 2013-09-10 )", "Stdout from call to status ondate invalid.");
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		String today = yyyy_MM_dd_DateFormat.format(Calendar.getInstance().getTime());
+		
+		Assert.assertEquals(statusResultYesterday.getStdout().trim(), String.format("Date entered is invalid. Date should be in YYYY-MM-DD format (example: %s )",today), "Stdout from call to status ondate invalid.");
 		Assert.assertEquals(statusResultYesterday.getStderr().trim(), "", "Stderr from call to status ondate invalid.");
 		Assert.assertEquals(statusResultYesterday.getExitCode(), Integer.valueOf(1), "ExitCode from call to status ondate invalid.");
 	}

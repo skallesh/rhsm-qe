@@ -390,7 +390,16 @@
   "Opens the contract selection dialog for a given subscription."
   [s]
   (ui selecttab :all-available-subscriptions)
-  (skip-dropdown :all-subscriptions-view s)
+  (if (= "0 *" (ui getcellvalue :all-subscriptions-view
+                   (skip-dropdown :all-subscriptions-view s) 3))
+    (do
+      (let [repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))]
+        (ui generatekeyevent (str
+                              (repeat-cmd 3 "<right> ")
+                              "<space>"))
+        (ui generatekeyevent (str
+                              (repeat-cmd 1 "<up> ")
+                              "<enter>")))))
   (ui click :attach)
   (checkforerror)
   (if-not (bool (ui waittillwindowexist :contract-selection-dialog 5))
@@ -434,7 +443,16 @@
      (subscribe s c nil))
   ([s] ;;simple subscribe that picks the first contract and default quantity
      (ui selecttab :all-available-subscriptions)
-     (skip-dropdown :all-subscriptions-view s)
+     (if (= "0 *" (ui getcellvalue :all-subscriptions-view
+                      (skip-dropdown :all-subscriptions-view s) 3))
+       (do
+         (let [repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))]
+           (ui generatekeyevent (str
+                                 (repeat-cmd 3 "<right> ")
+                                 "<space>"))
+           (ui generatekeyevent (str
+                                 (repeat-cmd 1 "<up> ")
+                                 "<enter>")))))
      (ui click :attach)
      (checkforerror)
      (ui waittillwindowexist :contract-selection-dialog 5)

@@ -48,7 +48,6 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
-  (assert-valid-testing-arch)
   (tasks/register-with-creds)
   (reset! servicelist (ctasks/build-service-map :all? true))
   (reset! subs-contractlist (ctasks/build-subscription-product-map :all? true))
@@ -569,6 +568,7 @@
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
+  (assert-valid-testing-arch)
   (tasks/restart-app)
   (register nil)
   (allsearch)
@@ -633,7 +633,8 @@
 
 (defn ^{DataProvider {:name "unlimited-pools"}}
   get_unlimited_pools [_ & {:keys [debug]
-                               :or {debug false}}]
+                            :or {debug false}}]
+  (assert-valid-testing-arch)
   (run-command "subscription-manager unregister")
   (tasks/restart-app)
   (tasks/register-with-creds)
