@@ -294,14 +294,12 @@
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
-  (if-not (assert-skip :facts)
-    (do
-      (let [prods (tasks/get-table-elements :installed-view 0)
-            indexes (range 0 (tasks/ui getrowcount :installed-view))
-            prodlist (map (fn [item index] [item index]) prods indexes)]
-        (if-not debug
-          (to-array-2d (vec prodlist))
-          prodlist)))))
+  (let [prods (tasks/get-table-elements :installed-view 0)
+        indexes (range 0 (tasks/ui getrowcount :installed-view))
+        prodlist (map (fn [item index] [item index]) prods indexes)]
+    (if-not debug
+      (to-array-2d (vec prodlist))
+      prodlist)))
 
 (defn printfact []
   (if-not (assert-skip :facts)
