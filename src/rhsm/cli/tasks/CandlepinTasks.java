@@ -530,6 +530,10 @@ schema generation failed
 	}
 	
 	static public JSONObject setAutohealForConsumer(String authenticator, String password, String url, String consumerid, Boolean autoheal) throws Exception {
+		//	[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request PUT --data '{"autoheal":false}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7
+		//	[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request GET --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7 | python -m simplejson/tool |  grep heal
+		//	    "autoheal": false, 
+
 		return setAttributeForConsumer(authenticator, password, url, consumerid, "autoheal", autoheal);
 	}
 	
@@ -537,19 +541,41 @@ schema generation failed
 		return setAttributeForConsumer(authenticator, password, url, consumerid, "guestIds", guestIds);
 	}
 	
-	static public JSONObject setAttributeForConsumer(String authenticator, String password, String url, String consumerid, String attributeName, Object attributeValue) throws Exception {
-
-//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request PUT --data '{"autoheal":false}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7
-//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request GET --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7 | python -m simplejson/tool |  grep heal
-//		    "autoheal": false, 
-//		[root@jsefler-onprem-62server tmp]# 
+	static public JSONObject setCapabilitiesForConsumer(String authenticator, String password, String url, String consumerid, List<String> capabilities) throws Exception {
+		// need to put the capabilities into a JSONArray of "name":"capabilitiy_value"
+		JSONArray jsonCapabilities = new JSONArray();
+		for (String capability : capabilities) {
+			JSONObject jsonCapability = new JSONObject();
+			jsonCapability.put("name", capability);
+			jsonCapabilities.put(jsonCapability);
+		}
 		
+		//	[root@jsefler-6 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request PUT --data '{"capabilities":[{"name":"cores"},{"name":"ram"},{"name":"instance_multiplier"}]}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/9fd15e0b-5d23-4e5e-9581-d57966fc58c4
+		//	[root@jsefler-6 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/9fd15e0b-5d23-4e5e-9581-d57966fc58c4 | python -m simplejson/tool | grep capabilities -A13
+		//	    "capabilities": [
+		//	        {
+		//	            "id": "8a9086d340d0ae7d01413bf440cc1a2b", 
+		//	            "name": "ram"
+		//	        }, 
+		//	        {
+		//	            "id": "8a9086d340d0ae7d01413bf440cc1a2c", 
+		//	            "name": "cores"
+		//	        }, 
+		//	        {
+		//	            "id": "8a9086d340d0ae7d01413bf440cc1a2d", 
+		//	            "name": "instance_multiplier"
+		//	        }
+		//	    ], 
+		return setAttributeForConsumer(authenticator, password, url, consumerid, "capabilities", jsonCapabilities);
+	}
+	
+	static public JSONObject setAttributeForConsumer(String authenticator, String password, String url, String consumerid, String attributeName, Object attributeValue) throws Exception {
 		JSONObject jsonData = new JSONObject();
 		
 		// update the consumer
 		jsonData.put(attributeName, attributeValue);
 		String httpResponse = putResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerid, jsonData);
-		// result will be null; not a string representation of the jsonConsumer!  
+		// httpResponse will be null; not a string representation of the jsonConsumer!  
 		
 		// get the updated consumer and return it
 		return new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerid));
@@ -2102,6 +2128,131 @@ schema generation failed
 		}
 		virt_only = virt_only==null? false : virt_only;	// the absense of a "virt_only" attribute implies virt_only=false
 		return virt_only;
+	}
+	
+	public static boolean isPoolDerived (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
+		
+		/* [root@jsefler-6 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/pools/8a9086d340d0ae7d0140d0afeb910746 | python -m simplejson/tool
+		{
+		    "accountNumber": "12331131231", 
+		    "activeSubscription": true, 
+		    "attributes": [
+		        {
+		            "created": "2013-08-30T19:25:24.753+0000", 
+		            "id": "8a9086d340d0ae7d0140d0afeb910747", 
+		            "name": "requires_consumer_type", 
+		            "updated": "2013-08-30T19:25:24.753+0000", 
+		            "value": "system"
+		        }, 
+		        {
+		            "created": "2013-08-30T19:25:24.753+0000", 
+		            "id": "8a9086d340d0ae7d0140d0afeb910748", 
+		            "name": "virt_limit", 
+		            "updated": "2013-08-30T19:25:24.753+0000", 
+		            "value": "0"
+		        }, 
+		        {
+		            "created": "2013-08-30T19:25:24.753+0000", 
+		            "id": "8a9086d340d0ae7d0140d0afeb91074a", 
+		            "name": "pool_derived", 
+		            "updated": "2013-08-30T19:25:24.753+0000", 
+		            "value": "true"
+		        }, 
+		        {
+		            "created": "2013-08-30T19:25:24.753+0000", 
+		            "id": "8a9086d340d0ae7d0140d0afeb910749", 
+		            "name": "virt_only", 
+		            "updated": "2013-08-30T19:25:24.753+0000", 
+		            "value": "true"
+		        }
+		    ], 
+		    "calculatedAttributes": {}, 
+		    "consumed": 0, 
+		    "contractNumber": "144", 
+		    "created": "2013-08-30T19:25:24.753+0000", 
+		    "derivedProductAttributes": [], 
+		    "derivedProductId": null, 
+		    "derivedProductName": null, 
+		    "derivedProvidedProducts": [], 
+		    "endDate": "2014-08-30T00:00:00.000+0000", 
+		    "exported": 0, 
+		    "href": "/pools/8a9086d340d0ae7d0140d0afeb910746", 
+		    "id": "8a9086d340d0ae7d0140d0afeb910746", 
+		    "orderNumber": "order-8675309", 
+		    "owner": {
+		        "displayName": "Admin Owner", 
+		        "href": "/owners/admin", 
+		        "id": "8a9086d340d0ae7d0140d0ae9ae60002", 
+		        "key": "admin"
+		    }, 
+		    "productAttributes": [
+		        {
+		            "created": "2013-08-30T19:25:24.753+0000", 
+		            "id": "8a9086d340d0ae7d0140d0afeb91074b", 
+		            "name": "virt_limit", 
+		            "productId": "awesomeos-virt-unlimited", 
+		            "updated": "2013-08-30T19:25:24.753+0000", 
+		            "value": "unlimited"
+		        }, 
+		        {
+		            "created": "2013-08-30T19:25:24.753+0000", 
+		            "id": "8a9086d340d0ae7d0140d0afeb91074c", 
+		            "name": "type", 
+		            "productId": "awesomeos-virt-unlimited", 
+		            "updated": "2013-08-30T19:25:24.753+0000", 
+		            "value": "MKT"
+		        }, 
+		        {
+		            "created": "2013-08-30T19:25:24.754+0000", 
+		            "id": "8a9086d340d0ae7d0140d0afeb92074d", 
+		            "name": "arch", 
+		            "productId": "awesomeos-virt-unlimited", 
+		            "updated": "2013-08-30T19:25:24.754+0000", 
+		            "value": "ALL"
+		        }, 
+		        {
+		            "created": "2013-08-30T19:25:24.754+0000", 
+		            "id": "8a9086d340d0ae7d0140d0afeb92074e", 
+		            "name": "variant", 
+		            "productId": "awesomeos-virt-unlimited", 
+		            "updated": "2013-08-30T19:25:24.754+0000", 
+		            "value": "ALL"
+		        }, 
+		        {
+		            "created": "2013-08-30T19:25:24.754+0000", 
+		            "id": "8a9086d340d0ae7d0140d0afeb92074f", 
+		            "name": "version", 
+		            "productId": "awesomeos-virt-unlimited", 
+		            "updated": "2013-08-30T19:25:24.754+0000", 
+		            "value": "6.1"
+		        }
+		    ], 
+		    "productId": "awesomeos-virt-unlimited", 
+		    "productName": "Awesome OS with unlimited virtual guests", 
+		    "providedProducts": [
+		        {
+		            "created": "2013-08-30T19:25:24.754+0000", 
+		            "id": "8a9086d340d0ae7d0140d0afeb920750", 
+		            "productId": "37060", 
+		            "productName": "Awesome OS Server Bits", 
+		            "updated": "2013-08-30T19:25:24.754+0000"
+		        }
+		    ], 
+		    "quantity": -1, 
+		    "restrictedToUsername": null, 
+		    "sourceConsumer": null, 
+		    "sourceEntitlement": null, 
+		    "sourceStackId": null, 
+		    "startDate": "2013-08-30T00:00:00.000+0000", 
+		    "subscriptionId": "8a9086d340d0ae7d0140d0af8acd0299", 
+		    "subscriptionSubKey": "derived", 
+		    "updated": "2013-09-10T21:23:02.466+0000"
+		}
+		*/
+
+		String isDerived = getPoolAttributeValue(authenticator, password, url, poolId, "pool_derived");
+		if (isDerived==null) return false;
+		return Boolean.valueOf(isDerived);
 	}
 	
 	public static boolean isPoolAModifier (String authenticator, String password, String poolId, String url) throws JSONException, Exception {

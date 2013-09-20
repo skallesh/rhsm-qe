@@ -366,7 +366,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to type",
 			groups={"blockedByBug-641027"}, dependsOnGroups={},
-			enabled=true)
+			enabled=false)	// 9/17/2013 this test has been disabled in favor of new BypassRulesDueToTypeAndCapabilities_Test
+							// 9/17/2013 jsefler: as originally written, this test is deficient because a new "capabilities"
+							// attribute has been added to the consumer object to help the creation of manifests for downstream
+							// candlepins that may not be new enough to handle subscriptions with an attribute of:
+							// cores, ram, instance_multiplier, derived_product
 	@ImplementsNitrateTest(caseId=56331)
 	public void BypassRulesDueToType_Test() throws Exception {
 		// determine which client is a RHEL Workstation
@@ -396,7 +400,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// now register to candlepin (as type candlepin)
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
-
+		
 		// get a list of available pools and all available pools (for this candlepin consumer)
 		List<SubscriptionPool> compatiblePoolsAsCandlepinConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		List<SubscriptionPool> allPoolsAsCandlepinConsumer = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
@@ -406,6 +410,129 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 		// now assert that all the pools can be subscribed to by the consumer (registered as type candlepin)
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+	}
+	@Test(	description="subscription-manager: facts and rules: bypass rules due to candlepin type and capabilities",
+			groups={"blockedByBug-641027","BypassRulesDueToTypeAndCapabilities_Test"}, dependsOnGroups={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=56331)
+	public void BypassRulesDueToTypeAndCapabilities_Test() throws Exception {
+				
+		// this list will grow in time as candlepins are programmed to handle more subscription types (I got this list from the dev team)
+		List<String> allCapabilities = Arrays.asList(new String[]{"cores", "ram", "instance_multiplier", "derived_product", "cert_v3"});
+		allCapabilities = getRandomSubsetOfList(allCapabilities,allCapabilities.size());	// randomly reorder this list
+		
+		// set minimal facts
+		// these facts will prevent cores, sockets, and ram from interfering with compliance based on the system arch
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.put("cpu.cpu_socket(s)","1");
+		factsMap.put("cpu.core(s)_per_socket","1");
+		factsMap.put("memory.memtotal","1");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		
+		// register (as type candlepin)
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null));
+		
+		// by default, this consumer starts out with no capabilities
+		JSONObject jsonConsumer = (JSONObject) new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		JSONArray jsonCapabilities = jsonConsumer.getJSONArray("capabilities");
+
+		Assert.assertTrue(jsonCapabilities.length()==0, "By default, a freshly registered consumer of type=candlepin has no capabilities.");
+		
+		// get the initial list of available pools and all available pools
+		List<SubscriptionPool> initialAvailablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> initialAllAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		
+		Assert.assertTrue(initialAllAvailablePools.containsAll(initialAvailablePools),
+			"The pools --available to a consumer of type=candlepin is a subset of --all --available pools.");
+		Assert.assertFalse(initialAvailablePools.containsAll(initialAllAvailablePools),
+				"Without any capabilities, --all --available pools contains addtional pools that are not --available for consumption by a consumer of type=candlepin (Assumes some subscriptions with attributes "+allCapabilities+" are available to org "+sm_clientOrg);
+		
+		// incrementally give the candlepin consumer more capabilities (starting with none)
+		List<String> currentCapabilities = new ArrayList<String>();
+		for (int i=0; i<=allCapabilities.size(); i++) {
+
+			// get the current list of available pools and all available pools
+			List<SubscriptionPool> currentAvailablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+			List<SubscriptionPool> currentAllAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+			
+			// loop through the unavailable pools and assert that the subscription's product attribute contains a capability that is absent from this consumer
+			for (SubscriptionPool pool : currentAllAvailablePools) {
+				if (!currentAvailablePools.contains(pool)) {
+					SubscriptionPool unavailablePool = pool;
+					// the reason this pool from allAvailablePools should not be available is because it must have a product attribute that is not among the consumer's current capabilities.  Let's test it...
+					boolean unavailablePoolHasAnUnavailableCapability=false;
+					for (String capability : allCapabilities) {
+						
+						// assume the capability is a an attribute of the pool product
+						if (!currentCapabilities.contains(capability)) {
+							if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, capability) != null) {
+							Assert.assertTrue(true,"Subscription Pool '"+pool.subscriptionName+"' is not available to a consumer of type=candlepin with capabilities "+currentCapabilities+" because this pool's product attributes includes capability '"+capability+"' and therefore requires that the candlepin consumer also possess the capability '"+capability+"'.");
+								unavailablePoolHasAnUnavailableCapability=true;
+							}
+						}
+						
+						// handle "derived_product" capability a little differently
+						if (!currentCapabilities.contains(capability) && capability.equals("derived_product")) {
+							if (CandlepinTasks.isPoolADataCenter(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
+								Assert.assertTrue(true,"Subscription Pool '"+pool.subscriptionName+"' is not available to a consumer of type=candlepin with capabilities "+currentCapabilities+" because this pool will derive subpools for a different product and requires that this consumer of type=candlepin to possess the capability '"+capability+"'.");
+								unavailablePoolHasAnUnavailableCapability=true;
+							}
+						}
+						
+						// TODO we probably need to handle "cert_v3" capability a little differently
+					}
+					Assert.assertTrue(unavailablePoolHasAnUnavailableCapability,"At least one of the capability attributes present in Subscription Pool '"+pool.subscriptionName+"' is not among the current capabilities "+currentCapabilities+" of this consumer of type=candlepin. (This is why this pool appears in list --all --available and is not just list --available.)");
+				}
+			}
+			
+			// break out of the loop when we have tested all capabilities
+			if (currentCapabilities.containsAll(allCapabilities)) break;
+			
+			// update the consumer with another capability
+			currentCapabilities.add(allCapabilities.get(i));
+			CandlepinTasks.setCapabilitiesForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, currentCapabilities);
+		
+		}
+		
+		// now that the consumer has all capabilities, list --available and list --all --available should be identical for a candlepin consumer
+		log.info("Now that this candlepin consumer supports all the available capabilities "+allCapabilities+", the list of --available pools should be identical to --all --available pools regardless of fact rules.");
+		
+		List<SubscriptionPool> finalAvailablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> finalAllAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		
+		Assert.assertTrue(finalAvailablePools.containsAll(finalAllAvailablePools) && finalAllAvailablePools.containsAll(finalAvailablePools),
+			"The pools --available to a consumer of type=candlepin with all capabilities "+allCapabilities+" is identical to --all --available pools.");
+		Assert.assertTrue(finalAvailablePools.containsAll(initialAllAvailablePools) && initialAllAvailablePools.containsAll(finalAvailablePools),
+				"The pools --available to a consumer of type=candlepin with all capabilities "+allCapabilities+" is identical to --all --available pools when the same consumer possessed no capabilities.");
+		
+		
+		
+		// now let's compare the type=candlepin's finalAllAvailablePools to a type=system's listAllAvailablePools
+		// the difference in the list should be generated subpools and DOMAIN subscriptions
+		log.info("Now let's register a consumer of type=system and compare its list --all --available to the type=candlepin consumer's list --all --available.");
+		
+		// register (as type system)
+		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null));
+		List<SubscriptionPool> allAvailablePoolsToSystem = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		List<SubscriptionPool> allAvailablePoolsToCandlepin = finalAllAvailablePools;
+		
+		for (SubscriptionPool pool : allAvailablePoolsToSystem) {
+			if (!allAvailablePoolsToCandlepin.contains(pool)) {
+				log.warning("Pool '"+pool.subscriptionName+"' is in consumer type=system list --all --available, but NOT in consumer type=candlepin list --all --available.");
+				Assert.assertTrue(CandlepinTasks.isPoolDerived(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl),"Pool '"+pool.subscriptionName+"' is in consumer type=system list --all --available, but NOT in consumer type=candlepin list --all --available because this is a derived pool.");
+			}
+		}
+		for (SubscriptionPool pool : allAvailablePoolsToCandlepin) {
+			if (!allAvailablePoolsToSystem.contains(pool)) {
+				log.warning("Pool '"+pool.subscriptionName+"' is in candlepin list --all --available, but NOT in system list --all --available.");
+				String requiresConsumerType = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "requires_consumer_type");
+				Assert.assertTrue(requiresConsumerType!=null && !requiresConsumerType.equals(ConsumerType.system), "Pool '"+pool.subscriptionName+"' is in candlepin list --all --available, but NOT in system list --all --available because this pool's product requires_consumer_type '"+requiresConsumerType+"'.");
+			}
+		}
+	}
+	@AfterGroups(groups={"setup"},value="BypassRulesDueToTypeAndCapabilities_Test")
+	public void deleteFactsFileWithOverridingValuesAfterBypassRulesDueToTypeAndCapabilities_Test() {
+		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 	
 	
