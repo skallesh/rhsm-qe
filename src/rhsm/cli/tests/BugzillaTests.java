@@ -181,7 +181,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 clienttasks.clean(null, null, null);
 		 clienttasks.importCertificate(path);
          String result=clienttasks.unsubscribe(true,(BigInteger)null, null, null, null).getStdout();
-         String expected_result="1 subscriptions removed from this system";
+         String expected_result="1 subscriptions removed from this system.";
 		 Assert.assertEquals(result, expected_result);
 		
 	}
@@ -1443,7 +1443,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		System.out.println(sm_serverAdminUsername + "   is the username");
+		System.out.println(sm_client2Hostname + "   is the username");
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"multi-stackable");
 		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "multi-stackable");
