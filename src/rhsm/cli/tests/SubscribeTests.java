@@ -82,7 +82,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert the installed status of the bundled products
 		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
 			JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
-//			String bundledProductName = bundledProductAsJSONObject.getString("productName");
 			String bundledProductId = bundledProductAsJSONObject.getString("productId");
 			
 			// assert the status of the installed products listed
@@ -103,7 +102,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// after subscribing to a pool, assert that its corresponding productSubscription is found among the currently consumed productSubscriptions
 		ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", pool.productId, currentlyConsumedProductSubscriptions);
 		Assert.assertNotNull(consumedProductSubscription, "The consumed ProductSubscription corresponding to the subscribed SubscriptionPool productId '"+pool.productId+"' was found among the list of consumed ProductSubscriptions.");
-
+		
+		// assert that the quantityUsed matches the quantitySuggested after implementation of Bug 1008647 - [RFE] bind requests that do not specify a quantity should automatically use the quantity needed to achieve compliance
+		if (pool.suggested > 1) {
+			Assert.assertEquals(consumedProductSubscription.quantityUsed, pool.suggested, "When the suggested consumption quantity '"+pool.suggested+"' from the available pool is greater than one, the quantity used from the consumed product subscription should match.");
+		} else {
+			Assert.assertEquals(consumedProductSubscription.quantityUsed, Integer.valueOf(1), "When the suggested consumption quantity '"+pool.suggested+"' from the available pool is NOT greater than one, the quantity used from the consumed product subscription should be one.");
+		}
+		
 		// assemble a list of expected bundled product names
 		List<String> bundledProductNames = new ArrayList<String>();
 		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
@@ -183,8 +189,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					}
 					
 					// consider the socket coverage and assert the installed product's status 
-					if (poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets) && Integer.valueOf(poolProductSocketsAttribute)>0) {
-						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to a pool for ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription covers.");
+					if (!pool.multiEntitlement/*ADDED AFTER IMPLEMENTATION OF BUG 1008647*/ && poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets) && Integer.valueOf(poolProductSocketsAttribute)>0) {
+						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to a pool for ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription from a non-multi-entitlement pool covers.");
 					} else {
 						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to a pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
 					}
