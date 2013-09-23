@@ -26,6 +26,8 @@ import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.ProductSubscription;
+import rhsm.data.SubscriptionPool;
+
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -548,6 +550,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "requires_consumer_type");
 		ConsumerType consumerType = requires_consumer_type==null?null:ConsumerType.valueOf(requires_consumer_type);
 		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", jsonPool.getString("id"), clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 		clienttasks.subscribe(null, null, jsonPool.getString("id"), null, null, null, null, null, null, null, null);
 
 		// remember the consuming consumerId
@@ -559,7 +562,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the current pool recognizes an increment in consumption
 		JSONObject jsonCurrentPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+jsonPool.getString("id")));
-		Assert.assertEquals(jsonCurrentPool.getInt("consumed"),jsonPool.getInt("consumed")+1,"The consumed entitlement from Pool '"+jsonPool.getString("id")+"' has incremented by one to an expected total of '"+(jsonPool.getInt("consumed")+1)+"' consumed.");
+		//Assert.assertEquals(jsonCurrentPool.getInt("consumed"),jsonPool.getInt("consumed")+1,"The consumed entitlement from Pool '"+jsonPool.getString("id")+"' has incremented by one to an expected total of '"+(jsonPool.getInt("consumed")+1)+"' consumed.");	// valid before Bug 1008557 and Bug 1008647
+		Integer suggested = subscriptionPool.suggested; Integer expectedIncrement = suggested>0? suggested:1;	// when subscriptionPool.suggested is zero, subscribe should still attach 1.
+		Assert.assertEquals(jsonCurrentPool.getInt("consumed"),jsonPool.getInt("consumed")+expectedIncrement, "The consumed entitlement from Pool '"+jsonPool.getString("id")+"' has incremented by the suggested quantity '"+subscriptionPool.suggested+"' to an expected total of '"+(jsonPool.getInt("consumed")+expectedIncrement)+"' consumed (Except when suggested quantity is zero, then subscribe should still attach one entitlement).");
 		
 		// finally do the test...
 		// create an activation key, add the current pool to the activation key with this valid quantity, and attempt to register with it.
