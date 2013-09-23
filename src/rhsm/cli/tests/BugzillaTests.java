@@ -237,14 +237,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
 		Calendar endCalendar = new GregorianCalendar();
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
-		Date endDate = endCalendar.getTime();
+		Calendar endDate = endCalendar.getInstance();
 		System.out.println(endDate);
 		sleep(1*60*1000);
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
 		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStderr();			
 		String EndingDate=CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,	sm_clientPassword, sm_serverUrl, expiringPoolId,"endDate");
-		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate;
+		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+endDate;
 		Assert.assertEquals(result, expected_message);
 		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
 		Assert.assertEquals(result, clienttasks.msg_ConsumerNotRegistered);
@@ -330,12 +330,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify if subscription manager cli uses product name comparisons in the list command ",
-			groups={"RHELWorkstationProduct","blockedByBug-709412","AcceptanceTests"},
+			groups={"blockedByBug-709412","AcceptanceTests","InstalledProductMultipliesAfterSubscription"},
 			enabled=true)
 	public void InstalledProductMultipliesAfterSubscription() throws Exception {
 		client.runCommand("mkdir /root/generatedCertsFolder");
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
+		if(sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("To be run against Stage only");
+		
 		clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, true, null, null, null, null).getStdout();
 		moveProductCertFiles("*");
@@ -363,13 +365,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"StackingFutureSubscriptionWithCurrentSubscription","blockedByBug-966069"},
 			enabled=true)
 	public void StackingFutureSubscriptionWithCurrentSubscription() throws Exception {
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"autoAttachInterval".toLowerCase(), "1440" });
-		clienttasks.config(null, null, true, listOfSectionNameValues);
+		
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
 		int sockets = 4;
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
@@ -387,7 +387,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		for(SubscriptionPool pool :clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			if(pool.productId.equals("awesomeos-x86_64")){
-				clienttasks.subscribe(null, null, pool.poolId, null, null,null, null, null, null, null, null);
+				clienttasks.subscribe(null, null, pool.poolId, null, null,"2", null, null, null, null, null);
 		}
 			
 		}
@@ -928,7 +928,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", 
 			groups = { "blockedByBug-889573","AcceptanceTests"}, enabled = true)
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException,Exception {
-	
+		if(sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("To be run against Stage only");
 	String clientUsername="stage_test_12";
 	String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 	String hostnameBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
@@ -1018,7 +1018,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "blockedByBug-878994","AcceptanceTests"},
 			enabled = true)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
-		
+		if(sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("To be run against Stage only");
+
 		//server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
 		clienttasks.unregister(null, null, null);
