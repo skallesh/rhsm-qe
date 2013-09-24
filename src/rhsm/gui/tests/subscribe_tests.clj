@@ -569,7 +569,8 @@
                {:keys [log-warning]} (log-warning))))
         (if-not debug
           (to-array-2d @subs)
-          @subs)))))
+          @subs)))
+    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
@@ -585,7 +586,8 @@
                                        :skip-dropdowns? true)))]
         (if-not debug
           (to-array-2d subs)
-          subs)))))
+          subs)))
+    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "subscribed"}}
   get_subscribed [_ & {:keys [debug]
@@ -603,7 +605,8 @@
                                        :skip-dropdowns? true)))]
         (if-not debug
           (to-array-2d subs)
-          subs)))))
+          subs)))
+    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "multi-contract"}}
   get_multi_contract_subscriptions [_ & {:keys [debug]
@@ -625,7 +628,8 @@
              (tasks/unsubscribe s))))
         (if-not debug
           (to-array-2d @subs)
-          @subs)))))
+          @subs)))
+    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
@@ -642,7 +646,8 @@
         (tasks/search)
         (if-not debug
           (to-array-2d prods)
-          prods)))))
+          prods)))
+    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "unlimited-pools"}}
   get_unlimited_pools [_ & {:keys [debug]
@@ -660,7 +665,8 @@
         (allsearch)
         (if-not debug
           (to-array-2d pools)
-          pools)))))
+          pools)))
+    (to-array-2d [])))
 
   ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=683550
   ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=691784
