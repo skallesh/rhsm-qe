@@ -146,6 +146,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// skip all the help tests with expectedOptions that do not come from --help
 			if (!helpCommand.contains("--help")) continue;
 			
+			// skip "rhsm-icon --help" and "rhsm-icon --help-gtk" and only test all of the options exposed by "rhsm-icon --help-all"
+			if (helpCommand.startsWith("rhsm-icon") && !helpCommand.contains("--help-all")) continue;
+			
 			// transcribe the helpCommand into a bashCommand
 			String bashCommand = helpCommand.replaceFirst("\\s*(--help-all|--help-gtk|--help)\\s*", " ").trim();	// strip out "--help"
 			bashCommand += " "; // append chars as a prefix to <tab><tab> complete the expected command line options
@@ -222,6 +225,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1004402 - rhsmd and rhsmcertd-worker does not bash complete its options
 			if (bashCommand.startsWith("/usr/libexec/rhsmcertd-worker ")) bugIds.add("1004402");
 			if (bashCommand.startsWith("/usr/libexec/rhsmd ")) bugIds.add("1004402");
+			
+			// Bug 1011712 - bash-completion of subscription-manager environments --<TAB><TAB> is incomplete
+			if (bashCommand.startsWith("subscription-manager environments ")) bugIds.add("1011712");
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
