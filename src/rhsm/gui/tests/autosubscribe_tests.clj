@@ -278,7 +278,8 @@
                            :owner ownername))
          (if-not debug
            (to-array-2d prods)
-           prods)))))
+           prods)))
+     (to-array-2d [])))
 
 (gen-class-testng)
 
