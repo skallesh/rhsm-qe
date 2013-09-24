@@ -54,7 +54,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
-			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520"},
+			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520","blockedByBug-1008647","blockedByBug-1009600"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
@@ -110,6 +110,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(consumedProductSubscription.quantityUsed, Integer.valueOf(1), "When the suggested consumption quantity '"+pool.suggested+"' from the available pool is NOT greater than one, the quantity used from the consumed product subscription should be one.");
 		}
 		
+		// assert that the System Type matches between the available pool and the consumed product subscription after implementation of Bug 1009600 - Show System Type in list --consumed; Show System Type in attach confirmation gui dialog.
+		Assert.assertEquals(consumedProductSubscription.machineType, pool.machineType, "After subscribing from a pool with a machine type '"+pool.machineType+"', the consumed product subscription's machine type should match.");
+
 		// assemble a list of expected bundled product names
 		List<String> bundledProductNames = new ArrayList<String>();
 		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
