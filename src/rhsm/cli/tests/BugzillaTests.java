@@ -337,7 +337,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommand("mkdir /root/generatedCertsFolder");
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
-		if(sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("To be run against Stage only");
+		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
 		
 		clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, true, null, null, null, null).getStdout();
@@ -929,7 +929,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", 
 			groups = { "blockedByBug-889573","AcceptanceTests"}, enabled = true)
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException,Exception {
-		if(sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("To be run against Stage only");
+		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
 	String clientUsername="stage_test_12";
 	String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 	String hostnameBeforeExecution=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
@@ -1019,7 +1019,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "blockedByBug-878994","AcceptanceTests"},
 			enabled = true)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
-		if(sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("To be run against Stage only");
+		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
 
 		//server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
