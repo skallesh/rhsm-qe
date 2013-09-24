@@ -77,7 +77,7 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 		// assert that the quantity available to both clients is the same
 		Assert.assertEquals(cl1SubscriptionPool.quantity, cl2SubscriptionPool.quantity, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to both consumers is the same.");
 
-		// subscribe consumer1 to the pool and assert that the available quantity to consumer2 has decremented by one...
+		// subscribe consumer1 to the pool and assert that the available quantity to consumer2 has decremented
 		client1tasks.subscribeToSubscriptionPool(pool);
 		alreadySubscribedProductIdsInMultiClientSubscribeToSameSubscriptionPool_Test.add(pool.productId);
 
@@ -89,12 +89,13 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool id "+pool.poolId+" is still available to consumer2 ("+sm_client2Username+").");
 		cl2SubscriptionPool = cl2SubscriptionPools.get(cl2SubscriptionPools.indexOf(pool));
 
-		// assert that the quantity has decremented by one
+		// assert that the quantity has decremented by one (technically the max(one,quantitySuggested) since subscribe did not specify quantity=1)
 		if (cl1SubscriptionPool.quantity.equalsIgnoreCase("unlimited")) {
 			//Assert.assertEquals(cl2SubscriptionPool.quantity, "unlimited", "When the quantity of entitlements from subscription pool id '"+pool.poolId+"' is 'unlimited', then the available to consumer2 ("+sm_client2Username+") must remain 'unlimited' after consumer1 subscribed to the pool.");
 			Assert.assertEquals(cl2SubscriptionPool.quantity, "Unlimited", "When the quantity of entitlements from subscription pool id '"+pool.poolId+"' is 'Unlimited', then the available to consumer2 ("+sm_client2Username+") must remain 'Unlimited' after consumer1 subscribed to the pool.");		// altered after Bug 862885 - String Update: Capitalize unlimited in the All Available Subscriptions tab 
 		} else {
-			Assert.assertEquals(Integer.valueOf(cl2SubscriptionPool.quantity).intValue(), Integer.valueOf(cl1SubscriptionPool.quantity).intValue()-1, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+sm_client2Username+") has decremented by one.");
+			//Assert.assertEquals(Integer.valueOf(cl2SubscriptionPool.quantity).intValue(), Integer.valueOf(cl1SubscriptionPool.quantity).intValue()-1, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+sm_client2Username+") has decremented by one.");	// was valid before Bug 1008647 [RFE] bind requests that do not specify a quantity should automatically use the quantity needed to achieve compliance 
+			Assert.assertEquals(Integer.valueOf(cl2SubscriptionPool.quantity).intValue(), Integer.valueOf(cl1SubscriptionPool.quantity).intValue()-Math.max(1,cl1SubscriptionPool.suggested), "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+sm_client2Username+") has decremented by max(one,suggestedQuantity '"+cl1SubscriptionPool.suggested+"').");
 		}
 	}
 	protected List<String> alreadySubscribedProductIdsInMultiClientSubscribeToSameSubscriptionPool_Test = new ArrayList<String>();
