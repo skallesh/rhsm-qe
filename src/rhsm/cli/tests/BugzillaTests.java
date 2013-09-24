@@ -161,10 +161,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"unsubscribeImportedcert","blockedByBug-691784"},
 			enabled=true)
 	public void unsubscribeImportedcert() throws Exception {
-		clienttasks.autoheal(null, null, true, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
 		String pool = null;
 		client.runCommand("mkdir "+importCertificatesDir1);
 		 for(SubscriptionPool AvailablePools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
@@ -215,6 +215,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"RegisterWithActivationKeyWithExpiredPool","blockedByBug-803814"},
 			enabled=true)
 	public void RegisterWithActivationKeyWithExpiredPool() throws Exception {
+		System.out.println(getProperty("sm.server.admin.password",""));
 		int endingMinutesFromNow = 1;
 		Integer addQuantity=1;
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
@@ -237,14 +238,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
 		Calendar endCalendar = new GregorianCalendar();
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
-		Calendar endDate = endCalendar.getInstance();
-		System.out.println(endDate);
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/dd/yy h:mm aaa");
+		String EndingDate=yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
 		sleep(1*60*1000);
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
 		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStderr();			
-		String EndingDate=CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,	sm_clientPassword, sm_serverUrl, expiringPoolId,"endDate");
-		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+endDate;
+		System.out.println(EndingDate);
+		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate+".";
 		Assert.assertEquals(result, expected_message);
 		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
 		Assert.assertEquals(result, clienttasks.msg_ConsumerNotRegistered);
@@ -1183,6 +1184,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "ExpirationOfEntitlementCerts","blockedByBug-907638","blockedByBug-953830"}, enabled = true)
 		public void ExpirationOfEntitlementCerts() throws JSONException,Exception {
 		int endingMinutesFromNow =1;
+		System.out.println(getProperty("sm.server.admin.password",""));
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"certCheckInterval".toLowerCase(), "1" });
@@ -2085,9 +2087,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "FactsUpdateForDeletedConsumer","blockedByBug-798788" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 148216)
 	public void FactsUpdateForDeletedConsumer() throws JSONException,Exception {
+		
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,
 				sm_serverAdminPassword, sm_serverUrl, "/consumers/"
@@ -2827,7 +2831,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Calendar EndTimeAfterRHSM = clienttasks.getCurrentConsumerCert().validityNotAfter;
 		String EndDateAfterRHSM = yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotAfter.getTime());
 		String StartDateAfterRHSM=yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotBefore.getTime());
-		System.out.println(EndDateAfterRHSM+"   .... "+ StartDateAfterRHSM);
 		String updatedCertdate = client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStderr();
 		String EndDate=setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago' +'%F'");
@@ -4227,6 +4230,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void removeMyEmptyCaCertFile() {
 		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
 	}
+
+	@AfterGroups(groups = {"setup"}, value = {"BugzillaTests","FactsUpdateForDeletedConsumer","VerifyOneCertPerOneSubscription",
+	"VerifyIfStatusDisplaysProductNameMultipleTimes","unsubscribeImportedcert","StackingFutureSubscriptionWithCurrentSubscription","VerifyDistinct","VerifyEntitlementStartDateIsSubStartDate_Test"})
+	public void enableAutoheal() {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null);
+	}
+	
 	
 	@AfterGroups(groups = {"setup"}, value = {"BugzillaTests","DisplayOfRemoteServerExceptionForServer500Error","RHELWorkstationProduct"})
 	public void restoreRHSMConfFileValues() {
