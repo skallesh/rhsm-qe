@@ -30,6 +30,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	public String productId;	// public String productSku;	// productSku was replaced by productId in subscription-manager-0.68-1.el6.i686  jsefler 7/13/2010
 	public String poolId;
 	public String quantity;	// public Integer quantity;	// can be "unlimited"
+	public Integer suggested;	// introduced by Bug 1008557 - [RFE] CLI list --available should include a "Quantity Needed" field to facilitate compliance and provide parity with GUI
 	public Boolean multiEntitlement;
 	public Calendar endDate;
 	public String machineType;
@@ -77,6 +78,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 			Boolean activeSubscription,
 			Integer consumed,
 			String quantity,	//Integer quantity,
+			Integer suggested,
 			String id,
 			String productId){
 		super(null);
@@ -87,6 +89,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		this.activeSubscription = activeSubscription;
 		this.consumed = consumed;
 		this.quantity = quantity;
+		this.suggested = suggested;
 		this.poolId = id;
 		this.productId = productId;
 
@@ -98,6 +101,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 			String productId,
 			String poolId,
 			String quantity,
+			Integer suggested,
 			Boolean multiEntitlement,
 			String endDate) {
 		super(null);
@@ -106,6 +110,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		this.productId = productId;
 		this.poolId = poolId;
 		this.quantity = quantity;
+		this.suggested = suggested;
 		this.multiEntitlement = multiEntitlement;
 		this.endDate = parseDateString(endDate);
 		associatedProductIDs = new ArrayList<ProductSubscription>();
@@ -133,6 +138,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
 		if (poolId != null)				string += String.format(" %s='%s'", "poolId",poolId);
 		if (quantity != null)			string += String.format(" %s='%s'", "quantity",quantity);
+		if (suggested != null)			string += String.format(" %s='%s'", "suggested",suggested);
 		if (consumed != null)			string += String.format(" %s='%s'", "consumed",consumed);
 		if (multiEntitlement != null)	string += String.format(" %s='%s'", "multiEntitlement",multiEntitlement);
 		if (activeSubscription != null)	string += String.format(" %s='%s'", "activeSubscription",activeSubscription);
@@ -255,6 +261,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		regexes.put("productId",				"SKU:(.*)");		// "Product Id"; changed by Bug 806986
 		regexes.put("poolId",					"Pool ID:(.*)");	// "Pool Id:(.*)"); changed by Bug 878634
 		regexes.put("quantity",					"Available:(.*)");	// "Quantity:(.*)"); changed by Bug 986971	// "quantity:(.*)"); changed by Bug 612730	// may eventually be changed by Bug 963874
+		regexes.put("suggested",				"Suggested:(.*)");	// added by Bug 1008557
 		regexes.put("serviceLevel",				"Service Level:(.*)");
 		regexes.put("serviceType",				"Service Type:(.*)");
 		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");

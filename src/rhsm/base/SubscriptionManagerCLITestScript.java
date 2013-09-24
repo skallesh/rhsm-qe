@@ -2508,7 +2508,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 			String quantity = String.valueOf(jsonPool.getInt("quantity"));
 			
-			ll.add(Arrays.asList(new Object[]{new SubscriptionPool(jsonPool.getString("productName"), jsonPool.getString("productId"), jsonPool.getString("id"), quantity, multiEntitlement, SubscriptionPool.formatDateString(endDate))}));
+			ll.add(Arrays.asList(new Object[]{new SubscriptionPool(jsonPool.getString("productName"), jsonPool.getString("productId"), jsonPool.getString("id"), quantity, null, multiEntitlement, SubscriptionPool.formatDateString(endDate))}));
 		}
 		return ll;
 	}

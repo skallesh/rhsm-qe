@@ -1045,13 +1045,19 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, null, (String)null, null, null, null, true, false, null, null, null));
 			org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
 		}
+		
 		// get all the valid service levels available to this org	
 		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
-			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
-			ll.add(Arrays.asList(new Object[] {null,	randomizeCaseOfCharactersInString(serviceLevel)}));	// run again with the serviceLevel case randomized
+			BlockedByBzBug blockedByBug=null;
+			
+			// Bug 1011234 - subscription-manager list --avail should catch nil service-levels and report the absense of a service-level rather than "None"
+			if (serviceLevel.equalsIgnoreCase("none")) blockedByBug=new BlockedByBzBug("1011234");
+			
+			ll.add(Arrays.asList(new Object[] {blockedByBug,	serviceLevel}));
+			ll.add(Arrays.asList(new Object[] {blockedByBug,	randomizeCaseOfCharactersInString(serviceLevel)}));	// run again with the serviceLevel case randomized
 		}
-		ll.add(Arrays.asList(new Object[] {null,	""}));
-		ll.add(Arrays.asList(new Object[] {null,	"FOO"}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("1011234"),	""}));
+		ll.add(Arrays.asList(new Object[] {null,							"FOO"}));
 
 		
 		return ll;
