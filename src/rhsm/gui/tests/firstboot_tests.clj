@@ -261,7 +261,8 @@
        ["sdf" "sdf" :invalid-credentials]
        ["" "" :no-username]
        ["" "password" :no-username]
-       ["sdf" "" :no-password]))])
+       ["sdf" "" :no-password])
+     (to-array-2d []))])
 
 ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=700601
 
