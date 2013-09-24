@@ -209,7 +209,8 @@ verify_password_tip
                      [(str "   " (@config :username)) (@config :password) nil])))]
         (if-not debug
           (to-array-2d data)
-          data)))))
+          data)))
+    (to-array-2d [])))
 
 (gen-class-testng)
 
