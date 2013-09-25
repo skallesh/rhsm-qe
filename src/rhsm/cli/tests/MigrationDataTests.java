@@ -1577,7 +1577,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				// Bug 1009071 - the RHN Classic rhel-x86_64-client-6-rhscl-1 channels are not accounted for in product-certs.json
 				bugIds.add("1009071");
 			}
-			
+			if (rhnAvailableChildChannel.matches(".+-htb(-.*|$)")) {
+				// Bug 1011992 - High Touch Beta channel mappings should be excluded from channel-cert-mapping.txt
+				bugIds.add("1011992");
+			}
 			List<String> variousAvailableChildChannels = Arrays.asList(new String[]{
 			"rhel-x86_64-server-6-rhevm-3-beta",
 			"rhel-x86_64-rhev-mgmt-agent-6-beta-debuginfo",
