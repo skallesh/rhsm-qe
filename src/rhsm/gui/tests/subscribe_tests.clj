@@ -9,7 +9,8 @@
         [clojure.string :only (split
                                blank?
                                join
-                               trim-newline)]
+                               trim-newline
+                               trim)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
@@ -525,6 +526,47 @@
   (tasks/skip-dropdown :all-subscriptions-view subscription)
   (verify ( = (sort (get @subs-contractlist subscription))
               (sort (tasks/get-table-elements :all-available-bundled-products 0)))))
+
+
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-962933"]
+              :dataProvider "subscriptions"}}
+  check_multiplier_logic
+  "Assert instance multiplier logic does not apply to Virtual machines"
+  [_ subscription]
+  (let [cli-out (:stdout (run-command "subscription-manager facts --list | grep \"virt.is_guest\""))
+        client-type-virt? (= "true" (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
+    (if client-type-virt?
+      (do
+        (try+
+         (tasks/skip-dropdown  :all-subscriptions-view subscription)
+         (tasks/open-contract-selection subscription)
+         (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
+           (if (>= row 0)
+             (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
+                   pool (ctasks/get-pool-id (@config :username)
+                                            (@config :password)
+                                            (@config :owner-key)
+                                            subscription
+                                            contract)
+                   multiplier (ctasks/get-instance-multiplier (@config :username)
+                                                              (@config :password)
+                                                              pool
+                                                              :string? false)
+                   repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))]
+               (if (> multiplier 1)
+                 (do
+                   (tasks/ui selectrowindex :contract-selection-table row)
+                   (let [quantity-before (Integer. (re-find #"\d+" (tasks/ui getcellvalue :contract-selection-table row 5)))
+                         action (tasks/ui generatekeyevent (str
+                                                            (repeat-cmd 5 "<right> ")
+                                                            "<space> " "<up> " "<enter>"))
+                         quantity-after (Integer. (re-find #"\d+" (tasks/ui getcellvalue :contract-selection-table row 5)))]
+                     (verify (not (= multiplier (- quantity-after quantity-before))))))))))
+         (catch [:type :contract-selection-not-available] _)
+         (finally 
+          (if (tasks/ui showing? :contract-selection-table)
+            (tasks/ui click :cancel-contract-selection))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
