@@ -146,8 +146,8 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// skip all the help tests with expectedOptions that do not come from --help
 			if (!helpCommand.contains("--help")) continue;
 			
-			// skip "rhsm-icon --help" and "rhsm-icon --help-gtk" and only test all of the options exposed by "rhsm-icon --help-all"
-			if (helpCommand.startsWith("rhsm-icon") && !helpCommand.contains("--help-all")) continue;
+			// based on comment https://bugzilla.redhat.com/show_bug.cgi?id=1004385#c7 we will only test rhsm-icon --help (we will skip tests for --help-gtk options or --help-all options)
+			if (helpCommand.startsWith("rhsm-icon") && (helpCommand.contains("--help-gtk")||helpCommand.contains("--help-all"))) continue;
 			
 			// transcribe the helpCommand into a bashCommand
 			String bashCommand = helpCommand.replaceFirst("\\s*(--help-all|--help-gtk|--help)\\s*", " ").trim();	// strip out "--help"
