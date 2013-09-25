@@ -34,9 +34,9 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscribe to a pool that will expire soon and assert the entitlements are removed after it expires",
-			groups={"blockedByBug-660713","blockedByBug-854312","blockedByBug-907638"}, dependsOnGroups={},
+			groups={"blockedByBug-655835","blockedByBug-660713","blockedByBug-854312","blockedByBug-907638","blockedByBug-994266"}, dependsOnGroups={},
 			enabled=true)
-	public void VerifyEntitlementsAreRemovedAfterSubscriptionExpires_Test() throws Exception{
+	public void VerifyEntitlementsAfterSubscriptionExpires_Test() throws Exception{
 
 		// create a subscription pool that will expire 2 minutes from now
 		int endingMinutesFromNow = 2;
@@ -51,14 +51,21 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		/*EntitlementCert*/ expiringCert = clienttasks.getEntitlementCertFromEntitlementCertFile(expiringCertFile);
 		List <ProductSubscription> expiringProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber", expiringCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertMore(expiringProductSubscriptions.size(),0, "Found ProductSubscriptions corresponding to the just subscribed SubscriptionPool: "+expiringPool);
-
+		for (ProductSubscription expiringProductSubscription : expiringProductSubscriptions) {
+			Assert.assertTrue(expiringProductSubscription.isActive, "Immediately before the consumed subscription '"+expiringProductSubscription.productName+"' is about the expire, the list --consumed should show it as Active.");
+		}
+		
 		// wait for pool to expire
 		sleep(endingMinutesFromNow*60*1000 + 10*1000); // plus a 10 sec buffer
 		
-		// verify that that the pool expired
+		// verify that the subscription pool has expired and is therefore not listed in all available; coverage for Bug 655835 - Pools are no longer removed after their expiration date https://github.com/RedHatQE/rhsm-qe/issues/132
 		SubscriptionPool expiredPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", expiringPoolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-		Assert.assertNull(expiredPool,"The expired TestPool is no longer available for subscribing: "+expiringPoolId);
+		Assert.assertNull(expiredPool,"Expired Test Pool ID '"+expiringPoolId+"' is no longer available for subscribing.");
 		
+		/* The following behavior block of assertions was changed for a few reasons...
+		 * 1. Bug 994266 - expired entitlement shows in GUI but not in CLI
+		 * 2. We felt that expired entitlements should remain on the system for the system user to acknowledge
+		 * 3. The system user can simply acknowledge the expiration by clicking Remove in the GUI tab of "My Subscriptions"
 		// verify that the expired product subscriptions are not listed among the consumed
 		List <ProductSubscription> currentProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null).getStdout());
 		for (ProductSubscription p : expiringProductSubscriptions) {
@@ -73,12 +80,25 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		// verify that the expired entitlement cert file is still gone after another trigger a rhsmcertd.certFrequency
 		SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,expiringCertFile.getPath()),"After another trigger of the cert frequency, the expired entitlement cert file remains cleaned from the system.");
+		 * current behavior is asserted below... */
+		
+		// verify that the expired product subscriptions is still listed among the consumed, but inactive
+		List <ProductSubscription> currentlyConsumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null).getStdout());
+		for (ProductSubscription expiringProductSubscription : expiringProductSubscriptions) {
+			ProductSubscription expiredProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", expiringProductSubscription.serialNumber, currentlyConsumedProductSubscriptions);
+			Assert.assertNotNull(expiredProductSubscription, "Immediately after the consumed subscription '"+expiringProductSubscription.productName+"' serial '"+expiringProductSubscription.serialNumber+"' expires, it should still be found the list of consumed product subscriptions.");
+			Assert.assertTrue(!expiredProductSubscription.isActive, "Immediately after the consumed subscription '"+expiringProductSubscription.productName+"' serial '"+expiringProductSubscription.serialNumber+"' expires, the list of consumed product subscriptions should show it as inActive.");
+		}
+		
+		// verify that the expired entitlement cert remains after a trigger of rhsmcertd.certFrequency
+		SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
+		Assert.assertTrue(RemoteFileTasks.testExists(client,expiringCertFile.getPath()),"The expired entitlement cert file remains on the system after rhsmcertd runs. (It is left for the system user to see it and manually remove it.)");
 	}
 	
 	
 	@Test(	description="Verify expired entitlement is added to the certifiate revocation list after the subscription expires",
-			groups={}, dependsOnMethods={"VerifyEntitlementsAreRemovedAfterSubscriptionExpires_Test"},
-			enabled=false)	// TODO Review the validity of this testcase with development (My observation is that expiringCert is NOT actually added to list of RevokedCerts
+			groups={}, dependsOnMethods={"VerifyEntitlementsAfterSubscriptionExpires_Test"},
+			enabled=false)	// TODO Review the validity of this testcase with development (Current behavior is that expiringCert is NOT actually added to list of RevokedCerts.  Instead they remain on the system for acknowledgment and manual removal)
 	public void VerifyExpiredEntitlementIsAddedToCertificateRevocationList_Test() throws Exception{
 		if (expiringCert==null) throw new SkipException("This test requires a successful run of a prior test whose entitlement cert has expired."); 
 
@@ -148,7 +168,6 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 655835 - Pools are no longer removed after their expiration date https://github.com/RedHatQE/rhsm-qe/issues/132
 	// TODO Bug 852630 - subscription-manager unsubscribe -all on expired subscriptions says "[Errno 2] No such file or directory: '/etc/pki/entitlement/1364069144416875315.pem'"	// DONE by skallesh https://github.com/RedHatQE/rhsm-qe/issues/133
 	
 	
