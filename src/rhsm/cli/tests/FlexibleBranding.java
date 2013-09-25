@@ -62,7 +62,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  */
 @Test(groups = { "FlexibleBranding" })
 public class FlexibleBranding extends SubscriptionManagerCLITestScript {
-	private static final List<String> BrandTypeValue = null;
+	protected  static String BrandType = null;
 	protected String ownerKey="";
 	protected String randomAvailableProductId;
 	protected EntitlementCert expiringCert = null;
@@ -180,7 +180,7 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if brandname file are replaced",
 			groups={"VerifyBrand_TypeValue"},
-			enabled=false) //yet to work on
+			enabled=true) //yet to work on
 	public void VerifyBrand_TypeValue() throws Exception {
 		String productname=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -194,10 +194,10 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
 		client.runCommandAndWaitWithoutLogging("find "+clienttasks.entitlementCertDir+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
 		String certificates = client.getStdout();
-		for(String BrandType:parseInfo(certificates)){
-		Assert.assertEquals(BrandType, "OS");
+		String BrandType=parseInfo(certificates);
+			Assert.assertEquals(BrandType, "OS");
 		}
-	}
+	
 	
 	
 
@@ -209,7 +209,7 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if brandname file are replaced",
 			groups={"CreationWithImport"},
-			enabled=true) //yet to work on
+			enabled=true) 
 	public void VerifyBrand_NameFileCreationWithImportedCert() throws Exception {
 		String productname=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -240,7 +240,7 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if brandname file are replaced",
 			groups={"CreationWithRHSMCERTD"},
-			enabled=false) //yet to work on
+			enabled=true) 
 	public void VerifyBrand_NameFileCreationWithRHSMCERTD() throws Exception {
 		String productname=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -279,7 +279,7 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 				client.runCommandAndWait("rm -rf " + "/root/temp1");
 	}
 	
-	static public List<String> parseInfo(String rawCertificates) {
+	static public String parseInfo(String rawCertificates) {
 		Map<String,String> regexes = new HashMap<String,String>();
 		List certData = new ArrayList();
 		regexes.put("BrandType",			"Product:(?:(?:\\n.+)+)Brand Type: (.+)");
@@ -295,21 +295,20 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
 			//	BrandTypeValue=regexes.get(field);
 				addRegexMatchesToList(pat, rawCertificate, certDataList, field);
-				System.out.println(field + "  is the field");
 			}
 			
 			// assert that there is only one group of certData found in the list
 			List<String> BrandTypeValue = new ArrayList<String>();
 			for(Map<String,String> CertMap : certDataList) {
 				// normalize newlines from productName when it spans multiple lines (introduced by bug 864177)
-				String key = "BrandType",BrandType = CertMap.get(key);
-				if (BrandType!=null) {
+				String key = "BrandType",Brandtype = CertMap.get(key);
+				if (Brandtype!=null) {
 					CertMap.remove(key);
-					BrandType = BrandType.replaceAll("\\s*\\n\\s*", " ");
+					BrandType = Brandtype.replaceAll("\\s*\\n\\s*", " ");
 				}
-				BrandTypeValue.add(BrandType);
+				//BrandTypeValue.add(BrandType);
 			}}
-			return BrandTypeValue;
+			return BrandType;
 			
 	}
 		
