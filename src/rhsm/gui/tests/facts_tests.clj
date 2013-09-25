@@ -289,7 +289,8 @@
     (do
       (if-not debug
         (to-array-2d (vec @gui-facts))
-        (vec @gui-facts)))))
+        (vec @gui-facts)))
+    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
@@ -301,7 +302,8 @@
             prodlist (map (fn [item index] [item index]) prods indexes)]
         (if-not debug
           (to-array-2d (vec prodlist))
-          prodlist)))))
+          prodlist)))
+    (to-array-2d [])))
 
 (defn printfact []
   (pprint (sort @gui-facts))

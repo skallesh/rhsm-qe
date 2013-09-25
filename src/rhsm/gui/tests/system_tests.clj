@@ -135,12 +135,15 @@
 (data-driven
  check_escape_window {Test {:groups ["system"
                                      "blockedByBug-862099"]}}
- [[:register-dialog "<CTRL>r"]
-  [:import-dialog "<CTRL>i"]
-  [:system-preferences-dialog "<CTRL>p"]
-  [:proxy-config-dialog "<CTRL>x"]
-  [:question-dialog "<CTRL>u"]
-  [:about-dialog "<CTRL>a"]])
+ [(if-not (assert-skip :system)
+    (do
+      [:register-dialog "<CTRL>r"]
+      [:import-dialog "<CTRL>i"]
+      [:system-preferences-dialog "<CTRL>p"]
+      [:proxy-config-dialog "<CTRL>x"]
+      [:question-dialog "<CTRL>u"]
+      [:about-dialog "<CTRL>a"])
+    (to-array-2d []))])
 
 
 (defn ^{Test {:groups ["system"
