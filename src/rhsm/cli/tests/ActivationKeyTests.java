@@ -886,7 +886,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	protected void assertProvidedProductsFromPoolAreWithinConsumedProductSubscriptionsUsingQuantity (JSONObject jsonPool, List<ProductSubscription> consumedProductSubscriptions, Integer addQuantity, boolean assertConsumptionIsLimitedToThisPoolOnly) throws Exception {
-
+		
 		// assert that only the pool's providedProducts (excluding type=MKT products) are consumed (unless it is a ManagementAddOn product - indicated by no providedProducts)
 		JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
 		// pluck out (remove) the providedProducts that have an attribute type=MKT products
@@ -920,9 +920,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(consumedProductSubscription.quantityUsed, addQuantity, "The consumed product subscription is using the same quantity as requested by the pool added in the activation key.");
 			Assert.assertTrue(consumedProductSubscription.provides.containsAll(providedProductsFromActivationKeyPool)&&providedProductsFromActivationKeyPool.containsAll(consumedProductSubscription.provides), "The consumed product subscription provides all the expected products "+providedProductsFromActivationKeyPool+" from the provided products of the pool added in the activation key.");
 		} else {
-			List<ProductSubscription> subsetOfConsumedProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("accountNumber", new BigInteger(jsonPool.getString("accountNumber")), consumedProductSubscriptions);
-			ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("contractNumber", new Integer(jsonPool.getString("contractNumber")), subsetOfConsumedProductSubscriptions);
-			Assert.assertNotNull(consumedProductSubscription,"Found a consumed product subscription whose account number '"+jsonPool.getLong("accountNumber")+"' AND contract number '"+jsonPool.getInt("contractNumber")+"' match the pool added to the activation key.");
+// after implementation of bug 908671, these three lines are replaced more efficiently by two lines
+//			List<ProductSubscription> subsetOfConsumedProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("accountNumber", new BigInteger(jsonPool.getString("accountNumber")), consumedProductSubscriptions);
+//			ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("contractNumber", new Integer(jsonPool.getString("contractNumber")), subsetOfConsumedProductSubscriptions);
+//			Assert.assertNotNull(consumedProductSubscription,"Found a consumed product subscription whose account number '"+jsonPool.getLong("accountNumber")+"' AND contract number '"+jsonPool.getInt("contractNumber")+"' match the pool added to the activation key.");
+			ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", jsonPool.getString("id"), consumedProductSubscriptions);
+			Assert.assertNotNull(consumedProductSubscription,"Found a consumed product subscription that came from pool id '"+ jsonPool.getString("id")+"' that was added to the activation key.");
 			Assert.assertTrue(consumedProductSubscription.provides.containsAll(providedProductsFromActivationKeyPool)&&providedProductsFromActivationKeyPool.containsAll(consumedProductSubscription.provides), "The consumed product subscription provides all the expected products "+providedProductsFromActivationKeyPool+" from the provided products of the pool added in the activation key.");
 		}
 	}
