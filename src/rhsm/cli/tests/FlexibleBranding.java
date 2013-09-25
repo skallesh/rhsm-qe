@@ -64,14 +64,6 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 	protected String EndingDate;
 	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir"
 			.toLowerCase();
-	protected final String myEmptyCaCertFile = "/etc/rhsm/ca/myemptycert.pem";
-	protected Integer configuredHealFrequency = null;
-	protected Integer configuredCertFrequency = null;
-	protected String configuredHostname=null;
-	protected String factname="system.entitlements_valid";
-	protected String RemoteServerError="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
-	protected String SystemDateOnClient=null;
-	protected String SystemDateOnServer=null;
 	List<String> providedProducts = new ArrayList<String>();
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String Brand_Name = "/var/lib/rhsm/branded_name".toLowerCase();
@@ -247,7 +239,6 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 			
 		}
 		clienttasks.restart_rhsmcertd(null, null, false, null);
-		sleep(2*60*1000);
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
