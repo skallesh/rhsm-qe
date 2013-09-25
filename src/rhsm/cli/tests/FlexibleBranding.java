@@ -1,14 +1,9 @@
 package rhsm.cli.tests;
 
-import java.awt.Robot;
-import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 
 import java.math.BigInteger;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -115,7 +110,7 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(	description="verify if brandname file is created",
+	@Test(	description="verify if brandname file is deleted",
 			groups={"VerifyBrandFileDeletion"},
 			enabled=true)
 	public void VerifyBrand_NameFileNotDeletedAfterUnsubscribing() throws Exception {
@@ -178,7 +173,7 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(	description="verify if brandname file are replaced",
+	@Test(	description="verify if brandtype value is present in the entitlement cert",
 			groups={"VerifyBrand_TypeValue"},
 			enabled=true) //yet to work on
 	public void VerifyBrand_TypeValue() throws Exception {
@@ -207,7 +202,7 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(	description="verify if brandname file are replaced",
+	@Test(	description="verify if brandname file is created for imported cert",
 			groups={"CreationWithImport"},
 			enabled=true) 
 	public void VerifyBrand_NameFileCreationWithImportedCert() throws Exception {
@@ -238,7 +233,7 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(	description="verify if brandname file are replaced",
+	@Test(	description="verify if brandname file is created when rhsmcertd service runs",
 			groups={"CreationWithRHSMCERTD"},
 			enabled=true) 
 	public void VerifyBrand_NameFileCreationWithRHSMCERTD() throws Exception {
