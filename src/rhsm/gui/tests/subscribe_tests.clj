@@ -585,7 +585,7 @@
 
 (defn ^{Test {:groups ["subscribe"
                        "stacking-tests"
-                       "blockedByBug-"]}}
+                       "blockedByBug-854380"]}}
   assert_subscriptions_displayed
   "Asserts the matching subscriptions are displayed when the system is partially subscribed"
   [_]
