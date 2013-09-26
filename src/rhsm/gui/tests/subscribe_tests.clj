@@ -10,7 +10,8 @@
                                blank?
                                join
                                trim-newline
-                               trim)]
+                               trim
+                               blank?)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
@@ -19,6 +20,7 @@
   (:import [org.testng.annotations
             BeforeClass
             BeforeGroups
+            AfterGroups
             Test
             DataProvider]))
 
@@ -26,7 +28,9 @@
 (def servicelist (atom {}))
 (def contractlist (atom {}))
 (def subs-contractlist (atom {}))
+(def prod-dir (atom {}))
 (def sys-log "/var/log/rhsm/rhsm.log")
+(def stacking-dir "/tmp/stacking-dir/")
 
 (defn build-subscription-map
   "Builds the product map and updates the productlist atom"
@@ -567,6 +571,55 @@
          (finally 
           (if (tasks/ui showing? :contract-selection-table)
             (tasks/ui click :cancel-contract-selection))))))))
+
+(defn ^{BeforeGroups {:groups ["subscribe"]
+                      :value ["stacking-tests"]}}
+  before_stacking_tests [_]
+  (if (not (bash-bool (:exitcode (run-command (str "test -d " stacking-dir)))))
+    (run-command (str "mkdir " stacking-dir)))
+  (reset! prod-dir (tasks/conf-file-value "productCertDir"))
+  (let [stackable-pems (tasks/get-stackable-pem-files)
+        change-prod-dir (tasks/set-conf-file-value "productCertDir" stacking-dir)
+        ret-val (fn [pem-file] (:exitcode (run-command (str "cp  " @prod-dir "/" pem-file "  " stacking-dir))))]
+    (map ret-val stackable-pems)))
+
+(defn ^{Test {:groups ["subscribe"
+                       "stacking-tests"
+                       "blockedByBug-"]}}
+  assert_subscriptions_displayed
+  "Asserts the matching subscriptions are displayed when the system is partially subscribed"
+  [_]
+  (try
+    (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
+    (tasks/restart-app)
+    (tasks/search :match-installed? true)
+    (let [subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
+          sockets? (fn [subscription] (substring? "socket" subscription))
+          socket-subs (filter sockets? subscriptions)
+          rand-sub (rand-nth socket-subs)
+          contract (first (get (ctasks/build-contract-map) rand-sub))]
+      (tasks/subscribe rand-sub contract 1)
+      (tasks/restart-app)
+      (tasks/ui selecttab :all-available-subscriptions)
+      (tasks/ui click :search)
+      (tasks/wait-for-progress-bar)
+      (verify (<= 0 (tasks/skip-dropdown :all-subscriptions-view rand-sub))))
+  (finally
+     (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
+     (tasks/unsubscribe_all))))
+
+(defn ^{Test {:groups ["subscribe"
+                       "stacking-tests"
+                       "blockedByBug-"]}}
+  test2[_]
+  (println "Test 2"))
+
+(defn ^{AfterGroups {:groups ["subscribe"]
+                     :value ["stacking-tests"]
+                     :alwaysRun ["true"]}}
+  after_stacking_tests [_]
+  (run-command (str "rm -rf " stacking-dir))
+  (tasks/set-conf-file-value "productCertDir" @prod-dir))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
