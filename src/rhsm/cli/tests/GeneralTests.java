@@ -1,5 +1,6 @@
 package rhsm.cli.tests;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -151,6 +152,26 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
+	
+	
+	@Test(	description="assert permissions on /etc/cron.daily/rhsmd",
+			groups={"blockedbyBug-1012566"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyPermissionsOnEtcCronDailyRhsmd_Test() {
+		//	[root@jsefler-6 ~]# ls -l /etc/cron.daily/rhsmd 
+		//	-rwxr-xr-x. 1 root root 256 Sep 23 14:53 /etc/cron.daily/rhsmd
+		
+		// Bug 1012566 - /etc/cron.daily/rhsmd breaks rule GEN003080 in Red Hat security guide
+		// It should have permissions 0700.
+		// http://people.redhat.com/sgrubb/files/stig-2011/stig-2011-checklist.html#item-SV-978r7_rule
+		
+		File cronDailyFile = new File("/etc/cron.daily/rhsmd");
+		RemoteFileTasks.runCommandAndAssert(client, "ls -l "+cronDailyFile, Integer.valueOf(0), "-rwx------\\. 1 root root .* "+cronDailyFile+"\\n", null);
+	}
+	
+	
+	
 	
 	
 	// Candidates for an automated Test:
