@@ -253,3 +253,14 @@
     (if (>= quantity 0)
       (- quantity consumed)
       quantity)))
+
+(defn build-stacking-id-map
+  "Builds a map of provides product and product attributes"
+  [& {:keys [all?]
+      :or {all? false}}]
+  (let [listall (if all? (list-available true)
+                    (list-available))
+        provides-prods (fn [i]  (map :productName (:providedProducts i)))
+        prod-attrs (fn [i] (:productAttributes i))
+        mapify (map (fn [i] {:pp (map :productName (:providedProducts i)) :attrs (:productAttributes i)}) listall)]
+    mapify))
