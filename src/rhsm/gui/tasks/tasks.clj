@@ -739,3 +739,22 @@
     (run-command command)
     (if update?
       (run-command "subscription-manager facts --update"))))
+
+(defn get-stackable-pem-files
+  "Builds a map of product fnames and .pem files"
+  []
+  (let
+      [prod-dir (conf-file-value "productCertDir")
+       stacking-map (ctasks/build-stacking-id-map :all? true)
+       raw-pem-files (:stdout (run-command
+                               (str "cd " prod-dir "; for x in `ls`; do rct cat-cert $x | egrep \"Path\" | cut -d: -f 2; done")))
+       pem-file-list (into [] (map clojure.string/trim (clojure.string/split-lines raw-pem-files)))
+       raw-prods (:stdout (run-command
+                           (str "cd " prod-dir "; for x in `ls`; do rct cat-cert $x | egrep \"Name\" | cut -d: -f 2; done")))
+       prod-list (into [] (map clojure.string/trim (clojure.string/split-lines raw-prods)))
+       prod-pem-file-map (zipmap prod-list pem-file-list)
+       stacking-id? (fn [i] (not-nil? (some #{"stacking_id"} (map :name (:attrs i)))))
+       stackable-prods (flatten (distinct (map (fn [i] (:pp i))
+                                              (filter stacking-id? stacking-map))))
+       stackable-pems (map (fn [i] (get prod-pem-file-map i)) stackable-prods)]
+    stackable-pems))
