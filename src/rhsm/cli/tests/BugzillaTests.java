@@ -107,7 +107,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 }
 		 String result=clienttasks.status(null, null, null, null).getStdout();
 		 clienttasks.autoheal(null, true, null, null, null, null);
-		 System.out.println(result);
 		
 		
 	}
@@ -182,7 +181,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 clienttasks.importCertificate(path);
          String result=clienttasks.unsubscribe(true,(BigInteger)null, null, null, null).getStdout();
          String expected_result="1 subscriptions removed from this system.";
-		 Assert.assertEquals(result, expected_result);
+		 Assert.assertEquals(result.trim(), expected_result);
 		
 	}
 	
@@ -246,9 +245,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStderr();			
 		System.out.println(EndingDate);
 		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate+".";
-		Assert.assertEquals(result, expected_message);
+		Assert.assertEquals(result.trim(), expected_message);
 		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
-		Assert.assertEquals(result, clienttasks.msg_ConsumerNotRegistered);
+		Assert.assertEquals(result.trim(), clienttasks.msg_ConsumerNotRegistered);
 
 	}
 	
@@ -269,16 +268,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	Assert.assertEquals(UUID, consumerid);
 	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/consumers/"+consumerid);
 	clienttasks.restart_rhsmcertd(null, null, false, null);
-	sleep(2*60*1000);
-	 UUID=getSystemUUIDFacts();
+	UUID=getSystemUUIDFacts();
 	Assert.assertNull(UUID);
 	
 	}
 	
+	
 	public String getSystemUUIDFacts(){
 	String value=null;
-	SSHCommandResult factsList=client.runCommandAndWait("subscription-manager facts --list | grep -v dmi | grep system.uuid");
-	Map<String,String> factsMap = new HashMap<String,String>();
+	value=client.runCommandAndWait("subscription-manager facts --list | grep -v dmi | grep system.uuid | cut -d ' ' -f2").getStdout();
+//	value=client.runCommandAndWait("echo $factsList | cut -d ' ' -f2").getStdout();
+	/*Map<String,String> factsMap = new HashMap<String,String>();
 	List<String> factNames = new ArrayList<String>();
 	String factsListAsString = factsList.getStdout().trim();
 	String factNameRegex="^[\\w\\.\\(\\)-:]+: ";
@@ -304,7 +304,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		thisFactName = thisFactName.replaceFirst(": $", "");
 		thisFactValue = thisFactValue.replaceFirst("\n$","");
 		value=thisFactValue;
-	}
+	}*/
 	return value;
 	}
 	
