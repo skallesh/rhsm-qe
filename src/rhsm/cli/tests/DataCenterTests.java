@@ -89,7 +89,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the derivedProductId is NOT available to the Physical host system
 		List<SubscriptionPool> availablePoolsForDerivedProductId = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", poolDerivedProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-		Assert.assertTrue(availablePoolsForDerivedProductId.isEmpty(),"A subpool for the derivedProductId should NOT be available to the host after (or before) it consumes the data center product subscription.");
+		Assert.assertTrue(availablePoolsForDerivedProductId.isEmpty(),"A subpool for the derivedProductId '"+poolDerivedProductId+"' should NOT be available to the host after (or before) it consumes the data center product subscription.");
 		
 		// now we can assert that a host_limited subpool was generated from consumption of this physical pool and is only available to guests of this physical system
 		// first, let's flip the virt.is_guest to true and assert that the virtual guest subpool is not (yet) available since the virtUuid is not on the host consumer's list of guestIds
@@ -330,7 +330,7 @@ System Type:       Physical
         {
             "created": "2013-07-09T18:57:46.312+0000", 
             "id": "8a90f8203fc4ca73013fc4cbed48045d", 
-            "name": "skip_subs", 
+            "name": "skip_subs", 						// <mstead> jsefler: skip_subs was only used when loading test data -- nothing candlepin related. Just ended up in the attributes list. <mstead> jsefler: I've made is so that it will no longer show up in imported data
             "productId": "awesomeos-server-basic-vdc", 
             "updated": "2013-07-09T18:57:46.312+0000", 
             "value": "true"

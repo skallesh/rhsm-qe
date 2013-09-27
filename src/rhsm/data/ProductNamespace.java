@@ -22,6 +22,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 	public String version;
 	public String arch;			// comma separated list of architectures: x86_64,x86
 	public String providedTags;	// comma separated list of tags: rhel-6,rhel-6-server
+	public String brandType;
 
 	public String id;
 	
@@ -43,6 +44,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 		if (version != null)		string += String.format(" %s='%s'", "version",version);
 		if (arch != null)			string += String.format(" %s='%s'", "arch",arch);
 		if (providedTags != null)	string += String.format(" %s='%s'", "providedTags",providedTags);
+		if (brandType != null)		string += String.format(" %s='%s'", "brandType",brandType);
 		
 		return string.trim();
 	}
@@ -215,6 +217,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.2 (Version) : 6.0
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.3 (Architecture) : x86_64
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.4 (Provides) : String1, String2, String3
+	    //    1.3.6.1.4.1.2312.9.1.<product_hash>.5 (OS): String (set if product is considered an os for branding)
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>  (High Availability)
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.1 (Name) : High Availability
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.2 (Version) : 6.0
@@ -230,6 +233,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 		regexes.put("version",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.2:[\\s\\cM]*\\.(?:.|\\s)(.*)");
 		regexes.put("arch",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.3:[\\s\\cM]*\\.(?:.|\\s)(.*)");
 		regexes.put("providedTags",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.4:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("brandType",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.5:[\\s\\cM]*\\.(?:.|\\s)(.*)");
 		
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){
@@ -356,6 +360,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 		regexes.put("version",				"^\\s+Version: (.+)");
 		regexes.put("arch",					"^\\s+Arch: (.+)");
 		regexes.put("providedTags",			"^\\s+Tags: (.+)");
+		regexes.put("brandType",			"^\\s+Brand Type: (.+)");
 		
 		// find all the raw "Product:" groupings and then create one ProductNamespace per raw "Product:" grouping
 		String rawProductRegex = "Product:((\\n.+)+)";

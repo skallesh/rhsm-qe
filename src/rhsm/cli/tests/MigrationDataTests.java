@@ -213,15 +213,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		boolean verifiedVersionOfAllMigrationProductCertFiles = false;
 		int numberOfMigrationProductCertsSupportingThisRelease = 0;
 		for (ProductCert productCert : clienttasks.getProductCerts(baseProductsDir)) {
-			if (!productCert.productNamespace.providedTags.toLowerCase().contains("rhel")) {
-				log.info("Migration productCert '"+productCert+"' does not provide RHEL tags.  Skipping assertion that its version matches this system's RHEL version.");
+			if (productCert.productNamespace.providedTags==null || !productCert.productNamespace.providedTags.toLowerCase().contains("rhel")) {
+				log.info("Migration productCert '"+productCert.file+"' providesTags '"+productCert.productNamespace.providedTags+"' which are NOT RHEL tags.  Skipping assertion that its version matches this system's RHEL version.");
 				continue;
 			}
 			if (productCert.productNamespace.version.equals(clienttasks.redhatReleaseXY)) {
-				Assert.assertTrue(true,"Migration productCert '"+productCert+"' supports this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
+				Assert.assertTrue(true,"Migration productCert '"+productCert.file+"' supports this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 				numberOfMigrationProductCertsSupportingThisRelease++;
 			} else {
-				log.warning("Migration productCert '"+productCert+"' does NOT support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
+				log.warning("Migration productCert '"+productCert.file+"' providesTags '"+productCert.productNamespace.providedTags+"' version '"+productCert.version+"' does NOT support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 			}
 		}
 		Assert.assertTrue(numberOfMigrationProductCertsSupportingThisRelease>0,"At least one 'actual="+numberOfMigrationProductCertsSupportingThisRelease+"' migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
