@@ -418,7 +418,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void BypassRulesDueToTypeAndCapabilities_Test() throws Exception {
 				
 		// this list will grow in time as candlepins are programmed to handle more subscription types (I got this list from the dev team)
-		List<String> allCapabilities = Arrays.asList(new String[]{"cores", "ram", "instance_multiplier", "derived_product", "cert_v3"});
+		//List<String> allCapabilities = Arrays.asList(new String[]{"cores", "ram", "instance_multiplier", "derived_product", "cert_v3"});
+		List<String> allCapabilities = servertasks.statusCapabilities;	// we can actually get this list from the candlepin API call to /status
 		allCapabilities = getRandomSubsetOfList(allCapabilities,allCapabilities.size());	// randomly reorder this list
 		
 		// set minimal facts

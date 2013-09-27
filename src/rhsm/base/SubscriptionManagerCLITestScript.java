@@ -179,6 +179,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
 			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/status"));
 			if (jsonStatus!=null) {
+				servertasks.statusCapabilities.clear();
+				for (int i=0; i<jsonStatus.getJSONArray("managerCapabilities").length(); i++) {
+					servertasks.statusCapabilities.add(jsonStatus.getJSONArray("managerCapabilities").getString(i));
+				}
 				servertasks.statusRelease		= jsonStatus.getString("release");
 				servertasks.statusResult		= jsonStatus.getBoolean("result");
 				servertasks.statusVersion		= jsonStatus.getString("version");
@@ -187,15 +191,33 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				servertasks.statusStandalone	= jsonStatus.getBoolean("standalone");
 				} catch(Exception e){log.warning(e.getMessage());log.warning("You should upgrade your candlepin server!");}
 
-				//[root@jsefler-r63-server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
-				//{
-				//    "release": "1", 
-				//    "result": true, 
-				//    "standalone": true, 
-				//    "timeUTC": "2012-03-08T18:58:07.688+0000", 
-				//    "version": "0.5.24"
-				//}
+				//	[root@jsefler-r63-server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
+				//	{
+				//	    "release": "1", 
+				//	    "result": true, 
+				//	    "standalone": true, 
+				//	    "timeUTC": "2012-03-08T18:58:07.688+0000", 
+				//	    "version": "0.5.24"
+				//	}
 				
+				//	[root@jsefler-6 ~]# curl --stderr /dev/null --insecure --user ***:*** --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/status | python -m simplejson/tool
+				//	{
+				//	    "managerCapabilities": [
+				//	        "cores", 
+				//	        "ram", 
+				//	        "instance_multiplier", 
+				//	        "derived_product", 
+				//	        "cert_v3"
+				//	    ], 
+				//	    "release": "1", 
+				//	    "result": true, 
+				//	    "rulesSource": "DEFAULT", 
+				//	    "rulesVersion": "4.3", 
+				//	    "standalone": false, 
+				//	    "timeUTC": "2013-09-27T13:51:08.783+0000", 
+				//	    "version": "0.8.28"    <=== COULD ALSO BE "0.8.28.0" IF A HOT FIX WAS APPLIED
+				//	}
+
 				//TODO git candlepin version on hosted stage:
 				// curl -s	http://git.corp.redhat.com/cgit/puppet-cfg/modules/candlepin/plain/data/rpm-versions.yaml?h=stage | grep candlepin
 				// candlepin-it-jars: 0.5.26-1
@@ -204,11 +226,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				log.info("Candlepin server '"+sm_serverHostname+"' is running: release="+servertasks.statusRelease+" version="+servertasks.statusVersion+" standalone="+servertasks.statusStandalone+" timeUTC="+servertasks.statusTimeUTC);
 				Assert.assertEquals(servertasks.statusResult, true,"Candlepin status result");
 				Assert.assertTrue(servertasks.statusRelease.matches("\\d+"), "Candlepin release matches d+");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
-				Assert.assertTrue(servertasks.statusVersion.matches("\\d+\\.\\d+\\.\\d+"), "Candlepin version is matches d+.d+.d+");
+				Assert.assertTrue(servertasks.statusVersion.matches("\\d+\\.\\d+\\.\\d+(.\\d+)?"), "Candlepin version matches d+.d+.d+(.d+)? (Note: optional fourth digits indicate a hot fix)");
 			}
 		} catch (Exception e) {
 			// Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
-			log.warning("Failed to get the Candlepin server '"+sm_serverHostname+"' version from the /status api.  Candlepin version: "+servertasks.statusVersion);
+			log.warning("Ecountered exception while getting the Candlepin server '"+sm_serverHostname+"' version from the /status api: "+e);
 		} 
 
 		
