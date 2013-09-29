@@ -181,9 +181,6 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// mark dataProvider rows with a blockedByBzBug where appropriate
 			Set<String> bugIds = new HashSet<String>();
 			
-			// Bug 817117 - bash-completion of subscription-manager environments --<TAB><TAB> is not working
-			if (bashCommand.startsWith("subscription-manager environments ")) bugIds.add("817117");
-			
 			// Bug 812104 - Unable to tab complete new subscription-manager modules (release and service-level)
 			if (bashCommand.startsWith("subscription-manager release ")) bugIds.add("812104");
 			if (bashCommand.startsWith("subscription-manager service-level ")) bugIds.add("812104");
@@ -191,6 +188,12 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 817390 - bash-completion of subscription-manager subscribe --<TAB><TAB> is not finding --servicelevel option
 			if (bashCommand.startsWith("subscription-manager subscribe ")) bugIds.add("817390");
 			if (bashCommand.startsWith("subscription-manager register ")) bugIds.add("817390");
+			
+			// Bug 817117 - bash-completion of subscription-manager environments --<TAB><TAB> is not working
+			if (bashCommand.startsWith("subscription-manager environments ")) bugIds.add("817117");
+
+			// Bug 1011712 - bash-completion of subscription-manager environments --<TAB><TAB> is incomplete
+			if (bashCommand.startsWith("subscription-manager environments ")) bugIds.add("1011712");
 			
 			// Bug 1003010 - --status should be removed from bash-completion of subscription-manager list --<TAB><TAB>
 			if (bashCommand.startsWith("subscription-manager list ")) bugIds.add("1003010");
@@ -212,22 +215,22 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			if (bashCommand.startsWith("subscription-manager subscribe ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager unsubscribe ")) bugIds.add("1001820");
 
+			// Bug 1004341 - subscription-manager-gui does not bash complete its options
+			if (bashCommand.startsWith("subscription-manager-gui ")) bugIds.add("1004341");
 			
 			// Bug 1004318 - rct [cat-cert cat-manifest dump-manifest stat-cert] does not bash complete its options
 			if (bashCommand.startsWith("rct ")) bugIds.add("1004318");
 			
-			// Bug 1004341 - subscription-manager-gui does not bash complete its options
-			if (bashCommand.startsWith("subscription-manager-gui ")) bugIds.add("1004341");
-			
 			// Bug 1004385 - rhsm-icon bash completions should not end with a comma
 			if (bashCommand.startsWith("rhsm-icon ")) bugIds.add("1004385");
+			
+			// Bug 985090 - command "rhsmcertd" options
+			if (bashCommand.startsWith("rhsmcertd ")) bugIds.add("985090");
 			
 			// Bug 1004402 - rhsmd and rhsmcertd-worker does not bash complete its options
 			if (bashCommand.startsWith("/usr/libexec/rhsmcertd-worker ")) bugIds.add("1004402");
 			if (bashCommand.startsWith("/usr/libexec/rhsmd ")) bugIds.add("1004402");
 			
-			// Bug 1011712 - bash-completion of subscription-manager environments --<TAB><TAB> is incomplete
-			if (bashCommand.startsWith("subscription-manager environments ")) bugIds.add("1011712");
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
