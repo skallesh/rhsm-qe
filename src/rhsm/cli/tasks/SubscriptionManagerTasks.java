@@ -517,7 +517,7 @@ public class SubscriptionManagerTasks {
 		*/
 		sshCommandRunner.runCommandAndWait("git clone -q "+gitRepository+" "+translateToolkitDir);
 		sshCommandRunner.runCommandAndWait("cd "+translateToolkitDir+" && ./setup.py install --force");
-		sshCommandRunner.runCommandAndWait("rm -rf ~/.local");	// 9/27/2013 Fix for the following... Don't know, but I started getting Traceback ImportError: cannot import name pofilter
+		sshCommandRunner.runCommandAndWait("rm -rf ~/.local");	// 9/27/2013 Fix for the following... Don't know why I started getting Traceback ImportError: cannot import name pofilter
 		sshCommandRunner.runCommandAndWait("which pofilter");
 		if (sshCommandRunner.getExitCode()!=0) log.warning("Encountered problems while installing pofilter; related tests will likely fail or skip.");
 	}
