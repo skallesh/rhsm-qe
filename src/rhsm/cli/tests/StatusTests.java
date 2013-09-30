@@ -324,17 +324,24 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult statusResultTommorow = clienttasks.status(onDateTomorrow,null,null, null);
 		
 		// assert tomorrow's status is identical to today's (assumes no change in coverage)
-		Assert.assertEquals(statusResultTommorow.toString(), statusResultToday.toString(),"Asserting the assumption that the status --ondate=tommorrw will be identical to the status ondate=today (default).");
+		Assert.assertEquals(statusResultTommorow.toString(), statusResultToday.toString(),"Asserting the assumption that the status --ondate=tommorrow will be identical to the status ondate=today (default).");
 		
-		// now let's find the endDate of any current entitlement and assert that the status on the following day is different
+		// now let's find the most future endDate of all current entitlement and assert that the status on the following day is different and Invalid
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		if (consumedProductSubscriptions.isEmpty()) throw new SkipException("The remainder of this test cannot be executed because we expect this system to have at least one consumed entitlement.");
-		Calendar future = consumedProductSubscriptions.get(randomGenerator.nextInt(consumedProductSubscriptions.size())).endDate; future.add(Calendar.HOUR, 24);
+		Calendar future = consumedProductSubscriptions.get(0).startDate;
+		for (ProductSubscription productSubscription : consumedProductSubscriptions) if (productSubscription.endDate.after(future)) future = productSubscription.endDate;
+		future.add(Calendar.HOUR, 24);	// add one day
 		String onDateFuture = yyyy_MM_dd_DateFormat.format(future.getTime());
 		SSHCommandResult statusResultFuture = clienttasks.status(onDateFuture,null,null, null);
 		
 		// assert future status is NOT identical to today's (assumes entitlements have expired)
 		Assert.assertTrue(!statusResultFuture.toString().equals(statusResultToday.toString()),"Asserting the assumption that the status --ondate=future (the day after an entitlement expires) will NOT be identical to the status ondate=today (default).");
+		
+		// assert future status is Invalid
+		String expectedStatus = "Overall Status: Invalid";
+		Assert.assertTrue(statusResultFuture.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' onDate '"+onDateFuture+"' which is one day beyond the most future endDate of the currently consumed subscriptions.");
+
 	}
 	
 	@Test(	description="run subscription-manager status ondate (yesterday)",
