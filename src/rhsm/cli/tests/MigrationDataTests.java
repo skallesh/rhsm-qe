@@ -681,11 +681,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		//	RHN Classic channel 'rhel-x86_64-server-hts-5-beta-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-5/channel-cert-mapping.txt'.
 		//	RHN Classic channel 'rhel-x86_64-server-hts-5-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-5/channel-cert-mapping.txt'.
 		// (degregor 5/8/2012) We're not delivering Hardware Certification (aka hts) bits through the CDN at this point.
+		/* (degregor 9/30/2013) I do see product 199 mapped to a number of SKUs, so we should include those channels/certs in the migration.
 		if (classicRhnChannel.matches("rhel-.+-hts-"+clienttasks.redhatReleaseX+"(-.*|$)")) {
 			log.warning("(degregor 5/8/2012) We're not delivering Hardware Certification (aka hts) bits through the CDN at this point.");
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		*/
 		
 		// RHN Classic channel 'rhel-x86_64-server-6-rhui-2' is accounted for in subscription-manager-migration-data file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'. expected:<true> but was:<false>
 		// RHN Classic channel 'rhel-x86_64-server-6-rhui-2-debuginfo' is accounted for in subscription-manager-migration-data file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'. expected:<true> but was:<false>
