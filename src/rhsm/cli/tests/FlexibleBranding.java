@@ -245,6 +245,80 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.trim(), productname.trim());
 	}
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if brandname file is created when two RHEL products are installed",
+			groups={"CreationWithTwoRhelproducts"},
+			enabled=true) 
+	public void VerifyBrand_NameFileCreationWithTwoRhelProductInstalled() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		client.runCommand("rm -rf "+Brand_Name);
+		client.runCommandAndWait("cp /root/temp1/32060.pem  /root/temp1/37060.pem "+clienttasks.productCertDir);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		String result=client.runCommandAndWait("cat "+Brand_Name).getStderr();
+		String expectedMessage="cat: /var/lib/rhsm/branded_name: No such file or directory";
+		Assert.assertEquals(result.trim(), expectedMessage);
+	}
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if brandname file is created when two RHEL products are installed",
+			groups={"CreationWithTActivationKey"},
+			enabled=true) 
+	public void VerifyBrand_NameFileCreationWithActivationKeys() throws Exception {
+		String productname=null;
+		Integer addQuantity=null;
+		
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
+			addQuantity=1;
+		}else{
+			addQuantity=2;
+		}
+		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
+				sm_clientOrg, System.currentTimeMillis());
+		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
+		mapActivationKeyRequest.put("name", name);
+		JSONObject jsonActivationKeyRequest = new JSONObject(
+				mapActivationKeyRequest);
+		JSONObject jsonActivationKey = new JSONObject(
+				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
+						sm_clientPassword, sm_serverUrl, "/owners/"
+								+ sm_clientOrg + "/activation_keys",
+								jsonActivationKeyRequest.toString()));
+		String poolId=null;
+		
+		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+					if(availList.subscriptionName.contains("Instance")){
+						poolId=availList.poolId;
+			
+		}
+		}
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			productname=installed.productName;
+		}
+		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
+		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
+
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);
+		
+		
+		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
+		Assert.assertEquals(result.trim(), productname.trim());
+	}
 	
 	@BeforeClass(groups = { "setup" })
 	protected void moveProductCertFiles() throws IOException {

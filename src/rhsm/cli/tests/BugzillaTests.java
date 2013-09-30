@@ -900,6 +900,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
 		File entitlementCertFile=null;
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		//clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
@@ -914,9 +917,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
 		clienttasks.restart_rhsmcertd(null, null, false, null);
-		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
+		System.out.println(servertasks.getCurrentlyRevokedCerts());
 		for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
+			System.out.println(revokedCerts.serialNumber +" revoked cert");
 			Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
+			
 		}
 		
 	}
