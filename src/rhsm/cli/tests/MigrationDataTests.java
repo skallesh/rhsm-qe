@@ -743,7 +743,19 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
+	@Test(	description="Verify that the channel-cert-mapping.txt does NOT contain any High Touch Beta channel mappings",
+			groups={"AcceptanceTests","blockedByBug-1011992"},
+			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyChannelCertMappingDoesNotContainHighTouchBetaChannels_Test() {
+		Assert.assertTrue(RemoteFileTasks.testExists(client, channelCertMappingFilename),"The expected channel cert mapping file '"+channelCertMappingFilename+"' exists.");
+		
+		SSHCommandResult sshCommandResult = client.runCommandAndWait("grep -- -htb "+channelCertMappingFilename);
+		Assert.assertTrue(sshCommandResult.getStdout().trim().isEmpty(), "There should be no hits on htb channels in "+channelCertMappingFilename);
+		Assert.assertEquals(sshCommandResult.getStderr().trim(),"", "Stderr from call to grep.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "Stderr from call to grep.");
+	}
 	
 	
 	

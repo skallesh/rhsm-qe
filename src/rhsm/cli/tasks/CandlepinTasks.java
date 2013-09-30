@@ -89,6 +89,7 @@ public class CandlepinTasks {
 	public Integer redhatReleaseX = new Integer(0);
 	
 	// populated from curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/status | python -mjson.tool
+	public List<String> statusCapabilities = new ArrayList<String>();
 	public String statusRelease = "";
 	public boolean statusResult = true;
 	public String statusVersion = "Unknown";
