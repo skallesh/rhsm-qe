@@ -1633,7 +1633,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			"rhel-x86_64-server-6-rhscl-1-beta-debuginfo",
 			"rhel-x86_64-server-6-rhscl-1-beta",
 			"rhel-x86_64-server-6-rhscl-1-debuginfo",
-			"rhel-x86_64-server-6-rhscl-1"});
+			"rhel-x86_64-server-6-rhscl-1",
+			"rhel-i386-server-hts-6-beta",
+			"rhel-x86_64-server-hts-6-beta"});
 			if (variousAvailableChildChannels.contains(rhnAvailableChildChannel)) {
 				// Bug 1009109 - various available RHN Classic child channels that are not accounted for in product-certs.json
 				bugIds.add("1009109");
