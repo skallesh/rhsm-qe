@@ -1106,14 +1106,20 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 			int n=newFeed.getEntries().size()-1;
 			int o=oldFeed.getEntries().size()-1;
-			g=0;
+			g=0;	// feed growth 
 			while (g<o+1) {
-				int c=0;
+				int c=0;	// backward feed index count of newFeed
 				while (o-c-g>=0 &&
 						// newFeedTitle == oldFeedTitle
 						(((SyndEntryImpl) newFeed.getEntries().get(n-c)).getTitle()).equals(((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getTitle()) &&
 						// newFeedDescription == oldFeedDescription
 						(((SyndEntryImpl) newFeed.getEntries().get(n-c)).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(n-c)).getDescription().getValue()).equals(((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription().getValue()) ) {
+/*debugging*/
+//					log.info("newFeed entry["+(n-c)+"].getTitle()= "+((SyndEntryImpl) newFeed.getEntries().get(n-c)).getTitle());
+//					log.info("oldFeed entry["+(o-c-g)+"].getTitle()= "+((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getTitle());
+//					log.info("newFeed entry["+(n-c)+"].getDescription()= "+(((SyndEntryImpl) newFeed.getEntries().get(n-c)).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(n-c)).getDescription().getValue())  );
+//					log.info("oldFeed entry["+(o-c-g)+"].getDescription()= "+(((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription().getValue())  );
+//					log.info("");
 					c++;
 				}
 				if (o-c-g<0) {
