@@ -432,4 +432,28 @@
              (if (bool (tasks/ui guiexist :contract-selection-dialog))
                (tasks/ui click :cancel-contract-selection)))))))))
 
+(defn ^{test {:group ["system"
+                      "blockedByBug-723992"]}}
+  check_gui_refresh
+  "Checks whether the GUI refreshes in a reasonable amount of time"
+  [_]
+  (tasks/restart-app :unregister? true)
+  (verify (tasks/ui showing? :register-system))
+  (let [username (@config :username)
+        password (@config :password)
+        owner (@config :owner-key)
+        server (ctasks/server-path)
+        cmd (str "--username=" username " --password=" password " --org=" owner " --serverurl=" server)]
+    (run-command (str "subscription-manager register " cmd)))
+  (sleep 2000)
+  (verify (not (tasks/ui showing? :register-system)))
+  (try
+    (let [status (tasks/ui gettextvalue :main-window "*subscriptions")
+          auto-suscribe (run-command "subscription-manager subscribe --auto")]
+      (sleep 2000)
+      (verify (not (= status (tasks/ui gettextvalue :main-window "*subscriptions")))))
+    (finally
+     (tasks/unsubscribe_all)
+     (tasks/unregister))))
+
 (gen-class-testng)
