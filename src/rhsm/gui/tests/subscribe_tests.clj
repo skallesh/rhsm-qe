@@ -575,6 +575,7 @@
 (defn ^{BeforeGroups {:groups ["subscribe"]
                       :value ["stacking-tests"]}}
   before_stacking_tests [_]
+  (tasks/restart-app :reregister? true)
   (if (not (bash-bool (:exitcode (run-command (str "test -d " stacking-dir)))))
     (run-command (str "mkdir " stacking-dir)))
   (reset! prod-dir (tasks/conf-file-value "productCertDir"))
@@ -610,9 +611,63 @@
 
 (defn ^{Test {:groups ["subscribe"
                        "stacking-tests"
-                       "blockedByBug-"]}}
-  test2[_]
-  (println "Test 2"))
+                       "blockedByBug-745965"]}}
+  assert_future_cert_status
+  "Asserts cert status for future entitilment"
+  [_]
+  (tasks/restart-app)
+  (tasks/ui selecttab :all-available-subscriptions)
+  (tasks/search)
+  (let [date-string (tasks/ui gettextvalue :date-entry)
+        date-split (split date-string #"-")
+        year (first date-split)
+        month (second date-split)
+        day (last date-split)
+        new-year (+ (Integer. (re-find  #"\d+" year)) 1)
+        new-prod-dir (str "/tmp/single-pem/")
+        existing-prod-dir (tasks/conf-file-value "productCertDir")
+        subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
+        sockets? (fn [subscription] (substring? "socket" subscription))
+        socket-subs (filter sockets? subscriptions)
+        rand-sub (rand-nth socket-subs)
+        rand-prod (tasks/skip-dropdown :all-subscriptions-view rand-sub)
+        rand-prod-list (tasks/get-table-elements :all-available-bundled-products 0)
+        raw-pem-files (:stdout (run-command
+                      (str "cd " existing-prod-dir "; for x in `ls`; do rct cat-cert $x | egrep \"Path\" | cut -d: -f 2; done")))
+        pem-file-list (into [] (map clojure.string/trim
+                                     (clojure.string/split-lines raw-pem-files)))
+        raw-prods (:stdout (run-command
+                       (str "cd " existing-prod-dir "; for x in `ls`; do rct cat-cert $x | egrep \"Name\" | cut -d: -f 2; done")))
+        prod-list (into [] (map clojure.string/trim (clojure.string/split-lines raw-prods)))
+        prod-pem-file-map (zipmap prod-list pem-file-list)
+        pem-file (get prod-pem-file-map (first rand-prod-list))
+        repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))]
+    (if (not (bash-bool (:exitcode (run-command (str "test -d " new-prod-dir)))))
+      (run-command (str "mkdir " new-prod-dir)))
+    (run-command (str "cp " existing-prod-dir pem-file "  " new-prod-dir))
+    (tasks/set-conf-file-value "productCertDir" new-prod-dir)
+    (try+
+      (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
+      (tasks/restart-app)
+      (tasks/ui selecttab :all-available-subscriptions)
+      (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
+      (tasks/search :match-installed? true)
+      (tasks/skip-dropdown :all-subscriptions-view rand-sub)
+      (tasks/ui generatekeyevent (str
+                                  (repeat-cmd 3 "<right> ")
+                                  "<space> " "1 " "<enter>"))
+      (tasks/ui click :attach)
+      (tasks/ui selecttab :my-installed-products)
+      (tasks/do-to-all-rows-in :installed-view 2
+                               (fn [status]
+                                 (verify (= "Future Subscription" status))))
+      (verify (not (substring? "doen not match subscription" (tasks/ui gettextvalue :main-window "*subscription"))))
+      (finally
+       (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
+       (tasks/set-conf-file-value "productCertDir" existing-prod-dir)
+       (run-command (str "rm -rf " new-prod-dir))
+       (tasks/unsubscribe_all)
+       (tasks/restart-app)))))
 
 (defn ^{AfterGroups {:groups ["subscribe"]
                      :value ["stacking-tests"]
