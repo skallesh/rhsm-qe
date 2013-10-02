@@ -671,7 +671,7 @@
 
 (defn ^{AfterGroups {:groups ["subscribe"]
                      :value ["stacking-tests"]
-                     :alwaysRun ["true"]}}
+                     :alwaysRun true}}
   after_stacking_tests [_]
   (run-command (str "rm -rf " stacking-dir))
   (tasks/set-conf-file-value "productCertDir" @prod-dir))
