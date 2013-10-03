@@ -21,8 +21,8 @@ public class ProductSubscription extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MM/dd/yyyy";	// 04/24/2011 https://bugzilla.redhat.com/show_bug.cgi?id=695234  https://bugzilla.redhat.com/show_bug.cgi?id=699442
 	
 	// abstraction fields
-	public String productName;	// TODO change to subscriptionName as well as all the "productName" references in the testcases
 	public String productId;
+	public String productName;	// TODO change to subscriptionName as well as all the "productName" references in the testcases
 	public List<String> provides;	// list of provided product names
 	public BigInteger serialNumber;	// Long serialNumber;	// Integer serialNumber; // serialNumber=290624661330496 is out of range for an Integer
 	public Integer contractNumber;
@@ -69,8 +69,8 @@ public class ProductSubscription extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (productName != null)	string += String.format(" %s='%s'", "productName",productName);
 		if (productId != null)		string += String.format(" %s='%s'", "productId",productId);
+		if (productName != null)	string += String.format(" %s='%s'", "productName",productName);
 		if (provides != null)		string += String.format(" %s='%s'", "provides",provides);
 		if (serialNumber != null)	string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (contractNumber != null)	string += String.format(" %s='%s'", "contractNumber",contractNumber);
@@ -220,8 +220,8 @@ public class ProductSubscription extends AbstractCommandLineData {
 
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		regexes.put("productName",			"Subscription Name:(.*)");
-		regexes.put("productId",			"SKU:(.*)");		// Bug 806986 - Subscription-Manager should refer to subscription name and product name
 		regexes.put("provides",				"Provides:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// this assumes that Provides is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
+		regexes.put("productId",			"SKU:(.*)");		// Bug 806986 - Subscription-Manager should refer to subscription name and product name
 		regexes.put("contractNumber",		"Contract:(.*)");	// Bug 818355 - Terminology Change: Contract Number -> Contract
 		regexes.put("accountNumber",		"Account:(.*)");	// Bug 818339 - Terminology Change: Account Number -> Account
 		regexes.put("serialNumber",			"Serial:(.*)");		// Bug 963815 - String Update: 'Serial Number' > 'Serial' in 'list --consumed'
