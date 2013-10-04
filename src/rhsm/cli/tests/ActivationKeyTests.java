@@ -206,7 +206,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(	description="create an activation key, add a pool to it with a quantity, and then register with the activation key",
-			groups={},
+			groups={"blockedByBug-973838"},
 			dataProvider="getRegisterWithActivationKeyContainingPoolWithQuantity_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -411,6 +411,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that only the pool's providedProducts (excluding type=MKT products) are consumed (unless it is a ManagementAddOn product - indicated by no providedProducts)
 		assertProvidedProductsFromPoolAreWithinConsumedProductSubscriptionsUsingQuantity(jsonPool, clienttasks.getCurrentlyConsumedProductSubscriptions(), addQuantity, true);
+		
+		// assert that the YumRepos immediately reflect the entitled contentNamespace labels // added for the benefit of Bug 973838 - subscription-manager needs to refresh redhat.repo when registering against katello
+		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(clienttasks.getCurrentProductCerts());
 		
 		return registerResult;
 	}

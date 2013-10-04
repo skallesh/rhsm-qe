@@ -528,8 +528,43 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
-	
+	@Test(	description="Verify that the redhat.repo file is refreshed with changes to the entitlements (yum transactions are no longer required to update the redhat.repo)",
+			enabled=true,
+			groups={"AcceptanceTests","blockedByBug-1008016"})	// TODO: review all tests and tasks that issue yum transactions simply to re-populate the redhat.repo
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyYumTransactionsAreNoLongerRequiredToTriggerUpadtesToRedhatRepo_Test() {
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);	// shut off auto-healing
+		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+
+		// Subscribe to a randomly available pool...
+		log.info("Subscribe to a randomly available pool...");
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		if (pools.size()<=0) throw new SkipException("No susbcriptions were available which blocks this test from executing.");
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+
+		// testing the subscribe case...
+		clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		log.info("Immediately after attaching a subscription, we will now assert that all of the content repos from the currently attached entitlements are currently present in the redhat.repo without having triggered a yum transaction...");
+		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
+		
+		// testing the unsubscribe case...
+		clienttasks.unsubscribe_(true,(BigInteger)null,null,null,null);
+		log.info("Immediately after removing a subscription, we will now assert that the redhat.repo is empty without having triggered a yum transaction...");
+		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
+		
+		// testing the autosubscribe case...
+		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
+		log.info("Immediately after autoattaching subscription(s), we will now assert that all of the content repos from the currently attached entitlements are currently present in the redhat.repo without having triggered a yum transaction...");
+		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
+		
+		// testing the unregister case...
+		clienttasks.unregister_(null, null, null);
+		log.info("Immediately after unregistering, we will now assert that the redhat.repo is empty without having triggered a yum transaction...");
+		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
+	}
 	
 	
 	
@@ -543,11 +578,6 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
-	
-	
-	// Configuration methods ***********************************************************************
-
 	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() throws JSONException, Exception {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
