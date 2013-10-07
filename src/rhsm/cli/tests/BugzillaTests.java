@@ -31,6 +31,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import clojure.contrib.jmx.client__init;
+
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -80,7 +83,32 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify status check and response from server after addition and deletion of product from /etc/pki/product/",
+			groups={"VerifyStatusCheck","blockedByBug-921870"},
+			enabled=true)
+	public void VerifyStatusCheck() throws Exception {
+		moveProductCertFiles("*");
+		client.runCommandAndWait("cp /root/temp1/37060.pem "+clienttasks.productCertDir);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
+		String result=clienttasks.status(null, null, null, null).getStdout();
+		String expectedStatus = "Overall Status: Invalid";
+		Assert.assertTrue(result.contains(expectedStatus));
+		clienttasks.restart_rhsmcertd(null, null, false, true);
+		result=clienttasks.status(null, null, null, null).getStdout();
+		expectedStatus = "Overall Status: Current";
+		Assert.assertTrue(result.contains(expectedStatus));
 		
+	}
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -666,19 +694,21 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"SubscriptionManagerAccess","blockedByBug-878588"},
 			enabled=false)
 	public void SubscriptionManagerAccess() throws Exception {
-		String username="testuserlogin";
-		String passwords="123testpassword";
+		/*String username="testlogin";
+		//String passwords="123testpassword";
 		client.runCommandAndWait("useradd "+username);
-		client.runCommandAndWait("echo "+passwords+" | passwd "+username + " --stdin");
-		String result=client.runCommandAndWait("").getStdout();
-	
+		//client.runCommandAndWait("echo "+passwords+" | passwd "+username + " --stdin");
+	//	String result=client.runCommandAndWait("su - "+username+" -c subscription-manager").getStderr();
+
+	//	client.runCommandAndWait("su - "+username);
+	//	System.out.println(result + "is the result");
 		String expectedMessage="Error: this command requires root access to execute";
 	//	Assert.assertEquals(client.getStderr().trim(), expectedMessage);
 		//SSHCommandResult result=client.runCommandAndWait("su "+username);
 		//result=client.runCommandAndWait(clienttasks.command);
 		//client.runCommandAndWait("logout");
 	//	client=new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
-		client.runCommandAndWait("userdel -r "+username);
+		client.runCommandAndWait("userdel -r "+username);*/
 		
 		
 	}
