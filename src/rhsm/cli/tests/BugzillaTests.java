@@ -265,7 +265,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
 		Calendar endCalendar = new GregorianCalendar();
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
-		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/dd/yy h:mm aaa");
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate=yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
 		sleep(1*60*1000);
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
@@ -293,7 +293,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null).getStderr();
 	String UUID=getSystemUUIDFacts();
 	String consumerid=clienttasks.getCurrentConsumerId();
-	Assert.assertEquals(UUID, consumerid);
+	Assert.assertEquals(UUID, consumerid.trim());
 	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/consumers/"+consumerid);
 	clienttasks.restart_rhsmcertd(null, null, false, null);
 	UUID=getSystemUUIDFacts();
@@ -3680,8 +3680,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				actual =false;
 				clienttasks.subscribe_(null, null, pool.poolId, null, null,
 						null, null, null, null, null, null);
-				
-				
+			
 			}
 			}
 		if(actual==false){
@@ -3689,8 +3688,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			Boolean flag = RegexInRhsmLog("@ /etc/pki/entitlement",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 			Assert.assertEquals(flag, actual);
 		}else throw new SkipException("no bundled products available for testing");	
-	
-
 	}
 
 	/**
