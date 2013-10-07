@@ -808,6 +808,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert that no new entitlements were actually given
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().containsAll(initialEntitlementCerts), "This system's prior entitlements are unchanged after the dry-run.");
 		
+		// calling candlepin API with a service_level="" is actually a special case:   /consumers/<UUID>/entitlements/dry-run?service_level=
+		// [root@jsefler-6 ~]#  curl --stderr /dev/null --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/6474c913-4c2f-4283-bcf5-2fc2c44da3ef/entitlements/dry-run?service_level= | python -m simplejson/tool
+		// []
+		if ("".equals(serviceLevel)) {
+			log.warning("Making an API Candlepin call to /consumers/<UUID>/entitlements/dry-run?service_level= with any empty string for service_level is NOT the same as subscription-manager subscribe --auto --service-level=''.  The dry-run will actually filter subscriptions with a service level of '' and should normally produce an empty result.  The auto-subscribe with a service-level of '"+serviceLevel+"' will reset the consumer's service level to nothing and proceed to attach entitlements with any service level.");
+			Assert.assertEquals(jsonDryrunResults.length(),0,"Normally a dry-run with service-level='"+serviceLevel+"' should produce an empty list of entitlements.  If this test fails, then subscriptions have been defined with service-level='"+serviceLevel+"' which does not make sense.  Manually investigate the subscriptions available to "+sm_clientUsername+" and determine which subscription has a service-level of \"\" that should be None/No/Serviceless.");
+			return;
+		}
+		
 		// actually autosubscribe with this service-level
 		clienttasks.subscribe(true, serviceLevel, (List<String>)null, (List<String>)null, (List<String>)null, null, null, null, null, null, null);
 		//clienttasks.subscribe(true,"".equals(serviceLevel)?String.format("\"%s\"", serviceLevel):serviceLevel, (List<String>)null, (List<String>)null, (List<String>)null, null, null, null, null, null, null);
