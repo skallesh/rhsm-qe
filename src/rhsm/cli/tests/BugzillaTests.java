@@ -1721,6 +1721,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if (installed.status.equals("Not Subscribed") || installed.status.equals("Partially Subscribed"))
 				moveProductCertFiles(installed.productId + ".pem");
+				moveProductCertFiles(installed.productId + "_.pem");
 		}		
 	//	String actual=clienttasks.getFactValue(factname).trim();
 	//	Assert.assertEquals(actual, "invalid");
@@ -1740,6 +1741,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if (installed.status.equals("Not Subscribed")
 					|| installed.status.equals("Partially Subscribed"))
 				moveProductCertFiles(installed.productId + ".pem");
+				moveProductCertFiles(installed.productId + "_.pem");
+
 				clienttasks.refresh(null, null, null);
 		}
 		
