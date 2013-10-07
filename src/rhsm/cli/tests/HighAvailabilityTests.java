@@ -35,6 +35,10 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  # High Availability Packages
  *  
  *  # x86_64
+ *  # RHEL70 http://download.devel.redhat.com/rel-eng/RHEL-7.0-Alpha-3/compose/Server/x86_64/os/addons/HighAvailability/
+ *  sm.ha.packages = corosync, corosynclib, corosynclib-devel, dlm, dlm-devel, dlm-lib, ipvsadm, ldirectord, libqb, libqb-devel, libtool-ltdl-devel, lvm2-cluster, omping, pacemaker, pacemaker-cli, pacemaker-cluster-libs, pacemaker-cts, pacemaker-doc, pacemaker-libs, pacemaker-libs-devel, pcs, resource-agents
+ *  
+ *  # x86_64
  *	# RHEL64 http://download.devel.redhat.com/released/RHEL-6/6.4/Server/x86_64/os/HighAvailability/listing
  *	sm.ha.packages = ccs, cluster-cim, cluster-glue, cluster-glue-libs, cluster-glue-libs-devel, cluster-snmp, clusterlib, clusterlib-devel, cman, corosync, corosynclib, corosynclib-devel, fence-virt, fence-virtd-checkpoint, foghorn, libesmtp-devel, libqb, libqb-devel, libtool-ltdl-devel, luci, modcluster, omping, openais, openaislib, openaislib-devel, pacemaker, pacemaker-cli, pacemaker-cluster-libs, pacemaker-cts, pacemaker-doc, pacemaker-libs, pacemaker-libs-devel, pcs, python-repoze-what-plugins-sql, python-repoze-what-quickstart, python-repoze-who-friendlyform, python-repoze-who-plugins-sa, python-tw-forms, resource-agents, rgmanager, ricci
  *	# RHEL63 http://download.devel.redhat.com/released/RHEL-6/6.3/Server/x86_64/os/HighAvailability/listing

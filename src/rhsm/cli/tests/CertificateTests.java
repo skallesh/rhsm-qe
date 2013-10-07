@@ -363,6 +363,28 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="assert that the rct cat-cert tool reports orders as Unlimited instead of -1",
+			groups={"AcceptanceTests","blockedByBug-1011961"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyRctCatCertReportsOrdersWithQuantityUnlimited_Test() {
+		int numberOfUnlimitedPools = 0;
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+			if (pool.quantity.equalsIgnoreCase("Unlimited")) {
+				numberOfUnlimitedPools++;
+				File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+				EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+				Assert.assertEquals(entitlementCert.orderNamespace.quantity, pool.quantity, "The Order:Quantity from the granted entitlement should match the Quantity from the available Subscription Pool: "+pool);
+			} else if (pool.quantity.equals("-1")) {
+				Assert.fail("Available SubscriptionPools should NOT report a quantity of '"+pool.quantity+"': "+pool);
+			}
+		}
+		if (numberOfUnlimitedPools==0) throw new SkipException("Could not find any available pools with an unlimited quantity for this test.");
+	}
+	
+	
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for the current consumer cert",
 			groups={},
 			enabled=true)

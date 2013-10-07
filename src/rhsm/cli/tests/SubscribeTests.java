@@ -54,7 +54,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
-			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520","blockedByBug-1008647","blockedByBug-1009600"},
+			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520","blockedByBug-1008647","blockedByBug-1009600","blockedByBug-996993"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
@@ -75,6 +75,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}	
 		}
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
+		
+		// assemble a list of expected bundled product names
+		List<String> bundledProductNames = new ArrayList<String>();
+		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
+			JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
+			String bundledProductId = bundledProductAsJSONObject.getString("productId");
+			String bundledProductName = bundledProductAsJSONObject.getString("productName");
+			bundledProductNames.add(bundledProductName);
+		}
+		
+		// assert that the pool's list of Provides matches the list of bundled product names after implementation of Bug 996993 - [RFE] Search for or list matching providedProducts
+		Assert.assertTrue(bundledProductNames.containsAll(pool.provides) && pool.provides.containsAll(bundledProductNames), "The actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
 		
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
 		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -113,18 +125,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert that the System Type matches between the available pool and the consumed product subscription after implementation of Bug 1009600 - Show System Type in list --consumed; Show System Type in attach confirmation gui dialog.
 		Assert.assertEquals(consumedProductSubscription.machineType, pool.machineType, "After subscribing from a pool with a machine type '"+pool.machineType+"', the consumed product subscription's machine type should match.");
 
-		// assemble a list of expected bundled product names
-		List<String> bundledProductNames = new ArrayList<String>();
-		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
-			JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
-			String bundledProductId = bundledProductAsJSONObject.getString("productId");
-			String bundledProductName = bundledProductAsJSONObject.getString("productName");
-			bundledProductNames.add(bundledProductName);
-		}
-		
 		// assert that the consumed product subscription provides all the expected bundled products.
-		Assert.assertTrue(consumedProductSubscription.provides.containsAll(bundledProductNames),"The consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
-		Assert.assertEquals(consumedProductSubscription.provides.size(),bundledProductNames.size(),"The consumed productSubscription provides for exactly the number of expected products");
+		Assert.assertTrue(consumedProductSubscription.provides.containsAll(bundledProductNames)&&bundledProductNames.containsAll(consumedProductSubscription.provides),"The consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
 		
 		// assert the dates of the consumed product subscription match the originating subscription pool
 		Assert.assertEquals(ProductSubscription.formatDateString(consumedProductSubscription.endDate),ProductSubscription.formatDateString(pool.endDate),

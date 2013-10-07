@@ -12,12 +12,18 @@
   "function that restarts the vnc server"
   []
   (if (= "RHEL7" (get-release))
-    (do (run-command "systemctl restart vncserver@:2.service"))
+    (do (run-command "systemctl stop vncserver@:2.service")
+        ( . Thread (sleep 5000))
+        ;;yup systemd sucks
+        (run-command "killall -9 Xvnc")
+        (run-command "rm -f /tmp/.X2-lock; rm -f /tmp/.X11-unix/X2")
+        (run-command "systemctl start vncserver@:2.service"))
     (do
       (run-command "service vncserver stop")
       ( . Thread (sleep 5000))
       (run-command "rm -f /tmp/.X2-lock; rm -f /tmp/.X11-unix/X2")
       (run-command "service vncserver start")))
+  (run-command "echo -n \"Waiting for startup.\" & until $(netstat -lnt | awk '$6 == \"LISTEN\" && $4 ~ \".4118\"' | grep -q .); do echo -n \".\"; sleep 2; done; echo")
   ( . Thread (sleep 10000)))
 
 (defn run-and-assert

@@ -42,12 +42,15 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
+import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.Org;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.Translation;
+import rhsm.data.YumRepo;
+
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -1042,8 +1045,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		String urlEncodedDate = java.net.URLEncoder.encode(formattedDate, "UTF-8");	// "2012-02-08T00%3A00%3A00.000%2B00%3A00"	encode the string to escape the colons and plus signs so it can be passed as a parameter on an http call
 		return urlEncodedDate;
 	}
-
-
 	
 	
 	protected Map<File,List<Translation>> buildTranslationFileMapForSubscriptionManager() {
@@ -1067,7 +1068,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		return translationFileMapForSubscriptionManager;
 	}
-
+	
 	
 	protected Map<File,List<Translation>> buildTranslationFileMapForCandlepin() {
 		Map<File,List<Translation>> translationFileMapForCandlepin = new HashMap<File, List<Translation>>();
@@ -1087,6 +1088,25 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	
+	protected void verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(List<ProductCert> currentProductCerts) {
+		if (currentProductCerts==null) currentProductCerts = clienttasks.getCurrentProductCerts();
+		List<YumRepo> yumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		int numYumReposProvided = 0;
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
+					numYumReposProvided++;
+					Assert.assertNotNull(YumRepo.findFirstInstanceWithMatchingFieldFromList("id", contentNamespace.label, yumRepos), "The '"+clienttasks.redhatRepoFile+"' has an entry for contentNamespace label '"+contentNamespace.label+"'.");
+				}
+			}
+		}
+		if (entitlementCerts.isEmpty()) {
+			Assert.assertTrue(yumRepos.isEmpty(),"When there are no entitlement contentNamespaces, then '"+clienttasks.redhatRepoFile+"' should have no yumRepo entries.");
+		} else if (numYumReposProvided==0) {
+			Assert.assertTrue(yumRepos.isEmpty(),"When none of the currently installed product certs provideTags matching the currently entitled content namespace requiredTags, then '"+clienttasks.redhatRepoFile+"' should have no yumRepo entries.");
+		}
+	}
 	
 	
 	
@@ -2876,4 +2896,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		serverurl= "http://";																			ll.add(Arrays.asList(new Object[] {	null,													serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
 		return ll;
 	}
+
+
+
 }

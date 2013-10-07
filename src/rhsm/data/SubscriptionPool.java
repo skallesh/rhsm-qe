@@ -26,8 +26,9 @@ public class SubscriptionPool extends AbstractCommandLineData {
 
 
 	// abstraction fields
-	public String subscriptionName;
 	public String productId;	// public String productSku;	// productSku was replaced by productId in subscription-manager-0.68-1.el6.i686  jsefler 7/13/2010
+	public String subscriptionName;
+	public List<String> provides;	// list of provided product names	// added bug RFE Bug 996993
 	public String poolId;
 	public String quantity;	// public Integer quantity;	// can be "unlimited"
 	public Integer suggested;	// introduced by Bug 1008557 - [RFE] CLI list --available should include a "Quantity Needed" field to facilitate compliance and provide parity with GUI
@@ -134,8 +135,9 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (subscriptionName != null)	string += String.format(" %s='%s'", "subscriptionName",subscriptionName);
 		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
+		if (subscriptionName != null)	string += String.format(" %s='%s'", "subscriptionName",subscriptionName);
+		if (provides != null)			string += String.format(" %s='%s'", "provides",provides);
 		if (poolId != null)				string += String.format(" %s='%s'", "poolId",poolId);
 		if (quantity != null)			string += String.format(" %s='%s'", "quantity",quantity);
 		if (suggested != null)			string += String.format(" %s='%s'", "suggested",suggested);
@@ -258,6 +260,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		
 		// abstraction field					regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		regexes.put("subscriptionName",			"Subscription Name:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// was "Product Name"; changed by Bug 806986	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
+		regexes.put("provides",					"Provides:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// this assumes that Provides is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value	// added by RFE Bug 996993
 		regexes.put("productId",				"SKU:(.*)");		// "Product Id"; changed by Bug 806986
 		regexes.put("poolId",					"Pool ID:(.*)");	// "Pool Id:(.*)"); changed by Bug 878634
 		regexes.put("quantity",					"Available:(.*)");	// "Quantity:(.*)"); changed by Bug 986971	// "quantity:(.*)"); changed by Bug 612730	// may eventually be changed by Bug 963874
