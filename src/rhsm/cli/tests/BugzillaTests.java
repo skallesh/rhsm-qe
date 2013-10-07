@@ -83,6 +83,52 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	
+	
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify End date and start date of the subscription is appropriate one when you attach a future subscription and then  heal after 1 min",
+			groups={"VerifyStartEndDateOfSubscription","blockedByBug-994853"},
+			enabled=true)
+	public void VerifyStartEndDateOfSubscription() throws Exception {
+		moveProductCertFiles("*");
+		client.runCommandAndWait("cp /root/temp1/100000000000002.pem "+clienttasks.productCertDir);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(4));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.autoheal(null, null, true, null, null, null);
+		for(SubscriptionPool AvailablePools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			 if(AvailablePools.productId.equals("awesomeos-x86_64")){
+				 clienttasks.subscribe(null, null, AvailablePools.poolId, null, null, "1", null, null, null, null, null);
+			}
+		}
+		for(InstalledProduct installedproduct:clienttasks.getCurrentlyInstalledProducts() ){
+			for(ProductSubscription pool:clienttasks.getCurrentlyConsumedProductSubscriptions()){
+				Assert.assertEquals(installedproduct.startDate, pool.startDate);
+			}
+		}
+		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.restart_rhsmcertd(null, null, false, true);
+		
+		for(InstalledProduct installedproduct:clienttasks.getCurrentlyInstalledProducts() ){
+			for(ProductSubscription pool:clienttasks.getCurrentlyConsumedProductSubscriptions()){
+				Assert.assertEquals(installedproduct.startDate, pool.startDate);
+				if(!pool.isActive){
+					Assert.assertEquals(installedproduct.endDate, pool.endDate);
+				}
+			}
+		}
+	}
+	
+	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -135,8 +181,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 }
 		 String result=clienttasks.status(null, null, null, null).getStdout();
 		 clienttasks.autoheal(null, true, null, null, null, null);
-		
-		
 	}
 	
 	/**
@@ -1720,8 +1764,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if (installed.status.equals("Not Subscribed") || installed.status.equals("Partially Subscribed"))
-				moveProductCertFiles(installed.productId + ".pem");
-				moveProductCertFiles(installed.productId + "_.pem");
+				moveProductCertFiles(installed.productId + "*");
 		}		
 	//	String actual=clienttasks.getFactValue(factname).trim();
 	//	Assert.assertEquals(actual, "invalid");
@@ -1740,8 +1783,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if (installed.status.equals("Not Subscribed")
 					|| installed.status.equals("Partially Subscribed"))
-				moveProductCertFiles(installed.productId + ".pem");
-				moveProductCertFiles(installed.productId + "_.pem");
+				moveProductCertFiles(installed.productId + "*");
 
 				clienttasks.refresh(null, null, null);
 		}
@@ -3714,8 +3756,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				.getCurrentlyInstalledProducts()) {
 			if (installed.status.equals("Not Subscribed")
 					&& installed.status.equals("Partially Subscribed"))
-				moveProductCertFiles(installed.productId + ".pem");
-			moveProductCertFiles(installed.productId + "_.pem");
+				moveProductCertFiles(installed.productId + "*");
 		}
 		for (SubscriptionPool availOnDate : getAvailableFutureSubscriptionsOndate(onDateToTest)) {
 			clienttasks.subscribe_(null, null, availOnDate.poolId, null, null,
