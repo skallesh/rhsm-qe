@@ -185,7 +185,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		
 		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
 				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-					if(installed.productName.contains("RAM")){
+					if(installed.productId.equals("801")){
 						Assert.assertEquals(installed.status.trim(), "Subscribed");
 				}else throw new SkipException(
 					"Couldnot auto-subscribe ram based subscription");
@@ -341,7 +341,25 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 			return certData;
 		}
 
-				
+		@BeforeClass(groups = "setup")
+		public void SetServerTasks() throws Exception {
+		server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
+		}
+		
+		@AfterClass(groups = "setup")
+		public void DeleteSystemArchValue() throws Exception {
+		clienttasks.deleteFactsFileWithOverridingValues();
+		clienttasks.facts(null, true, null, null, null);
+		}
+		
+		@BeforeClass(groups = "setup")
+		public void SetSystemArch() throws Exception {
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("uname.machine", "x86_64");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null, true, null, null, null);
+		}
 		
 		static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {
 			boolean foundMatches = false;
