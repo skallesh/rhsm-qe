@@ -369,6 +369,35 @@ public class FlexibleBranding extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify if brandname file is created cert version is 1",
+			groups={"VerifyBrand_NameCreatedWithCertV1","blockedByBug-1011768"},
+			enabled=true)
+	public void VerifyBrand_NameCreatedWithCertV1() throws Exception {
+		String productname=null;
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("system.certificate_version", String.valueOf(1));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null, true, null, null, null);
+		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			productname=installed.productName;
+			
+		}
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
+		clienttasks.deleteFactsFileWithOverridingValues();
+		Assert.assertEquals(result.trim(), productname.trim());
+	}
+	
+	
 	@BeforeClass(groups = { "setup" })
 	protected void moveProductCertFiles() throws IOException {
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
