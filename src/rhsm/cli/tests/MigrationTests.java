@@ -393,13 +393,32 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (!getProductCertFilenamesContainingNonUniqueProductIds(expectedMigrationProductCertFilenames).isEmpty()) {
 			log.warning("The RHN Classic channels currently consumed map to multiple product certs that share the same product ID "+getProductCertFilenamesContainingNonUniqueProductIds(expectedMigrationProductCertFilenames)+".  We must abort in this case.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
 			// TEMPORARY WORKAROUND FOR BUG
-			String bugId = "1006985"; boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId = "1006985"; // Bug 1006985 - rhn-migrate-classic-to-rhsm should abort when it encounters RHN channels that map to different products certs that share the same productId
+			boolean invokeWorkaroundWhileBugIsOpen = true;
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("The remainder of this test is blocked by bug "+bugId+".  There is no workaround.");
 			}
 			// END OF WORKAROUND
-			expectedMsg = "FIXME AFTER BUG 1006985 IS IMPLEMENTED";
+			
+			//	+-----------------------------------------------------+
+			//	Unable to continue migration!
+			//	+-----------------------------------------------------+
+			//	You are subscribed to channels that have conflicting product certificates.
+			//	The following channels map to product ID 69:
+			//		rhel-x86_64-rhev-agent-6-server
+			//		rhel-x86_64-rhev-agent-6-server-beta
+			//		rhel-x86_64-rhev-agent-6-server-beta-debuginfo
+			//		rhel-x86_64-rhev-agent-6-server-debuginfo
+			//		rhel-x86_64-server-6
+			//		rhel-x86_64-server-6-cf-tools-1
+			//		rhel-x86_64-server-6-cf-tools-1-beta
+			//		rhel-x86_64-server-6-cf-tools-1-beta-debuginfo
+			//		rhel-x86_64-server-6-cf-tools-1-debuginfo
+			//	Reduce the number of channels per product ID to 1 and run migration again.
+			//	To remove a channel, use 'rhn-channel --remove --channel=<conflicting_channel>'.
+			
+			expectedMsg = "Unable to continue migration!"; // TODO Improve the expectedMsg to better assert the list of conflicting channels
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);	
 			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
 			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classicwhen currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
