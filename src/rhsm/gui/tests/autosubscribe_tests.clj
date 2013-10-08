@@ -263,8 +263,6 @@
     (if (tasks/ui showing? :register-dialog "Select Service Level")
       (do
         (sleep 3000)
-        (tasks/ui selectrowindex :sla-selection-table
-                  (rand-int (tasks/ui getrowcount :sla-selection-table)))
         (tasks/ui click :register)
         (tasks/ui waittillwindownotexist :register-dialog 80))) 
     (verify (= 1 (tasks/ui guiexist :main-window "System is properly subscribed*")))
