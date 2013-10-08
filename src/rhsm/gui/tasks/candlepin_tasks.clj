@@ -1,7 +1,9 @@
 (ns rhsm.gui.tasks.candlepin-tasks
   (:use [rhsm.gui.tasks.test-config :only (config
                                            clientcmd)]
-        [clojure.string :only (trim blank?)]
+        [clojure.string :only (trim
+                               blank?
+                               split)]
         rhsm.gui.tasks.tools)
   (:require [rhsm.gui.tasks.rest :as rest])
   (:import [com.redhat.qe.tools RemoteFileTasks]
@@ -263,4 +265,29 @@
         provides-prods (fn [i]  (map :productName (:providedProducts i)))
         prod-attrs (fn [i] (:productAttributes i))
         mapify (map (fn [i] {:pp (map :productName (:providedProducts i)) :attrs (:productAttributes i)}) listall)]
+    mapify))
+
+(defn build-subscription-attr-type-map
+  "Buils a map of subscription name and product attribute :name map"
+  [& {:keys [all?]
+      :or {all? false}}]
+  (let [listall (if all? (list-available true)
+                    (list-available))
+        product-names (map :productName listall)
+        get-type (fn [i] (map :name i))
+        name-types (map get-type (map :productAttributes listall))
+        mapify (merge-zipmap product-names name-types)]
+    mapify))
+
+(defn build-subscription-dates-map
+  "Builds a map of suscripton name and start & end dates map"
+  [& {:keys [all?]
+      :or {all? false}}]
+  (let [listall (if all? (list-available true)
+                    (list-available))
+        product-names (map :productName listall)
+        get-dates (fn [i] [(first (split (:startDate i) #"T"))
+                          (first (split (:endDate i) #"T"))])
+        date-list (map get-dates listall)
+        mapify (merge-zipmap product-names date-list)]
     mapify))
