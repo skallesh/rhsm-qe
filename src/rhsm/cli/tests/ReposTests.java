@@ -484,7 +484,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateYumRepo(clienttasks.redhatRepoFile, yumRepo);
 		
 		// assert that the manually added repository options do not get clobbered by a new yum transaction
-		YumRepo yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());	// getCurrentlySubscribedYumRepos which includes a yum transaction: "yum -q repolist --disableplugin=rhnplugin"
+		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin");	// issue a new yum transaction
+		YumRepo yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());	// getCurrentlySubscribedYumRepos() includes a yum transaction: "yum -q repolist --disableplugin=rhnplugin"	(NOT ANYMORE after bug 1008016)
 		Assert.assertNotNull(yumRepoAfterUpdate, "Found yum repo ["+yumRepo.id+"] after we manually altered it and issued a yum transaction.");
 		Assert.assertEquals(yumRepoAfterUpdate.exclude, yumRepo.exclude, "Yum repo ["+yumRepo.id+"] has persisted the manually added \"exclude\" option and its value.");
 		Assert.assertEquals(yumRepoAfterUpdate.priority, yumRepo.priority, "Yum repo ["+yumRepo.id+"] has persisted the manually added \"priority\" option and its value.");
