@@ -1095,9 +1095,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		int numYumReposProvided = 0;
 		for (EntitlementCert entitlementCert : entitlementCerts) {
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-				if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
-					numYumReposProvided++;
-					Assert.assertNotNull(YumRepo.findFirstInstanceWithMatchingFieldFromList("id", contentNamespace.label, yumRepos), "The '"+clienttasks.redhatRepoFile+"' has an entry for contentNamespace label '"+contentNamespace.label+"'.");
+				if (contentNamespace.type.equals("yum")) {
+					if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
+						numYumReposProvided++;
+						Assert.assertNotNull(YumRepo.findFirstInstanceWithMatchingFieldFromList("id", contentNamespace.label, yumRepos), "The '"+clienttasks.redhatRepoFile+"' has an entry for contentNamespace label '"+contentNamespace.label+"'.");
+					}
+				} else {
+					// contentNamespace types that are not "yum" should not be included in the redhat.repo file (e.g. "file" and "kickstart")
+					Assert.assertNull(YumRepo.findFirstInstanceWithMatchingFieldFromList("id", contentNamespace.label, yumRepos), "The '"+clienttasks.redhatRepoFile+"' should NOT have an entry for contentNamespace label '"+contentNamespace.label+"' because it's type '"+contentNamespace.type+"' is not equal to 'yum'.");				
 				}
 			}
 		}
