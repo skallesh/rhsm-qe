@@ -741,7 +741,7 @@
       (run-command "subscription-manager facts --update"))))
 
 (defn get-stackable-pem-files
-  "Builds a map of product fnames and .pem files"
+  "Builds a map of product names and .pem files"
   []
   (let
       [prod-dir (conf-file-value "productCertDir")
