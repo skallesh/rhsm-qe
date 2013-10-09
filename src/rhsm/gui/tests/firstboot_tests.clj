@@ -59,7 +59,8 @@
   (try
     (if (= "5.7" (:version (get-release :true)))
       (throw (SkipException. (str "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))))
-    (verify (not (.isBugOpen (BzChecker/getInstance) "922806")))
+    (skip-if-bz-open "922806")
+    (skip-if-bz-open "1016643" (= "RHEL7" (get-release)))
     ;; new rhsm and classic have to be totally clean for this to run
     (run-command "subscription-manager clean")
     (let [sysidpath "/etc/sysconfig/rhn/systemid"]
@@ -243,7 +244,7 @@
   "Verifies that on clicking backbutton after registering from Create User menu should navigte to Choose Service menu"
   [_]
   (if-not (= "RHEL5" (get-release))
-    (do 
+    (do
       (reset_firstboot)
       (tasks/ui click :register-rhsm)
       (tasks/ui click :firstboot-forward)
