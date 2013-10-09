@@ -1205,7 +1205,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				}
 				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("6")) { 
 					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
-					//TODO UNCOMMENT AFTER BUG 884688 IS FIXED bugIds.add("820749");
+					bugIds.add("820749");
 				}
 				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("5")) { 
 					// Bug 852551 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
