@@ -806,7 +806,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}
 			
 			Assert.assertNotNull(subscriptionPool,"Pool '"+poolId+"' returned by the dry-run results for service-level '"+serviceLevel+"' was found in the list --available.");
-			Assert.assertTrue(quantity<=(subscriptionPool.quantity.equalsIgnoreCase("unlimited")?quantity+1:Integer.valueOf(subscriptionPool.quantity)),"Pool '"+poolId+"' returned by the dry-run results for service-level '"+serviceLevel+", will supply a quantity ("+quantity+") that is within the available quantity ("+subscriptionPool.quantity+").");
+			Assert.assertTrue(quantity<=(subscriptionPool.quantity.equalsIgnoreCase("unlimited")?quantity+1:Integer.valueOf(subscriptionPool.quantity)),"Pool '"+poolId+"' returned by the dry-run results for service-level '"+serviceLevel+"', will supply a quantity ("+quantity+") that is within the available quantity ("+subscriptionPool.quantity+").");
 		}
 		// TODO: This assert is not reliable unless there really is a pool that provides a product that is actually installed.
 		//Assert.assertTrue(jsonDryrunResults.length()>0, "Dry-run results for service-level '"+serviceLevel+"' are not empty.");
@@ -818,22 +818,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert that no new entitlements were actually given
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().containsAll(initialEntitlementCerts), "This system's prior entitlements are unchanged after the dry-run.");
-		
-		// calling candlepin API with a service_level="" is actually a special case:   /consumers/<UUID>/entitlements/dry-run?service_level=
-		// [root@jsefler-6 ~]#  curl --stderr /dev/null --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/6474c913-4c2f-4283-bcf5-2fc2c44da3ef/entitlements/dry-run?service_level= | python -m simplejson/tool
-		// []
-		if ("".equals(serviceLevel)) {
-			log.warning("Making an API Candlepin call to /consumers/<UUID>/entitlements/dry-run?service_level= with an empty string for service_level is NOT the same as subscription-manager subscribe --auto --service-level=''.  The dry-run should actually filter subscriptions with a service level of '' and normally produce an empty result.  The auto-subscribe with a service-level of '"+serviceLevel+"' will reset the consumer's service level to nothing and proceed to attach entitlements with any service level.");
-			for (int i = 0; i < jsonDryrunResults.length(); i++) {
-				// jsonDryrunResults is an array of two values per entry: "pool" and "quantity"
-				JSONObject jsonPool = ((JSONObject) jsonDryrunResults.get(i)).getJSONObject("pool");
-				Integer quantity = ((JSONObject) jsonDryrunResults.get(i)).getInt("quantity");
-				String poolId = jsonPool.getString("id");
-				log.warning(String.format("Results of dry-run?service_level=   jsonPool: %s",jsonPool.toString()));
-			}
-			Assert.assertEquals(jsonDryrunResults.length(),0,"Normally a dry-run with service-level='"+serviceLevel+"' should produce an empty list of entitlements.  If this test fails, then subscriptions have been defined with service-level='"+serviceLevel+"' which does not make sense.  Manually investigate the subscriptions available to "+sm_clientUsername+" and determine which subscription has a service-level of \"\" that should be None/No/Serviceless.");
-			return;
-		}
 		
 		// actually autosubscribe with this service-level
 		clienttasks.subscribe(true, serviceLevel, (List<String>)null, (List<String>)null, (List<String>)null, null, null, null, null, null, null);
@@ -855,6 +839,35 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		
+		// calling candlepin API with a service_level="" is actually a special case:   /consumers/<UUID>/entitlements/dry-run?service_level=
+		// calling candlepin API with a service_level=null is also a special case:   /consumers/<UUID>/entitlements/dry-run
+		// both of these cases will default to use the service_level that is already set on the consumer, however a call to subscribe --auto --service_level="" is not the same as calling the candlepin dry-run API with service_level="" since the CLI will actually UNSET the consumer's current service level (as requested by bug 1001169)
+		// [root@jsefler-6 ~]#  curl --stderr /dev/null --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/6474c913-4c2f-4283-bcf5-2fc2c44da3ef/entitlements/dry-run?service_level= | python -m simplejson/tool
+		if ("".equals(serviceLevel)) {
+			log.warning("When testing dry-run with an empty string for service level, the jsonPools returned should match the service-level that the consumer object already has (unless the service-level granted is exempt).  This is different than calling subscription-manager subscribe --auto --service-level=\"\".");
+			if (!"".equals(initialServiceLevel)) {
+				for (int i = 0; i < jsonDryrunResults.length(); i++) {
+					// jsonDryrunResults is an array of two values per entry: "pool" and "quantity"
+					JSONObject jsonPool = ((JSONObject) jsonDryrunResults.get(i)).getJSONObject("pool");
+					Integer quantity = ((JSONObject) jsonDryrunResults.get(i)).getInt("quantity");
+					String supportLevelExemptValue = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level_exempt");
+					
+					// assert that all of the pools proposed provide the consumer's initial service level
+					String poolId = jsonPool.getString("id");
+					SubscriptionPool dryrunSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", poolId, initialAvailableSubscriptionPools);
+					
+					// check for an exempt service level
+					if (supportLevelExemptValue==null || !Boolean.valueOf(supportLevelExemptValue)) {
+						Assert.assertEquals(dryrunSubscriptionPool.serviceLevel, initialServiceLevel, "When dry-run is called with an empty service-level, the actual consumer's initially set service-level '"+initialServiceLevel+"' matches the service-level of the dry-run pool result: "+dryrunSubscriptionPool+" EXCEPTION: This is not true when the service-level is exempt.");
+					} else {
+						log.info("An exempt service level '"+dryrunSubscriptionPool.serviceLevel+"' was included in the dry-run pool result: "+dryrunSubscriptionPool);
+					}
+				}
+			}
+			log.info("Skipping the remaining assertions in this test when the service-level is empty.");
+			return;
+		}
+			
 		// assert that one entitlement was granted per dry-run pool result
 		Assert.assertEquals(newlyGrantedEntitlementCerts.size(), jsonDryrunResults.length(),"The autosubscribe results granted the same number of entitlements as the dry-run pools returned.");
 
@@ -865,9 +878,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			JSONObject jsonPool = ((JSONObject) jsonDryrunResults.get(i)).getJSONObject("pool");
 			Integer quantity = ((JSONObject) jsonDryrunResults.get(i)).getInt("quantity");
 			
-			// assert that all of the pools proposed provide the requested service level
 			String poolId = jsonPool.getString("id");
 			SubscriptionPool dryrunSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", poolId, initialAvailableSubscriptionPools);
+			String supportLevelExemptValue = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level_exempt");
 
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(dryrunSubscriptionPool);
 			Assert.assertNotNull(entitlementCert, "Found an entitlement cert corresponding to dry-run pool: "+dryrunSubscriptionPool);
