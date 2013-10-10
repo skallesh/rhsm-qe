@@ -735,6 +735,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that traffic to RHSM went through the proxy (unless testing --no-proxy)
 		proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+		int numberOfConnectionAttempts;
+		String conflictingProductCertsMsg = "You are subscribed to channels that have conflicting product certificates.";	// "Unable to continue migration!";
+		if (sshCommandResult.getStdout().contains(conflictingProductCertsMsg)) numberOfConnectionAttempts=3; else numberOfConnectionAttempts=4;
 		if (options.contains("--no-proxy"))	{
 			//Assert.assertContainsNoMatch(proxyLogResult, proxyLogRegex, "The proxy server should NOT be logging the connection attempts to RHSM when --no-proxy option is used, but should be logging connection attempts to RHN.");
 
@@ -751,7 +754,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//	CONNECT   Aug 01 17:44:56 [10137]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
 			//	CONNECT   Aug 01 17:44:57 [10138]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
 			//	CONNECT   Aug 01 17:44:57 [10136]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
-			Assert.assertEquals(proxyLogResult.split("\n").length, 4, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy will yield this number of connection attempts through the proxy.");
+			Assert.assertEquals(proxyLogResult.split("\n").length, numberOfConnectionAttempts, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy will yield this number of connection attempts through the proxy.");
 		} else {
 			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHSM from the subscription-manager client ip '"+clienttasks.ipaddr+"'.");
 
@@ -772,7 +775,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (proxyLogRegex.equals("TCP_MISS") && !proxyLogResult.trim().isEmpty()) {
 				Assert.assertTrue(proxyLogResult.contains(rhnHostname) && proxyLogResult.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should log proxy attempts to '"+rhnHostname+"' and '"+candlepinServerHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
 				for (String proxyLogEntry : proxyLogResult.trim().split("\n")) Assert.assertTrue(proxyLogEntry.contains(rhnHostname)||proxyLogEntry.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname+"' or '"+candlepinServerHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
-				Assert.assertEquals(getSubstringMatches(proxyLogResult,rhnHostname).size(), 4, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield exactly this number of connection attempts through the proxy to RHN hostname '"+rhnHostname+"'.");
+				Assert.assertEquals(getSubstringMatches(proxyLogResult,rhnHostname).size(), numberOfConnectionAttempts, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield exactly this number of connection attempts through the proxy to RHN hostname '"+rhnHostname+"'.");
 			}
 			// /var/log/tinyproxy.log
 			//	CONNECT   Aug 01 17:40:55 [10134]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
@@ -788,13 +791,25 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//	CONNECT   Aug 01 17:40:59 [10134]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
 			//	CONNECT   Aug 01 17:40:59 [10140]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
 			//	CONNECT   Aug 01 17:40:59 [10133]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
-//			Assert.assertEquals(proxyLogResult.split("\n").length, 13, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield this number of connection attempts through the proxy.");
-			Assert.assertTrue(proxyLogResult.split("\n").length>4, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield more than 4 connection attempts through the proxy.  The 4 proxy connection attempts are to RHN.");
+			Assert.assertTrue(proxyLogResult.split("\n").length>numberOfConnectionAttempts, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield more than '"+numberOfConnectionAttempts+"' connection attempts through the proxy.  The '"+numberOfConnectionAttempts+"' proxy connection attempts are to RHN.");
 		}
 		
 		// assert the exit code
 		checkForKnownBug881952(sshCommandResult);
 		String expectedMsg;
+		if (sshCommandResult.getStdout().contains(conflictingProductCertsMsg)) {	// when "You are subscribed to channels that have conflicting product certificates." migration aborts.
+			log.warning("You are subscribed to channels that have conflicting product certificates.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
+			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when the RHN channels map to conflicting product certs that share the same product ID");
+			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is still registered using RHN Classic when the RHN channels map to conflicting product certs that share the same product ID");
+			
+			// assert that we are not yet registered to RHSM
+			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" detects that the RHN channels map to conflicting product certs that share the same product ID");
+			
+			// assert that we are still registered to RHN
+			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt aborted after detecting that the RHN channels map to conflicting product certs that share the same product ID");
+
+			return;
+		}
 		if (!areAllChannelsMapped(rhnChannelsConsumed) && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
 			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
