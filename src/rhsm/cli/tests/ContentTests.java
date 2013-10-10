@@ -48,22 +48,22 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
-			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546"/*,"blockedByBug-1017866"*/, "debugTesting"},
+			groups={"EnableDisableManageReposAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-1017866"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41696,fromPlan=2479)
-	public void EnableDisableYumRepoAndVerifyContentAvailable_Test(SubscriptionPool pool) throws JSONException, Exception {
+	public void EnableDisableManageReposAndVerifyContentAvailable_Test(SubscriptionPool pool) throws JSONException, Exception {
 
 		// get the currently installed product certs to be used when checking for conditional content tagging
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 
-		log.info("Before beginning this test, we will stop the rhsmcertd so that it does not interfere with this test..");
+		log.info("Before beginning this test, we will stop the rhsmcertd so that it does not interfere with this test and make sure we are not subscribed...");
 		clienttasks.stop_rhsmcertd();
+		clienttasks.unsubscribe_(true,(BigInteger)null,null,null,null);
 		
-		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 1
-		log.info("Making sure that the rhsm plugin conf file '"+clienttasks.rhsmPluginConfFile+"' is enabled with enabled=1..");
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
+		// Enable rhsm manage_repos configuration
+		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","1"});
 		
 		log.info("Subscribe to the pool and start testing that yum repolist reports the expected repo id/labels...");
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
@@ -77,15 +77,15 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			if (!clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 				Assert.assertFalse(repolist.contains(contentNamespace.label),
-					"Yum repolist enabled excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
+					"Yum repolist enabled excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the manage_repos configuration enabled because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
 				continue;
 			}
 			if (contentNamespace.enabled) {
 				Assert.assertTrue(repolist.contains(contentNamespace.label),
-					"Yum repolist enabled includes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+					"Yum repolist enabled includes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with manage_repos configuration enabled.");
 			} else {
 				Assert.assertFalse(repolist.contains(contentNamespace.label),
-					"Yum repolist enabled excludes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+					"Yum repolist enabled excludes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with manage_repos configuration enabled.");
 			}
 		}
 		repolist = clienttasks.getYumRepolist("disabled");
@@ -93,15 +93,15 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			if (!clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 				Assert.assertFalse(repolist.contains(contentNamespace.label),
-					"Yum repolist disabled excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
+					"Yum repolist disabled excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with manage_repos configuration enabled because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
 				continue;
 			}
 			if (contentNamespace.enabled) {
 				Assert.assertFalse(repolist.contains(contentNamespace.label),
-					"Yum repolist disabled excludes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+					"Yum repolist disabled excludes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with manage_repos configuration enabled.");
 			} else {
 				Assert.assertTrue(repolist.contains(contentNamespace.label),
-					"Yum repolist disabled includes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+					"Yum repolist disabled includes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with manage_repos configuration enabled.");
 			}
 		}
 		repolist = clienttasks.getYumRepolist("all");
@@ -109,10 +109,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 				Assert.assertTrue(repolist.contains(contentNamespace.label),
-					"Yum repolist all includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+					"Yum repolist all includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with manage_repos configuration enabled.");
 			} else {
 				Assert.assertFalse(repolist.contains(contentNamespace.label),
-					"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
+					"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with manage_repos configuration enabled because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
 			}
 		}
 
@@ -123,14 +123,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			Assert.assertFalse(repolist.contains(contentNamespace.label),
-				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with manage_repos configuration enabled.");
 		}
 	
-		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 0
-		log.info("Now we will disable the rhsm plugin conf file '"+clienttasks.rhsmPluginConfFile+"' with enabled=0..");
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "0");
+		// Disable rhsm manage_repos configuration
+		log.info("Now we will disable the rhsm manage_repos configuration with enabled=0..");
+		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","0"});
 		
-		log.info("Again let's subscribe to the same pool and verify that yum repolist does NOT report any of the entitled repo id/labels since the plugin has been disabled...");
+		log.info("Again let's subscribe to the same pool and verify that yum repolist does NOT report any of the entitled repo id/labels since the manage_repos has been disabled...");
 		entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
 		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 		entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
@@ -141,106 +141,26 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			Assert.assertFalse(repolist.contains(contentNamespace.label),
-				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled.");
+				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the manage_repos configuration disabled.");
 		}
 		
-		log.info("Now we will restart the rhsmcertd and expect the repo list to be updated");
-		int minutes = 2;
-		clienttasks.restart_rhsmcertd(minutes, null, false, true);
+		log.info("Now we will enable manage_repos and expect the repo list to be updated");
+		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","1"});
 		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 				Assert.assertTrue(repolist.contains(contentNamespace.label),
-					"Yum repolist all now includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled and run an update with rhsmcertd.");
+					"Yum repolist all now includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' followed by manage_repos configuration enabled.");
 			} else {
 				Assert.assertFalse(repolist.contains(contentNamespace.label),
-					"Yum repolist all still excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled and run an update with rhsmcertd because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");		
+					"Yum repolist all still excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' followed by manage_repos configuration enabled because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");		
 			}
-		}
-		
-		log.info("Now we will unsubscribe from the pool and verify that yum repolist continues to report the repo id/labels until the next refresh from the rhsmcertd runs...");
-		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
-		// repolist = clienttasks.getYumRepolist("all");	// used prior to RHEL5.9
-		/* 9/10/2012 RHEL5.9: YUM STARTED THROWING THIS M2Crypto.SSL.SSLError  THIS ERROR INSPIRED Bug 855957 - subscription-manager unsubscribe should cleanup the redhat.repo
-		ssh root@jsefler-59server.usersys.redhat.com yum repolist all --disableplugin=rhnplugin
-		Stdout:
-		Loaded plugins: product-id, security
-		No plugin match for: rhnplugin
-		Stderr:
-		Traceback (most recent call last):
-		File "/usr/bin/yum", line 29, in ?
-		yummain.user_main(sys.argv[1:], exit_code=True)
-		File "/usr/share/yum-cli/yummain.py", line 309, in user_main
-		errcode = main(args)
-		File "/usr/share/yum-cli/yummain.py", line 178, in main
-		result, resultmsgs = base.doCommands()
-		File "/usr/share/yum-cli/cli.py", line 349, in doCommands
-		return self.yum_cli_commands[self.basecmd].doCommand(self, self.basecmd, self.extcmds)
-		File "/usr/share/yum-cli/yumcommands.py", line 788, in doCommand
-		base.repos.populateSack()
-		File "/usr/lib/python2.4/site-packages/yum/repos.py", line 260, in populateSack
-		sack.populate(repo, mdtype, callback, cacheonly)
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 168, in populate
-		if self._check_db_version(repo, mydbtype):
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 226, in _check_db_version
-		return repo._check_db_version(mdtype)
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 1226, in _check_db_version
-		repoXML = self.repoXML
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 1399, in <lambda>
-		repoXML = property(fget=lambda self: self._getRepoXML(),
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 1391, in _getRepoXML
-		self._loadRepoXML(text=self)
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 1381, in _loadRepoXML
-		return self._groupLoadRepoXML(text, ["primary"])
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 1365, in _groupLoadRepoXML
-		if self._commonLoadRepoXML(text):
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 1201, in _commonLoadRepoXML
-		result = self._getFileRepoXML(local, text)
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 974, in _getFileRepoXML
-		cache=self.http_caching == 'all')
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 805, in _getFile
-		result = self.grab.urlgrab(misc.to_utf8(relative), local,
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 511, in <lambda>
-		grab = property(lambda self: self._getgrab())
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 506, in _getgrab
-		self._setupGrab()
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 474, in _setupGrab
-		ugopts = self._default_grabopts()
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 486, in _default_grabopts
-		opts = { 'keepalive': self.keepalive,
-		File "/usr/lib/python2.4/site-packages/yum/yumRepo.py", line 656, in _getSslContext
-		sslCtx.load_cert(self.sslclientcert, self.sslclientkey)
-		File "/usr/lib64/python2.4/site-packages/M2Crypto/SSL/Context.py", line 74, in load_cert
-		m2.ssl_ctx_use_cert(self.ctx, certfile)
-		M2Crypto.SSL.SSLError: No such file or directory
-		ExitCode: 1
-		*/
-		// while bug 855957 is open, replacing above call to clienttasks.getCurrentlySubscribedYumRepos() with the following call to clienttasks.getCurrentlySubscribedYumRepos()
-		repolist.clear(); for (YumRepo yumRepo : YumRepo.parse(client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout())) {repolist.add(yumRepo.id);}
-		// NOTE: 9/10/2012 - The following block of behavior may change after bug 855957 is addressed
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
-			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
-				Assert.assertTrue(repolist.contains(contentNamespace.label),
-					"Yum repolist all still includes repo id/label '"+contentNamespace.label+"' despite having unsubscribed from Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled.");
-			} else {
-				Assert.assertFalse(repolist.contains(contentNamespace.label),
-					"Yum repolist all still excludes repo id/label '"+contentNamespace.label+"' despite having unsubscribed from Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
-			}
-		}
-		log.info("Wait for the next refresh by rhsmcertd to remove the repos from the yum repo file '"+clienttasks.redhatRepoFile+"'...");
-		sleep(minutes*60*1000);
-		repolist = clienttasks.getYumRepolist("all");
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
-			Assert.assertFalse(repolist.contains(contentNamespace.label),
-				"Yum repolist all finally excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled AND waiting for the next refresh by rhsmcertd.");
 		}
 	}
-	@AfterGroups(value="EnableDisableYumRepoAndVerifyContentAvailable_Test", alwaysRun=true)
-	protected void teardownAfterEnableDisableYumRepoAndVerifyContentAvailable_Test() {
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
+	@AfterGroups(value="EnableDisableManageReposAndVerifyContentAvailable_Test", alwaysRun=true)
+	protected void afterEnableDisableManageReposAndVerifyContentAvailable_Test() {
+		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","1"});
 		clienttasks.restart_rhsmcertd(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"certFrequency" WAS CHANGED BY BUG 882459 TO */ "certCheckInterval")), null, false, null);
 	}
 	
