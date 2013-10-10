@@ -187,8 +187,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 					if(installed.productId.equals("801")){
 						Assert.assertEquals(installed.status.trim(), "Subscribed");
-				}else throw new SkipException(
-					"Couldnot auto-subscribe ram based subscription");
+				}
 	}
 	}
 	
