@@ -126,7 +126,7 @@ public class SubscriptionManagerTasks {
 		//ipaddr			= sshCommandRunner.runCommandAndWait("ip addr show | egrep 'scope global (dynamic )?eth' | cut -d/ -f1 | sed s/inet//g").getStdout().trim();
 		//ipaddr			= sshCommandRunner.runCommandAndWait("ip addr show | egrep 'scope global (dynamic )?e' | cut -d/ -f1 | sed s/inet//g").getStdout().trim();
 		//ipaddr			= sshCommandRunner.runCommandAndWait("for DEVICE in $(ip addr show | egrep 'state (UP|UNKNOWN)' | cut -f2 -d':' | sed 's/ //'); do ip addr show $DEVICE | egrep 'scope global .*'$DEVICE | cut -d'/' -f1 | sed 's/ *inet *//g'; done;").getStdout().trim();	// state is UNKNOWN on ppc64	// does not know how to choose when you have a physical system with two active ip devices - default and bridge
-		ipaddr			= sshCommandRunner.runCommandAndWait("ip route | egrep '^default' | awk '{print $3}'").getStdout().trim();
+		ipaddr			= sshCommandRunner.runCommandAndWait("ip addr show $(ip route | awk '$1 == \"default\" {print $5}') | grep 'scope global' | awk '{print $2}' | cut -d'/' -f1").getStdout().trim();
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
 		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release		// rpm -q --qf "%{VERSION}\n" --whatprovides /etc/redhat-release
 //		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
