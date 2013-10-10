@@ -173,7 +173,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify enablement of yum plugin for subscription-manager in /etc/yum/pluginconf.d/subscription-manager.conf ",
-			groups={"debugTest","VerifyYumPluginForSubscriptionManagerEnablement_Test"},
+			groups={"VerifyYumPluginForSubscriptionManagerEnablement_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyYumPluginForSubscriptionManagerEnablement_Test() {
