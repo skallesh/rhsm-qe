@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -1172,7 +1173,15 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Configuration Methods ***********************************************************************
-
+	@BeforeClass(groups={"setup"})
+	protected void removeRhsmLogBeforeClass() {
+		if (client==null) return;
+		
+		// remove the rhsm.log before this class to effectively reduce its size because it
+		// occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to
+		// RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
+		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);
+	}
 	
 	
 	
