@@ -572,6 +572,28 @@
           (if (tasks/ui showing? :contract-selection-table)
             (tasks/ui click :cancel-contract-selection))))))))
 
+(defn ^{Test {:groups ["subscribe"
+                       "acceptance"
+                       "blockedByBug-874624"]
+              :dataProvider "subscriptions"}}
+  check_contract_number
+  "Checks if every subscipion has contract numbers displayed"
+  [_ subscription]
+  (try
+    (let [sub-contract-map (ctasks/build-contract-map :all? true)
+          contracts (sort (get sub-contract-map subscription))]
+      (tasks/skip-dropdown :all-subscriptions-view subscription)
+      (tasks/ui click :attach)
+      (if (bool (tasks/ui waittillwindowexist :contract-selection-dialog 8))
+        (verify (= contracts (sort (tasks/get-table-elements :contract-selection-table 0))))
+        (do
+          (tasks/unsubscribe subscription)
+          (tasks/ui selecttab :all-available-subscriptions)
+          (verify (= 1 (count contracts))))))
+    (finally
+     (if (tasks/ui guiexist :contract-selection-dialog)
+       (tasks/ui click :cancel-contract-selection)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
