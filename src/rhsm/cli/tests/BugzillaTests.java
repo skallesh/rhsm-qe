@@ -318,7 +318,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		System.out.println(EndingDate);
 		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate+".";
 		Assert.assertEquals(result.trim(), expected_message);
-		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
+		result=clienttasks.identity_(null, null, null, null, null, null, null).getStdout();
 		Assert.assertEquals(result.trim(), clienttasks.msg_ConsumerNotRegistered);
 
 	}
@@ -337,7 +337,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null).getStderr();
 	String UUID=getSystemUUIDFacts();
 	String consumerid=clienttasks.getCurrentConsumerId();
-	Assert.assertEquals(UUID, consumerid.trim());
+	Assert.assertEquals(UUID.trim(), consumerid.trim());
 	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/consumers/"+consumerid);
 	clienttasks.restart_rhsmcertd(null, null, false, null);
 	UUID=getSystemUUIDFacts();
@@ -813,6 +813,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
 		Calendar now = new GregorianCalendar();
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		now.add(Calendar.YEAR, 1);
@@ -834,13 +835,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 							sm_clientPassword, sm_serverUrl, "/owners/"
 									+ sm_clientOrg + "/activation_keys",
 									jsonActivationKeyRequest.toString()));
-			List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-			listOfSectionNameValues.add(new String[] { "rhsmcertd",
-					"autoAttachInterval".toLowerCase(), "1440" });
-			clienttasks.config(null, null, true, listOfSectionNameValues);
+			
 			new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +availOnDate.get(i).poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 			clienttasks.unregister(null, null, null);
 			clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);			
+			clienttasks.autoheal(null, null, true, null, null, null);
 			for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
 				if(result.productId.equals(providedPools.get(randomGenerator.nextInt(providedPools.size())))){
 					Assert.assertEquals(result.status, "Future Subscription");
@@ -1512,7 +1511,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify that system should not be compliant for an expired subscription", 
-			groups = { "VerifySubscriptionOf","blockedByBug-919700"}, enabled = true)
+			groups = { "VerifySubscriptionOf"}, enabled = false)
 	//@ImplementsNitrateTest(caseId=71208)
 	public void VerifySubscriptionOfBestProductWithUnattendedRegistration() throws JSONException,Exception {
 		Map<String,String> attributes = new HashMap<String,String>();
