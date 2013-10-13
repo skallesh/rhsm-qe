@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -15,6 +16,7 @@ import rhsm.base.SubscriptionManagerCLITestScript;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -48,6 +50,7 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void BashCompletion_Test(Object bugzilla, String bashCommand, Set<String> expectedCompletions) {
+		
 		// inspired by https://github.com/lacostej/unity3d-bash-completion/blob/master/lib/completion.py
 		List<String> program_args =  Arrays.asList(bashCommand.split("\\s+"));
 		String program = program_args.get(0);
@@ -84,6 +87,16 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			if (!expectedCompletions.contains(actualCompletion))
 				log.warning("Was presented with an unexpected bash-completion '"+actualCompletion+"' for command '"+bashCommand+"'.");
 		}
+		
+		// PERMANENT WORKAROUND FOR CLOSED/WONTFIX Bug 1004402 - rhsmd and rhsmcertd-worker does not bash complete its options
+		if ((bashCommand.startsWith("/usr/libexec/rhsmcertd-worker ") || bashCommand.startsWith("/usr/libexec/rhsmd ")) &&
+			!actualCompletions.containsAll(expectedCompletions)) {
+			String bugId="1004402"; 
+			try {if (!BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else { }} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			throw new SkipException("Bash completion for '"+bashCommand+"' is broken and bug '"+bugId+"' was CLOSED/WONTFIX.");
+		}
+		// END OF WORKAROUND
+		
 		Assert.assertTrue(actualCompletions.containsAll(expectedCompletions), "All of the expected bash-completions for command '"+bashCommand+"' were presented.");
 		Assert.assertTrue(expectedCompletions.containsAll(actualCompletions), "All of the presented bash-completions for command '"+bashCommand+"' were expected.");
 		
@@ -230,7 +243,6 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1004402 - rhsmd and rhsmcertd-worker does not bash complete its options
 			if (bashCommand.startsWith("/usr/libexec/rhsmcertd-worker ")) bugIds.add("1004402");
 			if (bashCommand.startsWith("/usr/libexec/rhsmd ")) bugIds.add("1004402");
-			
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
