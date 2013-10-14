@@ -855,7 +855,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					
 					// check for an exempt service level
 					if (supportLevelExemptValue==null || !Boolean.valueOf(supportLevelExemptValue)) {
-						Assert.assertEquals(dryrunSubscriptionPool.serviceLevel, initialServiceLevel, "When dry-run is called with an empty service-level, the actual consumer's initially set service-level '"+initialServiceLevel+"' matches the service-level of the dry-run pool result: "+dryrunSubscriptionPool+" EXCEPTION: This is not true when the service-level is exempt.");
+						Assert.assertTrue(dryrunSubscriptionPool.serviceLevel.equalsIgnoreCase(initialServiceLevel), "When dry-run is called with an empty service-level, the actual consumer's initially set service-level '"+initialServiceLevel+"' matches the service-level '"+dryrunSubscriptionPool.serviceLevel+"' granted from the dry-run pool result: "+dryrunSubscriptionPool+". (EXCEPTION: This is not true when the service-level is exempt.)");
 					} else {
 						log.info("An exempt service level '"+dryrunSubscriptionPool.serviceLevel+"' was included in the dry-run pool result: "+dryrunSubscriptionPool);
 					}
