@@ -247,6 +247,10 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			}
 			// END OF WORKAROUND
 			
+			msgId = "Please provide an email address to receive notification\n"+"when the redemption is complete.";
+			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
+			if (translationFile.getPath().contains("/zh_TW/") && failedTranslation!=null && failedTranslation.msgstr.equals("請輸入電子郵件地址，好在兌換完成時收到通知。")) ignorableMsgIds.add(msgId);
+			
 			msgId = ""+"Did not receive a completed unregistration message from RHN Classic for system %s.\n"+"Please investigate on the Customer Portal at https://access.redhat.com.";
 			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
 			if (translationFile.getPath().contains("/zh_CN/") && failedTranslation!=null && failedTranslation.msgstr.equals("未从 RHN 传统订阅收到关于系统 %s 的 完整未注册信息。请在 https://access.redhat.com 客户门户网站中检查。")) ignorableMsgIds.add(msgId);
@@ -258,7 +262,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			msgId = "Tip: Forgot your login or password? Look it up at http://redhat.com/forgot_password";
 			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
 			if (translationFile.getPath().contains("/or/") && failedTranslation!=null && failedTranslation.msgstr.equals("ସୂଚନା: ଆପଣଙ୍କର ଲଗଇନ କିମ୍ବା ପ୍ରବେଶ ସଂକେତ ଭୁଲିଯାଇଛନ୍ତି କି?"+"\n"+"http://redhat.com/forgot_password ରେ ଦେଖନ୍ତୁ")) ignorableMsgIds.add(msgId);
-
+			
 			msgId = "\n"+"Retrieving existing RHN Classic subscription information...";
 			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
 			// TEMPORARY WORKAROUND FOR BUG
