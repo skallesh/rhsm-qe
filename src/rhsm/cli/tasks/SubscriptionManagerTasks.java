@@ -5381,12 +5381,16 @@ repolist: 3,394
 	public String findUniqueAvailablePackageFromRepo (String repo) {
 		for (String pkg : getYumListAvailable("--disablerepo=* --enablerepo="+repo)) {
 			if (!getYumListAvailable("--disablerepo="+repo+" "+pkg).contains(pkg)) {
-				if (yumCanInstallPackageFromRepo(pkg,repo,null)) {
-					return pkg;
+				if (!isPackageInstalled(pkg)) {	// only consider packages that are not installed otherwise we may inadvertantly upgrade an already installed package rather than install a new one
+					if (yumCanInstallPackageFromRepo(pkg,repo,null)) {
+						return pkg;
+					}
 				}
 			}
 		}
 		return null;
+		
+		// repoquery --whatrequires --recursive <pkg> // TODO CONSIDERATION: may want to make use of this query to skip pkgs that will inadvertently remove packages starting with string: rhn-client-tools rhn-setup subscription-manager
 	}
 	
 	public String findRandomAvailablePackageFromRepo (String repo) {
