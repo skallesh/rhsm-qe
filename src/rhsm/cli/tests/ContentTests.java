@@ -428,7 +428,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
-			groups={"AcceptanceTests","blockedByBug-737145","blockedByBug-838113","blockedByBug-924919","blockedByBug-979492"},
+			groups={"AcceptanceTests","blockedByBug-737145","blockedByBug-838113","blockedByBug-924919","blockedByBug-979492"},	/* yum stdout/stderr related bugs 872310 901612 1017354 1017969 */
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test() {
