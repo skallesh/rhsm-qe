@@ -800,12 +800,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sshCommandResult.getStdout().contains(conflictingProductCertsMsg)) {	// when "You are subscribed to channels that have conflicting product certificates." migration aborts.
 			log.warning("You are subscribed to channels that have conflicting product certificates.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
 			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when the RHN channels map to conflicting product certs that share the same product ID");
-			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is still registered using RHN Classic when the RHN channels map to conflicting product certs that share the same product ID");
+			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is still registered using RHN Classic when the RHN channels map to conflicting product certs that share the same product ID");	
 			
 			// assert that we are not yet registered to RHSM
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" detects that the RHN channels map to conflicting product certs that share the same product ID");
 			
 			// assert that we are still registered to RHN
+			removeProxyServerConfigurations();	// needed before we can call isRhnSystemIdRegistered(...)
 			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt aborted after detecting that the RHN channels map to conflicting product certs that share the same product ID");
 
 			return;
