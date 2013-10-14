@@ -86,16 +86,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// TEMPORARY WORKAROUND
-		if (productId.equals("awesomeos-server-2-socket-std")) {
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="1016300"; // Bug 1016300 - the "Provides:" field in subscription-manager list --availble should exclude "MKT" products.
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				throw new SkipException("Skipping this test for SKU '"+productId+"' while bug '"+bugId+"' is open.");
-			}
-		}
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1016300"; // Bug 1016300 - the "Provides:" field in subscription-manager list --available should exclude "MKT" products.
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("While bug '"+bugId+"' is open, skip assertion that the actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
+		} else
 		// END OF WORKAROUND
-		
 		// assert that the pool's list of Provides matches the list of bundled product names after implementation of Bug 996993 - [RFE] Search for or list matching providedProducts
 		Assert.assertTrue(bundledProductNames.containsAll(pool.provides) && pool.provides.containsAll(bundledProductNames), "The actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
 		
@@ -184,8 +181,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					
 					// TEMPORARY WORKAROUND FOR BUG
 					if (installedProduct.arch.contains(",")) {
-						boolean invokeWorkaroundWhileBugIsOpen = true;
-						String bugId="951633"; // Bug 951633 - installed product with comma separated arch attribute fails to go green
+						/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
+						/*String*/ bugId="951633"; // Bug 951633 - installed product with comma separated arch attribute fails to go green
 						try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 						if (invokeWorkaroundWhileBugIsOpen) {
 							throw new SkipException("Verification for status of Installed Product name='"+installedProduct.productName+"' with arch='"+installedProduct.arch+"' is blocked by open bugzilla '"+bugId+"'.");
