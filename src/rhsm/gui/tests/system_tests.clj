@@ -118,9 +118,11 @@
         ; creating a traceback dumps the cache and this works for a quick fix
         fuckcache (fn [] (try+ (tasks/ui getchild "blah")
                               (catch Exception e "")))]
-    (fuckcache)
-    (log/info (str "Items: " beforecount))
-    (fuckcache)
+    (if (= "RHEL5" (get-release))
+      (do
+        (fuckcache)
+        (log/info (str "Items: " beforecount))
+        (fuckcache)))
     (exec-shortcut "<ESC>")
     (tasks/ui waittillguinotexist window 10)
     (exec-shortcut shortcut)
