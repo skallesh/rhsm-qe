@@ -216,8 +216,7 @@
       (tasks/unsubscribe_all)
       (tasks/restart-app)))))
 
-(defn ^{Test {:groups ["stacking"
-                       "acceptance"
+(defn ^{Test {:groups ["acceptance"
                        "blockedByBug-827173"]}}
   assert_auto_attach
   "Asserts if autosubscribe is possible when client is partially subscribed"
