@@ -6136,9 +6136,14 @@ repolist: 3,394
 	 */
 	public String workaroundForBug906550(String stdoutMsg) {
 		// TEMPORARY WORKAROUND FOR BUG
+		// Bug 906550 - Any local-only certificates have been deleted.
 		// subscription-manager commit 7bb3751ad6f398b044efd095af61cd605d9831bf
-		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 906550 - Any local-only certificates have been deleted.
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		String bugId = "906550"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		// PERMANENT WORKAROUND FOR BUG
+		// Bug 895447 - the count of subscriptions removed is zero,for the certs that have been imported
+		// subscription-manager commit 46cbbe61713f5e9b43ff54793e2d1897d56191fd
+		// subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
+		//try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// Any local-only certificates have been deleted.
 			String subString = "Any local-only certificates have been deleted.";
@@ -6146,7 +6151,7 @@ repolist: 3,394
 			  log.info("Stripping substring '"+subString+"' from stdout while bug '"+bugId+"' is open.");
 			  stdoutMsg = stdoutMsg.replace(subString, "").trim();
 			}
-			// 1 local certificate has been deleted.
+			// 1 local certificate has been deleted.	// https://bugzilla.redhat.com/show_bug.cgi?id=895447#c8
 			// 2 local certificates have been deleted.
 			String subStringRegex = "(\\d+ local (certificate has|certificates have) been deleted\\.)";
 			Pattern pattern = Pattern.compile(subStringRegex);
@@ -6155,7 +6160,7 @@ repolist: 3,394
 				log.info("Stripping substring '"+matcher.group()+"' from stdout while bug '"+bugId+"' is open.");
 				stdoutMsg = stdoutMsg.replace(matcher.group(), "").trim();
 			}
-			// 3 subscriptions removed at the server.
+			// 3 subscriptions removed at the server.	// https://bugzilla.redhat.com/show_bug.cgi?id=895447#c8
 			subStringRegex = "(\\d+ subscriptions removed at the server\\.)";
 			pattern = Pattern.compile(subStringRegex);
 			matcher = pattern.matcher(stdoutMsg);
