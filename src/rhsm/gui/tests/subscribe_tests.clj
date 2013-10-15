@@ -30,7 +30,6 @@
 (def subs-contractlist (atom {}))
 (def prod-dir (atom {}))
 (def sys-log "/var/log/rhsm/rhsm.log")
-(def stacking-dir "/tmp/stacking-dir/")
 
 (defn build-subscription-map
   "Builds the product map and updates the productlist atom"
@@ -592,7 +591,7 @@
           (tasks/ui selecttab :all-available-subscriptions)
           (verify (= 1 (count contracts))))))
     (finally
-     (if (tasks/ui guiexist :contract-selection-dialog)
+     (if (bool (tasks/ui guiexist :contract-selection-dialog))
        (tasks/ui click :cancel-contract-selection)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
