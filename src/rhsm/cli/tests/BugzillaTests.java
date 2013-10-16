@@ -139,6 +139,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void VerifyStatusCheck() throws Exception {
 		moveProductCertFiles("*");
+		if((RemoteFileTasks.testExists(client, "/root/temp1/37060.pem") && (RemoteFileTasks.testExists(client, "/root/temp1/32060.pem")))){
+			throw new SkipException("required products are not available for testing");
+		}
 		client.runCommandAndWait("cp /root/temp1/37060.pem "+clienttasks.productCertDir);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
@@ -329,9 +332,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify Sytem.UUID fact is Deleted Once Consumer is Deleted",
-			groups={"Sytem_UUIDfactShouldBeDeletedOnceConsumerDeleted"},
+			groups={"SytemUUIDfactShouldBeDeletedOnceConsumerDeleted"},
 			enabled=true)
-	public void Sytem_UUIDfactShouldBeDeletedOnceConsumerDeleted() throws Exception {
+	public void SytemUUIDfactShouldBeDeletedOnceConsumerDeleted() throws Exception {
 	clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null).getStderr();
@@ -340,8 +343,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	Assert.assertEquals(UUID.trim(), consumerid.trim());
 	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/consumers/"+consumerid);
 	clienttasks.restart_rhsmcertd(null, null, false, null);
+	sleep(2*60*1000);
 	UUID=getSystemUUIDFacts();
-	Assert.assertNull(UUID);
+	Assert.assertEquals(UUID, "");
 	
 	}
 	
@@ -2008,6 +2012,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			listOfSectionNameValues = new ArrayList<String[]>();
 			listOfSectionNameValues.add(new String[] { "rhsm","manage_repos", "0" });
 			clienttasks.config(null, null, true, listOfSectionNameValues);
+			client.runCommand("yum repolist");
 			originalRepos =clienttasks.getCurrentlySubscribedYumRepos();
 			Assert.assertTrue(originalRepos.isEmpty());
 			 
@@ -2724,14 +2729,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId = 50230)
 	public void UnsubscribeFromMultipleEntitlements() throws JSONException,
 	Exception {
+		int count=0;
 		List<BigInteger> serialnums = new ArrayList<BigInteger>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			if((count<=2)){
+				count++;
+			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			}
+			
 		}
+		
 		for (ProductSubscription consumed : clienttasks
 				.getCurrentlyConsumedProductSubscriptions()) {
 			serialnums.add(consumed.serialNumber);
@@ -2746,9 +2757,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		BigInteger serialTwo = serialnums.get(j);
 		String result = unsubscribeFromMultipleEntitlementsUsingSerialNumber(
 				serialOne, serialTwo).getStdout();
-		System.out.println(result);
-		String expected = "Successfully removed serial numbers:" + "\n" + "   "
-				+ serialOne + "\n" + "   " + serialTwo;
+		
+		String expected = "Serial numbers successfully removed at the server:" + "\n" + "   "
+				+ serialOne + "\n" + "   " + serialTwo+ "\n" 
+				+"2 local certificates have been deleted.";
 		Assert.assertEquals(result.trim(), expected);
 	}
 
@@ -2953,7 +2965,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<File> Entitlementcerts = clienttasks
 				.getCurrentEntitlementCertFiles();
 		String expected = Entitlementcerts.size()
-				+ " subscriptions removed from this system.";
+				+ " subscriptions removed at the server.";
 		Assert.assertEquals(result.getStdout().trim(), expected);
 
 	}
@@ -3106,8 +3118,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				for (SubscriptionPool AvailSub : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 					if (installed.productName.contains(AvailSub.subscriptionName)) {
 						String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + AvailSub.productId);
-						String expect = "{\"displayMessage\""+ ":"+ "\"Product with UUID '"+ AvailSub.productId+ "'"+ " cannot be deleted while subscriptions exist.\"}";
-						Assert.assertEquals(expect, jsonConsumer);
+						String expect = "{\"displayMessage\""+ ":"+ "\"Product with UUID '"+ AvailSub.productId+ "'"+ " cannot be deleted while subscriptions exist.\"},\"requestUuid\":\"";
+						Assert.assertEquals(jsonConsumer, expect);
 					}
 				}
 			}
@@ -4014,7 +4026,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA","AutoHealFailForSLA","VerifyFuturesubscription_Test","VerifySubscriptionOf",
 	"VerifySystemCompliantFact","ValidityAfterOversubscribing","certificateStacking","UpdateWithNoInstalledProducts","VerifyHealingForFuturesubscription"
-	,"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","BugzillaTests"})
+	,"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","BugzillaTests","VerifyStatusCheck"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
@@ -4312,8 +4324,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void restoreRHSMConfFileValues() {
 		clienttasks.unregister(null, null, null);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "server","hostname".toLowerCase(),configuredHostname});
-		listOfSectionNameValues.add(new String[] { "server","port".toLowerCase(), "8443" });
 		listOfSectionNameValues.add(new String[] { "server","prefix".toLowerCase(), "/candlepin" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
