@@ -1651,6 +1651,16 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1009109");
 			}
 			
+			if (rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-ost-4") || rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-ost-beta")) {
+				// Bug 1019981 - OpenStack-4.0 rhel-x86_64-server-6-ost-4 channel maps are missing
+				bugIds.add("1019981");
+			}
+			
+			if (rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-ose-2")) {
+				// Bug 1019986 - OpenShift-2.0 rhel-x86_64-server-6-ose-2 channel maps are missing
+				bugIds.add("1019986");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
