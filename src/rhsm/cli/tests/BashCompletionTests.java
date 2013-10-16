@@ -162,6 +162,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// based on comment https://bugzilla.redhat.com/show_bug.cgi?id=1004385#c7 we will only test rhsm-icon --help (we will skip tests for --help-gtk options or --help-all options)
 			if (helpCommand.startsWith("rhsm-icon") && (helpCommand.contains("--help-gtk")||helpCommand.contains("--help-all"))) continue;
 			
+			// remove "export DISPLAY=localhost:10.0 && " from the helpCommand export DISPLAY=localhost:10.0 && subscription-manager-gui --help
+			helpCommand = helpCommand.replace("export DISPLAY=localhost:10.0 && ","");
+			
 			// transcribe the helpCommand into a bashCommand
 			String bashCommand = helpCommand.replaceFirst("\\s*(--help-all|--help-gtk|--help)\\s*", " ").trim();	// strip out "--help"
 			bashCommand += " "; // append chars as a prefix to <tab><tab> complete the expected command line options
