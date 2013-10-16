@@ -1640,6 +1640,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			"rhel-x86_64-server-6-rhscl-1-beta",
 			"rhel-x86_64-server-6-rhscl-1-debuginfo",
 			"rhel-x86_64-server-6-rhscl-1",
+			"rhel-x86_64-workstation-6-rhscl-1-beta",
+			"rhel-x86_64-workstation-6-rhscl-1-beta-debuginfo",
 			"rhel-i386-server-hts-6-beta",
 			"rhel-x86_64-server-hts-6-beta",
 			"rhel-ppc64-server-hts-6",	// Red Hat Hardware Certification Test Suite  productID=199
