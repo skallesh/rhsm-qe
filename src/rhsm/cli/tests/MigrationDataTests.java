@@ -740,6 +740,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.startsWith("rhel-x86_64-client-6-rhscl-1")) {	// rhel-x86_64-client-6-rhscl-1 rhel-x86_64-client-6-rhscl-1-debuginfo rhel-x86_64-client-6-rhscl-1-beta rhel-x86_64-client-6-rhscl-1-beta-debuginfo
+			// Bug 1009071 - the RHN Classic rhel-x86_64-client-6-rhscl-1 channels are not accounted for in product-certs.json
+			log.warning("(degregor 10/9/2013) RHSCL on client has been dropped - https://bugzilla.redhat.com/show_bug.cgi?id=1009071#c1");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
 		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
