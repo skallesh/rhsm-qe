@@ -4782,10 +4782,16 @@ public class SubscriptionManagerTasks {
 		// assert results for a successful facts
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the facts command indicates a success.");
 		String regex = "";
-		if (list!=null && list)		regex=".*:.*";						// list of the current facts
-		if (update!=null && update)	regex="Successfully updated the system facts\\.";	// regex=getCurrentConsumerCert().consumerid;	// consumerid	// RHEL57 RHEL61
-
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
+		if (list!=null && list)	{
+			regex=".*:.*";	// list of the current facts
+			//Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(sshCommandResult.getStdout().trim(), regex), "The list of facts contains matches to regex '"+regex+"'.");
+			List<String> facts = SubscriptionManagerCLITestScript.getSubstringMatches(sshCommandResult.getStdout().trim(), regex);
+			Assert.assertTrue(facts.size()>1, "A list of facts matching regex '"+regex+"' was reported.");
+		}
+		if (update!=null && update)	{
+			String expectedMsg="Successfully updated the system facts.";	// expectedMsg=getCurrentConsumerCert().consumerid;	// consumerid	// RHEL57 RHEL61
+			Assert.assertTrue(sshCommandResult.getStdout().trim().contains(expectedMsg), "The facts update feedback contains expected message '"+expectedMsg+"'.");
+		}
 		
 		return sshCommandResult; // from the facts command
 	}
