@@ -762,7 +762,19 @@ public class SubscriptionManagerTasks {
 	 * @return
 	 */
 	public String getConfParameter(String parameter){
-		String parameterValue = sshCommandRunner.runCommandAndWait(command+" config | grep "+parameter.toLowerCase()).getStdout().trim();
+		String parameterValue = sshCommandRunner.runCommandAndWait(command+" config | grep '  "+parameter.toLowerCase()+" = '").getStdout().trim();
+		//	[root@jsefler-6 ~]# subscription-manager config
+		//	[server]
+		//	   hostname = jsefler-f14-candlepin.usersys.redhat.com
+		//	   insecure = [0]
+		//	   port = 8443
+		//	   prefix = /candlepin
+		//	   proxy_hostname = []
+		//	   proxy_password = []
+		//	   proxy_port = []
+		//	   proxy_user = []
+		//	   ssl_verify_depth = [3]
+
 		return parameterValue.split(" = ")[1].replaceAll("\\[","").replaceAll("\\]","");	// a value wrapped in brackets [] indicates a default value is being used
 	}
 	
@@ -3050,8 +3062,8 @@ public class SubscriptionManagerTasks {
 		if (list!=null && list)						command += " --list";
 		for (String[] section_name_value : listOfSectionNameValues) {
 			// double quote the value when necessary
-			if (listOfSectionNameValues.size()>2 && section_name_value[2].equals("")) section_name_value[2] = "\"\"";	// double quote blank values
-			if (listOfSectionNameValues.size()>2 && section_name_value[2].contains(" ")) section_name_value[2] = "\""+section_name_value[2]+"\"";	// double quote value containing spaces (probably never used)
+			if (section_name_value.length>2 && section_name_value[2].equals("")) section_name_value[2] = "\"\"";	// double quote blank values
+			if (section_name_value.length>2 && section_name_value[2].contains(" ")) section_name_value[2] = "\""+section_name_value[2]+"\"";	// double quote value containing spaces (probably never used)
 
 			if (remove!=null && remove)				command += String.format(" --remove=%s.%s", section_name_value[0],section_name_value[1]);  // expected format section.name
 			if (set!=null && set)					command += String.format(" --%s.%s=%s", section_name_value[0],section_name_value[1],section_name_value[2]);  // expected format section.name=value
