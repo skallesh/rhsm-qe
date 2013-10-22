@@ -94,7 +94,8 @@
       (tasks/checkforerror)
       (if (bool (tasks/ui guiexist :contract-selection-dialog))
         (do (tasks/ui selectrowindex :contract-selection-table 0)
-            (tasks/ui click :attach-contract-selection)))
+            (tasks/ui click :attach-contract-selection)
+            (tasks/checkforerror)))
       (tasks/restart-app)
       (tasks/ui selecttab :all-available-subscriptions)
       (tasks/search :match-installed? true)
@@ -128,7 +129,8 @@
       (tasks/checkforerror)
       (if (bool (tasks/ui guiexist :contract-selection-dialog))
        (do (tasks/ui selectrowindex :contract-selection-table 0)
-           (tasks/ui click :attach-contract-selection)))
+           (tasks/ui click :attach-contract-selection)
+           (tasks/checkforerror)))
       (tasks/ui selecttab :my-installed-products)
       (tasks/do-to-all-rows-in :installed-view 0
                                (fn [sub]
@@ -202,7 +204,8 @@
      (tasks/checkforerror)
      (if (bool (tasks/ui guiexist :contract-selection-dialog))
        (do (tasks/ui selectrowindex :contract-selection-table 0)
-           (tasks/ui click :attach-contract-selection)))
+           (tasks/ui click :attach-contract-selection)
+            (tasks/checkforerror)))
      (tasks/ui selecttab :my-installed-products)
      (tasks/do-to-all-rows-in :installed-view 2
                               (fn [status]
@@ -242,7 +245,8 @@
       (tasks/checkforerror)
       (if (bool (tasks/ui guiexist :contract-selection-dialog))
        (do (tasks/ui selectrowindex :contract-selection-table 0)
-           (tasks/ui click :attach-contract-selection)))
+           (tasks/ui click :attach-contract-selection)
+            (tasks/checkforerror)))
       (tasks/ui selecttab :my-installed-products)
       (tasks/ui click :auto-attach)
       (sleep 10000)
@@ -261,9 +265,73 @@
      (run-command "subscription-manager facts --update")
      (tasks/unsubscribe_all))))
 
+(defn ^{Test {:groups ["acceptance"
+                       "blockedByBug-827173"]}}
+  assert_quantity_displayed
+  "Asserts if quantity displayed for stacking subscriptions is correct"
+  [_]
+  (try
+    ;(tasks/write-facts "{\"memory.memtotal\": \"10202520\"}")
+    ;(run-command "subscription-manager facts --update")
+    ;(tasks/restart-app :reregister? true)
+    ;(tasks/search :match-installed? true)
+    (let [subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
+          sub-type-map (ctasks/build-subscription-attr-type-map)
+          only-ram (fn [i] (and (not (or (some #(= "cores" %) i) (some #(= "sockets" %) i))) (some #(= "ram" %) i)))
+          socket-subs (for [s subscriptions
+                            :let [x (get sub-type-map s)]
+                            :when (only-ram x)] s)
+          rand-sub (random-subscription socket-subs)
+          subs-attrs-map (ctasks/build-subscriptions-name-val-map)
+          stacking-id (get (get subs-attrs-map rand-sub) "stacking_id")
+          filter-func (fn [i] (if (= stacking-id (get (get subs-attrs-map i) "stacking_id")) i))
+          subs-stacking-id (into [] (distinct (remove nil? (map filter-func subscriptions))))
+          ;raw-data (:stdout (run-command "subscription-manager service-level --list"))
+          ;service-level (rand-nth (drop 3 (split-lines raw-data)))
+          ]
+      (comment
+        (tasks/skip-dropdown :all-subscriptions-view rand-sub)
+        (tasks/ui generatekeyevent (str
+                                    (repeat-cmd 3 "<right> ")
+                                    "<space> " "1 " "<enter>"))
+        (tasks/ui click :attach)
+        (tasks/checkforerror)
+        (if (bool (tasks/ui guiexist :contract-selection-dialog))
+          (do (tasks/ui selectrowindex :contract-selection-table 0)
+              (tasks/ui click :attach-contract-selection)
+              (tasks/checkforerror)))
+        (tasks/skip-dropdown :all-subscriptions-view rand-sub)
+        (tasks/ui click :search))
+      ;(map verify)
+      (comment
+        (map
+         (fn [i] (= (re-find #"\d"
+                            (tasks/ui getcellvalue :all-subscriptions-view (tasks/skip-dropdown :all-subscriptions-view rand-sub) 3))
+                   i))
+         (map (fn [i] (re-find #"\d" (tasks/ui getcellvalue :all-subscriptions-view (tasks/skip-dropdown :all-subscriptions-view i) 3)))
+              subs-stacking-id)))
+      ;(clojure.pprint/pprint (clojure.set/intersection (into #{} socket-subs) (into #{} subs-stacking-id)))
+      ;(clojure.pprint/pprint socket-subs)
+      ;(clojure.pprint/pprint subs-stacking-id)
+      (clojure.pprint/pprint stacking-id)
+      )
+    (comment (finally
+              (tasks/write-facts "{\"memory.memtotal\": \"1020252\"}")
+              (run-command "subscription-manager facts --update")
+              (tasks/unsubscribe_all)))
+    ))
+
+
+(comment
+  (not-every? false? (map (fn [i] (= "stacking_id" i)) (flatten(map keys(first (vals ans1))))))
+  ;where ans -> (ctasks/build-stackable-subscription-map)
+  )
+
 (defn ^{AfterClass {:groups ["cleanup"]
                      :alwaysRun true}}
   cleanup [_]
   (run-command (str "rm -rf " stacking-dir))
   (tasks/set-conf-file-value "productCertDir" @prod-dir)
   (tasks/restart-app))
+
+(gen-class-testng)
