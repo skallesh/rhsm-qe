@@ -579,6 +579,7 @@
   "Checks if every subscipion has contract numbers displayed"
   [_ subscription]
   (try
+    (allsearch)
     (let [sub-contract-map (ctasks/build-contract-map :all? true)
           contracts (sort (get sub-contract-map subscription))]
       (tasks/skip-dropdown :all-subscriptions-view subscription)
