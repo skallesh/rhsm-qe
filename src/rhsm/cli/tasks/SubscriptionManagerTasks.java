@@ -3060,7 +3060,7 @@ public class SubscriptionManagerTasks {
 		// assemble the command
 		String command = this.command;				command += " config";
 		if (list!=null && list)						command += " --list";
-		for (String[] section_name_value : listOfSectionNameValues) {
+		if (listOfSectionNameValues!=null) for (String[] section_name_value : listOfSectionNameValues) {
 			// double quote the value when necessary
 			if (section_name_value.length>2 && section_name_value[2].equals("")) section_name_value[2] = "\"\"";	// double quote blank values
 			if (section_name_value.length>2 && section_name_value[2].contains(" ")) section_name_value[2] = "\""+section_name_value[2]+"\"";	// double quote value containing spaces (probably never used)
@@ -3078,7 +3078,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult config_(Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(section_name_value);
+		if (section_name_value!=null) listOfSectionNameValues.add(section_name_value);
 		return config_(list, remove, set, listOfSectionNameValues);
 	}
 	
@@ -3188,7 +3188,7 @@ public class SubscriptionManagerTasks {
 	
 	public SSHCommandResult config(Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(section_name_value);
+		if (section_name_value!=null) listOfSectionNameValues.add(section_name_value);
 		return config(list, remove, set, listOfSectionNameValues);
 	}
 	
