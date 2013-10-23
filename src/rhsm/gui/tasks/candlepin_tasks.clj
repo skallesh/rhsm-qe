@@ -305,16 +305,3 @@
         type-val-map (map (fn [i] (into {} (map get-type-value i))) product-attr)
         mapify (zipmap product-names type-val-map)]
     mapify))
-
-(comment
-        listall (if all? (list-available true)
-                    (list-available))
-        sub-attr-type (build-subscription-attr-type-map)
-        stacking? (fn [i] (= "stacking_id" i))
-        filter-stacking-subs (fn [j] (if (not-every? false? (map stacking? (val j)))
-                                      (key j))) 
-        stacking-subs (into [] (remove nil? (map filter-stacking-subs sub-attr-type)))
-        stacking_id? (fn [k] (if (= "stacking_id" (map :name k)) :value))
-        filter-val (fn [l] (remove nil? (map stacking_id? (if () (:productAttributes l)))))
-        stacking-vals (into [] (map filter-val listall))
-        mapify (zipmap stacking-subs stacking-vals))
