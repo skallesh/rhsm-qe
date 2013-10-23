@@ -115,6 +115,110 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="Verify RHEL4 channel mappings exist in channel-cert-mapping.txt",
+			groups={"AcceptanceTests","blockedByBug-1009932"},
+			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyRHEL4ChannelMappings_Test() {
+		
+		// hand assemble a list of expected RHEL4 channels
+		// [root@jsefler-6 ~]# egrep 'rhel-.*-4(:|-.*:|\.[[:digit:]]\.z:)' /usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt | egrep --invert-match  '(-ost-4|-4-els|-4-hwcert)'
+		// rhel-i386-as-4: AS-AS-i386-002dbe5bbca3-69.pem
+		List<String> expectedRhel4Channels = Arrays.asList(new String[]{
+				"rhel-i386-as-4",
+				//"rhel-i386-as-4-els",		// Name: Red Hat Enterprise Linux Server - Extended Life Cycle Support
+				//"rhel-i386-as-4-hwcert",	// Name: Red Hat Hardware Certification Test Suite
+				"rhel-i386-as-4.5.z",
+				"rhel-i386-as-4.6.z",
+				"rhel-i386-as-4.7.z",
+				"rhel-i386-as-4.8.z",
+				"rhel-i386-es-4",
+				"rhel-i386-es-4.5.z",
+				"rhel-i386-es-4.6.z",
+				"rhel-i386-es-4.7.z",
+				"rhel-i386-es-4.8.z",
+				"rhel-i386-ws-4",
+				"rhel-ia64-as-4",
+				//"rhel-ia64-as-4-hwcert",
+				"rhel-ia64-as-4.5.z",
+				"rhel-ia64-as-4.6.z",
+				"rhel-ia64-as-4.7.z",
+				"rhel-ia64-as-4.8.z",
+				"rhel-ia64-es-4",
+				"rhel-ia64-es-4.5.z",
+				"rhel-ia64-es-4.6.z",
+				"rhel-ia64-es-4.7.z",
+				"rhel-ia64-es-4.8.z",
+				"rhel-ia64-ws-4",
+				"rhel-ppc-as-4",
+				"rhel-ppc-as-4.5.z",
+				"rhel-ppc-as-4.6.z",
+				"rhel-ppc-as-4.7.z",
+				"rhel-ppc-as-4.8.z",
+				"rhel-s390-as-4",
+				"rhel-s390-as-4.5.z",
+				"rhel-s390-as-4.6.z",
+				"rhel-s390-as-4.7.z",
+				"rhel-s390-as-4.8.z",
+				"rhel-s390x-as-4",
+				"rhel-s390x-as-4.5.z",
+				"rhel-s390x-as-4.6.z",
+				"rhel-s390x-as-4.7.z",
+				"rhel-s390x-as-4.8.z",
+				"rhel-x86_64-as-4",
+				//"rhel-x86_64-as-4-els",
+				//"rhel-x86_64-as-4-hwcert",
+				"rhel-x86_64-as-4.5.z",
+				"rhel-x86_64-as-4.6.z",
+				"rhel-x86_64-as-4.7.z",
+				"rhel-x86_64-as-4.8.z",
+				"rhel-x86_64-es-4",
+				"rhel-x86_64-es-4.5.z",
+				"rhel-x86_64-es-4.6.z",
+				"rhel-x86_64-es-4.7.z",
+				"rhel-x86_64-es-4.8.z",
+				//"rhel-x86_64-server-6-ost-4",		// Name: Red Hat OpenStack
+				//"rhel-x86_64-server-6-ost-4-cts",
+				//"rhel-x86_64-server-6-ost-4-cts-debuginfo",
+				//"rhel-x86_64-server-6-ost-4-debuginfo",
+				"rhel-x86_64-ws-4"
+		});
+		
+		// use a regex and grep to detect actual RHEL4 channel mappings
+		List<String> actualRhel4Channels = new ArrayList<String>();
+		SSHCommandResult result = client.runCommandAndWait("egrep 'rhel-.*-4(:|-.*:|\\.[[:digit:]]\\.z:)' "+channelCertMappingFilename+" | egrep --invert-match '(-ost-4|-4-els|-4-hwcert)'");
+		for (String line: result.getStdout().trim().split("\\n")){
+			if (line.trim().equals("")) continue; // skip blank lines
+			if (line.trim().startsWith("#")) continue; // skip comments
+			String channel = line.split(":")[0].trim();
+			String productCertFilename = line.split(":")[1].trim();
+			actualRhel4Channels.add(channel);
+		}
+		
+		boolean allExpectedRhel4ChannelsAreMapped = true;
+		for (String channel : expectedRhel4Channels) {
+			if (actualRhel4Channels.contains(channel)) {
+				Assert.assertTrue(actualRhel4Channels.contains(channel), "Expected RHEL4 channel '"+channel+"' was found in channel cert mapping file '"+channelCertMappingFilename+"'.");
+			} else {
+				log.warning("Expected RHEL4 channel '"+channel+"' was not found in channel cert mapping file '"+channelCertMappingFilename+"'.");
+				allExpectedRhel4ChannelsAreMapped = false;
+			}
+		}
+		
+		boolean allActualRhel4ChannelsMappedAreExpected = true;
+		for (String channel : actualRhel4Channels) {
+			if (!expectedRhel4Channels.contains(channel)) {
+				log.warning("Actual RHEL4 channel '"+channel+"' in channel cert mapping file '"+channelCertMappingFilename+"' that was not expected.  This automated test may need an update.");
+				allActualRhel4ChannelsMappedAreExpected = false;
+			}
+		}
+		
+		Assert.assertTrue(allExpectedRhel4ChannelsAreMapped, "All expected RHEL4 channels are mapped in '"+channelCertMappingFilename+"'. (See above warnings for offenders.)");
+		Assert.assertTrue(allActualRhel4ChannelsMappedAreExpected, "All actual RHEL4 channels mapped in '"+channelCertMappingFilename+"' are expected. (See above warnings for offenders.)");
+	}
+	
+	
 	@Test(	description="Verify that all product cert files mapped in channel-cert-mapping.txt exist",
 			groups={"AcceptanceTests","blockedByBug-771615"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
@@ -737,6 +841,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		}
 		if (classicRhnChannel.matches("rhel-.+-client-multimedia-5(-.*|$)")) {	// rhel-i386-client-multimedia-5 rhel-i386-client-multimedia-5-beta
 			log.warning("(degregor 5/31/2013) I don't think we ever added these to CDN.  Please ignore them for now.");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.startsWith("rhel-x86_64-client-6-rhscl-1")) {	// rhel-x86_64-client-6-rhscl-1 rhel-x86_64-client-6-rhscl-1-debuginfo rhel-x86_64-client-6-rhscl-1-beta rhel-x86_64-client-6-rhscl-1-beta-debuginfo
+			// Bug 1009071 - the RHN Classic rhel-x86_64-client-6-rhscl-1 channels are not accounted for in product-certs.json
+			log.warning("(degregor 10/9/2013) RHSCL on client has been dropped - https://bugzilla.redhat.com/show_bug.cgi?id=1009071#c1");
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
@@ -1634,6 +1744,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			"rhel-x86_64-server-6-rhscl-1-beta",
 			"rhel-x86_64-server-6-rhscl-1-debuginfo",
 			"rhel-x86_64-server-6-rhscl-1",
+			"rhel-x86_64-workstation-6-rhscl-1-beta",
+			"rhel-x86_64-workstation-6-rhscl-1-beta-debuginfo",
 			"rhel-i386-server-hts-6-beta",
 			"rhel-x86_64-server-hts-6-beta",
 			"rhel-ppc64-server-hts-6",	// Red Hat Hardware Certification Test Suite  productID=199
@@ -1641,6 +1753,26 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			if (variousAvailableChildChannels.contains(rhnAvailableChildChannel)) {
 				// Bug 1009109 - various available RHN Classic child channels that are not accounted for in product-certs.json
 				bugIds.add("1009109");
+			}
+			
+			if (rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-ost-4") || rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-ost-beta")) {
+				// Bug 1019981 - OpenStack-4.0 rhel-x86_64-server-6-ost-4 channel maps are missing
+				bugIds.add("1019981");
+			}
+			
+			if (rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-ose-2")) {
+				// Bug 1019986 - OpenShift-2.0 rhel-x86_64-server-6-ose-2 channel maps are missing
+				bugIds.add("1019986");
+			}
+			
+			if (rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-rhs-rhsc-2.1")) {
+				// Bug 1021661 - Red Hat Storage Management Console rhel-x86_64-server-6-rhs-rhsc-2.1 channel maps are missing
+				bugIds.add("1021661");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-2") || rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-2-debuginfo")) {
+				// Bug 1021664 - Red Hat CloudForms rhel-x86_64-server-6-cf-me-2 channel mappings are missing
+				bugIds.add("1021664");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));

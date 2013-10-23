@@ -1313,13 +1313,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="attempt to execute migration tool rhn-migrate-classic-to-rhsm while while under attack by a man-in-the-middle security vulnerability",
-			groups={"blockedByBug-966745","blockedByBug-885130","blockedByBug-918967","blockedByBug-918968","blockedByBug-918969","RhnMigrateClassicToRhsmCertificateVerification_Test"},
+			groups={"blockedByBug-966745","blockedByBug-885130","blockedByBug-918967","blockedByBug-918968","blockedByBug-918969","blockedByBug-918970","RhnMigrateClassicToRhsmCertificateVerification_Test"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmCertificateVerification_Test() {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
 		clienttasks.unregister(null, null, null);
-		// Steps: are outlined in https://bugzilla.redhat.com/show_bug.cgi?id=918967#c1
+		// Steps: are outlined in https://bugzilla.redhat.com/show_bug.cgi?id=918967#c1 EMBARGOED CVE-2012-6137 subscription-manager (rhn-migrate-classic-to-rhsm): Absent certificate verification
 		
 		// Step 0: register to rhn classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);

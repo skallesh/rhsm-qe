@@ -382,6 +382,53 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected String repoCaCertConfigured = null;
 	
 	
+	@Test(	description="verify the default configurations for server hostname:port/prefix after running config removal",
+			groups={"blockedByBug-988085","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test() {
+		
+		// this bug is specifically designed to test Bug 988085 - After running subscription-manager config --remove server.hostname, different default values available from GUI and CLI
+
+		serverHostnameConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
+		serverPortConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
+		serverPrefixConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
+		
+		// use the config command to remove the server configurations
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "server", "hostname".toLowerCase()});
+		listOfSectionNameValues.add(new String[] { "server", "port".toLowerCase()});
+		listOfSectionNameValues.add(new String[] { "server", "prefix".toLowerCase()});
+		clienttasks.config(null, true, null, listOfSectionNameValues);
+		
+		// assert that they are removed
+		for (String[] sectionNameValues : listOfSectionNameValues) {
+			String section = sectionNameValues[0];
+			String name = sectionNameValues[1];
+			Assert.assertNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name),"After using subscription-manager config to remove section '"+section+"' parameter '"+name+"', it should no longer be readable from config file '"+clienttasks.rhsmConfFile+"'.");
+		}
+		
+		// assert the expected interpolated defaults
+		Assert.assertEquals(clienttasks.getConfParameter("hostname"),"subscription.rhn.redhat.com","The interpolated default configuration for [server].hostname after it has been deleted from configuration file '"+clienttasks.rhsmConfFile+"'.");
+		Assert.assertEquals(clienttasks.getConfParameter("port"),"443","The interpolated default configuration for [server].port after it has been deleted from configuration file '"+clienttasks.rhsmConfFile+"'.");
+		Assert.assertEquals(clienttasks.getConfParameter("prefix"),"/subscription","The interpolated default configuration for [server].prefix after it has been deleted from configuration file '"+clienttasks.rhsmConfFile+"'.");
+	}
+	@AfterGroups(value={"VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},groups={"setup"})
+	public void afterVerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test() {
+		if (serverHostnameConfigured!=null) clienttasks.config(null,null,true, new String[]{"server","hostname",serverHostnameConfigured});
+		if (serverPortConfigured!=null) clienttasks.config(null,null,true, new String[]{"server","port",serverPortConfigured});
+		if (serverPrefixConfigured!=null) clienttasks.config(null,null,true, new String[]{"server","prefix",serverPrefixConfigured});
+	}
+	protected String serverHostnameConfigured = null;
+	protected String serverPortConfigured = null;
+	protected String serverPrefixConfigured = null;
+	
+	
+	
+	
+	
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 744654 - [ALL LANG] [RHSM CLI]config module_ config Server port with balnk or incorrect text produces traceback. https://github.com/RedHatQE/rhsm-qe/issues/121
 	// TODO Bug 807721 - upgrading subscription-manager to rhel63 does not set a default rhsm.manage_repos configuration https://github.com/RedHatQE/rhsm-qe/issues/122

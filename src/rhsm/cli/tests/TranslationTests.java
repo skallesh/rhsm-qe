@@ -204,7 +204,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={"AcceptanceTests", "blockedByBug-871152", "blockedByBug-912460", "blockedByBug-1003017"},
+			groups={"AcceptanceTests", "blockedByBug-871152", "blockedByBug-912460", "blockedByBug-1003017"/*, "blockedByBug-1020474"*/},
 			dataProvider="getTranslationFileData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

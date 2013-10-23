@@ -762,7 +762,19 @@ public class SubscriptionManagerTasks {
 	 * @return
 	 */
 	public String getConfParameter(String parameter){
-		String parameterValue = sshCommandRunner.runCommandAndWait(command+" config | grep "+parameter.toLowerCase()).getStdout().trim();
+		String parameterValue = sshCommandRunner.runCommandAndWait(command+" config | grep '  "+parameter.toLowerCase()+" = '").getStdout().trim();
+		//	[root@jsefler-6 ~]# subscription-manager config
+		//	[server]
+		//	   hostname = jsefler-f14-candlepin.usersys.redhat.com
+		//	   insecure = [0]
+		//	   port = 8443
+		//	   prefix = /candlepin
+		//	   proxy_hostname = []
+		//	   proxy_password = []
+		//	   proxy_port = []
+		//	   proxy_user = []
+		//	   ssl_verify_depth = [3]
+
 		return parameterValue.split(" = ")[1].replaceAll("\\[","").replaceAll("\\]","");	// a value wrapped in brackets [] indicates a default value is being used
 	}
 	
@@ -3048,10 +3060,10 @@ public class SubscriptionManagerTasks {
 		// assemble the command
 		String command = this.command;				command += " config";
 		if (list!=null && list)						command += " --list";
-		for (String[] section_name_value : listOfSectionNameValues) {
+		if (listOfSectionNameValues!=null) for (String[] section_name_value : listOfSectionNameValues) {
 			// double quote the value when necessary
-			if (listOfSectionNameValues.size()>2 && section_name_value[2].equals("")) section_name_value[2] = "\"\"";	// double quote blank values
-			if (listOfSectionNameValues.size()>2 && section_name_value[2].contains(" ")) section_name_value[2] = "\""+section_name_value[2]+"\"";	// double quote value containing spaces (probably never used)
+			if (section_name_value.length>2 && section_name_value[2].equals("")) section_name_value[2] = "\"\"";	// double quote blank values
+			if (section_name_value.length>2 && section_name_value[2].contains(" ")) section_name_value[2] = "\""+section_name_value[2]+"\"";	// double quote value containing spaces (probably never used)
 
 			if (remove!=null && remove)				command += String.format(" --remove=%s.%s", section_name_value[0],section_name_value[1]);  // expected format section.name
 			if (set!=null && set)					command += String.format(" --%s.%s=%s", section_name_value[0],section_name_value[1],section_name_value[2]);  // expected format section.name=value
@@ -3066,7 +3078,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult config_(Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(section_name_value);
+		if (section_name_value!=null) listOfSectionNameValues.add(section_name_value);
 		return config_(list, remove, set, listOfSectionNameValues);
 	}
 	
@@ -3176,7 +3188,7 @@ public class SubscriptionManagerTasks {
 	
 	public SSHCommandResult config(Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(section_name_value);
+		if (section_name_value!=null) listOfSectionNameValues.add(section_name_value);
 		return config(list, remove, set, listOfSectionNameValues);
 	}
 	
@@ -4770,10 +4782,16 @@ public class SubscriptionManagerTasks {
 		// assert results for a successful facts
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the facts command indicates a success.");
 		String regex = "";
-		if (list!=null && list)		regex=".*:.*";						// list of the current facts
-		if (update!=null && update)	regex="Successfully updated the system facts\\.";	// regex=getCurrentConsumerCert().consumerid;	// consumerid	// RHEL57 RHEL61
-
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
+		if (list!=null && list)	{
+			regex=".*:.*";	// list of the current facts
+			//Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(sshCommandResult.getStdout().trim(), regex), "The list of facts contains matches to regex '"+regex+"'.");
+			List<String> facts = SubscriptionManagerCLITestScript.getSubstringMatches(sshCommandResult.getStdout().trim(), regex);
+			Assert.assertTrue(facts.size()>1, "A list of facts matching regex '"+regex+"' was reported.");
+		}
+		if (update!=null && update)	{
+			String expectedMsg="Successfully updated the system facts.";	// expectedMsg=getCurrentConsumerCert().consumerid;	// consumerid	// RHEL57 RHEL61
+			Assert.assertTrue(sshCommandResult.getStdout().trim().contains(expectedMsg), "The facts update feedback contains expected message '"+expectedMsg+"'.");
+		}
 		
 		return sshCommandResult; // from the facts command
 	}

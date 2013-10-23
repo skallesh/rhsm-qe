@@ -1,8 +1,11 @@
 package rhsm.base;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -235,24 +238,37 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			// Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
 			log.warning("Ecountered exception while getting the Candlepin server '"+sm_serverHostname+"' version from the /status api: "+e);
 		} 
-
 		
-		log.info("Installed version of subscription-manager...");
-		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("rpm -qa | egrep ^subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
-		if (client2!=null) log.info("Client2 '"+sm_client2Hostname+"' is running version: "+client2.runCommandAndWait("rpm -qa | grep subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
-
-		log.info("Installed version of python-rhsm...");
-		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("rpm -q python-rhsm").getStdout()); // python-rhsm-0.63-1.el6.i686
-		if (client2!=null) log.info("Client2 '"+sm_client2Hostname+"' is running version: "+client2.runCommandAndWait("rpm -q python-rhsm").getStdout()); // python-rhsm-0.63-1.el6.i686
-
-		log.info("Installed version of RHEL...");
-		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("cat /etc/redhat-release").getStdout()); // Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
-		if (client2!=null) log.info("Client2 '"+sm_client2Hostname+"' is running version: "+client2.runCommandAndWait("cat /etc/redhat-release").getStdout()); // Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
-
-		log.info("Installed version of kernel...");
-		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("uname -a").getStdout()); // Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
-		if (client2!=null) log.info("Client2 '"+sm_client2Hostname+"' is running version: "+client2.runCommandAndWait("uname -a").getStdout()); // Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
-
+	    File file = new File("test-output/version.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+    	Writer output = new BufferedWriter(new FileWriter(file));
+    	String infoMsg = "Installed versions...";
+		log.info(infoMsg); output.write(infoMsg+"\n");
+		if (client1 != null) {
+			infoMsg = "Client1 '"+sm_client1Hostname+"' is running version: ";
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("rpm -qa | egrep ^subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("rpm -q python-rhsm").getStdout();	// python-rhsm-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("cat /etc/redhat-release").getStdout();	// Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("uname -a").getStdout();	// Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
+			log.info(infoMsg); output.write(infoMsg+"\n");
+		}
+		if (client2 != null) {
+			infoMsg = "Client2 '"+sm_client2Hostname+"' is running version: ";
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("rpm -qa | egrep ^subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("rpm -q python-rhsm").getStdout();	// python-rhsm-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("cat /etc/redhat-release").getStdout();	// Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("uname -a").getStdout();	// Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
+			log.info(infoMsg); output.write(infoMsg+"\n");
+		}
+		output.close();
+		
 		isSetupBeforeSuiteComplete = true;
 	}
 	

@@ -219,12 +219,13 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// unsubscribe from all and assert # subscriptions are unsubscribed
 		SSHCommandResult result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",pools.size()),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
+		//Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",pools.size()),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");	// 10/18/2013 NOT SURE WHAT COMMIT/BUG CAUSED THIS CHANGE TO THE FOLLOWING...
+		Assert.assertEquals(result.getStdout().trim(), String.format("%s subscriptions removed at the server."+"\n"+"%s local certificates have been deleted.",pools.size(),pools.size()),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
 		
 		// now attempt to unsubscribe from all again and assert 0 subscriptions are unsubscribed
 		result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",0),"Expected feedback when unsubscribing from all when no subscriptions are currently consumed.");
-
+		//Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",0),"Expected feedback when unsubscribing from all when no subscriptions are currently consumed.");	// 10/18/2013 NOT SURE WHAT COMMIT/BUG CAUSED THIS CHANGE TO THE FOLLOWING...
+		Assert.assertEquals(result.getStdout().trim(), String.format("%s subscriptions removed at the server.",0),"Expected feedback when unsubscribing from all when no subscriptions are currently consumed.");
 	}
 	
 	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
