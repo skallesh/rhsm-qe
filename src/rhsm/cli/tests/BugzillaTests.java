@@ -3106,6 +3106,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(List<String>) null, null, null, null, true, null, null, null, null);
+		String consumerid=clienttasks.getCurrentConsumerId();
 		clienttasks.subscribe_(true, null, null, (String) null, null, null,
 				null, null, null, null, null);
 		if(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty()){
@@ -3118,6 +3119,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				for (SubscriptionPool AvailSub : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 					if (installed.productName.contains(AvailSub.subscriptionName)) {
 						String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + AvailSub.productId);
+						String result=server.runCommandAndWait("tail -5 /var/log/candlepin/candlepin.log | grep req").getStdout();
+						System.out.println();
 						String expect = "{\"displayMessage\""+ ":"+ "\"Product with UUID '"+ AvailSub.productId+ "'"+ " cannot be deleted while subscriptions exist.\"},\"requestUuid\":\"";
 						Assert.assertEquals(jsonConsumer, expect);
 					}
