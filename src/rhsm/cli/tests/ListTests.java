@@ -185,8 +185,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// assert same results when no subscribed to anything...
 		log.info("assert list [--installed] produce same results when not subscribed to anything...");
-		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null);
-		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null);
+		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -198,8 +198,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPool_(pool);
-		listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null);
-		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null);
+		listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null, null, null);
+		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -445,6 +445,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0),"Exit code from list consumed when executed without being registered.");
 	}
 	
+	
 	@Test(	description="subscription-manager: subcription manager list installed should be permitted without being registered",
 			groups={"blockedByBug-725870"},
 			enabled=true)
@@ -455,6 +456,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult listResult = clienttasks.listInstalledProducts();
 	}
 	
+	
 	@Test(	description="subscription-manager: subcription manager list should be permitted without being registered",
 			groups={"blockedByBug-725870"},
 			enabled=true)
@@ -462,10 +464,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	public void AttemptListWithoutBeingRegistered_Test() {
 		
 		clienttasks.unregister(null,null,null);
-		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null, null, null);
+		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null, null, null, null, null);
 		
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
 	}
+	
 	
 	@Test(	description="subscription-manager: subcription manager list available should require being registered",
 			groups={},
@@ -475,14 +478,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult listResult;
 		clienttasks.unregister(null,null,null);
 		
-		listResult = clienttasks.list_(null,true,null,null,null,null,null, null, null);
+		listResult = clienttasks.list_(null,true,null,null,null,null,null, null, null, null, null);
 		//Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list available command indicates a problem.");
 		//Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list available subscriptions should require registration.");
 		// results changed after bug fix 749332
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(255), "The exit code from the list available command indicates a problem.");
 		Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --available subscriptions should require registration.");
 
-		listResult = clienttasks.list_(true,true,null,null,null,null,null, null, null);
+		listResult = clienttasks.list_(true,true,null,null,null,null,null, null, null, null, null);
 		//Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list all available command indicates a problem.");
 		//Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list all available subscriptions should require registration.");
 		// results changed after bug fix 749332
@@ -490,6 +493,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --all --available subscriptions should require registration.");
 
 	}
+	
 	
 	@Test(	description="subscription-manager: subcription manager list future subscription pools for a system",
 			groups={"blockedByBug-672562"},
@@ -543,7 +547,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			if (onDatesTested.contains(onDateToTest)) continue;
 			
 			// list all available onDateToTest
-			SSHCommandResult listResult = clienttasks.list_(true,true,null,null,null,onDateToTest,null, null, null);
+			SSHCommandResult listResult = clienttasks.list_(true,true,null,null,null,onDateToTest,null, null, null, null, null);
 			Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --ondate command indicates a success.");
 
 			List<SubscriptionPool> subscriptionPools = SubscriptionPool.parse(listResult.getStdout());
@@ -573,6 +577,151 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager: subcription manager list with --match-installed option",
+			groups={"blockedByBug-654501"},
+			enabled=false)	// FIXME TODO Enable for RHEL7
+			//@ImplementsNitrateTest(caseId=)
+	public void ListAvailableWithMatchInstalled_Test() throws JSONException, Exception {
+		
+ 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
+
+		// assemble a list of currently installed product ids
+		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		List<String> installedProductIds = new ArrayList<String>(); for (ProductCert productCert : installedProductCerts) installedProductIds.add(productCert.productId);
+		
+		// get the available subscription pools
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, false, null, null, null, null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPoolsMatchingInstalled = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, true, null, null, null, null).getStdout());
+		
+		// loop through the list of available subscription pools with match-installed and assert they really do provide at least one product that is installed.
+		for (SubscriptionPool subscriptionPool : availableSubscriptionPoolsMatchingInstalled) {
+			ProductCert matchedInstalledProductCert = null;
+			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
+				matchedInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProductCerts);
+				if (matchedInstalledProductCert!=null) break;
+			}
+			if (matchedInstalledProductCert!=null) Assert.assertTrue(matchedInstalledProductCert!=null,"Available subscription pool '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides+" includes product id '"+matchedInstalledProductCert.productId+"' which was found among the product ids of the currently installed product certs. "+installedProductIds);
+			else Assert.fail("Subscription-manager list available with match-installed option erroneously reported SubscriptionPool '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides+" which does NOT provide a product whose id was found among the currently installed product certs. "+installedProductIds);
+		}
+		
+		// loop through the list of available subscription without match-installed and make sure those that provide an installed product id are included in the filtered list
+		for (SubscriptionPool subscriptionPool : availableSubscriptionPools) {
+			boolean providesAnInstalledProductId = false;
+			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
+				if (installedProductIds.contains(providedProductId)) providesAnInstalledProductId = true;
+			}
+			if (providesAnInstalledProductId) Assert.assertTrue(availableSubscriptionPoolsMatchingInstalled.contains(subscriptionPool),"The list of available subscriptions with match-installed option includes '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides);
+			else Assert.assertTrue(!availableSubscriptionPoolsMatchingInstalled.contains(subscriptionPool),"The list of available subscriptions with match-installed option does NOT include '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides);
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager: subcription manager list all with --match-installed option",
+			groups={"blockedByBug-654501"},
+			enabled=false)	// FIXME TODO Enable for RHEL7
+			//@ImplementsNitrateTest(caseId=)
+	public void ListAllAvailableWithMatchInstalled_Test() throws JSONException, Exception {
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
+
+		// assemble a list of currently installed product ids
+		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		List<String> installedProductIds = new ArrayList<String>(); for (ProductCert productCert : installedProductCerts) installedProductIds.add(productCert.productId);
+		
+		// get all the available subscription pools
+		List<SubscriptionPool> allAvailableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(true, true, null, null, null, null, false, null, null, null, null).getStdout());
+		List<SubscriptionPool> allAvailableSubscriptionPoolsMatchingInstalled = SubscriptionPool.parse(clienttasks.list(true, true, null, null, null, null, true, null, null, null, null).getStdout());
+		
+		// loop through the list of all available subscription pools with match-installed and assert they really do provide at least one product that is installed.
+		for (SubscriptionPool subscriptionPool : allAvailableSubscriptionPoolsMatchingInstalled) {
+			ProductCert matchedInstalledProductCert = null;
+			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
+				matchedInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProductCerts);
+				if (matchedInstalledProductCert!=null) break;
+			}
+			if (matchedInstalledProductCert!=null) Assert.assertTrue(matchedInstalledProductCert!=null,"Available subscription pool '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides+" includes product id '"+matchedInstalledProductCert.productId+"' which was found among the product ids of the currently installed product certs. "+installedProductIds);
+			else Assert.fail("Subscription-manager list all available with match-installed option erroneously reported SubscriptionPool '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides+" which does NOT provide a product whose id was found among the currently installed product certs. "+installedProductIds);
+		}
+		
+		// loop through the list of all available subscription without match-installed and make sure those that provide an installed product id are included in the filtered list
+		for (SubscriptionPool subscriptionPool : allAvailableSubscriptionPools) {
+			boolean providesAnInstalledProductId = false;
+			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
+				if (installedProductIds.contains(providedProductId)) providesAnInstalledProductId = true;
+			}
+			if (providesAnInstalledProductId) Assert.assertTrue(allAvailableSubscriptionPoolsMatchingInstalled.contains(subscriptionPool),"The list of all available subscriptions with match-installed option includes '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides);
+			else Assert.assertTrue(!allAvailableSubscriptionPoolsMatchingInstalled.contains(subscriptionPool),"The list of all available subscriptions with match-installed option does NOT include '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides);
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager: subcription manager list all with --match-installed option",
+			groups={"blockedByBug-654501","blockedByBug-1022622"},
+			enabled=false)	// FIXME TODO Enable for RHEL7
+			//@ImplementsNitrateTest(caseId=)
+	public void ListAvailableWithNoOverlap_Test() throws JSONException, Exception {
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
+		
+		// assemble a list of currently installed product ids
+		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		List<String> installedProductIds = new ArrayList<String>(); for (ProductCert productCert : installedProductCerts) installedProductIds.add(productCert.productId);
+		
+		// get the available subscription pools
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, false, null, null, null).getStdout());
+		
+		// randomly attach a subset of available subscriptions
+		List<SubscriptionPool> randomAvailableSubscriptionPools = getRandomSubsetOfList(availableSubscriptionPools, randomGenerator.nextInt(availableSubscriptionPools.size()));
+		List<String> poolIds = new ArrayList<String>(); for (SubscriptionPool subscriptionPool : randomAvailableSubscriptionPools) poolIds.add(subscriptionPool.poolId);
+		clienttasks.subscribe(null, null, poolIds, null, null, "1", null, null, null, null, null);
+		
+		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null,null,null,true,null,null,null,null,null,null,null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPoolsWithoutOverlap = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, true, null, null, null).getStdout());
+		//	[root@jsefler-7 ~]# subscription-manager list --help | grep no-overlap -A1
+		//	  --no-overlap          shows pools which provide products that are not
+		//	                        already covered; only used with --available
+		
+		// loop through the list of available subscription pools without overlap and assert that at least one of pools provided product is not fully subscribed.
+		for (SubscriptionPool subscriptionPool : availableSubscriptionPoolsWithoutOverlap) {
+			boolean noOverlapFound = false;
+			List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId);
+			if (providedProductIds.isEmpty()) {
+				Assert.assertTrue(providedProductIds.isEmpty(),"Subscription '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides+" reported in the list available with no-overlap provides no products and therefore does not overlap an already covered product.");
+				noOverlapFound = true;
+			}
+			for (String providedProductId : providedProductIds) {
+				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
+				if (installedProduct!=null) {
+					if (!installedProduct.status.equalsIgnoreCase("Subscribed")) {
+						Assert.assertTrue(!installedProduct.status.equalsIgnoreCase("Subscribed"),"Subscription '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides+" reported in the list available with no-overlap provides product id '"+providedProductId+"' which is installed with status '"+installedProduct.status+"' and therefore does not overlap an already covered product.");
+						noOverlapFound = true;
+					} else {
+						log.warning("Subscription '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides+" reported in the list available with no-overlap provides product id '"+providedProductId+"' which is installed with status '"+installedProduct.status+"'.");
+					}
+				} else {
+					Assert.assertTrue(installedProduct==null,"Subscription '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides+" reported in the list available with no-overlap provides product id '"+providedProductId+"' which is not installed and therefore does not overlap an already covered product.");
+					noOverlapFound = true;
+				}
+			}
+			Assert.assertTrue(noOverlapFound,"Subscription '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides+" that is reported in the list available with no-overlap provides at least one product that is not fully Subscribed.");
+		}
+		
+		// assert that availableSubscriptionPools that are not filtered out of the availableSubscriptionPoolsWithoutOverlap provide products that are all fully Subscribed
+		availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, false, null, null, null).getStdout());
+		for (SubscriptionPool availableSubscriptionPool : availableSubscriptionPools) {
+			if (!availableSubscriptionPoolsWithoutOverlap.contains(availableSubscriptionPool)) {
+				for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId)) {
+					InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
+					Assert.assertNotNull(installedProduct, "Subscription '"+availableSubscriptionPool.subscriptionName+"' provides="+availableSubscriptionPool.provides+" is excluded from the list available with no-overlap.  It provides product id '"+providedProductId+"' which is installed and should be covered by an active subscription.");
+					Assert.assertEquals(installedProduct.status, "Subscribed", "Subscription '"+availableSubscriptionPool.subscriptionName+"' provides="+availableSubscriptionPool.provides+" is excluded from the list available with no-overlap.  It provides product id '"+providedProductId+"' which is installed and covered by an active subscription.");
+				}
+			}
+		}
+	}
+	
 	
 	@Test(	description="subscription-manager: subcription manager list all available should filter by servicelevel when this option is passed.",
 			groups={"blockedByBug-800933","blockedByBug-800999"},
@@ -584,14 +733,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> expectedSubscriptionPools, filteredSubscriptionPools;
 				
 		// list all available (without service level)
-		listResult = clienttasks.list_(true,true,null,null,null,null,null,null,null);
+		listResult = clienttasks.list_(true,true,null,null,null,null,null,null,null, null, null);
 		List<SubscriptionPool> allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
 		// determine the subset of expected pools with a case-insensitive matching servicelevel
 		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allAvailableSubscriptionPools);
 
 		// list all available filtered by servicelevel
-		listResult = clienttasks.list_(true,true,null,null,servicelevel,null,null,null,null);
+		listResult = clienttasks.list_(true,true,null,null,servicelevel,null,null,null,null, null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --servicelevel command indicates a success.");
 		
 		// assert results
@@ -601,14 +750,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (expectedSubscriptionPools.isEmpty()) Assert.assertEquals(listResult.getStdout().trim(), "No available subscription pools to list","Expected message when no subscription remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
 				
 		// list all available (without service level)
-		listResult = clienttasks.list_(false,true,null,null,null,null,null,null,null);
+		listResult = clienttasks.list_(false,true,null,null,null,null,null,null,null, null, null);
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		
 		// determine the subset of expected pools with a matching servicelevel
 		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, availableSubscriptionPools);
 		
 		// list available filtered by servicelevel
-		listResult = clienttasks.list_(false,true,null,null,servicelevel,null,null,null,null);
+		listResult = clienttasks.list_(false,true,null,null,servicelevel,null,null,null,null, null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --servicelevel command indicates a success.");
 		
 		// assert results
@@ -629,7 +778,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<ProductSubscription> expectedProductSubscriptions, filteredProductSubscriptions;
 				
 		// list consumed (without service level)
-		listResult = clienttasks.list_(false,false,true,null,null,null,null,null,null);
+		listResult = clienttasks.list_(false,false,true,null,null,null,null,null,null, null, null);
 		List<ProductSubscription> allConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		
 		// determine the subset of expected pools with a matching servicelevel
@@ -637,7 +786,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		expectedProductSubscriptions = ProductSubscription.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allConsumedProductSubscriptions);
 
 		// list consumed filtered by servicelevel
-		listResult = clienttasks.list_(false,false,true,null,servicelevel,null,null,null,null);
+		listResult = clienttasks.list_(false,false,true,null,servicelevel,null,null,null,null, null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --consumed --servicelevel command indicates a success.");
 		
 		// assert results
