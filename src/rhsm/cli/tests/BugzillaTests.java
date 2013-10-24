@@ -138,11 +138,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"VerifyStatusCheck","blockedByBug-921870"},
 			enabled=true)
 	public void VerifyStatusCheck() throws Exception {
-		moveProductCertFiles("*");
-		if((RemoteFileTasks.testExists(client, "/root/temp1/37060.pem") && (RemoteFileTasks.testExists(client, "/root/temp1/32060.pem")))){
-			throw new SkipException("required products are not available for testing");
+		
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
 		}
-		client.runCommandAndWait("cp /root/temp1/37060.pem "+clienttasks.productCertDir);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -2965,7 +2966,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<File> Entitlementcerts = clienttasks
 				.getCurrentEntitlementCertFiles();
 		String expected = Entitlementcerts.size()
-				+ " subscriptions removed at the server.";
+				+ " subscriptions removed at the server."+ "\n" +"1 local certificate has been deleted.";
 		Assert.assertEquals(result.getStdout().trim(), expected);
 
 	}
@@ -3119,10 +3120,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				for (SubscriptionPool AvailSub : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 					if (installed.productName.contains(AvailSub.subscriptionName)) {
 						String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + AvailSub.productId);
-						String result=server.runCommandAndWait("tail -5 /var/log/candlepin/candlepin.log | grep req").getStdout();
-						System.out.println();
-						String expect = "{\"displayMessage\""+ ":"+ "\"Product with UUID '"+ AvailSub.productId+ "'"+ " cannot be deleted while subscriptions exist.\"},\"requestUuid\":\"";
-						Assert.assertEquals(jsonConsumer, expect);
+						//String result=server.runCommandAndWait("tail -5 /var/log/candlepin/candlepin.log | grep req").getStdout();
+						String expect = "{\"displayMessage\""+ ":"+ "\"Product with UUID '"+ AvailSub.productId+ "'"+ " cannot be deleted while subscriptions exist.\",\"requestUuid\":\"[a-f,0-9,\\-]{36}\"}";
+						Assert.assertContainsMatch(jsonConsumer, expect);
 					}
 				}
 			}
