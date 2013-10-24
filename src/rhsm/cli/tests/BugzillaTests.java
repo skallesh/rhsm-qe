@@ -1755,7 +1755,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if system.entitlements_valid goes from valid to partial after oversubscribing", 
-			groups = { "ValidityAfterOversubscribing","blockedByBug-845126"}, enabled = true)
+			groups = { "ValidityAfterOversubscribing","blockedByBug-845126"}, enabled = false)
 	public void systemEntitlementsValidityAfterOversubscribing() throws JSONException,Exception {
 		Boolean noMultiEntitlements=true;
 		int sockets=2;
@@ -1770,8 +1770,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if (installed.status.equals("Not Subscribed") || installed.status.equals("Partially Subscribed"))
 				moveProductCertFiles(installed.productId + "*");
 		}		
-	//	String actual=clienttasks.getFactValue(factname).trim();
-	//	Assert.assertEquals(actual, "invalid");
+	
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
@@ -1781,7 +1780,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			
 			if(isMultiEntitled){
 				noMultiEntitlements=false;
-				clienttasks.subscribe_(null, null, availList.poolId, null, null, "4", null, null, null, null, null);
+				clienttasks.subscribe(null, null, availList.poolId, null, null, "4", null, null, null, null, null);
 			}
 		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
@@ -3121,7 +3120,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					if (installed.productName.contains(AvailSub.subscriptionName)) {
 						String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + AvailSub.productId);
 						//String result=server.runCommandAndWait("tail -5 /var/log/candlepin/candlepin.log | grep req").getStdout();
-						String expect = "{\"displayMessage\""+ ":"+ "\"Product with UUID '"+ AvailSub.productId+ "'"+ " cannot be deleted while subscriptions exist.\",\"requestUuid\":\"[a-f,0-9,\\-]{36}\"}";
+						String expect = "\"displayMessage\""+ ":"+ "\"Product with UUID '"+ AvailSub.productId+ "'"+ " cannot be deleted while subscriptions exist.\",\"requestUuid\":\"[a-f,0-9,\\-]{36}\"";
 						Assert.assertContainsMatch(jsonConsumer, expect);
 					}
 				}
