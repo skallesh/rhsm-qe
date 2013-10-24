@@ -163,7 +163,8 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			if (helpCommand.startsWith("rhsm-icon") && (helpCommand.contains("--help-gtk")||helpCommand.contains("--help-all"))) continue;
 			
 			// remove "export DISPLAY=localhost:10.0 && " from the helpCommand export DISPLAY=localhost:10.0 && subscription-manager-gui --help
-			helpCommand = helpCommand.replace("export DISPLAY=localhost:10.0 && ","");
+			//helpCommand = helpCommand.replace("export DISPLAY=localhost:10.0 && ","");
+			helpCommand = helpCommand.replaceFirst("export DISPLAY=.* && ","");
 			
 			// transcribe the helpCommand into a bashCommand
 			String bashCommand = helpCommand.replaceFirst("\\s*(--help-all|--help-gtk|--help)\\s*", " ").trim();	// strip out "--help"
