@@ -9,7 +9,8 @@
   (:require [clojure.tools.logging :as log])
   (:import [com.redhat.qe.tools RemoteFileTasks]
                org.testng.SkipException
-               [com.redhat.qe.auto.bugzilla BzChecker]))
+               [com.redhat.qe.auto.bugzilla BzChecker]
+               [java.lang.Math]))
 
 (def skip-groups {:suite (atom false)
                   :autosubscribe (atom false)
@@ -90,6 +91,11 @@
 
 (defn xor [& args]
   (odd? (count (filter identity args))))
+
+(defn round-up
+  "Rounds the value up (ceiling)"
+  [a]
+  (Math/ceil a))
 
 (defmacro loop-timeout [timeout bindings & forms]
   `(let [starttime# (System/currentTimeMillis)]
