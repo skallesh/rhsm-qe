@@ -115,7 +115,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(derivedPool.subscriptionName, poolDerivedProductName, "Subscription name for the derived product id '"+poolDerivedProductId+"'.");
 		Assert.assertEquals(derivedPool.quantity.toLowerCase(),poolVirtLimit,"The quantity of entitlements from the host_limited subpool to derived product subscription '"+poolDerivedProductName+"' should be the same as the host data center subscription's virt_limit '"+poolVirtLimit+"'.");
 		
-		// now subscribe to the derived subpool and we'll asserting the entitlement values come from the derived product and not the originating data center subscription
+		// now subscribe to the derived subpool and we'll assert the entitlement values come from the derived product and not the originating data center subscription
 		
 		// subscribe the guest to the derived product subscription
 		File derivedEntitlementFile = clienttasks.subscribeToSubscriptionPool(derivedPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
@@ -230,7 +230,19 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(hostEntitlementCert.orderNamespace.providesManagement, providesManagement==null?Boolean.valueOf(false):Boolean.valueOf(providesManagement),													"hostEntitlementCert.orderNamespace.providesManagement should match the data center pool's productAttribute management_enabled");
 		providesManagement = CandlepinTasks.getPoolDerivedProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "management_enabled");
 		Assert.assertEquals(derivedEntitlementCert.orderNamespace.providesManagement, providesManagement==null?Boolean.valueOf(false):Boolean.valueOf(providesManagement),												"derivedEntitlementCert.orderNamespace.providesManagement should match the derivedProductAttribute management_enabled");
-
+		
+		// for the sake of cleanup and to avoid this candlepin errors, let's unsubscribe from derivedEntitlementCert and then hostEntitlementCert
+		//	ssh root@jsefler-6server.usersys.redhat.com subscription-manager unregister
+		//	Stdout: Runtime Error No row with the given identifier exists: [org.candlepin.model.ProvidedProduct#8a90869341e61f7c0141e84e9ade3efd] at org.hibernate.UnresolvableObjectException.throwIfNull:65
+		//	Stderr:
+		//	ExitCode: 255
+		//	
+		//	ssh root@jsefler-6server.usersys.redhat.com subscription-manager unsubscribe --all
+		//	Stdout:
+		//	Stderr: Runtime Error No row with the given identifier exists: [org.candlepin.model.DerivedProvidedProduct#8a90869341e61f7c0141e84f2b9a3f0e] at org.hibernate.UnresolvableObjectException.throwIfNull:65
+		//	ExitCode: 255
+		clienttasks.unsubscribeFromSerialNumber(derivedEntitlementCert.serialNumber);
+		clienttasks.unsubscribeFromSerialNumber(hostEntitlementCert.serialNumber);
 	}
 	
 	@AfterGroups(value={"VerifyAvailabilityOfDerivedProductSubpools_Test"},groups={"setup"})
