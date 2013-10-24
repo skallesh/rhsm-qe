@@ -33,6 +33,7 @@
                          :basicauth-proxy-username "sm.basicauthproxy.username"
                          :binary-path (DefaultMapKey. "sm.gui.binary" "subscription-manager-gui")
                          :client-hostname "sm.client1.hostname"
+                         :server-hostname "sm.server.hostname"
                          :firstboot-binary-path (DefaultMapKey. "sm.firstboot.binary" "firstboot")
                          :ldtpd-source-url (DefaultMapKey. "sm.ldtpd.sourceUrl" nil)
                          :noauth-proxy-hostname "sm.noauthproxy.hostname"
@@ -56,6 +57,7 @@
 (def candlepin-tasks (atom nil))
 (def auth-proxyrunner (atom nil))
 (def noauth-proxyrunner (atom nil))
+(def candlepin-runner (atom nil))
 
 (defn init []
   (TestScript.) ;;sets up logging, reads properties
@@ -87,6 +89,14 @@
                                                 nil))
   (when (@config :ssh-timeout)
     (.setEmergencyTimeout @noauth-proxyrunner (Long/valueOf (@config :ssh-timeout))))
+  ;; command runner to run ssh commands on the candlepin server
+  (reset! candlepin-runner (SSHCommandRunner. (@config :server-hostname)
+                                              (@config :ssh-user)
+                                              (@config :ssh-key-private)
+                                              (@config :ssh-key-passphrase)
+                                              nil))
+  (when (@config :ssh-timeout)
+    (.setEmergencyTimeout @candlepin-runner (Long/valueOf (@config :ssh-timeout))))
   ;; instantiate CandlepinTasks
   (reset! candlepin-tasks (CandlepinTasks.))
   ;; turn off SSL Checking so rest API works
