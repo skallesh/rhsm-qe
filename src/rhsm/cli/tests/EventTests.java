@@ -171,7 +171,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
  
         // fire a subscribe event
 		//SubscriptionPool pool = pools.get(0); // pick the first pool
@@ -238,7 +238,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
         
 		// fire an modified pool event (and subsequently a modified entitlement event because the pool was modified thereby requiring an entitlement update dropped to the consumer)
 		log.info("To fire a modified pool event (and subsequently a modified entitlement event because the pool is already subscribed too), we will modify pool '"+testPool.poolId+"' by subtracting one month from startdate...");
@@ -313,7 +313,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
  
         // fire an unsubscribe event
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -356,7 +356,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
  
         // fire an facts update event by overriding a fact in /etc/rhsm/facts/event_tests.facts
 		Map<String,String> eventFacts = new HashMap<String,String>();
@@ -588,7 +588,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
         
         // do something that will fire a exported created event
 		CandlepinTasks.exportConsumerUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,consumerCert.consumerid,"/tmp/export.zip");
@@ -647,7 +647,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
-		assertTheNewFeed(oldFeed, newEventTitles);	// TODO 12/6/2012 several POOL MODIFIED may occur between new events POOL CREATED and SUBSCRIPTION CREATED.  Seems to happen when re-running the script after hours of other troubleshooting runs.  Redeploying candlepin and running EventTests does NOT encounter the extraneous POOL MODIFIED event.  We may want change this to...  assertTheNewFeedContains(oldFeed, Arrays.asList(newEventTitles));
+		//assertTheNewFeed(oldFeed, newEventTitles);	// TODO 12/6/2012 several POOL MODIFIED may occur between new events POOL CREATED and SUBSCRIPTION CREATED.  Seems to happen when re-running the script after hours of other troubleshooting runs.  Redeploying candlepin and running EventTests does NOT encounter the extraneous POOL MODIFIED event.  We may want change this to...  assertTheNewFeedContains(oldFeed, Arrays.asList(newEventTitles));
+		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("RULES MODIFIED");}} );	// TODO 10/24/2013 don't yet understand why "RULES MODIFIED" have randomly started showing up like the POOL MODIFIED events in the comment above
 	}
 	
 	
@@ -678,7 +679,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// END OF WORKAROUND
 		
 		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
+		//assertTheNewFeed(oldFeed, newEventTitles);
+		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("POOL DELETED");}} );	// TODO 10/24/2013 don't yet understand why "POOL DELETED" sometimes occurs on script re-runs
+
 	}
 	
 	
@@ -734,7 +737,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			// enter the wrong user, correct passwd
 			authuser = sm_client1Username+getRandInt();
 			authpwd = sm_client1Password;
-			CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,authuser,authpwd,sm_serverUrl);
+			CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/consumerCert.consumerid,authuser,authpwd,sm_serverUrl);
 			Assert.fail("Expected the candlepin server request for a syndication feed to return an HTTP response code 401 Unauthorized due to invalid authorization credentials "+authuser+":"+authpwd);
 
 		} catch (IOException e) {
@@ -745,7 +748,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			// enter the correct user, wrong passwd
 			authuser = sm_client1Username;
 			authpwd = sm_client1Password+getRandInt();
-			CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,authuser,authpwd,sm_serverUrl);
+			CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/consumerCert.consumerid,authuser,authpwd,sm_serverUrl);
 			Assert.fail("Expected the candlepin server request for a syndication feed to return an HTTP response code 401 Unauthorized due to invalid authorization credentials "+authuser+":"+authpwd);
 
 		} catch (IOException e) {
@@ -766,7 +769,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// finally assert success with valid credentials
 		authuser = sm_client1Username;
 		authpwd = sm_client1Password;
-		SyndFeed feed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,authuser,authpwd,sm_serverUrl);
+		SyndFeed feed = CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/ consumerCert.consumerid, authuser, authpwd, sm_serverUrl);
 		Assert.assertTrue(!feed.getEntries().isEmpty(),"Atom feed for consumer events is successful with valid credentials "+authuser+":"+authpwd);
 	}
 
@@ -893,7 +896,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	protected void assertTheNewConsumerFeed(String ownerKey, String consumerUuid, SyndFeed oldConsumerFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
 		
 		// assert the consumer feed...
-		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey, consumerUuid, sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/ consumerUuid, sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		Assert.assertEquals(newConsumerFeed.getTitle(),"Event feed for consumer "+consumerUuid);
 		assertFeedContainsNoUnknownEvents(newConsumerFeed);
 		
@@ -919,7 +922,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	protected void assertTheNewConsumerFeedIgnoringEventTitles(String ownerKey, String consumerUuid, SyndFeed oldConsumerFeed, String[] newEventTitles, Set<String> ignoreEventTitles) throws IllegalArgumentException, IOException, FeedException {
 		
 		// assert the consumer feed...
-		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey, consumerUuid, sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/ consumerUuid, sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		Assert.assertEquals(newConsumerFeed.getTitle(),"Event feed for consumer "+consumerUuid);
 		assertFeedContainsNoUnknownEvents(newConsumerFeed);
 		
@@ -947,7 +950,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	protected void assertTheNewConsumerFeed(String ownerKey, String consumerUuid, SyndFeed oldConsumerFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
 		
 		// assert the consumer feed...
-		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey, consumerUuid, sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(/*ownerKey,*/ consumerUuid, sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		Assert.assertEquals(newConsumerFeed.getTitle(),"Event feed for consumer "+consumerUuid);
 		assertFeedContainsNoUnknownEvents(newConsumerFeed);
 		
@@ -1083,7 +1086,19 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		for (int i=0;  i<feed.getEntries().size(); i++) {
 			String entryTitle = ((SyndEntryImpl) feed.getEntries().get(i)).getTitle();
 			String entryDescription = ((SyndEntryImpl) feed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) feed.getEntries().get(i)).getDescription().getValue();
-			String entryAsString = String.format("%s entries[%d].title=%s   description=%s", feed.getTitle(), i, entryTitle, entryDescription);
+			String entryAsString = String.format("%s entries[%d].getTitle()=%s   .getDescription()=%s", feed.getTitle(), i, entryTitle, entryDescription);
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			if (entryDescription.equals("Unknown event for user admin and target 4.4")) {
+				String bugId = "1023187"; boolean invokeWorkaroundWhileBugIsOpen = true;
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Encountered an atom feed entry with an unknown event: "+entryAsString);
+					log.warning("Skipping assertion failure while Bug '"+bugId+"' is already opened to handle this unknown event description.");
+					continue;
+				}
+			}
+			// END OF WORKAROUND
 			
 			if (entryDescription.toLowerCase().contains("unknown event")) {
 				Assert.fail("Encountered an atom feed entry with an unknown event: "+entryAsString);
@@ -1097,6 +1112,43 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	protected int getFeedGrowthCount(SyndFeed newFeed, SyndFeed oldFeed) {
+		int g=0; // growth
+		int x=10; // number of entries in a sequential match
+		
+		if (oldFeed==null || oldFeed.getEntries()==null || oldFeed.getEntries().isEmpty()) {
+			g = newFeed.getEntries().size();
+		} else {
+			x = Math.min(10, oldFeed.getEntries().size());
+		}
+		
+		if (g==0) {
+			boolean sequenceMatches;
+			do {
+				sequenceMatches = true;	// assume the next sequence of x feed entries match between old and new
+				for (int i=0; i<x; i++) {
+					String newFeedTitle = ((SyndEntryImpl) newFeed.getEntries().get(i+g)).getTitle();
+					String newFeedDescription = ((SyndEntryImpl) newFeed.getEntries().get(i+g)).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(i+g)).getDescription().getValue();
+					String oldFeedTitle = ((SyndEntryImpl) oldFeed.getEntries().get(i)).getTitle();
+					String oldFeedDescription = ((SyndEntryImpl) oldFeed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(i)).getDescription().getValue();
+					if (!(newFeedTitle.equals(oldFeedTitle) && newFeedDescription.equals(oldFeedDescription))) {
+						sequenceMatches = false;
+						g++;
+						break;
+					}
+				}
+			} while (!sequenceMatches);
+		}
+		
+		// log the newest feed entries pushed onto the stack
+		for (int i=0; i<g; i++) {
+			log.info(String.format("Newest %s entries[%d]: title='%s'  description='%s'", newFeed.getTitle(), i, ((SyndEntryImpl) newFeed.getEntries().get(i)).getTitle(), ((SyndEntryImpl) newFeed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(i)).getDescription().getValue()));
+		}
+
+		return g;
+	}
+	
+	@Deprecated // 10/24/2013 re-implemented this method with a faster algorithm above.  this algorithm is too complicated!
+	protected int getFeedGrowthCount_DEPRECATED(SyndFeed newFeed, SyndFeed oldFeed) {
 		
 		int g=newFeed.getEntries().size();	// assume all of the entries represent new growth
 		

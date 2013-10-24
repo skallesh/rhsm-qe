@@ -3083,8 +3083,13 @@ schema generation failed
 		return getSyndFeedFor(candlepinUsername,candlepinPassword,url,"/owners/"+org);
 	}
 	
+	@Deprecated	// replaced by SyndFeed getSyndFeedForConsumer(String uuid, String candlepinUsername, String candlepinPassword, String url) due to candlepin API signature change
 	public static SyndFeed getSyndFeedForConsumer(String org, String uuid, String candlepinUsername, String candlepinPassword, String url) throws IllegalArgumentException, IOException, FeedException {
 		return getSyndFeedFor(candlepinUsername,candlepinPassword,url,"/owners/"+org+"/consumers/"+uuid);
+	}
+	
+	public static SyndFeed getSyndFeedForConsumer(String uuid, String candlepinUsername, String candlepinPassword, String url) throws IllegalArgumentException, IOException, FeedException {
+		return getSyndFeedFor(candlepinUsername,candlepinPassword,url,"/consumers/"+uuid);
 	}
 	
 	public static SyndFeed getSyndFeed(String candlepinUsername, String candlepinPassword, String url) throws IllegalArgumentException, IOException, FeedException {
