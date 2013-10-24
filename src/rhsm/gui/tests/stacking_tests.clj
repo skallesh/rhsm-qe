@@ -63,17 +63,13 @@
         equal (map (fn [i j] (> i j)) a-int  b-int)]
     (if (some #(= false %) equal) false true)))
 
-(defn round-up
-  "Rounds the value up (ceiling)"
-  [a]
-  (if (> (float a) (int a)) (+ 1 (int a)) (int a)))
-
 (defn repeat-cmd
   [n cmd]
   (apply str (repeat n cmd)))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
+  (tasks/restart-app :reregister? true)
   (if (not (bash-bool (:exitcode (run-command (str "test -d " stacking-dir)))))
     (run-command (str "mkdir " stacking-dir)))
   (reset! prod-dir (tasks/conf-file-value "productCertDir"))
@@ -261,7 +257,8 @@
             (tasks/checkforerror)))
       (tasks/ui selecttab :my-installed-products)
       (tasks/ui click :auto-attach)
-      (sleep 10000)
+      (sleep 8000)
+      (tasks/checkforerror)
       (tasks/ui waittillwindowexist :register-dialog 80)
       (tasks/ui click :register-dialog service-level)
       (tasks/ui click :register)
@@ -305,7 +302,7 @@
                                                                   (tasks/skip-dropdown :all-subscriptions-view i) 3))))
           subs-applicable-ram (into {} (map (fn [i]  {i (ram-func i) }) subs-applicable))
           ram-covered (- system-ram (get subs-applicable-ram rand-sub))
-          calc-func (fn [i] (round-up (float (/ ram-covered i))))
+          calc-func (fn [i] (int (round-up (float (/ ram-covered i)))))
           quantity-after (into [] (map calc-func (vals  subs-applicable-ram)))]
       (tasks/skip-dropdown :all-subscriptions-view rand-sub)
       (tasks/ui generatekeyevent (str
