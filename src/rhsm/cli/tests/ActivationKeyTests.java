@@ -242,7 +242,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// add the pool with a random available quantity (?quantity=#) to the activation key
 		int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
 		JSONObject jsonAddedPool = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + poolId +(addQuantity==null?"":"?quantity="+addQuantity), null));
-		if (addQuantity==null) addQuantity=1;
+		if (addQuantity==null) {
+			//addQuantity=1;	// this was true before Bug 1023568 - [RFE] bind requests using activation keys that do not specify a quantity should automatically use the quantity needed to achieve compliance
+		}
 
 		// handle the case when the pool productAttributes contain name:"requires_consumer_type" value:"person"
 		if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"))) {
@@ -260,7 +262,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// handle the case when the pool is NOT multi_entitlement and we tried to add the pool to the key with a quantity > 1
-		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId) && addQuantity>1) {
+		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId) && addQuantity!=null && addQuantity>1) {
 
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
 			if (jsonAddedPool.has("displayMessage")) {
@@ -274,7 +276,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// handle the case when the quantity is excessive
-		if (addQuantity > jsonPool.getInt("quantity") && addQuantity>1) {
+		if (addQuantity!=null && addQuantity>jsonPool.getInt("quantity") && addQuantity>1) {
 
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
 			if (jsonAddedPool.has("displayMessage")) {
@@ -288,7 +290,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// handle the case when the quantity is insufficient (less than one)
-		if (addQuantity < 1) {
+		if (addQuantity!=null && addQuantity<1) {
 
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
 			if (jsonAddedPool.has("displayMessage")) {
@@ -330,9 +332,13 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		//}
 		String addedPoolId = ((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).getJSONObject("pool").getString("id");	// get(0) since there should only be one pool added
 		Assert.assertEquals(addedPoolId, poolId, "Pool id '"+poolId+"' appears to be successfully added to activation key: "+jsonActivationKey);
-		Integer addedQuantity = ((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).getInt("quantity");	// get(0) since there should only be one pool added
-		Assert.assertEquals(addedQuantity, addQuantity, "Pool id '"+poolId+"' appears to be successfully added with quantity '"+addQuantity+"' to activation key: "+jsonActivationKey);
-
+		if (addQuantity!=null) {
+			Integer addedQuantity = ((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).getInt("quantity");	// get(0) since there should only be one pool added
+			Assert.assertEquals(addedQuantity, addQuantity, "Pool id '"+poolId+"' appears to be successfully added with quantity '"+addQuantity+"' to activation key: "+jsonActivationKey);
+		} else {
+			// only possible after Bug 1023568 - [RFE] bind requests using activation keys that do not specify a quantity should automatically use the quantity needed to achieve compliance
+			Assert.assertTrue(((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).isNull("quantity"), "Pool id '"+poolId+"' appears to be successfully added with a null quantity to activation key: "+jsonActivationKey);		
+		}
 		// register with the activation key
 		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, true, null, null, null, null);
 		
@@ -361,7 +367,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// handle the case when our quantity request exceeds the quantityAvail (when pool quantity is NOT unlimited)
-		if (addQuantity > quantityAvail && (jsonPool.getInt("quantity")!=-1/*exclude unlimited pools*/)) {
+		if ((addQuantity!=null) && (addQuantity>quantityAvail) && (jsonPool.getInt("quantity")!=-1/*exclude unlimited pools*/)) {
 			//Assert.assertEquals(registerResult.getStderr().trim(), String.format("No entitlements are available from the pool with id '%s'.",poolId), "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");	// expected string changed by bug 876758
 			String expectedStderr = String.format("No subscriptions are available from the pool with id '%s'.",poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("No subscriptions are available from the pool with ID '%s'.",poolId);
@@ -438,7 +444,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key, add a pool to it (without specifying a quantity), and then register with the activation key",
-			groups={"blockedByBug-878986","blockedByBug-979492"},
+			groups={"blockedByBug-878986","blockedByBug-979492","blockedByBug-1023568"},
 			dataProvider="getRegisterWithActivationKeyContainingPool_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -452,7 +458,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	 * @Test enabled=false
 	 */
 	@Test(	description="create an activation key named with an international character, add a pool to it (without specifying a quantity), and then register with the activation key",
-			groups={"blockedByBug-803773"},
+			groups={"blockedByBug-803773","blockedByBug-1023568"},
 			dataProvider="getRegisterWithInternationalActivationKeyContainingPool_TestData",
 			enabled=false)
 	@Deprecated
@@ -920,7 +926,13 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			ProductSubscription consumedProductSubscription = consumedProductSubscriptions.get(0);
 			Assert.assertEquals(consumedProductSubscription.accountNumber.longValue(), jsonPool.getLong("accountNumber"), "The consumed product subscription comes from the same accountNumber as the pool added in the activation key.");
 			Assert.assertEquals(consumedProductSubscription.contractNumber.intValue(), jsonPool.getInt("contractNumber"), "The consumed product subscription comes from the same contractNumber as the pool added in the activation key.");
-			Assert.assertEquals(consumedProductSubscription.quantityUsed, addQuantity, "The consumed product subscription is using the same quantity as requested by the pool added in the activation key.");
+			if (addQuantity!=null) {
+				Assert.assertEquals(consumedProductSubscription.quantityUsed, addQuantity, "The consumed product subscription is using the same quantity as requested by the pool added in the activation key.");
+			} else {
+				// valid after Bug 1023568 - [RFE] bind requests using activation keys that do not specify a quantity should automatically use the quantity needed to achieve compliance
+				Assert.assertTrue(consumedProductSubscription.quantityUsed>=1, "The actual consumed product subscription quantity of '"+consumedProductSubscription.quantityUsed+"' is >= 1 to achieve compliance since the quantity requested by the pool added in the activation key was null (result of RFE bugzilla 1023568).");
+				// TODO if this subscription was multi-entitlement, then assert that all of the installed products provided by this subscription are fully subscribed
+			}
 			Assert.assertTrue(consumedProductSubscription.provides.containsAll(providedProductsFromActivationKeyPool)&&providedProductsFromActivationKeyPool.containsAll(consumedProductSubscription.provides), "The consumed product subscription provides all the expected products "+providedProductsFromActivationKeyPool+" from the provided products of the pool added in the activation key.");
 		} else {
 // after implementation of bug 908671, these three lines are replaced more efficiently by two lines
