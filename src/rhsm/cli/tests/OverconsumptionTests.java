@@ -44,6 +44,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		int quantity = 1000000;
 		for (SubscriptionPool pool: client1tasks.getCurrentlyAvailableSubscriptionPools()) {
 //debugging if (pool.productId.equals("awesomeos-virt-4") && pool.quantity.equals("5")) {testPool=pool;break;}
+//debugging if (pool.productId.equals("awesomeos-all-just-86_64-cont")) {testPool=pool;quantity = Integer.valueOf(pool.quantity);break;} else {if (true) continue;}
 			if (pool.quantity.equalsIgnoreCase("unlimited")) continue;
 			int pool_quantity = Integer.valueOf(pool.quantity);
 			if (pool_quantity < quantity && pool_quantity >= 2) {
@@ -63,7 +64,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 			systemConsumerIds.add(client1tasks.getCurrentConsumerId(client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, registereeName, null, null, null, null, (String)null, null, null, null, null, false, null, null, null)));
 
 			// subscribe to the pool
-			client1tasks.subscribeToSubscriptionPool(testPool);
+			// client1tasks.subscribeToSubscriptionPool(testPool);	// do not do this anymore because it could attach a quantity greater than 1 as a result of new feature bug 1008647
+			client1tasks.subscribe(null, null, testPool.poolId,null,null,"1",null,null,null,null,null);
 			testPool.quantity = String.valueOf(Integer.valueOf(testPool.quantity)-1);	// decrement this pool's quantity since we just consumed one
 		}
 		
@@ -71,7 +73,6 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		client1tasks.clean(null,null,null);
 		systemConsumerIds.add(client1tasks.getCurrentConsumerId(client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, registereeName, null, null, null, null, (String)null, null, null, null, null, false, null, null, null)));
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAllAvailableSubscriptionPools());
-//		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNull(pool, "The test pool is no longer in the --available list after having consumed all of its available subscriptions.");
