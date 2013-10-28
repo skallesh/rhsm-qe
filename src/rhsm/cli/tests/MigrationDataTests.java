@@ -1050,7 +1050,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 //		clienttasks.config(null, null, true, listOfSectionNameValues);
 //	}
 	
-	@AfterClass(groups={"setup"})
+	@AfterClass(groups={"setup"},alwaysRun=true)
 	public void removeRHNSystemIdFileAfterClass() {
 		if (clienttasks!=null) {
 			clienttasks.removeRhnSystemIdFile();
