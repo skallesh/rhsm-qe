@@ -241,7 +241,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to subscription-manager",
-			groups={},
+			groups={"blockedbyBug-801280"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForSubscriptionManager_Test() {
