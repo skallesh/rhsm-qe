@@ -244,7 +244,10 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	// Candidates for an automated Test:
 	// TODO Bug 734474 - better error message for missing enviroment on katello https://github.com/RedHatQE/rhsm-qe/issues/130
 	// TODO Bug 738322 - Katello returning inaccurate message via subscription-manager when user has incorrect credentials https://github.com/RedHatQE/rhsm-qe/issues/131
-	
+	// TODO Bug 872351 - subscription-manager identity and facts gui dialog should display the registered consumer's environment value
+	// TODO Bug 901479 - [RFE] Not able to see environment to which is system registered to
+	// TODO Bug 795541 - Subscription Manager should filter out library instead of locker
+	// TODO Bug 963579 - `subscription-manager environments` does not recognize Library as an env.
 	// Configuration methods ***********************************************************************
 	
 	
