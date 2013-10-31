@@ -579,8 +579,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--all");
 		options.add("--servicelevel=SERVICE_LEVEL");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=800999
 		options.add("--ondate=ON_DATE");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=672562
-		// FIXME TODO Enable for RHEL7	options.add("--no-overlap");		// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
-		// FIXME TODO Enable for RHEL7	options.add("--match-installed");	// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
+		options.add("--no-overlap");		// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
+		options.add("--match-installed");	// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");

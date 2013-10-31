@@ -530,8 +530,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --pool=FOO",								new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" register --servicelevel=foo",							new Integer(255),	"Error: Must use --auto-attach with --servicelevel.", ""}));	// changed by bug 874804,876305		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("856236"),	clienttasks.command+" register --activationkey=foo --org=foo --env=foo",	new Integer(255),	"Error: Activation keys do not allow environments to be specified.", ""}));
-		// FIXME TODO Enable for RHEL7 ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --match-installed",								new Integer(255),	"Error: --match-installed is only applicable with --available.", ""}));
-		// FIXME TODO Enable for RHEL7 ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --no-overlap",									new Integer(255),	"Error: --no-overlap is only applicable with --available.", ""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --match-installed",								new Integer(255),	"Error: --match-installed is only applicable with --available.", ""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --no-overlap",									new Integer(255),	"Error: --no-overlap is only applicable with --available.", ""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --installed --servicelevel=foo",					new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe",											new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 		

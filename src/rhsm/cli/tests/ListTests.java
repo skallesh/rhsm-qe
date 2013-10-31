@@ -579,7 +579,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: subcription manager list with --match-installed option",
 			groups={"blockedByBug-654501"},
-			enabled=false)	// FIXME TODO Enable for RHEL7
+			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithMatchInstalled_Test() throws JSONException, Exception {
 		
@@ -619,7 +619,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: subcription manager list all with --match-installed option",
 			groups={"blockedByBug-654501"},
-			enabled=false)	// FIXME TODO Enable for RHEL7
+			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAllAvailableWithMatchInstalled_Test() throws JSONException, Exception {
 		
@@ -659,7 +659,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: subcription manager list all with --match-installed option",
 			groups={"blockedByBug-654501","blockedByBug-1022622"},
-			enabled=false)	// FIXME TODO Enable for RHEL7
+			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithNoOverlap_Test() throws JSONException, Exception {
 		
