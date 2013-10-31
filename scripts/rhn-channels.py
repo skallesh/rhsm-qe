@@ -4,6 +4,7 @@
 # Given a credentials and a hosted RHN server, this script is used to list the
 # RHN Classic channels available.
 
+import socket
 import sys, time
 from xmlrpclib import Server
 from optparse import OptionParser
@@ -20,6 +21,9 @@ parser.add_option("-s", "--server", dest="server", help="Server hostname rhn.red
 if not options.username or not options.password:
    parser.print_usage()
    sys.exit(1)
+
+# set a socket timeout of 3 minutes; attempt to avoid a 502 Proxy Error after 2 minutes
+socket.setdefaulttimeout(60*3)
 
 # create an api connection to the server
 # RHN API documentation: https://access.stage.redhat.com/knowledge/docs/Red_Hat_Network/

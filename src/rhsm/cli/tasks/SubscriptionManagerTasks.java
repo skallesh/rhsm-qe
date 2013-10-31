@@ -5995,8 +5995,8 @@ repolist: 3,394
 	
 	/**
 	 * Call rhnreg_ks and assert the existence of a systemid file afterwards.
-	 * @param rhnUsername
-	 * @param rhnPassword
+	 * @param rhnUsername - rhnreg_ks username
+	 * @param rhnPassword - rhnreg_ks password
 	 * @param rhnHostname
 	 * @return the rhn system_id value from the contents of the systemid file
 	 */

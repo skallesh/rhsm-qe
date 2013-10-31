@@ -6,16 +6,16 @@
 
 # parse arguments to this script
 set tool rhn-migrate-classic-to-rhsm
-set options      [lindex $argv 0]
-set rhnUsername  [lindex $argv 1]
-set rhnPassword  [lindex $argv 2]
-set regUsername  [lindex $argv 3]
-set regPassword  [lindex $argv 4]
-set regOrg       [lindex $argv 5]
-set regEnv       [lindex $argv 6]
-set slaIndex     [lindex $argv 7]
+set options       [lindex $argv 0]
+set rhnUsername   [lindex $argv 1]
+set rhnPassword   [lindex $argv 2]
+set rhsmUsername  [lindex $argv 3]
+set rhsmPassword  [lindex $argv 4]
+set rhsmOrg       [lindex $argv 5]
+set rhsmEnv       [lindex $argv 6]
+set slaIndex      [lindex $argv 7]
 if {$argc != 8} {
-  puts "Usage: ${argv0} ${tool}-options rhnUsername rhnPassword regUsername regPassword regOrg regEnv slaIndex"
+  puts "Usage: ${argv0} ${tool}-options rhnUsername rhnPassword rhsmUsername rhsmPassword rhsmOrg rhsmEnv slaIndex"
   puts "(pass \"null\" for argument values that you do not expect $tool to interactively prompt for)"
   exit -1
 }
@@ -24,10 +24,10 @@ if {$argc != 8} {
 #puts options=$options
 #puts rhnUsername=$rhnUsername
 #puts rhnPassword=$rhnPassword
-#puts regUsername=$regUsername
-#puts regPassword=$regPassword
-#puts regOrg=$regOrg
-#puts regEnv=$regEnv
+#puts rhsmUsername=$rhsmUsername
+#puts rhsmPassword=$rhsmPassword
+#puts rhsmOrg=$rhsmOrg
+#puts rhsmEnv=$rhsmEnv
 #puts slaIndex=$slaIndex
 
 # launch rhn-migrate-classic-to-rhsm with options
@@ -46,24 +46,29 @@ set timeout 180
 # now respond to the interactive prompts from rhn-migrate-classic-to-rhsm ...
 
 if {$rhnUsername != "null"} {
-  set prompt "Red Hat account:";  # "RHN Username:";	# changed by bug 847380
+  set prompt "RHN Username:";			# obsoleted by bug 847380
+  set prompt "Red Hat account:";		# obsoleted by bug 912375
+  set prompt "Red Hat username:";
   expect $prompt {send "${rhnUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
-  set prompt "Password:";
+  set prompt "Password:";			# obsoleted by bug 912375
+  set prompt "Red Hat password:";
   expect $prompt {send "${rhnPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
-if {$regUsername != "null"} {
-  set prompt "System Engine Username:";
-  expect $prompt {send "${regUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
-  set prompt "Password:";
-  expect $prompt {send "${regPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+if {$rhsmUsername != "null"} {
+  set prompt "System Engine Username:"; 	# obsoleted by bug 912375
+  set prompt "Subscription Service username:";
+  expect $prompt {send "${rhsmUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+  set prompt "Password:";			# obsoleted by bug 912375
+  set prompt "Subscription Service password:";
+  expect $prompt {send "${rhsmPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
-if {$regOrg != "null"} {
+if {$rhsmOrg != "null"} {
   set prompt "Org:";
-  expect $prompt {send "${regOrg}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+  expect $prompt {send "${rhsmOrg}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
-if {$regEnv != "null"} {
+if {$rhsmEnv != "null"} {
   set prompt "Environment:";
-  expect $prompt {send "${regEnv}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+  expect $prompt {send "${rhsmEnv}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
 if {$slaIndex != "null"} {
   set prompt "Please select a service level agreement for this system.";
