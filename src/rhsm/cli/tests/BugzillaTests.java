@@ -4026,9 +4026,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA","AutoHealFailForSLA","VerifyFuturesubscription_Test","VerifySubscriptionOf",
-	"VerifySystemCompliantFact","ValidityAfterOversubscribing","certificateStacking","UpdateWithNoInstalledProducts","VerifyHealingForFuturesubscription"
-	,"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","BugzillaTests","VerifyStatusCheck"})
+	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA","VerifyFuturesubscription_Test","VerifySubscriptionOf",
+			"VerifySystemCompliantFact","ValidityAfterOversubscribing","certificateStacking",
+			"UpdateWithNoInstalledProducts","VerifyHealingForFuturesubscription"
+				,"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","BugzillaTests","VerifyStatusCheck",
+			"VerifyStartEndDateOfSubscription","InstalledProductMultipliesAfterSubscription","AutoHealFailForSLA"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
