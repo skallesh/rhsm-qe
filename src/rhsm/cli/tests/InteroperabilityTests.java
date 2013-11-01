@@ -158,6 +158,11 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		String expectedMsgRHSM = "This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.";
 		String expectedMsgRHN; // comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
 		expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";
+		// [root@jsefler-7 ~]# rpm -q --changelog yum-rhn-plugin | more
+		// * Wed Jun 12 2013 Tomas Kasparek <tkasparek@redhat.com> 1.10.3-1
+		// - rebranding RHN Proxy to Red Hat Proxy in client stuff
+		// - rebranding RHN Satellite to Red Hat Satellite in client stuff
+		expectedMsgRHN = "This system is not registered with RHN Classic or Red Hat Satellite.\nYou can use rhn_register to register.\nRed Hat Satellite or RHN Classic support will be disabled.";
 		if (Arrays.asList(new String[]{"6.3","5.8","6.2","5.7","6.1"}).contains(clienttasks.redhatReleaseXY)) expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When not registered to either RHN nor RHSM, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When not registered to either RHN nor RHSM, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
@@ -178,7 +183,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			log.warning("With RHEL7 (and beyond), registration to RHN Classic is no longer supported and therefore no base rhel channel (e.g. rhel-x86_64-server-7) will be available.");
 			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHN but not RHSM, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 			Assert.assertFalse((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When registered to RHN but not RHSM, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
-			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN_RHEL7), "On RHEL7... When registered to RHN but not RHSM, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN_RHEL7+"\n");
+			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN_NoChannels), "On RHEL7... When registered to RHN but not RHSM, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN_NoChannels+"\n");
 			return;
 		}
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHN but not RHSM, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
@@ -196,6 +201,11 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		String expectedMsgRHSM = "This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.";	
 		String expectedMsgRHN;	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
 		expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";
+		// [root@jsefler-7 ~]# rpm -q --changelog yum-rhn-plugin | more
+		// * Wed Jun 12 2013 Tomas Kasparek <tkasparek@redhat.com> 1.10.3-1
+		// - rebranding RHN Proxy to Red Hat Proxy in client stuff
+		// - rebranding RHN Satellite to Red Hat Satellite in client stuff
+		expectedMsgRHN = "This system is not registered with RHN Classic or Red Hat Satellite.\nYou can use rhn_register to register.\nRed Hat Satellite or RHN Classic support will be disabled.";
 		if (Arrays.asList(new String[]{"6.3","5.8","6.2","5.7","6.1"}).contains(clienttasks.redhatReleaseXY)) expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHSM (but not subscribed) but not RHN, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When registered to RHSM (but not subscribed) but not RHN, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
@@ -213,6 +223,11 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		String expectedMsgRHSM = "This system is receiving updates from Red Hat Subscription Management.";
 		String expectedMsgRHN;	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
 		expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";
+		// [root@jsefler-7 ~]# rpm -q --changelog yum-rhn-plugin | more
+		// * Wed Jun 12 2013 Tomas Kasparek <tkasparek@redhat.com> 1.10.3-1
+		// - rebranding RHN Proxy to Red Hat Proxy in client stuff
+		// - rebranding RHN Satellite to Red Hat Satellite in client stuff
+		expectedMsgRHN = "This system is not registered with RHN Classic or Red Hat Satellite.\nYou can use rhn_register to register.\nRed Hat Satellite or RHN Classic support will be disabled.";
 		if (Arrays.asList(new String[]{"6.3","5.8","6.2","5.7","6.1"}).contains(clienttasks.redhatReleaseXY)) expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHSM (and subscribed) but not RHN, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When registered to RHSM (and subscribed) but not RHN, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
@@ -233,7 +248,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			log.warning("With RHEL7 (and beyond), registration to RHN Classic is no longer supported and therefore no base rhel channel (e.g. rhel-x86_64-server-7) will be available.");
 			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (but not subscribed), the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 			Assert.assertFalse((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When registered to both RHN and RHSM (but not subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
-			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN_RHEL7), "On RHEL7... When registered to both RHN and RHSM (but not subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN_RHEL7+"\n");
+			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN_NoChannels), "On RHEL7... When registered to both RHN and RHSM (but not subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN_NoChannels+"\n");
 			return;
 		}
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (but not subscribed), the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
@@ -256,7 +271,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			log.warning("With RHEL7 (and beyond), registration to RHN Classic is no longer supported and therefore no base rhel channel (e.g. rhel-x86_64-server-7) will be available.");
 			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (and subscribed), the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 			Assert.assertFalse((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When registered to both RHN and RHSM (and subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
-			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN_RHEL7), "On RHEL7... When registered to both RHN and RHSM (and subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN_RHEL7+"\n");
+			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN_NoChannels), "On RHEL7... When registered to both RHN and RHSM (and subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN_NoChannels+"\n");
 			return;
 		}
 		Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (and subscribed), the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
@@ -281,7 +296,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Protected methods ***********************************************************************
-	protected String expectedMsgRHN_RHEL7 = "This system is not subscribed to any channels.\nRHN channel support will be disabled.";
+	protected String expectedMsgRHN_NoChannels = "This system is not subscribed to any channels.\nRHN channel support will be disabled.";
 	
 	
 	
