@@ -6045,6 +6045,30 @@ repolist: 3,394
 			stderr = stderr.replaceAll(msg, "");
 		}
 		
+		// this will occur on rhel7+ where Red Hat Network Classic is not supported.  See bugzilla 906875
+		msg = "Red Hat Network Classic is not supported.";
+		if (stderr.contains(msg)) {
+			//	FINE: ssh root@jsefler-7.usersys.redhat.com rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=redhatqa --profilename=rhsm-automation.jsefler-7.usersys.redhat.com --force --norhnsd --nohardware --nopackages --novirtinfo
+			//	FINE: Stdout: 
+			//	FINE: Stderr: 
+			//	An error has occurred:
+			//
+			//	Red Hat Network Classic is not supported.
+			//	To register with Red Hat Subscription Management please run:
+			//
+			//	    subscription-manager register --auto-attach
+			//
+			//	Get more information at access.redhat.com/knowledge
+			//	    
+			//	See /var/log/up2date for more information
+			//	FINE: ExitCode: 1
+			if (Integer.valueOf(redhatReleaseX)>=7) {
+				log.warning(msg);
+				throw new SkipException("Skipping this test on RHEL '"+redhatReleaseX+"' which depends on RHN Classic registration.");
+			}
+		}
+		
+		
 		Assert.assertEquals(exitCode, new Integer(0),"Exitcode from attempt to register to RHN Classic.");
 		Assert.assertEquals(stderr.trim(), "","Stderr from attempt to register to RHN Classic.");
 		Assert.assertEquals(stdout.trim(), "","Stdout from attempt to register to RHN Classic.");
