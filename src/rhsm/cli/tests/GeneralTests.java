@@ -208,7 +208,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to python-rhsm",
-			groups={},
+			groups={"blockedByBug-1006748"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForPythonRhsm_Test() {
@@ -229,7 +229,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			expecetdRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: m2crypto",
 					"manual: python-iniparse",
-					"manual: python-simplejson",
+					//"manual: python-simplejson",	// removed by bug 1006748
 					"manual: rpm-python"
 			}));
 		}
@@ -241,7 +241,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to subscription-manager",
-			groups={"blockedbyBug-801280"},
+			groups={"blockedbyBug-801280","blockedByBug-1006748"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForSubscriptionManager_Test() {
@@ -273,8 +273,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: python-dmidecode",
 					"manual: python-ethtool",
 					"manual: python-iniparse",
-					"manual: python-rhsm >= 1.9.1-1",
-					"manual: python-simplejson",
+					//"manual: python-rhsm >= 1.9.1-1"/*RHEL65*/,
+					"manual: python-rhsm >= 1.10.3"/*RHEL70*/,
+					//"manual: python-simplejson",	// removed by bug 1006748
 					"manual: usermode",
 					"manual: virt-what",
 					"manual: yum >= 3.2.19-15"
@@ -298,8 +299,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: python-dmidecode",
 					"manual: python-ethtool",
 					"manual: python-iniparse",
-					"manual: python-rhsm >= 1.9.1-1",
-					"manual: python-simplejson",
+					//"manual: python-rhsm >= 1.9.1-1"/*RHEL65*/,
+					"manual: python-rhsm >= 1.10.3"/*RHEL70*/,
+					//"manual: python-simplejson",	// removed by bug 1006748
 					"manual: usermode",
 					"manual: virt-what",
 					"manual: yum >= 3.2.19-15"
