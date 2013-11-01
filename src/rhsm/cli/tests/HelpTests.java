@@ -874,13 +874,13 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				// attempt to avoid bug 881095 RuntimeError: could not open display
 				if ((Integer.valueOf(clienttasks.redhatReleaseX)==6 && Float.valueOf(clienttasks.redhatReleaseXY)<6.4) || 
 					(Integer.valueOf(clienttasks.redhatReleaseX)==5 && Float.valueOf(clienttasks.redhatReleaseXY)<5.10)){
-					//commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
-					commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
+					commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
+					//commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
 				}
 				// 2013-10-11 update... WONTFIX "Unable to open a display"; see https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7
 				log.warning("Employing WORKAROUND for https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7 by exporting DISPLAY");
-				//commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
-				commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
+				commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
+				//commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
 				
 				List <String> usages = new ArrayList<String>();
 				String usage = String.format("Usage: %s [OPTIONS]",command);
@@ -972,6 +972,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			options.add("--no-proxy");	// added by Bug 915847 - rhn-migrate-classic-to-rhsm fails when used with a proxy with an internal SAM
 			options.add("--org=ORG");					// added by Bug 877331 - missing --org --environment arguments for migration script
 			options.add("--environment=ENVIRONMENT");	// added by Bug 877331 - missing --org --environment arguments for migration script
+			options.add("--redhat-user=REDHATUSER");							// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
+			options.add("--redhat-password=REDHATPASSWORD");					// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
+			options.add("--subscription-service-user=SUBSERVICEUSER");			// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
+			options.add("--subscription-service-password=SUBSERVICEPASSWORD");	// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();
