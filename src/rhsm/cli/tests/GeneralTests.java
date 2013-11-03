@@ -389,11 +389,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.redhatReleaseX.equals("5")) { 
 			// TODO
 		}
-		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")) {
+		if (clienttasks.redhatReleaseX.equals("6")) {
 			expecetdRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersion.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
 					"manual: librsvg2",
 					"manual: rhn-setup-gnome"
+			}));
+		}
+		if (clienttasks.redhatReleaseX.equals("7")) {
+			expecetdRequiresList.addAll(Arrays.asList(new String[]{
+					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersion.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
+					"manual: librsvg2",
+					//"manual: rhn-setup-gnome"	// removed by git commit 72e37ab24d5ba1ea9ff8ccc756246df721e204b1 Fix firstboot on Fedora 19. (will help fix Bug 1021013 - RHEL7 firstboot: missing option to skip Subscription Management Registration)
 			}));
 		}
 		
