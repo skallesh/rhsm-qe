@@ -20,6 +20,7 @@
                   :interop (atom false)
                   :proxy (atom false)
                   :register (atom false)
+                  :stacking (atom false)
                   :subscribe (atom false)
                   :system (atom false)})
 
@@ -111,6 +112,10 @@
 
 (defn get-default-locale
   [] (trim (:stdout (run-command "echo $LANG"))))
+
+(defn repeat-cmd
+  [n cmd]
+  (apply str (repeat n cmd)))
 
 (defn get-locale-regex
   "Gets the correct formated locale date string and transforms it into a usable regex.
