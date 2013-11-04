@@ -279,54 +279,70 @@
       (if (bool (tasks/ui guiexist :system-preferences-dialog))
         (tasks/ui click :close-system-prefs)))))
 
-(comment)
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-1012501"]}}
   check_status_message
-  "Asserts is status message displayed in main-window is correct"
+  "Asserts is status message displayed in main-window is correct when product is subscribed
+   to subscription on current date, future date and for expired subscriptions"
   [_]
   (try
-    (run-command "subscription-manager unsubscribe --all")
+    (tasks/unsubscribe_all)
     (tasks/restart-app :reregister? true)
-    (let [installed-products (tasks/ui getrowcount :installed-view)
-          status-before-subscribe (Integer. (re-find #"\d*" (tasks/ui gettextvalue :main-window "*subscriptions")))
-          _ (verify (= installed-products status-before-subscribe))
-          _ (do (run-command "subscription-manager subscribe --auto")
-                (sleep 5000))
-          subscribed-products (count (filter #(= "Subscribed" %) (tasks/get-table-elements :installed-view 2)))
-          after-subscribe (Integer. (re-find #"\d*" (tasks/ui gettextvalue :main-window "*subscriptions")))
-          _ (verify (= after-subscribe (- status-before-subscribe subscribed-products)))
+    (let [installed-products (atom {})
+          status-before-subscribe (atom {})
+          subscribed-products (atom {})
+          after-subscribe (atom {})
+          subscribed-products-date (atom {})
+          after-date-products (atom {})
+          subscribed-products-future (atom {})
+          after-future-subscribe (atom {})
           present-date (do (tasks/ui selecttab :all-available-subscriptions)
                            (tasks/ui gettextvalue :date-entry))
           date-split (split present-date #"-")
           year (first date-split)
           month (second date-split)
           day (last date-split)
-          new-year (+ (Integer. (re-find  #"\d+" year)) 1)
-          _ (do (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
-                (tasks/search :do-not-overlap? false :match-installed true)
-                (tasks/ui selectrowindex :all-subscriptions-view (rand-int (tasks/ui getrowcount :all-subscriptions-view)))
-                (tasks/ui click :attach)
-                (tasks/checkforerror)
-                (if (bool (tasks/ui guiexist :contract-selection-dialog))
-                  (do (tasks/ui selectrowindex :contract-selection-table 0)
-                      (tasks/ui click :attach-contract-selection)
-                      (tasks/checkforerror))))
-          subscribed-products-date (count (filter #(= "Subscribed" %) (tasks/get-table-elements :installed-view 2)))
-          after-date (Integer. (re-find #"\d*" (tasks/ui gettextvalue :main-window "*subscriptions")))
-          _ (verify (= after-date (- status-before-subscribe subscribed-products-date)))
-          increment-client-year (run-command "date -s \"+1 year\"")
-          increment-server-year (run-command "date -s \"+1 year\""
-                                             :runner @candlepin-runner)
-          _ (tasks/restart-app)
-          subscribed-products-future (count (filter #(= "Subscribed" %) (tasks/get-table-elements :installed-view 2)))
-          after-future (Integer. (re-find #"\d*" (tasks/ui gettextvalue :main-window "*subscriptions")))
-          _ (verify (= after-future (- status-before-subscribe subscribed-products-future)))])
+          new-year (+ (Integer. (re-find  #"\d+" year)) 1)]
+      ;; scenario without subscribing
+      (reset! installed-products (tasks/ui getrowcount :installed-view))
+      (reset! status-before-subscribe
+              (Integer. (re-find #"\d*" (tasks/ui gettextvalue :main-window "*subscriptions"))))
+      (verify (= @installed-products @status-before-subscribe))
+      ;; scenario after subscribing
+      (tasks/search :match-installed? true)
+      (dotimes [n 3]
+        (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
+                                   (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
+      (reset! subscribed-products (count (filter #(= "Subscribed" %)
+                                                 (tasks/get-table-elements :installed-view 2))))
+      (reset! after-subscribe (Integer. (re-find #"\d*"
+                                                 (tasks/ui gettextvalue :main-window "*subscriptions"))))
+      (verify (= @after-subscribe (- @status-before-subscribe @subscribed-products)))
+      ;; scenario after subscribing to future subscriptions
+      (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
+      (tasks/search :match-installed? true)
+      (dotimes [n 3]
+        (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
+                                   (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
+      (reset! subscribed-products-date (count (filter #(= "Subscribed" %)
+                                                      (tasks/get-table-elements :installed-view 2))))
+      (reset! after-date-products (Integer. (re-find #"\d*"
+                                                     (tasks/ui gettextvalue :main-window "*subscriptions"))))
+      (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date)))
+      ;; scenario after advancing dates and expiring subscriptions
+      (run-command "date -s \"+1 year\"")
+      (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
+      (tasks/restart-app)
+      (reset! subscribed-products-future (count (filter #(= "Subscribed" %)
+                                                        (tasks/get-table-elements :installed-view 2))))
+      (reset! after-future-subscribe (Integer. (re-find #"\d*"
+                                                        (tasks/ui gettextvalue :main-window "*subscriptions"))))
+      (verify (= @after-future-subscribe (- @status-before-subscribe @subscribed-products-future))))
     (finally
      (run-command "service ntpd stop; ntpdate clock.redhat.com; service ntpd start")
      (run-command "service ntpd stop; ntpdate clock.redhat.com; service ntpd start"
                   :runner @candlepin-runner)
-     (run-command "subscription-manager unsubscribe --all"))))
+     (tasks/unsubscribe_all))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
