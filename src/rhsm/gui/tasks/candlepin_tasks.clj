@@ -296,8 +296,7 @@
   "Builds a map of subscriptions name having the same stacking value."
   [& {:keys [all?]
       :or {all? false}}]
-  (let [
-        listall (if all? (list-available true)
+  (let [listall (if all? (list-available true)
                     (list-available))
         product-names (map :productName listall)
         product-attr (map :productAttributes listall)
