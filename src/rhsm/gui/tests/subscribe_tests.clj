@@ -153,7 +153,6 @@
               used (first (split usedmax #" / "))
               max (last (split usedmax #" / "))
               available (- (Integer. max) (Integer. used))
-              repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))
               enter-quantity (fn [num]
                                (tasks/ui generatekeyevent
                                          (str (repeat-cmd 5 "<right> ")
@@ -555,16 +554,17 @@
                    multiplier (ctasks/get-instance-multiplier (@config :username)
                                                               (@config :password)
                                                               pool
-                                                              :string? false)
-                   repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))]
+                                                              :string? false)]
                (if (> multiplier 1)
                  (do
                    (tasks/ui selectrowindex :contract-selection-table row)
-                   (let [quantity-before (Integer. (re-find #"\d+" (tasks/ui getcellvalue :contract-selection-table row 5)))
-                         action (tasks/ui generatekeyevent (str
-                                                            (repeat-cmd 5 "<right> ")
-                                                            "<space> " "<up> " "<enter>"))
-                         quantity-after (Integer. (re-find #"\d+" (tasks/ui getcellvalue :contract-selection-table row 5)))]
+                   (let [quantity-before (Integer. (re-find #"\d+"
+                                                            (tasks/ui getcellvalue :contract-selection-table row 5)))
+                         action (tasks/ui generatekeyevent
+                                          (str (repeat-cmd 5 "<right> ")
+                                               "<space> " "<up> " "<enter>"))
+                         quantity-after (Integer. (re-find #"\d+"
+                                                           (tasks/ui getcellvalue :contract-selection-table row 5)))]
                      (verify (not (= multiplier (- quantity-after quantity-before))))))))))
          (catch [:type :contract-selection-not-available] _)
          (finally 
