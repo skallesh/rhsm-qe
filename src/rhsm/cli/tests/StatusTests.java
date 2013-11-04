@@ -316,15 +316,17 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		
 		// get today's status
 		SSHCommandResult statusResultToday = clienttasks.status(null,null,null, null);
+		Map<String,String> statusMapToday = getProductStatusMapFromStatusResult(statusResultToday);
 		
 		// get tomorrow's status
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		Calendar tomorrow = new GregorianCalendar(); tomorrow.add(Calendar.HOUR, 24);
 		String onDateTomorrow = yyyy_MM_dd_DateFormat.format(tomorrow.getTime());
-		SSHCommandResult statusResultTommorow = clienttasks.status(onDateTomorrow,null,null, null);
+		SSHCommandResult statusResultTomorrow = clienttasks.status(onDateTomorrow,null,null, null);
+		Map<String,String> statusMapTomorrow = getProductStatusMapFromStatusResult(statusResultTomorrow);
 		
 		// assert tomorrow's status is identical to today's (assumes no change in coverage)
-		Assert.assertEquals(statusResultTommorow.toString(), statusResultToday.toString(),"Asserting the assumption that the status --ondate=tommorrow will be identical to the status ondate=today (default).");
+		Assert.assertTrue(statusMapTomorrow.equals(statusMapToday), "Asserting the assumption that the status --ondate=tomorrow will be identical to the status ondate=today (default).");
 		
 		// now let's find the most future endDate of all current entitlement and assert that the status on the following day is different and Invalid
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -334,9 +336,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		future.add(Calendar.HOUR, 24);	// add one day
 		String onDateFuture = yyyy_MM_dd_DateFormat.format(future.getTime());
 		SSHCommandResult statusResultFuture = clienttasks.status(onDateFuture,null,null, null);
+		Map<String,String> statusMapFuture = getProductStatusMapFromStatusResult(statusResultFuture);
 		
 		// assert future status is NOT identical to today's (assumes entitlements have expired)
-		Assert.assertTrue(!statusResultFuture.toString().equals(statusResultToday.toString()),"Asserting the assumption that the status --ondate=future (the day after an entitlement expires) will NOT be identical to the status ondate=today (default).");
+		Assert.assertTrue(!statusMapFuture.equals(statusMapToday),"Asserting the assumption that the status --ondate=future (the day after an entitlement expires) will NOT be identical to the status ondate=today (default).");
 		
 		// assert future status is Invalid
 		String expectedStatus = "Overall Status: Invalid";
@@ -387,7 +390,39 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Protected methods ***********************************************************************
-	
+	protected Map<String,String> getProductStatusMapFromStatusResult(SSHCommandResult statusResult) {
+		
+		//	FINE: ssh root@jsefler-7.usersys.redhat.com subscription-manager status --ondate=2014-11-04
+		//	FINE: Stdout: 
+		//	+-------------------------------------------+
+		//	   System Status Details
+		//	+-------------------------------------------+
+		//	Overall Status: Invalid
+		//
+		//	Awesome OS Modifier Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Awesome OS Server Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	Multi-Attribute Stackable (4 cores)/Multi-Attribute Stackable (2 GB, 2 Cores)/Multi-Attribute Stackable (4 cores):
+		//	- Only covers 44 of 200 cores.
+		//	- Only covers 12 of 100 sockets.
+		//
+		//	Virt Only Awesome OS for i386 Bits:
+		//	- Not covered by a valid subscription.
+		//
+		//	FINE: Stderr: 
+		//	FINE: ExitCode: 0
+		Map<String,String> statusMap = new HashMap<String, String>();
+		
+		for (String productStatus : getSubstringMatches(statusResult.getStdout(), "(.*):(\n- (.*))+")) {
+			String product = productStatus.split(":\n- ")[0];
+			String status = productStatus.split(":\n- ")[1];	// TODO could be multiple lines
+			statusMap.put(product, status);
+		}
+		return statusMap;
+	}
 	
 	
 	// Data Providers ***********************************************************************
