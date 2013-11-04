@@ -1480,6 +1480,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
+		// java.lang.RuntimeException: org.json.JSONException: JSONObject["owner"] not found.
+		// ^^^ this will be thrown when the consumerId has been deleted at the server, but the client does not know it.
 
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
