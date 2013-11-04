@@ -301,9 +301,14 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
+	@BeforeGroups(groups={"setup"}, value={"VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test"})
+	public void beforeVerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test() {
+		if (clienttasks!=null) {
+			origConsumerCertDir = clienttasks.consumerCertDir;
+		}
+	}
 	@Test(	description="subscription-manager: assert that the consumer cert is backed up when a server-side deletion is detected.",
-			groups={"AcceptanceTests","ConsumerDeletedServerSideTests","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706","blockedByBug-872847","blockedByBug-894633","blockedByBug-907638","blockedByBug-1026435"/*,"blockedByBug-822402","blockedByBug-1000301"*/},
+			groups={"AcceptanceTests","VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706","blockedByBug-872847","blockedByBug-894633","blockedByBug-907638","blockedByBug-1026435"/*,"blockedByBug-822402","blockedByBug-1000301"*/},
 			dataProvider="getConsumerCertDirData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -407,7 +412,16 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),clienttasks.msg_ConsumerNotRegistered,"The system should no longer be registered after rhsmcertd triggers following a server-side consumer deletion.");
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCertFiles().isEmpty(),"The system should no longer have any entitlements after rhsmcertd triggers following a server-side consumer deletion.");
 	}
-	
+	@AfterGroups(groups={"setup"}, value={"VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test"})
+	public void afterVerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test() {
+		if (clienttasks!=null) {
+			clienttasks.unregister_(null,null,null);
+			clienttasks.clean_(null,null,null);
+			clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"consumerCertDir",origConsumerCertDir);
+			//clienttasks.consumerCertDir = origConsumerCertDir;
+		}
+	}
+	protected String origConsumerCertDir = null;
 	
 	
 	
@@ -435,22 +449,6 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// This also allows us to individually run this Test Class on Hudson.
 		RegisterWithCredentials_Test(); // needed to populate registrationDataList
 	}
-	
-	@BeforeGroups(groups={"setup"}, value={"ConsumerDeletedServerSideTests"})
-	public void setConsumerCertDirBeforeGroups() {
-		if (clienttasks!=null) {
-			origConsumerCertDir = clienttasks.consumerCertDir;
-		}
-	}
-	@AfterGroups(groups={"setup"}, value={"ConsumerDeletedServerSideTests"})
-	public void setConsumerCertDirAfterGroups() {
-		if (clienttasks!=null) {
-			clienttasks.unregister_(null,null,null);
-			clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"consumerCertDir",origConsumerCertDir);
-			//clienttasks.consumerCertDir = origConsumerCertDir;
-		}
-	}
-	protected String origConsumerCertDir = null;
 	
 	@AfterClass(groups="setup")
 	public void cleanAfterClass() {
