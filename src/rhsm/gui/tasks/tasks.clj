@@ -393,10 +393,9 @@
   (if (= "0 *" (ui getcellvalue :all-subscriptions-view
                    (skip-dropdown :all-subscriptions-view s) 3))
     (do
-      (let [repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))]
-        (ui generatekeyevent (str
-                              (repeat-cmd 3 "<right> ")
-                              "<space> " "<up> " "<enter>")))))
+      (ui generatekeyevent (str
+                            (repeat-cmd 3 "<right> ")
+                            "<space> " "<up> " "<enter>"))))
   (ui click :attach)
   (checkforerror)
   (if-not (bool (ui waittillwindowexist :contract-selection-dialog 5))
@@ -422,7 +421,6 @@
            usedmax (ui getcellvalue :contract-selection-table line 2)
            used (first (split usedmax #" / "))
            max (last (split usedmax #" / "))
-           repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))
            enter-quantity (fn [num]
                             (ui generatekeyevent
                                 (str (repeat-cmd 5 "<right> ")
@@ -443,10 +441,9 @@
      (if (= "0 *" (ui getcellvalue :all-subscriptions-view
                       (skip-dropdown :all-subscriptions-view s) 3))
        (do
-         (let [repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))]
-           (ui generatekeyevent (str
-                                 (repeat-cmd 3 "<right> ")
-                                 "<space> " "<up> " "<enter>")))))
+         (ui generatekeyevent (str
+                               (repeat-cmd 3 "<right> ")
+                               "<space> " "<up> " "<enter>"))))
      (ui click :attach)
      (checkforerror)
      (ui waittillwindowexist :contract-selection-dialog 5)
