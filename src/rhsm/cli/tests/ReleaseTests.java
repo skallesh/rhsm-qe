@@ -325,7 +325,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
 		List<ProductCert> rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
-		// special case (Rhel5ClientDesktopVersusWorkstation)
+		// special case (rhel5ClientDesktopVersusWorkstation)
 		if (rhelProductCerts.isEmpty() && clienttasks.releasever.equals("5Client")) {
 			//	Product:
 			//		ID: 68
@@ -341,6 +341,62 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			//		Arch: i386
 			//		Tags: rhel-5-client-workstation,rhel-5-workstation
 			providingTag = "rhel-5-client-workstation";
+			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
+		}
+		// special case (rhel7)
+		if (rhelProductCerts.isEmpty() && clienttasks.redhatReleaseX.equals("7")) {
+			//	[root@jsefler-7 rhel-7.0-beta]# pwd
+			//	/tmp/rhnDefinitionsDir/product_ids/rhel-7.0-beta
+			//	[root@jsefler-7 rhel-7.0-beta]# for f in $(ls *.pem); do echo ''; echo $f; rct cat-cert $f | egrep 'Tags:|ID:'; done;
+			//
+			//	Client-x86_64-0e02a62335a7-229.pem
+			//		ID: 229
+			//		Tags: rhel-7-client
+			//
+			//	ComputeNode-x86_64-58cda7733d76-234.pem
+			//		ID: 234
+			//		Tags: rhel-7-computenode
+			//
+			//	Everything-ppc64-f7fe5b9ea798-227.pem
+			//		ID: 227
+			//		Tags: rhel-7-everything
+			//
+			//	Everything-s390x-25a8e9a13878-228.pem
+			//		ID: 228
+			//		Tags: rhel-7-everything
+			//
+			//	Everything-x86_64-316174883467-226.pem
+			//		ID: 226
+			//		Tags: rhel-7-everything
+			//
+			//	Server-HighAvailability-x86_64-7b7efc9479e7-236.pem
+			//		ID: 236
+			//		Tags: rhel-7-highavailability
+			//
+			//	Server-LoadBalancer-x86_64-6406500c3a54-237.pem
+			//		ID: 237
+			//		Tags: rhel-7-loadbalancer
+			//
+			//	Server-ppc64-56b1260a7102-233.pem
+			//		ID: 233
+			//		Tags: rhel-7-server
+			//
+			//	Server-ResilientStorage-x86_64-d4e812911f8e-238.pem
+			//		ID: 238
+			//		Tags: rhel-7-resilientstorage
+			//
+			//	Server-s390x-efb367fafc5d-232.pem
+			//		ID: 232
+			//		Tags: rhel-7-server
+			//
+			//	Server-x86_64-4f156adfd691-230.pem
+			//		ID: 230
+			//		Tags: rhel-7-server
+			//
+			//	Workstation-x86_64-a7ced6b6706e-231.pem
+			//		ID: 231
+			//		Tags: rhel-7-workstation
+			providingTag = "rhel-"+clienttasks.redhatReleaseX+"-.*";	// use a regex for rhel-7
 			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
 		}
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");

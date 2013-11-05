@@ -1333,12 +1333,22 @@ public class SubscriptionManagerTasks {
 		return ProductCert.parse(certificates);
 		
 	}
-	public List<ProductCert> getCurrentProductCerts(String providingTag) {
+	
+	/**
+	 * @param providingTagRegex - examples: rhel5 rhel6 rhel-5-client-workstation rhel-7-client rhel-7-server rhel-7-*
+	 * @return a list of ProductCert that provide the given tag (in the case of rhel7, a regex is useful)
+	 */
+	public List<ProductCert> getCurrentProductCerts(String providingTagRegex) {
 		List<ProductCert> prodctCertsProvidingTag = new ArrayList<ProductCert>();
 		for (ProductCert productCert : getCurrentProductCerts()) {
 			if (productCert.productNamespace.providedTags==null) continue;
 			List<String> providedTags = Arrays.asList(productCert.productNamespace.providedTags.split("\\s*,\\s*"));
-			if (providedTags.contains(providingTag)) prodctCertsProvidingTag.add(productCert);
+			for (String providedTag : providedTags) {
+				if (providedTag.matches(providingTagRegex)) {
+					prodctCertsProvidingTag.add(productCert);
+					break;
+				}
+			}
 		}
 		return prodctCertsProvidingTag;
 	}
@@ -1352,7 +1362,7 @@ public class SubscriptionManagerTasks {
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+redhatReleaseX;
 		List<ProductCert> rhelProductCerts = getCurrentProductCerts(providingTag);
-		// special case (Rhel5ClientDesktopVersusWorkstation)
+		// special case (rhel5ClientDesktopVersusWorkstation)
 		if (rhelProductCerts.isEmpty() && releasever.equals("5Client")) {
 			//	Product:
 			//		ID: 68
@@ -1370,6 +1380,109 @@ public class SubscriptionManagerTasks {
 			providingTag = "rhel-5-client-workstation";
 			rhelProductCerts = getCurrentProductCerts(providingTag);
 		}
+		// special case (rhel7)
+		if (rhelProductCerts.isEmpty() && redhatReleaseX.equals("7")) {
+			//[root@jsefler-7 rhel-7.0-beta]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
+			//Product:
+			//	ID: 229
+			//	Name: Red Hat Enterprise Linux 7 Desktop High Touch Beta
+			//	Version: 7.0 Beta
+			//	Arch: x86_64
+			//	Tags: rhel-7-client
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 234
+			//	Name: Red Hat Enterprise Linux 7 for HPC Compute Node High Touch Beta
+			//	Version: 7.0 Beta
+			//	Arch: x86_64
+			//	Tags: rhel-7-computenode
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 227
+			//	Name: Red Hat Enterprise Linux 7 for IBM POWER Public Beta
+			//	Version: 7.0 Beta
+			//	Arch: ppc64
+			//	Tags: rhel-7-everything
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 228
+			//	Name: Red Hat Enterprise Linux 7 for IBM System z Public Beta
+			//	Version: 7.0 Beta
+			//	Arch: s390x
+			//	Tags: rhel-7-everything
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 226
+			//	Name: Red Hat Enterprise Linux 7 Public Beta
+			//	Version: 7.0 Beta
+			//	Arch: x86_64
+			//	Tags: rhel-7-everything
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 236
+			//	Name: Red Hat Enterprise Linux 7 High Availability High Touch Beta
+			//	Version: 7.0 Beta
+			//	Arch: x86_64
+			//	Tags: rhel-7-highavailability
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 237
+			//	Name: Red Hat Enterprise Linux 7 Load Balancer High Touch Beta
+			//	Version: 7.0 Beta
+			//	Arch: x86_64
+			//	Tags: rhel-7-loadbalancer
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 233
+			//	Name: Red Hat Enterprise Linux 7 for IBM POWER High Touch Beta
+			//	Version: 7.0 Beta
+			//	Arch: ppc64
+			//	Tags: rhel-7-server
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 238
+			//	Name: Red Hat Enterprise Linux 7 Resilient Storage High Touch Beta
+			//	Version: 7.0 Beta
+			//	Arch: x86_64
+			//	Tags: rhel-7-resilientstorage
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 232
+			//	Name: Red Hat Enterprise Linux 7 for IBM System z High Touch Beta
+			//	Version: 7.0 Beta
+			//	Arch: s390x
+			//	Tags: rhel-7-server
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 230
+			//	Name: Red Hat Enterprise Linux 7 Server High Touch Beta
+			//	Version: 7.0 Beta
+			//	Arch: x86_64
+			//	Tags: rhel-7-server
+			//	Brand Type: 
+			//
+			//Product:
+			//	ID: 231
+			//	Name: Red Hat Enterprise Linux 7 Workstation High Touch Beta
+			//	Version: 7.0 Beta
+			//	Arch: x86_64
+			//	Tags: rhel-7-workstation
+			//	Brand Type: 
+			
+			providingTag = "rhel-"+redhatReleaseX+"-.*";	// use a regex for rhel-7
+			rhelProductCerts = getCurrentProductCerts(providingTag);
+		}
+		
 		Assert.assertTrue(rhelProductCerts.size()<=1, "No more than one product cert is installed that provides RHEL tag '"+providingTag+"' (actual='"+rhelProductCerts.size()+"').");
 		if (rhelProductCerts.isEmpty()) return null; 
 		return rhelProductCerts.get(0);
