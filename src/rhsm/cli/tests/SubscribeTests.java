@@ -430,7 +430,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsmcertd: change certFrequency",
 			dataProvider="getCertFrequencyData",
-			groups={"blockedByBug-617703","blockedByBug-700952","blockedByBug-708512","blockedByBug-907638","blockedByBug-822402"/*,"blockedByBug-1000301","blockedByBug-1026435"*/},
+			groups={"blockedByBug-617703","blockedByBug-700952","blockedByBug-708512","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41692)
 	public void rhsmcertdChangeCertFrequency_Test(int minutes) {
@@ -520,7 +520,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="rhsmcertd: ensure certificates synchronize",
-			groups={"blockedByBug-617703","blockedByBug-907638","blockedByBug-822402"/*,"blockedByBug-1000301","blockedByBug-1026435"*/},
+			groups={"blockedByBug-617703","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41694)
 	public void rhsmcertdEnsureCertificatesSynchronize_Test() throws JSONException, Exception{
