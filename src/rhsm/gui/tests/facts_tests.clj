@@ -69,7 +69,7 @@
 (defn ^{Test {:groups ["facts"]
               :dataProvider "guifacts"}}
   match_each_fact
-  "Tests that each fact in the GUI is shwowing the expected or known value."
+  "Tests that each fact in the GUI is showing the expected or known value."
   [_ fact value]
   (skip-if-bz-open "921249" (substring? "virt" fact))
   (verify (= (@cli-facts fact) value)))
@@ -339,10 +339,12 @@
                                                         (tasks/ui gettextvalue :main-window "*subscriptions"))))
       (verify (= @after-future-subscribe (- @status-before-subscribe @subscribed-products-future))))
     (finally
-     (run-command "service ntpd stop; ntpdate clock.redhat.com; service ntpd start")
-     (run-command "service ntpd stop; ntpdate clock.redhat.com; service ntpd start"
-                  :runner @candlepin-runner)
-     (tasks/unsubscribe_all))))
+     (tasks/unsubscribe_all)
+     ;(run-command "service ntpd stop; ntpdate clock.redhat.com; service ntpd start")
+     ;(run-command "service ntpd stop; ntpdate clock.redhat.com; service ntpd start"
+     ;            :runner @candlepin-runner
+     (run-command "date -s \"-1 year\"")
+     (run-command "date -s \"-1 year\"" :runner @candlepin-runner))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
