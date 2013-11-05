@@ -208,7 +208,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to python-rhsm",
-			groups={"blockedByBug-1006748"},
+			groups={"blockedByBug-1006748","blockedByBug-800732"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForPythonRhsm_Test() {
@@ -241,7 +241,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to subscription-manager",
-			groups={"blockedbyBug-801280","blockedByBug-1006748"},
+			groups={"blockedbyBug-801280","blockedByBug-1006748","blockedByBug-800744"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForSubscriptionManager_Test() {
