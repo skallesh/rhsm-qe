@@ -35,7 +35,7 @@
 
 (defn random-subscription
   "Validates if the subscriptions are stackable by verifying quantity to be greater than 1
-  choses random subscriptions which can be stacked"
+   and picks a random subscriptions which can be stacked"
   [subscriptions]
   (let [quantity-list (distinct
                        (into []
@@ -109,7 +109,7 @@
     (catch Exception e
       (reset! (skip-groups :stacking) true)
       (throw e))))
-
+(comment
 (defn ^{BeforeGroups {:groups ["stacking"]
                       :value ["stacking-sockets"]}}
   before_sockets_stacking [_]
@@ -397,7 +397,7 @@
   assert_product_state
   "Asserts product states when it is partially subscribed and fully subscribed
    This is test is performed for different stacking groups"
-  [_ stacking-parameter]
+  [stacking-parameter]
   (try
     (set-stacking-environment stacking-parameter "before")
     (tasks/restart-app :reregister? true)
@@ -454,11 +454,12 @@
        ["cores"]
        ["sockets"])
      (to-array-2d []))])
+)
 
 (defn ^{AfterClass {:groups ["cleanup"]
                      :alwaysRun true}}
   cleanup [_]
-  (run-command (str "rm -rf " stacking-dir))
+  ;(run-command (str "rm -rf " stacking-dir))
   (tasks/set-conf-file-value "productCertDir" @prod-dir)
   (tasks/restart-app))
 
