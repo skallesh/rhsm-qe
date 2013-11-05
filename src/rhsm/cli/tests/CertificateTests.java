@@ -49,8 +49,35 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
+	@Test(	description="Verify that no more than one RHEL product cert is ever installed.",
+			groups={"AcceptanceTests","blockedByBug-854879"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyOnlyOneBaseRHELProductCertIsInstalled_Test() {
+		
+		//  find all installed RHEL product Certs
+		List<ProductCert> rhelProductCertsInstalled = new ArrayList<ProductCert>();
+		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+			if (Arrays.asList("68","69","71","72","74","76").contains(productCert.productId)) { // 70,73,75 are "Extended Update Support"
+				rhelProductCertsInstalled.add(productCert);
+			}
+		}
+		if (rhelProductCertsInstalled.isEmpty() && clienttasks.redhatReleaseX.equals("7")) {
+			rhelProductCertsInstalled = clienttasks.getCurrentProductCerts("rhel-7-.*");
+		}
+		if (rhelProductCertsInstalled.size()>1) {
+			log.warning("Found multiple installed RHEL product certs:");
+			for (ProductCert productCert : rhelProductCertsInstalled) {
+				log.warning(productCert.toString());
+			}
+		}
+		Assert.assertTrue(rhelProductCertsInstalled.size()==1,"At most only one RHEL product cert should ever be installed.");
+	}
+	
+	
 	@Test(	description="Verify that a base product cert corresponding to the /etc/redhat-release is installed",
 			groups={"AcceptanceTests","blockedByBug-706518","blockedByBug-844368"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			dependsOnMethods={"VerifyOnlyOneBaseRHELProductCertIsInstalled_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyBaseRHELProductCertIsInstalled_Test() {
@@ -94,29 +121,6 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		Assert.assertNotNull(rhelProductCert,"Found an installed product cert that matches the system's base RHEL release version '"+clienttasks.releasever+"' on arch '"+clienttasks.arch+"':");
 		log.info(rhelProductCert.toString());
-	}
-	
-	
-	@Test(	description="Verify that no more than one RHEL product cert is ever installed.",
-			groups={"AcceptanceTests","blockedByBug-854879"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void VerifyOnlyOneBaseRHELProductCertIsInstalled_Test() {
-		
-		//  find all installed RHEL product Certs
-		List<ProductCert> rhelProductCertsInstalled = new ArrayList<ProductCert>();
-		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
-			if (Arrays.asList("68","69","71","72","74","76").contains(productCert.productId)) { // 70,73,75 are "Extended Update Support"
-				rhelProductCertsInstalled.add(productCert);
-			}
-		}
-		if (rhelProductCertsInstalled.size()>1) {
-			log.warning("Found multiple installed RHEL product certs:");
-			for (ProductCert productCert : rhelProductCertsInstalled) {
-				log.warning(productCert.toString());
-			}
-		}
-		Assert.assertTrue(rhelProductCertsInstalled.size()==1,"At most only one RHEL product cert should ever be installed.");
 	}
 	
 	
