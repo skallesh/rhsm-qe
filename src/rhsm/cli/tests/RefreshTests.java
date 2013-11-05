@@ -87,31 +87,39 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		String marker = "SM TestClass marker "+String.valueOf(System.currentTimeMillis());	// using a timestamp on the class marker will help identify the test class during which a denial is logged
 		RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, marker);
 		clienttasks.restart_rhsmcertd(null,null,false, null);
-
-		/* # tail /var/log/rhsm/rhsmcertd.log
-		Tue Sep 27 17:36:32 2011: started: interval = 240 minutes
-		Tue Sep 27 17:36:32 2011: started: interval = 1440 minutes
-		Tue Sep 27 17:36:32 2011: certificates updated
-		Tue Sep 27 17:36:32 2011: error opening /var/run/rhsm/update to write
-		timestamp: Is a directory
-		Tue Sep 27 17:36:32 2011: certificates updated
-		Tue Sep 27 17:36:32 2011: error opening /var/run/rhsm/update to write
-		timestamp: Is a directory
-		*/
 		
-		/* tail /var/log/messages
-		Sep 27 14:58:42 jsefler-onprem-62server kernel: rhsmcertd[7117]: segfault at 0 ip 00000039f7a665be sp 00007fff37437d40 error 4 in libc-2.12.so[39f7a00000+197000]
-		Sep 27 14:58:42 jsefler-onprem-62server abrt[7174]: saved core dump of pid 7117 (/usr/bin/rhsmcertd) to /var/spool/abrt/ccpp-2011-09-27-14:58:42-7117.new/coredump (323584 bytes)
-		Sep 27 14:58:42 jsefler-onprem-62server abrtd: Directory 'ccpp-2011-09-27-14:58:42-7117' creation detected
-		Sep 27 14:58:42 jsefler-onprem-62server abrtd: Package 'subscription-manager' isn't signed with proper key
-		Sep 27 14:58:42 jsefler-onprem-62server abrtd: Corrupted or bad dump /var/spool/abrt/ccpp-2011-09-27-14:58:42-7117 (res:2), deleting
-		Sep 27 14:58:43 jsefler-onprem-62server kernel: rhsmcertd[7119]: segfault at 0 ip 00000039f7a665be sp 00007fff37437d40 error 4 in libc-2.12.so[39f7a00000+197000]
-		Sep 27 14:58:43 jsefler-onprem-62server abrt[7201]: not dumping repeating crash in '/usr/bin/rhsmcertd'
-		*/
+		// ON RHEL6...
+		//	[root@jsefler-onprem-62server ~]# tail /var/log/rhsm/rhsmcertd.log
+		//	Tue Sep 27 17:36:32 2011: started: interval = 240 minutes
+		//	Tue Sep 27 17:36:32 2011: started: interval = 1440 minutes
+		//	Tue Sep 27 17:36:32 2011: certificates updated
+		//	Tue Sep 27 17:36:32 2011: error opening /var/run/rhsm/update to write
+		//	timestamp: Is a directory
+		//	Tue Sep 27 17:36:32 2011: certificates updated
+		//	Tue Sep 27 17:36:32 2011: error opening /var/run/rhsm/update to write
+		//	timestamp: Is a directory
+		
+		// ON RHEL6...
+		//	[root@jsefler-onprem-62server ~]# tail -f /var/log/messages
+		//	Sep 27 14:58:42 jsefler-onprem-62server kernel: rhsmcertd[7117]: segfault at 0 ip 00000039f7a665be sp 00007fff37437d40 error 4 in libc-2.12.so[39f7a00000+197000]
+		//	Sep 27 14:58:42 jsefler-onprem-62server abrt[7174]: saved core dump of pid 7117 (/usr/bin/rhsmcertd) to /var/spool/abrt/ccpp-2011-09-27-14:58:42-7117.new/coredump (323584 bytes)
+		//	Sep 27 14:58:42 jsefler-onprem-62server abrtd: Directory 'ccpp-2011-09-27-14:58:42-7117' creation detected
+		//	Sep 27 14:58:42 jsefler-onprem-62server abrtd: Package 'subscription-manager' isn't signed with proper key
+		//	Sep 27 14:58:42 jsefler-onprem-62server abrtd: Corrupted or bad dump /var/spool/abrt/ccpp-2011-09-27-14:58:42-7117 (res:2), deleting
+		//	Sep 27 14:58:43 jsefler-onprem-62server kernel: rhsmcertd[7119]: segfault at 0 ip 00000039f7a665be sp 00007fff37437d40 error 4 in libc-2.12.so[39f7a00000+197000]
+		//	Sep 27 14:58:43 jsefler-onprem-62server abrt[7201]: not dumping repeating crash in '/usr/bin/rhsmcertd'
+		
+		// ON RHEL7...
+		//	[root@jsefler-7 ~]# tail -f /var/log/messages
+		//	SM TestClass marker 1383686002365
+		//	Nov  5 16:13:49 jsefler-7 systemd: Stopping Enable periodic update of entitlement certificates....
+		//	Nov  5 16:13:49 jsefler-7 systemd: Starting Enable periodic update of entitlement certificates....
+		//	Nov  5 16:13:49 jsefler-7 systemd: Started Enable periodic update of entitlement certificates..
 		
 		// verify that no subscription-manager abrt was logged to /var/log/messages 
-		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, null/*abrt*/).trim().equals(""), "No segfault was logged in '"+clienttasks.varLogMessagesFile+"' on "+client.getConnection().getHostname()+" while regression testing bug 725535.");
-
+		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, "abrt").trim().equals(""), "No segfault was logged in '"+clienttasks.varLogMessagesFile+"' on "+client.getConnection().getHostname()+" while regression testing bug 725535.");
+		//Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, null).trim().equals(""), "No segfault was logged in '"+clienttasks.varLogMessagesFile+"' on "+client.getConnection().getHostname()+" while regression testing bug 725535.");
+		//Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, clienttasks.hostname.split("\\.")[0]+"' | grep -v 'Enable periodic update of entitlement certificates").trim().equals(""), "No segfault was logged in '"+clienttasks.varLogMessagesFile+"' on "+client.getConnection().getHostname()+" while regression testing bug 725535.");
 	}
 	
 	
