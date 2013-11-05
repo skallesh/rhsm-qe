@@ -104,8 +104,9 @@
         (let [stackable-pems (tasks/get-stackable-pem-files)
               change-prod-dir (tasks/set-conf-file-value "productCertDir" stacking-dir)
               ret-val (fn [pem-file] (:exitcode
-                                     (run-command (str "cp  " @prod-dir-atom "/" pem-file "  " stacking-dir))))]
-          (map ret-val stackable-pems))))
+                                     (run-command (str "cp  " @prod-dir-atom "/" pem-file "  " stacking-dir))))
+              copy-pem (map ret-val stackable-pems)]
+          copy-pem)))
     (catch Exception e
       (reset! (skip-groups :stacking) true)
       (throw e))))
@@ -392,9 +393,7 @@
       ("sockets") sockets-value
       (throw (Exception. "Invalid stacking-parameter passed to function")))))
 
-(defn ^{Test {:groups ["stacking"
-                       "blockedByBug-845600"]}}
-  assert_product_state
+(defn assert_product_state
   "Asserts product states when it is partially subscribed and fully subscribed
    This is test is performed for different stacking groups"
   [stacking-parameter]
