@@ -27,11 +27,11 @@
            org.testng.SkipException
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
-(def prod-dir (atom {}))  ;"ProductCertDir" value from conf file
-(def sub (atom {}))       ;used in "random-subscription" func to pic a subscription
+(def prod-dir-atom (atom {}))  ; "ProductCertDir" value from conf file
+(def sub (atom {}))            ; used in "random-subscription" func to pic a subscription
 
-(def stacking-dir "/tmp/stacking-dir/")  ;temporary product directory
-                                         ;which has stackable products
+(def stacking-dir "/tmp/stacking-dir/")  ; temporary product directory
+                                         ; which has stackable products
 
 (defn random-subscription
   "Validates if the subscriptions are stackable by verifying quantity to be greater than 1
@@ -100,16 +100,16 @@
     (if (not (bash-bool (:exitcode (run-command (str "test -d " stacking-dir)))))
       (do
         (run-command (str "mkdir " stacking-dir))
-        (reset! prod-dir (tasks/conf-file-value "productCertDir"))
+        (reset! prod-dir-atom (tasks/conf-file-value "productCertDir"))
         (let [stackable-pems (tasks/get-stackable-pem-files)
               change-prod-dir (tasks/set-conf-file-value "productCertDir" stacking-dir)
               ret-val (fn [pem-file] (:exitcode
-                                     (run-command (str "cp  " @prod-dir "/" pem-file "  " stacking-dir))))]
+                                     (run-command (str "cp  " @prod-dir-atom "/" pem-file "  " stacking-dir))))]
           (map ret-val stackable-pems))))
     (catch Exception e
       (reset! (skip-groups :stacking) true)
       (throw e))))
-(comment
+
 (defn ^{BeforeGroups {:groups ["stacking"]
                       :value ["stacking-sockets"]}}
   before_sockets_stacking [_]
@@ -433,7 +433,7 @@
                                                 (first(tasks/get-table-elements
                                                        :all-available-bundled-products 0)))2)))
       (tasks/skip-dropdown :all-subscriptions-view rand-sub)
-      (tasks/ui generatekeyevent (str
+       (tasks/ui generatekeyevent (str
                                   (repeat-cmd 3 "<right> ")
                                   "<space> " quantity-after  " <enter>"))
       ;; verifying if product is fully subscribed
@@ -446,7 +446,7 @@
      (set-stacking-environment stacking-parameter "after")
      (tasks/unsubscribe_all))))
 
-(data-driven assert_product_state {Test {:groups ["firstboot"]}}
+(data-driven assert_product_state {Test {:groups ["stacking"]}}
   [^{Test {:groups ["blockedByBug-845600"]}}
    (if-not (assert-skip :stacking)
      (do
@@ -454,13 +454,12 @@
        ["cores"]
        ["sockets"])
      (to-array-2d []))])
-)
 
 (defn ^{AfterClass {:groups ["cleanup"]
                      :alwaysRun true}}
   cleanup [_]
   ;(run-command (str "rm -rf " stacking-dir))
-  (tasks/set-conf-file-value "productCertDir" @prod-dir)
+  (tasks/set-conf-file-value "productCertDir" @prod-dir-atom)
   (tasks/restart-app))
 
 (gen-class-testng)
