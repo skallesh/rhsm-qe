@@ -119,7 +119,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		SSHCommandResult identityResult = clienttasks.identity(null,null,null,null,null,null,null);
 		List<String> expectedStdoutRegexs = new ArrayList<String>();
-		expectedStdoutRegexs.add("^Current identity is: "+consumerId);
+		//expectedStdoutRegexs.add("^Current identity is: "+consumerId);
+		expectedStdoutRegexs.add("^system identity: "+consumerId);	// changed to this by commit 7da29583efa091337be233b9795b0157283aad0f Change wording for identity in CLI command.
 		//expectedStdoutRegexs.add("^remote entitlement server type: RHN classic and subscription management service$");	// changed by bug 846834
 		//expectedStdoutRegexs.add("^server type: RHN classic and Red Hat Subscription Management$");	// changed by bug 852328
 		expectedStdoutRegexs.add("^server type: RHN Classic and Red Hat Subscription Management$");
@@ -146,7 +147,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// ALPHA: Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
 		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clientusername);
 		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clienttasks.hostname);	// RHEL61 RHEL57
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "Current identity is: ",consumerId));
+		// Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "Current identity is: ",consumerId));
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "system identity: ",consumerId));	// changed to this by commit 7da29583efa091337be233b9795b0157283aad0f Change wording for identity in CLI command.
 		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "name: ",clienttasks.hostname));
 		
 		// also assert additional output from the new multi-owner function
@@ -174,7 +176,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the current identity matches what was returned from register
 		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+nickname);	// RHEL61 RHEL57
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^Current identity is: "+consumerId);
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^system identity: "+consumerId);
 		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^name: "+nickname);
 	}
 	
