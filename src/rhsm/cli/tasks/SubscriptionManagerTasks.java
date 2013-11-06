@@ -5061,56 +5061,54 @@ public class SubscriptionManagerTasks {
 	 * @param entitlementCerts
 	 */
 	public void assertEntitlementCertsInYumRepolist(List<EntitlementCert> entitlementCerts, boolean areReported) {
-		/* # yum repolist all
-Loaded plugins: refresh-packagekit, rhnplugin, rhsmplugin
-Updating Red Hat repositories.
-This system is not registered with RHN.
-RHN support will be disabled.
-http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
-Trying other mirror.
-repo id                      repo name                                                      status
-always-enabled-content       always-enabled-content                                         disabled
-content-label                content                                                        disabled
-never-enabled-content        never-enabled-content                                          enabled: 0
-rhel-beta                    Red Hat Enterprise Linux 5.90Workstation Beta - x86_64         disabled
-rhel-beta-debuginfo          Red Hat Enterprise Linux 5.90Workstation Beta - x86_64 - Debug disabled
-rhel-beta-optional           Red Hat Enterprise Linux 5.90Workstation Beta (Optional) - x86 disabled
-rhel-beta-optional-debuginfo Red Hat Enterprise Linux 5.90Workstation Beta (Optional) - x86 disabled
-rhel-beta-optional-source    Red Hat Enterprise Linux 5.90Workstation Beta (Optional) - x86 disabled
-rhel-beta-source             Red Hat Enterprise Linux 5.90Workstation Beta - x86_64 - Sourc disabled
-rhel-latest                  Latest RHEL 6                                                  enabled: 0
-repolist: 0
-		*/
+		// # yum repolist all
+		//	Loaded plugins: refresh-packagekit, rhnplugin, rhsmplugin
+		//	Updating Red Hat repositories.
+		//	This system is not registered with RHN.
+		//	RHN support will be disabled.
+		//	http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
+		//	Trying other mirror.
+		//	repo id                      repo name                                                      status
+		//	always-enabled-content       always-enabled-content                                         disabled
+		//	content-label                content                                                        disabled
+		//	never-enabled-content        never-enabled-content                                          enabled: 0
+		//	rhel-beta                    Red Hat Enterprise Linux 5.90Workstation Beta - x86_64         disabled
+		//	rhel-beta-debuginfo          Red Hat Enterprise Linux 5.90Workstation Beta - x86_64 - Debug disabled
+		//	rhel-beta-optional           Red Hat Enterprise Linux 5.90Workstation Beta (Optional) - x86 disabled
+		//	rhel-beta-optional-debuginfo Red Hat Enterprise Linux 5.90Workstation Beta (Optional) - x86 disabled
+		//	rhel-beta-optional-source    Red Hat Enterprise Linux 5.90Workstation Beta (Optional) - x86 disabled
+		//	rhel-beta-source             Red Hat Enterprise Linux 5.90Workstation Beta - x86_64 - Sourc disabled
+		//	rhel-latest                  Latest RHEL 6                                                  enabled: 0
+		//	repolist: 0
 		
-		/* [root@jsefler-itclient01 product]# yum repolist all
-Loaded plugins: pidplugin, refresh-packagekit, rhnplugin, rhsmplugin
-Updating Red Hat repositories.
-INFO:repolib:repos updated: 0
-This system is not registered with RHN.
-RHN support will be disabled.
-red-hat-enterprise-linux-6-entitlement-alpha-rpms                                                                         | 4.0 kB     00:00     
-red-hat-enterprise-linux-6-entitlement-alpha-rpms-updates                                                                 |  951 B     00:00     
-repo id                                                                        repo name                                           status
-red-hat-enterprise-linux-6-entitlement-alpha-debug-rpms                        Red Hat Enterprise Linux 6 Entitlement Alpha (Debug disabled
-red-hat-enterprise-linux-6-entitlement-alpha-debug-rpms-updates                Red Hat Enterprise Linux 6 Entitlement Alpha (Debug disabled
-red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms               Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
-red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms-updates       Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
-red-hat-enterprise-linux-6-entitlement-alpha-optional-rpms                     Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
-red-hat-enterprise-linux-6-entitlement-alpha-optional-rpms-updates             Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
-red-hat-enterprise-linux-6-entitlement-alpha-optional-source-rpms              Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
-red-hat-enterprise-linux-6-entitlement-alpha-optional-source-rpms-updates      Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
-red-hat-enterprise-linux-6-entitlement-alpha-rpms                              Red Hat Enterprise Linux 6 Entitlement Alpha (RPMs) enabled: 3,394
-red-hat-enterprise-linux-6-entitlement-alpha-rpms-updates                      Red Hat Enterprise Linux 6 Entitlement Alpha (RPMs) enabled:     0
-red-hat-enterprise-linux-6-entitlement-alpha-source-rpms                       Red Hat Enterprise Linux 6 Entitlement Alpha (Sourc disabled
-red-hat-enterprise-linux-6-entitlement-alpha-source-rpms-updates               Red Hat Enterprise Linux 6 Entitlement Alpha (Sourc disabled
-red-hat-enterprise-linux-6-entitlement-alpha-supplementary-debug-rpms          Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
-red-hat-enterprise-linux-6-entitlement-alpha-supplementary-debug-rpms-updates  Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
-red-hat-enterprise-linux-6-entitlement-alpha-supplementary-rpms                Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
-red-hat-enterprise-linux-6-entitlement-alpha-supplementary-rpms-updates        Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
-red-hat-enterprise-linux-6-entitlement-alpha-supplementary-source-rpms         Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
-red-hat-enterprise-linux-6-entitlement-alpha-supplementary-source-rpms-updates Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
-repolist: 3,394
-		*/
+		// [root@jsefler-itclient01 product]# yum repolist all
+		//	Loaded plugins: pidplugin, refresh-packagekit, rhnplugin, rhsmplugin
+		//	Updating Red Hat repositories.
+		//	INFO:repolib:repos updated: 0
+		//	This system is not registered with RHN.
+		//	RHN support will be disabled.
+		//	red-hat-enterprise-linux-6-entitlement-alpha-rpms                                                                         | 4.0 kB     00:00     
+		//	red-hat-enterprise-linux-6-entitlement-alpha-rpms-updates                                                                 |  951 B     00:00     
+		//	repo id                                                                        repo name                                           status
+		//	red-hat-enterprise-linux-6-entitlement-alpha-debug-rpms                        Red Hat Enterprise Linux 6 Entitlement Alpha (Debug disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-debug-rpms-updates                Red Hat Enterprise Linux 6 Entitlement Alpha (Debug disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms               Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms-updates       Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-rpms                     Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-rpms-updates             Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-source-rpms              Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-source-rpms-updates      Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-rpms                              Red Hat Enterprise Linux 6 Entitlement Alpha (RPMs) enabled: 3,394
+		//	red-hat-enterprise-linux-6-entitlement-alpha-rpms-updates                      Red Hat Enterprise Linux 6 Entitlement Alpha (RPMs) enabled:     0
+		//	red-hat-enterprise-linux-6-entitlement-alpha-source-rpms                       Red Hat Enterprise Linux 6 Entitlement Alpha (Sourc disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-source-rpms-updates               Red Hat Enterprise Linux 6 Entitlement Alpha (Sourc disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-supplementary-debug-rpms          Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-supplementary-debug-rpms-updates  Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-supplementary-rpms                Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-supplementary-rpms-updates        Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-supplementary-source-rpms         Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-supplementary-source-rpms-updates Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
+		//	repolist: 3,394
 		
 		List<ProductCert> currentProductCerts = this.getCurrentProductCerts();
 		
@@ -5149,27 +5147,21 @@ repolist: 3,394
 		// END OF WORKAROUND
 		
 		
-				
-				
 		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
-		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
+		List<String> yumRepolistAll = getYumRepolist("all");
  		for (EntitlementCert entitlementCert : entitlementCerts) {
  			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
  				
  				// Note: When the repo id and repo name are really long, the repo name in the yum repolist all gets crushed (hence the reason for .* in the regex)
-				String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", contentNamespace.label.trim(), contentNamespace.name.substring(0,Math.min(contentNamespace.name.length(), 25)), contentNamespace.enabled? "enabled:":"disabled$");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
-				boolean isReported = Pattern.compile(regex,Pattern.MULTILINE).matcher(result.getStdout()).find();
-
+ 				boolean isReported = yumRepolistAll.contains(contentNamespace.label.trim());
+ 				
 				boolean areAllRequiredTagsInstalled = areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts);
 				if (!contentNamespace.type.equalsIgnoreCase("yum")) {
-//					Assert.assertContainsNoMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all since its type '"+contentNamespace.type+"' is non-yum.");
 					Assert.assertTrue(!isReported, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all since its type '"+contentNamespace.type+"' is non-yum.");
 				} else if (areReported && areAllRequiredTagsInstalled) {
-//					Assert.assertContainsMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is reported in yum repolist all.");
 					Assert.assertTrue(isReported, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is reported in yum repolist all.");
 				} else {
-//					Assert.assertContainsNoMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all"+((areReported&&!areAllRequiredTagsInstalled)?" since all its required tags '"+contentNamespace.requiredTags+"' are NOT found among the currently installed product certs.":"."));
 					Assert.assertTrue(!isReported, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all"+((areReported&&!areAllRequiredTagsInstalled)?" since all its required tags '"+contentNamespace.requiredTags+"' are NOT found among the currently installed product certs.":"."));
 				}
  			}
@@ -5251,16 +5243,16 @@ repolist: 3,394
 		int repolistStartLn = 0;
 		int repolistEndLn = 0;
 		for(int i=0;i<availRepos.length;i++)
-			if (availRepos[i].startsWith("repo id"))
+			if (availRepos[i].startsWith("repo id")) // marks the start of the list
 				repolistStartLn = i + 1;
-			else if (availRepos[i].startsWith("repolist:"))
+			else if (availRepos[i].startsWith("repolist:")) // marks the end of the list
 				repolistEndLn = i;
 		if (repolistStartLn>0)
 			for(int i=repolistStartLn;i<repolistEndLn;i++)
 				repoList.add(availRepos[i].split(" ")[0]);
 		
 		// the repo id may be appended with a /$releasever/$basearch suffix on RHEL7; strip it off!
-		// see Bug 905544 - yum repolist is including /$releasever/$basearch as a suffix to the repo id
+		// see NOTABUG Bug 905544 - yum repolist is including /$releasever/$basearch as a suffix to the repo id
 		for (int i=0; i<repoList.size(); i++) repoList.set(i, repoList.get(i).split("/")[0]);
 		
 		return repoList;
