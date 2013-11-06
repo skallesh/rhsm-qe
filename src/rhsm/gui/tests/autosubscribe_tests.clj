@@ -220,6 +220,33 @@
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel"
+                       "blockedByBug-1009600"
+                       "blockedByBug-1011703"]}}
+  check_subscription_type_auto_attach
+  "Asserts if type column is present in register dialog"
+  [_]
+  (try
+    (tasks/restart-app)
+    (tasks/register-with-creds)
+    (tasks/ui click :auto-attach)
+    (sleep 8000)
+    (tasks/ui waittillwindowexist :register-dialog 80)
+    (tasks/ui click :register-dialog (clojure.string/capitalize(first @sla-list)))
+    (tasks/ui click :register)
+    (verify (tasks/ui showing? :register-dialog "Select Service Level"))
+    (let [values (into [] (tasks/get-table-elements :auto-attach-subscriptions-table 1))
+          phy-virt? (fn [val]
+                      (not (or (= (.toLowerCase val) "virtual")
+                                 (= (.toLowerCase val) "physical"))))
+          error-list (filter phy-virt? values)]
+      (verify (= 0 (count error-list))))
+    (finally
+     (if (bool(tasks/ui guiexist :register-dialog))
+       (tasks/ui click :register-cancel))
+     (tasks/unregister))))
+
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel"
                        "blockedByBug-812903"
                        "blockedByBug-1005329"]}}
   autosubscribe_select_product_sla
@@ -236,8 +263,6 @@
     (if (tasks/ui showing? :register-dialog "Select Service Level")
       (do
         (sleep 3000)
-        (tasks/ui selectrowindex :sla-selection-table
-                  (rand-int (tasks/ui getrowcount :sla-selection-table)))
         (tasks/ui click :register)
         (tasks/ui waittillwindownotexist :register-dialog 80))) 
     (verify (= 1 (tasks/ui guiexist :main-window "System is properly subscribed*")))

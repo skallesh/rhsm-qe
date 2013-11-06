@@ -118,9 +118,11 @@
         ; creating a traceback dumps the cache and this works for a quick fix
         fuckcache (fn [] (try+ (tasks/ui getchild "blah")
                               (catch Exception e "")))]
-    (fuckcache)
-    (log/info (str "Items: " beforecount))
-    (fuckcache)
+    (if (= "RHEL5" (get-release))
+      (do
+        (fuckcache)
+        (log/info (str "Items: " beforecount))
+        (fuckcache)))
     (exec-shortcut "<ESC>")
     (tasks/ui waittillguinotexist window 10)
     (exec-shortcut shortcut)
@@ -431,5 +433,29 @@
             (finally
              (if (bool (tasks/ui guiexist :contract-selection-dialog))
                (tasks/ui click :cancel-contract-selection)))))))))
+
+(defn ^{test {:group ["system"
+                      "blockedByBug-723992"]}}
+  check_gui_refresh
+  "Checks whether the GUI refreshes in a reasonable amount of time"
+  [_]
+  (tasks/restart-app :unregister? true)
+  (verify (tasks/ui showing? :register-system))
+  (let [username (@config :username)
+        password (@config :password)
+        owner (@config :owner-key)
+        server (ctasks/server-path)
+        cmd (str "--username=" username " --password=" password " --org=" owner " --serverurl=" server)]
+    (run-command (str "subscription-manager register " cmd)))
+  (sleep 2000)
+  (verify (not (tasks/ui showing? :register-system)))
+  (try
+    (let [status (tasks/ui gettextvalue :main-window "*subscriptions")
+          auto-suscribe (run-command "subscription-manager subscribe --auto")]
+      (sleep 2000)
+      (verify (not (= status (tasks/ui gettextvalue :main-window "*subscriptions")))))
+    (finally
+     (tasks/unsubscribe_all)
+     (tasks/unregister))))
 
 (gen-class-testng)
