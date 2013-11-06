@@ -263,7 +263,7 @@
     (tasks/ui waittillwindowexist :register-dialog 80)
     (tasks/ui click :register-dialog (clojure.string/capitalize(first @sla-list)))
     (tasks/ui click :register)
-    (if (tasks/ui showing? :register-dialog "Select Service Level")
+    (if (tasks/ui showing? :register-dialog "Confirm Subscriptions")
       (do
         (sleep 3000)
         (tasks/ui click :register)
