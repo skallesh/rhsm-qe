@@ -1413,7 +1413,24 @@ Expected Results:
 	}
 	
 	
-	
+	@Test(	description="subscription-manager: register with leading or trailing whitespace on --username",
+			groups={"blockedByBug-1023166"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithWhitespaceOnUsername_Test() {
+		String usernameWithWhitespace;
+		SSHCommandResult sshCommandResult;
+		
+		// calling register with trailing whitespace in username
+		usernameWithWhitespace = sm_clientUsername+"  ";
+		sshCommandResult = clienttasks.register_(usernameWithWhitespace,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,false,null,true,null,null,null,null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command specifying username=\""+usernameWithWhitespace+"\" (with trailing whitespace) indicates a success.  Bug 1023166 requested trimming the username.");
+
+		// calling register with leading whitespace in username
+		usernameWithWhitespace = "  "+sm_clientUsername;
+		sshCommandResult = clienttasks.register_(usernameWithWhitespace,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,false,null,true,null,null,null,null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command specifying username=\""+usernameWithWhitespace+"\" (with leading whitespace) indicates a success.  Bug 1023166 requested trimming the username.");
+	}
 	
 	
 	
