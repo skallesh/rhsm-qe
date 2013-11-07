@@ -55,8 +55,8 @@ import com.redhat.qe.tools.SSHCommandRunner;
  * 
  * 
  */
-@Test(groups = { "FlexibleBranding" })
-public class FlexibleBranding extends SubscriptionManagerCLITestScript {
+@Test(groups = { "FlexibleBrandingTests" })
+public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	protected  static String BrandType = null;
 	protected String ownerKey="";
 	protected String randomAvailableProductId;

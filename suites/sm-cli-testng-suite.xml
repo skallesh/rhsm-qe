@@ -714,6 +714,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: FlexibleBranding Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="FlexibleBrandingTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: SELinux Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
