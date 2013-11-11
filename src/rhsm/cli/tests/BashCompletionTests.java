@@ -231,7 +231,10 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			if (bashCommand.startsWith("subscription-manager status ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager subscribe ")) bugIds.add("1001820");
 			if (bashCommand.startsWith("subscription-manager unsubscribe ")) bugIds.add("1001820");
-
+			
+			// Bug 1028555 - bash completion is missing for the new subscription-manager repo-override module and its options
+			if (bashCommand.startsWith("subscription-manager repo-override ")) bugIds.add("1028555");
+			
 			// Bug 1004341 - subscription-manager-gui does not bash complete its options
 			if (bashCommand.startsWith("subscription-manager-gui ")) bugIds.add("1004341");
 			
