@@ -276,7 +276,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Map<String, String> result=clienttasks.getFacts("system");
 		Assert.assertNotNull(result.get("system.certificate_version"));
 		Assert.assertNotNull(result.get("system.name"));
-		Assert.assertNotNull("system.uuid");
 
 	
 	}
@@ -334,7 +333,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify Sytem.UUID fact is Deleted Once Consumer is Deleted",
 			groups={"SytemUUIDfactShouldBeDeletedOnceConsumerDeleted","blockedByBug-1019753"},
-			enabled=true)
+			enabled=false)//the fact is removed from the list,hence test is disabled
 	public void SytemUUIDfactShouldBeDeletedOnceConsumerDeleted() throws Exception {
 	clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -357,10 +356,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 //	value=client.runCommandAndWait("echo $factsList | cut -d ' ' -f2").getStdout();
 	/*Map<String,String> factsMap = new HashMap<String,String>();
 	List<String> factNames = new ArrayList<String>();
-	String factsListAsString = factsList.getStdout().trim();
 	String factNameRegex="^[\\w\\.\\(\\)-:]+: ";
 	Pattern pattern = Pattern.compile(factNameRegex, Pattern.MULTILINE);
 	Matcher matcher = pattern.matcher(factsListAsString);
+	String factsListAsString = factsList.getStdout().trim();
 	while (matcher.find()) {
 		matcher.group();
 		factNames.add(matcher.group());

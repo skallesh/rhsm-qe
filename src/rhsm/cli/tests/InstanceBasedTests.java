@@ -133,7 +133,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 	 * @throws JSONException
 	 */
 	@Test(description = "verify Healing of instance based subscription", 
-			groups = { "HealingOfInstanceBasedSubscription"}, enabled = true)
+			groups = { "HealingOfInstanceBasedSubscription","blockedByBug-907638"}, enabled = true)
 	public void HealingOfInstanceBasedSubscription() throws JSONException,Exception {
 		
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
