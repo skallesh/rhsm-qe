@@ -3997,6 +3997,35 @@ public class SubscriptionManagerTasks {
 	
 	
 	
+	// repo-override module tasks ************************************************************
+
+	/**
+	 * @return SSHCommandResult from subscription-manager repo-override [parameters] without asserting any results
+	 */
+	public SSHCommandResult repo_override_(Boolean list, Boolean removeAll, List<String> repoIds, List<String> removeNames, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
+		
+		// assemble the command
+		String command = this.command;											command += " repo-override";
+		if (list!=null && list)													command += " --list";
+		if (removeAll!=null && removeAll)										command += " --remove-all";
+		if (repoIds!=null) for (String repoId : repoIds)						command += " --repo="+repoId;
+		if (removeNames!=null) for (String removeName : removeNames)			command += " --remove="+removeName;
+		if (addNameValueMap!=null) for (String name:addNameValueMap.keySet())	command += " --add="+name+":"+addNameValueMap.get(name);
+		if (proxy!=null)														command += " --proxy="+proxy;
+		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)												command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	public SSHCommandResult repo_override_(Boolean list, Boolean removeAll, String repoId, String removeName, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
+		List<String> repoIds = repoId==null?null:Arrays.asList(new String[]{repoId});
+		List<String> removeNames = removeName==null?null:Arrays.asList(new String[]{removeName});
+		return repo_override_(list, removeAll, repoIds, removeNames, addNameValueMap, proxy, proxyuser, proxypassword);
+	}
+	
+	
+	
 	// plugins module tasks ************************************************************
 
 	/**
