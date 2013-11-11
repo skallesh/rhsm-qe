@@ -347,8 +347,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(	description="verify if brandname file is created without product cert",
-			groups={"verifyFile"},
+	@Test(	description="verify if Brand Name Creation During Repeated RHSMCERTD Updates",
+			groups={"verifyFileduringrhsmupdates"},
 			enabled=false)
 	public void VerifyBrand_NameCreatedDuringRepeatedRHSMCERTDUpdates() throws Exception {
 		String productname=null;
@@ -376,7 +376,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if brandname file is created cert version is 1",
 			groups={"VerifyBrand_NameCreatedWithCertV1","blockedByBug-1011768"},
-			enabled=true)
+			enabled=false)//bug has been closed as not a bug
 	public void VerifyBrand_NameCreatedWithCertV1() throws Exception {
 		String productname=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -408,7 +408,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		
 		}
 	
-	@AfterGroups(groups = { "setup" }, value = {"FlexibleBranding"})
+	@AfterGroups(groups = { "setup" }, value = {"FlexibleBranding","verifyFile","verifyFileduringrhsmupdates","CreationWithTActivationKey","CreationWithTwoRhelproducts","CreationWithRHSMCERTD","CreationWithImport","VerifyBrand_TypeValue","VerifyBrandFileContents","VerifyBrandFileCreation","VerifyBrandFileDeletion"})
 			@AfterClass(groups = "setup")
 			public void restoreProductCerts() throws IOException {
 				client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
