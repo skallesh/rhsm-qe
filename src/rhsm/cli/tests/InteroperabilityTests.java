@@ -283,6 +283,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	
 	// All of these are the same...
 	// TODO Bug 872310 - yum plugins subscription-manger and rhnplugin should agree to print to stdout or stderr	// when this bug is fixed, simply update the YumPluginMessageCase*_Tests  https://github.com/RedHatQE/rhsm-qe/issues/165
+	// TODO Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr. 
+	// TODO Bug 1017354 - yum subscription-manager plugin puts non-error information on stderr 
+	// TODO Bug 1017969 - subscription manager plugin ignores yum --quiet 
 	
 	
 	// Configuration methods ***********************************************************************
