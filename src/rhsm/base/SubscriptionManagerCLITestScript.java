@@ -569,6 +569,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// process all of the pools belonging to ownerKey
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
+		List<String> secondarySubscriptionIdsDeleted = new ArrayList<String>();
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String productId = jsonPool.getString("productId");
@@ -588,11 +589,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						
 			// delete the subscription
 			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/subscriptions/"+subscriptionId);
+			secondarySubscriptionIdsDeleted.add(subscriptionId);
 		}
 		
 		// refresh the pools
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,sm_clientOrg);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+		if (!secondarySubscriptionIdsDeleted.isEmpty()) {
+			JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,sm_clientOrg);
+			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+		}
 	}
 	
 	protected static ArrayList<String> invokedWorkaroundBugs = new ArrayList<String>();;
