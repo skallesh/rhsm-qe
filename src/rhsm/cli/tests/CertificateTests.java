@@ -119,6 +119,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "76", productCerts);	// Red Hat Enterprise Linux for Scientific Computing
 		}
 		
+		if (clienttasks.redhatReleaseX.equals("7")) {
+			rhelProductCert = clienttasks.getCurrentProductCerts("rhel-7-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)
+		}
+		
 		Assert.assertNotNull(rhelProductCert,"Found an installed product cert that matches the system's base RHEL release version '"+clienttasks.releasever+"' on arch '"+clienttasks.arch+"':");
 		log.info(rhelProductCert.toString());
 	}
