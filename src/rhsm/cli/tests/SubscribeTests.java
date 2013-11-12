@@ -112,8 +112,16 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		
+		// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
+		// adjust quantity for instance_multiplier pools
+		String instance_multiplier = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier");
+		String quantity = null;
+		if (pool.suggested<1 && instance_multiplier!=null) {
+			quantity = instance_multiplier;
+		}
+		
 		// subscribe to the pool
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,quantity,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
 		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -124,7 +132,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNotNull(consumedProductSubscription, "The consumed ProductSubscription corresponding to the subscribed SubscriptionPool productId '"+pool.productId+"' was found among the list of consumed ProductSubscriptions.");
 		
 		// assert that the quantityUsed matches the quantitySuggested after implementation of Bug 1008647 - [RFE] bind requests that do not specify a quantity should automatically use the quantity needed to achieve compliance
-		if (pool.suggested > 1) {
+		if (quantity!=null) {
+			Assert.assertEquals(consumedProductSubscription.quantityUsed, Integer.valueOf(quantity), "When the attachment quantity '"+quantity+"' is specified, the quantity used from the consumed product subscription should match.");		
+		} else if (pool.suggested > 1) {
 			Assert.assertEquals(consumedProductSubscription.quantityUsed, pool.suggested, "When the suggested consumption quantity '"+pool.suggested+"' from the available pool is greater than one, the quantity used from the consumed product subscription should match.");
 		} else {
 			Assert.assertEquals(consumedProductSubscription.quantityUsed, Integer.valueOf(1), "When the suggested consumption quantity '"+pool.suggested+"' from the available pool is NOT greater than one, the quantity used from the consumed product subscription should be one.");
