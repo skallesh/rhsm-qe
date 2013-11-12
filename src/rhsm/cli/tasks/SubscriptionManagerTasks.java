@@ -4192,7 +4192,11 @@ public class SubscriptionManagerTasks {
 			Assert.assertTrue(sshCommandResult.getStdout().contains("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
 		else {
 			//Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports 'Success'.");
-			Assert.assertTrue(workaroundForBug906550(sshCommandResult.getStdout()).startsWith("Success"), "The subscribe stdout reports 'Success'.");
+			if (poolIds.size()==1) {
+				Assert.assertTrue(workaroundForBug906550(sshCommandResult.getStdout()).startsWith("Success"), "The subscribe stdout reports a 'Success'fully attached subscription.");
+			} else {
+				Assert.assertTrue(workaroundForBug906550(sshCommandResult.getStdout()).contains("Success"), "The subscribe stdout reports at least one 'Success'fully attached subscription.");			
+			}
 		}
 		
 		// assert the exit code was not a failure
