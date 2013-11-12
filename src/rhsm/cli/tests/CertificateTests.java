@@ -181,11 +181,19 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("This test is not designed for CORES-based product subscriptions.");
 		}
 		
+		// adjust quantity for instance_multiplier pools
+		String instance_multiplier = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier");
+		String quantity = null;
+		if (pool.suggested<1 && instance_multiplier!=null) {
+			quantity = instance_multiplier;
+		}
+		
 		// subscribe to the pool and get the EntitlementCert
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		//^ replaced with the following to save logging/assertion time
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(null, null, pool.poolId, null, null, quantity, null, null, null, null, null);
+		if (result.getStderr().startsWith("Too many content sets")) throw new SkipException("This test is only designed for system.certificate_version=1.0 compatible subscriptions.");
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		Assert.assertNotNull(entitlementCert,"Successfully retrieved the entitlement cert granted after subscribing to pool: "+pool);
 		// re-scan the entitlement cert using openssl because it better distinguishes between a "" OID value and a null OID value.
