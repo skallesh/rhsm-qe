@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
@@ -16,6 +17,7 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
 import rhsm.data.SubscriptionPool;
@@ -421,7 +423,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			priority=430, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledSubscribeTestPluginHooksAreCalled_Test() {
+	public void verifyEnabledSubscribeTestPluginHooksAreCalled_Test() throws JSONException, Exception {
 		removeRhsmLog();
 		
 		// get the pre-registered facts on the system
@@ -433,13 +435,14 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		String quantity = null; if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
 
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledSubscribeTestPluginHooksAreCalled_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 
 		// subscribe to a random pool (to generate calls to pre/post hooks)
-		clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null);
+		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null);
 		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
@@ -789,7 +792,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			priority=830, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledAllSlotsTestPluginHooksAreCalled_Test() {
+	public void verifyEnabledAllSlotsTestPluginHooksAreCalled_Test() throws JSONException, Exception {
 		removeRhsmLog();
 		
 		// get the pre-registered facts on the system
@@ -805,7 +808,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null);
+		String quantity = null; if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
+		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null);
 		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
