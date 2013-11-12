@@ -129,7 +129,10 @@ public class SubscriptionManagerTasks {
 		ipaddr			= sshCommandRunner.runCommandAndWait("ip addr show $(ip route | awk '$1 == \"default\" {print $5}' | uniq) | egrep 'inet [[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+.* scope global' | awk '{print $2}' | cut -d'/' -f1").getStdout().trim();
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
 		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release		// rpm -q --qf "%{VERSION}\n" --whatprovides /etc/redhat-release
-//		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
+
+		// TODO NOTES: on rhel7 releasever is 7.0, we may need to use info in cat /etc/system-release-cpe or cat /etc/os-release  see: rpm -ql redhat-release-server
+		
+		//		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
 		redhatReleaseXY = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
 		if (redhatRelease.contains("Server")) variant = "Server";	//69.pem
@@ -4010,7 +4013,7 @@ public class SubscriptionManagerTasks {
 		if (removeAll!=null && removeAll)										command += " --remove-all";
 		if (repoIds!=null) for (String repoId : repoIds)						command += " --repo="+repoId;
 		if (removeNames!=null) for (String removeName : removeNames)			command += " --remove="+removeName;
-		if (addNameValueMap!=null) for (String name:addNameValueMap.keySet())	command += " --add="+name+":"+addNameValueMap.get(name);
+		if (addNameValueMap!=null) for (String name:addNameValueMap.keySet())	command += " --add="+String.format(addNameValueMap.get(name).contains(" ")||addNameValueMap.get(name).isEmpty()?"%s:\"%s\"":"%s:%s", name,addNameValueMap.get(name)); 	// quote a value containing spaces or is empty
 		if (proxy!=null)														command += " --proxy="+proxy;
 		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)												command += " --proxypassword="+proxypassword;
@@ -4025,6 +4028,24 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+	/**
+	 * @return SSHCommandResult from subscription-manager repo-override [parameters]
+	 */
+	public SSHCommandResult repo_override(Boolean list, Boolean removeAll, List<String> repoIds, List<String> removeNames, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
+
+		SSHCommandResult sshCommandResult = repo_override_(list, removeAll, repoIds, removeNames, addNameValueMap, proxy, proxyuser, proxypassword);
+		
+		// assert results...
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repo-override command indicates a success.");
+		
+		
+		return sshCommandResult;
+	}
+	public SSHCommandResult repo_override(Boolean list, Boolean removeAll, String repoId, String removeName, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
+		List<String> repoIds = repoId==null?null:Arrays.asList(new String[]{repoId});
+		List<String> removeNames = removeName==null?null:Arrays.asList(new String[]{removeName});
+		return repo_override(list, removeAll, repoIds, removeNames, addNameValueMap, proxy, proxyuser, proxypassword);
+	}
 	
 	// plugins module tasks ************************************************************
 
@@ -4217,17 +4238,18 @@ public class SubscriptionManagerTasks {
 		subscribeToSubscriptionPool(pool);
 	}
 	
+	
 	/**
 	 * subscribe to the given SubscriptionPool (assumes pool came from the list of available pools)
 	 * @param pool
 	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
 	 */
-	public File subscribeToSubscriptionPool(SubscriptionPool pool, String authenticator, String password, String serverUrl)  {
+	public File subscribeToSubscriptionPool(SubscriptionPool pool, String quantity, String authenticator, String password, String serverUrl)  {
 		
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, quantity, null, null, null, null, null);
 
 		// is this pool multi-entitleable?
 		/* This information is now in the SubscriptionPool itself
@@ -4381,16 +4403,16 @@ public class SubscriptionManagerTasks {
 			if (authenticator!=null && password!=null && serverUrl!=null) {
 				JSONObject jsonPool = null;
 				int consumed = 0;
-				int quantity = Integer.valueOf(pool.quantity);
+				int quantityAvailable = Integer.valueOf(pool.quantity);
 				try {
 					jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,serverUrl,"/pools/"+pool.poolId));
 					consumed = jsonPool.getInt("consumed");
-					quantity = jsonPool.getInt("quantity");
+					quantityAvailable = jsonPool.getInt("quantity");
 				} catch (Exception e) {
 					e.printStackTrace();
 					Assert.fail(e.getMessage());
 				} 
-				Assert.assertEquals(consumed, quantity,
+				Assert.assertEquals(consumed, quantityAvailable,
 						"Asserting the pool's consumed attribute equals it's total quantity after having consumed all of its available entitlements.");
 			}
 			
@@ -4453,8 +4475,11 @@ public class SubscriptionManagerTasks {
 		
 		return newCertFile;
 	}
-	public void subscribeToSubscriptionPool(SubscriptionPool pool)  {
-		subscribeToSubscriptionPool(pool, null, null, null);
+	public File subscribeToSubscriptionPool(SubscriptionPool pool)  {
+		return subscribeToSubscriptionPool(pool, null, null, null);
+	}
+	public File subscribeToSubscriptionPool(SubscriptionPool pool, String authenticator, String password, String serverUrl)  {
+		return subscribeToSubscriptionPool(pool, null, authenticator, password, serverUrl);
 	}
 	
 	/**
