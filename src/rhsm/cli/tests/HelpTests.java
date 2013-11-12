@@ -303,6 +303,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.add("attach");	// added by bug 874804
 		modules.add("remove");	// added by bug 874749
 		modules.add("plugins");	// added by https://engineering.redhat.com/trac/Entitlement/wiki/SubscriptionManagerPlugins
+		modules.add("repo-override");https:	// added as part of bug 803746
 		modules.add("status");
 		modules.add("auto-attach");	//modules.add("autoheal"); changed by Bug 976867 - subscription-manager autoheal needs feedback and a review of options
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
@@ -821,13 +822,35 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
+		// subscription-manager repo-override OPTIONS
+		module = "repo-override";
+		options.clear();
+		options.add("-h, --help");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
+		options.add("--repo=REPOID");
+		options.add("--remove=NAME");
+		options.add("--add=NAME:VALUE");
+		options.add("--remove-all");
+		options.add("--list");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
+			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("977481"), smHelpCommand, 0, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
 		// subscription-manager version OPTIONS
 		module = "version";
 		options.clear();
 		options.add("-h, --help");
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
-		options.add("--proxypassword=PROXY_PASSWORD");		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+		options.add("--proxypassword=PROXY_PASSWORD");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
