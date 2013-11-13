@@ -4493,14 +4493,14 @@ public class SubscriptionManagerTasks {
 	 * @throws Exception 
 	 * @throws JSONException 
 	 */
-	public File subscribeToSubscriptionPool_(SubscriptionPool pool) throws JSONException, Exception  {
+	public File subscribeToSubscriptionPool_(SubscriptionPool pool, String quantity) throws JSONException, Exception  {
 		
 //		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
 //		String port = getConfFileParameter(rhsmConfFile, "port");
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, quantity, null, null, null, null, null);
 
 		// get the serial of the entitlement that was granted from this pool
 		//BigInteger serialNumber = CandlepinTasks.getOwnersNewestEntitlementSerialCorrespondingToSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,getCurrentlyRegisteredOwnerKey(),pool.poolId);
@@ -4511,6 +4511,9 @@ public class SubscriptionManagerTasks {
 		//Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, serialPemFile.getPath()),1, "Found the EntitlementCert file ("+serialPemFile+") that was granted after subscribing to pool id '"+pool.poolId+"'.");
 
 		return serialPemFile;
+	}
+	public File subscribeToSubscriptionPool_(SubscriptionPool pool) throws JSONException, Exception  {
+		return subscribeToSubscriptionPool_(pool,null);
 	}
 	
 	//@Deprecated

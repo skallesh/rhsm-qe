@@ -316,11 +316,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
-	public void InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
+	public void InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(String pkg, String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
 		if (pkg==null) throw new SkipException("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
 		
 		// subscribe to this pool
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
 		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 
 		// install the package and assert that it is successfully installed
@@ -337,7 +337,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
-		InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(pkg, repoLabel, pool);
+		InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(pkg, repoLabel, pool, null);
 	}
 	
 	
@@ -1159,7 +1159,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
-			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
+			String quantity = null; if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
+
+			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
 			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
@@ -1173,8 +1175,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 						log.warning("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
 					}
 
-					// String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool
-					ll.add(Arrays.asList(new Object[]{pkg, repoLabel, pool}));
+					// String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool, String quantity
+					ll.add(Arrays.asList(new Object[]{pkg, repoLabel, pool, quantity}));
 				}
 			}
 			clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
