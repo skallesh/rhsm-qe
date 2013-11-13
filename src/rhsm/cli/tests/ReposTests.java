@@ -53,7 +53,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		List<Repo> priorRepos = clienttasks.getCurrentlySubscribedRepos();
 		
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);	// for this test, we can skip the exhaustive asserts done by this call to clienttasks.subscribeToSubscriptionPool(pool)
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
+		String quantity = null; if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, entitlementCertFile.getPath()), "Found the EntitlementCert file ("+entitlementCertFile+") that was granted after subscribing to pool id '"+pool.poolId+"'.");
 
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
