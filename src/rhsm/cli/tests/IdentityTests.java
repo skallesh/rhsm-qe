@@ -18,6 +18,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -484,7 +485,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// String consumerCertDir
 		ll.add(Arrays.asList(new Object[]{null,	clienttasks.consumerCertDir}));
-		ll.add(Arrays.asList(new Object[]{null,	"/tmp/consumer"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("1030560"),	"/tmp/consumer"}));
 
 		return ll;
 	}
