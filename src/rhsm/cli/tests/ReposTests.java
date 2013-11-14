@@ -442,7 +442,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 				
 		for(Repo repo:subscribedRepos) {
 			SSHCommandResult result = clienttasks.repos_(false,repo.repoId,null,null,null,null);
-			Assert.assertEquals(result.getStdout().trim(),"Repo " +repo.repoId+" is enabled for this system.");
+			//Assert.assertEquals(result.getStdout().trim(),"Repo " +repo.repoId+" is enabled for this system.");
+			Assert.assertEquals(result.getStdout().trim(),String.format("Repo '%s' is enabled for this system.",repo.repoId));
 		}
 	}
 	@Test(	description="subscription-manager: disable a repo.",
@@ -459,7 +460,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 				
 		for(Repo repo:subscribedRepos) {
 			SSHCommandResult result = clienttasks.repos_(false,null,repo.repoId,null,null,null);
-			Assert.assertEquals(result.getStdout().trim(),"Repo " +repo.repoId+" is disabled for this system.");
+			//Assert.assertEquals(result.getStdout().trim(),"Repo " +repo.repoId+" is disabled for this system.");
+			Assert.assertEquals(result.getStdout().trim(),String.format("Repo '%s' is disabled for this system.",repo.repoId));
 		}
 	}
 	

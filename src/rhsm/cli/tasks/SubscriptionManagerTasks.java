@@ -3935,12 +3935,14 @@ public class SubscriptionManagerTasks {
 		// assert the enable feedback
 		if (enableRepos!=null) for (String enableRepo : enableRepos) {
 			String expectedStdout = "Repo "+enableRepo+" is enabled for this system.";
+			expectedStdout = String.format("Repo '%s' is enabled for this system.",enableRepo);
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedStdout), "Stdout from repos --enable includes expected feedback '"+expectedStdout+"'.");
 		}
 		
 		// assert the disable feedback
 		if (disableRepos!=null) for (String disableRepo : disableRepos) {
 			String expectedStdout = "Repo "+disableRepo+" is disabled for this system.";
+			expectedStdout = String.format("Repo '%s' is disabled for this system.",disableRepo);
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedStdout), "Stdout from repos --disable includes expected feedback '"+expectedStdout+"'.");
 		}
 		
