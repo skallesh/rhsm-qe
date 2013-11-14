@@ -167,7 +167,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if brandtype value is present in the entitlement cert",
 			groups={"VerifyBrand_TypeValue"},
-			enabled=true) //yet to work on
+			enabled=true) 
 	public void VerifyBrand_TypeValue() throws Exception {
 		String productname=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -398,7 +398,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@BeforeClass(groups = { "setup" })
+	@BeforeGroups(groups = { "setup" },value = {"verifyFile","verifyFileduringrhsmupdates","CreationWithTActivationKey","CreationWithTwoRhelproducts","CreationWithRHSMCERTD","CreationWithImport","VerifyBrand_TypeValue","VerifyBrandFileContents","VerifyBrandFileCreation","VerifyBrandFileDeletion"})
+	@BeforeClass(groups = "setup")
 	protected void moveProductCertFiles() throws IOException {
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		if(!(RemoteFileTasks.testExists(client, "/root/temp1/"))){
