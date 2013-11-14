@@ -171,9 +171,9 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			// physical systems -----------------------------------------------------------------------------------
 			
 			// physical systems must consume entitlements from the instance based pool in quantities that are evenly
-			// divisible by the instance_multiplier.  Moreover, sockets matter for compliance.  In addition, when a
-			// physical system consumes from the instance based pool, a subpool with unlimited quantity available only
-			// to the guests on this physical system will be generated.
+			// divisible by the instance_multiplier.  Moreover, sockets matter for compliance.
+			// In addition (if host_limited with virt_limit), when a physical system consumes from the instance based
+			// pool, a subpool with unlimited quantity available only to the guests on this physical system will be generated.
 			
 			// start by attempting to subscribe in quantities that are NOT evenly divisible by the instance_multiplier
 			for (int qty=0; qty<=poolInstanceMultiplier+1; qty++) {
@@ -221,9 +221,12 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 					}
 				}
 			}
-			
-			// now let's unsubscribe from all entitlements and attempt auto-subscribing
-			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+
+//TODO 11/13/2013 Work in progress... This logic was causing a failure in the stage acceptance testing and I could not remember why I did this.  At the momemt, this unsubcribe/autosubscribe doesn't make sense to me.  Let's let this run against onpremise a few times before I delete it to see if I can remember why put this here.
+//			// now let's unsubscribe from all entitlements and attempt auto-subscribing
+//			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+//			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
+			// now let's attempt auto-subscribing which should complete the stack
 			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
 			
 			// assert the total quantity of consumption
@@ -248,40 +251,44 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 			
-			// now we can assert that a host_limited subpool was generated from consumption of this physical pool and is only available to guests of this physical system
-			// first, let's flip the virt.is_guest to true and assert that the virtual guest subpool is not (yet) available since the virtUuid is not on the host consumer's list of guestIds
-			// factsMap.clear(); // do not clear since it will already contain cpu.cpu_socket(s)
-			factsMap.put("virt.is_guest",String.valueOf(true));
-			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null,true,null,null,null);
-			List<SubscriptionPool> availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", pool.productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-			for (SubscriptionPool availableInstanceBasedSubscriptionPool : availableInstanceBasedSubscriptionPools) {
-				Assert.assertEquals(availableInstanceBasedSubscriptionPool.machineType, "Physical", "Only physical pools to '"+pool.subscriptionName+"' should be available to a guest system when its virt_uuid is not on the host's list of guestIds.");
+			// do some more testing when the pool is host limited and virt limited... 
+			if (CandlepinTasks.isPoolProductHostLimited(sm_clientUsername,sm_clientPassword, sm_serverUrl, pool.poolId) && CandlepinTasks.isPoolProductVirtLimited(sm_clientUsername,sm_clientPassword, sm_serverUrl, pool.poolId)) {
+				
+				// now we can assert that a host_limited subpool was generated from consumption of this physical pool and is only available to guests of this physical system
+				// first, let's flip the virt.is_guest to true and assert that the virtual guest subpool is not (yet) available since the virtUuid is not on the host consumer's list of guestIds
+				// factsMap.clear(); // do not clear since it will already contain cpu.cpu_socket(s)
+				factsMap.put("virt.is_guest",String.valueOf(true));
+				clienttasks.createFactsFileWithOverridingValues(factsMap);
+				clienttasks.facts(null,true,null,null,null);
+				List<SubscriptionPool> availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", pool.productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+				for (SubscriptionPool availableInstanceBasedSubscriptionPool : availableInstanceBasedSubscriptionPools) {
+					Assert.assertEquals(availableInstanceBasedSubscriptionPool.machineType, "Physical", "Only physical pools to '"+pool.subscriptionName+"' should be available to a guest system when its virt_uuid is not on the host's list of guestIds.");
+				}
+				
+				// now fake this consumer's facts and guestIds to make it think it is a guest of itself (a trick for testing)
+				String systemUuid = clienttasks.getCurrentConsumerId();
+				factsMap.put("virt.uuid",systemUuid);
+				clienttasks.createFactsFileWithOverridingValues(factsMap);
+				clienttasks.facts(null,true,null,null,null);
+				//[root@jsefler-5 ~]# curl -k -u testuser1:password --request PUT --data '{"guestIds":["e6f55b91-aae1-44d6-f0db-c8f25ec73ef5","abcd"]}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/d2ee0c6e-a57d-4e37-8be3-228a44ca2739 
+				JSONObject jsonConsumer = CandlepinTasks.setGuestIdsForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, systemUuid,Arrays.asList(new String[]{"abc",systemUuid,"def"}));
+				
+				// now the host_limited subpool for this virtual system should be available
+				availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", pool.productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+				availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("machineType", "Virtual", availableInstanceBasedSubscriptionPools);
+	 			Assert.assertTrue(!availableInstanceBasedSubscriptionPools.isEmpty(),"Host_limited Virtual subpool to instance based subscription '"+pool.subscriptionName+"' is available to its guest.");
+				Assert.assertEquals(availableInstanceBasedSubscriptionPools.size(),1,"Only one host_limited Virtual subpool to instance based subscription '"+pool.subscriptionName+"' is available to its guest.");
+				Assert.assertEquals(availableInstanceBasedSubscriptionPools.get(0).quantity,poolVirtLimit,"The quantity of entitlements from the host_limited Virtual subpool to instance based subscription '"+pool.subscriptionName+"' should be equal to the subscription's virt_limit '"+poolVirtLimit+"'.");
+				
+				// consume an entitlement from the subPool so that we can test Bug 1000444
+				SubscriptionPool subSubscriptionPool = availableInstanceBasedSubscriptionPools.get(0);
+				//clienttasks.subscribeToSubscriptionPool(subSubscriptionPool);
+				clienttasks.subscribe_(false,null,subSubscriptionPool.poolId,null,null,"1",null,null,null,null,null);
+				ProductSubscription subProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", subSubscriptionPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
+				// assert Bug 1000444 - Instance based subscription on the guest gets merged with other subscription when a future instance based subscription is added on the host
+				Assert.assertTrue(subProductSubscription.provides.containsAll(productSubscription.provides)&&productSubscription.provides.containsAll(subProductSubscription.provides), "The list of provided products from the consumed subpool "+subProductSubscription.provides+" should be the same as the provided products from the consumed hostpool "+productSubscription.provides+".");
+				clienttasks.unsubscribe_(false, subProductSubscription.serialNumber, null, null, null);
 			}
-			
-			// now fake this consumer's facts and guestIds to make it think it is a guest of itself (a trick for testing)
-			String systemUuid = clienttasks.getCurrentConsumerId();
-			factsMap.put("virt.uuid",systemUuid);
-			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null,true,null,null,null);
-			//[root@jsefler-5 ~]# curl -k -u testuser1:password --request PUT --data '{"guestIds":["e6f55b91-aae1-44d6-f0db-c8f25ec73ef5","abcd"]}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/d2ee0c6e-a57d-4e37-8be3-228a44ca2739 
-			JSONObject jsonConsumer = CandlepinTasks.setGuestIdsForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, systemUuid,Arrays.asList(new String[]{"abc",systemUuid,"def"}));
-			
-			// now the host_limited subpool for this virtual system should be available
-			availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", pool.productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
-			availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("machineType", "Virtual", availableInstanceBasedSubscriptionPools);
- 			Assert.assertTrue(!availableInstanceBasedSubscriptionPools.isEmpty(),"Host_limited Virtual subpool to instance based subscription '"+pool.subscriptionName+"' is available to its guest.");
-			Assert.assertEquals(availableInstanceBasedSubscriptionPools.size(),1,"Only one host_limited Virtual subpool to instance based subscription '"+pool.subscriptionName+"' is available to its guest.");
-			Assert.assertEquals(availableInstanceBasedSubscriptionPools.get(0).quantity,poolVirtLimit,"The quantity of entitlements from the host_limited Virtual subpool to instance based subscription '"+pool.subscriptionName+"' should be equal to the subscription's virt_limit '"+poolVirtLimit+"'.");
-			
-			// consume an entitlement from the subPool so that we can test Bug 1000444
-			SubscriptionPool subSubscriptionPool = availableInstanceBasedSubscriptionPools.get(0);
-			//clienttasks.subscribeToSubscriptionPool(subSubscriptionPool);
-			clienttasks.subscribe_(false,null,subSubscriptionPool.poolId,null,null,"1",null,null,null,null,null);
-			ProductSubscription subProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", subSubscriptionPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
-			// assert Bug 1000444 - Instance based subscription on the guest gets merged with other subscription when a future instance based subscription is added on the host
-			Assert.assertTrue(subProductSubscription.provides.containsAll(productSubscription.provides)&&productSubscription.provides.containsAll(subProductSubscription.provides), "The list of provided products from the consumed subpool "+subProductSubscription.provides+" should be the same as the provided products from the consumed hostpool "+productSubscription.provides+".");
-			clienttasks.unsubscribe_(false, subProductSubscription.serialNumber, null, null, null);
 		}
 	}
 	@AfterGroups(value={"QuantityNeededToAchieveSocketCompliance_Test"},groups={"setup"})

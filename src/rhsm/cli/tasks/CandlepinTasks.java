@@ -2385,6 +2385,24 @@ schema generation failed
 		return true;
 	}
 	
+	public static boolean isPoolProductHostLimited (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		String value = getPoolProductAttributeValue(authenticator,password,url,poolId,"host_limited");
+		
+		// the absence of a "host_limited" attribute means this pool is NOT a host limited pool
+		if (value==null) return false;
+		
+		return Boolean.valueOf(value);
+	}
+	
+	public static boolean isPoolProductVirtLimited (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		String value = getPoolProductAttributeValue(authenticator,password,url,poolId,"virt_limit");	// usually a positive integer, but can be -1 to indicate "unlimited"
+		
+		// the absence of a "virt_limit" attribute means this pool is NOT a virt limited pool
+		if (value==null) return false;
+		
+		return true;
+	}
+	
 	public static boolean isPoolADataCenter (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
 		String value = (String) getPoolValue(authenticator,password,url,poolId,"derivedProductId");
 		
