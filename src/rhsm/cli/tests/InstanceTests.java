@@ -151,12 +151,14 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			
 			// assert the quantity of consumption
 			if (!providedProductIdsActuallyInstalled.isEmpty()) {
+				/* These assertions are valid ONLY when this instance-based subscription pool is the ONLY one available that provides for all of the providedProductIdsActuallyInstalled (Not guarantee-able)
 				ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", pool.subscriptionName, clienttasks.getCurrentlyConsumedProductSubscriptions());
 				Assert.assertNotNull(productSubscription, "Found a consumed product subscription to '"+pool.subscriptionName+"' after autosubscribing.");
 				Assert.assertEquals(productSubscription.quantityUsed,Integer.valueOf(1),"Autosubscribing a virtual system with instance based products installed should only consume 1 quantity from the instance based pool.");
+				*/
 			} else log.warning("There are no installed product ids '"+poolProvidedProductIds+"' to assert compliance status of instance-based subscription '"+pool.subscriptionName+"'.");
 			
-			// assert the installed provided products are compliant
+			// assert the installed provided products are compliant after auto-subscribing
 			currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 			for (String productId : poolProvidedProductIds) {
 				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, currentlyInstalledProducts);
@@ -222,11 +224,12 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 
-//TODO 11/13/2013 Work in progress... This logic was causing a failure in the stage acceptance testing and I could not remember why I did this.  At the momemt, this unsubcribe/autosubscribe doesn't make sense to me.  Let's let this run against onpremise a few times before I delete it to see if I can remember why put this here.
-//			// now let's unsubscribe from all entitlements and attempt auto-subscribing
-//			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
-//			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
-			// now let's attempt auto-subscribing which should complete the stack
+			// now let's unsubscribe from all entitlements and attempt auto-subscribing
+			/* Using autosubscribe to fill a stack of this instance-based pool will work ONLY when this instance-based subscription pool is the ONLY one available that provides for all of the providedProductIdsActuallyInstalled (Not guarantee-able)
+			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
+			*/
+			// instead let's attempt auto-subscribing which should hopefully complete the stack
 			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
 			
 			// assert the total quantity of consumption
