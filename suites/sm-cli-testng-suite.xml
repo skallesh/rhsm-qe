@@ -207,6 +207,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: RepoOverride Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="RepoOverrideTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Orgs Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />

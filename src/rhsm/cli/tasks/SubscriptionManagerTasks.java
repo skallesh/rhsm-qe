@@ -4040,6 +4040,49 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repo-override command indicates a success.");
 		
+		//	[root@jsefler-7 ~]# subscription-manager repo-override --list
+		//	Repository: content-label-10
+		//	  enabled:        1
+		//	  exclude:        foo-bar
+		//	  gpgcheck:       0
+		//	  name:           Repo content-label-10
+		//	  retries:        5
+		//	  ui_repoid_vars: releasever basearch foo
+		//
+		//	Repository: content-label-11
+		//	  enabled:        1
+		//	  exclude:        foo-bar
+		//	  gpgcheck:       0
+		//	  name:           Repo content-label-11
+		//	  retries:        5
+		//	  ui_repoid_vars: releasever basearch foo
+		
+		// assert the removeNames are actually removed from the list
+		if (removeNames!=null && !removeNames.isEmpty()) {
+			SSHCommandResult listResult = repo_override(true,null,(String)null,(String)null,null,null,null,null);
+			for (String repoId : repoIds) {
+				for (String name : removeNames) {
+					Assert.assertTrue(!SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(repoOverrideListRepositoryNameValueRegexFormat,repoId,name,"")),"After a repo-override removal, the subscription-manager repo-override list no longer reports repo override repo='"+repoId+"' name='"+name+"'.");
+				}
+			}			
+		}
+		
+		// assert the addNameValueMap are actually added to the list
+		if (addNameValueMap!=null && !addNameValueMap.isEmpty()) {
+			SSHCommandResult listResult = repo_override(true,null,(String)null,(String)null,null,null,null,null);
+			for (String repoId : repoIds) {
+				for (String name : addNameValueMap.keySet()) {
+					String value = addNameValueMap.get(name);
+					String regex = String.format(repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value);
+					Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value)),"After adding a repo-override, the subscription-manager repo-override reports repo override repo='"+repoId+"' name='"+name+"' value='"+value+"'.");
+				}
+			}
+		}
+		
+		if (removeAll!=null && removeAll) {
+			SSHCommandResult listResult = repo_override(true,null,(String)null,(String)null,null,null,null,null);
+			Assert.assertEquals(listResult.getStdout().trim(),"This system does not have any content overrides applied to it.","After removing all repo-overrides, this is the subscription-manager repo-override report.");
+		}
 		
 		return sshCommandResult;
 	}
@@ -4048,6 +4091,7 @@ public class SubscriptionManagerTasks {
 		List<String> removeNames = removeName==null?null:Arrays.asList(new String[]{removeName});
 		return repo_override(list, removeAll, repoIds, removeNames, addNameValueMap, proxy, proxyuser, proxypassword);
 	}
+	public static final String repoOverrideListRepositoryNameValueRegexFormat = "Repository: %s(\\n.+)+%s:(\\s)*%s";
 	
 	// plugins module tasks ************************************************************
 
