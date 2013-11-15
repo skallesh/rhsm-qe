@@ -267,6 +267,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		       modulesRegex = "^  [\\w-]+";	// valid after bug 848095
 		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*, --\\w+(=\\w+)*";
 		       optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.-]+)*|^  -[\\?\\w]( \\w+)*, --[\\w\\.-]+(=\\w+)*";
+		       optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.:-]+)*|^  -[\\?\\w]( \\w+)*, --[\\w\\.:-]+(=\\w+)*";
 		
 		// EXAMPLES FOR optionsRegex
 		//  -h, --help            show this help message and exit
@@ -278,7 +279,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		//  -f, --force-icon=TYPE       Force display of the icon (expired, partial or warning)
 		//  -c, --check-period          How often to check for validity (in seconds)
 		//  -i INSTNUMBER, --instnumber=INSTNUMBER
-		
+		//	--add=NAME:VALUE			name and value of the option to override separated by
+        //  							a colon (can be specified more than once)
+
 		// ========================================================================================
 		// subscription-manager MODULES
 		modules.clear();
