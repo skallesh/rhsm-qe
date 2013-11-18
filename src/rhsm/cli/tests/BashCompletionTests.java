@@ -170,6 +170,12 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			String bashCommand = helpCommand.replaceFirst("\\s*(--help-all|--help-gtk|--help)\\s*", " ").trim();	// strip out "--help"
 			bashCommand += " "; // append chars as a prefix to <tab><tab> complete the expected command line options
 			
+			// special case for rct modules [cat-cert|cat-manifest|dump-manifest|stat-cert] need to start the bash completion of the options by adding a "-" as described in https://bugzilla.redhat.com/show_bug.cgi?id=1004318#c1
+			if (bashCommand.equals("rct cat-cert ")) bashCommand += "-";
+			if (bashCommand.equals("rct cat-manifest ")) bashCommand += "-";
+			if (bashCommand.equals("rct dump-manifest ")) bashCommand += "-";
+			if (bashCommand.equals("rct stat-cert ")) bashCommand += "-";
+			
 			// transcribe the expectedHelpOptions into expectedCompletions
 			Set<String>expectedCompletions = new HashSet<String>();
 			for (String expectedHelpOption: expectedHelpOptions) {
