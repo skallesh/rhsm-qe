@@ -84,7 +84,11 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
+		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			
 				productname=installed.productName;
@@ -110,7 +114,11 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
+		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			productname=installed.productName;
 			
@@ -135,7 +143,11 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
+		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			productname=installed.productName;
 			
@@ -145,8 +157,11 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.trim(), productname.trim());
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 		Assert.assertEquals(result.trim(), productname.trim());
-		moveProductCertFiles();
-		client.runCommandAndWait("cp /root/temp1/37060.pem "+clienttasks.productCertDir);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("37060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
+		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			productname=installed.productName;
 			
@@ -173,7 +188,11 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
+		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			productname=installed.productName;
 			
@@ -202,7 +221,11 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
+		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			productname=installed.productName;
 			
@@ -258,8 +281,11 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		client.runCommand("rm -rf "+Brand_Name);
-		client.runCommandAndWait("cp /root/temp1/32060.pem  /root/temp1/37060.pem "+clienttasks.productCertDir);
-		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
+		}		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStderr();
 		String expectedMessage="cat: /var/lib/rhsm/branded_name: No such file or directory";
 		Assert.assertEquals(result.trim(), expectedMessage);
@@ -311,7 +337,11 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 			productname=installed.productName;
 		}
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
-		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
+		}
 
 		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);
 		
@@ -332,6 +362,10 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		
+				moveProductCertFiles("*");
+			
+		
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(pool.subscriptionName.contains("Instance")){
 				clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
@@ -348,14 +382,18 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify if Brand Name Creation During Repeated RHSMCERTD Updates",
-			groups={"verifyFileduringrhsmupdates"},
-			enabled=false)
+			groups={"verifyFileduringrhsmupdates","blockedByBug-907638"},
+			enabled=true)
 	public void VerifyBrand_NameCreatedDuringRepeatedRHSMCERTDUpdates() throws Exception {
 		String productname=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
+		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			productname=installed.productName;
 			
@@ -386,8 +424,11 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("system.certificate_version", String.valueOf(1));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles(installed.productId+"*"+ ".pem");
+			}
+		}		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			productname=installed.productName;
 			
 		}
@@ -398,15 +439,14 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@BeforeGroups(groups = { "setup" },value = {"verifyFile","verifyFileduringrhsmupdates","CreationWithTActivationKey","CreationWithTwoRhelproducts","CreationWithRHSMCERTD","CreationWithImport","VerifyBrand_TypeValue","VerifyBrandFileContents","VerifyBrandFileCreation","VerifyBrandFileDeletion"})
-	@BeforeClass(groups = "setup")
-	protected void moveProductCertFiles() throws IOException {
+
+	protected void moveProductCertFiles(String filename) throws IOException {
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		if(!(RemoteFileTasks.testExists(client, "/root/temp1/"))){
 			client.runCommandAndWait("mkdir " + "/root/temp1/");
 		}
-			client.runCommandAndWait("mv " + clienttasks.productCertDir + "/"+ "*" + " " + "/root/temp1/");
-		
+			client.runCommandAndWait("mv " + clienttasks.productCertDir + "/"+ filename + " " + "/root/temp1/");
+	
 		}
 	
 	@AfterGroups(groups = { "setup" }, value = {"FlexibleBranding","verifyFile","verifyFileduringrhsmupdates","CreationWithTActivationKey","CreationWithTwoRhelproducts","CreationWithRHSMCERTD","CreationWithImport","VerifyBrand_TypeValue","VerifyBrandFileContents","VerifyBrandFileCreation","VerifyBrandFileDeletion"})
