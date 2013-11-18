@@ -300,7 +300,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: python-ethtool",
 					"manual: python-iniparse",
 					//"manual: python-rhsm >= 1.9.1-1"/*RHEL65*/,
-					"manual: python-rhsm >= 1.10.3"/*RHEL70*/,
+					"manual: python-rhsm >= 1.10.6"/*RHEL70*/,
 					//"manual: python-simplejson",	// removed by bug 1006748
 					"manual: usermode",
 					"manual: virt-what",
