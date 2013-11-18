@@ -424,6 +424,71 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected String serverPrefixConfigured = null;
 	
 	
+	@Test(	description="verify that only the expected configration parameters are present in the rhsm config file; useful for detecting newly added configurations by the subscription-manager developers",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyExpectedConfigParameters_Test() {
+		
+		SSHCommandResult rawConfigList = clienttasks.config(true, null, null, (String[])null);
+		//	[root@jsefler-7 ~]# subscription-manager config --list
+		//	[server]
+		//	   hostname = jsefler-f14-candlepin.usersys.redhat.com
+		//	   insecure = [0]
+		//	   port = 8443
+		//	   prefix = /candlepin
+		//	   proxy_hostname = []
+		//	   proxy_password = []
+		//	   proxy_port = []
+		//	   proxy_user = []
+		//	   ssl_verify_depth = [3]
+		//
+		//	[rhsm]
+		//	   baseurl = [https://cdn.redhat.com]
+		//	   ca_cert_dir = [/etc/rhsm/ca/]
+		//	   consumercertdir = [/etc/pki/consumer]
+		//	   entitlementcertdir = [/etc/pki/entitlement]
+		//	   full_refresh_on_yum = [0]
+		//	   manage_repos = [1]
+		//	   pluginconfdir = [/etc/rhsm/pluginconf.d]
+		//	   plugindir = [/usr/share/rhsm-plugins]
+		//	   productcertdir = [/etc/pki/product]
+		//	   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		//	   report_package_profile = [1]
+		//
+		//	[rhsmcertd]
+		//	   autoattachinterval = [1440]
+		//	   certcheckinterval = [240]
+		//
+		//	[] - Default value in use
+		
+		// create a list of the actual config file parameter names listed above
+		List<String> allActualConfFileParameterNames = new ArrayList<String>();
+		for (String regexMatch : getSubstringMatches(rawConfigList.getStdout(),"^   [\\w]+")) {
+			allActualConfFileParameterNames.add(regexMatch.trim().toLowerCase());
+		}
+		
+		// create an expected list of the config file parameter names from our hardcoded testware defaultConfFileParameterNames() getter
+		List<String> allExpectedConfFileParameterNames = new ArrayList<String>();
+		allExpectedConfFileParameterNames.addAll(clienttasks.defaultConfFileParameterNames("server",true));
+		allExpectedConfFileParameterNames.addAll(clienttasks.defaultConfFileParameterNames("rhsm",true));
+		allExpectedConfFileParameterNames.addAll(clienttasks.defaultConfFileParameterNames("rhsmcertd",true));
+		
+		// assert that only the expected list of configuration parameters are listed
+		boolean allActualConfFileParameterNameAreExpected=true;
+		for (String actualConfFileParameterName : allActualConfFileParameterNames) {
+			if (allExpectedConfFileParameterNames.contains(actualConfFileParameterName)) {
+				Assert.assertTrue(allExpectedConfFileParameterNames.contains(actualConfFileParameterName),"Actual configuration parameter '"+actualConfFileParameterName+"' is among the expected configuration parameters.");
+			} else {
+				log.warning("Actual configuration parameter '"+actualConfFileParameterName+"' is NOT among the expected configuration parameters.  It is likely that this configuration parameter has recently been added by subscription-manager developers, and new test coverage is needed.");
+				allActualConfFileParameterNameAreExpected=false;
+			}
+		}
+		Assert.assertTrue(allActualConfFileParameterNameAreExpected,"All of the actual configuration parameters are among the expected configuration parameters.  If this fails, see the warnings logged above.");
+	}
+	
+	
+	
 	
 	
 	
@@ -542,6 +607,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"pluginconfdir",			"/tmp/rhsm/pluginconfdir"}));
 //988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"100"}));
 //988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"1000"}));
+		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"full_refresh_on_yum",	"1"}));	// was added as part of RFE Bug 803746
 		
 //988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"ca_cert_dir",			"/tmp/rhsmcertd/ca_cert_dir"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"300"}));
