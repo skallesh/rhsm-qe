@@ -152,10 +152,39 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that manual edits to enable repos in redhat.repo are preserved.",
 			groups={"blockedByBug-905546"},
 			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
-			enabled=true)
+			enabled=false)	// with the implementation of RFE Bug 803746, manual edits to the enablement of redhat repos is now forbidden.  This test is being disabled in favor of ManualEditsToEnablementOfRedhatReposIsForbidden_Test
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListPreservesManualEditsToEnablementOfRedhatRepos_Test(YumRepo yumRepo){
 		verifyTogglingTheEnablementOfRedhatRepo(yumRepo,true);
+	}
+	@Test(	description="subscription-manager: verify that manual edits to enable repos in redhat.repo are forbidden by documented warning.",
+			groups={"blockedByBug-1032243"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ManualEditsToEnablementOfRedhatReposIsForbidden_Test(){	// replacement for ReposListPreservesManualEditsToEnablementOfRedhatRepos_Test
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.yumClean("all");	// to trip the subscription-manager yum plugin
+		
+		SSHCommandResult result = client.runCommandAndWaitWithoutLogging("cat "+clienttasks.redhatRepoFile);
+		//	[root@jsefler-7 ~]# cat /etc/yum.repos.d/redhat.repo  | head -10
+		//	#
+		//	# Certificate-Based Repositories
+		//	# Managed by (rhsm) subscription-manager
+		//	#
+		//	# *** This file is auto-generated.  Changes made here will be over-written. ***
+		//	# *** Use "subscription-manager override" if you wish to make changes. ***
+		//	#
+		//	# If this file is empty and this system is subscribed consider 
+		//	# a "yum repolist" to refresh available repos
+		//	#
+
+		String expectedMessage;
+		expectedMessage = "*** This file is auto-generated.  Changes made here will be over-written. ***";
+		Assert.assertTrue(result.getStdout().contains(expectedMessage),"File '"+clienttasks.redhatRepoFile+"' warns the user with expected message '"+expectedMessage+"'.");
+		expectedMessage = "*** Use \"subscription-manager override --help\" if you wish to make changes. ***";
+		expectedMessage = "*** Use \"subscription-manager repo-override --help\" if you wish to make changes. ***";
+		Assert.assertTrue(result.getStdout().contains(expectedMessage),"File '"+clienttasks.redhatRepoFile+"' warns the user with expected message '"+expectedMessage+"'.");
 	}
 
 	
