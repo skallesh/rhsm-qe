@@ -992,6 +992,8 @@ public class SubscriptionManagerTasks {
 	/**
 	 * run /usr/libexec/rhsmcertd-worker as a faster alternative to restart_rhsmcertd(...) to avoid a two minute sleep delay waiting for the cert check updates.
 	 * @param options  pass a string of command line options, for example: --autoheal -h --help
+	 * <br>Note: passing "--autoheal" will trigger what happens on the autoAttachInterval
+	 * <br>Note: passing "" will trigger what happens on the certCheckInterval
 	 */
 	public void run_rhsmcertd_worker(String options) {
 		if (options==null) options="";
