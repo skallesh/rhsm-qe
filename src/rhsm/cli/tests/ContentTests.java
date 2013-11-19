@@ -25,6 +25,8 @@ import org.testng.annotations.Test;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
+
+import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
@@ -847,6 +849,57 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="Verify that all there is at least one available RHEL subscription and that yum content is available for the installed RHEL product cert",
+			groups={"AcceptanceTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyRhelContentSubscriptionContentIsAvailable_Test() throws JSONException, Exception {
+		
+		// get the currently installed RHEL product cert
+		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
+		Assert.assertNotNull(rhelProductCert, "Expecting a RHEL Product Cert to be installed.");
+		log.info("RHEL product cert installed: "+rhelProductCert);
+		
+		// register and make sure autoheal is off
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
+		
+		// verify that NO yum content is available since no entitlements have been granted
+		Assert.assertEquals(clienttasks.getYumRepolistPackageCount("enabled"),new Integer(0),"Expecting no enabled repo content available because no RHEL subscription has been attached.");
+		
+		// loop through the available pools looking for those that provide content for this rhelProductCert
+		boolean rhelYumContentIsAvailable = true;
+		boolean rhelSubscriptionIsAvailable = false;
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			if (CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId).contains(rhelProductCert.productId)) {
+				
+				// subscribe
+				EntitlementCert rhelEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool, sm_clientUsername, sm_clientPassword, sm_serverUrl));
+				
+				// verify that rhel yum content is available
+				Integer yumRepolistPackageCount = clienttasks.getYumRepolistPackageCount("enabled");
+				if (yumRepolistPackageCount>0) {
+					Assert.assertTrue(yumRepolistPackageCount>0,"Expecting many available packages (actual='"+yumRepolistPackageCount+"') of enabled repo content because RHEL subscription '"+pool.subscriptionName+"' SKU '"+pool.productId+"' was just attached.");
+				} else {
+					log.warning("No enabled yum repo content packages are available after attaching RHEL subscription '"+pool.subscriptionName+"'.");
+					rhelYumContentIsAvailable = false;
+				}
+				
+				// unsubscribe
+				clienttasks.unsubscribe(null, rhelEntitlementCert.serialNumber, null, null, null);
+				
+				rhelSubscriptionIsAvailable = true;
+			}
+		}
+		if (!rhelSubscriptionIsAvailable && sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("Skipping this test against a standalone Candlepin server that has no RHEL subscriptions available.");
+		Assert.assertTrue(rhelSubscriptionIsAvailable,"Successfully subscribed to at least one available RHEL subscription that provided for our installed RHEL product cert: "+rhelProductCert);
+		Assert.assertTrue(rhelYumContentIsAvailable,"All of the RHEL subscriptions subscribed provided at least one enabled yum content package applicable for our installed RHEL product cert: "+rhelProductCert+" (See WARNINGS logged above for failed subscriptions)");
+	}
+	
+	
+	
+	
+	
 	
 	
 	
@@ -904,7 +957,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 	
-	@BeforeClass(groups="setup")
+//uncomment after debugTesting	@BeforeClass(groups="setup")
 	public void createSubscriptionsWithVariationsOnContentSizes() throws JSONException, Exception {
 		String marketingProductName,engineeringProductName,marketingProductId,engineeringProductId;
 		Map<String,String> attributes = new HashMap<String,String>();
