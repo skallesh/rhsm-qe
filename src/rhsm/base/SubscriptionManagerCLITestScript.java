@@ -361,7 +361,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
 			if (clienttasks!=null) {
 				Assert.assertEquals(clienttasks.sshCommandRunner.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+clienttasks.sshCommandRunner.getConnection().getHostname());
-				RemoteFileTasks.markFile(clienttasks.sshCommandRunner, clienttasks.varLogAuditFile, selinuxSuiteMarker);
+				RemoteFileTasks.markFile(clienttasks.sshCommandRunner, clienttasks.auditLogFile, selinuxSuiteMarker);
 
 			}
 		}
@@ -371,7 +371,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void MarkSELinuxAuditLogBeforeClass() {
 		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
 			if (clienttasks!=null) {
-				RemoteFileTasks.markFile(clienttasks.sshCommandRunner, clienttasks.varLogAuditFile, selinuxClassMarker);
+				RemoteFileTasks.markFile(clienttasks.sshCommandRunner, clienttasks.auditLogFile, selinuxClassMarker);
 			}
 		}
 	}
@@ -379,7 +379,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void verifyNoSELinuxDenialsWereLoggedAfterClass() {
 		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
 			if (clienttasks!=null) {
-				Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(clienttasks.sshCommandRunner, clienttasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log '"+clienttasks.varLogAuditFile+"' on client "+clienttasks.sshCommandRunner.getConnection().getHostname()+" while executing this test class.");
+				Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(clienttasks.sshCommandRunner, clienttasks.auditLogFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log '"+clienttasks.auditLogFile+"' on client "+clienttasks.sshCommandRunner.getConnection().getHostname()+" while executing this test class.");
 			}
 		}
 	}

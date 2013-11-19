@@ -1439,16 +1439,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 	String SyslogMessage="Added subscription for product '";
 	String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, LogMarker);
 	clienttasks.subscribe(true, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
-	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, null),SyslogMessage);
+	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, LogMarker, null),SyslogMessage);
 
 	
 	SyslogMessage="Removed subscription for ";
 	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, LogMarker);
 	clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
-	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, null),SyslogMessage);
+	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, LogMarker, null),SyslogMessage);
 	
 	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 	for (SubscriptionPool available : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
@@ -1456,18 +1456,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	SyslogMessage="Added subscription for ";
-	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, LogMarker);
 	clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null);
-	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, null),SyslogMessage);
+	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, LogMarker, null),SyslogMessage);
 		
 	for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 		serialnums=consumed.serialNumber;
 	}
 	SyslogMessage="Removed subscription for ";
 	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-	RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, LogMarker);
+	RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, LogMarker);
 	clienttasks.unsubscribe(null, serialnums, null, null, null);
-	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, LogMarker, null),SyslogMessage);
+	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, LogMarker, null),SyslogMessage);
 
 	}
 	
@@ -1483,10 +1483,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
 	String consumerid=clienttasks.getCurrentConsumerId();
 	String SyslogMessage="Registered system with identity: "+consumerid;
-		RemoteFileTasks.runCommandAndAssert(client,"tail -10 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -10 "+clienttasks.messagesLogFile, null, SyslogMessage, null);
 	clienttasks.unregister(null, null, null);	
 	SyslogMessage="Unregistered machine with identity: "+consumerid;
-	RemoteFileTasks.runCommandAndAssert(client,"tail -10 "+clienttasks.varLogMessagesFile, null, SyslogMessage, null);
+	RemoteFileTasks.runCommandAndAssert(client,"tail -10 "+clienttasks.messagesLogFile, null, SyslogMessage, null);
 
 	}
 	

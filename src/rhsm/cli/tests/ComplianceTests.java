@@ -320,7 +320,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRhsmCompliancedWhenSomeProductsAreSubscribable_Test() {
 		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
 		String command = clienttasks.rhsmComplianceD+" -s -d";
-		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, TestRecords.action());
+		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.messagesLogFile, TestRecords.action());
 		SSHCommandResult sshCommandResult;
 		
 		// verify the stdout message
@@ -455,7 +455,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRhsmCompliancedWhenNoProductsAreSubscribable_Test() {
 		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
 		String command = clienttasks.rhsmComplianceD+" -s -d";
-		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, TestRecords.action());
+		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.messagesLogFile, TestRecords.action());
 		SSHCommandResult sshCommandResult;
 		
 		// verify the stdout message

@@ -62,21 +62,22 @@ public class SubscriptionManagerTasks {
 	public final String command				= "subscription-manager";
 	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
-	public final String rhsmcertdLogFile	= "/var/log/rhsm/rhsmcertd.log";
+	public final String factsDir			= "/etc/rhsm/facts";
 	public final String rhsmUpdateFile		= "/var/run/rhsm/update";
-	public final String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
 	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 	public final String rhnPluginConfFile	= "/etc/yum/pluginconf.d/rhnplugin.conf";
-	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
-	public final String productIdJsonFile	= "/var/lib/rhsm/productid.js";	// maps a product id to the repository from which it came; managed by subscription-manager's ProductDatabase python class
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String rhnUp2dateFile		= "/etc/sysconfig/rhn/up2date";
-	public final String factsDir			= "/etc/rhsm/facts";
+	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
+	public final String productIdJsonFile	= "/var/lib/rhsm/productid.js";	// maps a product id to the repository from which it came; managed by subscription-manager's ProductDatabase python class
+	public final String rhsmCacheRepoOverridesFile	= "/var/lib/rhsm/cache/content_overrides.json";
 	public final String certVersionFactsFilename	= "automation_forced_certificate_version.facts";
 	public final String overrideFactsFilename		= "automation_override.facts";
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
-	public final String varLogMessagesFile	= "/var/log/messages";
-	public final String varLogAuditFile		= "/var/log/audit/audit.log";
+	public final String rhsmcertdLogFile	= "/var/log/rhsm/rhsmcertd.log";
+	public final String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
+	public final String messagesLogFile		= "/var/log/messages";
+	public final String auditLogFile		= "/var/log/audit/audit.log";
 	public final String rhsmCertD			= "rhsmcertd";
 	public final String rhsmCertDWorker		= "/usr/libexec/rhsmcertd-worker";
 	public final String rhsmComplianceD		= "/usr/libexec/rhsmd";	// /usr/libexec/rhsm-complianced; RHEL61
@@ -985,6 +986,16 @@ public class SubscriptionManagerTasks {
 		} else {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service rhsmcertd stop && service rhsmcertd status", Integer.valueOf(3), "^rhsmcertd is stopped$", null);  // exit code 3 = program not running		// reference Bug 232163; Bug 679812
 		}
+	}
+	
+	
+	/**
+	 * run /usr/libexec/rhsmcertd-worker as a faster alternative to restart_rhsmcertd(...) to avoid a two minute sleep delay waiting for the cert check updates.
+	 * @param options  pass a string of command line options, for example: --autoheal -h --help
+	 */
+	public void run_rhsmcertd_worker(String options) {
+		if (options==null) options="";
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, rhsmCertDWorker+" "+options, Integer.valueOf(0));
 	}
 	
 	public void waitForRegexInRhsmcertdLog(String logRegex, int timeoutMinutes) {
