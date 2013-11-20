@@ -4,8 +4,10 @@ import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONException;
@@ -496,7 +498,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: manually add more yum repository options to redhat.repo and assert persistence.",
-			enabled=true,
+			enabled=false, 	// with the implementation of RFE Bug 803746, manual edits to add more repository options to the redhat.repos is now forbidden.  This test is being disabled in favor of ManualEditsToEnablementOfRedhatReposIsForbidden_Test and 
 			groups={"AcceptanceTests","blockedByBug-845349","blockedByBug-834806"})
 	//@ImplementsNitrateTest(caseId=)
 	public void YumRepoListPreservesAdditionalOptionsToRedhatRepos_Test() throws JSONException, Exception {
@@ -558,7 +560,78 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			// THIS WILL LIKELY NOT BE EQUAL WHEN THE yumRepoAfterUpdate.baseurl POINTS TO RHEL CONTENT SINCE IT WILL CONTAIN THE RELEASE PREFERENCE SUBSTITUTED FOR $releasever	//Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Yum repo ["+yumRepo.id+"] has persisted all of its repository option values even after setting a release and issuing a yum transaction.");
 		}
 	}
-	
+	@Test(	description="subscription-manager: add more yum repository options to redhat.repo and assert persistence using repo-override module.",
+			enabled=true,	// this test replaces the former YumRepoListPreservesAdditionalOptionsToRedhatRepos_Test
+			groups={"AcceptanceTests","blockedByBug-845349","blockedByBug-834806","blockedByBug-803746"})
+	//@ImplementsNitrateTest(caseId=)
+	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingRepoOverride_Test() throws JSONException, Exception {
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
+		
+		// randomly choose one of the YumRepos, set new option values, and manually update the yum repo
+		YumRepo yumRepo = subscribedYumRepos.get(randomGenerator.nextInt(subscribedYumRepos.size()));
+		//yumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", "awesomeos-modifier",subscribedYumRepos);	// debugTesting case when yum repo comes from a modifier entitlement
+		//yumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", "content-label-no-gpg",subscribedYumRepos);	// debugTesting case when sslclientcert appears to change.
+		yumRepo.exclude = "my-test-pkg my-test-pkg-* my-test-pkgversion-?";
+		yumRepo.priority = new Integer(10);
+		if (false) {
+			// previously supported manual edits to redhat.repos
+			clienttasks.updateYumRepo(clienttasks.redhatRepoFile, yumRepo);
+		} else {
+			// newly supported process for adding redhat.repo edits
+			Map<String,String> addNameValueMap = new HashMap<String,String>();
+			addNameValueMap.put("exclude",  "my-test-pkg my-test-pkg-* my-test-pkgversion-?");
+			addNameValueMap.put("priority",  "10");
+			clienttasks.repo_override(null, null, yumRepo.id, null, addNameValueMap, null, null, null);			
+		}
+		
+		// assert that the manually added repository options do not get clobbered by a new yum transaction
+		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin");	// issue a new yum transaction
+		YumRepo yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());	// getCurrentlySubscribedYumRepos() includes a yum transaction: "yum -q repolist --disableplugin=rhnplugin"	(NOT ANYMORE after bug 1008016)
+		Assert.assertNotNull(yumRepoAfterUpdate, "Found yum repo ["+yumRepo.id+"] after we manually altered it and issued a yum transaction.");
+		Assert.assertEquals(yumRepoAfterUpdate.exclude, yumRepo.exclude, "Yum repo ["+yumRepo.id+"] has persisted the manually added \"exclude\" option and its value.");
+		Assert.assertEquals(yumRepoAfterUpdate.priority, yumRepo.priority, "Yum repo ["+yumRepo.id+"] has persisted the manually added \"priority\" option and its value.");
+		Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Yum repo ["+yumRepo.id+"] has persisted all of its repository option values after running a yum transaction.");
+		
+		// also assert that the repository values persist even after refresh
+		clienttasks.removeAllCerts(false,true,false);
+		clienttasks.refresh(null,null,null);
+		yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());
+		
+		/* temporary idea to figure how why an sslclientcert would change; did not prove to be true; keeping for future
+		BigInteger bi = clienttasks.getSerialNumberFromEntitlementCertFile(new File(yumRepoAfterUpdate.sslclientcert));
+		SubscriptionPool sp = clienttasks.getSubscriptionPoolFromProductSubscription(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", bi, clienttasks.getCurrentlyConsumedProductSubscriptions()), sm_clientUsername, sm_clientPassword);
+		if (CandlepinTasks.isPoolAModifier(sm_clientUsername, sm_clientPassword, sp.poolId, sm_serverUrl)) {
+			yumRepoAfterUpdate.sslclientcert = null;
+			yumRepoAfterUpdate.sslclientkey = null;
+			yumRepo.sslclientcert = null;
+			yumRepo.sslclientkey = null;
+			Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Discounting the sslclientcert and sslclientkey, yum repo ["+yumRepo.id+"] still persists all of its repository option values after running refresh and a yum transaction.");
+		
+		} else {
+			Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Yum repo ["+yumRepo.id+"] still persists all of its repository option values after running refresh and a yum transaction.");
+		}
+		*/
+		//Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Yum repo ["+yumRepo.id+"] still persists all of its repository option values after running refresh and a yum transaction.");
+		yumRepoAfterUpdate.sslclientcert = null; yumRepo.sslclientcert = null; 
+		yumRepoAfterUpdate.sslclientkey	= null; yumRepo.sslclientkey = null;
+		Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Discounting changes to the sslclientcert and sslclientkey, yum repo ["+yumRepo.id+"] still persists all of its repository option values after running refresh and a yum transaction.");
+		
+		// also assert (when possible) that the repository values persist even after setting a release preference
+		List<String> releases = clienttasks.getCurrentlyAvailableReleases(null,null,null);
+		if (!releases.isEmpty()) {
+			clienttasks.release(null, null, releases.get(randomGenerator.nextInt(releases.size())), null, null, null, null);
+			yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());
+			Assert.assertNotNull(yumRepoAfterUpdate, "Found yum repo ["+yumRepo.id+"] after we manually altered it, set a release, and issued a yum transaction.");
+			Assert.assertEquals(yumRepoAfterUpdate.exclude, yumRepo.exclude, "Yum repo ["+yumRepo.id+"] has persisted the manually added \"exclude\" option and its value even after setting a release and issuing a yum transaction.");
+			Assert.assertEquals(yumRepoAfterUpdate.priority, yumRepo.priority, "Yum repo ["+yumRepo.id+"] has persisted the manually added \"priority\" option and its value even after setting a release and issuing a yum transaction.");
+			// THIS WILL LIKELY NOT BE EQUAL WHEN THE yumRepoAfterUpdate.baseurl POINTS TO RHEL CONTENT SINCE IT WILL CONTAIN THE RELEASE PREFERENCE SUBSTITUTED FOR $releasever	//Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Yum repo ["+yumRepo.id+"] has persisted all of its repository option values even after setting a release and issuing a yum transaction.");
+		}
+	}
 	
 	
 	@Test(	description="Verify that the redhat.repo file is refreshed with changes to the entitlements (yum transactions are no longer required to update the redhat.repo)",

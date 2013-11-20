@@ -4094,8 +4094,8 @@ public class SubscriptionManagerTasks {
 			for (String repoId : repoIds) {
 				for (String name : addNameValueMap.keySet()) {
 					String value = addNameValueMap.get(name);
-					String regex = String.format(repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value);
-					Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value)),"After adding a repo-override, the subscription-manager repo-override reports repo override repo='"+repoId+"' name='"+name+"' value='"+value+"'.");
+					String regex = String.format(repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+					Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After adding a repo-override, the subscription-manager repo-override reports override repo='"+repoId+"' name='"+name+"' value='"+value+"'.");
 				}
 			}
 		}
