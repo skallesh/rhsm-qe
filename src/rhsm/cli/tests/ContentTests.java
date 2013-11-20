@@ -853,7 +853,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			groups={"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRhelContentSubscriptionContentIsAvailable_Test() throws JSONException, Exception {
+	public void VerifyRhelSubscriptionContentIsAvailable_Test() throws JSONException, Exception {
 		
 		// get the currently installed RHEL product cert
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
