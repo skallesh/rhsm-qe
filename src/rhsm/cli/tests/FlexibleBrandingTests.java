@@ -86,7 +86,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles(installed.productId+"*"+ ".pem");
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
@@ -116,7 +116,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles(installed.productId+"*"+ ".pem");
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
@@ -145,7 +145,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles(installed.productId+"*"+ ".pem");
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
@@ -159,7 +159,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.trim(), productname.trim());
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("37060"))){
-				moveProductCertFiles(installed.productId+"*"+ ".pem");
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
@@ -190,7 +190,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles(installed.productId+"*"+ ".pem");
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
@@ -223,7 +223,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles(installed.productId+"*"+ ".pem");
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
@@ -283,7 +283,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		client.runCommand("rm -rf "+Brand_Name);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles(installed.productId+"*"+ ".pem");
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStderr();
@@ -339,7 +339,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles(installed.productId+"*"+ ".pem");
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}
 
@@ -391,7 +391,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles(installed.productId+"*"+ ".pem");
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
@@ -426,7 +426,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.facts(null, true, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles(installed.productId+"*"+ ".pem");
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			productname=installed.productName;
