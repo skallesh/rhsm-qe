@@ -314,7 +314,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		clienttasks.config(null, null, true, new String[]{"rhsm","full_refresh_on_yum","0"});
 		client.runCommandAndWait("rm -f "+clienttasks.rhsmCacheRepoOverridesFile);
 		Assert.assertFalse(RemoteFileTasks.testExists(client, clienttasks.rhsmCacheRepoOverridesFile));
-		clienttasks.run_rhsmcertd_worker("");	//clienttasks.restart_rhsmcertd(null, null, false, true);	// use run_rhsmcertd_worker as a faster alternative to restart_rhsmcertd
+		clienttasks.run_rhsmcertd_worker(null);	//clienttasks.restart_rhsmcertd(null, null, false, true);	// use run_rhsmcertd_worker as a faster alternative to restart_rhsmcertd
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhsmCacheRepoOverridesFile),"Testing for the restoration of cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"' after running rhsmcertd_worker to trigger a certificates update.");
 		clienttasks.getYumRepolist("all");
 		currentYumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", repoId,  clienttasks.getCurrentlySubscribedYumRepos());

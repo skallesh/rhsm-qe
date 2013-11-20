@@ -991,13 +991,20 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * run /usr/libexec/rhsmcertd-worker as a faster alternative to restart_rhsmcertd(...) to avoid a two minute sleep delay waiting for the cert check updates.
-	 * @param options  pass a string of command line options, for example: --autoheal -h --help
-	 * <br>Note: passing "--autoheal" will trigger what happens on the autoAttachInterval
-	 * <br>Note: passing "" will trigger what happens on the certCheckInterval
+	 * @param autoheal - passing true will trigger what happens on the autoAttachInterval; otherwise the certCheckInterval events will trigger
+	 * @return the command result
 	 */
-	public void run_rhsmcertd_worker(String options) {
-		if (options==null) options="";
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, rhsmCertDWorker+" "+options, Integer.valueOf(0));
+	public SSHCommandResult run_rhsmcertd_worker(Boolean autoheal) {
+		String command = this.rhsmCertDWorker;
+		
+		if (autoheal!=null && autoheal)		command += " --autoheal";
+		
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		
+		// assert results...
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from command '"+command+"' indicates a success.");
+
+		return sshCommandResult;
 	}
 	
 	public void waitForRegexInRhsmcertdLog(String logRegex, int timeoutMinutes) {
