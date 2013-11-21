@@ -476,6 +476,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		
 		log.info("Finally test with a registered user and verify that the rhsmcertd succeeds because he can identify himself to the candlepin server.");
+		if (true) {	// WORKAROUND for new RHEL7 selinux-policy troubles
+			// Although the following register with consumerid will successfully re-establish a good /etc/pki/consumer/cert.pem, the selinux-policy on RHEL7 is not happy with the permissions on the file after "Corrupting the identity cert by borking its content..."
+			// The result is the following error in rhsm.log and the audit.log
+			//
+			//	2013-11-21 12:16:54,135 [WARNING] rhsmcertd-worker @identity.py:64 - possible certificate corruption
+			//	2013-11-21 12:16:54,136 [ERROR] rhsmcertd-worker @identity.py:65 - [Errno 13] Permission denied: '/etc/pki/consumer/cert.pem'
+			//	2013-11-21 12:16:54,136 [ERROR] rhsmcertd-worker @rhsmcertd-worker:43 - Either the consumer is not registered or the certificates are corrupted. Certificate update using daemon failed.
+			//
+			//	type=AVC msg=audit(1385054754.518:21794): avc:  denied  { open } for  pid=22456 comm="rhsmcertd-worke" path="/etc/pki/consumer/cert.pem" dev="dm-1" ino=25317473 scontext=system_u:system_r:rhsmcertd_t:s0 tcontext=unconfined_u:object_r:user_tmp_t:s0 tclass=file
+			//	type=SYSCALL msg=audit(1385054754.518:21794): arch=c000003e syscall=2 success=no exit=-13 a0=147ab10 a1=0 a2=1b6 a3=0 items=0 ppid=20771 pid=22456 auid=4294967295 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=4294967295 comm="rhsmcertd-worke" exe="/usr/bin/python2.7" subj=system_u:system_r:rhsmcertd_t:s0 key=(null)
+			//
+			// The WORKAROUND is to tell subscription-manager to clean before registering with the consumerId
+			clienttasks.clean(null, null, null);
+		}
 	    clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
 		clienttasks.restart_rhsmcertd(minutes, null, false, true); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
