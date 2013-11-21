@@ -5367,6 +5367,15 @@ public class SubscriptionManagerTasks {
 		//	Updating certificate-based repositories.
 		//	repolist: 0
 		
+		//	[root@localhost ~]# yum repolist all
+		//	Loaded plugins: product-id, subscription-manager
+		//	This system is receiving updates from Red Hat Subscription Management.
+		//	repo id                         repo name                                              status
+		//	rhel-7-public-beta-debug-rpms   Red Hat Enterprise Linux 7 Public Beta (Debug RPMs)    disabled
+		//	!rhel-7-public-beta-rpms        Red Hat Enterprise Linux 7 Public Beta (RPMs)          enabled: 9,497
+		//	rhel-7-public-beta-source-rpms  Red Hat Enterprise Linux 7 Public Beta (Source RPMs)   disabled
+		//	repolist: 9,497
+		
 		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
 		int repolistStartLn = 0;
 		int repolistEndLn = 0;
@@ -5382,6 +5391,21 @@ public class SubscriptionManagerTasks {
 		// the repo id may be appended with a /$releasever/$basearch suffix on RHEL7; strip it off!
 		// see NOTABUG Bug 905544 - yum repolist is including /$releasever/$basearch as a suffix to the repo id
 		for (int i=0; i<repoList.size(); i++) repoList.set(i, repoList.get(i).split("/")[0]);
+		
+		// the repo id may be prefixed with an exclamation point on RHEL7; strip it off!
+		// Explanation from James Antill
+		//	 Damn, I was sure I'd documented this but it's not there :(.
+		//
+		//	 It was added around the same time as "metadata_expire_filter" because
+		//	after that feature was added if you just did "simple" yum commands then
+		//	yum wouldn't trigger new metadata downloads.
+		//	 In repolist the '!' signifies that new metadata would have been checked
+		//	for, if metadata_expire_filter=never (in other words the cache check for
+		//	the repo. is older than the metadata_expire time for the repo.). But it
+		//	hasn't, because of metadata_expire_filter, hence "not" before the repo.
+		//
+		//	 /me off to write that again in man page.
+		for (int i=0; i<repoList.size(); i++) repoList.set(i, repoList.get(i).replaceFirst("^!", ""));
 		
 		return repoList;
 	}
