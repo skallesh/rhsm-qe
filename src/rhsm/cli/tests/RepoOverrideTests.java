@@ -35,7 +35,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListRepoOverridesIsTheDefault_Test() {
-
+		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
@@ -67,7 +67,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptToOverrideBaseurl_Test() {
-
+		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
@@ -83,6 +83,30 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);		
 		Assert.assertEquals(result.getStderr().trim(), "The value for name 'baseurl' is not allowed to be overridden.", "Stderr from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+	}
+	
+	@Test(	description="attempt to add an override to a non-existant repo",
+			groups={"blockedByBug-1032673"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptToAddOverrideToNonExistantRepo_Test() {
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// subscribe to a random pool (so as to consume an entitlement)
+		attachRandomSubscriptionThatProvidesYumRepos();
+		
+		// attempt to add an override to non-existant-repos
+		List<String> repos = Arrays.asList(new String[]{"non-existant-repo-1","non-existant-repo-2"});
+		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
+		repoOverrideNameValueMap.put("test", "value");
+		SSHCommandResult result = clienttasks.repo_override_(null, null, repos, null, repoOverrideNameValueMap, null, null, null);
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add repo-overrides to non-existant repos "+repos);
+		for (String repo : repos) {
+			String expectedStdoutMessage = String.format("Repository '%s' does not currently exist, but the override has been added.",repo);
+			Assert.assertTrue(result.getStdout().trim().contains(expectedStdoutMessage), "Stdout from the attempt to add an override to a non-existant repo contains the expected feedback message '"+expectedStdoutMessage+"'.");
+		}
 	}
 	
 	@Test(	description="add yum repo overrides, verify they persist, and remove them one repo at a time",
@@ -171,7 +195,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AddAndRemoveRepoOverridesUsingMultipleRepos_Test() {
-
+		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
