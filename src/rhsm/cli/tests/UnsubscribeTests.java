@@ -76,11 +76,16 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41903)
-	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool){
+	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool) throws JSONException, Exception{
 		client.runCommandAndWait("killall -9 yum");
 		
+		// choose a quantity before subscribing to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
+		String quantity = null;
+		if (subscriptionPool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
+		if (subscriptionPool.suggested>1 && quantity==null) quantity = subscriptionPool.suggested.toString();
+
 		// subscribe to a pool
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(subscriptionPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(subscriptionPool,quantity,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		List <EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
 		entitlementCerts.add(entitlementCert);

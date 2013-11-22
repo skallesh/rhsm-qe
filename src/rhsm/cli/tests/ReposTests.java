@@ -57,7 +57,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		// choose a quantity before subscribing to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
 		String quantity = null;
 		if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
-		if (pool.suggested>1) quantity = pool.suggested.toString();
+		if (pool.suggested>1 && quantity==null) quantity = pool.suggested.toString();
 		
 		// subscribe and get the granted entitlement
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);	// for this test, we can skip the exhaustive asserts done by this call to clienttasks.subscribeToSubscriptionPool(pool)
