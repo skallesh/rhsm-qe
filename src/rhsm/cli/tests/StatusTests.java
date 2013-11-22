@@ -283,11 +283,11 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			
 			// asset the list status output
 			if (productSubscription.statusDetails.isEmpty()) {
-				Assert.assertTrue(getSubstringMatches(statusResult.getStdout(), "^.*"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+".*:").isEmpty(),
+				Assert.assertTrue(getSubstringMatches(statusResult.getStdout(), "(^|/)"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+"(|/.+):").isEmpty(),
 						"Expecting the empty status details "+productSubscription.statusDetails+" of consumed subscription '"+productSubscription.productName+"' to NOT appear in the list of overall status details.");
 			} else {
 				for (String statusDetail : productSubscription.statusDetails) {
-					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^.*"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+".*:(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")).isEmpty(),
+					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "(^|/)"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+"(|/.+):(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")).isEmpty(),
 							"Expecting the status detail '"+statusDetail+"' of consumed subscription '"+productSubscription.productName+"' to appear in the list of overall status details.");
 					//Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+statusDetail+"){2,}"),
 					//		"Status detail '"+statusDetail+"' of consumed subscription '"+productSubscription+"' should NOT appear in duplicate.");
