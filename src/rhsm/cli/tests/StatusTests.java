@@ -284,7 +284,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			// asset the list status output
 			if (productSubscription.statusDetails.isEmpty()) {
 				Assert.assertTrue(getSubstringMatches(statusResult.getStdout(), "^.*"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+".*:").isEmpty(),
-						"Expecting the empty status details "+productSubscription.statusDetails+" of consumed subscription '"+productSubscription.productName+" to NOT appear in the list of overall status details.");
+						"Expecting the empty status details "+productSubscription.statusDetails+" of consumed subscription '"+productSubscription.productName+"' to NOT appear in the list of overall status details.");
 			} else {
 				for (String statusDetail : productSubscription.statusDetails) {
 					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^.*"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+".*:(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")).isEmpty(),
