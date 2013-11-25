@@ -109,11 +109,48 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
 	}
 	
-	@Test(	description="attempt to add an override to a non-existant repo",
+	@Test(	description="attempt to add an override to a non-existant repo (while NOT consuming entitlements)",
+			groups={"blockedByBug-1032673","blockedByBug-1034396"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AddOverrideWithoutEntitlementsAttached_Test() {
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// attempt to add an override to non-existant-repos (without entitlements attached)
+		List<String> repos = Arrays.asList(new String[]{"any-repo-1","Any-Repo-2"});
+		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
+		repoOverrideNameValueMap.put("any_parameter", "value");
+		SSHCommandResult result = clienttasks.repo_override_(null, null, repos, null, repoOverrideNameValueMap, null, null, null);
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add repo-overrides to non-existant repos "+repos);
+		for (String repo : repos) {
+			String expectedStdoutMessage = String.format("Repository '%s' does not currently exist, but the override has been added.",repo);
+			Assert.assertTrue(result.getStdout().trim().contains(expectedStdoutMessage), "Stdout from the attempt to add an override to a non-existant repo contains the expected feedback message '"+expectedStdoutMessage+"'.");
+		}
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "The exit code from the repo-override command indicates a success.");
+		
+		// assert the repoOverrideNameValueMap were actually added to the list
+		if (repoOverrideNameValueMap!=null && !repoOverrideNameValueMap.isEmpty()) {
+			SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+			for (String repoId : repos) {
+				for (String name : repoOverrideNameValueMap.keySet()) {
+					String value = repoOverrideNameValueMap.get(name);
+					String regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+					Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After adding a repo-override, the subscription-manager repo-override list reports override repo='"+repoId+"' name='"+name+"' value='"+value+"'.");
+				}
+			}
+		}
+		
+		// re-verify no entitlements are attached
+		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No entitlements should be attached.");
+	}
+	
+	@Test(	description="attempt to add an override to a non-existant repo (while consuming entitlements)",
 			groups={"blockedByBug-1032673"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttemptToAddOverrideToNonExistantRepo_Test() {
+	public void AddOverrideToNonExistantRepo_Test() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
@@ -131,6 +168,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			String expectedStdoutMessage = String.format("Repository '%s' does not currently exist, but the override has been added.",repo);
 			Assert.assertTrue(result.getStdout().trim().contains(expectedStdoutMessage), "Stdout from the attempt to add an override to a non-existant repo contains the expected feedback message '"+expectedStdoutMessage+"'.");
 		}
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "The exit code from the repo-override command indicates a success.");
 	}
 	
 	@Test(	description="attempt to add overrides in mixed cases - add parameters should be lowercased - repoid names can be mixed case",
