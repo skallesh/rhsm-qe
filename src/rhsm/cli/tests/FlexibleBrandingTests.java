@@ -249,7 +249,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify if brandname file is created when rhsmcertd service runs",
-			groups={"CreationWithRHSMCERTD"},
+			groups={"CreationWithRHSMCERTD","blockedByBug-907638"},
 			enabled=true) 
 	public void VerifyBrand_NameFileCreationWithRHSMCERTD() throws Exception {
 		String productname=null;
@@ -282,7 +282,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		client.runCommand("rm -rf "+Brand_Name);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if(!(installed.productId.equals("32060"))){
+			if((!(installed.productId.equals("32060")))|| (!(installed.productId.equals("37060")))){
 				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
 			}
 		}		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
@@ -303,8 +303,6 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	public void VerifyBrand_NameFileCreationWithActivationKeys() throws Exception {
 		String productname=null;
 		Integer addQuantity=null;
-		
-		
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -325,7 +323,12 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 								+ sm_clientOrg + "/activation_keys",
 								jsonActivationKeyRequest.toString()));
 		String poolId=null;
-		
+		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
+			if(!(installed.productId.equals("32060"))){
+				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
+			}
+		}
+
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 					if(availList.subscriptionName.contains("Instance")){
@@ -337,15 +340,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 			productname=installed.productName;
 		}
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
-		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-			}
-		}
-
+		
 		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);
-		
-		
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
 	}
@@ -365,7 +361,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		
 				moveProductCertFiles("*");
 			
-		
+		client.runCommand("rm -rf "+Brand_Name);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(pool.subscriptionName.contains("Instance")){
 				clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
