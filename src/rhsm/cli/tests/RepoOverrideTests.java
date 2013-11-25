@@ -86,6 +86,29 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
 	}
 	
+	@Test(	description="attempt to override a baseUrl (note the uppercase) using subscription-manager repos-override",
+			groups={"blockedByBug-1030604","blockedByBug-1034375"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptToOverrideBaseUrl_Test() {
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// subscribe to a random pool (so as to consume an entitlement) and remember the original list of YumRepos read from the redhat.repo file
+		List<YumRepo> yumRepos = attachRandomSubscriptionThatProvidesYumRepos();
+		
+		// attempt to override the baseUrl (note the uppercase character)
+		YumRepo yumRepo = yumRepos.get(randomGenerator.nextInt(yumRepos.size())); // randomly pick a YumRepo
+		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
+		String baseUrl = "baseUrl";
+		repoOverrideNameValueMap.put(baseUrl, "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
+		SSHCommandResult result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from an attempt to repo-override the "+baseUrl+" (note the case) of yumRepo '"+yumRepo.id+"'.");		
+		Assert.assertEquals(result.getStderr().trim(), "The value for name '"+baseUrl.toLowerCase()+"' is not allowed to be overridden.", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+	}
+	
 	@Test(	description="attempt to add an override to a non-existant repo",
 			groups={"blockedByBug-1032673"},
 			enabled=true)
