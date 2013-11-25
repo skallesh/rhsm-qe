@@ -11,6 +11,7 @@ import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
@@ -98,15 +99,56 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		attachRandomSubscriptionThatProvidesYumRepos();
 		
 		// attempt to add an override to non-existant-repos
-		List<String> repos = Arrays.asList(new String[]{"non-existant-repo-1","non-existant-repo-2"});
+		List<String> repos = Arrays.asList(new String[]{"non-existant-repo-1","Non-Existant-Repo-2"});
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
-		repoOverrideNameValueMap.put("test", "value");
+		repoOverrideNameValueMap.put("test_parameter", "value");
 		SSHCommandResult result = clienttasks.repo_override_(null, null, repos, null, repoOverrideNameValueMap, null, null, null);
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add repo-overrides to non-existant repos "+repos);
 		for (String repo : repos) {
 			String expectedStdoutMessage = String.format("Repository '%s' does not currently exist, but the override has been added.",repo);
 			Assert.assertTrue(result.getStdout().trim().contains(expectedStdoutMessage), "Stdout from the attempt to add an override to a non-existant repo contains the expected feedback message '"+expectedStdoutMessage+"'.");
 		}
+	}
+	
+	@Test(	description="attempt to add overrides in mixed cases - add parameters should be lowercased - repoid names can be mixed case",
+			groups={"blockedByBug-1034375"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptToAddOverrideInMixedCases_Test() {
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// subscribe to a random pool (so as to consume an entitlement)
+		attachRandomSubscriptionThatProvidesYumRepos();
+		
+		// attempt to add an override to upper and lower cases
+		List<String> repos = Arrays.asList(new String[]{"REPO-1","repo-1","repo-2","REPO-2"});
+		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
+		repoOverrideNameValueMap.put("parameter_1", "1");
+		repoOverrideNameValueMap.put("PARAMETER_1", "1");
+		repoOverrideNameValueMap.put("PARAMETER_2", "2");
+		repoOverrideNameValueMap.put("parameter_2", "2");
+		SSHCommandResult result = clienttasks.repo_override_(null, null, repos, null, repoOverrideNameValueMap, null, null, null);
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add multi-case repo-overrides to repos "+repos);
+		Assert.assertEquals(result.getExitCode(),  Integer.valueOf(0), "ExitCode from an attempt to add multi-case repo-overrides to repos "+repos);
+		
+		String name, value;
+		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		for (String repoId : repos) {
+			value = "1";
+			name = "parameter_1";
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name.toLowerCase(),value)),"After adding repo-override parameter '"+name+"', the subscription-manager repo-override --list should show that it was lower cased and added to repo='"+repoId+"' name='"+name.toLowerCase()+"'.");
+			name = "PARAMETER_1";
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name.toLowerCase(),value)),"After adding repo-override parameter '"+name+"', the subscription-manager repo-override --list should show that it was lower cased and added to repo='"+repoId+"' name='"+name.toLowerCase()+"'.");
+			Assert.assertTrue(!SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value)),"After adding repo-override parameter '"+name+"' containing uppercase characters, subscription-manager repo-override should automatically lowercase it and add it to repo='"+repoId+"' as name='"+name.toLowerCase()+"'.");
+			value = "2";
+			name = "parameter_2";
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name.toLowerCase(),value)),"After adding repo-override parameter '"+name+"', the subscription-manager repo-override --list should show that it was lower cased and added to repo='"+repoId+"' name='"+name.toLowerCase()+"'.");
+			name = "PARAMETER_2";
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name.toLowerCase(),value)),"After adding repo-override parameter '"+name+"', the subscription-manager repo-override --list should show that it was lower cased and added to repo='"+repoId+"' name='"+name.toLowerCase()+"'.");
+			Assert.assertTrue(!SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value)),"After adding repo-override parameter '"+name+"' containing uppercase characters, subscription-manager repo-override should automatically lowercase it and add it to repo='"+repoId+"' as name='"+name.toLowerCase()+"'.");
+		}	
 	}
 	
 	@Test(	description="add yum repo overrides, verify they persist, and remove them one repo at a time",
