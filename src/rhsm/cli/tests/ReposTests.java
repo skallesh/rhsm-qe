@@ -640,9 +640,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="Verify that the redhat.repo file is refreshed with changes to the entitlements (yum transactions are no longer required to update the redhat.repo)",
 			enabled=true,
-			groups={"AcceptanceTests","blockedByBug-1008016"})	// TODO: review all tests and tasks that issue yum transactions simply to re-populate the redhat.repo
+			groups={"AcceptanceTests","blockedByBug-1008016","blockedByBug-1034429"})	// TODO: review all tests and tasks that issue yum transactions simply to re-populate the redhat.repo
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumTransactionsAreNoLongerRequiredToTriggerUpadtesToRedhatRepo_Test() {
+	public void VerifyYumTransactionsAreNoLongerRequiredToTriggerUpdatesToRedhatRepo_Test() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
