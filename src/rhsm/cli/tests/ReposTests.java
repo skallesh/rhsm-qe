@@ -44,7 +44,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: subscribe to a pool and verify that the newly entitled content namespaces are represented in the repos list",
-			groups={"AcceptanceTests","blockedByBug-807407","blockedByBug-962520"},
+			groups={"AcceptanceTests","blockedByBug-807407","blockedByBug-962520","blockedByBug-1034649"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
@@ -205,7 +205,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options specified multiple times in a single call) to repos in redhat.repo are preserved.",
-			groups={"AcceptanceTests","blockedByBug-843915","blockedByBug-962520"},
+			groups={"AcceptanceTests","blockedByBug-843915","blockedByBug-962520","blockedByBug-1034649"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListPreservesSimultaneousEnablementOfRedhatRepos_Test(){
@@ -303,7 +303,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: set manage_repos to 0 and assert redhat.repo is removed.",
-			groups={"blockedByBug-767620","blockedByBug-797996","blockedByBug-895462","ManageReposTests","AcceptanceTests"},
+			groups={"blockedByBug-767620","blockedByBug-797996","blockedByBug-895462","blockedByBug-1034649","ManageReposTests","AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListIsDisabledByConfigurationAfterRhsmManageReposIsConfiguredOff_Test() throws JSONException, Exception{
