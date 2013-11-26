@@ -31,7 +31,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  * The strategy for these tests is to exercise the test-plugins which are based on the
- * exmaple-plugins found in the upstream subscription-manager git repository:
+ * example-plugins found in the upstream subscription-manager git repository:
  * https://github.com/candlepin/subscription-manager/tree/master/example-plugins
  * 
  * Design Document:
