@@ -19,9 +19,11 @@ import com.redhat.qe.tools.RemoteFileTasks;
 /**
  * @author jsefler
  * 
- * Reference Design Doc:
- * https://mojo.redhat.com/docs/DOC-186259
- * 
+ * References
+ *  Design Doc: https://mojo.redhat.com/docs/DOC-186259
+ *  Dev Test Doc: https://mojo.redhat.com/docs/DOC-21827
+ *  TCMS plan link https://tcms.engineering.redhat.com/plan/11066/flex-branding-test-cases
+ *  
  * Brandbot is owned by the initscripts package and developed by Bill Nottingham
  * [root@jsefler-7 ~]# rpm -ql initscripts | grep brandbot
  * /usr/lib/systemd/system/brandbot.path
