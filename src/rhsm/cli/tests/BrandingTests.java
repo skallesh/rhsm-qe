@@ -1,7 +1,9 @@
 package rhsm.cli.tests;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.testng.SkipException;
 import org.testng.annotations.Test;
@@ -31,7 +33,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * /usr/lib/systemd/system/multi-user.target.wants/brandbot.path
  * /usr/sbin/brandbot
  */
-@Test(groups = {"debugTesting", "BrandingTests" })
+@Test(groups = {"debugTest", "BrandingTests" })
 public class BrandingTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="assert that brandbot service is running",
@@ -61,7 +63,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			String prettyNameBeforeSubscribing = getCurrentPrettyName();
 			log.info("Currently, the flexible brand name prior to subscribing to pool '"+pool.subscriptionName+"' is '"+brandNameBeforeSubscribing+"'.");
 			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-			List<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlements();
+			Set<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlements();
 			
 			// determine the expected brand name after subscribing
 			// Rules:
@@ -85,7 +87,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 				expectedBrandNameAfterSubscribing = brandNameBeforeSubscribing;
 			}
 			if (eligibleBrandNames.size()==1) {
-				expectedBrandNameAfterSubscribing = eligibleBrandNames.get(0);
+				expectedBrandNameAfterSubscribing = (String) eligibleBrandNames.toArray()[0];
 				log.info("Currently there is only one eligible brand name based on the attached entitlements, therefore the actual brand name should be '"+expectedBrandNameAfterSubscribing+"'.");
 				flexibleBrandedSubscriptionsFound=true;
 			}
@@ -137,7 +139,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			String prettyNameBeforeUnsubscribing = getCurrentPrettyName();
 			log.info("Currently, the flexible brand name prior to unsubscribing from subscription '"+productSubscription.productName+"' is '"+brandNameBeforeUnsubscribing+"'.");
 			clienttasks.unsubscribe(null,productSubscription.serialNumber, null, null, null);
-			List<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlements();
+			Set<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlements();
 			
 			// determine the expected brand name after subscribing
 			// Rules:
@@ -160,7 +162,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 				expectedBrandNameAfterUnsubscribing = brandNameBeforeUnsubscribing;
 			}
 			if (eligibleBrandNames.size()==1) {
-				expectedBrandNameAfterUnsubscribing = eligibleBrandNames.get(0);
+				expectedBrandNameAfterUnsubscribing = (String) eligibleBrandNames.toArray()[0];
 				log.info("Currently there is only one eligible brand name based on the attached entitlements, therefore the actual brand name should be '"+expectedBrandNameAfterUnsubscribing+"'.");
 			}
 
@@ -296,7 +298,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the first line of the brand file is empty).");
 	}
 	
-	
+	// TODO add a testcase for autosubscribe
+	// TODO add a testcase for rhsmcertd
+	// TODO add a testcase for rhsmcertd healing
 	
 	
 	
@@ -316,26 +320,31 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	/**
 	 * @return the eligible brand names based on the currently attached entitlement certs and the currently installed product certs
 	 */
-	List<String> getEligibleBrandNamesFromCurrentEntitlements() {
+	Set<String> getEligibleBrandNamesFromCurrentEntitlements() {
 		
 		// Rules:
 		//  - eligible brand names come from the currently entitled productNamespaces and are identified by a brandType = "OS"
 		//  - the corresponding productId must be among the currently installed product certs to be eligible
 		
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
-		List<String> eligibleBrandNames = new ArrayList<String>();
+		List<String> eligibleBrandNamesList = new ArrayList<String>();
+		Set<String> eligibleBrandNamesSet = new HashSet<String>();
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
 			for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
 				if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productNamespace.id, currentProductCerts) != null) {
 					if (productNamespace.brandType != null) {
 						if (productNamespace.brandType.equals("OS")) {
-							eligibleBrandNames.add(productNamespace.name);
+							eligibleBrandNamesList.add(productNamespace.name);
+							eligibleBrandNamesSet.add(productNamespace.name);
 						}
 					}
 				}
 			}
 		}
-		return eligibleBrandNames;
+		if (eligibleBrandNamesList.size() > eligibleBrandNamesSet.size()) {
+			log.warning("Currently there are multiple entitled OS brand products by the same name "+eligibleBrandNamesList+".  This can happen when multiple OS subscriptions have been stacked.");
+		}
+		return eligibleBrandNamesSet;
 		
 
 	}
