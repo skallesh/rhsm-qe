@@ -31,11 +31,19 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * /usr/lib/systemd/system/multi-user.target.wants/brandbot.path
  * /usr/sbin/brandbot
  */
-@Test(groups = { "BrandingTests" })
+@Test(groups = {"debugTesting", "BrandingTests" })
 public class BrandingTests extends SubscriptionManagerCLITestScript {
 	
+	@Test(	description="assert that brandbot service is running",
+			groups={"AcceptanceTests"},
+			enabled=false)	// TODO not sure how this works... the status of this service is inactive, yet it appears to be automatically started/stopped as needed NEEDINFO from notting
+	public void BrandbotServiceShouldBeRunning_Test() {
+		RemoteFileTasks.runCommandAndAssert(client, "systemctl is-active brandbot.service", Integer.valueOf(0), "^active$", null);
+	}
+	
 	@Test(	description="incrementally attach all available subscriptions and verify tests for Flexible Branding",
-			groups={"AttachSubscriptionsForFlexibleBranding_Test"},
+			groups={"AttachSubscriptionsForFlexibleBranding_Test","AcceptanceTests"},
+			priority=100,
 			enabled=true)
 	public void AttachSubscriptionsForFlexibleBranding_Test() {
 		// register
@@ -50,6 +58,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),10)) {
 			String brandNameBeforeSubscribing = getCurrentBrandName();
 			String brandNameStatBeforeSubscribing = getCurrentBrandNameFileStat();
+			String prettyNameBeforeSubscribing = getCurrentPrettyName();
 			log.info("Currently, the flexible brand name prior to subscribing to pool '"+pool.subscriptionName+"' is '"+brandNameBeforeSubscribing+"'.");
 			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 			List<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlements();
@@ -98,10 +107,16 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			// verify that /usr/sbin/brandbot has updated PRETTY_NAME in /etc/os-release
 			String actualPrettyNameAfterSubscribing = getCurrentPrettyName();
 			if (expectedBrandNameAfterSubscribing!=null) {
-				Assert.assertEquals(actualPrettyNameAfterSubscribing, expectedBrandNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should match the first line of the brand file '"+brandingFile+"' after subscribing to pool '"+pool.subscriptionName+"'.");
+				if (expectedBrandNameAfterSubscribing.isEmpty()) {
+					// see BrandbotShouldHandleEmptyBrandingFile_Test
+					Assert.assertNull(actualPrettyNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should be removed when the first line of the brand file '"+brandingFile+"' is empty after subscribing to pool '"+pool.subscriptionName+"'.");
+				} else {
+					Assert.assertEquals(actualPrettyNameAfterSubscribing, expectedBrandNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should match the first line of the brand file '"+brandingFile+"' after subscribing to pool '"+pool.subscriptionName+"'.");
+				}
+			} else {
+				// see BrandbotShouldHandleNonExistantBrandingFile_Test
+				Assert.assertEquals(actualPrettyNameAfterSubscribing,prettyNameBeforeSubscribing, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' should remain unchanged when the expected brand name is null after subscribing to pool '"+pool.subscriptionName+"'.");
 			}
-			// TODO Not sure what PRETTY_NAME should be when expectedBrandNameAfterSubscribing==null
-			// TODO Not sure what PRETTY_NAME should be when expectedBrandNameAfterSubscribing==""
 		}
 		
 		// throw SkipException when no flexible branding was tested
@@ -109,7 +124,8 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="incrementally remove attached subscriptions and verify tests for Flexible Branding",
-			dependsOnGroups={"AttachSubscriptionsForFlexibleBranding_Test"},
+			dependsOnGroups={"AttachSubscriptionsForFlexibleBranding_Test","AcceptanceTests"},
+			priority=101,
 			groups={},
 			enabled=true)
 	public void RemoveSubscriptionsForFlexibleBranding_Test() {
@@ -118,6 +134,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 			String brandNameBeforeUnsubscribing = getCurrentBrandName();
 			String brandNameStatBeforeUnsubscribing = getCurrentBrandNameFileStat();
+			String prettyNameBeforeUnsubscribing = getCurrentPrettyName();
 			log.info("Currently, the flexible brand name prior to unsubscribing from subscription '"+productSubscription.productName+"' is '"+brandNameBeforeUnsubscribing+"'.");
 			clienttasks.unsubscribe(null,productSubscription.serialNumber, null, null, null);
 			List<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlements();
@@ -162,12 +179,20 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			}
 			
 			// verify that /usr/sbin/brandbot has updated PRETTY_NAME in /etc/os-release
-			String actualPrettyNameAfterSubscribing = getCurrentPrettyName();
+			String actualPrettyNameAfterUnsubscribing = getCurrentPrettyName();
 			if (expectedBrandNameAfterUnsubscribing!=null) {
-				Assert.assertEquals(actualPrettyNameAfterSubscribing, expectedBrandNameAfterUnsubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should match the first line of the brand file '"+brandingFile+"' after unsubscribing from '"+productSubscription.productName+"'.");
+				if (expectedBrandNameAfterUnsubscribing.isEmpty()) {
+					// see BrandbotShouldHandleEmptyBrandingFile_Test
+					Assert.assertNull(actualPrettyNameAfterUnsubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should be removed when the first line of the brand file '"+brandingFile+"' is empty after unsubscribing from '"+productSubscription.productName+"'.");
+				} else {
+					Assert.assertEquals(actualPrettyNameAfterUnsubscribing, expectedBrandNameAfterUnsubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should match the first line of the brand file '"+brandingFile+"' after unsubscribing from '"+productSubscription.productName+"'.");
+				}
+			} else {
+				// see BrandbotShouldHandleNonExistantBrandingFile_Test
+				Assert.assertEquals(actualPrettyNameAfterUnsubscribing,prettyNameBeforeUnsubscribing, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' should remain unchanged when the expected brand name is null after unsubscribing from '"+productSubscription.productName+"'.");
+
 			}
-			// TODO Not sure what PRETTY_NAME should be when expectedBrandNameAfterSubscribing==null
-			// TODO Not sure what PRETTY_NAME should be when expectedBrandNameAfterSubscribing==""
+			
 		}
 	}
 	
@@ -193,7 +218,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="assert that brandbot trims white space from the first line of the branding file",
-			groups={"debugTest"},
+			groups={},
 			enabled=true)
 	public void BrandbotShouldTrimWhiteSpaceFromBrandingFile_Test() {
 		String actualBrandName,actualPrettyName;
@@ -206,34 +231,69 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(actualPrettyName, "RHEL Branded OS", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT contain leading nor trailing white space).");
 	}
 	
-	// TODO Brandbot SHOULD handle /var/lib/rhsm/branded_name not existing.
-	@Test(	description="assert that brandbot trims white space from the first line of the branding file",
-			groups={"debugTest"},
-			enabled=false)
+	
+	@Test(	description="assert that brandbot does nothing when the brand file is removed",	//  Brandbot SHOULD handle /var/lib/rhsm/branded_name not existing.
+			groups={},
+			enabled=true)
 	public void BrandbotShouldHandleNonExistantBrandingFile_Test() {
-//		String actualBrandName,actualPrettyName;
-//		
-//		log.info("Testing a single line branding file with leading and trailing white space...");
-//		RemoteFileTasks.runCommandAndAssert(client, "echo '  RHEL Branded OS  ' > "+brandingFile, 0);
-//		actualBrandName = getCurrentBrandName();
-//		Assert.assertEquals(actualBrandName, "  RHEL Branded OS  ", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should contain leading and trailing white space).");
-//		actualPrettyName = getCurrentPrettyName();
-//		Assert.assertEquals(actualPrettyName, "RHEL Branded OS", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT contain leading nor trailing white space).");
+		//	> If /var/lib/rhsm/branded_name is removed, what should PRETTY_NAME be? In
+		//	> initscripts-9.49.11-1.el7.x86_64 it retains its prior value before the
+		//	> branded_name was removed.  I don't know if that is correct.
+		//
+		//	(The answer is likely 'whatever PM wants to happen'. But aside from that...)
+		//	Bill
+				
+		String actualBrandName,actualPrettyName;
+		
+		log.info("Testing a single line branding...");
+		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL Branded OS' > "+brandingFile, 0);
+		actualPrettyName = getCurrentPrettyName();
+		Assert.assertEquals(actualPrettyName, "RHEL Branded OS", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"'.");
+		
+		log.info("Testing an non-existant branding file...");
+		RemoteFileTasks.runCommandAndAssert(client, "rm -f "+brandingFile, 0);
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, brandingFile), "The brand file '"+brandingFile+"' should not exist for this test.");
+		actualBrandName = getCurrentBrandName();
+		Assert.assertNull(actualBrandName, "The brand name is not defined when the brand file '"+brandingFile+"' does not exist.");
+		Assert.assertEquals(getCurrentPrettyName(),actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should remain unchanged when the brand file is removed).");
 	}
 	
-	// TODO Brandbot SHOULD handle /var/lib/rhsm/branded_name being empty.
-	@Test(	description="assert that brandbot trims white space from the first line of the branding file",
-			groups={"debugTest"},
-			enabled=false)
+	
+	@Test(	description="assert that brandbot removes PRETTY_NAME when the first line of the branding file is empty",	//  Brandbot SHOULD handle /var/lib/rhsm/branded_name being empty.
+			groups={"blockedByBug-1031490"},
+			enabled=true)
 	public void BrandbotShouldHandleEmptyBrandingFile_Test() {
-//		String actualBrandName,actualPrettyName;
-//		
-//		log.info("Testing a single line branding file with leading and trailing white space...");
-//		RemoteFileTasks.runCommandAndAssert(client, "echo '  RHEL Branded OS  ' > "+brandingFile, 0);
-//		actualBrandName = getCurrentBrandName();
-//		Assert.assertEquals(actualBrandName, "  RHEL Branded OS  ", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should contain leading and trailing white space).");
-//		actualPrettyName = getCurrentPrettyName();
-//		Assert.assertEquals(actualPrettyName, "RHEL Branded OS", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT contain leading nor trailing white space).");
+		//	> If /var/lib/rhsm/branded_name is an empty file, what should PRETTY_NAME
+		//	> be?  In initscripts-9.49.11-1.el7.x86_64 PRETTY_NAME is removed from
+		//	> /etc/os-release.  I think it should be PRETTY_NAME = "".
+		//	>
+		//	> What is the consequence of PRETTY_NAME missing from /etc/os-release?
+		//
+		//	Logical behaviors would be:
+		//
+		//	1) removing PRETTY_NAME
+		//	2) reverting it to the unbranded name
+		//
+		//	Since we don't (AFAIK) have the data to do #2, #1 makes sense to me.
+		//
+		//	Bill
+		
+		String actualBrandName,actualPrettyName;
+		
+		log.info("Testing an empty branding file...");
+		RemoteFileTasks.runCommandAndAssert(client, "rm -f "+brandingFile+" && touch "+brandingFile, 0);
+		actualBrandName = getCurrentBrandName();
+		Assert.assertEquals(actualBrandName, "", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should be an empty string).");
+		actualPrettyName = getCurrentPrettyName();
+		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the brand file is empty).");
+		
+		log.info("Testing an empty branding file (first line only)...");
+		RemoteFileTasks.runCommandAndAssert(client, "echo '' >> "+brandingFile, 0);
+		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL SubBranded OS (line 2)' >> "+brandingFile, 0);
+		actualBrandName = getCurrentBrandName();
+		Assert.assertEquals(actualBrandName, "", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should be an empty string).");
+		actualPrettyName = getCurrentPrettyName();
+		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the first line of the brand file is empty).");
 	}
 	
 	
