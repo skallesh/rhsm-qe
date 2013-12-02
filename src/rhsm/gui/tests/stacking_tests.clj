@@ -15,6 +15,7 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
@@ -41,15 +42,15 @@
                        (into []
                              (map (fn [i] (Integer.
                                           (re-find #"\d+"
-                                                   (tasks/ui getcellvalue :all-subscriptions-view 
+                                                   (tasks/ui getcellvalue :all-subscriptions-view
                                                              (tasks/skip-dropdown :all-subscriptions-view i)
                                                              3)))) subscriptions)))]
     (case (into [] quantity-list)
       [] (throw (SkipException. (str "Data unavailable for stacking test")))
       [1] (throw (SkipException. (str "Data unavailable for stacking test")))
-      (do (reset! sub (rand-nth subscriptions)) 
+      (do (reset! sub (rand-nth subscriptions))
           (while (= "1" (re-find #"\d+"
-                                 (tasks/ui getcellvalue :all-subscriptions-view 
+                                 (tasks/ui getcellvalue :all-subscriptions-view
                                            (tasks/skip-dropdown :all-subscriptions-view @sub)
                                            3)))
             (reset! sub (rand-nth subscriptions)))))
@@ -85,17 +86,18 @@
                        (into []
                              (map (fn [i] (Integer.
                                           (re-find #"\d+"
-                                                   (tasks/ui getcellvalue :all-subscriptions-view 
+                                                   (tasks/ui getcellvalue :all-subscriptions-view
                                                              (tasks/skip-dropdown :all-subscriptions-view i)
                                                              3)))) subscriptions)))]
     (case (into [] quantity-list)
       [] false
-      [1] false 
+      [1] false
       true)))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (try
+    (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/restart-app :reregister? true)
     (if (not (bash-bool (:exitcode (run-command (str "test -d " stacking-dir)))))
       (do
@@ -214,7 +216,7 @@
   (tasks/ui selecttab :all-available-subscriptions)
   (tasks/search :match-installed? true)
   (let [                                ;getting future date
-        date-string (tasks/ui gettextvalue :date-entry)                                        
+        date-string (tasks/ui gettextvalue :date-entry)
         date-split (split date-string #"-")
         year (first date-split)
         month (second date-split)
@@ -289,7 +291,7 @@
           (sleep 3000)
           (tasks/ui click :register)
           (tasks/ui waittillwindownotexist :register-dialog 80)
-          (tasks/restart-app))) 
+          (tasks/restart-app)))
       (verify (= 1 (tasks/ui guiexist :main-window "System is properly subscribed*"))))
     (finally
      (tasks/unsubscribe_all))))
@@ -342,14 +344,14 @@
       (tasks/ui click :search)
       (sleep 4000)
       (verify (= nil (some false? (map = (into [] (map quantity-func subs-applicable)) quantity-after)))))
-    
+
     (finally
      (tasks/write-facts "{\"memory.memtotal\": \"1020252\"}")
      (tasks/unsubscribe_all))))
 
 (defn set-stacking-environment
   "This function is used to set stackig environment based on RAMs COREs or SOCKETs"
-  [stacking-parameter when?]   
+  [stacking-parameter when?]
   (cond
    (= when? "before")
    (do
@@ -388,7 +390,7 @@
         cores-value (* (get-value (str "subscription-manager facts --list | grep \"^cpu.core(s)_per_socket\""))
                        sockets-value)]
     (case stacking-parameter
-      ("ram")     ram-value 
+      ("ram")     ram-value
       ("cores")   cores-value
       ("sockets") sockets-value
       (throw (Exception. "Invalid stacking-parameter passed to function")))))

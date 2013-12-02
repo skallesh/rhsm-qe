@@ -310,7 +310,7 @@
           (if org (ui selectrow :firstboot-owner-table org))
           (ui click :firstboot-forward)))
       ;;TODO: write autosubscribe selection methods
-       (if back-button? 
+       (if back-button?
         (do
         (verify (not (bool (ui hasstate :firstboot-back "sensitive"))))
         (verify (not (bool (ui hasstate :firstboot-forward "sensitive")))))))

@@ -9,6 +9,7 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tests.base :as base]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             AfterClass
@@ -57,6 +58,7 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
   (try
+    (if (= "RHEL7" (get-release)) (base/startup nil))
     (if (= "5.7" (:version (get-release :true)))
       (throw (SkipException. (str "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))))
     (skip-if-bz-open "922806")

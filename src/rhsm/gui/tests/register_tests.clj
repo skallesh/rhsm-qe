@@ -10,6 +10,7 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks])
   (:import [org.testng.annotations
             Test
@@ -24,7 +25,8 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (try+ (tasks/unregister)
+  (try+ (if (= "RHEL7" (get-release)) (base/startup nil))
+        (tasks/unregister)
         (catch [:type :not-registered] _)
         (catch Exception e
           (reset! (skip-groups :register) true)
@@ -179,7 +181,7 @@ verify_password_tip
     (tasks/ui click :default-server)
     (tasks/ui click :register)
     (tasks/ui waittillguiexist :register-dialog)
-    (verify (= "Please enter your Red Hat account information:" 
+    (verify (= "Please enter your Red Hat account information:"
       (tasks/ui gettextvalue :register-dialog "registration_header_label")))
     (finally
      (if (bool (tasks/ui guiexist :register-dialog))

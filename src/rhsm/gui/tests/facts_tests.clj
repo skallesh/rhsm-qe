@@ -14,6 +14,7 @@
         clojure.pprint
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             rhsm.gui.tasks.ui
             [clojure.tools.logging :as log])
@@ -58,6 +59,7 @@
 (defn ^{BeforeClass {:groups ["facts"]}}
   register [_]
   (try
+    (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/register-with-creds)
     (reset! gui-facts (tasks/get-all-facts))
     (reset! cli-facts (get-cli-facts))

@@ -15,6 +15,7 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
@@ -53,6 +54,7 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
   (try
+    (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/register-with-creds)
     (reset! servicelist (ctasks/build-service-map :all? true))
     (reset! subs-contractlist (ctasks/build-subscription-product-map :all? true))
@@ -567,7 +569,7 @@
                                                            (tasks/ui getcellvalue :contract-selection-table row 5)))]
                      (verify (not (= multiplier (- quantity-after quantity-before))))))))))
          (catch [:type :contract-selection-not-available] _)
-         (finally 
+         (finally
           (if (tasks/ui showing? :contract-selection-table)
             (tasks/ui click :cancel-contract-selection))))))))
 
@@ -662,7 +664,7 @@
   get_subscribed [_ & {:keys [debug]
                        :or {debug false}}]
   (if-not (assert-skip :subscribe)
-    (do                     
+    (do
       (tasks/restart-app)
       (register nil)
       (tasks/ui selecttab :my-subscriptions)

@@ -12,6 +12,7 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tests.base :as base]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
@@ -36,6 +37,7 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
   (try
+    (if (= "RHEL7" (get-release)) (base/startup nil))
     (reset! importtests (ImportTests.))
     (.restartCertFrequencyBeforeClass @importtests)
     (.setupEntitlemenCertsForImportBeforeClass @importtests)

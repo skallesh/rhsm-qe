@@ -9,7 +9,8 @@
         [com.redhat.qe.verify :only (verify)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
-  (:require [rhsm.gui.tasks.tasks :as tasks])
+  (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tests.base :as base])
   (:import [org.testng.annotations
             Test
             BeforeClass
@@ -25,7 +26,8 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (try+ (tasks/unregister)
+  (try+ (if (= "RHEL7" (get-release)) (base/startup nil))
+        (tasks/unregister)
         (catch [:type :not-registered] _)
         (catch Exception e
           (reset! (skip-groups :proxy) true)

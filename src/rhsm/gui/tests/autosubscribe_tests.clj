@@ -10,6 +10,7 @@
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
@@ -49,6 +50,7 @@
   (try
     ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
     ;; this bug crashes everything, so fail the BeforeClass if this is open
+    (if (= "RHEL7" (get-release)) (base/startup nil))
     (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
     (tasks/kill-app)
     (reset! complytests (ComplianceTests. ))
@@ -264,7 +266,7 @@
       (do
         (sleep 3000)
         (tasks/ui click :register)
-        (tasks/ui waittillwindownotexist :register-dialog 80))) 
+        (tasks/ui waittillwindownotexist :register-dialog 80)))
     (verify (= 1 (tasks/ui guiexist :main-window "System is properly subscribed*")))
     (finally
      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
@@ -294,7 +296,7 @@
                          (ctasks/get-owner-display-name user pass key))]
          (setup-product-map)
          (run-command "subscription-manager attach --auto")
-         
+
          (comment
            (tasks/unregister)
            (tasks/register user

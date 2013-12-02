@@ -13,6 +13,7 @@
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
             [clojure.tools.logging :as log]
+            [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
@@ -32,6 +33,7 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
   (try
+    (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/kill-app)
     (catch Exception e
       (reset! (skip-groups :system) true)
@@ -397,7 +399,7 @@
       (verify (tasks/ui showing? :system-preferences-dialog "Enable auto-attach preference"))
       (verify (tasks/ui check :autoheal-checkbox))
       (finally (bool (tasks/ui guiexist :system-preferences-dialog))
-               (do 
+               (do
                  (tasks/ui check :autoheal-checkbox)
                  (tasks/ui click :close-system-prefs))))))
 

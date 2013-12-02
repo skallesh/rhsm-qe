@@ -6,6 +6,7 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tests.base :as base]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
@@ -25,6 +26,7 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (try
+    (if (= "RHEL7" (get-release)) (base/startup nil))
     (if (tasks/ui exists? :main-window "*")
       (kill-app))
     (run-command (str "touch " systemid))

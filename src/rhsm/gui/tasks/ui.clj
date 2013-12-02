@@ -138,7 +138,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :sla-next "Next"
          :sla-cancel "Cancel"
          :sla-back "Back"
-         :auto-attach-subscriptions-table "Selected Subscriptions Table" 
+         :auto-attach-subscriptions-table "Selected Subscriptions Table"
          ;;:sla-selection-table ""  ** waiting for table name Bug 1005329 **
          })
     (define-elements (windows :question-dialog)
