@@ -188,7 +188,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		String expectedMessage;
 		expectedMessage = "*** This file is auto-generated.  Changes made here will be over-written. ***";
 		Assert.assertTrue(result.getStdout().contains(expectedMessage),"File '"+clienttasks.redhatRepoFile+"' warns the user with expected message '"+expectedMessage+"'.");
-		expectedMessage = "*** Use \"subscription-manager override --help\" if you wish to make changes. ***";
+		expectedMessage = "*** Use \"subscription-manager override\" if you wish to make changes. ***";	// value prior to bug 1032243
 		expectedMessage = "*** Use \"subscription-manager repo-override --help\" if you wish to make changes. ***";
 		Assert.assertTrue(result.getStdout().contains(expectedMessage),"File '"+clienttasks.redhatRepoFile+"' warns the user with expected message '"+expectedMessage+"'.");
 	}

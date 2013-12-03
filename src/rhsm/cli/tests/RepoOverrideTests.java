@@ -32,7 +32,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="when subscription-manager repos-override is run with no args, it should default to --list option",
-			groups={},
+			groups={"blockedByBug-1034396"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListRepoOverridesIsTheDefault_Test() {
@@ -43,10 +43,11 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// without any subscriptions attached...
 		SSHCommandResult defaultResult = clienttasks.repo_override_(null,null,(String)null,(String)null,null,null,null,null);
 		SSHCommandResult listResult = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
-		Assert.assertEquals(listResult.toString().trim(), defaultResult.toString().trim(), "The result from running module repo-override without any options should default to the --list result (with no subscriptions attached)");
-		Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached.");
-		Assert.assertEquals(listResult.getStderr().trim(), "", "Stderr from repo-override --list without any subscriptions attached.");
-		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "ExitCode from repo-override --list without any subscriptions attached.");
+		Assert.assertEquals(listResult.toString().trim(), defaultResult.toString().trim(), "The result from running module repo-override without any options should default to the --list result (with no subscriptions attached and no overrides)");
+		// valid prior to bug 1034396	Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached and no overrides.");
+		Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any content overrides applied to it.", "Stdout from repo-override --list without any subscriptions attached and no overrides.");
+		Assert.assertEquals(listResult.getStderr().trim(), "", "Stderr from repo-override --list without any subscriptions attached and no overrides.");
+		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(/*1*/0), "ExitCode from repo-override --list without any subscriptions attached and no overrides.");
 		
 		// subscribe to a random pool (so as to consume an entitlement)
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -118,7 +119,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
-		// attempt to add an override to non-existant-repos (without entitlements attached)
+		// attempt to add an override to non-existent-repos (without entitlements attached)
 		List<String> repos = Arrays.asList(new String[]{"any-repo-1","Any-Repo-2"});
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
 		repoOverrideNameValueMap.put("any_parameter", "value");
@@ -213,7 +214,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="add yum repo overrides, verify they persist, and remove them one repo at a time",
-			groups={},
+			groups={"blockedByBug-1034396"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AddAndRemoveRepoOverridesOneRepoAtATime_Test() {
@@ -250,13 +251,15 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, true);
 		
 		// unsubscribe/resubscribe
+		SSHCommandResult listResultBeforeUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
 		List<String> poolIds = new ArrayList<String>();
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 			clienttasks.unsubscribe(true, productSubscription.serialNumber, null, null, null);
 			poolIds.add(productSubscription.poolId);
 		}
-		SSHCommandResult listResult = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
-		Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached (but should still have overrides cached in the consumer).");
+		SSHCommandResult listResultAfterUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
+		// valid prior to bug 1034396	Assert.assertEquals(listResultAfterUnsubscribe.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached (but should still have overrides cached in the consumer).");
+		Assert.assertEquals(listResultAfterUnsubscribe.getStdout(), listResultBeforeUnsubscribe.getStdout(), "Stdout from repo-override --list without any subscriptions attached should be identical to the list when subscriptions were attached.");
 		Assert.assertTrue(clienttasks.getCurrentlySubscribedYumRepos().isEmpty(), "The YumRepos in '"+clienttasks.redhatRepoFile+"' should be empty after unsubscribing from each serial.");
 		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
 		
@@ -294,7 +297,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="add yum repo overrides, verify they persist, and remove them across multiple repo ids simultaneously (use multiple --repo args)",
-			groups={},
+			groups={"blockedByBug-1034396"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AddAndRemoveRepoOverridesUsingMultipleRepos_Test() {
@@ -328,13 +331,15 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, true);
 		
 		// unsubscribe/resubscribe
+		SSHCommandResult listResultBeforeUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
 		List<String> poolIds = new ArrayList<String>();
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 			clienttasks.unsubscribe(true, productSubscription.serialNumber, null, null, null);
 			poolIds.add(productSubscription.poolId);
 		}
-		SSHCommandResult listResult = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
-		Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached (but should still have overrides cached in the consumer).");
+		SSHCommandResult listResultAfterUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
+		// valid prior to bug 1034396	Assert.assertEquals(listResultAfterUnsubscribe.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached (but should still have overrides cached in the consumer).");
+		Assert.assertEquals(listResultAfterUnsubscribe.getStdout(), listResultBeforeUnsubscribe.getStdout(), "Stdout from repo-override --list without any subscriptions attached should be identical to the list when subscriptions were attached.");
 		Assert.assertTrue(clienttasks.getCurrentlySubscribedYumRepos().isEmpty(), "The YumRepos in '"+clienttasks.redhatRepoFile+"' should be empty after unsubscribing from each serial.");
 		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
 		
