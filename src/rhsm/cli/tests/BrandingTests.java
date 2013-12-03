@@ -1,5 +1,6 @@
 package rhsm.cli.tests;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +34,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * /usr/lib/systemd/system/multi-user.target.wants/brandbot.path
  * /usr/sbin/brandbot
  */
-@Test(groups = {"debugTest", "BrandingTests" })
+@Test(groups = { "BrandingTests" })
 public class BrandingTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="assert that brandbot service is running",
@@ -42,6 +43,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	public void BrandbotServiceShouldBeRunning_Test() {
 		RemoteFileTasks.runCommandAndAssert(client, "systemctl is-active brandbot.service", Integer.valueOf(0), "^active$", null);
 	}
+	
 	
 	@Test(	description="incrementally attach all available subscriptions and verify tests for Flexible Branding",
 			groups={"AttachSubscriptionsForFlexibleBranding_Test","AcceptanceTests"},
@@ -63,72 +65,18 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			String prettyNameBeforeSubscribing = getCurrentPrettyName();
 			log.info("Currently, the flexible brand name prior to subscribing to pool '"+pool.subscriptionName+"' is '"+brandNameBeforeSubscribing+"'.");
 			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-			Set<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlements();
-			
-			// determine the expected brand name after subscribing
-			// Rules:
-			//  - eligible brand names come from the currently entitled productNamespaces
-			//  - the corresponding productId must be among the currently installed product certs to be eligible
-			//  - if more than one brand name is eligible, no update is made to the branding file
-			//  - if only one brand name is eligible and it does NOT already equal the current brand name, then an update is made
-			//  - if no brand name is eligible, no update is made
-			//  - updates are sought out when entitlements are refreshed
-			// 
-			// Design Doc: https://mojo.redhat.com/docs/DOC-186259
-			// Developer Test Notes: https://mojo.redhat.com/docs/DOC-21827
-			String expectedBrandNameAfterSubscribing=null;
-			if (eligibleBrandNames.size()>1) {
-				log.warning("Currently there are multiple eligible brand names "+eligibleBrandNames+", therefore the actual brand name should remain unchanged.");
-				expectedBrandNameAfterSubscribing = brandNameBeforeSubscribing;
-				flexibleBrandedSubscriptionsFound=true;
-			}
-			if (eligibleBrandNames.isEmpty()) {
-				log.warning("Currently there are no eligible brand names based on the attached entitlements, therefore the actual brand name should remain unchanged.");
-				expectedBrandNameAfterSubscribing = brandNameBeforeSubscribing;
-			}
-			if (eligibleBrandNames.size()==1) {
-				expectedBrandNameAfterSubscribing = (String) eligibleBrandNames.toArray()[0];
-				log.info("Currently there is only one eligible brand name based on the attached entitlements, therefore the actual brand name should be '"+expectedBrandNameAfterSubscribing+"'.");
-				flexibleBrandedSubscriptionsFound=true;
-			}
-
-			// verify the actualBrandNameAfterSubscribing = expectedBrandNameAfterSubscribing
-			String actualBrandNameAfterSubscribing = getCurrentBrandName();
-			Assert.assertEquals(actualBrandNameAfterSubscribing, expectedBrandNameAfterSubscribing, "The brand name contained within the first line of the brand file '"+brandingFile+"' after subscribing to pool '"+pool.subscriptionName+"'.");
-			
-			// verify that the brand file was NOT altered when the expectedBrandNameAfterSubscribing = brandNameBeforeSubscribing
-			if (expectedBrandNameAfterSubscribing!=null && expectedBrandNameAfterSubscribing.equals(brandNameBeforeSubscribing)) {
-				String brandNameStatAfterSubscribing = getCurrentBrandNameFileStat();
-				Assert.assertEquals(brandNameStatAfterSubscribing, brandNameStatBeforeSubscribing, "After attaching a new subscription, if the brand name should remain unchanged, the modification and change stats on the brand file '"+brandingFile+"' should remain unaltered.");
-			}
-			if (expectedBrandNameAfterSubscribing!=null && !expectedBrandNameAfterSubscribing.equals(brandNameBeforeSubscribing)) {
-				String brandNameStatAfterSubscribing = getCurrentBrandNameFileStat();
-				Assert.assertTrue(!brandNameStatAfterSubscribing.equals(brandNameStatBeforeSubscribing), "After attaching a new subscription, if the brand name should change, the modification/change stats on the brand file '"+brandingFile+"' should obviously change too.");
-			}
-			
-			// verify that /usr/sbin/brandbot has updated PRETTY_NAME in /etc/os-release
-			String actualPrettyNameAfterSubscribing = getCurrentPrettyName();
-			if (expectedBrandNameAfterSubscribing!=null) {
-				if (expectedBrandNameAfterSubscribing.isEmpty()) {
-					// see BrandbotShouldHandleEmptyBrandingFile_Test
-					Assert.assertNull(actualPrettyNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should be removed when the first line of the brand file '"+brandingFile+"' is empty after subscribing to pool '"+pool.subscriptionName+"'.");
-				} else {
-					Assert.assertEquals(actualPrettyNameAfterSubscribing, expectedBrandNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should match the first line of the brand file '"+brandingFile+"' after subscribing to pool '"+pool.subscriptionName+"'.");
-				}
-			} else {
-				// see BrandbotShouldHandleNonExistantBrandingFile_Test
-				Assert.assertEquals(actualPrettyNameAfterSubscribing,prettyNameBeforeSubscribing, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' should remain unchanged when the expected brand name is null after subscribing to pool '"+pool.subscriptionName+"'.");
-			}
+			if (verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(brandNameBeforeSubscribing,brandNameStatBeforeSubscribing,prettyNameBeforeSubscribing,"subscribing to pool '"+pool.subscriptionName+"'")) flexibleBrandedSubscriptionsFound=true;
 		}
 		
 		// throw SkipException when no flexible branding was tested
 		if (!flexibleBrandedSubscriptionsFound) throw new SkipException("No flexible branded subscriptions were found among the available subscriptions for testing.");
 	}
 	
+	
 	@Test(	description="incrementally remove attached subscriptions and verify tests for Flexible Branding",
-			dependsOnGroups={"AttachSubscriptionsForFlexibleBranding_Test","AcceptanceTests"},
+			//depend on priority instead of dependsOnMethods={"AttachSubscriptionsForFlexibleBranding_Test"},
 			priority=101,
-			groups={},
+			groups={"AcceptanceTests"},
 			enabled=true)
 	public void RemoveSubscriptionsForFlexibleBranding_Test() {
 		
@@ -139,64 +87,85 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			String prettyNameBeforeUnsubscribing = getCurrentPrettyName();
 			log.info("Currently, the flexible brand name prior to unsubscribing from subscription '"+productSubscription.productName+"' is '"+brandNameBeforeUnsubscribing+"'.");
 			clienttasks.unsubscribe(null,productSubscription.serialNumber, null, null, null);
-			Set<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlements();
-			
-			// determine the expected brand name after subscribing
-			// Rules:
-			//  - eligible brand names come from the currently entitled productNamespaces
-			//  - the corresponding productId must be among the currently installed product certs to be eligible
-			//  - if more than one brand name is eligible, no update is made to the branding file
-			//  - if only one brand name is eligible and it does NOT already equal the current brand name, then an update is made
-			//  - if no brand name is eligible, no update is made
-			//  - updates are sought out when entitlements are refreshed
-			// 
-			// Design Doc: https://mojo.redhat.com/docs/DOC-186259
-			// Developer Test Notes: https://mojo.redhat.com/docs/DOC-21827
-			String expectedBrandNameAfterUnsubscribing=null;
-			if (eligibleBrandNames.size()>1) {
-				log.warning("Currently there are multiple eligible brand names "+eligibleBrandNames+", therefore the actual brand name should remain unchanged.");
-				expectedBrandNameAfterUnsubscribing = brandNameBeforeUnsubscribing;
-			}
-			if (eligibleBrandNames.isEmpty()) {
-				log.warning("Currently there are no eligible brand names based on the attached entitlements, therefore the actual brand name should remain unchanged.");
-				expectedBrandNameAfterUnsubscribing = brandNameBeforeUnsubscribing;
-			}
-			if (eligibleBrandNames.size()==1) {
-				expectedBrandNameAfterUnsubscribing = (String) eligibleBrandNames.toArray()[0];
-				log.info("Currently there is only one eligible brand name based on the attached entitlements, therefore the actual brand name should be '"+expectedBrandNameAfterUnsubscribing+"'.");
-			}
-
-			// verify the actualBrandNameAfterUnsubscribing = expectedBrandNameAfterUnsubscribing
-			String actualBrandNameAfterUnsubscribing = getCurrentBrandName();
-			Assert.assertEquals(actualBrandNameAfterUnsubscribing, expectedBrandNameAfterUnsubscribing, "The brand name contained within the first line of the brand file '"+brandingFile+"' after unsubscribing from '"+productSubscription.productName+"'.");
-			
-			// verify that the brand file was NOT altered when the expectedBrandNameAfterSubscribing = brandNameBeforeSubscribing
-			if (expectedBrandNameAfterUnsubscribing!=null && expectedBrandNameAfterUnsubscribing.equals(brandNameBeforeUnsubscribing)) {
-				String brandNameStatAfterSubscribing = getCurrentBrandNameFileStat();
-				Assert.assertEquals(brandNameStatAfterSubscribing, brandNameStatBeforeUnsubscribing, "After unsubscribing, if the brand name should remain unchanged, the modification and change stats on the brand file '"+brandingFile+"' should remain unaltered.");
-			}
-			if (expectedBrandNameAfterUnsubscribing!=null && !expectedBrandNameAfterUnsubscribing.equals(brandNameBeforeUnsubscribing)) {
-				String brandNameStatAfterUnsubscribing = getCurrentBrandNameFileStat();
-				Assert.assertTrue(!brandNameStatAfterUnsubscribing.equals(brandNameStatBeforeUnsubscribing), "After unsubscribing, if the brand name should change, the modification/change stats on the brand file '"+brandingFile+"' should obviously change too.");
-			}
-			
-			// verify that /usr/sbin/brandbot has updated PRETTY_NAME in /etc/os-release
-			String actualPrettyNameAfterUnsubscribing = getCurrentPrettyName();
-			if (expectedBrandNameAfterUnsubscribing!=null) {
-				if (expectedBrandNameAfterUnsubscribing.isEmpty()) {
-					// see BrandbotShouldHandleEmptyBrandingFile_Test
-					Assert.assertNull(actualPrettyNameAfterUnsubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should be removed when the first line of the brand file '"+brandingFile+"' is empty after unsubscribing from '"+productSubscription.productName+"'.");
-				} else {
-					Assert.assertEquals(actualPrettyNameAfterUnsubscribing, expectedBrandNameAfterUnsubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should match the first line of the brand file '"+brandingFile+"' after unsubscribing from '"+productSubscription.productName+"'.");
-				}
-			} else {
-				// see BrandbotShouldHandleNonExistantBrandingFile_Test
-				Assert.assertEquals(actualPrettyNameAfterUnsubscribing,prettyNameBeforeUnsubscribing, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' should remain unchanged when the expected brand name is null after unsubscribing from '"+productSubscription.productName+"'.");
-
-			}
-			
+			verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(brandNameBeforeUnsubscribing,brandNameStatBeforeUnsubscribing,prettyNameBeforeUnsubscribing,"unsubscribing from '"+productSubscription.productName+"'");
 		}
 	}
+	
+	
+	@Test(	description="autosubscribe and verify tests for Flexible Branding",
+			dependsOnGroups={},
+			priority=200,
+			groups={"AcceptanceTests","AutoSubscribeForFlexibleBranding_Test"},
+			enabled=true)
+	public void AutoSubscribeForFlexibleBranding_Test() {
+		// we will start out by unregistering and removing the current brand name.
+		clienttasks.unregister(null, null, null);
+		client.runCommandAndWait("rm -f "+brandingFile);
+		
+		String brandNameBeforeRegisteringWithAutosubscribe = getCurrentBrandName();
+		String brandNameStatBeforeRegisteringWithAutosubscribe = getCurrentBrandNameFileStat();
+		String prettyNameBeforeRegisteringWithAutosubscribe = getCurrentPrettyName();
+		log.info("Currently, the flexible brand name prior to registering with autosubscribe is '"+brandNameBeforeRegisteringWithAutosubscribe+"'.");
+
+		// register with autosubscribe
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null,(List<String>)null, null, null, null, null, null, null, null, null);
+		
+		// tests for branding
+		if (!verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(brandNameBeforeRegisteringWithAutosubscribe,brandNameStatBeforeRegisteringWithAutosubscribe,prettyNameBeforeRegisteringWithAutosubscribe,"registering with autosubscribe")) {
+			throw new SkipException("No flexible branded subscriptions were found after registering with autosubscribe.");
+		}
+	}
+	
+	
+	@Test(	description="run an rhsmcertd event and verify tests for Flexible Branding",
+			//depend on priority instead of dependsOnMethods={"AutoSubscribeForFlexibleBranding_Test"},
+			priority=201,
+			groups={"AcceptanceTests"},
+			enabled=true)
+	public void RhsmcertdCheckForFlexibleBranding_Test() {
+		// we will start out by removing the current brand name and the current entitlements.
+		clienttasks.removeAllCerts(false, true, false);
+		client.runCommandAndWait("rm -f "+brandingFile);
+
+		String brandNameBeforeRunningRhsmcertdCheck = getCurrentBrandName();
+		String brandNameStatBeforeRunningRhsmcertdCheck = getCurrentBrandNameFileStat();
+		String prettyNameBeforeRunningRhsmcertdCheck = getCurrentPrettyName();
+		log.info("Currently, the flexible brand name prior to an rhsmcertd check is '"+brandNameBeforeRunningRhsmcertdCheck+"'.");
+		
+		// run rhsmcertd
+		clienttasks.run_rhsmcertd_worker(false);
+		
+		// tests for branding
+		if (!verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(brandNameBeforeRunningRhsmcertdCheck,brandNameStatBeforeRunningRhsmcertdCheck,prettyNameBeforeRunningRhsmcertdCheck,"running the rhsmcertd-worker check")) {
+			Assert.fail("Expected the rhsmcertd-worker to restore the consumer's entitlements from the prior AutoSubscribeForFlexibleBranding_Test.");
+		}
+	}
+	
+	
+	@Test(	description="run an rhsmcertd healing event and verify tests for Flexible Branding",
+			//depend on priority instead of dependsOnMethods={"AutoSubscribeForFlexibleBranding_Test"},
+			priority=202,
+			groups={"AcceptanceTests"},
+			enabled=true)
+	public void RhsmcertdHealingUpdateForFlexibleBranding_Test() {
+		// we will start out by removing the current brand name and removing the current entitlements.
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		client.runCommandAndWait("rm -f "+brandingFile);
+
+		String brandNameBeforeRunningRhsmcertdHealCheck = getCurrentBrandName();
+		String brandNameStatBeforeRunningRhsmcertdHealCheck = getCurrentBrandNameFileStat();
+		String prettyNameBeforeRunningRhsmcertdHealCheck = getCurrentPrettyName();
+		log.info("Currently, the flexible brand name prior to an rhsmcertd heal check is '"+brandNameBeforeRunningRhsmcertdHealCheck+"'.");
+		
+		// run rhsmcertd check for healing
+		clienttasks.run_rhsmcertd_worker(true);
+		
+		// tests for branding
+		if (!verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(brandNameBeforeRunningRhsmcertdHealCheck,brandNameStatBeforeRunningRhsmcertdHealCheck,prettyNameBeforeRunningRhsmcertdHealCheck,"running the rhsmcertd-worker healing check")) {
+			throw new SkipException("No flexible branded subscriptions were found after running the rhsmcertd-worker check for healing.");
+		}
+	}
+	
 	
 	@Test(	description="assert that brandbot only reads the first line of the branding file",
 			groups={"blockedByBug-1031490"},
@@ -219,6 +188,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(actualPrettyName, "RHEL Branded OS (line 1)", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (Should not contain any new line characters).");
 	}
 	
+	
 	@Test(	description="assert that brandbot trims white space from the first line of the branding file",
 			groups={},
 			enabled=true)
@@ -229,6 +199,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client, "echo '  RHEL Branded OS  ' > "+brandingFile, 0);
 		actualBrandName = getCurrentBrandName();
 		Assert.assertEquals(actualBrandName, "  RHEL Branded OS  ", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should contain leading and trailing white space).");
+		sleep(2000);  // give the brandbot service a chance to run; TODO not sure this is needed 
 		actualPrettyName = getCurrentPrettyName();
 		Assert.assertEquals(actualPrettyName, "RHEL Branded OS", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT contain leading nor trailing white space).");
 	}
@@ -249,6 +220,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		
 		log.info("Testing a single line branding...");
 		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL Branded OS' > "+brandingFile, 0);
+		sleep(2000);  // give the brandbot service a chance to run; TODO not sure this is needed 
 		actualPrettyName = getCurrentPrettyName();
 		Assert.assertEquals(actualPrettyName, "RHEL Branded OS", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"'.");
 		
@@ -298,9 +270,6 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the first line of the brand file is empty).");
 	}
 	
-	// TODO add a testcase for autosubscribe
-	// TODO add a testcase for rhsmcertd
-	// TODO add a testcase for rhsmcertd healing
 	
 	
 	
@@ -399,6 +368,79 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		return prettyName;
 	}
 	
+
+	/**
+	 * This routine performs the expected assertions based on the current entitlements after an event has occurred.
+	 * It will assert the contents of the branding file and the PRETTY_NAME in /etc/os-release. 
+	 * An event like subscribe or unsubscribe should be called immediately before this verification method is called.
+	 * @param brandNameBeforeEvent - value from getCurrentBrandName() before the event is called
+	 * @param brandNameStatBeforeEvent - value from getCurrentBrandNameFileStat() before the event is called
+	 * @param prettyNameBeforeEvent - value from getCurrentPrettyName() before the event is called
+	 * @param afterEventDescription - a description of the event like "after subscribing to pool 'Awesome OS'."
+	 * @return - whether or not a flexible branded subscription is currently entitled
+	 */
+	protected boolean verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(String brandNameBeforeEvent, String brandNameStatBeforeEvent, String prettyNameBeforeEvent, String afterEventDescription) { 
+		
+		boolean flexibleBrandedSubscriptionsFound = false;
+		Set<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlements();
+		
+		// determine the expected brand name after subscribing
+		// Rules:
+		//  - eligible brand names come from the currently entitled productNamespaces
+		//  - the corresponding productId must be among the currently installed product certs to be eligible
+		//  - if more than one brand name is eligible, no update is made to the branding file
+		//  - if only one brand name is eligible and it does NOT already equal the current brand name, then an update is made
+		//  - if no brand name is eligible, no update is made
+		//  - updates are sought out when entitlements are refreshed
+		// 
+		// Design Doc: https://mojo.redhat.com/docs/DOC-186259
+		// Developer Test Notes: https://mojo.redhat.com/docs/DOC-21827
+		String expectedBrandNameAfterSubscribing=null;
+		if (eligibleBrandNames.size()>1) {
+			log.warning("Currently there are multiple eligible brand names "+eligibleBrandNames+", therefore the actual brand name should remain unchanged.");
+			expectedBrandNameAfterSubscribing = brandNameBeforeEvent;
+			flexibleBrandedSubscriptionsFound=true;
+		}
+		if (eligibleBrandNames.isEmpty()) {
+			log.warning("Currently there are no eligible brand names based on the attached entitlements, therefore the actual brand name should remain unchanged.");
+			expectedBrandNameAfterSubscribing = brandNameBeforeEvent;
+		}
+		if (eligibleBrandNames.size()==1) {
+			expectedBrandNameAfterSubscribing = (String) eligibleBrandNames.toArray()[0];
+			log.info("Currently there is only one eligible brand name based on the attached entitlements, therefore the actual brand name should be '"+expectedBrandNameAfterSubscribing+"'.");
+			flexibleBrandedSubscriptionsFound=true;
+		}
+	
+		// verify the actualBrandNameAfterSubscribing = expectedBrandNameAfterSubscribing
+		String actualBrandNameAfterSubscribing = getCurrentBrandName();
+		Assert.assertEquals(actualBrandNameAfterSubscribing, expectedBrandNameAfterSubscribing, "The brand name contained within the first line of the brand file '"+brandingFile+"' after "+afterEventDescription);
+		
+		// verify that the brand file was NOT altered when the expectedBrandNameAfterSubscribing = brandNameBeforeSubscribing
+		if (expectedBrandNameAfterSubscribing!=null && expectedBrandNameAfterSubscribing.equals(brandNameBeforeEvent)) {
+			String brandNameStatAfterSubscribing = getCurrentBrandNameFileStat();
+			Assert.assertEquals(brandNameStatAfterSubscribing, brandNameStatBeforeEvent, "After "+afterEventDescription+", if the brand name should remain unchanged, then the modification and change stats on the brand file '"+brandingFile+"' should remain unaltered.");
+		}
+		if (expectedBrandNameAfterSubscribing!=null && !expectedBrandNameAfterSubscribing.equals(brandNameBeforeEvent)) {
+			String brandNameStatAfterSubscribing = getCurrentBrandNameFileStat();
+			Assert.assertTrue(!brandNameStatAfterSubscribing.equals(brandNameStatBeforeEvent), "After "+afterEventDescription+", if the brand name should change, then the modification/change stats on the brand file '"+brandingFile+"' should obviously change too.");
+		}
+		
+		// verify that /usr/sbin/brandbot has updated PRETTY_NAME in /etc/os-release
+		String actualPrettyNameAfterSubscribing = getCurrentPrettyName();
+		if (expectedBrandNameAfterSubscribing!=null) {
+			if (expectedBrandNameAfterSubscribing.isEmpty()) {
+				// see BrandbotShouldHandleEmptyBrandingFile_Test
+				Assert.assertNull(actualPrettyNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should be removed when the first line of the brand file '"+brandingFile+"' is empty after "+afterEventDescription+".");
+			} else {
+				Assert.assertEquals(actualPrettyNameAfterSubscribing, expectedBrandNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should match the first line of the brand file '"+brandingFile+"' after "+afterEventDescription+".");
+			}
+		} else {
+			// see BrandbotShouldHandleNonExistantBrandingFile_Test
+			Assert.assertEquals(actualPrettyNameAfterSubscribing,prettyNameBeforeEvent, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' should remain unchanged when the expected brand name is null after "+afterEventDescription+".");
+		}
+		
+		return flexibleBrandedSubscriptionsFound;
+	}
 	
 	
 	// Data Providers ***********************************************************************
