@@ -1973,13 +1973,19 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			// add more BlockedByBzBug to rows that are....
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			blockedByBzBug = new BlockedByBzBug("1034396");
 			l.set(0, blockedByBzBug);
 			
 			// Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr
 			
 			if (l.get(7).equals(new Integer(0))) {
+				/* valid prior to bug 1034396 
 				l.set(7,new Integer(1));
 				l.set(8,"This system does not have any subscriptions.");
+				l.set(9,"");
+				*/
+				l.set(7,new Integer(0));
+				l.set(8,"This system does not have any content overrides applied to it.");
 				l.set(9,"");
 			}
 			ll.add(l);
@@ -2000,13 +2006,19 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			// add more BlockedByBzBug to rows that are....
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			blockedByBzBug = new BlockedByBzBug("1034396");
 			l.set(0, blockedByBzBug);
 			
 			// Object blockedByBug, String username, String password, Sring org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern
 			
 			if (l.get(11).equals(new Integer(0))) {
+				/* valid prior to bug 1034396 
 				l.set(11,new Integer(1));
 				l.set(12,"This system does not have any subscriptions.");
+				l.set(13,"");
+				*/
+				l.set(11,new Integer(0));
+				l.set(12,"This system does not have any content overrides applied to it.");
 				l.set(13,"");
 			}
 			ll.add(l);
