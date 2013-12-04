@@ -33,6 +33,11 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * /usr/lib/systemd/system/brandbot.service
  * /usr/lib/systemd/system/multi-user.target.wants/brandbot.path
  * /usr/sbin/brandbot
+ * 
+ * Be wary of this error when trying to update the branding file too fast
+ * [root@jsefler-7 ~]# tail -f /var/log/messages | grep brandbot
+ * Dec  4 14:23:59 jsefler-7 systemd: brandbot.service start request repeated too quickly, refusing to start.
+ * Dec  4 14:23:59 jsefler-7 systemd: Unit brandbot.service entered failed state.
  */
 @Test(groups = { "BrandingTests" })
 public class BrandingTests extends SubscriptionManagerCLITestScript {
@@ -54,6 +59,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(List<String>)null, null, null, null, true, false, null, null, null);
 		
 		// we will start out by removing the current brand name.
+		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		client.runCommandAndWait("rm -f "+brandingFile);
 		 
 		// loop through all the available subscription pools searching for FlexibleBranded subscriptions
@@ -174,18 +180,20 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		String actualBrandName,actualPrettyName;
 		
 		log.info("Testing a single line branding file...");
-		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL Branded OS (line 1)' > "+brandingFile, 0);
+		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
+		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL/Branded OS (line 1)' > "+brandingFile, 0);
 		actualBrandName = getCurrentBrandName();
-		Assert.assertEquals(actualBrandName, "RHEL Branded OS (line 1)", "The brand name contained within the first line of the brand file '"+brandingFile+"'.");
+		Assert.assertEquals(actualBrandName, "RHEL/Branded OS (line 1)", "The brand name contained within the first line of the brand file '"+brandingFile+"'.");
 		actualPrettyName = getCurrentPrettyName();
-		Assert.assertEquals(actualPrettyName, "RHEL Branded OS (line 1)", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"'.");
+		Assert.assertEquals(actualPrettyName, "RHEL/Branded OS (line 1)", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"'.");
 
 		log.info("Testing a multi-line branding file...");
-		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL SubBranded OS (line 2)' >> "+brandingFile, 0);
+		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
+		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL/SubBranded OS (line 2)' >> "+brandingFile, 0);
 		actualBrandName = getCurrentBrandName();
-		Assert.assertEquals(actualBrandName, "RHEL Branded OS (line 1)", "The brand name contained within the first line of the brand file '"+brandingFile+"'.");
+		Assert.assertEquals(actualBrandName, "RHEL/Branded OS (line 1)", "The brand name contained within the first line of the brand file '"+brandingFile+"'.");
 		actualPrettyName = getCurrentPrettyName();
-		Assert.assertEquals(actualPrettyName, "RHEL Branded OS (line 1)", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (Should not contain any new line characters).");
+		Assert.assertEquals(actualPrettyName, "RHEL/Branded OS (line 1)", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (Should not contain any new line characters).");
 	}
 	
 	
@@ -196,12 +204,12 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		String actualBrandName,actualPrettyName;
 		
 		log.info("Testing a single line branding file with leading and trailing white space...");
-		RemoteFileTasks.runCommandAndAssert(client, "echo '  RHEL Branded OS  ' > "+brandingFile, 0);
+		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
+		RemoteFileTasks.runCommandAndAssert(client, "echo '  RHEL-x.y Branded OS  ' > "+brandingFile, 0);
 		actualBrandName = getCurrentBrandName();
-		Assert.assertEquals(actualBrandName, "  RHEL Branded OS  ", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should contain leading and trailing white space).");
-		sleep(2000);  // give the brandbot service a chance to run; TODO not sure this is needed 
+		Assert.assertEquals(actualBrandName, "  RHEL-x.y Branded OS  ", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should contain leading and trailing white space).");
 		actualPrettyName = getCurrentPrettyName();
-		Assert.assertEquals(actualPrettyName, "RHEL Branded OS", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT contain leading nor trailing white space).");
+		Assert.assertEquals(actualPrettyName, "RHEL-x.y Branded OS", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT contain leading nor trailing white space).");
 	}
 	
 	
@@ -218,13 +226,16 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 				
 		String actualBrandName,actualPrettyName;
 		
-		log.info("Testing a single line branding...");
+		log.info("Testing a single line branding to make sure PRETTY_NAME exists before testing the non-existant branding file...");
+		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL Branded OS' > "+brandingFile, 0);
-		sleep(2000);  // give the brandbot service a chance to run; TODO not sure this is needed 
+		actualBrandName = getCurrentBrandName();
+		Assert.assertEquals(actualBrandName, "RHEL Branded OS", "The brand name contained within the first line of the brand file '"+brandingFile+"'.");
 		actualPrettyName = getCurrentPrettyName();
 		Assert.assertEquals(actualPrettyName, "RHEL Branded OS", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"'.");
 		
-		log.info("Testing an non-existant branding file...");
+		log.info("Testing a non-existant branding file...");
+		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		RemoteFileTasks.runCommandAndAssert(client, "rm -f "+brandingFile, 0);
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, brandingFile), "The brand file '"+brandingFile+"' should not exist for this test.");
 		actualBrandName = getCurrentBrandName();
@@ -255,15 +266,17 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		String actualBrandName,actualPrettyName;
 		
 		log.info("Testing an empty branding file...");
+		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		RemoteFileTasks.runCommandAndAssert(client, "rm -f "+brandingFile+" && touch "+brandingFile, 0);
 		actualBrandName = getCurrentBrandName();
 		Assert.assertEquals(actualBrandName, "", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should be an empty string).");
 		actualPrettyName = getCurrentPrettyName();
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the brand file is empty).");
 		
-		log.info("Testing an empty branding file (first line only)...");
+		log.info("Testing a non-empty branding file, but the first line is empty...");
+		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		RemoteFileTasks.runCommandAndAssert(client, "echo '' >> "+brandingFile, 0);
-		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL SubBranded OS (line 2)' >> "+brandingFile, 0);
+		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL SubBranded OS (second line)' >> "+brandingFile, 0);
 		actualBrandName = getCurrentBrandName();
 		Assert.assertEquals(actualBrandName, "", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should be an empty string).");
 		actualPrettyName = getCurrentPrettyName();
