@@ -64,8 +64,9 @@ public class RolesTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that user '"+username+"' with role '"+roleName+"' to org '"+orgKey+"' can NOT register with access '"+access+"'.");
 				//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User "+username+" cannot access organization/owner "+orgKey);	// before string translation files were committed
 				//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User "+username+" cannot access organization "+orgKey);
-				Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User '"+username+"' cannot access organization '"+orgKey+"'.");
-				
+				//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User '"+username+"' cannot access organization '"+orgKey+"'.");	// server response 403 Forbidden
+				Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), String.format("owner with key: %s was not found.",orgKey));	// new server response 404 Not Found from candlepin pull request https://github.com/candlepin/candlepin/pull/444 'Update auth system to allow "my system" administrators'
+					
 				// TODO beav suggested another test to try here
 				/*
 				<beav> jsefler-wfh: maybe update a username
