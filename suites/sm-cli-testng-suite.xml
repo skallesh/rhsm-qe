@@ -129,6 +129,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Branding Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="BrandingTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Proxy Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
