@@ -126,7 +126,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="run an rhsmcertd event and verify tests for Flexible Branding",
 			//depend on priority instead of dependsOnMethods={"AutoSubscribeForFlexibleBranding_Test"},
 			priority=201,
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-1038664"},
 			enabled=true)
 	public void RhsmcertdCheckForFlexibleBranding_Test() {
 		// we will start out by removing the current brand name and the current entitlements.
