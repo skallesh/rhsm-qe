@@ -362,9 +362,10 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		//	VERSION="7.0 (Maipo)"
 		//	ID="rhel"
 		//	VERSION_ID="7.0"
-		//	PRETTY_NAME="foo bar"
+		//	PRETTY_NAME="Red Hat Enterprise Linux Server 7.0 (Maipo)"
 		//	ANSI_COLOR="0;31"
 		//	CPE_NAME="cpe:/o:redhat:enterprise_linux:7.0:beta:server"
+		//
 		//	REDHAT_BUGZILLA_PRODUCT="Red Hat Enterprise Linux 7"
 		//	REDHAT_BUGZILLA_PRODUCT_VERSION=7.0
 		//	REDHAT_SUPPORT_PRODUCT="Red Hat Enterprise Linux"
