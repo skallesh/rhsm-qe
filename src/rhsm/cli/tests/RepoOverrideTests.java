@@ -110,6 +110,40 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
 	}
 	
+	@Test(	description="attempt to add an override for a name baseurl and label using subscription-manager repos-override",
+			groups={"blockedByBug-1030604","blockedByBug-1034396"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptToAddOverrideForBaseurlNameAndLabel_Test() {
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// attempt to add overrides for name, label, and baseurl to multiple repoids
+		List<String> repoids = Arrays.asList(new String[]{"repo1","repo2","repo3"});
+		SSHCommandResult result;
+		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
+		repoOverrideNameValueMap.put("enabled", "0");	// it is okay to add an override for "enabled"
+		
+		repoOverrideNameValueMap.put("name", "Repo Name");
+		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: name", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		
+		repoOverrideNameValueMap.put("label", "repo-label");
+		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: name, label", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		
+		repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-baseurl/$releasever/$basearch");
+		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: name, label, baseurl", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+	}
+	
 	@Test(	description="attempt to add an override to a non-existant repo (while NOT consuming entitlements)",
 			groups={"blockedByBug-1032673","blockedByBug-1034396"},
 			enabled=true)
