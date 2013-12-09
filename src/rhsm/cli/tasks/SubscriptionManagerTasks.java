@@ -2390,13 +2390,12 @@ public class SubscriptionManagerTasks {
 	
 	
 	// register module tasks ************************************************************
-	
+
 	/**
-	 * register WITHOUT asserting results.
-	 * @param insecure TODO
+	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
-		
+	public String registerCommand(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+
 		// assemble the command
 		String command = this.command;											command += " register";
 		if (username!=null)														command += " --username="+String.format(username.contains(" ")? "\"%s\"":"%s", username);	// quote username containing spaces
@@ -2417,6 +2416,37 @@ public class SubscriptionManagerTasks {
 		if (proxy!=null)														command += " --proxy="+proxy;
 		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)												command += " --proxypassword="+proxypassword;
+		
+		return command;
+	}
+
+	/**
+	 * register WITHOUT asserting results.
+	 * @param insecure TODO
+	 */
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+		
+		// assemble the command
+//		String command = this.command;											command += " register";
+//		if (username!=null)														command += " --username="+String.format(username.contains(" ")? "\"%s\"":"%s", username);	// quote username containing spaces
+//		if (password!=null)														command += " --password="+String.format(password.contains("(")||password.contains(")")? "\"%s\"":"%s", password);	// quote password containing ()
+//		if (org!=null)															command += " --org="+org;
+//		if (environment!=null)													command += " --environment="+environment;
+//		if (type!=null)															command += " --type="+type;
+//		if (name!=null)															command += " --name="+String.format(name.contains("\"")? "'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
+//		if (consumerid!=null)													command += " --consumerid="+consumerid;
+//		if (autosubscribe!=null && autosubscribe)								command += " --autosubscribe";
+//		if (servicelevel!=null)													command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()? "\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
+//		if (release!=null)														command += " --release="+release;
+//		if (activationkeys!=null)	for (String activationkey : activationkeys)	command += " --activationkey="+String.format(activationkey.contains(" ")? "\"%s\"":"%s", activationkey);	// quote activationkey containing spaces
+//		if (serverurl!=null)													command += " --serverurl="+serverurl;
+//		if (insecure!=null && insecure)											command += " --insecure";
+//		if (baseurl!=null)														command += " --baseurl="+baseurl;
+//		if (force!=null && force)												command += " --force";
+//		if (proxy!=null)														command += " --proxy="+proxy;
+//		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;
+//		if (proxypassword!=null)												command += " --proxypassword="+proxypassword;
+		String command = registerCommand(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword);	
 		
 		// workaround for bug 800323 after master commit 1bc25596afaf294cd217200c605737a43112a378 to avoid stderr: 'ascii' codec can't decode byte 0xe5 in position 13: ordinal not in range(128)
 		// TODO copy this to all of the task_ methods
