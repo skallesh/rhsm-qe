@@ -145,7 +145,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="attempt to add an override for a name and value that exceed 255 chars",
-			groups={"debugTest","blockedByBug-1034396","blockedByBug-1033583"},
+			groups={"blockedByBug-1034396","blockedByBug-1033583"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptToAddOverridesExceeding255Chars_Test() {
