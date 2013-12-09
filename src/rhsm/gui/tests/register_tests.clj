@@ -151,20 +151,33 @@ verify_password_tip
     (tasks/ui click :register-cancel))))
 
 (defn ^{Test {:groups ["registration"
-                       "blockedByBug-920091"]}}
+                       "blockedByBug-920091"
+                       "blockedByBug-1039753"
+                       "blockedByBug-1034429"]}}
   check_traceback_unregister
   "checks for traceback if any during unregister with GUI open"
   [_]
   (if (not (tasks/ui showing? :register-system))
-  (tasks/unregister))
+    (tasks/unregister))
   (let [log "/var/log/rhsm/rhsm.log"
-        output (get-logging @clientcmd
-                            log
-                            "Traceback-register-unregister-GUI-open"
-                            nil
-                            (run-command (str  "subscription-manager register --user=" (@config :username) " --password=" (@config :password) " --org=" (@config :owner-key) " --auto-attach"))
-                            (run-command "subscription-manager unregister"))]
-    (verify (not (substring? "Traceback" output)))))
+        cmdout (atom nil)
+        addput (fn [m] (swap! cmdout str " " (reduce str ((juxt :stdout :stderr) m))))
+        logout (get-logging
+                @clientcmd
+                log
+                "Traceback-register-unregister-GUI-open"
+                nil
+                (addput (run-command
+                         (str  "subscription-manager register --user="
+                               (@config :username)
+                               " --password="
+                               (@config :password)
+                               " --org="
+                               (@config :owner-key)
+                               " --auto-attach")))
+                (addput (run-command "subscription-manager unregister")))]
+    (verify (not (substring? "Traceback" logout)))
+    (verify (not (substring? "Traceback" @cmdout)))))
 
 (defn ^{Test {:groups ["registration"
                        "blockedByBug-891621"]}}
