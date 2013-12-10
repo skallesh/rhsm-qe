@@ -589,7 +589,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key and add many pools to it and then register asserting all the pools get consumed",
-			groups={"blockedByBug-844455"},
+			groups={/*"blockedByBug-1040101"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingMultiplePools_Test() throws JSONException, Exception {
@@ -597,7 +597,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// get all of the pools belonging to ownerKey
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
 		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
-		jsonPools = clienttasks.workaroundForBug844455(jsonPools);
+		jsonPools = clienttasks.workaroundForBug1040101(jsonPools);
 		
 		// create an activation key
 		String activationKeyName = String.format("ActivationKey%sWithMultiplePoolsForOrg_%s", System.currentTimeMillis(),sm_clientOrg);
@@ -612,7 +612,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONArray jsonPoolsAddedToActivationKey = new JSONArray();
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-
+			
+			// for the purpose of this test, skip pools with no available entitlements (consumed>=quantity) (quantity=-1 is unlimited)
+			if (jsonPool.getInt("quantity")>0 && jsonPool.getInt("consumed")>=jsonPool.getInt("quantity")) continue;
+			
 			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
 			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 			
@@ -656,7 +659,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create many activation keys with one added pool per key and then register with --activationkey=comma_separated_string_of_keys asserting all the pools get consumed",
-			groups={"blockedByBug-844455","blockedByBug-878986","blockedByBug-979492"},
+			groups={"blockedByBug-878986","blockedByBug-979492"/*,"blockedByBug-1040101"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithListOfCommaSeparatedActivationKeys_Test() throws JSONException, Exception {
@@ -664,7 +667,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// get all of the pools belonging to ownerKey
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
 		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
-		jsonPools = clienttasks.workaroundForBug844455(jsonPools);
+		jsonPools = clienttasks.workaroundForBug1040101(jsonPools);
 		
 		// process each of the pools adding them to an individual activation key
 		List<String> activationKeyNames = new ArrayList<String>();
@@ -672,7 +675,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONArray jsonPoolsAddedToActivationKey = new JSONArray();
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-
+			
+			// for the purpose of this test, skip pools with no available entitlements (consumed>=quantity) (quantity=-1 is unlimited)
+			if (jsonPool.getInt("quantity")>0 && jsonPool.getInt("consumed")>=jsonPool.getInt("quantity")) continue;
+			
 			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
 			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 
@@ -723,7 +729,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create many activation keys with one added pool per key and then register with a sequence of many --activationkey parameters asserting each pool per key gets consumed",
-			groups={"blockedByBug-844455","blockedByBug-878986","blockedByBug-979492"},
+			groups={"blockedByBug-878986","blockedByBug-979492"/*,"blockedByBug-1040101"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithSequenceOfMultipleActivationKeys_Test() throws JSONException, Exception {
@@ -731,7 +737,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// get all of the pools belonging to ownerKey
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
 		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
-		jsonPools = clienttasks.workaroundForBug844455(jsonPools);
+		jsonPools = clienttasks.workaroundForBug1040101(jsonPools);
 		
 		// process each of the pools adding them to an individual activation key
 		List<String> activationKeyNames = new ArrayList<String>();
@@ -739,10 +745,13 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONArray jsonPoolsAddedToActivationKey = new JSONArray();
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-
+			
+			// for the purpose of this test, skip pools with no available entitlements (consumed>=quantity) (quantity=-1 is unlimited)
+			if (jsonPool.getInt("quantity")>0 && jsonPool.getInt("consumed")>=jsonPool.getInt("quantity")) continue;
+			
 			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
 			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
-
+			
 			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
 			if (servertasks.statusStandalone) {
 				String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");

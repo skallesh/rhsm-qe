@@ -6601,6 +6601,29 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
+	 * Bug 1040101 - consequence of an SSLTimeoutError when registering with activation keys
+	 * @param jsonPools
+	 * @return
+	 */
+	public JSONArray workaroundForBug1040101(JSONArray jsonPools) {
+		// TEMPORARY WORKAROUND FOR BUG
+		int tooManyPools = 30;
+		if (jsonPools.length()>tooManyPools) { 
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1040101";	// Bug 1040101 - consequence of an SSLTimeoutError when registering with activation keys
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("The workaround is to reduce the number of multiple pools to approximately "+tooManyPools+".  Then resume testing with multiple pools.");
+				for (int i=jsonPools.length()-1; i>=30; i--) {
+					jsonPools.remove(i);
+				}
+			}
+		}
+		// END OF WORKAROUND
+		return jsonPools;
+	}
+	
+	/**
 	 * Bug 876764 - String Updates: consumer -> unit
 	 * @param type
 	 * @return
