@@ -597,13 +597,6 @@
     (or  (substring? "System is properly subscribed through" status)
          (substring? "No installed products detected." status))))
 
-(defn first-date-of-noncomply
-  "Pulls the first date of noncompliance from the subscription assistant dialog."
-  []
-  (if (bool (ui guiexist :subscription-assistant-dialog))
-    (let [datelabel (ui getobjectproperty :subscription-assistant-dialog "*first date*" "label")]
-      (.substring datelabel 0 10))))
-
 (defn get-table-elements
   "Returns a vector containing all elements in a given table and column."
   [view col & {:keys [skip-dropdowns?]
