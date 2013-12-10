@@ -50,8 +50,9 @@
   (try
     ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
     ;; this bug crashes everything, so fail the BeforeClass if this is open
-    (if (= "RHEL7" (get-release)) (base/startup nil))
     (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
+    (verify (not (.isBugOpen (BzChecker/getInstance) "1040119")))
+    (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/kill-app)
     (reset! complytests (ComplianceTests. ))
     (.setupProductCertDirsBeforeClass @complytests)

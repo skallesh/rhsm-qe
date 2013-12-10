@@ -437,7 +437,8 @@
                (tasks/ui click :cancel-contract-selection)))))))))
 
 (defn ^{test {:group ["system"
-                      "blockedByBug-723992"]}}
+                      "blockedByBug-723992"
+                      "blockedByBug-1040119"]}}
   check_gui_refresh
   "Checks whether the GUI refreshes in a reasonable amount of time"
   [_]
@@ -452,10 +453,10 @@
   (sleep 2000)
   (verify (not (tasks/ui showing? :register-system)))
   (try
-    (let [status (tasks/ui gettextvalue :main-window "*subscriptions")
+    (let [status (tasks/ui gettextvalue :overall-status)
           auto-suscribe (run-command "subscription-manager subscribe --auto")]
       (sleep 2000)
-      (verify (not (= status (tasks/ui gettextvalue :main-window "*subscriptions")))))
+      (verify (not (= status (tasks/ui gettextvalue :overall-status)))))
     (finally
      (tasks/unsubscribe_all)
      (tasks/unregister))))

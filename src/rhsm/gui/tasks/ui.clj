@@ -74,6 +74,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :my-subscriptions
                                     :my-subscriptions-view
                                     :online-documentation
+                                    :overall-status
                                     :preferences
                                     :registration-settings
                                     :remove

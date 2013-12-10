@@ -593,8 +593,9 @@
 (defn compliance?
   "Returns true if the GUI reports that all products have a valid subscription."
   []
-  (or (bool (ui guiexist :main-window "System is properly subscribed through*"))
-      (bool (ui guiexist :main-window "No installed products detected."))))
+  (let [status (ui gettextvalue :overall-status)]
+    (or  (substring? "System is properly subscribed through" status)
+         (substring? "No installed products detected." status))))
 
 (defn first-date-of-noncomply
   "Pulls the first date of noncompliance from the subscription assistant dialog."

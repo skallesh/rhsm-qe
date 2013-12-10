@@ -282,7 +282,8 @@
         (tasks/ui click :close-system-prefs)))))
 
 (defn ^{Test {:groups ["facts"
-                       "blockedByBug-1012501"]}}
+                       "blockedByBug-1012501"
+                       "blockedByBug-1040119"]}}
   check_status_message
   "Asserts is status message displayed in main-window is correct when product is subscribed
    to subscription on current date, future date and for expired subscriptions"
@@ -308,7 +309,7 @@
       ;; scenario without subscribing
       (reset! installed-products (tasks/ui getrowcount :installed-view))
       (reset! status-before-subscribe
-              (Integer. (re-find #"\d*" (tasks/ui gettextvalue :main-window "*subscriptions"))))
+              (Integer. (re-find #"\d*" (tasks/ui gettextvalue :overall-status))))
       (verify (= @installed-products @status-before-subscribe))
       ;; scenario after subscribing
       (tasks/search :match-installed? true)
@@ -318,7 +319,7 @@
       (reset! subscribed-products (count (filter #(= "Subscribed" %)
                                                  (tasks/get-table-elements :installed-view 2))))
       (reset! after-subscribe (Integer. (re-find #"\d*"
-                                                 (tasks/ui gettextvalue :main-window "*subscriptions"))))
+                                                 (tasks/ui gettextvalue :overall-status))))
       (verify (= @after-subscribe (- @status-before-subscribe @subscribed-products)))
       ;; scenario after subscribing to future subscriptions
       (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
@@ -329,7 +330,7 @@
       (reset! subscribed-products-date (count (filter #(= "Subscribed" %)
                                                       (tasks/get-table-elements :installed-view 2))))
       (reset! after-date-products (Integer. (re-find #"\d*"
-                                                     (tasks/ui gettextvalue :main-window "*subscriptions"))))
+                                                     (tasks/ui gettextvalue :overall-status))))
       (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date)))
       ;; scenario after advancing dates and expiring subscriptions
       (run-command "date -s \"+1 year\"")
@@ -338,7 +339,7 @@
       (reset! subscribed-products-future (count (filter #(= "Subscribed" %)
                                                         (tasks/get-table-elements :installed-view 2))))
       (reset! after-future-subscribe (Integer. (re-find #"\d*"
-                                                        (tasks/ui gettextvalue :main-window "*subscriptions"))))
+                                                        (tasks/ui gettextvalue :overall-status))))
       (verify (= @after-future-subscribe (- @status-before-subscribe @subscribed-products-future))))
     (finally
      (tasks/unsubscribe_all)

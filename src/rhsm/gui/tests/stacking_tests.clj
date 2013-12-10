@@ -207,7 +207,8 @@
     (tasks/set-conf-file-value "productCertDir" new-prod-dir))
 
 (defn ^{Test {:groups ["stacking"
-                       "blockedByBug-745965"]
+                       "blockedByBug-745965"
+                       "blockedByBug-1040119"]
               :value ["stacking-sockets"]}}
   assert_future_cert_status
   "Asserts cert status for future entitilment"
@@ -250,7 +251,7 @@
      (tasks/do-to-all-rows-in :installed-view 2
                               (fn [status]
                                 (verify (= "Future Subscription" status))))
-     (verify (not (substring? "does not match" (tasks/ui gettextvalue :main-window "*subscription"))))
+     (verify (not (substring? "does not match" (tasks/ui gettextvalue :overall-status))))
      (finally
       (tasks/set-conf-file-value "productCertDir" existing-prod-dir)
       (run-command (str "rm -rf " new-prod-dir))
