@@ -263,19 +263,17 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		// find a different username from the registrationDataList whose owner does not match the registerer of this client
-//		RegistrationData registrationData = findRegistrationDataNotMatchingOwnerKey(ownerKey);
-//		if (registrationData==null) throw new SkipException("Could not find registration data for a user who does not belong to owner '"+ownerKey+"'.");
 		List<RegistrationData> registrationData = findGoodRegistrationData(false,sm_clientUsername,false,sm_clientOrg);
 		if (registrationData.isEmpty()) throw new SkipException("Could not find registration data for a different user who does not belong to owner '"+ownerKey+"'.");
 
-//		RegistrationData registrationDatum = registrationData.get(0);
 		for (RegistrationData registrationDatum : registrationData) {
 			// retrieve the identity using the same username and password as used during register... and assert
 			log.info("Attempting to regenerate identity with an invalid username and password...");
 			SSHCommandResult identityResult = clienttasks.identity_(registrationDatum.username,registrationDatum.password,Boolean.TRUE, Boolean.TRUE, null, null, null);
 			Assert.assertNotSame(identityResult.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
-//			Assert.assertEquals(result.getStderr().trim(),"access denied.");
-			Assert.assertEquals(identityResult.getStderr().trim(),"Insufficient permissions");
+			//Assert.assertEquals(identityResult.getStderr().trim(),"access denied.");
+			//Assert.assertEquals(identityResult.getStderr().trim(),"Insufficient permissions");	// server response 403 Forbidden
+			Assert.assertEquals(identityResult.getStderr().trim(), String.format("Consumer with id %s could not be found.",consumerId));	// new server response 404 Not Found from candlepin pull request https://github.com/candlepin/candlepin/pull/444 'Update auth system to allow "my system" administrators'
 		}
 	}
 	
