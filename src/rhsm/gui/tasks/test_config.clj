@@ -34,6 +34,8 @@
                          :binary-path (DefaultMapKey. "sm.gui.binary" "subscription-manager-gui")
                          :client-hostname "sm.client1.hostname"
                          :server-hostname "sm.server.hostname"
+                         :server-port "sm.server.port"
+                         :server-prefix "sm.server.prefix"
                          :firstboot-binary-path (DefaultMapKey. "sm.firstboot.binary" "firstboot")
                          :ldtpd-source-url (DefaultMapKey. "sm.ldtpd.sourceUrl" nil)
                          :noauth-proxy-hostname "sm.noauthproxy.hostname"

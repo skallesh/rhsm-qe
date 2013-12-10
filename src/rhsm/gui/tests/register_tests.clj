@@ -197,8 +197,12 @@ verify_password_tip
     (verify (= "Please enter your Red Hat account information:"
       (tasks/ui gettextvalue :register-dialog "registration_header_label")))
     (finally
-     (if (bool (tasks/ui guiexist :register-dialog))
-       (tasks/ui click :register-cancel)))))
+      (do
+       (if (bool (tasks/ui guiexist :register-dialog))
+         (tasks/ui click :register-cancel))
+       (tasks/set-conf-file-value "hostname" (@config :server-hostname))
+       (tasks/set-conf-file-value "port" (@config :server-port))
+       (tasks/set-conf-file-value "prefix" (@config :server-prefix))))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
