@@ -16,9 +16,9 @@
 from subscription_manager.base_plugin import SubManPlugin
 requires_api_version = "1.0"
 
-import subprocess
-import simplejson as json
-
+#import subprocess
+#import simplejson as json
+#import json
 
 class FactsCollectionTestPlugin(SubManPlugin):
     """Plugin for adding additional facts to subscription-manager facts"""

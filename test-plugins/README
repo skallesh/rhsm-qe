@@ -1,3 +1,26 @@
 The test plugins in this directory originated from https://github.com/candlepin/subscription-manager/tree/master/example-plugins
 
 For testing purposes, they have been modified.
+
+For testing purposes, these files are actually copied to the following web server from a BeforeClass method uses wget to fetch them...
+[root@auto-services test-plugins]# hostname
+auto-services.usersys.redhat.com
+[root@auto-services test-plugins]# ls -l
+total 68
+-rw-r--r-- 1 root root   19 2013-03-14 17:05 all_slots_test.AllSlotsTestPlugin.conf
+-rw-r--r-- 1 root root 2040 2013-03-16 15:07 all_slots_test.py
+-rw-r--r-- 1 root root   19 2013-06-07 19:46 auto_attach_test.AutoAttachTestPlugin.conf
+-rw-r--r-- 1 root root 1953 2013-06-07 20:56 auto_attach_test.py
+-rw-r--r-- 1 root root   19 2013-03-14 15:28 dbus_event.DbusEventPlugin.conf
+-rw-r--r-- 1 root root 3435 2013-03-14 15:28 dbus_event.py
+-rw-r--r-- 1 root root   19 2013-03-14 15:28 facts_collection_test.FactsCollectionTestPlugin.conf
+-rw-r--r-- 1 root root 1190 2013-12-11 16:39 facts_collection_test.py
+-rw-r--r-- 1 root root   19 2013-03-14 15:28 product_id_install_test.ProductIdInstallTestPlugin.conf
+-rw-r--r-- 1 root root 2382 2013-07-03 23:18 product_id_install_test.py
+-rw-r--r-- 1 root root  185 2013-03-14 15:32 README
+-rw-r--r-- 1 root root 1532 2013-03-15 15:24 register_consumer_test1.py
+-rw-r--r-- 1 root root   19 2013-03-14 15:28 register_consumer_test1.RegisterConsumerTestPlugin.conf
+-rw-r--r-- 1 root root 1532 2013-03-15 15:24 register_consumer_test2.py
+-rw-r--r-- 1 root root   19 2013-03-14 20:33 register_consumer_test2.RegisterConsumerTestPlugin.conf
+-rw-r--r-- 1 root root 1835 2013-03-18 16:09 subscribe_test.py
+-rw-r--r-- 1 root root   19 2013-03-14 15:28 subscribe_test.SubscribeTestPlugin.conf
