@@ -304,7 +304,6 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		for (YumRepo yumRepo : originalYumReposSubset) {
 			String repoId = yumRepo.id;
 			Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
-			repoOverrideNameValueMap.put("name", "Repo "+repoId);
 			repoOverrideNameValueMap.put("enabled", "true");
 			repoOverrideNameValueMap.put("gpgcheck", "false");
 			repoOverrideNameValueMap.put("exclude", "foo-bar");
@@ -485,32 +484,36 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		String name;
 		Map<String,Map<String,String>> repoOverridesMapOfMaps = new HashMap<String,Map<String,String>>();
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
-		repoOverrideNameValueMap.put("name", "Name override for repo "+repoId);
-		repoOverrideNameValueMap.put("cost", "500");
+		repoOverrideNameValueMap.put("retries", "5");
+		repoOverrideNameValueMap.put("timeout", "40");
+		repoOverrideNameValueMap.put("enabled", originalYumRepo.enabled? Boolean.FALSE.toString():Boolean.TRUE.toString());	// put the opposite of originalYumRepo.enabled
 		repoOverridesMapOfMaps.put(repoId, repoOverrideNameValueMap);
 		clienttasks.repo_override(null, null, repoId, null, repoOverrideNameValueMap, null, null, null);
 		
 		// verify the current YumRepos read from the redhat.repo file actually contain the overrides
 		clienttasks.getYumRepolist("all");
 		currentYumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", repoId,  clienttasks.getCurrentlySubscribedYumRepos());
-		name = "name"; Assert.assertEquals(currentYumRepo.name, repoOverrideNameValueMap.get(name), "After adding a repo-override for repoId '"+repoId+"' parameter '"+name+"' and running a yum transaction, the subscription-manager yum plugin should have read the repo overrides from cache at in the '"+clienttasks.redhatRepoFile+"' contains the override.");
-		name = "cost"; Assert.assertEquals(currentYumRepo.cost, repoOverrideNameValueMap.get(name), "After adding a repo-override for repoId '"+repoId+"' parameter '"+name+"' and running a yum transaction, the subscription-manager yum plugin should have read the repo overrides from cache at in the '"+clienttasks.redhatRepoFile+"' contains the override.");
+		name = "retries"; Assert.assertEquals(currentYumRepo.retries,            repoOverrideNameValueMap.get(name), "After adding a repo-override for repoId '"+repoId+"' parameter '"+name+"' and running a yum transaction, the subscription-manager yum plugin should read the repo overrides from cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"' and apply them to '"+clienttasks.redhatRepoFile+"'.");
+		name = "timeout"; Assert.assertEquals(currentYumRepo.timeout,            repoOverrideNameValueMap.get(name), "After adding a repo-override for repoId '"+repoId+"' parameter '"+name+"' and running a yum transaction, the subscription-manager yum plugin should read the repo overrides from cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"' and apply them to '"+clienttasks.redhatRepoFile+"'.");
+		name = "enabled"; Assert.assertEquals(currentYumRepo.enabled.toString(), repoOverrideNameValueMap.get(name), "After adding a repo-override for repoId '"+repoId+"' parameter '"+name+"' and running a yum transaction, the subscription-manager yum plugin should read the repo overrides from cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"' and apply them to '"+clienttasks.redhatRepoFile+"'.");
 		
 		// now let's delete the cache for /var/lib/rhsm/cache/content_overrides.json and verify that
 		// after running a yum transaction, the override is no longer present (because full_refresh_on_yum=0)
 		client.runCommandAndWait("rm -f "+clienttasks.rhsmCacheRepoOverridesFile);
 		clienttasks.getYumRepolist("all");
 		currentYumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", repoId,  clienttasks.getCurrentlySubscribedYumRepos());
-		name = "name"; Assert.assertEquals(currentYumRepo.name, originalYumRepo.name, "After removing '"+clienttasks.rhsmCacheRepoOverridesFile+"' and running a yum transaction, the repo overrides in the '"+clienttasks.redhatRepoFile+"' should be gone; orginal values should be restored for repoId '"+repoId+"' parameter '"+name+"'.");
-		name = "cost"; Assert.assertEquals(currentYumRepo.cost, originalYumRepo.cost, "After removing '"+clienttasks.rhsmCacheRepoOverridesFile+"' and running a yum transaction, the repo overrides in the '"+clienttasks.redhatRepoFile+"' should be gone; orginal values should be restored for repoId '"+repoId+"' parameter '"+name+"'.");
+		name = "retries"; Assert.assertEquals(currentYumRepo.retries,            originalYumRepo.retries, "After removing '"+clienttasks.rhsmCacheRepoOverridesFile+"' and running a yum transaction, the repo overrides in the '"+clienttasks.redhatRepoFile+"' should be gone; orginal values should be restored for repoId '"+repoId+"' parameter '"+name+"'.");
+		name = "timeout"; Assert.assertEquals(currentYumRepo.timeout,            originalYumRepo.timeout, "After removing '"+clienttasks.rhsmCacheRepoOverridesFile+"' and running a yum transaction, the repo overrides in the '"+clienttasks.redhatRepoFile+"' should be gone; orginal values should be restored for repoId '"+repoId+"' parameter '"+name+"'.");
+		name = "enabled"; Assert.assertEquals(currentYumRepo.enabled,            originalYumRepo.enabled, "After removing '"+clienttasks.rhsmCacheRepoOverridesFile+"' and running a yum transaction, the repo overrides in the '"+clienttasks.redhatRepoFile+"' should be gone; orginal values should be restored for repoId '"+repoId+"' parameter '"+name+"'.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhsmCacheRepoOverridesFile),"Re-asserting cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"' has been deleted.");
 		
 		// now let's set rhsm.full_refresh_on_yum to 1 and test...
 		clienttasks.config(null, null, true, new String[]{"rhsm","full_refresh_on_yum","1"});
 		clienttasks.getYumRepolist("all");
 		currentYumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", repoId,  clienttasks.getCurrentlySubscribedYumRepos());
-		name = "name"; Assert.assertEquals(currentYumRepo.name, repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
-		name = "cost"; Assert.assertEquals(currentYumRepo.cost, repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
+		name = "retries"; Assert.assertEquals(currentYumRepo.retries,            repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
+		name = "timeout"; Assert.assertEquals(currentYumRepo.timeout,            repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
+		name = "enabled"; Assert.assertEquals(currentYumRepo.enabled.toString(), repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhsmCacheRepoOverridesFile),"Testing for the restoration of cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"'.");
 		
 		// now let's test that a trigger of rhsmcertd will restore the cache even when rhsm.full_refresh_on_yum=0
@@ -521,8 +524,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhsmCacheRepoOverridesFile),"Testing for the restoration of cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"' after running rhsmcertd_worker to trigger a certificates update.");
 		clienttasks.getYumRepolist("all");
 		currentYumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", repoId,  clienttasks.getCurrentlySubscribedYumRepos());
-		name = "name"; Assert.assertEquals(currentYumRepo.name, repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=0, deleting the cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"', and restarting the rhsmcertd service, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
-		name = "cost"; Assert.assertEquals(currentYumRepo.cost, repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=0, deleting the cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"', and restarting the rhsmcertd service, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
+		name = "retries"; Assert.assertEquals(currentYumRepo.retries,            repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=0, deleting the cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"', and restarting the rhsmcertd service, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
+		name = "timeout"; Assert.assertEquals(currentYumRepo.timeout,            repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=0, deleting the cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"', and restarting the rhsmcertd service, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
+		name = "enabled"; Assert.assertEquals(currentYumRepo.enabled.toString(), repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=0, deleting the cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"', and restarting the rhsmcertd service, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
 	}
 	@AfterGroups(value={"VerifyRhsmConfigurationForFullRefreshOnYum_Test"},groups={"setup"})
 	public void afterVerifyRhsmConfigurationForFullRefreshOnYum_Test() {

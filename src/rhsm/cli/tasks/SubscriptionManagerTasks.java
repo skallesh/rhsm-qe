@@ -4373,7 +4373,7 @@ public class SubscriptionManagerTasks {
 					"When the pool is not multi-entitleable, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
 		} else {
 			Assert.assertTrue(afterSubscriptionPools.contains(pool),
-					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool);
+					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool+" (if this fails, then we likely attached the final entitlements from the pool)");	// TODO fix the assertions for "if this fails"
 		}
 		
 		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
