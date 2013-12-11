@@ -263,7 +263,8 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 			for (SubscriptionPool subscriptionPool : getRandomSubsetOfList(registrationDatum.allAvailableSubscriptionPools,3)) {
 				if (!poolIdsTested.contains(subscriptionPool.poolId)) {
 					SSHCommandResult sshCommandResult = clienttasks.subscribe_(false, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null);
-					Assert.assertEquals(sshCommandResult.getStdout().trim(), "Insufficient permissions", "Stdout from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' belonging to a different org '"+registrationDatum.ownerKey+"'.");
+					//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Insufficient permissions", "Stdout from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' belonging to a different org '"+registrationDatum.ownerKey+"'.");	// server response 403 Forbidden
+					Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Pool with id %s could not be found.",subscriptionPool.poolId), "Stdout from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' belonging to a different org '"+registrationDatum.ownerKey+"'.");	// new server response 404 Not Found from candlepin pull request https://github.com/candlepin/candlepin/pull/444 'Update auth system to allow "my system" administrators'
 					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' belonging to a different org '"+registrationDatum.ownerKey+"'.");
 					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "Exitcode from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' from a different org '"+registrationDatum.ownerKey+"'.");
 					Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "The currently consumed subscriptions should be empty.");
