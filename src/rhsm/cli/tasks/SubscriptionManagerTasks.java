@@ -651,6 +651,12 @@ public class SubscriptionManagerTasks {
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
 				0,"Updated '"+confFile+"' parameter '"+parameter+"' to value '"+value+"'.");
 		
+		// catch the case when the config file parameter is not defined and therefore cannot be updated
+		if (getConfFileParameter(confFile, parameter)==null) {
+			log.warning("Config file '"+confFile+"' parameter '"+parameter+"' was not found and therefore cannot be updated.");
+			return;
+		}
+		
 		// also update this "cached" value for these config file parameters
 		if (confFile.equals(this.rhsmConfFile)) {
 			if (parameter.equals("consumerCertDir"))	this.consumerCertDir = value;
@@ -682,16 +688,22 @@ public class SubscriptionManagerTasks {
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "\\["+section+"\\]", "\\["+section+"\\]\\n"+parameter+"="+value),
 				0,"Added config file '"+confFile+"' section '"+section+"' parameter '"+parameter+"' value '"+value+"'");
 	}
+	public void addConfFileParameter(String confFile, String parameter, String value){
+		log.info("Adding config file '"+confFile+"' parameter: "+parameter+"="+value);
+		
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, String.format("echo '%s=%s' >> %s", parameter, value, confFile), 0);
+	}
 	
 	/**
-	 * This method should be deleted and replaced with calls to getConfFileParameter(String confFile, String section, String parameter)
+	 * return the value of an active configuration parameter from a config file. If not found null is returned.
 	 * @param confFile
 	 * @param parameter
 	 * @return
 	 */
 	public String getConfFileParameter(String confFile, String parameter){
 		// Note: parameter can be case insensitive
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, String.format("grep -iE \"^%s *(=|:)\" %s",parameter,confFile), 0);	// tolerates = or : assignment character
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(String.format("grep -iE \"^%s *(=|:)\" %s",parameter,confFile));	// tolerates = or : assignment character
+		if (result.getExitCode()!=0) return null;
 		String value = result.getStdout().split("=|:",2)[1];
 		return value.trim();
 	}
@@ -6302,7 +6314,21 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
-	
+	/**
+	 * Call rhnreg_ks without asserting any results
+	 * @param rhnUsername - rhnreg_ks username
+	 * @param rhnPassword - rhnreg_ks password
+	 * @param rhnHostname
+	 * @return SSHCommandResult containing stdout stderr and exitCode
+	 */
+	public SSHCommandResult registerToRhnClassic_(String rhnUsername, String rhnPassword, String rhnHostname) {
+		
+		// register to RHN Classic
+		// [root@jsefler-onprem-5server ~]# rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
+		//	ERROR: refreshing remote package list for System Profile
+		String command = String.format("rhnreg_ks --serverUrl=https://xmlrpc.%s/XMLRPC --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", rhnHostname, rhnUsername, rhnPassword, "rhsm-automation."+hostname);
+		return sshCommandRunner.runCommandAndWait(command);
+	}
 	
 	/**
 	 * Call rhnreg_ks and assert the existence of a systemid file afterwards.
@@ -6314,10 +6340,7 @@ public class SubscriptionManagerTasks {
 	public String registerToRhnClassic(String rhnUsername, String rhnPassword, String rhnHostname) {
 		
 		// register to RHN Classic
-		// [root@jsefler-onprem-5server ~]# rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
-		//	ERROR: refreshing remote package list for System Profile
-		String command = String.format("rhnreg_ks --serverUrl=https://xmlrpc.%s/XMLRPC --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", rhnHostname, rhnUsername, rhnPassword, "rhsm-automation."+hostname);
-		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult result = registerToRhnClassic_(rhnUsername, rhnPassword, rhnHostname);
 		
 		// assert result
 		Integer exitCode = result.getExitCode();
@@ -6390,7 +6413,7 @@ public class SubscriptionManagerTasks {
 		// get the value of the systemid
 		// [root@jsefler-onprem-5server rhn]# grep ID- /etc/sysconfig/rhn/systemid
 		// <value><string>ID-1021538137</string></value>
-		command = String.format("grep ID- %s", rhnSystemIdFile);
+		String command = String.format("grep ID- %s", rhnSystemIdFile);
 		return sshCommandRunner.runCommandAndWait(command).getStdout().trim().replaceAll("\\<.*?\\>", "").replaceFirst("ID-", "");		// return 1021538137
 	}
 	
@@ -6408,9 +6431,18 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
 		
 		// assert result
-		String tolerateStderrMsg = "This system is not associated with any channel.";
-		if (result.getExitCode()==1 && result.getStderr().trim().equals(tolerateStderrMsg)) {
-			log.warning(tolerateStderrMsg);
+		if (result.getExitCode()==1 && result.getStderr().trim().equals("This system is not associated with any channel.")) {
+			//	[root@cloud-qe-7 ~]# rhn-channel --list
+			//	This system is not associated with any channel.
+			//	[root@cloud-qe-7 ~]# echo $?
+			//	1
+			log.warning(result.getStderr().trim());
+		} else if (result.getExitCode()==1 && result.getStderr().trim().equals("Unable to locate SystemId file. Is this system registered?")) {
+			//	[root@cloud-qe-7 ~]# rhn-channel --list
+			//	Unable to locate SystemId file. Is this system registered?
+			//	[root@cloud-qe-7 ~]# echo $?
+			//	1
+			log.warning(result.getStderr().trim());
 		} else {
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "Exitcode from attempt to list currently consumed RHN Classic channels.");
 			Assert.assertEquals(result.getStderr(), "", "Stderr from attempt to list currently consumed RHN Classic channels.");
@@ -6418,7 +6450,7 @@ public class SubscriptionManagerTasks {
 		
 		// parse the rhnChannels from stdout 
 		List<String> rhnChannels = new ArrayList<String>();
-		if (!result.getStdout().trim().equals("")) {
+		if (result.getExitCode()==0) {	//if (!result.getStdout().trim().equals("")) {
 			rhnChannels	= Arrays.asList(result.getStdout().trim().split("\\n"));
 		}
 		return rhnChannels;
