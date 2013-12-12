@@ -116,7 +116,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify RHEL4 channel mappings exist in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","blockedByBug-1009932"},
+			groups={"AcceptanceTests","blockedByBug-1009932","blockedByBug-1025338"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -241,7 +241,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","blockedByBug-799103","blockedByBug-849274"/*,"blockedByBug-909436"UNCOMMENT FOR RHEL7.0*/},
+			groups={"AcceptanceTests","blockedByBug-799103","blockedByBug-849274","blockedByBug-909436","blockedByBug-1025338"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -307,7 +307,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","blockedByBug-782208","blockedByBug-1006060"},
+			groups={"AcceptanceTests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
@@ -596,7 +596,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productBaselineRhnChannel+"' to the same productId as dictated in the CDN Product Baseline.");
 	}
 	@Test(	description="Verify that all of the required RHN Channels in the ProductCerts file are accounted for in channel-cert-mapping.txt",
-			groups={},
+			groups={"blockedByBug-1025338"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnChannelFromProductCertsData",
 			enabled=true) // Starting in RHEL65, we are moving away from product-baseline.json and replacing it with product-certs.json
@@ -957,8 +957,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth", "0");	// enableProxyAuth[comment]=To use an authenticated proxy or not
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyUser", "");			// proxyUser[comment]=The username for an authenticated proxy
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyPassword", "");		// proxyPassword[comment]=The password to use for an authenticated proxy
-		
-//		iptablesAcceptPort(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port"));
+		// Note: On RHEL7, these three configurations will not have been set in /etc/sysconfig/rhn/up2date because a successful rhnreg_ks will not have occurred
+		if (clienttasks.getConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth")==null)	{clienttasks.addConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth", "0");}	else {clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth", "0");}	// enableProxyAuth[comment]=To use an authenticated proxy or not
+		if (clienttasks.getConfFileParameter(clienttasks.rhnUp2dateFile, "proxyUser")==null)		{clienttasks.addConfFileParameter(clienttasks.rhnUp2dateFile, "proxyUser", "");}		else {clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyUser", "");}		// proxyUser[comment]=The username for an authenticated proxy
+		if (clienttasks.getConfFileParameter(clienttasks.rhnUp2dateFile, "proxyPassword")==null)	{clienttasks.addConfFileParameter(clienttasks.rhnUp2dateFile, "proxyPassword", "");}	else {clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyPassword", "");}	// proxyPassword[comment]=The password to use for an authenticated proxy
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass"})
@@ -986,7 +988,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (sm_rhnHostname.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 
 		// get the base channel
-		clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		clienttasks.registerToRhnClassic_(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		List<String> rhnChannels = clienttasks.getCurrentRhnClassicChannels();
 		//Assert.assertEquals(rhnChannels.size(), 1, "The number of base RHN Classic base channels this system is consuming.");
 		if (rhnChannels.isEmpty()) {

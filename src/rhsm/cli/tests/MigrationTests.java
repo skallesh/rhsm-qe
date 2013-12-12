@@ -1255,7 +1255,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
 		String expectedStdout = "Unable to locate SystemId file. Is this system registered?";
 		expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";	// changed to this value by subscription-manager commit 53c7f0745d1857cd5e1e080e06d577e67e76ecdd for the benefit of unit testing on Fedora
-		
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";	// "Red Hat Network Classic is not supported." on RHEL 7
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file.");
 		
@@ -1522,10 +1522,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// remove proxy settings from up2date
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxy", "0");		// enableProxyAuth[comment]=To use an authenticated proxy or not
 		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "httpProxy", "");			// httpProxy[comment]=HTTP proxy in host:port format, e.g. squid.redhat.com:3128
-		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth", "0");	// enableProxyAuth[comment]=To use an authenticated proxy or not
-		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyUser", "");			// proxyUser[comment]=The username for an authenticated proxy
-		clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyPassword", "");		// proxyPassword[comment]=The password to use for an authenticated proxy
-		
+		// Note: On RHEL7, these three configurations will not have been set in /etc/sysconfig/rhn/up2date because a successful rhnreg_ks will not have occurred
+		if (clienttasks.getConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth")==null)	{clienttasks.addConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth", "0");}	else {clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "enableProxyAuth", "0");}	// enableProxyAuth[comment]=To use an authenticated proxy or not
+		if (clienttasks.getConfFileParameter(clienttasks.rhnUp2dateFile, "proxyUser")==null)		{clienttasks.addConfFileParameter(clienttasks.rhnUp2dateFile, "proxyUser", "");}		else {clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyUser", "");}		// proxyUser[comment]=The username for an authenticated proxy
+		if (clienttasks.getConfFileParameter(clienttasks.rhnUp2dateFile, "proxyPassword")==null)	{clienttasks.addConfFileParameter(clienttasks.rhnUp2dateFile, "proxyPassword", "");}	else {clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "proxyPassword", "");}	// proxyPassword[comment]=The password to use for an authenticated proxy
 		iptablesAcceptPort(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port"));
 	}
 	
@@ -1556,7 +1556,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sm_rhnHostname.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 		
 		// get the base channel
-		clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		clienttasks.registerToRhnClassic_(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		List<String> rhnChannels = clienttasks.getCurrentRhnClassicChannels();
 		//Assert.assertEquals(rhnChannels.size(), 1, "The number of base RHN Classic base channels this system is consuming.");
 		if (rhnChannels.isEmpty()) {
