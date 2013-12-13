@@ -6462,14 +6462,28 @@ public class SubscriptionManagerTasks {
 		return Boolean.valueOf(result.getStdout().trim());
 	}
 	
-	// protected methods ************************************************************
-
 	protected boolean poolsNoLongerAvailable(ArrayList<SubscriptionPool> beforeSubscription, ArrayList<SubscriptionPool> afterSubscription) {
 		for(SubscriptionPool beforePool:beforeSubscription)
 			if (afterSubscription.contains(beforePool))
 				return false;
 		return true;
 	}
+	
+	/**
+	 * @return the command line syntax for calling rhsm-debug system with these options
+	 */
+	public String rhsmDebugSystemCommand(String destination, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = "rhsm-debug";			command += " system";
+		if (destination!=null)					command += " --destination="+destination;
+		if (proxy!=null)						command += " --proxy="+proxy;
+		if (proxyuser!=null)					command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)				command += " --proxypassword="+proxypassword;
+		
+		return command;
+	}
+	
 	
 	/**
 	 * This command is very useful to run an rhsm cli command in a specific language.<p>
