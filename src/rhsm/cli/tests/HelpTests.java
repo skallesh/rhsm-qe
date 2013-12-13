@@ -1258,6 +1258,60 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
+		
+		// ========================================================================================
+		// rhsm-debug MODULES
+		
+		//	[root@jsefler-7 ~]# rhsm-debug --help
+		//	Usage: rhsm-debug MODULE-NAME [MODULE-OPTIONS] [--help]
+		//	
+		//	Other Modules:
+		//	
+		//	  system         None	// Bug 1039907 - Need Description for rhsm-debug system option
+
+		
+		command = "rhsm-debug"; 
+		modules.clear();
+		modules.add("system");
+		for (String commandHelp : new String[]{command+" -h",command+" --help"}) {
+			Integer exitCode = commandHelp.contains("--help")?0:1;		// coverage for bug 906124; the usage statement permits only "--help" and therefore any differing option (including "-h") should return non-zero exit code
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s MODULE-NAME [MODULE-OPTIONS] [--help]",command);
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null/*new BlockedByBzBug("906124")*/, commandHelp, exitCode, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null/*new BlockedByBzBug("906124")*/, commandHelp, exitCode, modulesRegex, new ArrayList<String>(modules)}));
+		}
+		
+		// rhsm-debug system OPTIONS
+		
+		//	[root@jsefler-7 ~]# rhsm-debug system --help
+		//	Usage: rhsm-debug system [OPTIONS] 
+		//
+		//	Options:
+		//	  -h, --help            show this help message and exit
+		//	  --proxy=PROXY_URL     proxy URL in the form of proxy_hostname:proxy_port
+		//	  --proxyuser=PROXY_USER
+		//	                        user for HTTP proxy with basic authentication
+		//	  --proxypassword=PROXY_PASSWORD
+		//	                        password for HTTP proxy with basic authentication
+		//	  --destination=DESTINATION
+		//	                        the destination location of the zip file
+
+		module = "system";
+		options.clear();
+		options.add("-h, --help");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
+		options.add("--destination=DESTINATION");	// https://bugzilla.redhat.com/show_bug.cgi?id=1040338#c2
+		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS]",command,module);
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
 		return ll;
 	}
 }
