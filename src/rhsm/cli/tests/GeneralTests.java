@@ -560,9 +560,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --remove-all",							new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --list",								new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override",										new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.rhsmDebugSystemCommand(null, null, null, null),					new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 
 		
-		// negative tests that require the system to be registered first...
+		// negative tests that require the system to be registered before attempting the test...
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+(sm_clientOrg==null?"":" --org "+sm_clientOrg),									new Integer(0),	null,	""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe",											new Integer(255),	"Error: This command requires that you specify a pool with --pool or use --auto.",	""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe --pool=123 --auto",							new Integer(255),	"Error: Only one of --pool or --auto may be used with this command.", ""}));
