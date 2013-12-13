@@ -176,6 +176,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			if (bashCommand.equals("rct dump-manifest ")) bashCommand += "-";
 			if (bashCommand.equals("rct stat-cert ")) bashCommand += "-";
 			
+			// special case for rhsm-debug modules [system] need to start the bash completion of the options by adding a "-" as described in https://bugzilla.redhat.com/show_bug.cgi?id=1004318#c1
+			if (bashCommand.equals("rhsm-debug system ")) bashCommand += "-";
+			
 			// transcribe the expectedHelpOptions into expectedCompletions
 			Set<String>expectedCompletions = new HashSet<String>();
 			for (String expectedHelpOption: expectedHelpOptions) {
@@ -256,6 +259,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1004402 - rhsmd and rhsmcertd-worker does not bash complete its options
 			if (bashCommand.startsWith("/usr/libexec/rhsmcertd-worker ")) bugIds.add("1004402");
 			if (bashCommand.startsWith("/usr/libexec/rhsmd ")) bugIds.add("1004402");
+			
+			// Bug 1042897 - bash-completion for "rhsm-debug system -" is missing the proxy options
+			if (bashCommand.startsWith("rhsm-debug system ")) bugIds.add("1042897");
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
