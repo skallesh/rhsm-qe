@@ -212,7 +212,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					}
 					
 					// consider the socket coverage and assert the installed product's status 
-					if (!pool.multiEntitlement/*ADDED AFTER IMPLEMENTATION OF BUG 1008647*/ && poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets) && Integer.valueOf(poolProductSocketsAttribute)>0) {
+					if (pool.subscriptionType!=null && pool.subscriptionType.equals("Other")) {
+						Assert.fail("Encountered a subscription pool of type '"+pool.subscriptionType+"'.  Do not know how to assert the installedProduct.status after subscribing to pool: "+pool);
+				    } else if (pool.multiEntitlement==null && pool.subscriptionType!=null && pool.subscriptionType.isEmpty()) {
+				    	log.warning("Encountered a pool with an empty value for subscriptionType (indicative of an older candlepin server): "+pool);
+				    	log.warning("After subscribing to a pool for ProductId '"+productId+", skipping assertion of the installed product status for products provided by this pool: "+pool);
+					} else if (pool.multiEntitlement!=null && !pool.multiEntitlement/*ADDED AFTER IMPLEMENTATION OF BUG 1008647*/ && poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets) && Integer.valueOf(poolProductSocketsAttribute)>0) {
+						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to a pool for ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription from a non-multi-entitlement pool covers.");
+					} else if (pool.subscriptionType!=null && (pool.subscriptionType.equals("Standard") || pool.subscriptionType.equals("Stackable only with other subscriptions"))/*ADDED AFTER IMPLEMENTATION OF BUG 1008647 AND 1029968*/ && poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets) && Integer.valueOf(poolProductSocketsAttribute)>0) {
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to a pool for ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription from a non-multi-entitlement pool covers.");
 					} else {
 						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to a pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);

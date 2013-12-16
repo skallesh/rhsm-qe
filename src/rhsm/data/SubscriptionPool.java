@@ -33,7 +33,8 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	public String contract;	// added by Bug 1007580 - RFE: list-available output should include contract number and not sku
 	public String quantity;	// public Integer quantity;	// can be "unlimited"
 	public Integer suggested;	// introduced by Bug 1008557 - [RFE] CLI list --available should include a "Quantity Needed" field to facilitate compliance and provide parity with GUI
-	public Boolean multiEntitlement;
+	public Boolean multiEntitlement;	// replaced by subscriptionType
+	public String subscriptionType;	// introduced by Bug 1029968 - [RFE] request for new subscription-manager list installed/consumed field called "Subscription Type"
 	public Calendar endDate;
 	public String machineType;
 	public String serviceLevel;
@@ -145,6 +146,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		if (suggested != null)			string += String.format(" %s='%s'", "suggested",suggested);
 		if (consumed != null)			string += String.format(" %s='%s'", "consumed",consumed);
 		if (multiEntitlement != null)	string += String.format(" %s='%s'", "multiEntitlement",multiEntitlement);
+		if (subscriptionType != null)	string += String.format(" %s='%s'", "subscriptionType",subscriptionType);
 		if (activeSubscription != null)	string += String.format(" %s='%s'", "activeSubscription",activeSubscription);
 		if (startDate != null)			string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
 		if (endDate != null)			string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
@@ -254,9 +256,23 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		Multi-Entitlement:    	No
 		Ends:                 	07/04/2013
 		Machine Type:         	physical
-
-
+		
+		// after changes from: Bug 1029968 - [RFE] request for new subscription-manager list installed/consumed field called "Subscription Type"
+		Subscription Name: Awesome OS with up to 4 virtual guests
+		Provides:          Awesome OS Server Bits
+		SKU:               awesomeos-virt-4
+		Contract:          0
+		Pool ID:           8a90874042fc428e0142fc4369000f29
+		Available:         5
+		Suggested:         1
+		Service Level:     
+		Service Type:      
+		Subscription Type: Multi-Entitleable
+		Ends:              12/15/2014
+		System Type:       Physical
 		*/
+		
+		
 
 		Map<String,String> regexes = new HashMap<String,String>();
 		
@@ -271,6 +287,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		regexes.put("serviceLevel",				"Service Level:(.*)");
 		regexes.put("serviceType",				"Service Type:(.*)");
 		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");
+		regexes.put("subscriptionType",			"Subscription Type:(.*)");	// added by Bug 1029968 (replaces multiEntitlement)	// for possible values see https://bugzilla.redhat.com/show_bug.cgi?id=1029968#c2
 		regexes.put("endDate",					"Ends:(.*)");
 		regexes.put("machineType",				"System Type:(.*)");	// changed by bug 874760	"Machine Type:(.*)");
 	

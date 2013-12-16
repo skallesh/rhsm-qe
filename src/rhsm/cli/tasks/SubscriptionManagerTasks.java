@@ -4377,12 +4377,20 @@ public class SubscriptionManagerTasks {
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed too (unless it is multi-entitleable)
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
-		if (!pool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(pool.quantity)<=1) {
+	    if (pool.subscriptionType!=null && pool.subscriptionType.equals("Other") ) {
+	    	Assert.fail("Encountered a subscription pool of type '"+pool.subscriptionType+"'.  Do not know how to assert the remaining availability of this pool after subscribing to it: "+pool);
+	    } else if (pool.multiEntitlement==null && pool.subscriptionType!=null && pool.subscriptionType.isEmpty()) {
+	    	log.warning("Encountered a pool with an empty value for subscriptionType (indicative of an older candlepin server): "+pool);
+	    	log.warning("Skipping assertion of the pool's expected availability after having subscribed to it.");
+	    } else if (!pool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(pool.quantity)<=1) {
 			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
 					"When the final quantity from the pool was consumed, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
-		} else if (!pool.multiEntitlement) {
+		} else if (pool.multiEntitlement!=null && !pool.multiEntitlement) {
 			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
 					"When the pool is not multi-entitleable, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
+		} else if (pool.subscriptionType!=null && (!pool.subscriptionType.equals("Stackable") && !pool.subscriptionType.equals("Multi-Entitleable") && !pool.subscriptionType.equals("Instance Based")) ) {	// see https://bugzilla.redhat.com/show_bug.cgi?id=1029968#c2
+			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
+					"When the pool is not multi-entitleable (not Stackable && not Multi-Entitleable && not Instance Based), the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
 		} else {
 			Assert.assertTrue(afterSubscriptionPools.contains(pool),
 					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool+" (if this fails, then we likely attached the final entitlements from the pool)");	// TODO fix the assertions for "if this fails"
