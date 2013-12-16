@@ -1435,8 +1435,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	public void setupBeforeClass() throws IOException {
 		basicauthproxy = new SSHCommandRunner(sm_basicauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		noauthproxy = new SSHCommandRunner(sm_noauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-		nErrMsg = "Network error, unable to connect to server.\n Please see "+clienttasks.rhsmLogFile+" for more information.";
-		nErrMsg = "Network error, unable to connect to server.\nPlease see "+clienttasks.rhsmLogFile+" for more information."; // effective in RHEL58
+		if (clienttasks!=null) nErrMsg = clienttasks.msg_NetworkErrorUnableToConnect;
 	}
 	
 	@BeforeMethod(groups={"setup"})

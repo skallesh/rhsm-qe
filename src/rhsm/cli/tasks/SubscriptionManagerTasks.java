@@ -89,6 +89,10 @@ public class SubscriptionManagerTasks {
 	public final String msg_ConsumerNotRegistered		= "This system is not yet registered. Try 'subscription-manager register --help' for more information.";
 	public final String msg_NeedListOrUpdateOption		= "Error: Need either --list or --update, Try facts --help";
 	
+	//public final String msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server.\n Please see "+rhsmLogFile+" for more information.";
+	//public final String msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server.\nPlease see "+rhsmLogFile+" for more information."; // effective in RHEL58
+	public final String msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server. Please see "+rhsmLogFile+" for more information."; // effective after subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
+	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
 	public String entitlementCertDir			= null; // "/etc/pki/entitlement";
