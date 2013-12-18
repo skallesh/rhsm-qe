@@ -916,8 +916,12 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// calling service level list without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.service_level_(null,true,null,null,sm_clientUsername,sm_clientPassword, sm_clientOrg, null, false, null, null, null);
+		/* changed by subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
+		*/
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
 	
 		// calling service level list with insecure should now pass

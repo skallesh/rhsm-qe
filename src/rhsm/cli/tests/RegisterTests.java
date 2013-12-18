@@ -1281,16 +1281,16 @@ Expected Results:
 		ll.add(Arrays.asList(new Object[] {	null,													"",											ll.get(ll.size()-1).get(2)/* last set */,	new Integer(0),		null,			null}));	
 	
 		// negative tests
-		ll.add(Arrays.asList(new Object[] {	null,													"https:/hostname",							null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,													"https:hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,													"http//hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,													"http/hostname/prefix",						null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,													"ftp://hostname",							null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	null,													"git://hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
-		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"878634"}),				"https://hostname:/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL port could not be parsed",											null}));
-		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"878634","842845"}),	"https://hostname:PORT/prefix",				null,			new Integer(255),	"Error parsing baseurl: Server URL port should be numeric",												null}));
-		ll.add(Arrays.asList(new Object[] {	null,													"https://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
-		ll.add(Arrays.asList(new Object[] {	null,													"http://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1044596"}),						"https:/hostname",							null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1044596"}),						"https:hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1044596"}),						"http//hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1044596"}),						"http/hostname/prefix",						null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1044596"}),						"ftp://hostname",							null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1044596"}),						"git://hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"878634","1044596"}),				"https://hostname:/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL port could not be parsed",											null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"878634","842845","1044596"}),		"https://hostname:PORT/prefix",				null,			new Integer(255),	"Error parsing baseurl: Server URL port should be numeric",												null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1044596"}),						"https://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1044596"}),						"http://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
 		return ll;
 	}
 	
@@ -1395,8 +1395,12 @@ Expected Results:
 		
 		// calling register without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,false,null,null,null,null,null,null);
+		/* changed by subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		*/
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		
 		// calling register with insecure should now pass

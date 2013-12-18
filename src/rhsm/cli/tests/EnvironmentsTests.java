@@ -192,8 +192,12 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		
 		// calling environments without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, false, null, null, null);
+		/* changed by subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
+		*/
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
 	
 		// calling environments with insecure should now pass
