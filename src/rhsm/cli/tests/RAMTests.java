@@ -1,39 +1,21 @@
 package rhsm.cli.tests;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterGroups;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
+
 import rhsm.base.SubscriptionManagerCLITestScript;
-import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
-import rhsm.data.ProductCert;
-import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
-import com.redhat.qe.tools.SSHCommandResult;
-import com.redhat.qe.tools.SSHCommandRunner;
-import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
+
+import com.redhat.qe.Assert;
 
 /**
  * @author skallesh
@@ -48,14 +30,6 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 
 
 	// Test methods ***********************************************************************
-
-	@Test(	description="",
-			groups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void TODO_Test() throws Exception {
-		
-	}
 	
 	
 	/**
@@ -66,26 +40,28 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify subscription of Ram/socket based subscription", 
 			groups = { "RamSocketSubscription"}, enabled = true)
 	public void RamSocketSubscription() throws JSONException,Exception {
-		factsMap.put("memory.memtotal", String.valueOf(value*10));
 		Integer sockets = 4;
+		factsMap.clear();
+		factsMap.put("uname.machine", "x86_64");
+		factsMap.put("cpu.core(s)_per_socket", "1");
+		factsMap.put("memory.memtotal", String.valueOf(value*10));
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, true, null, null,
+				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
+		
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
-			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-			
-		}clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
-		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.productId.contains("ram")){
-
-				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+			clienttasks.subscribe(null, null, pool.poolId, null, null, "1", null, null, null, null, null);
+		}
+//DELETEME
+//		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		
+		for(InstalledProduct installed : getRamBasedProducts()){
+			Assert.assertEquals(installed.status.trim(), "Partially Subscribed", "Status of installed product '"+installed.productName+"'.");
 		}
 	}
-		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
-
- }
 	
 	/**
 	 * @author skallesh
@@ -95,33 +71,41 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify healing of partially subscribed Ram/socket based subscription", 
 			groups = { "RamSocketSubscription","blockedByBug-907638"}, enabled = true)
 	public void HealingPartialRamSocketSubscription() throws JSONException,Exception {
-		factsMap.put("memory.memtotal", String.valueOf(value*10));
-		Integer sockets = 4;
-		int healFrequency=2;
-		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
-		clienttasks.register_(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, true, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		for(SubscriptionPool pool :clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
-			if(pool.subscriptionName.contains("RAM/Cores Package")){
-			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-			
-			}}clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
-		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.productId.contains("ram")){
-
-				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+// DELETEME		
+//		factsMap.put("memory.memtotal", String.valueOf(value*10));
+//		Integer sockets = 4;
+//		int healFrequency=2;
+//		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+//		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+//		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+//				sm_clientOrg, null, null, null, null, true, null, null,
+//				(String) null, null, null, null, true, null, null, null, null);
+//		for(SubscriptionPool pool :clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
+//			if(pool.subscriptionName.contains("RAM/Cores Package")){
+//			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+//			
+//			}}clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+//		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+//			if(installed.productId.contains("ram")){
+//
+//				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+//		}
+//	}clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+//	SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+//	for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+//		if(installed.productName.contains("RAM")){
+//			Assert.assertEquals(installed.status.trim(), "Subscribed");
+//	}}
+//		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
+		
+		RamSocketSubscription();
+		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.run_rhsmcertd_worker(true);
+		
+		for(InstalledProduct installed : getRamBasedProducts()){
+			Assert.assertEquals(installed.status.trim(), "Subscribed", "Status of installed product '"+installed.productName+"'.");
 		}
-	}clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-	SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
-	for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-		if(installed.productName.contains("RAM")){
-			Assert.assertEquals(installed.status.trim(), "Subscribed");
-	}}
-		clienttasks.deleteFactsFileWithOverridingValues("/custom.facts");
-
- }
+	}
 	
 	/**
 	 * @author skallesh
@@ -139,14 +123,11 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.productId.contains("ram")){
-
-				Assert.assertEquals(installed.status.trim(), "Not Subscribed");
+		
+		for(InstalledProduct installed : getRamBasedProducts()){
+			Assert.assertEquals(installed.status.trim(), "Not Subscribed", "Status of installed product '"+installed.productName+"'.");
 		}
 	}
-		
- }
 	
 	/**
 	 * @author skallesh
@@ -156,19 +137,26 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify Auto Heal for Ram subscription .", 
 			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638","blockedByBug-976867"}, enabled = true)
 	public void AutoHealRamBasedSubscription() throws JSONException,Exception {
-		int healFrequency=2;
+//DELETEME		
+//		int healFrequency=2;
+		factsMap.clear();
+		factsMap.put("uname.machine", "x86_64");
+		factsMap.put("cpu.core(s)_per_socket", "1");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.autoheal(null, true, null, null, null, null);
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-		SubscriptionManagerCLITestScript.sleep( healFrequency* 60 * 1000+ 10*1000);
-		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.productName.contains("RAM")){
-				Assert.assertEquals(installed.status.trim(), "Subscribed");
-		}}
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, false, null, null, null);
 		
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.autoheal(null, true, null, null, null, null);
+//DELETEME
+//		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+//		SubscriptionManagerCLITestScript.sleep( healFrequency* 60 * 1000+ 10*1000);
+		clienttasks.run_rhsmcertd_worker(true);
+		
+		for(InstalledProduct installed : getRamBasedProducts()){
+			Assert.assertEquals(installed.status.trim(), "Subscribed", "Status of installed product '"+installed.productName+"'.");
+		}
 	}
 	
 	/**
@@ -179,16 +167,19 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify Auto-attach for Ram based subscription", 
 			groups = { "AutoSubscribeRamBasedSubscription"}, enabled = true)
 	public void AutoSubscribeRamBasedSubscription() throws JSONException,Exception {
+		factsMap.clear();
+		factsMap.put("uname.machine", "x86_64");
+		factsMap.put("cpu.core(s)_per_socket", "1");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
 		
 		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
-				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-					if(installed.productId.equals("801")){
-						Assert.assertEquals(installed.status.trim(), "Subscribed");
-				}
-	}
+		
+		for(InstalledProduct installed : getRamBasedProducts()){
+			Assert.assertEquals(installed.status.trim(), "Subscribed", "Status of installed product '"+installed.productName+"'.");
+		}
 	}
 	
 	/**
@@ -199,31 +190,43 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify Partial subscription of Ram subscription. ", 
 			groups = { "PartailSubscriptionOfRamBasedSubscription"}, enabled = true)
 	public void PartailSubscriptionOfRamBasedSubscription() throws JSONException,Exception {
-		clienttasks.register_(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+// DELETEME
+//		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+//				sm_clientOrg, null, null, null, null, null, null, null,
+//				(String) null, null, null, null, true, null, null, null, null);
+//		
+//		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+//			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+//			
+//		}clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+//		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+//			if(installed.productId.contains("ram")){
+//
+//				Assert.assertEquals(installed.status.trim(), "Subscribed");
+//		}
+//			factsMap.put("memory.memtotal", String.valueOf(value*10));
+//			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+//		}
+//		
+//		clienttasks.facts_(true, null, null, null, null);
+//		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+//		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+//			if(installed.productId.contains("ram")){
+//
+//				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+//			}}
 		
-		for(SubscriptionPool pool :getRamBasedSubscriptions()){
-			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-			
-		}clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
-		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.productId.contains("ram")){
-
-				Assert.assertEquals(installed.status.trim(), "Subscribed");
-		}
-			factsMap.put("memory.memtotal", String.valueOf(value*10));
-			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
-		}
+		AutoSubscribeRamBasedSubscription();
 		
-		clienttasks.facts_(true, null, null, null, null);
-		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
-		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.productId.contains("ram")){
-
-				Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
-			}}
+		factsMap.put("memory.memtotal", String.valueOf(value*100));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null, true, null, null, null);
+		
+		for(InstalledProduct installed : getRamBasedProducts()){
+			Assert.assertEquals(installed.status.trim(), "Partially Subscribed", "Status of installed product '"+installed.productName+"'.");
+		}
 	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -232,6 +235,10 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify Ram info in product and entitlement certificate", 
 			groups = { "RamBasedSubscriptionInfoInEntitlementCert"}, enabled = true)
 	public void RamBasedSubscriptionInfoInEntitlementCert() throws JSONException,Exception {
+		factsMap.clear();
+		factsMap.put("uname.machine", "x86_64");
+		factsMap.put("cpu.core(s)_per_socket", "1");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, false, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -239,10 +246,16 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
 			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 		}
-		client.runCommandAndWaitWithoutLogging("find "+clienttasks.entitlementCertDir+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
-		String certificates = client.getStdout();
-		List<EntitlementCert> ramInfo =parseRamInfo(certificates);
-		Assert.assertNotNull(ramInfo.size());
+		
+//DELETEME
+//		client.runCommandAndWaitWithoutLogging("find "+clienttasks.entitlementCertDir+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
+//		String certificates = client.getStdout();
+//		List<EntitlementCert> ramInfo =parseRamInfo(certificates);
+//		Assert.assertNotNull(ramInfo.size());
+		List<EntitlementCert> ramEntitlements = clienttasks.getCurrentEntitlementCerts();
+		for (EntitlementCert ramEntitlement : ramEntitlements) {
+			Assert.assertTrue(!ramEntitlement.orderNamespace.ramLimit.isEmpty(), "A ram-based entitlement cert contains a non-empty Ram Limit (actual='"+ramEntitlement.orderNamespace.ramLimit+"').");
+		}
 	}
 		
 		
@@ -255,35 +268,72 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify subscription of Ram based subscription", 
 			groups = { "SubscribeToRamBasedSubscription","blockedByBug-907315"}, enabled = true)
 	public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
-		int expected=1;
+//DELETEME
+//		int expected=1;
+//		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+//				sm_clientOrg, null, null, null, null, null, null, null,
+//				(String) null, null, null, null, true, null, null, null, null);
+//		factsMap.put("memory.memtotal", String.valueOf(value*1));
+//		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+//		int ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
+//		for(SubscriptionPool pool :getRamBasedSubscriptions()){
+//			if(pool.subscriptionName.contains("8GB")){
+//			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+//			}}
+//		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
+//			if(installed.productId.contains("ram")){
+//			if(ramvalue<=4){
+//			Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+//			factsMap.put("memory.memtotal", String.valueOf(value*5));
+//			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+//			clienttasks.facts(null, true, null, null, null);
+//			ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
+//		}else if(ramvalue>4 && ramvalue<=8){
+//			expected=2;
+//			Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
+//			factsMap.put("memory.memtotal", String.valueOf(value*9));
+//			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+//			clienttasks.facts(null, true, null, null, null);
+//			ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
+//		}
+//		}}
+		
+		factsMap.clear();
+		factsMap.put("uname.machine", "x86_64");
+		factsMap.put("cpu.core(s)_per_socket", "1");
+		factsMap.put("memory.memtotal", String.valueOf(value*1));
+		factsMap.put("cpu.cpu_socket(s)", "1");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		factsMap.put("memory.memtotal", String.valueOf(value*1));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+				(String) null, null, null, null, true, false, null, null, null);
+
 		int ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
+		
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
 			if(pool.subscriptionName.contains("8GB")){
-			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-			}}
-		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.productId.contains("ram")){
-			if(ramvalue<=4){
-			Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
-			factsMap.put("memory.memtotal", String.valueOf(value*5));
-			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
-			clienttasks.facts(null, true, null, null, null);
-			ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
-		}else if(ramvalue>4 && ramvalue<=8){
-			expected=2;
-			Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
-			factsMap.put("memory.memtotal", String.valueOf(value*9));
-			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
-			clienttasks.facts(null, true, null, null, null);
-			ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
+				clienttasks.subscribe(null, null, pool.poolId, null, null, "1", null, null, null, null, null);
+				for (String productName : pool.provides) {
+					for (InstalledProduct installed : InstalledProduct.findAllInstancesWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts())) {
+						if(ramvalue<=4){
+							Assert.assertEquals(installed.status.trim(), "Subscribed", "Status of installed product '"+installed.productName+"'.");
+							factsMap.put("memory.memtotal", String.valueOf(value*5));
+							clienttasks.createFactsFileWithOverridingValues(factsMap);
+							clienttasks.facts(null, true, null, null, null);
+							ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
+						}else if(ramvalue>4 && ramvalue<=8){
+							Assert.assertEquals(installed.status.trim(), "Subscribed", "Status of installed product '"+installed.productName+"'.");
+							factsMap.put("memory.memtotal", String.valueOf(value*9));
+							clienttasks.createFactsFileWithOverridingValues(factsMap);
+							clienttasks.facts(null, true, null, null, null);
+							ramvalue=KBToGBConverter(Integer.parseInt(clienttasks.getFactValue("memory.memtotal")));
+						} else {
+							Assert.assertEquals(installed.status.trim(), "Partially Subscribed", "Status of installed product '"+installed.productName+"'.");	
+						}
+					}
+				}
+			}
 		}
-		}}
-		
 	}
 	
 	static public int KBToGBConverter(int memory) {
@@ -295,14 +345,29 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	
 	 public List<SubscriptionPool> getRamBasedSubscriptions() {
 		 List<SubscriptionPool> RAMBasedPools= new ArrayList<SubscriptionPool>();
-		 for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
-			 if(pools.subscriptionName.contains("RAM Limiting Package")){
-				 RAMBasedPools.add(pools) ;
+		 for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			 if(pool.subscriptionName.toLowerCase().contains("ram") || pool.productId.toLowerCase().contains("ram")){
+				 RAMBasedPools.add(pool) ;
 			 }
 		 }
+		 if (RAMBasedPools.isEmpty()) throw new SkipException("Could not find any RAM-based subscription pools/SKUs.");
 		 
 		return RAMBasedPools;
 	}
+	 
+	public List<InstalledProduct> getRamBasedProducts() {
+		String ramProductName = "RAM";	// "RAM Limiting Product"
+		List<InstalledProduct> RAMBasedProducts= new ArrayList<InstalledProduct>();
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()){
+			if(installedProduct.productName.contains(ramProductName)){
+				RAMBasedProducts.add(installedProduct) ;
+			}
+		}
+		if (RAMBasedProducts.isEmpty()) throw new SkipException("Could not find any installed products containing name '"+ramProductName+"'.");
+		 
+		return RAMBasedProducts;
+	}
+	
 	/* @AfterGroups(groups="setup",value={"DisableCertV3ForRamBasedSubscription"})
 	 public void restartTomcatWithCertV3Enabled() {
 	 clienttasks.unregister(null, null, null);
@@ -311,73 +376,85 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
 	 }*/
 
-	 
-		static public List<EntitlementCert> parseRamInfo(String rawCertificates) {
-			Map<String,String> regexes = new HashMap<String,String>();
-			List certData = new ArrayList();
-			regexes.put("RAM LIMIT",			"Order:(?:(?:\\n.+)+)RAM Limit: (.+)");
 
-			// split the rawCertificates process each individual rawCertificate
-			String rawCertificateRegex = "\\+-+\\+\\n\\s+Entitlement Certificate\\n\\+-+\\+";
-			List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
-			for (String rawCertificate : rawCertificates.split(rawCertificateRegex)) {
-				
-				// strip leading and trailing blank lines and skip blank rawCertificates
-				rawCertificate = rawCertificate.replaceAll("^\\n*","").replaceAll("\\n*$", "");
-				if (rawCertificate.length()==0) continue;
-				List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
-				for(String field : regexes.keySet()){
-					Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-					addRegexMatchesToList(pat, rawCertificate, certDataList, field);
-				}
-				
-				// assert that there is only one group of certData found in the list
-				if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificate.  Expected to parse only one group of certificate data.");
-				certData.add(certDataList.get(0));
-				
-				// create a new EntitlementCert
-			}
-			return certData;
-		}
+//DELETEME
+//		static public List<EntitlementCert> parseRamInfo(String rawCertificates) {
+//			Map<String,String> regexes = new HashMap<String,String>();
+//			List certData = new ArrayList();
+//			regexes.put("RAM LIMIT",			"Order:(?:(?:\\n.+)+)RAM Limit: (.+)");
+//
+//			// split the rawCertificates process each individual rawCertificate
+//			String rawCertificateRegex = "\\+-+\\+\\n\\s+Entitlement Certificate\\n\\+-+\\+";
+//			List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+//			for (String rawCertificate : rawCertificates.split(rawCertificateRegex)) {
+//				
+//				// strip leading and trailing blank lines and skip blank rawCertificates
+//				rawCertificate = rawCertificate.replaceAll("^\\n*","").replaceAll("\\n*$", "");
+//				if (rawCertificate.length()==0) continue;
+//				List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+//				for(String field : regexes.keySet()){
+//					Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+//					addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+//				}
+//				
+//				// assert that there is only one group of certData found in the list
+//				if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificate.  Expected to parse only one group of certificate data.");
+//				certData.add(certDataList.get(0));
+//				
+//				// create a new EntitlementCert
+//			}
+//			return certData;
+//		}
 
-		@BeforeClass(groups = "setup")
-		public void SetServerTasks() throws Exception {
-		server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-		servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
-		}
+//DELETEME
+//		@BeforeClass(groups = "setup")
+//		public void SetServerTasks() throws Exception {
+//		server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+//		servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
+//		}
 		
 		@AfterClass(groups = "setup")
-		public void DeleteSystemArchValue() throws Exception {
-		clienttasks.deleteFactsFileWithOverridingValues();
-		clienttasks.facts(null, true, null, null, null);
+		public void deleteFactsFileWithOverridingValuesAfterClass() throws Exception {
+			if (clienttasks!=null) clienttasks.deleteFactsFileWithOverridingValues();
 		}
 		
-		@BeforeClass(groups = "setup")
-		public void SetSystemArch() throws Exception {
-		Map<String, String> factsMap = new HashMap<String, String>();
-		factsMap.put("uname.machine", "x86_64");
-		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
-		}
+//DELETEME
+//		@AfterClass(groups = "setup")
+//		public void DeleteSystemArchValue() throws Exception {
+//		clienttasks.deleteFactsFileWithOverridingValues("system-arch.facts");
+//		//clienttasks.facts(null, true, null, null, null);
+//		}
+//		
+//		@BeforeClass(groups = "setup")
+//		public void SetSystemArch() throws Exception {
+//		Map<String, String> factsMap = new HashMap<String, String>();
+//		factsMap.put("uname.machine", "x86_64");
+//		clienttasks.createFactsFileWithOverridingValues("system-arch.facts",factsMap);
+//		//clienttasks.facts(null, true, null, null, null);
+//		}
 		
-		static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {
-			boolean foundMatches = false;
-			Matcher matcher = regex.matcher(to_parse);
-			int currListElem=0;
-			while (matcher.find()){
-				if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
-				Map<String,String> matchMap = matchList.get(currListElem);
-				matchMap.put(sub_key, matcher.group(1).trim());
-				matchList.set(currListElem, matchMap);
-				currListElem++;
-				foundMatches = true;
-			}
-	        if (!foundMatches) {
-	        	//log.warning("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
-	        	log.finer("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
-	        }
-			return foundMatches;
-		}
+
+		
+//DELETEME
+//		static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {
+//			boolean foundMatches = false;
+//			Matcher matcher = regex.matcher(to_parse);
+//			int currListElem=0;
+//			while (matcher.find()){
+//				if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
+//				Map<String,String> matchMap = matchList.get(currListElem);
+//				matchMap.put(sub_key, matcher.group(1).trim());
+//				matchList.set(currListElem, matchMap);
+//				currListElem++;
+//				foundMatches = true;
+//			}
+//	        if (!foundMatches) {
+//	        	//log.warning("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
+//	        	log.finer("Could not find regex '"+regex+"' match for field '"+sub_key+"' while parsing: "+to_parse );
+//	        }
+//			return foundMatches;
+//		}
+		
 	// Candidates for an automated Test:
 	// TODO http://qe-india.pad.engineering.redhat.com/48?
 	/*
@@ -489,110 +566,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	- Subscription: RAM Limiting Package (8GB)
 	 */
 	
-	//[root@jsefler-6 ~]# curl --stderr /dev/null -k -u testuser1:password https://jsefler-f14-6candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f82e3b49b570013b49b691ba055b | python -msimplejson/tool
-	//{
-	//    "accountNumber": "12331131231", 
-	//    "activeSubscription": true, 
-	//    "attributes": [], 
-	//    "consumed": 0, 
-	//    "contractNumber": "133", 
-	//    "created": "2012-11-29T01:09:59.866+0000", 
-	//    "endDate": "2013-11-28T00:00:00.000+0000", 
-	//    "exported": 0, 
-	//    "href": "/pools/8a90f82e3b49b570013b49b691ba055b", 
-	//    "id": "8a90f82e3b49b570013b49b691ba055b", 
-	//    "owner": {
-	//        "displayName": "Admin Owner", 
-	//        "href": "/owners/admin", 
-	//        "id": "8a90f82e3b49b570013b49b58f170002", 
-	//        "key": "admin"
-	//    }, 
-	//    "productAttributes": [
-	//        {
-	//            "created": "2012-11-29T01:09:59.866+0000", 
-	//            "id": "8a90f82e3b49b570013b49b691ba055c", 
-	//            "name": "ram", 
-	//            "productId": "ram-8gb", 
-	//            "updated": "2012-11-29T01:09:59.866+0000", 
-	//            "value": "8"
-	//        }, 
-	//        {
-	//            "created": "2012-11-29T01:09:59.866+0000", 
-	//            "id": "8a90f82e3b49b570013b49b691bb055d", 
-	//            "name": "type", 
-	//            "productId": "ram-8gb", 
-	//            "updated": "2012-11-29T01:09:59.866+0000", 
-	//            "value": "MKT"
-	//        }, 
-	//        {
-	//            "created": "2012-11-29T01:09:59.867+0000", 
-	//            "id": "8a90f82e3b49b570013b49b691bb055e", 
-	//            "name": "arch", 
-	//            "productId": "ram-8gb", 
-	//            "updated": "2012-11-29T01:09:59.867+0000", 
-	//            "value": "ALL"
-	//        }, 
-	//        {
-	//            "created": "2012-11-29T01:09:59.867+0000", 
-	//            "id": "8a90f82e3b49b570013b49b691bb055f", 
-	//            "name": "version", 
-	//            "productId": "ram-8gb", 
-	//            "updated": "2012-11-29T01:09:59.867+0000", 
-	//            "value": "1.0"
-	//        }, 
-	//        {
-	//            "created": "2012-11-29T01:09:59.867+0000", 
-	//            "id": "8a90f82e3b49b570013b49b691bb0560", 
-	//            "name": "variant", 
-	//            "productId": "ram-8gb", 
-	//            "updated": "2012-11-29T01:09:59.867+0000", 
-	//            "value": "ALL"
-	//        }
-	//    ], 
-	//    "productId": "ram-8gb", 
-	//    "productName": "RAM Limiting Package (8GB)", 
-	//    "providedProducts": [
-	//        {
-	//            "created": "2012-11-29T01:09:59.867+0000", 
-	//            "id": "8a90f82e3b49b570013b49b691bb0561", 
-	//            "productId": "801", 
-	//            "productName": "RAM Limiting Product", 
-	//            "updated": "2012-11-29T01:09:59.867+0000"
-	//        }
-	//    ], 
-	//    "quantity": 10, 
-	//    "restrictedToUsername": null, 
-	//    "sourceEntitlement": null, 
-	//    "startDate": "2012-11-28T00:00:00.000+0000", 
-	//    "subscriptionId": "8a90f82e3b49b570013b49b67e6e023d", 
-	//    "subscriptionSubKey": "master", 
-	//    "updated": "2012-11-29T22:12:20.077+0000"
-	//}
-	//[root@jsefler-6 ~]# 
-
-//	@BeforeGroups(groups={"setup"}, value={"VerifyEntitlementCertContainsExpectedOIDs_Test"})
-//	public void createFactsFileWithOverridingValues() {
-//		Map<String,String> factsMap = new HashMap<String,String>();
-//		factsMap.put("system.certificate_version", "1.0");
-//		clienttasks.createFactsFileWithOverridingValues(factsMap);
-//	}
-//	@Test(	description="Make sure the entitlement cert contains all expected OIDs",
-//			groups={"debugTest","VerifyEntitlementCertContainsExpectedOIDs_Test","AcceptanceTests","blockedByBug-744259","blockedByBug-754426" },
-//			dataProvider="getAllAvailableSubscriptionPoolsData",
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void VerifyEntitlementCertContainsExpectedOIDs_Test(SubscriptionPool pool) throws JSONException, Exception {
-//		// skip RAM-based subscriptions
-//		if (CandlepinTasks.getPoolAttributeValue(sm_clientUsername, sm_clientPassword, sm_clientOrg, pool.poolId, "ram")!=null) {
-//			if (Float.valueOf(clienttasks.getFactValue("system.certificate_version")) < 3.1) {
-//				SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-//				Assert.assertEquals(subscribeResult.getStderr().trim(), "Please upgrade to a newer client to use subscription: "+pool.subscriptionName, "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
-//				Assert.assertEquals(subscribeResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
-//				Assert.assertEquals(subscribeResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' a RAM-based subscription when system.certificate_version is < 3.1");
-//				throw new SkipException("This test is not designed for RAM-based subscriptions requiring system.certificate_version >= 3.1");
-//			}
-//		}
-//	}
+	
 	
 	// Configuration methods ***********************************************************************
 
