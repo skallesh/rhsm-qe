@@ -55,7 +55,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering call rhsm-debug system",
-			groups={/*"blockedByBug-1040338"*/},
+			groups={/*FIXME UNCOMMENT "blockedByBug-1040338"*/},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystem_Test() {
@@ -63,7 +63,16 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
-		// attempt to run rhsm-debug system without being registered
+		// subscribe to a randomly available pool (so as to consume an entitlement)
+		List<SubscriptionPool> availablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		if (!availablePools.isEmpty()) {
+			SubscriptionPool pool = availablePools.get(randomGenerator.nextInt(availablePools.size())); // randomly pick a pool
+			clienttasks.subscribeToSubscriptionPool(pool);
+		} else {
+			log.warning("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
+		}
+		
+		// run rhsm-debug system
 		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
@@ -77,7 +86,8 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the existence of the rhsmDebugFile
 		Assert.assertTrue(RemoteFileTasks.testExists(client, rhsmDebugSystemFile.getPath()), "The expected rhsm-debug system file '"+rhsmDebugSystemFile+"' exists.");
-		
+
+// DELETEME
 //		// get a zip file listing of the rhsmDebugFile
 //		SSHCommandResult rhsmDebugSystemFileListResult = client.runCommandAndWait("unzip -l "+rhsmDebugSystemFile);
 		
@@ -102,36 +112,34 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		//	   creating: /tmp/rhsmDebugSystemTestDir/etc/pki/product/
 		//	  inflating: /tmp/rhsmDebugSystemTestDir/etc/pki/product/230.pem  
 		//	   creating: /tmp/rhsmDebugSystemTestDir/etc/pki/entitlement/
+		//	   creating: /tmp/rhsmDebugSystemTestDir/etc/pki/entitlement/1244867258726211835.pem
 		//	   creating: /tmp/rhsmDebugSystemTestDir/etc/pki/consumer/
 		//	  inflating: /tmp/rhsmDebugSystemTestDir/etc/pki/consumer/key.pem  
 		//	  inflating: /tmp/rhsmDebugSystemTestDir/etc/pki/consumer/cert.pem  
 		//	[root@jsefler-7 ~]#
-		String expectedFile;
-		expectedFile = unzipDir+"/consumer.json";		Assert.assertTrue(!getSubstringMatches(rhsmDebugSystemFileUnzipResult.getStdout(),unzipDir+"/consumer.json"+"\\s*$").isEmpty(),"The rhsmDebugSystemFile '"+rhsmDebugSystemFile+"' appears to contain expected file '"+expectedFile+"'.");
-		expectedFile = unzipDir+"/entitlements.json";	Assert.assertTrue(!getSubstringMatches(rhsmDebugSystemFileUnzipResult.getStdout(),unzipDir+"/consumer.json"+"\\s*$").isEmpty(),"The rhsmDebugSystemFile '"+rhsmDebugSystemFile+"' appears to contain expected file '"+expectedFile+"'.");
+		List<String> expectedFiles = new ArrayList<String>();
+		expectedFiles.add("/consumer.json");
+		expectedFiles.add("/compliance.json");
+		expectedFiles.add("/entitlements.json");
+		expectedFiles.add("/pools.json");
+		expectedFiles.add("/subscriptions.json");
+		expectedFiles.add("/etc/rhsm/rhsm.conf");
+		expectedFiles.add("/var/log/rhsm/rhsmcertd.log");
+		expectedFiles.add("/var/log/rhsm/rhsm.log");
+		String consumerCertDir = clienttasks.getConfParameter("consumerCertDir");
+		expectedFiles.add(consumerCertDir+"/key.pem");
+		expectedFiles.add(consumerCertDir+"/cert.pem");
+		for (File entitlementCertFile : clienttasks.getCurrentEntitlementCertFiles()) {
+// FIXME UNCOMMENT			expectedFiles.add(entitlementCertFile.getPath());
+		}
+		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
+			expectedFiles.add(productCertFile.getPath());
+		}
+		for (String expectedFile : expectedFiles) {
+			Assert.assertTrue(rhsmDebugSystemFileUnzipResult.getStdout().contains(expectedFile), "Explosion of '"+rhsmDebugSystemFile+"' appears to contain expected file '"+expectedFile+"'.");
+		}
 		
-//		// without any subscriptions attached...
-//		SSHCommandResult defaultResult = clienttasks.repo_override_(null,null,(String)null,(String)null,null,null,null,null);
-//		SSHCommandResult listResult = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
-//		Assert.assertEquals(listResult.toString().trim(), defaultResult.toString().trim(), "The result from running module repo-override without any options should default to the --list result (with no subscriptions attached and no overrides)");
-//		// valid prior to bug 1034396	Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached and no overrides.");
-//		Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any content overrides applied to it.", "Stdout from repo-override --list without any subscriptions attached and no overrides.");
-//		Assert.assertEquals(listResult.getStderr().trim(), "", "Stderr from repo-override --list without any subscriptions attached and no overrides.");
-//		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(/*1*/0), "ExitCode from repo-override --list without any subscriptions attached and no overrides.");
 		
-//		// subscribe to a random pool (so as to consume an entitlement)
-//		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-//		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
-//		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-//		clienttasks.subscribeToSubscriptionPool(pool);
-//		
-//		// with a subscription attached...
-//		defaultResult = clienttasks.repo_override_(null,null,(String)null,(String)null,null,null,null,null);
-//		listResult = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
-//		Assert.assertEquals(listResult.toString().trim(), defaultResult.toString().trim(), "The result from running module repo-override without any options should default to the --list result (with subscriptions attached)");
-//		Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any content overrides applied to it.", "Stdout from repo-override --list without any overrides.");
-//		Assert.assertEquals(listResult.getStderr().trim(), "", "Stderr from repo-override --list without any overrides.");
-//		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "ExitCode from repo-override --list without any overrides.");
 	}
 	
 	
