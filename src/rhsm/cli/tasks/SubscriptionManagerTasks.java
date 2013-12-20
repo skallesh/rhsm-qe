@@ -109,6 +109,7 @@ public class SubscriptionManagerTasks {
 	public String sockets						= null;	// of the client
 	public String coresPerSocket				= null;	// of the client
 	public String cores							= null;	// of the client
+	public String vcpu							= null;	// of the client
 	public String variant						= null;	// of the client
 	public String releasever					= null;	// of the client	 // e.g. 5Server	// e.g. 5Client
 	
@@ -176,15 +177,17 @@ public class SubscriptionManagerTasks {
 	
 	
 	/**
+	 * Initialize/determine the system values for ram cores vcpu and sockets which are all used in the determination of a system's compliance (depending on the is_guest fact)
 	 * Must be called after installSubscriptionManagerRPMs(...)
+	 * 
 	 */
-	public void initializeRamCoreSockets() {
+	public void initializeSystemComplianceAttributes() {
 		// STORE THE subscription-manager fact for "cpu.cpu_socket(s)".  THIS IS THE VALUE CANDLEPIN USES FOR HARDWARE RULES.
 		removeAllFacts();
 		
 		// sockets
 		String cpuSocketsFact = "cpu.cpu_socket(s)";
-		sockets = getFactValue(cpuSocketsFact);
+		sockets = getFactValue(cpuSocketsFact);	//  (will be ingored for compliance on a virtual system)
 		//Assert.assertTrue(SubscriptionManagerCLITestScript.isInteger(sockets) && Integer.valueOf(sockets)>0, "Subscription manager facts '"+cpuSocketsFact+"' value '"+sockets+"' is a positive integer.");
 		if (!SubscriptionManagerCLITestScript.isInteger(sockets)) {
 			log.warning("When no '"+cpuSocketsFact+"' fact is present, the hardware rules should treat this system as a 1 socket system.  Therefore automation will assume this is a one socket system.");
@@ -199,9 +202,13 @@ public class SubscriptionManagerTasks {
 			log.warning("When no '"+cpuCoresPerSocketFact+"' fact is present, the hardware rules should treat this system as a 1 core_per_socket system.  Therefore automation will assume this is a one core_per_socket system.");
 			coresPerSocket = "1";
 		}
-		cores = String.valueOf(Integer.valueOf(sockets)*Integer.valueOf(coresPerSocket));
+		cores = String.valueOf(Integer.valueOf(sockets)*Integer.valueOf(coresPerSocket));	//  (will be ingored for compliance on a virtual system)
 		
-		//TODO ram
+		// ram
+		// ram = getFactValue("memory.memtotal"); //TODO determine what the ram is on the system; is thgis adequate?
+		
+		// vcpu
+		vcpu = cores;	// vcpu count on a virtual system is treated as equivalent to cores (will be ingored for compliance on a physical system)
 	}
 	
 	
