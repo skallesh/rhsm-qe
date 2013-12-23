@@ -200,8 +200,9 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(productSubscription, "Found a consumed product subscription to '"+pool.subscriptionName+"' after manually subscribing.");
 			Assert.assertEquals(productSubscription.quantityUsed,Integer.valueOf(poolInstanceMultiplier),"The attached quantity of instance based subscription '"+pool.subscriptionName+"' in the list of consumed product subscriptions.");
 			if (poolInstanceMultiplier>=expectedQuantityToAchieveCompliance) {	// compliant when true
-				Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "Status Details for consumed product subscription '"+productSubscription.productName+"' should be empty.  Actual="+productSubscription.statusDetails);
+				Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "Indicated by an empty value, Status Details for consumed product subscription '"+productSubscription.productName+"' is compliant (Actual="+productSubscription.statusDetails+").");
 			} else {
+				// TODO Something is wrong in this next calculation.  I think poolInstanceMultiplier is wrong.  Is creating "Only covers 2 of 2 sockets." instead of "Only covers 1 of 2 sockets."
 				List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.",poolInstanceMultiplier,systemSockets)});
 				if (productSubscription.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 				Assert.assertEquals(productSubscription.statusDetails,expectedStatusDetails, "Status Details for consumed product subscription '"+productSubscription.productName+"'.  Expected="+expectedStatusDetails);
@@ -319,14 +320,17 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				poolProductIdsQuantityMap.put(pool.productId, Integer.valueOf(pool.quantity)+poolProductIdsQuantityMap.get(pool.productId));
 
 			} else if (CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
+				BlockedByBzBug blockedByBzBug = null;
+//TODO debugTesting if (!pool.productId.equals("RH00073")) continue;
+				if (pool.productId.equals("RH00073")) blockedByBzBug = new BlockedByBzBug("1046158");	// Bug 1046158 - Attaching quantity=1 of SKU RH00073 on a 2 socket physical system yields "Only covers 0 of 2 sockets."
 				
 				// Object bugzilla, Boolean is_guest, String cpu_sockets, SubscriptionPool pool
-				ll.add(Arrays.asList(new Object[]{null,	false,	new Integer(1),	pool}));
-				ll.add(Arrays.asList(new Object[]{null,	false,	new Integer(2),	pool}));
-				ll.add(Arrays.asList(new Object[]{null,	false,	new Integer(5),	pool}));
-				ll.add(Arrays.asList(new Object[]{null,	true,	new Integer(1),	pool}));
-				ll.add(Arrays.asList(new Object[]{null,	true,	new Integer(2),	pool}));
-				ll.add(Arrays.asList(new Object[]{null,	true,	new Integer(5),	pool}));
+				ll.add(Arrays.asList(new Object[]{blockedByBzBug,	false,	new Integer(1),	pool}));
+				ll.add(Arrays.asList(new Object[]{blockedByBzBug,	false,	new Integer(2),	pool}));
+				ll.add(Arrays.asList(new Object[]{blockedByBzBug,	false,	new Integer(5),	pool}));
+				ll.add(Arrays.asList(new Object[]{null,				true,	new Integer(1),	pool}));
+				ll.add(Arrays.asList(new Object[]{null,				true,	new Integer(2),	pool}));
+				ll.add(Arrays.asList(new Object[]{null,				true,	new Integer(5),	pool}));
 				
 				// keep a quantity map of the instance based pools we are testing
 				poolProductIdsQuantityMap.put(pool.productId, Integer.valueOf(pool.quantity));
