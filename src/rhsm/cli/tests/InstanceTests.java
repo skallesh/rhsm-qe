@@ -178,20 +178,22 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			// pool, a subpool with unlimited quantity available only to the guests on this physical system will be generated.
 			
 			// start by attempting to subscribe in quantities that are NOT evenly divisible by the instance_multiplier
-			for (int qty=0; qty<=poolInstanceMultiplier+1; qty++) {
-				SSHCommandResult sshCommandResult = clienttasks.subscribe_(false,null,pool.poolId,null,null,String.valueOf(qty),null,null,null,null,null);
-				if (qty==0) {
-					Assert.assertEquals(sshCommandResult.getStdout().trim(), "Error: Quantity must be a positive integer.", "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+qty+"' which should be an error.");
-					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+qty+"' which should be an error.");
-					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+qty+"' which should be an error.");
-				} else if (qty%poolInstanceMultiplier!=0) {
-					Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Quantity '%s' is not a multiple of instance multiplier '%s'",qty,poolInstanceMultiplier), "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+qty+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
-					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+qty+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
-					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1)/* TODO figure out if this is a bug.  should it be 255?*/, "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+qty+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
+			int quantityAttached=0;
+			for (int quantityAttempted=0; quantityAttempted<=poolInstanceMultiplier+1; quantityAttempted++) {
+				SSHCommandResult sshCommandResult = clienttasks.subscribe_(false,null,pool.poolId,null,null,String.valueOf(quantityAttempted),null,null,null,null,null);
+				if (quantityAttempted==0) {
+					Assert.assertEquals(sshCommandResult.getStdout().trim(), "Error: Quantity must be a positive integer.", "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
+					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
+					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
+				} else if (quantityAttempted%poolInstanceMultiplier!=0) {
+					Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Quantity '%s' is not a multiple of instance multiplier '%s'",quantityAttempted,poolInstanceMultiplier), "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
+					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
+					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1)/* TODO figure out if this is a bug.  should it be 255?*/, "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
 				} else {
-					Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Successfully attached a subscription for: %s",pool.subscriptionName), "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+qty+"' which is evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
-					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+qty+"' which is evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
-					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+qty+"' which is evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
+					Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Successfully attached a subscription for: %s",pool.subscriptionName), "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
+					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
+					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
+					quantityAttached+=quantityAttempted;
 				}
 			}
 			
@@ -202,8 +204,8 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			if (poolInstanceMultiplier>=expectedQuantityToAchieveCompliance) {	// compliant when true
 				Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "Indicated by an empty value, Status Details for consumed product subscription '"+productSubscription.productName+"' is compliant (Actual="+productSubscription.statusDetails+").");
 			} else {
-				// TODO Something is wrong in this next calculation.  I think poolInstanceMultiplier is wrong.  Is creating "Only covers 2 of 2 sockets." instead of "Only covers 1 of 2 sockets."
-				List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.",poolInstanceMultiplier,systemSockets)});
+				//List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.",poolInstanceMultiplier,systemSockets)});	//TODO I think this is wrong - is predicting "Only covers 2 of 2 sockets." instead of "Only covers 1 of 2 sockets."
+				List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.",(quantityAttached*poolSockets)/poolInstanceMultiplier,systemSockets)});
 				if (productSubscription.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 				Assert.assertEquals(productSubscription.statusDetails,expectedStatusDetails, "Status Details for consumed product subscription '"+productSubscription.productName+"'.  Expected="+expectedStatusDetails);
 			}
@@ -321,7 +323,6 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 
 			} else if (CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
 				BlockedByBzBug blockedByBzBug = null;
-//TODO debugTesting if (!pool.productId.equals("RH00073")) continue;
 				if (pool.productId.equals("RH00073")) blockedByBzBug = new BlockedByBzBug("1046158");	// Bug 1046158 - Attaching quantity=1 of SKU RH00073 on a 2 socket physical system yields "Only covers 0 of 2 sockets."
 				
 				// Object bugzilla, Boolean is_guest, String cpu_sockets, SubscriptionPool pool
