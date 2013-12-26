@@ -109,7 +109,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, currentlyInstalledProducts);
 			if (installedProduct!=null) {
 				providedProductIdsActuallyInstalled.add(installedProduct.productId);
-				List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not covered by a valid subscription."});
+				List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not supported by a valid subscription."});	// Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386	covers -> supports
 				if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 				Assert.assertEquals(installedProduct.status,"Not Subscribed", "Since we have not yet consumed an instance based entitlement, the status of installed product '"+installedProduct.productName+"' should be this value.");
 				Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails,"Since we have not yet consumed an instance based entitlement, the status details of installed product '"+installedProduct.productName+"' is expected to be: "+expectedStatusDetails);
@@ -205,7 +205,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "Indicated by an empty value, Status Details for consumed product subscription '"+productSubscription.productName+"' is compliant (Actual="+productSubscription.statusDetails+").");
 			} else {
 				//List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.",poolInstanceMultiplier,systemSockets)});	//TODO I think this is wrong - is predicting "Only covers 2 of 2 sockets." instead of "Only covers 1 of 2 sockets."
-				List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.",(quantityAttached*poolSockets)/poolInstanceMultiplier,systemSockets)});
+				List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only supports %s of %s sockets.",(quantityAttached*poolSockets)/poolInstanceMultiplier,systemSockets)});	// Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 				if (productSubscription.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 				Assert.assertEquals(productSubscription.statusDetails,expectedStatusDetails, "Status Details for consumed product subscription '"+productSubscription.productName+"'.  Expected="+expectedStatusDetails);
 			}
@@ -219,7 +219,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 						Assert.assertEquals(installedProduct.status,"Subscribed", "After manually attaching a quantity of '"+poolInstanceMultiplier+"' subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"', the status of installed product '"+installedProduct.productName+"' on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
 						Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "Status Details for installed product '"+installedProduct.productName+"' should be empty.  Actual="+installedProduct.statusDetails);
 					} else {
-						List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.",poolInstanceMultiplier,systemSockets)});
+						List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only supports %s of %s sockets.",poolInstanceMultiplier,systemSockets)}); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 						if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 						Assert.assertEquals(installedProduct.status,"Partially Subscribed", "After manually attaching a quantity of '"+poolInstanceMultiplier+"' subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"', the status of installed product '"+installedProduct.productName+"' on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
 						Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails,"Status Details for installed product '"+installedProduct.productName+" should be this value: "+expectedStatusDetails);

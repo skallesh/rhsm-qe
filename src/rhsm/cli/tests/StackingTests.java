@@ -97,7 +97,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 			if (installedProducts.isEmpty()) continue; // this productIdProvidedFor is not installed
 			if (installedProducts.size()>1) Assert.fail("Something is seriously wrong.  Found multiple InstalledProduct "+installedProducts+" with a common productId '"+productId+"'.");	// this should be impossible because the would all share the same /etc/pki/product/<productId>.pem file name
 			InstalledProduct installedProduct = installedProducts.get(0);
-			List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not covered by a valid subscription."});
+			List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not supported by a valid subscription."});	// Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 			Assert.assertEquals(installedProduct.status,"Not Subscribed","Prior to subscribing to any of the stackable subscription pools, Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have this status.");
 			if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 			Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails,"Prior to subscribing to any of the stackable subscription pools, Installed product '"+installedProduct.productName+"' which is provided for by the subscription stack should have these status details: "+expectedStatusDetails);
@@ -153,28 +153,28 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 				if (productIdsProvidedForThusFar.contains(installedProduct.productId)) {
 					List<String> expectedStatusDetails = new ArrayList<String>();
 					if (attribute.equals("ram") && attributeValueStackedThusFar<minimumAttributeValue) {
-						expectedStatusDetails.add(String.format("Only covers %sGB of %sGB of RAM.", attributeValueStackedThusFar,minimumAttributeValue));
+						expectedStatusDetails.add(String.format("Only supports %sGB of %sGB of RAM.", attributeValueStackedThusFar,minimumAttributeValue)); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 					}
 					if (attribute.equals("sockets") && !systemIsGuest && attributeValueStackedThusFar<minimumAttributeValue) {
-						expectedStatusDetails.add(String.format("Only covers %s of %s sockets.", attributeValueStackedThusFar,minimumAttributeValue));
+						expectedStatusDetails.add(String.format("Only supports %s of %s sockets.", attributeValueStackedThusFar,minimumAttributeValue)); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 					}
 					if (attribute.equals("cores") && !systemIsGuest && attributeValueStackedThusFar<minimumAttributeValue) {
-						expectedStatusDetails.add(String.format("Only covers %s of %s cores.", attributeValueStackedThusFar,minimumAttributeValue));
+						expectedStatusDetails.add(String.format("Only supports %s of %s cores.", attributeValueStackedThusFar,minimumAttributeValue)); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 					}
 					if (attribute.equals("vcpu") && systemIsGuest && attributeValueStackedThusFar<minimumAttributeValue) {
-						expectedStatusDetails.add(String.format("Only covers %s of %s vCPUs.", attributeValueStackedThusFar,minimumAttributeValue));
+						expectedStatusDetails.add(String.format("Only supports %s of %s vCPUs.", attributeValueStackedThusFar,minimumAttributeValue)); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 					}
 					if (attribute.equals("cores") && !systemIsGuest && socketsValueStackedThusFar>0 && socketsValueStackedThusFar<minimumSocketsValue) {	// when a cores stack also includes sockets (on a physical system), we will have more status details
-						expectedStatusDetails.add(String.format("Only covers %s of %s sockets.", socketsValueStackedThusFar,minimumSocketsValue));
+						expectedStatusDetails.add(String.format("Only supports %s of %s sockets.", socketsValueStackedThusFar,minimumSocketsValue)); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 					}
 					if (attribute.equals("cores") && systemIsGuest && vcpuValueStackedThusFar>0 && vcpuValueStackedThusFar<minimumAttributeValue) {	// when a cores stack also includes vcpu (on a virtual system), we will have more status details
-						expectedStatusDetails.add(String.format("Only covers %s of %s vCPUs.", vcpuValueStackedThusFar,minimumAttributeValue));
+						expectedStatusDetails.add(String.format("Only supports %s of %s vCPUs.", vcpuValueStackedThusFar,minimumAttributeValue)); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 					}
 					if (attribute.equals("sockets") && systemIsGuest && vcpuValueStackedThusFar>0 && vcpuValueStackedThusFar<minimumAttributeValue) {	// when a sockets stack also includes vcpu (on a virtual system), we will have more status details
-						expectedStatusDetails.add(String.format("Only covers %s of %s vCPUs.", vcpuValueStackedThusFar,minimumAttributeValue));
+						expectedStatusDetails.add(String.format("Only supports %s of %s vCPUs.", vcpuValueStackedThusFar,minimumAttributeValue)); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 					}
 					if (attribute.equals("vcpu") && !systemIsGuest && socketsValueStackedThusFar>0 && socketsValueStackedThusFar<minimumSocketsValue) {	// when a vcpu stack also includes sockets (on a physical system), we will have more status details
-						expectedStatusDetails.add(String.format("Only covers %s of %s sockets.", socketsValueStackedThusFar,minimumSocketsValue));
+						expectedStatusDetails.add(String.format("Only supports %s of %s sockets.", socketsValueStackedThusFar,minimumSocketsValue)); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 					}
 					
 					if (expectedStatusDetails.isEmpty()) {
@@ -187,14 +187,14 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 					
 				} else {
 					if (productIdsProvidedForByAllStackableSubscriptionPools.contains(installedProduct.productId)) {
-						List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not covered by a valid subscription."});
+						List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not supported by a valid subscription."}); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 						if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 						Assert.assertEquals(installedProduct.status,"Not Subscribed","After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT YET provided for by the subscription stack THUS FAR should have this status.");
 						Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails, "After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT YET provided for by the subscription stack THUS FAR should have these status details: "+expectedStatusDetails);
 						//Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails), "After an incremental attachment of one stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT YET provided for by the subscription stack THUS FAR should have these status details: "+expectedStatusDetails);
 					} else {
 						/* These asserts are valid, but not really relevant to this test.  Commented out to reduce noisy logging.
-						List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not covered by a valid subscription."});
+						List<String> expectedStatusDetails = Arrays.asList(new String[]{"Not supported by a valid subscription."}); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 						Assert.assertEquals(installedProduct.status,"Not Subscribed","After subscribing to stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT provided for by the subscription stack should have this status.");
 						Assert.assertTrue(isEqualNoOrder(installedProduct.statusDetails,expectedStatusDetails), "After subscribing to stackable subscription for '"+pool.subscriptionName+"' poolId="+pool.poolId+", Installed product '"+installedProduct.productName+"' which is NOT provided for by the subscription stack should have these status details: "+expectedStatusDetails);
 						*/
