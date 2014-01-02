@@ -6310,7 +6310,9 @@ public class SubscriptionManagerTasks {
 	 * @return
 	 */
 	public SSHCommandResult yumClean (String option) {
-		String command = "yum clean "+option;	//+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		String command = "yum clean "+option;
+		//command += " --disableplugin=rhnplugin"; // helps avoid: up2date_client.up2dateErrors.AbuseError
+		command += " --enablerepo=*";	// helps on rhel7
 		//return RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Cleaning",null);	// don't bother asserting results anymore since rhel7 exitCode is 1 when "There are no enabled repos."	// jsefler 1/26/2013
 		return sshCommandRunner.runCommandAndWait(command);
 	}
