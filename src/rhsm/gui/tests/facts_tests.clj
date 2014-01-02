@@ -123,7 +123,8 @@
     (let [cli-raw (:stdout
                    (run-command "subscription-manager identity | grep 'org ID'"))
           cli-val (trim (last (split cli-raw #":")))
-          gui-val (tasks/ui gettextvalue :facts-org-id)]
+          gui-raw (tasks/ui gettextvalue :facts-org)
+          gui-val (re-find #"\w+" (last (split gui-raw #" ")))]
       (verify (= gui-val cli-val)))
     (finally (tasks/ui click :close-facts))))
 
