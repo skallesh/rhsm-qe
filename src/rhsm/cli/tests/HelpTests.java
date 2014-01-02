@@ -905,8 +905,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				}
 				// 2013-10-11 update... WONTFIX "Unable to open a display"; see https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7
 				log.warning("Employing WORKAROUND for https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7 by exporting DISPLAY");
-				commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
+				//commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
 				//commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
+				commandHelp = "export DISPLAY=:0 && "+commandHelp;
 				
 				List <String> usages = new ArrayList<String>();
 				String usage = String.format("Usage: %s [OPTIONS]",command);
