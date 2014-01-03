@@ -76,7 +76,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected Integer configuredCertFrequency = null;
 	protected String configuredHostname=null;
 	protected String factname="system.entitlements_valid";
-	protected String RemoteServerError="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 	protected String SystemDateOnClient=null;
 	protected String SystemDateOnServer=null;
 	List<String> providedProducts = new ArrayList<String>();
@@ -647,7 +646,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String RemoteError=clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null).getStdout();
-		String Expected_Message="Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
+		String Expected_Message=clienttasks.msg_NetworkErrorCheckConnection;
 		listOfSectionNameValues.add(new String[] { "server",
 				"prefix".toLowerCase(), prefixValueBeforeExecution.trim() });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
@@ -1100,7 +1099,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	//To be tested against stage
 	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe",
-			groups = { "blockedByBug-878994","AcceptanceTests"},
+			groups = {"blockedByBug-878994","AcceptanceTests"},
 			enabled = true)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
 		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
@@ -1118,15 +1117,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		String result=clienttasks.listAvailableSubscriptionPools().getStdout();
 		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, logMessage).trim().equals(""));
-		Assert.assertNoMatch(result.trim(), RemoteServerError);
+		Assert.assertNoMatch(result.trim(), clienttasks.msg_NetworkErrorCheckConnection);
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		result=clienttasks.subscribe_(true,(String)null,(String)null,(String)null, null, null, null, null, null, null, null).getStdout();
 		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, logMessage).trim().equals(""));
-		Assert.assertNoMatch(result.trim(), RemoteServerError);
+		Assert.assertNoMatch(result.trim(), clienttasks.msg_NetworkErrorCheckConnection);
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		result=clienttasks.unregister(null, null, null).getStdout();
 		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, logMessage).trim().equals(""));
-		Assert.assertNoMatch(result.trim(), RemoteServerError);
+		Assert.assertNoMatch(result.trim(), clienttasks.msg_NetworkErrorCheckConnection);
 	}
 	
 	/**
