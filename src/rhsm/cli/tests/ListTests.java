@@ -899,7 +899,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
 	}
 	@Test(	description="rct: cat-cert an entitlement containing UTF-8 character(s)",
-			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-890296"},
+			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-890296","blockedByBug-1048325"},
 			dependsOnMethods={"AttachSubscriptionContainingUTF8Character_Test"},
 			priority=130,
 			enabled=true)
