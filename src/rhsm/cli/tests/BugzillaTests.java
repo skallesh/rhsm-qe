@@ -448,6 +448,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.autoheal(null, null, true, null, null, null);
 		int sockets = 4;
 		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("virt.is_guest", Boolean.FALSE.toString());	// stacking subscriptions based on sockets is only applicable on Physical systems now that vcpu compliance has been added to candlepin
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
@@ -459,19 +460,21 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for(SubscriptionPool availOnDate :getAvailableFutureSubscriptionsOndate(onDateToTest)){
 			if(availOnDate.productId.equals("awesomeos-x86_64")){
 				clienttasks.subscribe(null, null, availOnDate.poolId, null, null,null, null, null, null, null, null);
-		}
+			}
 		}
 		for(SubscriptionPool pool :clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			if(pool.productId.equals("awesomeos-x86_64")){
 				clienttasks.subscribe(null, null, pool.poolId, null, null,"2", null, null, null, null, null);
+			}	
 		}
-			
-		}
+		boolean testComplete=false;
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(installed.productId.equals("100000000000002")){
-			Assert.assertEquals(installed.status, "Partially Subscribed");
+				Assert.assertEquals(installed.status, "Partially Subscribed");
+				testComplete = true;
 			}
 		}
+		if (!testComplete) throw new SkipException("Expected product from candlepin TESTDATA was not found to perform this test.");
 	}
 	
 	
