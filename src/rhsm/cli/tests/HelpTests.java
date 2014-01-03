@@ -54,7 +54,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String cliCommand = clienttasks.command;
 		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+cliCommand,0);
-		RemoteFileTasks.runCommandAndAssert(client,"whatis "+cliCommand,0,"^"+cliCommand+" ",null);
+		RemoteFileTasks.runCommandAndAssert(client,"whatis "+cliCommand,0,"^"+cliCommand+" ",null);	// run "mandb" if the result is Stderr: subscription-manager: nothing appropriate.
 		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
 	
@@ -73,7 +73,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			throw new SkipException(guiCommand+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,0);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+" ",null);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+" ",null);	// run "mandb" if the result is Stderr: subscription-manager-gui: nothing appropriate.
 			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
@@ -93,7 +93,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);	// run "mandb" if the result is Stderr: rhsm-icon: nothing appropriate.
 			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
@@ -123,7 +123,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			throw new SkipException("The migration tool '"+command+"' and its man page is only applicable on RHEL5.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);	// run "mandb" if the result is Stderr: install-num-migrate-to-rhsm: nothing appropriate.
 			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
@@ -143,7 +143,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);	// run "mandb" if the result is Stderr: rhn-migrate-classic-to-rhsm: nothing appropriate.
 			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
@@ -156,7 +156,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String rctCommand = "rct";
 		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+rctCommand,0);
-		RemoteFileTasks.runCommandAndAssert(client,"whatis "+rctCommand,0,"^"+rctCommand+" ",null);
+		RemoteFileTasks.runCommandAndAssert(client,"whatis "+rctCommand,0,"^"+rctCommand+" ",null);	// run "mandb" if the result is Stderr: rct: nothing appropriate.
 		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
 	
@@ -234,14 +234,16 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return;
 		
 		// ensure that the whatis database is built (often needed on Beaker provisioned systems)
-		SSHCommandResult whatisResult = client.runCommandAndWait("whatis "+clienttasks.command);
-		if ((whatisResult.getStdout()+whatisResult.getStderr()).toLowerCase().contains("nothing appropriate")) {
+// get rid of this check since whatis subscription-manager may pass while whatis rhn-migrate-classic-to-rhsm may fail thereby needing a call to mandb
+//		SSHCommandResult whatisResult = client.runCommandAndWait("whatis "+clienttasks.command);
+//		if ((whatisResult.getStdout()+whatisResult.getStderr()).toLowerCase().contains("nothing appropriate")) {
+
 			if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) {
 				RemoteFileTasks.runCommandAndAssert(client,"mandb -q",0);	// mandb replaced makewhatis in f14
 			} else {
 				RemoteFileTasks.runCommandAndAssert(client,"makewhatis",0);
 			}
-		}	
+//		}	
 	}
 	
 	
