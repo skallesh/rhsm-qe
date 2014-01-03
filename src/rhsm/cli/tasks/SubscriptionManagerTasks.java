@@ -92,6 +92,7 @@ public class SubscriptionManagerTasks {
 	//public final String msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server.\n Please see "+rhsmLogFile+" for more information.";
 	//public final String msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server.\nPlease see "+rhsmLogFile+" for more information."; // effective in RHEL58
 	public final String msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server. Please see "+rhsmLogFile+" for more information."; // effective after subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
+	public final String msg_NetworkErrorCheckConnection = "Network error. Please check the connection details, or see "+rhsmLogFile+" for more information.";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
