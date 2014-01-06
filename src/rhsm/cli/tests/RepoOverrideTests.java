@@ -145,7 +145,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="attempt to add an override for a name and value that exceed 255 chars",
-			groups={"blockedByBug-1034396","blockedByBug-1033583"},
+			groups={"blockedByBug-1034396","blockedByBug-1033583","blockedByBug-1049001"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptToAddOverridesExceeding255Chars_Test() {
@@ -159,26 +159,28 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// attempt to create a very long value override
 		repoOverrideNameValueMap.clear();
 		repoOverrideNameValueMap.put("param", "value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456");
-		result = clienttasks.repo_override(null, null, "repo1", null, repoOverrideNameValueMap, null, null, null);
+		result = clienttasks.repo_override_(null, null, "repo1", null, repoOverrideNameValueMap, null, null, null);
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo1 --add=param_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456:value
 		//	Runtime Error Could not execute JDBC batch update at org.postgresql.jdbc2.AbstractJdbc2Statement$BatchResultHandler.handleError:2,598
-		/* TODO after bug 1033583 is addressed
+		// Bug 1033583 ^
+		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo1 --add=param:value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456
+		//	Name and value of the override must not exceed 255 characters.
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a value exceeding 255 chars.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add a repo-override with a value exceeding 255 chars.");
-		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");
-		*/
+		Assert.assertEquals(result.getStdout().trim(), "Name and value of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");
 		
 		// attempt to create a very long parameter override
 		repoOverrideNameValueMap.clear();
 		repoOverrideNameValueMap.put("param_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456", "value");
-		result = clienttasks.repo_override(null, null, "repo1", null, repoOverrideNameValueMap, null, null, null);
+		result = clienttasks.repo_override_(null, null, "repo1", null, repoOverrideNameValueMap, null, null, null);
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo1 --add=param:value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456
 		//	Runtime Error Batch entry 0 update cp_consumer_content_override set created='2013-12-09 11:03:23.169000 -05:00:00', updated='2013-12-09 11:04:42.821000 -05:00:00', consumer_id='8a90874042bf59cd0142c9fe0de12d1c', content_label='repo1', name='param', value='value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456' where id='8a90874042bf59cd0142d81941a1401a' was aborted.  Call getNextException to see the cause. at org.postgresql.jdbc2.AbstractJdbc2Statement$BatchResultHandler.handleError:2,598
-		/* TODO after bug 1033583 is addressed
+		// Bug 1033583 ^
+		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo1 --add=param_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456:value
+		//	Name and value of the override must not exceed 255 characters.
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a value exceeding 255 chars.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add a repo-override with a value exceeding 255 chars.");
-		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");
-		*/
+		Assert.assertEquals(result.getStdout().trim(), "Name and value of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");
 	}
 	
 	@Test(	description="attempt to add an override to a non-existant repo (while NOT consuming entitlements)",
