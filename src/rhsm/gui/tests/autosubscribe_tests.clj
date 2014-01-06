@@ -3,13 +3,17 @@
         [rhsm.gui.tasks.test-config :only (config
                                            clientcmd)]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.string :only (trim split)]
+        [clojure.string :only (trim
+                               split
+                               split-lines
+                               blank?)]
         [slingshot.slingshot :only [throw+
                                     try+]]
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tests.subscribe_tests :as subscribe]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
              rhsm.gui.tasks.ui)
@@ -17,6 +21,7 @@
             BeforeClass
             AfterClass
             BeforeGroups
+            AfterGroups
             Test
             DataProvider]
            [rhsm.cli.tests ComplianceTests]
@@ -32,6 +37,7 @@
 (def productmap (atom {}))
 (def common-sla (atom nil))
 (def sla-list (atom nil))
+(def entitlement-map (atom nil))
 
 (defn- dirsetup? [dir]
   (and
@@ -249,13 +255,13 @@
      (tasks/unregister))))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel"
                        "blockedByBug-812903"
                        "blockedByBug-1005329"]}}
   autosubscribe_select_product_sla
   "Asserts if autosubscribe works with selecting product sla"
   [_]
   (try
+    (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel @complytests)
     (tasks/restart-app)
     (tasks/register-with-creds)
     (tasks/ui click :auto-attach)
@@ -283,7 +289,6 @@
    (if-not (assert-skip :autosubscribe)
      (do
        (.configureProductCertDirForSomeProductsSubscribable @complytests)
-       (run-command "subscription-manager unregister")
        (tasks/restart-app)
        (tasks/register-with-creds)
        (let [prods (into [] (map vector (tasks/get-table-elements
@@ -296,7 +301,6 @@
                          nil
                          (ctasks/get-owner-display-name user pass key))]
          (setup-product-map)
-         (run-command "subscription-manager attach --auto")
 
          (comment
            (tasks/unregister)
