@@ -1635,7 +1635,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyVirtOnlyPoolsRemoved() throws JSONException,Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
+				(List<String>)null, (String)null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"virtualPool");
@@ -1705,7 +1705,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Boolean virtonly=false;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
+				(List<String>)null,  (String)null, null, null, true, null, null, null, null);
 		String isGuest=clienttasks.getFactValue("virt.is_guest");
 		if(isGuest.equals("false")){
 		for (SubscriptionPool availList : clienttasks
@@ -1738,7 +1738,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		System.out.println(sm_clientUsername + "  "+ sm_clientPassword + "   "+CandlepinType.hosted);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
+				(List<String>)null, (String)null, null, null, true, null, null, null, null);
 		
 		for (SubscriptionPool availList : clienttasks
 				.getCurrentlyAvailableSubscriptionPools()) {
@@ -1770,7 +1770,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
-				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
+				(List<String>)null, (String)null, null, null, true, null, null, null, null);
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if (installed.status.equals("Not Subscribed") || installed.status.equals("Partially Subscribed"))
 				moveProductCertFiles(installed.productId + "*");
@@ -1813,7 +1813,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Map<String,String> attributes = new HashMap<String,String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				sm_clientUsernames, (String) null, null, null, true, null, null, null,null);
+				(List<String>)null, (String) null, null, null, true, null, null, null,null);
 		moveProductCertFiles( "*.pem");
 		client.runCommandAndWait("cp /root/temp1/100000000000002.pem "+clienttasks.productCertDir);
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"multi-stackable");
@@ -1885,25 +1885,29 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", 
-			groups = { "OwnerInfoForActivePools","blockedByBug-710141",}, enabled = true)
+			groups = {"OwnerInfoForActivePools","blockedByBug-710141",}, enabled = true)
 	public void OwnerInfoForActivePools() throws JSONException,Exception {
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				sm_clientUsernames,  (String)null, null, null, true, null, null, null, null);
+				(List<String>)null,  (String)null, null, null, true, null, null, null, null);
 		Calendar now = new GregorianCalendar();
+		Calendar future = new GregorianCalendar();
 
 		String onDate = yyyy_MM_dd_DateFormat.format(now.getTime());
-		now.add(Calendar.YEAR, 1);
-		now.add(Calendar.DATE, 1);
-		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		future.add(Calendar.YEAR, 1);
+		future.add(Calendar.DATE, 1);
+		String onDateToTest = yyyy_MM_dd_DateFormat.format(future.getTime());
 		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
 		if(availOnDate.size()==0) throw new SkipException(
 				"Sufficient future pools are not available");
+		/* attaching entitlements has nothing to do with the assertion of pool availability dates that follow; commenting this block out
 		for (SubscriptionPool subscriptions : availOnDate) {
 			clienttasks.subscribe_(null, null, subscriptions.poolId, null, null,
 					null, null, null, null, null, null);
 		}
+		*/
+		/* parsing JSON should be done using JSONArrays and JSONObjects.  Then we should assert that the start/end dates of the available pools straddle the test date; commenting this block out and re-implementing
 		String jsonActivationKey = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+sm_clientOrg+"/pools");
 		for (String Cert: jsonActivationKey.split(",",0)){
 			if(Cert.contains("startDate")){
@@ -1913,6 +1917,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 		}
 	      }
 		jsonActivationKey = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+sm_clientOrg+"/pools?activeon="+onDateToTest);
+		*/
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+sm_clientOrg+"/pools"));
+		Assert.assertTrue (jsonPools.length()>0,"Successfully got a positive number of /owners/"+sm_clientOrg+"/pools");
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String subscriptionName = jsonPool.getString("productName");
+			String startDate = jsonPool.getString("startDate");
+			String endDate = jsonPool.getString("endDate");
+			Calendar startCalendar = parseISO8601DateString(startDate,"GMT");	// "startDate":"2014-01-06T00:00:00.000+0000"
+			Calendar endCalendar = parseISO8601DateString(endDate,"GMT");	// "endDate":"2015-01-06T00:00:00.000+0000"
+			Assert.assertTrue(startCalendar.before(now),"Available pool '"+subscriptionName+"' startsDate='"+startDate+"' starts before now.");
+			Assert.assertTrue(endCalendar.after(now),"Available pool '"+subscriptionName+"' endDate='"+endDate+"' ends after now.");
+		}
+		jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+sm_clientOrg+"/pools?activeon="+onDateToTest));
+		Assert.assertTrue (jsonPools.length()>0,"Successfully got a positive number of /owners/"+sm_clientOrg+"/pools?activeon="+onDateToTest);
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String subscriptionName = jsonPool.getString("productName");
+			String startDate = jsonPool.getString("startDate");
+			String endDate = jsonPool.getString("endDate");
+			Calendar startCalendar = parseISO8601DateString(startDate,"GMT");	// "startDate":"2014-01-06T00:00:00.000+0000"
+			Calendar endCalendar = parseISO8601DateString(endDate,"GMT");	// "endDate":"2015-01-06T00:00:00.000+0000"
+			Assert.assertTrue(startCalendar.before(future),"Future available pool '"+subscriptionName+"' startsDate='"+startDate+"' starts before "+onDateToTest+".");
+			Assert.assertTrue(endCalendar.after(future),"Future available pool '"+subscriptionName+"' endDate='"+endDate+"' ends after "+onDateToTest+".");
+		}
 	}
 	/**
 	 * @author skallesh
