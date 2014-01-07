@@ -2771,6 +2771,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if((count<=2)){
+				if (CandlepinTasks.isPoolAModifier(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl)) continue;	// skip modifier pools
 				count++;
 			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 			}
@@ -2781,14 +2782,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				.getCurrentlyConsumedProductSubscriptions()) {
 			serialnums.add(consumed.serialNumber);
 		}
+		/* does not guarantee i != j
 		int i = randomGenerator.nextInt(serialnums.size());
 		int j = randomGenerator.nextInt(serialnums.size());
 		if (i == j) {
 			j = randomGenerator.nextInt(serialnums.size());
 
 		}
-		BigInteger serialOne = serialnums.get(i);
-		BigInteger serialTwo = serialnums.get(j);
+		*/
+		BigInteger serialOne = serialnums.get(randomGenerator.nextInt(serialnums.size()));	// serialnums.get(i);
+		serialnums.remove(serialOne);
+		BigInteger serialTwo = serialnums.get(randomGenerator.nextInt(serialnums.size()));	// serialnums.get(j);
 		String result = unsubscribeFromMultipleEntitlementsUsingSerialNumber(
 				serialOne, serialTwo).getStdout();
 		
@@ -4124,6 +4128,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	protected SSHCommandResult unsubscribeFromMultipleEntitlementsUsingSerialNumber(
 			BigInteger SerialNumOne, BigInteger SerialNumTwo) throws IOException {
+		/* this task is implemented by SubscriptionManagerTasks
 		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		String command = clienttasks.command;
 		command += " unsubscribe";
@@ -4133,6 +4138,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		// run command without asserting results
 		return client.runCommandAndWait(command);
+		*/
+		return clienttasks.unsubscribe_(false, Arrays.asList(new BigInteger[]{SerialNumOne,SerialNumTwo}), null, null, null);
 	}
 
 	protected SSHCommandResult subscribeInvalidFormat_(Boolean auto,
