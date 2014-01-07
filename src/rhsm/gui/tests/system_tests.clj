@@ -439,7 +439,7 @@
              (if (bool (tasks/ui guiexist :contract-selection-dialog))
                (tasks/ui click :cancel-contract-selection)))))))))
 
-(defn ^{test {:group ["system"
+(defn ^{Test {:group ["system"
                       "blockedByBug-723992"
                       "blockedByBug-1040119"]}}
   check_gui_refresh
@@ -471,8 +471,8 @@
   "Tests whether the subscripton field in installed view is populated when the entitlement is subscribed"
   [_ product]
   (if (= "Subscribed"
-               (tasks/ui getcellvalue :installed-view
-                         (tasks/skip-dropdown :installed-view product) 2))
+         (tasks/ui getcellvalue :installed-view
+                   (tasks/skip-dropdown :installed-view product) 2))
     (let [map (ctasks/build-product-map)
           gui-value (set (clojure.string/split-lines
                           (tasks/ui gettextvalue :providing-subscriptions)))
