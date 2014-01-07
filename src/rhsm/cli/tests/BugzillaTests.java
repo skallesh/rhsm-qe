@@ -3350,17 +3350,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "Auto-heal for partial subscription", groups = {
 			"autohealPartial", "blockedByBug-746218","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
 	public void VerifyAutohealForPartialSubscription() throws Exception {
+		/* not necessary; will use clienttasks.run_rhsmcertd_worker(true) to invoke an immediate auto-heal
 		Integer healFrequency = 3;
+		*/
 		Integer moreSockets = 0;
-		List<String> productId = new ArrayList<String>();
+		List<String> productIds = new ArrayList<String>();
 		List<String> poolId = new ArrayList<String>();
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("virt.is_guest", Boolean.FALSE.toString());
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		Map<String, String> factsMap = new HashMap<String, String>();
+
 		for (SubscriptionPool pool : clienttasks
 				.getCurrentlyAvailableSubscriptionPools()) {
+			/* pool.multiEntitlement is not longer used; has been replaced with CandlepinTasks.isPoolProductMultiEntitlement(...)
 			if (pool.multiEntitlement) {
+			*/
+			if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
 				String poolProductSocketsAttribute = CandlepinTasks
 						.getPoolProductAttributeValue(sm_clientUsername,
 								sm_clientPassword, sm_serverUrl, pool.poolId,
@@ -3374,43 +3382,53 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 					poolId.add(pool.poolId);
 					moreSockets = Integer.parseInt(SocketsCount) + 3;
-
+					productIds.addAll(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId));
 				}
 			}
 		}
-		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
+		if (moreSockets==0) throw new SkipException("Expected to find a sockets based multi-entitlement pool with stacking_id 1 for this test.");
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets+Integer.valueOf(clienttasks.sockets)));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
+		/* not needed
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 
 		clienttasks.subscribe_(null, null, poolId, null, null, null, null,
 				null, null, null, null);
+		*/
 
 		for (InstalledProduct installedProduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
+			/* wrong if statement; replaced with correct if statement below
 			if (installedProduct.status.equals("Partially Subscribed")) {
 				productId.add(installedProduct.productId);
+			*/
+			if (productIds.contains(installedProduct.productId)) {
 				Assert.assertEquals(installedProduct.status,
 						"Partially Subscribed");
 
 			}
-
 		}
+		Assert.assertTrue(!productIds.isEmpty(),"Found installed products that are partially subscribed after adding "+moreSockets+" more cpu.cpu_socket(s).");
+		/* replace this time consuming sleep with an immediate trigger of rhsmcertd with autohealing
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
-
+		*/
+		clienttasks.run_rhsmcertd_worker(true);
 		for (InstalledProduct installedProduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
-			for (String product : productId) {
-				if (product.equals(installedProduct.productId))
-					Assert.assertEquals(installedProduct.status, "Subscribed");
+			for (String productId : productIds) {
+				if (productId.equals(installedProduct.productId))
+					Assert.assertEquals(installedProduct.status, "Subscribed", "Status of installed product '"+installedProduct.productName+"' after auto-healing.");
 			}
 		}
+		/* this block does nothing useful; instead just delete the overriding facts
 		moreSockets = 1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-
+		*/
+		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 
 	/**
