@@ -758,6 +758,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	   // similar to Assert.assertEqualsNoOrder(Object[] actual, Object[] expected, String message)
 	}
 	
+	/**
+	 * @param <T>
+	 * @param list1
+	 * @param list2
+	 * @return true if list1.containsAny(list2)
+	 */
+	public static <T> boolean doesListOverlapList(List<T> list1, List<T> list2) {
+		for (T list2item : list2) if (list1.contains(list2item)) return true;
+		return false;
+	}
+	
 	static public String joinListToString(List<String> list, String conjunction) {
 	   StringBuilder sb = new StringBuilder();
 	   boolean first = true;
