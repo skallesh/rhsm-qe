@@ -204,7 +204,6 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			if (poolInstanceMultiplier>=expectedQuantityToAchieveCompliance) {	// compliant when true
 				Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "Indicated by an empty value, Status Details for consumed product subscription '"+productSubscription.productName+"' is compliant (Actual="+productSubscription.statusDetails+").");
 			} else {
-				//List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only covers %s of %s sockets.",poolInstanceMultiplier,systemSockets)});	//TODO I think this is wrong - is predicting "Only covers 2 of 2 sockets." instead of "Only covers 1 of 2 sockets."
 				List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only supports %s of %s sockets.",(quantityAttached*poolSockets)/poolInstanceMultiplier,systemSockets)});	// Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 				if (productSubscription.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 				Assert.assertEquals(productSubscription.statusDetails,expectedStatusDetails, "Status Details for consumed product subscription '"+productSubscription.productName+"'.  Expected="+expectedStatusDetails);
@@ -219,7 +218,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 						Assert.assertEquals(installedProduct.status,"Subscribed", "After manually attaching a quantity of '"+poolInstanceMultiplier+"' subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"', the status of installed product '"+installedProduct.productName+"' on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
 						Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "Status Details for installed product '"+installedProduct.productName+"' should be empty.  Actual="+installedProduct.statusDetails);
 					} else {
-						List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only supports %s of %s sockets.",poolInstanceMultiplier,systemSockets)}); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
+						List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only supports %s of %s sockets.",(quantityAttached*poolSockets)/poolInstanceMultiplier,systemSockets)}); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 						if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 						Assert.assertEquals(installedProduct.status,"Partially Subscribed", "After manually attaching a quantity of '"+poolInstanceMultiplier+"' subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"', the status of installed product '"+installedProduct.productName+"' on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
 						Assert.assertEquals(installedProduct.statusDetails,expectedStatusDetails,"Status Details for installed product '"+installedProduct.productName+" should be this value: "+expectedStatusDetails);
@@ -232,19 +231,39 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
 			*/
-			// instead let's attempt auto-subscribing which should hopefully complete the stack
+			// instead let's attempt auto-subscribing which should complete the stack
 			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
 			
 			// assert the total quantity of consumption
 			if (!providedProductIdsActuallyInstalled.isEmpty()) {
+				/* The following algorithm neglects the case when multiple subscriptions by different names provide the installed products providedProductIdsActuallyInstalled.
 				List<ProductSubscription> productSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("productName", pool.subscriptionName, clienttasks.getCurrentlyConsumedProductSubscriptions());
-				Assert.assertTrue(!productSubscriptions.isEmpty(), "Found at lease one consumed product subscription to '"+pool.subscriptionName+"' after auto-subscribing.");
+				Assert.assertTrue(!productSubscriptions.isEmpty(), "Found at least one consumed product subscription to '"+pool.subscriptionName+"' after auto-subscribing.");
 				Integer totalQuantityUsed = 0;
 				for (ProductSubscription prodSub : productSubscriptions) {
 					totalQuantityUsed += prodSub.quantityUsed;
 					Assert.assertTrue(prodSub.statusDetails.isEmpty(),"Status Details of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be empty.  Actual="+prodSub.statusDetails);
 				}
 				Assert.assertEquals(totalQuantityUsed,Integer.valueOf(expectedQuantityToAchieveCompliance),"Quantity of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
+				Re-implementing a new algorithm below to count the number of system sockets covered and then assert that it autosubscribe successfully met coverage without excess over consumption...*/
+				float totalSocketsCovered = 0;	// among the consumed product subscriptions, this is the total stacked accumulation of socket coverage
+				Integer maxIncrementOfPhysicalSocketCoverage = new Integer(0);	// this is the maximum sockets attribute among the pools that provide for the installed products poolProvidedProductIds
+				List<ProductSubscription> productSubscriptions = new ArrayList<ProductSubscription>();
+				for (ProductSubscription prodSub : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+					List<String> thisPoolProvidedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId);
+					if (doesListOverlapList(thisPoolProvidedProductIds, providedProductIdsActuallyInstalled)) {
+						// the consumed quantity from this pool contributes to the socket coverage for installed products poolProvidedProductIds
+						Integer thisPoolInstanceMultiplier = Integer.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId, "instance_multiplier"));
+						Integer thisPoolSockets = Integer.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId, "sockets"));
+						maxIncrementOfPhysicalSocketCoverage=Math.max(maxIncrementOfPhysicalSocketCoverage, thisPoolSockets);
+						float socketsCoveredByThisPool = prodSub.quantityUsed.floatValue()*thisPoolSockets.floatValue()/thisPoolInstanceMultiplier.floatValue();
+						log.info("Attached product subscription '"+prodSub.productName+"' with quantity '"+prodSub.quantityUsed+"' contributes to '"+socketsCoveredByThisPool+"' cpu_socket(s) of coverage.");
+						totalSocketsCovered+=socketsCoveredByThisPool;
+						Assert.assertTrue(prodSub.statusDetails.isEmpty(),"Status Details of auto-attached subscription '"+prodSub.productName+"' covering '"+thisPoolSockets+"' sockets with instance_multiplier '"+thisPoolInstanceMultiplier+"' expected to contribute to the full compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be empty.  Actual="+prodSub.statusDetails);
+					}
+				}
+				Assert.assertTrue(systemSockets+maxIncrementOfPhysicalSocketCoverage>totalSocketsCovered && totalSocketsCovered>=systemSockets, "After auto-subscribing to complete a stacked quantity of subscriptions providing for installed product ids '"+providedProductIdsActuallyInstalled+"', the total cpu_socket(s) coverage of '"+totalSocketsCovered+"' should minimally satistfy the system's physical socket count of '"+systemSockets+"' cpu_socket(s) within '"+maxIncrementOfPhysicalSocketCoverage+"' sockets of excess coverage.");
+
 			} else log.warning("There are no installed product ids '"+poolProvidedProductIds+"' to assert compliance status of instance-based subscription '"+pool.subscriptionName+"'.");
 			
 			// assert the installed provided products are compliant
