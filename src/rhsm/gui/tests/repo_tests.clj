@@ -28,7 +28,9 @@
            org.testng.SkipException
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
-(def message "No repositories are available without an attached subscription.")
+(def random_row_num (atom nil)) ;; Used to dynamically select a random row number
+(def list_row (atom []))       ;; Used to hold probable row numbers
+(def default_static_message "No repositories are available without an attached subscription.")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
@@ -52,14 +54,14 @@
 
 (defn ^{Test {:groups ["repo"]}}
   check_repo_message_unsubscribed
-  "This tests for appropriate message in repository dialog when unsubscribed"
+  "This tests for default static message in repository dialog when unsubscribed"
   [_]
   (try
     (tasks/restart-app :reregister? true)
     (tasks/ui click :repositories)
     (tasks/ui waittillguiexist :repositories-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
-    (verify (= message (tasks/ui gettextvalue :repo-message)))
+    (verify (= default_static_message (tasks/ui gettextvalue :repo-message)))
     (finally
      (tasks/ui click :close-repo-dialog))))
 
@@ -93,12 +95,14 @@
       (throw (Exception. "Repositories table is not populated"))
       (do
         (let
-            [rand-row (int (rand (tasks/ui getrowcount :repo-table)))]
-          (tasks/ui selectrowindex :repo-table rand-row)
-          (tasks/ui checkrow :repo-table rand-row)
+            [row-count (tasks/ui getrowcount :repo-table)
+             list-row (into [] (range row-count))
+             random-row-num (nth list-row (rand (count list-row)))]
+          (tasks/ui selectrowindex :repo-table random-row-num)
+          (tasks/ui checkrow :repo-table random-row-num)
           (verify (bool (and (tasks/ui hasstate :repo-remove-override "enabled")
                              (tasks/ui hasstate :repo-remove-override "sensitive"))))
-          (tasks/ui uncheckrow :repo-table rand-row)
+          (tasks/ui uncheckrow :repo-table random-row-num)
           (verify (bash-bool (and (tasks/ui hasstate :repo-remove-override "enabled")
                                   (tasks/ui hasstate :repo-remove-override "sensitive")))))))
     (finally
@@ -116,9 +120,14 @@
     (tasks/ui waittillguiexist :repositories-dialog)
     (let
         [row-count (tasks/ui getrowcount :repo-table)]
-      (tasks/ui selectrowindex :repo-table (int (rand row-count)))
-      (while (bash-bool (tasks/ui hasstate :gpg-check-edit "visible"))
-        (tasks/ui selectrowindex :repo-table (int (rand (row-count)))))
+      (reset! list_row (into [] (range row-count)))
+      (reset! random_row_num (nth @list_row (rand (count @list_row))))
+      (tasks/ui selectrowindex :repo-table @random_row_num)
+      (while (and (bash-bool (tasks/ui hasstate :gpg-check-edit "visible"))
+                  (< 1 (count @list_row)))
+        (reset! list_row (remove #(= @random_row_num %) @list_row))
+        (reset! random_row_num (nth @list_row (int (rand (count @list_row)))))
+        (tasks/ui selectrowindex :repo-table @random_row_num))
       (sleep 1000)
       (verify (bool (tasks/ui hasstate :gpg-check-edit "visible")))
       (verify (bash-bool (tasks/ui hasstate :gpg-check-remove "visible")))
