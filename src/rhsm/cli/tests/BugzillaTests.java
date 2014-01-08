@@ -2046,7 +2046,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			listOfSectionNameValues = new ArrayList<String[]>();
 			listOfSectionNameValues.add(new String[] { "rhsm","manage_repos", "0" });
 			clienttasks.config(null, null, true, listOfSectionNameValues);
-			client.runCommand("yum repolist");
+			clienttasks.getYumRepolist("all");	// needed to trigger subscription-manager yum plugin
 			originalRepos =clienttasks.getCurrentlySubscribedYumRepos();
 			Assert.assertTrue(originalRepos.isEmpty());
 			 
