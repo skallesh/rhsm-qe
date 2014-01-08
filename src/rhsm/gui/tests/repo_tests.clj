@@ -30,7 +30,7 @@
 
 (def random_row_num (atom nil)) ;; Used to dynamically select a random row number
 (def list_row (atom []))       ;; Used to hold probable row numbers
-(def default_static_message "No repositories are available without an attached subscription.")
+(def no_repos_message "No repositories are available without an attached subscription.")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
@@ -61,7 +61,7 @@
     (tasks/ui click :repositories)
     (tasks/ui waittillguiexist :repositories-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
-    (verify (= default_static_message (tasks/ui gettextvalue :repo-message)))
+    (verify (= no_repos_message (tasks/ui gettextvalue :repo-message)))
     (finally
      (tasks/ui click :close-repo-dialog))))
 
