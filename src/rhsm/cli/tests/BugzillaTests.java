@@ -2848,9 +2848,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String listAfterUpdate = clienttasks.facts(true, null, null, null,
 				null).getStdout();
 		Assert.assertNoMatch(listAfterUpdate, listBeforeUpdate);
+/* unnecessary, AfterGroups method deleteFactsFileWithOverridingValues() "VerifyFactsListByOverridingValues" will do it
 		clienttasks.deleteFactsFileWithOverridingValues();
 		clienttasks.facts(null, true, null, null, null);
-
+*/
 	}
 
 	/**
@@ -3088,47 +3089,64 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"VerifyDistinct", "blockedByBug-733327" }, enabled = true)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		
-		
+/* unnecessary		
 		List<String> poolId = new ArrayList<String>();
-		Map<String, String> factsMap = new HashMap<String, String>();
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if (!(installed.productId.equals("100000000000002"))){
 				moveProductCertFiles(installed.productId + ".pem");
 			}
 		}
+*/
+		String poolId = null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+// unnecessary		clienttasks.restart_rhsmcertd(null, null, false, null);
 		int sockets = 4;
+		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-		clienttasks.getFactValue("cpu.cpu_socket(s)");
-		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
-
+// unnecessary		clienttasks.getFactValue("cpu.cpu_socket(s)");
+// unnecessary		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+		
+		boolean testResourceFound=false;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if (pool.multiEntitlement) {
+// unnecessary			if (pool.multiEntitlement) {
 				if(pool.productId.equals("awesomeos-x86_64")){
 					clienttasks.subscribe(null, null, pool.poolId, null, null,"2", null, null, null, null, null);
-					poolId.add(pool.poolId);
-			}}
+					poolId = pool.poolId;
+					testResourceFound=true; break;
+				}
+//			}
 		}
+		Assert.assertTrue(testResourceFound, "Found a pool corresponding to productId awesomeos-x86_64 needed for this test.");
+		
+		testResourceFound=false;
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(installed.productId.equals("100000000000002")){
 			Assert.assertEquals(installed.status, "Partially Subscribed");
+				testResourceFound=true; break;
 			}
 		}
+		Assert.assertTrue(testResourceFound, "Found the installed productId 100000000000002 provided by subscription productId awesomeos-x86_64 needed for this test.");
+		
 		clienttasks.subscribe(null, null, poolId, null, null, "2",null, null, null, null, null);
+		testResourceFound=false;
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-				
 			if(installedProduct.productId.equals("100000000000002")){
 				Assert.assertEquals(installedProduct.status, "Subscribed");
+				testResourceFound=true; break;
+			}
 		}
-	  }
+		Assert.assertTrue(testResourceFound, "Found the installed productId 100000000000002 provided by subscription productId awesomeos-x86_64 needed for this test.");
+		
+/* unnecessary
 		sockets = 1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
+*/
 	}
 
 	
@@ -3422,13 +3440,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					Assert.assertEquals(installedProduct.status, "Subscribed", "Status of installed product '"+installedProduct.productName+"' after auto-healing.");
 			}
 		}
-		/* this block does nothing useful; instead just delete the overriding facts
+/* unnecessary
 		moreSockets = 1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-		*/
-		clienttasks.deleteFactsFileWithOverridingValues();
+*/
 	}
 
 	/**
@@ -4096,7 +4113,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifyautosubscribeTest",
-	"VerifyautosubscribeIgnoresSocketCount_Test","BugzillaTests"})
+	"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","autohealPartial","VerifyFactsListByOverridingValues"})
 	@AfterClass(groups = { "setup" })
 	// insurance
 	public void deleteFactsFileWithOverridingValues() {
