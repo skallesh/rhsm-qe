@@ -2547,7 +2547,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
 		clienttasks.subscribe_(true, null, (String) null, null, null, null,
 				null, null, null, null, null);
 		List<File> ProductCerts = clienttasks.getCurrentProductCertFiles();
