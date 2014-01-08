@@ -3411,7 +3411,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 									pool.poolId, "sockets");
 
 					poolId.add(pool.poolId);
-					moreSockets = Integer.parseInt(SocketsCount) + 3;
+					moreSockets = Integer.valueOf(SocketsCount) + 3;
 					productIds.addAll(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId));
 				}
 			}
@@ -3531,27 +3531,33 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId = 119327)
 	public void VerifyStatusForPartialSubscription() throws JSONException,
 	Exception {
+/* unnecessary
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
+*/
 		String Flag = "false";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
+/* unnecessary
 		List<ProductSubscription> consumed = clienttasks
 				.getCurrentlyConsumedProductSubscriptions();
 		if (!(consumed.isEmpty())) {
 			clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		}
+*/
 		Map<String, String> factsMap = new HashMap<String, String>();
-		Integer moreSockets = 4;
-		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
+		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		for (SubscriptionPool SubscriptionPool : clienttasks
 				.getCurrentlyAllAvailableSubscriptionPools()) {
+/* pool.multiEntitlement is not longer used; has been replaced with CandlepinTasks.isPoolProductMultiEntitlement(...)
 			if (!(SubscriptionPool.multiEntitlement)) {
+*/
+			if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId)) {
 				String poolProductSocketsAttribute = CandlepinTasks
 						.getPoolProductAttributeValue(sm_clientUsername,
 								sm_clientPassword, sm_serverUrl,
@@ -3559,19 +3565,30 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				if ((!(poolProductSocketsAttribute == null))
 						&& (poolProductSocketsAttribute.equals("2"))) {
 					clienttasks.subscribeToSubscriptionPool_(SubscriptionPool);
+					Flag = "true";
 				}
 			}
 		}
+		Assert.assertTrue(Boolean.valueOf(Flag),"Found and subscribed to non-multi-entitlement 2 socket subscription pool(s) for this test.");
+		Integer moreSockets = 4;
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets+Integer.valueOf(clienttasks.sockets)));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null, true, null, null, null);
+		Flag = "false";
 		for (InstalledProduct product : clienttasks
 				.getCurrentlyInstalledProducts()) {
-			if (product.status.equals("Partially Subscribed")) {
+//			if (product.status.equals("Partially Subscribed")) {
+			if (!product.status.equals("Not Subscribed") && !product.status.equals("Subscribed") && !product.status.equals("Unknown")) {
+				Assert.assertEquals(product.status,"Partially Subscribed","Installed product '"+product.productName+"' status is Partially Subscribed.");
 				Flag = "true";
 			}
 		}
+/* not necessary
 		moreSockets = 1;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		Assert.assertEquals(Flag, "true");
+*/
+		Assert.assertEquals(Flag, "true","Verified Partially Subscribed installed product(s).");
 	}
 
 	/**
@@ -4124,7 +4141,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -rf " + "/root/temp1");
 	}
 
-	@AfterGroups(groups = { "setup" }, value = { "VerifyautosubscribeTest",
+	@AfterGroups(groups = { "setup" }, value = { "VerifyautosubscribeTest","VerifyStatusForPartialSubscription",
 	"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","autohealPartial","VerifyFactsListByOverridingValues"})
 	@AfterClass(groups = { "setup" })	// called after class for insurance
 	public void deleteFactsFileWithOverridingValues() {
