@@ -3054,9 +3054,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String facts = clienttasks.facts_(null, true, basicauthproxyUrl, null,
 				null).getStdout();
-		String Expect = "Network error, unable to connect to server."+"\n"+"Please see /var/log/rhsm/rhsm.log for more information.";
+		String Expect = clienttasks.msg_NetworkErrorUnableToConnect;
 		Assert.assertEquals(facts.trim(), Expect);
-
 	}
 
 	/**
