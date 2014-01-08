@@ -137,24 +137,37 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"VerifyStatusCheck","blockedByBug-921870"},
 			enabled=true)
 	public void VerifyStatusCheck() throws Exception {
-		
+/* takes too much time; calling configureTmpProductCertDirWithInstalledProductCerts instead
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.productId.equals("32060"))){
 				moveProductCertFiles("*");
 			}
 		}
+*/
+		String result,expectedStatus;
+		ProductCert installedProductCert32060 = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "32060", clienttasks.getCurrentProductCerts());
+		Assert.assertNotNull(installedProductCert32060, "Found installed product cert 32060 needed for this test.");
+		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[]{}));
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
-		String result=clienttasks.status(null, null, null, null).getStdout();
-		String expectedStatus = "Overall Status: Invalid";
-		Assert.assertTrue(result.contains(expectedStatus));
-		clienttasks.restart_rhsmcertd(null, null, false, true);
+				(String) null, null, null, null, true, false, null, null, null);
+		Assert.assertTrue(clienttasks.getCurrentProductCertFiles().isEmpty(),"No product certs are installed.");
 		result=clienttasks.status(null, null, null, null).getStdout();
 		expectedStatus = "Overall Status: Current";
-		Assert.assertTrue(result.contains(expectedStatus));
-		
+		Assert.assertTrue(result.contains(expectedStatus), "System status displays '"+expectedStatus+"' because no products are installed.");	
+		client.runCommandAndWait("cp "+installedProductCert32060.file+" "+tmpProductCertDir);	// OR THIS IS VALID TOO configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[]{installedProductCert32060}));
+		result=clienttasks.status(null, null, null, null).getStdout();
+		// The test behavior demonstrated in https://bugzilla.redhat.com/show_bug.cgi?id=921870 seems to have improved; commenting out the following few lines...
+//		expectedStatus = "Overall Status: Current";
+//		Assert.assertTrue(result.contains(expectedStatus), "System status displays '"+expectedStatus+"' after manually installing a product cert because this is the cached value.  Rhsmcertd needs to be triggered.");
+//		clienttasks.run_rhsmcertd_worker(false);
+//		result=clienttasks.status(null, null, null, null).getStdout();
+		expectedStatus = "Overall Status: Invalid";
+		Assert.assertTrue(result.contains(expectedStatus), "System status displays '"+expectedStatus+"' after manully installing a product cert and running the rhsmcertd worker.");
+		clienttasks.run_rhsmcertd_worker(true);
+		result=clienttasks.status(null, null, null, null).getStdout();
+		expectedStatus = "Overall Status: Current";
+		Assert.assertTrue(result.contains(expectedStatus), "System status displays '"+expectedStatus+"' after finally running rhsmcertd worker with auto-healing.");
 	}
 	
 	
@@ -4113,11 +4126,34 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifyautosubscribeTest",
 	"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","autohealPartial","VerifyFactsListByOverridingValues"})
-	@AfterClass(groups = { "setup" })
-	// insurance
+	@AfterClass(groups = { "setup" })	// called after class for insurance
 	public void deleteFactsFileWithOverridingValues() {
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
+	
+	protected void configureTmpProductCertDirWithInstalledProductCerts(List<ProductCert> installedProductCerts) {
+		if (rhsmProductCertDir==null) {
+			rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
+			Assert.assertNotNull(rhsmProductCertDir);
+		}
+		log.info("Initializing a new product cert directory with the currently installed product certs for this test class...");
+		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+tmpProductCertDir,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+tmpProductCertDir+"/*.pem",Integer.valueOf(0));
+		for (ProductCert productCert : installedProductCerts) {
+			RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert.file+" "+tmpProductCertDir,Integer.valueOf(0));
+		}
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
+	}
+	@AfterGroups(groups="setup", value = {"VerifyStatusCheck"})
+	@AfterClass(groups="setup")	// called after class for insurance
+	public void restoreRhsmProductCertDir() {
+		if (clienttasks==null) return;
+		if (rhsmProductCertDir==null) return;	
+		log.info("Restoring the originally configured product cert directory...");
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", rhsmProductCertDir);
+	}
+	protected String rhsmProductCertDir = null;
+	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir";
 
 	// Protected methods
 	// ***********************************************************************
