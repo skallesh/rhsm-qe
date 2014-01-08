@@ -95,6 +95,7 @@
   check_version_arch
   "Checks that the version and arch field are displayed properly for each product."
   [_ product index]
+  (tasks/unsubscribe_all)
   (let [version (:version (@installed-certs product))
         arch (:arch (@installed-certs product))
         guiversion (try (tasks/ui getcellvalue :installed-view index 1)
@@ -224,7 +225,8 @@
 (defn ^{Test {:groups ["facts"
                        "facts-product-status"
                        "blockedByBug-964332"]
-              :dataProvider "installed-products"}}
+              :dataProvider "installed-products"
+              :priority (int 10)}}
   check_product_status
   "Asserts that all product statuses match the known statuses in the CLI."
   [_ product row]
@@ -233,13 +235,15 @@
     (verify (= gui-value cli-value))))
 
 (defn ^{AfterGroups {:groups ["facts"]
-                     :value ["facts-product-status"]}}
+                     :value ["facts-product-status"]
+                     :alwaysRun true}}
   after_check_product_status [_]
   (:stdout (run-command "subscription-manager unsubscribe --all")))
 
 (defn ^{Test {:groups ["facts"]
               :dependsOnMethods ["check_product_status"]
-              :dataProvider "installed-products"}}
+              :dataProvider "installed-products"
+              :priority (int 20)}}
   check_product_status_unsubscribe
   "Checks product status is correct after unsubscribing."
   [_ product row]
@@ -369,6 +373,7 @@
                                :or {debug false}}]
   (if-not (assert-skip :facts)
     (do
+      (tasks/restart-app)
       (let [prods (tasks/get-table-elements :installed-view 0)
             indexes (range 0 (tasks/ui getrowcount :installed-view))
             prodlist (map (fn [item index] [item index]) prods indexes)]
