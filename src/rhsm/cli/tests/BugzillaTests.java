@@ -1820,15 +1820,21 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", 
+	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", // TODO, correct this description
 			groups = { "certificateStacking","blockedByBug-726409"}, enabled = true)
 	public void certificateStacking() throws JSONException,Exception {
 		Map<String,String> attributes = new HashMap<String,String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(List<String>)null, (String) null, null, null, true, null, null, null,null);
+/* too time consuming; replacing with configureTmpProductCertDirWithInstalledProductCerts...
 		moveProductCertFiles( "*.pem");
 		client.runCommandAndWait("cp /root/temp1/100000000000002.pem "+clienttasks.productCertDir);
+*/
+		ProductCert installedProductCert100000000000002 = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "100000000000002", clienttasks.getCurrentProductCerts());
+		Assert.assertNotNull(installedProductCert100000000000002, "Found installed product cert 100000000000002 needed for this test.");
+		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[]{installedProductCert100000000000002}));
+		
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"multi-stackable");
 		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "multi-stackable");
@@ -1843,7 +1849,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		Map<String, String> factsMap = new HashMap<String, String>();
-		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
+		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));	// sockets based compliance now applies only to Physical systems; vcpu based compliance applies to Virtual systems
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
@@ -4155,7 +4161,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA","VerifyFuturesubscription_Test","VerifySubscriptionOf",
-			"VerifySystemCompliantFact","ValidityAfterOversubscribing","certificateStacking",
+			"VerifySystemCompliantFact","ValidityAfterOversubscribing",/*"certificateStacking",*/
 			"UpdateWithNoInstalledProducts","VerifyHealingForFuturesubscription"
 			,"VerifyDistinct","BugzillaTests","VerifyStatusCheck",
 			"VerifyStartEndDateOfSubscription","InstalledProductMultipliesAfterSubscription","AutoHealFailForSLA"})
@@ -4167,7 +4173,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -rf " + "/root/temp1");
 	}
 
-	@AfterGroups(groups = { "setup" }, value = { "VerifyautosubscribeTest","VerifyStatusForPartialSubscription",
+	@AfterGroups(groups = { "setup" }, value = { "VerifyautosubscribeTest","VerifyStatusForPartialSubscription","certificateStacking",
 	"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","autohealPartial","VerifyFactsListByOverridingValues"})
 	@AfterClass(groups = { "setup" })	// called after class for insurance
 	public void deleteFactsFileWithOverridingValues() {
@@ -4187,7 +4193,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
-	@AfterGroups(groups="setup", value = {"VerifyStatusCheck"})
+	@AfterGroups(groups="setup", value = {"VerifyStatusCheck","certificateStacking"})
 	@AfterClass(groups="setup")	// called after class for insurance
 	public void restoreRhsmProductCertDir() {
 		if (clienttasks==null) return;
