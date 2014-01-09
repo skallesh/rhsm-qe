@@ -2995,29 +2995,42 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630","blockedByBug-906550" }, enabled = true)
 	public void VerifyUnsubscribeAllForExpiredSubscription()
 			throws JSONException, Exception {
+/* unnecessary
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"certCheckInterval".toLowerCase(), "1" });
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
+*/
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
+/* unnecessary
 		String consumed = clienttasks.list_(null, null, true, null, null, null,null, null, null, null, null).getStdout();
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+*/
 		File expectCertFile = new File(System.getProperty("automation.dir",
 				null) + "/expiredcerts/Expiredcert.pem");
 		RemoteFileTasks.putFile(client.getConnection(),
 				expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate("/root/Expiredcert.pem");
+/* does not assert the expired entitlement si being consumed; added a better assertion below...
 		consumed = clienttasks.list_(null, null, true, null, null, null,null, null, null, null, null).getStdout();
 		Assert.assertFalse((consumed == null));
+*/
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		List<ProductSubscription> activeProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("isActive", Boolean.TRUE, consumedProductSubscriptions);
+		List<ProductSubscription> expiredProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("isActive", Boolean.FALSE, consumedProductSubscriptions);
+		Assert.assertEquals(expiredProductSubscriptions.size(), 1, "Found one expired entitlement (indicated by Active:False) among the list of consumed subscriptions.");
 		SSHCommandResult result = clienttasks.unsubscribe(true,(BigInteger) null, null, null, null);
+/* rewritten in terms of activeProductSubscriptions and expiredProductSubscriptions below...
 		List<File> Entitlementcerts = clienttasks
 				.getCurrentEntitlementCertFiles();
 		String expected = Entitlementcerts.size()
 				+ " subscriptions removed at the server."+ "\n" +"1 local certificate has been deleted.";
+*/
+		String expected = String.format("%d subscriptions removed at the server.\n%d local certificates have been deleted.",activeProductSubscriptions.size(),activeProductSubscriptions.size()+expiredProductSubscriptions.size());
 		Assert.assertEquals(result.getStdout().trim(), expected);
 
 	}
