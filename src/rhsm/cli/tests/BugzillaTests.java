@@ -2498,18 +2498,21 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
+/* unnecessary
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		clienttasks.deleteFactsFileWithOverridingValues();
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+*/
+/* takes too much time to execute; choose a random subset of available pools
 		for (SubscriptionPool subscriptionpool : clienttasks
 				.getCurrentlyAvailableSubscriptionPools()) {
-
+*/
+		for (SubscriptionPool subscriptionpool : getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),5)) {
 			clienttasks.subscribe_(null, null, subscriptionpool.poolId, null,
 					null, null, null, null, null, null, null);
 			expected = expected + 1;
 			List<File> Cert = clienttasks.getCurrentEntitlementCertFiles();
-			Assert.assertEquals(Cert.size(), expected);
-
+			Assert.assertEquals(Cert.size(), expected, "Total number of local entitlement certs after subscribing to '"+expected+"' different pools.");
 		}
 	}
 
