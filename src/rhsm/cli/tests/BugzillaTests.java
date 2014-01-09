@@ -2681,12 +2681,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify healing of installed products without taking future subscriptions into consideration", groups = { "VerifyHealingForFutureSubscription","blockedByBug-907638"}, enabled = true)
 	public void VerifyHealingForFuturesubscription() throws JSONException,
 	Exception {
+		List<String> productId = new ArrayList<String>();
+/* unnecessary
 		int autoAttachInterval = 2;
 		clienttasks.deleteFactsFileWithOverridingValues();
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+*/
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null); // disabling autoheal
+/* unnecessary; already tested by VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test()
 		clienttasks.service_level_(null, null, null, true, null, null, null,
 				null, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -2695,8 +2700,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"),
 				"A consumer's autoheal attribute value=true.");
+*/
+/* unnecessary
 		Calendar now = new GregorianCalendar();
-		List<String> productId = new ArrayList<String>();
 		now.add(Calendar.YEAR, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
@@ -2709,20 +2715,35 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				moveProductCertFiles(installed.productId + ".pem");
 				moveProductCertFiles(installed.productId + "._pem");
 		}
+*/
+/* too time consuming; replacing with a faster algorithm below...
 		for (SubscriptionPool availOnDate : getAvailableFutureSubscriptionsOndate(onDateToTest)) {
 			System.out.println(availOnDate.poolId + " avail on date is");
 			clienttasks.subscribe_(null, null, availOnDate.poolId, null, null,
 					null, null, null, null, null, null);
 		}
+*/
+		List<String> futureSystemSubscriptionPoolIds = new ArrayList<String>();
+		for (List<Object> futureSystemSubscriptionPoolsDataRow : getAllFutureSystemSubscriptionPoolsDataAsListOfLists()) {
+			SubscriptionPool futureSystemSubscriptionPool = (SubscriptionPool)futureSystemSubscriptionPoolsDataRow.get(0);
+			futureSystemSubscriptionPoolIds.add(futureSystemSubscriptionPool.poolId);
+		}
+		Assert.assertTrue(!futureSystemSubscriptionPoolIds.isEmpty(), "Found future available subscriptions needed to attempt this test.");
+		clienttasks.subscribe(null, null, futureSystemSubscriptionPoolIds, null, null, null, null, null, null, null, null);
+
 		for (InstalledProduct installedproduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			if (installedproduct.status.equals("Future Subscription")) {
 				productId.add(installedproduct.productId);
 			}
 		}
+/* takes too much time; replacing with a call to run_rhsmcertd_worker with autoheal...
 		clienttasks.restart_rhsmcertd(null, autoAttachInterval, false, null);
 		SubscriptionManagerCLITestScript.sleep(autoAttachInterval * 60 * 1000);
-
+*/
+		clienttasks.autoheal(null, true, null, null, null, null); // enabling autoheal
+		clienttasks.run_rhsmcertd_worker(true);
+/* insufficient assertions; re-implementing below...
 		for (InstalledProduct installedproduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			for (String productid : productId) {
@@ -2733,9 +2754,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
-		
-
-
+*/
+		boolean assertedFutureSubscriptionIsNowSubscribed = false;
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+			for (String id : productId) {
+				if (installedProduct.productId.equals(id)) {
+					List<String> installedProductArches = new ArrayList<String>(Arrays.asList(installedProduct.arch.trim().split(" *, *")));	// Note: the arch can be a comma separated list of values
+					if (installedProductArches.contains("x86")) {installedProductArches.addAll(Arrays.asList("i386","i486","i586","i686"));}	// Note: x86 is a general alias to cover all 32-bit intel microprocessors, expand the x86 alias
+					if (installedProductArches.contains(clienttasks.arch) || installedProductArches.contains("ALL")) {
+						Assert.assertEquals(installedProduct.status.trim(),
+								"Subscribed", "Previously installed product '"+installedProduct.productName+"' covered by a Future Subscription should now be covered by a current subscription after auto-healing.");
+						assertedFutureSubscriptionIsNowSubscribed = true;
+					} else {
+						Assert.assertEquals(installedProduct.status.trim(),
+								"Future Subscription", "Mismatching arch installed product '"+installedProduct.productName+"' (arch='"+installedProduct.arch+"') covered by a Future Subscription should remain unchanged after auto-healing.");			
+					}
+				}
+			}
+		}
+		Assert.assertTrue(assertedFutureSubscriptionIsNowSubscribed,"Verified at least one previously installed product covered by a Future Subscription is now covered by a current subscription after auto-healing.");
 	}
 
 	/**
@@ -4201,8 +4238,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA",/*"VerifyFuturesubscription_Test",*/"VerifySubscriptionOf",
 			"VerifySystemCompliantFact","ValidityAfterOversubscribing",/*"certificateStacking",*/
-			"UpdateWithNoInstalledProducts","VerifyHealingForFuturesubscription"
-			,"VerifyDistinct","BugzillaTests","VerifyStatusCheck",
+			"UpdateWithNoInstalledProducts",/*"VerifyHealingForFuturesubscription",*/
+			"VerifyDistinct","BugzillaTests","VerifyStatusCheck",
 			"VerifyStartEndDateOfSubscription","InstalledProductMultipliesAfterSubscription","AutoHealFailForSLA"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
