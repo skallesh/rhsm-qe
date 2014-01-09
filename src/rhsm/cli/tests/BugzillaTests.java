@@ -1745,25 +1745,30 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if system.entitlements_valid goes from valid to partial after oversubscribing", 
-			groups = { "VerifyRHELWorkstationSubscription","blockedByBug-739790"}, enabled = true)
+	@Test(description = "verify if system.entitlements_valid goes from valid to partial after oversubscribing", // TODO fix this description
+			groups = {"VerifyRHELWorkstationSubscription","blockedByBug-739790"}, enabled = true)
 	public void VerifyRHELWorkstationSubscription() throws JSONException,Exception {
-		System.out.println(sm_clientUsername + "  "+ sm_clientPassword + "   "+CandlepinType.hosted);
+		InstalledProduct workstation = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "71", clienttasks.getCurrentlyInstalledProducts());
+		if (workstation==null) throw new SkipException("This test is only applicable on a RHEL Workstation where product 71 is installed.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(List<String>)null, (String)null, null, null, true, null, null, null, null);
-		
+				(List<String>)null, (String)null, null, null, true, false, null, null, null);
+/* too time consuming; replace with subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();	
 		for (SubscriptionPool availList : clienttasks
 				.getCurrentlyAvailableSubscriptionPools()) {
 				clienttasks.subscribe_(null, null, availList.poolId, null, null, null, null, null, null, null, null);
 		}
+*/
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		boolean assertedWorkstationProduct = false;
 		for (InstalledProduct installed : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			if(installed.productId.contains("Workstation")){
 				Assert.assertEquals(installed.status, "subscribed");
-			}else throw new SkipException(
-					"Installed product to be tested is not available");
+				assertedWorkstationProduct = true;
+			}
 		}
+		if (!assertedWorkstationProduct) throw new SkipException("Installed product to be tested is not available");
 	}
 	
 	
