@@ -102,12 +102,26 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// attempt to override the baseUrl (note the uppercase character)
 		YumRepo yumRepo = yumRepos.get(randomGenerator.nextInt(yumRepos.size())); // randomly pick a YumRepo
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
+		// attempt to override bASeUrL
 		String baseUrl = "bASeUrL";
 		repoOverrideNameValueMap.put(baseUrl, "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
 		SSHCommandResult result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override the "+baseUrl+" (note the case) of yumRepo '"+yumRepo.id+"'.");		
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
-		Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+baseUrl.toLowerCase(), "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+		Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+baseUrl, "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+		// attempt to override two bASeUrL and baseurl
+		repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
+		repoOverrideNameValueMap.put("mirrorlist_expire", "10");	// include another valid parameter for the fun of it
+		result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override "+baseUrl+" (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");		
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
+		Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+baseUrl+", baseurl", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
+		
+		// verify that no repo overrides have been added (including the valid parameter for the fun of it)
+		result = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		Assert.assertEquals(result.getStdout().trim(), "This system does not have any content overrides applied to it.", "Stdout from repo-override --list after attempts to add baseurl overrides.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from repo-override --list after attempts to add baseurl overrides.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(/*1*/0), "ExitCode from repo-override --list after attempts to add baseurl overrides.");
 	}
 	
 	@Test(	description="attempt to add an override for a name baseurl and label using subscription-manager repos-override",
