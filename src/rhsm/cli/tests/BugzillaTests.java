@@ -4001,9 +4001,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String> SubscriptionId = new ArrayList<String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
 		for (SubscriptionPool SubscriptionPool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+/* pool.multiEntitlement is no longer used; has been replaced with CandlepinTasks.isPoolProductMultiEntitlement(...)
 			if (!(SubscriptionPool.multiEntitlement)) {
+*/
+			if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId)) {
 				SubscriptionId.add(SubscriptionPool.subscriptionName);
 				String poolProductSocketsAttribute = CandlepinTasks
 						.getPoolProductAttributeValue(sm_clientUsername,
@@ -4014,18 +4017,28 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					if (socketvalue > socketnum) {
 						socketnum = socketvalue;
 					}
+/* unnecessary
 				} else {
 					socketvalue = 0;
+*/
 				}
 			}
-			Map<String, String> factsMap = new HashMap<String, String>();
-			factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum + 2));
-			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null, true, null, null, null);
-
 		}
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum + 2));
+		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null, true, null, null, null);
+		
 		clienttasks.subscribe_(true, null, (String) null, null, null, null,
 				null, null, null, null, null);
+		
+		if (true) throw new SkipException("The remaining test logic in this test needs a re-write.");
+		/* TODO I can't figure out what is being tested here.  It will always pass.
+		 * It will certainly pass if the nested Assert is never reached.
+		 * The inner-most Assert.assertEquals("Subscribed",(installedProductsAfterAuto.status).trim()) will always pass because it is already inside decision if ((installedProductsAfterAuto.status).equalsIgnoreCase("Subscribed")).
+		 * The call to facts update does nothing if you don't reload the installedProductsAfterAuto variable
+		 */
 		for (InstalledProduct installedProductsAfterAuto : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			for (String pool : SubscriptionId) {
@@ -4033,7 +4046,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 					if ((installedProductsAfterAuto.status)
 							.equalsIgnoreCase("Subscribed")) {
-						Map<String, String> factsMap = new HashMap<String, String>();
+//						Map<String, String> factsMap = new HashMap<String, String>();
 						factsMap.put("cpu.cpu_socket(s)", String.valueOf(1));
 						clienttasks
 						.createFactsFileWithOverridingValues(factsMap);
@@ -4144,7 +4157,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA","VerifyFuturesubscription_Test","VerifySubscriptionOf",
 			"VerifySystemCompliantFact","ValidityAfterOversubscribing","certificateStacking",
 			"UpdateWithNoInstalledProducts","VerifyHealingForFuturesubscription"
-				,"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","BugzillaTests","VerifyStatusCheck",
+			,"VerifyDistinct","BugzillaTests","VerifyStatusCheck",
 			"VerifyStartEndDateOfSubscription","InstalledProductMultipliesAfterSubscription","AutoHealFailForSLA"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
