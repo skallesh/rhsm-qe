@@ -3875,12 +3875,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(description = "Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ", groups = {"VerifyFuturesubscription_Test", "blockedByBug-746035" }, enabled = true)
 	public void VerifyFuturesubscription_Test() throws Exception {
-		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+//unnecessary		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		Calendar now = new GregorianCalendar();
+				(String) null, null, null, null, true, false, null, null, null);
 		List<String> productId = new ArrayList<String>();
+/* unnecessary
+		Calendar now = new GregorianCalendar();
 		now.add(Calendar.YEAR, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
@@ -3892,10 +3893,22 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					&& installed.status.equals("Partially Subscribed"))
 				moveProductCertFiles(installed.productId + "*");
 		}
+*/
+/* too time consuming; replacing with a faster algorithm below...
 		for (SubscriptionPool availOnDate : getAvailableFutureSubscriptionsOndate(onDateToTest)) {
 			clienttasks.subscribe_(null, null, availOnDate.poolId, null, null,
 					null, null, null, null, null, null);
 		}
+*/
+		List<String> futureSystemSubscriptionPoolIds = new ArrayList<String>();
+		for (List<Object> futureSystemSubscriptionPoolsDataRow : getAllFutureSystemSubscriptionPoolsDataAsListOfLists()) {
+			SubscriptionPool futureSystemSubscriptionPool = (SubscriptionPool)futureSystemSubscriptionPoolsDataRow.get(0);
+			futureSystemSubscriptionPoolIds.add(futureSystemSubscriptionPool.poolId);
+		}
+		Assert.assertTrue(!futureSystemSubscriptionPoolIds.isEmpty(), "Found future available subscriptions needed to attempt this test.");
+		clienttasks.subscribe(null, null, futureSystemSubscriptionPoolIds, null, null, null, null, null, null, null, null);
+
+		
 		for (InstalledProduct installedproduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			if (installedproduct.status.equals("Future Subscription")) {
@@ -3903,8 +3916,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				productId.add(installedproduct.productId);
 			}
 		}
+		Assert.assertTrue(!productId.isEmpty(), "Found installed product(s) with a Future Subscription Status needed to attempt this test.");
+
 		clienttasks.subscribe_(true, null, (String) null, null, null, null,
 				null, null, null, null, null);
+/* insufficient assertions; re-implementing below...
 		for (InstalledProduct installedproduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			for (String productid : productId) {
@@ -3915,18 +3931,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
-
-		for (InstalledProduct installedproduct : clienttasks
-				.getCurrentlyInstalledProducts()) {
-			for (String productid : productId) {
-				if (installedproduct.productId.equals(productid)) {
-					Assert.assertEquals(installedproduct.status.trim(),
-							"Subscribed");
-
+*/
+		boolean assertedFutureSubscriptionIsNowSubscribed = false;
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+			for (String id : productId) {
+				if (installedProduct.productId.equals(id)) {
+					List<String> installedProductArches = new ArrayList<String>(Arrays.asList(installedProduct.arch.trim().split(" *, *")));	// Note: the arch can be a comma separated list of values
+					if (installedProductArches.contains("x86")) {installedProductArches.addAll(Arrays.asList("i386","i486","i586","i686"));}	// Note: x86 is a general alias to cover all 32-bit intel microprocessors, expand the x86 alias
+					if (installedProductArches.contains(clienttasks.arch) || installedProductArches.contains("ALL")) {
+						Assert.assertEquals(installedProduct.status.trim(),
+								"Subscribed", "Previously installed product '"+installedProduct.productName+"' covered by a Future Subscription should now be covered by a current subscription after auto-subscribing.");
+						assertedFutureSubscriptionIsNowSubscribed = true;
+					} else {
+						Assert.assertEquals(installedProduct.status.trim(),
+								"Future Subscription", "Mismatching arch installed product '"+installedProduct.productName+"' (arch='"+installedProduct.arch+"') covered by a Future Subscription should remain unchanged after auto-subscribing.");			
+					}
 				}
 			}
 		}
-
+		Assert.assertTrue(assertedFutureSubscriptionIsNowSubscribed,"Verified at least one previously installed product covered by a Future Subscription is now covered by a current subscription after auto-subscribing.");
 	}
 
 	protected Calendar parseISO8601DateString(String dateString, String timeZone) {
@@ -4160,7 +4183,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA","VerifyFuturesubscription_Test","VerifySubscriptionOf",
+	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA",/*"VerifyFuturesubscription_Test",*/"VerifySubscriptionOf",
 			"VerifySystemCompliantFact","ValidityAfterOversubscribing",/*"certificateStacking",*/
 			"UpdateWithNoInstalledProducts","VerifyHealingForFuturesubscription"
 			,"VerifyDistinct","BugzillaTests","VerifyStatusCheck",
