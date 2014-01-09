@@ -3771,13 +3771,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	"blockedByBug-670831" }, enabled = true)
 	public void VerifyEntitlementStartDate_Test() throws JSONException,
 	Exception {
-		clienttasks.autoheal(null, null, true, null, null, null);
+// unnecessary		clienttasks.autoheal(null, null, true, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
-		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			
+				(String) null, null, null, null, true, false, null, null, null);
+// unnecessary		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+// takes too long		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+		for (SubscriptionPool pool : getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),5)) {	
 			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(
 					sm_clientUsername, sm_clientPassword, sm_serverUrl,"/pools/" + pool.poolId));
 			Calendar subStartDate = parseISO8601DateString(jsonPool.getString("startDate"), "GMT");
@@ -4154,17 +4154,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "rhsm","manage_repos", "1" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 	}
-	
+
+/* this methods looks more like a Test than a BeforeGroups configuration method; changing to a Test...
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests","VerifyEntitlementStartDateIsSubStartDate_Test","unsubscribeImportedcert" }, enabled = true)
+*/
+	@Test(	description = "verify that the autoheal attribute of a new system consumer defaults to true",
+			groups = {},
+			enabled = true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test()
 			throws Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword, sm_clientOrg, null, null, null,
 				null, null, null, null, (String) null, null, null,
 				null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
+/* unnecessary; we should be getting the consumer without setting the autoheal attribute
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(
 				sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,
 				true);
+*/
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"),
 				"A new system consumer's autoheal attribute value defaults to true.");
@@ -4502,6 +4510,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
 	}
 
+/* unnecessary
 	@AfterGroups(groups = {"setup"}, value = {"BugzillaTests","FactsUpdateForDeletedConsumer","VerifyOneCertPerOneSubscription",
 	"VerifyIfStatusDisplaysProductNameMultipleTimes","unsubscribeImportedcert","StackingFutureSubscriptionWithCurrentSubscription","VerifyDistinct","VerifyEntitlementStartDateIsSubStartDate_Test"})
 	public void enableAutoheal() {
@@ -4510,6 +4519,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, true, null, null, null, null);
 	}
+*/
 	
 	
 	@AfterGroups(groups = {"setup"}, value = {"BugzillaTests","DisplayOfRemoteServerExceptionForServer500Error","RHELWorkstationProduct"})
