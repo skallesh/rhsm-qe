@@ -91,7 +91,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-1030604","blockedByBug-1034375"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttemptToOverrideBaseUrl_Test() {
+	public void AttemptToOverrideBaseurlInMixedCases_Test() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
@@ -103,7 +103,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		YumRepo yumRepo = yumRepos.get(randomGenerator.nextInt(yumRepos.size())); // randomly pick a YumRepo
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
 		// attempt to override bASeUrL
-		String baseUrl = "bASeUrL";
+		String baseUrl = "bASeUrL";	// contains mixed case characters
 		repoOverrideNameValueMap.put(baseUrl, "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
 		SSHCommandResult result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override the "+baseUrl+" (note the case) of yumRepo '"+yumRepo.id+"'.");		
