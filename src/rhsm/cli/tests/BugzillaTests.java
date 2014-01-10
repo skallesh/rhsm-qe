@@ -1003,22 +1003,32 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				 entitlementCertFile=	clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 			}
 		}
+		Assert.assertNotNull(entitlementCertFile,"Successfully created and subscribed to product subscription '"+productId+"' created by and needed for this test.");
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		List <ProductSubscription> consumedSusbscription=clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertFalse(consumedSusbscription.isEmpty());
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+/* this is not the right way to assert the revokedCerts contain the entitlementCert.serialNumber; re-implementing below...
 		clienttasks.autoheal(null, true, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		List <RevokedCert> revokedCerts=servertasks.getCurrentlyRevokedCerts();
 		Assert.assertTrue(revokedCerts.contains(entitlementCert.serialNumber));
+*/
+		// sleep long enough for the CertificateRevocationListTask on the server to update
+		//	[root@jsefler-f14-candlepin candlepin]# grep CertificateRevocationListTask.schedule /etc/candlepin/candlepin.conf 
+		//	pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
+		//	pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
+		sleep(2/*min*/*60*1000);
 		
-			
-		/*for(RevokedCert revokedCert:servertasks.getCurrentlyRevokedCerts()){
-			Assert.assertEquals(revokedCert.serialNumber, entitlementCert.serialNumber);
-			
-		}*/
+		// verify the entitlement serial has been added to the CRL on the server
+		List<RevokedCert> revokedCerts=servertasks.getCurrentlyRevokedCerts();
+		RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber", entitlementCert.serialNumber, revokedCerts);
+		Assert.assertNotNull(revokedCert,"The Certificate Revocation List file on the candlepin server contains an entitlement serial '"+entitlementCert.serialNumber+"' to the product subscription '"+productId+"' that was just deleted on the candlepin server.");
 		
+		// trigger the rhsmcertd on the system and verify the entitlement has been removed
+		clienttasks.run_rhsmcertd_worker(false);
+		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "The revoked entitlement has been removed from the system by rhsmcertd.");
 	}
 	
 	/**
