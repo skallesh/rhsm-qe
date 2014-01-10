@@ -2839,6 +2839,11 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the import command
 	}
 	
+	/**
+	 * import including assertion that the result is a success
+	 * @param certificate - path to certificate file to be imported (file should contain both the entitlement and key)
+	 * @return
+	 */
 	public SSHCommandResult importCertificate(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
 		
 		List<String> certificates = certificate==null?null:Arrays.asList(new String[]{certificate});
@@ -4608,6 +4613,10 @@ public class SubscriptionManagerTasks {
 		
 		return newCertFile;
 	}
+	/**
+	 * @param pool
+	 * @return null; Note this overloaded method ALWAYS RETURNS NULL!
+	 */
 	public File subscribeToSubscriptionPool(SubscriptionPool pool)  {
 		return subscribeToSubscriptionPool(pool, null, null, null);
 	}
