@@ -1,7 +1,5 @@
 package rhsm.cli.tests;
 
-import java.awt.Robot;
-import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 
@@ -31,8 +29,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-
-import clojure.contrib.jmx.client__init;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
@@ -3444,9 +3440,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "Auto-heal for partial subscription", groups = {
 			"autohealPartial", "blockedByBug-746218","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
 	public void VerifyAutohealForPartialSubscription() throws Exception {
-		/* not necessary; will use clienttasks.run_rhsmcertd_worker(true) to invoke an immediate auto-heal
+/* not necessary; will use clienttasks.run_rhsmcertd_worker(true) to invoke an immediate autoheal
 		Integer healFrequency = 3;
-		*/
+*/
 		Integer moreSockets = 0;
 		List<String> productIds = new ArrayList<String>();
 		List<String> poolId = new ArrayList<String>();
@@ -3456,12 +3452,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-
+		clienttasks.autoheal(null, null, true, null, null, null); 	// disable autoheal
 		for (SubscriptionPool pool : clienttasks
 				.getCurrentlyAvailableSubscriptionPools()) {
-			/* pool.multiEntitlement is not longer used; has been replaced with CandlepinTasks.isPoolProductMultiEntitlement(...)
+/* pool.multiEntitlement is not longer used; has been replaced with CandlepinTasks.isPoolProductMultiEntitlement(...)
 			if (pool.multiEntitlement) {
-			*/
+*/
 			if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
 				String poolProductSocketsAttribute = CandlepinTasks
 						.getPoolProductAttributeValue(sm_clientUsername,
@@ -3475,7 +3471,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 									pool.poolId, "sockets");
 
 					poolId.add(pool.poolId);
-					moreSockets = Integer.valueOf(SocketsCount) + 3;
+					moreSockets += Integer.valueOf(SocketsCount);
 					productIds.addAll(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId));
 				}
 			}
@@ -3484,31 +3480,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets+Integer.valueOf(clienttasks.sockets)));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-		/* not needed
+/* not needed
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 
 		clienttasks.subscribe_(null, null, poolId, null, null, null, null,
 				null, null, null, null);
-		*/
+*/
 
 		for (InstalledProduct installedProduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
-			/* wrong if statement; replaced with correct if statement below
+/* wrong if statement; replaced with correct if statement below
 			if (installedProduct.status.equals("Partially Subscribed")) {
 				productId.add(installedProduct.productId);
-			*/
+*/
 			if (productIds.contains(installedProduct.productId)) {
 				Assert.assertEquals(installedProduct.status,
 						"Partially Subscribed");
-
 			}
 		}
 		Assert.assertTrue(!productIds.isEmpty(),"Found installed products that are partially subscribed after adding "+moreSockets+" more cpu.cpu_socket(s).");
-		/* replace this time consuming sleep with an immediate trigger of rhsmcertd with autohealing
+/* replace this time consuming sleep with an immediate trigger of rhsmcertd with autohealing
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
-		*/
-		clienttasks.run_rhsmcertd_worker(true);
+*/
+		clienttasks.autoheal(null, true, null, null, null, null); 	// enable autoheal
+		clienttasks.run_rhsmcertd_worker(true);	// trigger autoheal
 		for (InstalledProduct installedProduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			for (String productId : productIds) {
@@ -4261,7 +4257,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
 			Assert.assertNotNull(rhsmProductCertDir);
 		}
-		log.info("Initializing a new product cert directory with the currently installed product certs for this test class...");
+		log.info("Initializing a new product cert directory with the currently installed product certs for this test...");
 		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+tmpProductCertDir+"/*.pem",Integer.valueOf(0));
 		for (ProductCert productCert : installedProductCerts) {
