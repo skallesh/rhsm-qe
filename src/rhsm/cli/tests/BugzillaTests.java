@@ -207,7 +207,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		client.runCommand("rm -rf "+clienttasks.rhsmFactsJsonFile);
+		client.runCommandAndWait("rm -rf "+clienttasks.rhsmFactsJsonFile);
 		Assert.assertFalse(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
 		clienttasks.facts(null, true, null, null, null);
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
@@ -423,7 +423,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-709412","AcceptanceTests","InstalledProductMultipliesAfterSubscription"},
 			enabled=true)
 	public void InstalledProductMultipliesAfterSubscription() throws Exception {
-		client.runCommand("mkdir /root/generatedCertsFolder");
+		client.runCommandAndWait("mkdir /root/generatedCertsFolder");
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
 		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
@@ -695,13 +695,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				
 				Assert.assertTrue(repo.enabled);
 			}
-		}		client.runCommand("sed -i \"/\\[always-enabled-content]/,/\\[/s/^enabled\\s*=.*/Enabled: false/\" /etc/yum.repos.d/redhat.repo");	
+		}		client.runCommandAndWait("sed -i \"/\\[always-enabled-content]/,/\\[/s/^enabled\\s*=.*/Enabled: false/\" /etc/yum.repos.d/redhat.repo");	
 		for(Repo repo : clienttasks.getCurrentlySubscribedRepos()){
 			if(repo.repoId.equals("always-enabled-content")){
 				Assert.assertFalse(repo.enabled);
 			}
 		}
-		client.runCommand(" yum repolist enabled");
+		client.runCommandAndWait(" yum repolist enabled");
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String expected_message="This system has no repositories available through subscriptions.";
 		String reposlist=clienttasks.repos(true, (String)null, null, null, null, null).getStdout();
