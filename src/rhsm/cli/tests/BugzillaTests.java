@@ -247,9 +247,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);	// disable
+/* let's make this more efficient...
 		String pool = null;
 		client.runCommand("mkdir "+importCertificatesDir1);
+
 		 for(SubscriptionPool AvailablePools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			 pool=AvailablePools.poolId;
 		 }
@@ -257,16 +259,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 clienttasks.subscribe(null, null, pool, null, null, null, null, null, null, null, null);
 		 entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
 		 File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
+*/
+		SubscriptionPool pool = getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),1).get(0);
+		File importEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_clientUsername, sm_clientPassword,sm_serverUrl);
 		 File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
 		 File importCertificateFile = new File(importCertificatesDir1+File.separator+importEntitlementCertFile.getName());
-		 client.runCommandAndWait("cat "+importEntitlementCertFile+" "+importEntitlementKeyFile+" >> "+importCertificateFile);
+		 client.runCommandAndWait("mkdir -p "+importCertificatesDir1);
+		 client.runCommandAndWait("cat "+importEntitlementCertFile+" "+importEntitlementKeyFile+" > "+importCertificateFile);
 		 String path =importCertificateFile.getPath();
 		 clienttasks.clean(null, null, null);
 		 clienttasks.importCertificate(path);
          String result=clienttasks.unsubscribe(true,(BigInteger)null, null, null, null).getStdout();
          String expected_result="1 subscriptions removed from this system.";
 		 Assert.assertEquals(result.trim(), expected_result);
-		
 	}
 	
 	/**
