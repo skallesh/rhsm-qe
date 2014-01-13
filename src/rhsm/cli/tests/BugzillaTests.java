@@ -3718,21 +3718,30 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Auto-heal for subscription", groups = { "AutoHeal","blockedByBug-907638","blockedByBug-726411","blockedByBug-907400"}, enabled = true)
+	@Test(description = "Auto-heal for subscription", groups = {"AutoHeal","blockedByBug-907638","blockedByBug-726411","blockedByBug-907400"}, enabled = true)
 	@ImplementsNitrateTest(caseId = 119327)
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
+/* unnecessary
 		Integer healFrequency = 2;
+*/
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
+/* unnecessary; the consumer's autoheal attribute defaults to true
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String consumerId = clienttasks.getCurrentConsumerId();
 		clienttasks.autoheal(null, true, null, null, null, null);
 		clienttasks.service_level_(null, null, null, true, null, null, null,null, null, null, null, null);
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+*/
+/* takes too long; calling run_rhsmcertd_worker with autoheal instead...
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, true);	// argument assertCertificatesUpdate should be true for this test (and most all tests)  
 		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
+*/
+		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().isEmpty(), "After immediately registering with force, there are no entitlements attached.");
+		clienttasks.run_rhsmcertd_worker(true);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
 		List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		log.info("Currently the consumed products are" + consumed.size());
-		Assert.assertTrue((!(certs.isEmpty())), "autoheal is successful");
+		// this assertion assumes that the currently available subscriptions provide coverage for the currently installed products
+		Assert.assertTrue(!clienttasks.getCurrentEntitlementCerts().isEmpty(), "Asserting that entitlement certs have been granted to the system indicating that autoheal was successful invoked to cover its currently installed products.");
 	}
 
 	/**
