@@ -327,7 +327,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate=yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
-		sleep(1*60*1000);
+		sleep(endingMinutesFromNow*60*1000);
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
 		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStderr();			
@@ -1294,6 +1294,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "ExpirationOfEntitlementCerts","blockedByBug-907638","blockedByBug-953830"}, enabled = true)
 		public void ExpirationOfEntitlementCerts() throws JSONException,Exception {
 		int endingMinutesFromNow =1;
+/* unnecessary
 		System.out.println(getProperty("sm.server.admin.password",""));
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
@@ -1301,25 +1302,48 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
+*/
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
+/* unnecessary
 		String productId=null;
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+*/
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+		Calendar endCalendar = new GregorianCalendar();
+		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
+		Date endDate = endCalendar.getTime();	// caution - if the next call to createTestPool does not occur within this minute; endDate will be 1 minute behind reality
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
+/* another way to do this is call SubscriptionPool.findFirstInstanceWithMatchingFieldFromList(...)
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			if(pool.poolId.equals(expiringPoolId)){
 				productId=pool.productId;
 			}
 		}
-		clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null).getStdout();
-		sleep(1*60*1000);
+*/
+		SubscriptionPool expiringSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", expiringPoolId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+
+		// attaching from the pool that is about to expire should still be successful
+		//clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null);
+		File expiringEntitlementFile = clienttasks.subscribeToSubscriptionPool(expiringSubscriptionPool,sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl);
+		EntitlementCert expiringEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(expiringEntitlementFile);
+		clienttasks.unsubscribeFromSerialNumber(expiringEntitlementCert.serialNumber);
 		
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		// wait for the pool to expire
+		sleep(endingMinutesFromNow*60*1000);
+		
+		// attempt to attach an entitlement from an expired pool
 		String result=clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null).getStdout();	
+		// Stdout: Unable to attach pool with ID '8a908740438be86501438cd57718376c'.: Subscriptions for awesomeos-onesocketib expired on: 1/13/14 1:21 PM.
+		String expiredOnDatePattern = "M/dd/yy h:mm a";	//	1/13/14 1:21 PM
+		DateFormat expiredOnDateFormat = new SimpleDateFormat(expiredOnDatePattern);
+		String expiredOnString = expiredOnDateFormat.format(endDate.getTime());
+/* 
 		String expected="Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+productId+" expired on: "+EndingDate;
+*/
+		String expected = String.format("Unable to attach pool with ID '%s'.: Subscriptions for %s expired on: %s.",expiringSubscriptionPool.poolId,expiringSubscriptionPool.productId,expiredOnString);
 		Assert.assertEquals(result.trim(), expected);
 }
 	
@@ -1329,23 +1353,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", 
-			groups = { "SubscribeToexpiredEntitlement","blockedByBug-907638"}, enabled = true)
+			groups = {"SubscribeToexpiredEntitlement","blockedByBug-907638"}, enabled = true)
 		public void SubscribeToexpiredEntitlement() throws JSONException,Exception {
+/* unnecessary
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"certCheckInterval".toLowerCase(), "1" });
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-
+*/
 		int endingMinutesFromNow = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
-		sleep(1*60*1000);
+		sleep(endingMinutesFromNow*60*1000);
 		clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCertFiles().isEmpty());
@@ -4461,10 +4486,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {
-				
-		if (true) return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId, null).getString("id");
-		
+	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {	
+/* already implemented; calling CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(...)
 		
 		Calendar startCalendar = new GregorianCalendar();
 		startCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
@@ -4519,7 +4542,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		log.info("The newly created subscription pool with id '"+poolId+"' will start '"+startingMinutesFromNow+"' minutes from now.");
 		log.info("The newly created subscription pool with id '"+poolId+"' will expire '"+endingMinutesFromNow+"' minutes from now.");
 		return poolId; // return poolId to the newly available SubscriptionPool
-		
+*/
+		return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId, null).getString("id");
 	}
 	
 	@AfterGroups(groups = { "setup" }, value = { "VerifyrhsmcertdRefreshIdentityCert"})
@@ -4587,12 +4611,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		}
-	
+
+/* unnecessary; just call it once before the class
 	@BeforeGroups(groups={"setup"}, value = {"ExpirationOfEntitlementCerts","RefreshPoolAfterChangeInProvidedProducts","RegisterWithActivationKeyWithExpiredPool","SubscribeToexpiredEntitlement"})
+*/
+	@BeforeClass(groups={"setup"})
 	public void findRandomAvailableProductIdBeforeClass() throws Exception {
-		clienttasks.register_(sm_clientUsername, sm_clientPassword,
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); 
 		randomAvailableProductId = pool.productId;
