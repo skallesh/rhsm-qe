@@ -1011,8 +1011,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				String usage = String.format("usage: %s [OPTIONS]",command);
 				usage = String.format("Usage: %s [OPTIONS]",command);
 				usages.add(usage);
-				ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
-				ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
+				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("1052297"), commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
+				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("1052297"), commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
 			}
 		}
 		
