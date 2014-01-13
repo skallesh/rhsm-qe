@@ -4263,7 +4263,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"VerifyStartEndDateOfSubscription","InstalledProductMultipliesAfterSubscription","AutoHealFailForSLA"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
-		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+// client is already instantiated		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		client.runCommandAndWait("mv " + "/root/temp1/*.pem" + " "
 				+ clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf " + "/root/temp1");
@@ -4305,36 +4305,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	protected String setDate(String hostname, String user, String passphrase,
 			String privatekey, String datecmd) throws IOException {
-		client = new SSHCommandRunner(hostname, user, passphrase, privatekey,
+		SSHCommandRunner sshHostnameCommandRunner = new SSHCommandRunner(hostname, user, passphrase, privatekey,
 				null);
-		return(client.runCommandAndWait(datecmd).getStdout());
+		return(sshHostnameCommandRunner.runCommandAndWait(datecmd).getStdout());
 
 	}
 	protected String getDate(String hostname, String user, String passphrase,
 			String privatekey,Boolean flag) throws IOException, ParseException {
-		if(flag){
-		client = new SSHCommandRunner(hostname, user, passphrase, privatekey,
-				null);
-		return(client.runCommandAndWait("date +\"%F\"").getStdout());
-		}else
-			
-			client = new SSHCommandRunner(hostname, user, passphrase, privatekey,
-					null);
-			return(client.runCommandAndWait(" date --date='yesterday' '+%F'").getStdout());
+		SSHCommandRunner sshHostnameCommandRunner = new SSHCommandRunner(hostname, user, passphrase, privatekey, null);
+		if(flag)
+			return(sshHostnameCommandRunner.runCommandAndWait("date +\"%F\"").getStdout());
+		else
+			return(sshHostnameCommandRunner.runCommandAndWait("date --date='yesterday' '+%F'").getStdout());
 	}
 	
 	protected void moveProductCertFiles(String filename) throws IOException {
-		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+// client is already instantiated		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		if(!(RemoteFileTasks.testExists(client, "/root/temp1/"))){
 			client.runCommandAndWait("mkdir " + "/root/temp1/");
 		}
-			client.runCommandAndWait("mv " + clienttasks.productCertDir + "/"+ filename + " " + "/root/temp1/");
-	
-		}
+		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/"+ filename + " " + "/root/temp1/");
+	}
 	
 
 	protected String getEntitlementCertFilesWithPermissions() throws IOException {
-		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+// client is already instantiated		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		String lsFiles = client.runCommandAndWait(
 				"ls -l " + clienttasks.entitlementCertDir + "/*-key.pem"
 						+ " | cut -d " + "' '" + " -f1,9").getStdout();
@@ -4343,8 +4338,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	protected SSHCommandResult unsubscribeFromMultipleEntitlementsUsingSerialNumber(
 			BigInteger SerialNumOne, BigInteger SerialNumTwo) throws IOException {
-		/* this task is implemented by SubscriptionManagerTasks
-		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+/* this task is implemented by SubscriptionManagerTasks
+// client is already instantiated		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		String command = clienttasks.command;
 		command += " unsubscribe";
 		if (SerialNumOne != null && SerialNumTwo != null)
@@ -4353,7 +4348,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		// run command without asserting results
 		return client.runCommandAndWait(command);
-		*/
+*/
 		return clienttasks.unsubscribe_(false, Arrays.asList(new BigInteger[]{SerialNumOne,SerialNumTwo}), null, null, null);
 	}
 
@@ -4362,7 +4357,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			List<String> productIds, List<String> regtokens, String quantity,
 			String email, String locale, String proxy, String proxyuser,
 			String proxypassword) throws IOException {
-		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+// client is already instantiated		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		String command = clienttasks.command;
 		command += " subscribe";
 		if (poolIdOne != null && poolIdTwo != null)
