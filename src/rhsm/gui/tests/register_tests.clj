@@ -203,7 +203,8 @@ verify_password_tip
          (tasks/ui click :register-cancel))
        (tasks/set-conf-file-value "hostname" (@config :server-hostname))
        (tasks/set-conf-file-value "port" (@config :server-port))
-       (tasks/set-conf-file-value "prefix" (@config :server-prefix))))))
+       (tasks/set-conf-file-value "prefix" (@config :server-prefix))
+       (tasks/restart-app))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
