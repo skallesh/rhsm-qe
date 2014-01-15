@@ -45,7 +45,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system and assert the expected contents of the written debug file",
-			groups={"blockedByBug-1040338"},
+			groups={"AcceptanceTests","blockedByBug-1040338"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystem_Test() {
