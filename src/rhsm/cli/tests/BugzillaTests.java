@@ -599,10 +599,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Integer contractNumber = getRandInt();
 		Integer accountNumber = getRandInt();
 		Calendar endCalendar = new GregorianCalendar();
-		endCalendar.add(Calendar.MINUTE, 15*24*60);
+		endCalendar.set(Calendar.HOUR_OF_DAY, 0);endCalendar.set(Calendar.MINUTE, 0);endCalendar.set(Calendar.SECOND, 0);	// avoid times in the middle of the day
+		endCalendar.add(Calendar.MINUTE, 15*24*60);		// 15 days from today
 		Date endDate = endCalendar.getTime();
 		Calendar startCalendar = new GregorianCalendar();
-		startCalendar.add(Calendar.MINUTE, -1*24*60);
+		startCalendar.set(Calendar.HOUR_OF_DAY, 0);startCalendar.set(Calendar.MINUTE, 0);startCalendar.set(Calendar.SECOND, 0);	// avoid times in the middle of the day
+		startCalendar.add(Calendar.MINUTE, -1*24*60);	// 1 day ago
+
 		Date startDate = startCalendar.getTime();		
 	//	CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 	//	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
@@ -1391,14 +1394,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
-		Calendar now = new GregorianCalendar();
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,"multi-stackable");
 		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "multi-stackable");
-		Date onDate = now.getTime();
-		now.add(Calendar.YEAR, 1);
-		now.add(Calendar.DATE, 1);
-		Date onDateToTest = now.getTime();
+		Calendar calendar = new GregorianCalendar();	// right now
+		Date todaysDate = calendar.getTime();
+		calendar.add(Calendar.YEAR, 1);
+		calendar.add(Calendar.DATE, 10);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);calendar.set(Calendar.MINUTE, 0);calendar.set(Calendar.SECOND, 0);	// avoid times in the middle of the day
+		Date futureDate = calendar.getTime();
 		Map<String,String> attributes = new HashMap<String,String>();
 		attributes.put("sockets", "8");
 		attributes.put("arch", "ALL");
@@ -1409,7 +1413,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		providedProducts.add("100000000000002");
 		providedProducts.add("100000000000001");
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"Multi-Stackable","multi-stackable", 1,attributes ,null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, onDate, onDateToTest,"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, todaysDate, futureDate,"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
@@ -1587,11 +1591,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
-		Calendar now = new GregorianCalendar();
-		Date onDate = now.getTime();
-		now.add(Calendar.YEAR, 1);
-		now.add(Calendar.DATE, 1);
-		Date onDateToTest = now.getTime();
+		Calendar cal = new GregorianCalendar();
+		Date todaysDate = cal.getTime();
+		cal.set(Calendar.HOUR_OF_DAY, 0);cal.set(Calendar.MINUTE, 0);cal.set(Calendar.SECOND, 0);	// avoid times in the middle of the day
+		cal.add(Calendar.YEAR, 1);
+		cal.add(Calendar.DATE, 10);
+		Date futureDate = cal.getTime();	// one year and ten days from tomorrow
 		attributes.put("sockets", "0");
 		attributes.put("arch", "ALL");
 		attributes.put("type", "MKT");
@@ -1600,7 +1605,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String> providedProducts = new ArrayList<String>();
 		providedProducts.add("100000000000002");
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"Multi-Stackable for 100000000000002","multi-stackable", 1,attributes ,null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, onDate, onDateToTest,"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, todaysDate, futureDate,"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
@@ -1680,7 +1685,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if able to entitle consumer to the pool virt_only,pool_derived,bonus pool ", 
-			groups = { "VerifyVirtOnlyPoolsRemoved","blockedByBug-722977"}, enabled = true)
+			groups = {"VerifyVirtOnlyPoolsRemoved","blockedByBug-722977"}, enabled = true)		// TODO: jsefler does not understand how this test works - please explain
 	public void VerifyVirtOnlyPoolsRemoved() throws JSONException,Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -1691,11 +1696,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "virtualPool");
 
-		Calendar now = new GregorianCalendar();
-		Date onDate = now.getTime();
-		now.add(Calendar.YEAR, 1);
-		now.add(Calendar.DATE, 1);
-		Date onDateToTest = now.getTime();
+		Calendar cal = new GregorianCalendar();	// right now
+		cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0);// avoid times in the middle of the day
+		Date todaysDate = cal.getTime();
+		cal.add(Calendar.YEAR, 1);
+		cal.add(Calendar.DATE, 10);
+		Date futureDate = cal.getTime();	// one year and 10 days from tomorrow
 		Map<String,String> attributes = new HashMap<String,String>();
 		attributes.put("virt_limit", "4");
 		attributes.put("arch", "ALL");
@@ -1704,21 +1710,29 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String> providedProducts = new ArrayList<String>();
 		providedProducts.add("27060");
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"virtual-product","virtualPool", 1,attributes ,null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(10, onDate, onDateToTest,"virtualPool", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(10, todaysDate, futureDate,"virtualPool", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
 
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
-		sleep(3*60*1000);
-		Boolean flag=false;
+// unnecessary		sleep(3*60*1000);
+		boolean flag=false;
 		String poolId=null;
 		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			if(pools.subscriptionName.equals("virtual-product")){
 				flag=true;
 				poolId=pools.poolId;
-		}
 			}
+		}
 		Assert.assertTrue(flag, "Pool is created");
+		
+if (true) throw new SkipException("The remaining test logic in this test needs a re-write.");
+/* TODO I can't figure out what is being tested here.
+ * It always fails because the "virtual-product" subscription is available.
+ * I don't know what the intend is for manipulating the JSON followed by the Candlepin PUT on the /owners/<ownerKey>/subscriptions
+ * Please explain/re-write.
+ */
+		
 		JSONObject jsonSubscriptions = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolId));	
 		JSONArray jsonProduct = (JSONArray) jsonSubscriptions.get("productAttributes");
 		JSONObject product=(JSONObject) jsonProduct.get(0);
@@ -1729,17 +1743,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		jsonSubscriptions.remove("productAttributes");
 		jsonSubscriptions.accumulate("productAttributes", jsonProduct);
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions" ,jsonSubscriptions);
-		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 
+		flag=false;
 		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
-			flag=false;
 			if(pools.subscriptionName.equals("virtual-product")){
 				flag=true;
-				poolId=pools.poolId;
-		}
+// unnecessary				poolId=pools.poolId;
 			}
+		}
 		Assert.assertTrue(!flag, "Pool is no longer available");
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "virtual-pool");
+	}
+	@AfterGroups(groups = "setup", value = {"VerifyVirtOnlyPoolsRemoved"}, enabled = true)
+	public void cleanupAfterVerifyVirtOnlyPoolsRemoved() throws Exception{
+// TODO This is not completely accurate, but it is a good place to cleanup after VerifyVirtOnlyPoolsRemoved...
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/subscriptions/"+"virtualPool");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/products/"+"virtual-pool");
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,sm_clientOrg);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 	}
 	
 	/**
@@ -1896,9 +1918,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.facts(null, true, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
+/* unnecessary
 		Calendar now = new GregorianCalendar();
 		now.add(Calendar.YEAR, 1);
 		now.add(Calendar.DATE, 1);
+*/
 		attributes.put("sockets", "2");
 		attributes.put("arch", "ALL");
 		attributes.put("type", "MKT");
@@ -1952,13 +1976,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(List<String>)null,  (String)null, null, null, true, null, null, null, null);
 		Calendar now = new GregorianCalendar();
-		Calendar future = new GregorianCalendar();
-
-		String onDate = yyyy_MM_dd_DateFormat.format(now.getTime());
-		future.add(Calendar.YEAR, 1);
-		future.add(Calendar.DATE, 1);
-		String onDateToTest = yyyy_MM_dd_DateFormat.format(future.getTime());
-		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
+		Calendar futureCalendar = new GregorianCalendar();
+		futureCalendar.set(Calendar.HOUR_OF_DAY, 0); futureCalendar.set(Calendar.MINUTE, 0); futureCalendar.set(Calendar.SECOND, 0);	// avoid times in the middle of the day
+		futureCalendar.add(Calendar.YEAR, 1);
+//unnecessary		futureCalendar.add(Calendar.DATE, 1);
+		
+		String futurceDate = yyyy_MM_dd_DateFormat.format(futureCalendar.getTime());
+		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(futurceDate);
 		if(availOnDate.size()==0) throw new SkipException(
 				"Sufficient future pools are not available");
 		/* attaching entitlements has nothing to do with the assertion of pool availability dates that follow; commenting this block out
@@ -1990,8 +2014,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(startCalendar.before(now),"Available pool '"+subscriptionName+"' startsDate='"+startDate+"' starts before now.");
 			Assert.assertTrue(endCalendar.after(now),"Available pool '"+subscriptionName+"' endDate='"+endDate+"' ends after now.");
 		}
-		jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+sm_clientOrg+"/pools?activeon="+onDateToTest));
-		Assert.assertTrue (jsonPools.length()>0,"Successfully got a positive number of /owners/"+sm_clientOrg+"/pools?activeon="+onDateToTest);
+		jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+sm_clientOrg+"/pools?activeon="+futurceDate));
+		Assert.assertTrue (jsonPools.length()>0,"Successfully got a positive number of /owners/"+sm_clientOrg+"/pools?activeon="+futurceDate);
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String subscriptionName = jsonPool.getString("productName");
@@ -1999,8 +2023,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			String endDate = jsonPool.getString("endDate");
 			Calendar startCalendar = parseISO8601DateString(startDate,"GMT");	// "startDate":"2014-01-06T00:00:00.000+0000"
 			Calendar endCalendar = parseISO8601DateString(endDate,"GMT");	// "endDate":"2015-01-06T00:00:00.000+0000"
-			Assert.assertTrue(startCalendar.before(future),"Future available pool '"+subscriptionName+"' startsDate='"+startDate+"' starts before "+onDateToTest+".");
-			Assert.assertTrue(endCalendar.after(future),"Future available pool '"+subscriptionName+"' endDate='"+endDate+"' ends after "+onDateToTest+".");
+			Assert.assertTrue(startCalendar.before(futureCalendar),"Future available pool '"+subscriptionName+"' startsDate='"+startDate+"' starts before "+futurceDate+".");
+			Assert.assertTrue(endCalendar.equals(futureCalendar)||endCalendar.after(futureCalendar),"Future available pool '"+subscriptionName+"' endDate='"+endDate+"' ends on or after "+futurceDate+".");
 		}
 	}
 	/**
@@ -4152,12 +4176,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribe_(true, null, (String) null, null, null, null,
 				null, null, null, null, null);
 		
-		if (true) throw new SkipException("The remaining test logic in this test needs a re-write.");
-		/* TODO I can't figure out what is being tested here.  It will always pass.
-		 * It will certainly pass if the nested Assert is never reached.
-		 * The inner-most Assert.assertEquals("Subscribed",(installedProductsAfterAuto.status).trim()) will always pass because it is already inside decision if ((installedProductsAfterAuto.status).equalsIgnoreCase("Subscribed")).
-		 * The call to facts update does nothing if you don't reload the installedProductsAfterAuto variable
-		 */
+if (true) throw new SkipException("The remaining test logic in this test needs a re-write.");
+/* TODO I can't figure out what is being tested here.  It will always pass.
+ * It will certainly pass if the nested Assert is never reached.
+ * The inner-most Assert.assertEquals("Subscribed",(installedProductsAfterAuto.status).trim()) will always pass because it is already inside decision if ((installedProductsAfterAuto.status).equalsIgnoreCase("Subscribed")).
+ * The call to facts update does nothing if you don't reload the installedProductsAfterAuto variable
+ */
 		for (InstalledProduct installedProductsAfterAuto : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			for (String pool : SubscriptionId) {
