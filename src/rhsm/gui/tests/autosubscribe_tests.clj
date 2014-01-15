@@ -24,6 +24,7 @@
             AfterGroups
             Test
             DataProvider]
+           org.testng.SkipException
            [rhsm.cli.tests ComplianceTests]
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
@@ -62,13 +63,16 @@
     (tasks/kill-app)
     (reset! complytests (ComplianceTests. ))
     (.setupProductCertDirsBeforeClass @complytests)
-    (reset! common-sla (.toUpperCase
-                        (ComplianceTests/allProductsSubscribableByOneCommonServiceLevelValue)))
-    (reset! sla-list (map #(.toUpperCase %)
-                          (seq (ComplianceTests/allProductsSubscribableByMoreThanOneCommonServiceLevelValues))))
+    (let [safe-upper (fn [s] (if s (.toUpperCase s) nil))]
+      (reset! common-sla
+              (safe-upper (ComplianceTests/allProductsSubscribableByOneCommonServiceLevelValue)))
+      (reset! sla-list
+              (map #(safe-upper %)
+                   (seq (ComplianceTests/allProductsSubscribableByMoreThanOneCommonServiceLevelValues)))))
     (run-command "subscription-manager unregister")
     (tasks/start-app)
     (catch Exception e
+      (log/info "Skipping Test Class: Autosubscribe")
       (reset! (skip-groups :autosubscribe) true)
       (throw e))))
 
@@ -167,6 +171,7 @@
   assert_service_level
   "Asserts that the service level was set system wide after simple autosubscribe."
   [_]
+  (if (nil? @common-sla) (throw (SkipException. "Common SLA is unset!")))
   (verify
    (substring? @common-sla
                      (:stdout (run-command "subscription-manager service-level"))))

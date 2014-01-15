@@ -204,7 +204,7 @@ verify_password_tip
        (tasks/set-conf-file-value "hostname" (@config :server-hostname))
        (tasks/set-conf-file-value "port" (@config :server-port))
        (tasks/set-conf-file-value "prefix" (@config :server-prefix))
-       (tasks/restart-app))))
+       (tasks/restart-app)))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
