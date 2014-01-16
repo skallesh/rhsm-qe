@@ -2302,12 +2302,30 @@ public class SubscriptionManagerTasks {
 		return null;	// not found
 	}
 	
-	public List<ProductCert> getCurrentProductCertsCorrespondingToSubscriptionPool(SubscriptionPool pool) throws JSONException, Exception {
-		List<ProductCert> currentProductCertsCorrespondingToSubscriptionPool = new ArrayList<ProductCert>();
+	/**
+	 * From amongst the currently installed product certs, return those that are provided for by the given pool.
+	 * @param pool
+	 * @return
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public List<ProductCert> getCurrentProductCertsProvidedBySubscriptionPool(SubscriptionPool pool) throws JSONException, Exception {
+		return getProductCertsProvidedBySubscriptionPool(getCurrentProductCerts(), pool);
+	}
+	
+	/**
+	 * From amongst the given product certs, return those that are provided for by the given pool.
+	 * @param productCerts
+	 * @param pool
+	 * @return
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public List<ProductCert> getProductCertsProvidedBySubscriptionPool(List<ProductCert> productCerts, SubscriptionPool pool) throws JSONException, Exception {
+		List<ProductCert> productCertsProvidedBySubscriptionPool = new ArrayList<ProductCert>();
 //		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
 //		String port = getConfFileParameter(rhsmConfFile, "port");
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
-		List<ProductCert> currentProductCerts = getCurrentProductCerts();
 
 		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,"/pools/"+pool.poolId));
 		JSONArray jsonProvidedProducts = (JSONArray) jsonPool.getJSONArray("providedProducts");
@@ -2316,10 +2334,10 @@ public class SubscriptionManagerTasks {
 			String providedProductId = jsonProvidedProduct.getString("productId");
 			
 			// is this productId among the installed ProductCerts? if so, add them all to the currentProductCertsCorrespondingToSubscriptionPool
-			currentProductCertsCorrespondingToSubscriptionPool.addAll(ProductCert.findAllInstancesWithMatchingFieldFromList("productId", providedProductId, currentProductCerts));
+			productCertsProvidedBySubscriptionPool.addAll(ProductCert.findAllInstancesWithMatchingFieldFromList("productId", providedProductId, productCerts));
 		}
 		
-		return currentProductCertsCorrespondingToSubscriptionPool;
+		return productCertsProvidedBySubscriptionPool;
 	}
 	
 	public List <EntitlementCert> getEntitlementCertsCorrespondingToProductCert(ProductCert productCert) {

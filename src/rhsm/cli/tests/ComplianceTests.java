@@ -661,8 +661,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
-
+		
 		// initial assertions
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by future available subscription pools.");
@@ -677,14 +678,15 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 			
 			// assert that the Status of the installed product is "Future Subscription"
-			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(futureSystemSubscriptionPool)) {
+//			for (ProductCert productCert : clienttasks.getCurrentProductCertsProvidedBySubscriptionPool(futureSystemSubscriptionPool)) {	// TODO not efficient; testing fix on next line
+			for (ProductCert productCert : clienttasks.getProductCertsProvidedBySubscriptionPool(currentProductCerts,futureSystemSubscriptionPool)) {
 				InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
 				Assert.assertEquals(installedProduct.status, "Future Subscription", "Status of the installed product '"+productCert.productName+"' after subscribing to future subscription pool: "+futureSystemSubscriptionPool);
 				// TODO assert the installedProduct start/end dates
 			}
 		}
 		
-		// simply assert that actually did subscribe every installed product to a future subscription pool
+		// simply assert that we actually did subscribe every installed product to a future subscription pool
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			Assert.assertEquals(installedProduct.status, "Future Subscription", "Status of every installed product should be a Future Subscription after subscribing all installed products to a future pool.  This Installed Product: "+installedProduct);
 		}
@@ -901,9 +903,13 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
-		// distribute a copy of the product certs amongst the productCertDirs based on their status
+		// get the current certs
+		List<EntitlementCert> currentEntitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+		
+		// distribute a copy of the product certs amongst the productCertDirs based on their status
+		for (ProductCert productCert : currentProductCerts) {
 			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
 			
 			if (installedProduct.status.equals("Not Subscribed")) {
@@ -927,7 +933,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		futureSystemSubscriptionPools = new ArrayList<SubscriptionPool>();
 		for (List<Object> futureSystemSubscriptionPoolsDataRow : getAllFutureSystemSubscriptionPoolsDataAsListOfLists()) {
 			SubscriptionPool futureSystemSubscriptionPool = (SubscriptionPool)futureSystemSubscriptionPoolsDataRow.get(0);
-			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(futureSystemSubscriptionPool)) {
+//			for (ProductCert productCert : clienttasks.getCurrentProductCertsProvidedBySubscriptionPool(futureSystemSubscriptionPool)) {	// TODO not efficient; testing fix on next line
+			for (ProductCert productCert : clienttasks.getProductCertsProvidedBySubscriptionPool(currentProductCerts,futureSystemSubscriptionPool)) {
 				if (!productCertFilesCopied.contains(productCert.file)) {
 					//RemoteFileTasks.runCommandAndAssert(client, "cp -n "+productCert.file+" "+productCertDirForAllProductsSubscribableInTheFuture, 0);	// RHEL5 does not understand cp -n  
 					RemoteFileTasks.runCommandAndAssert(client, "if [ ! -e "+productCertDirForAllProductsSubscribableInTheFuture+File.separator+productCert.file.getName()+" ]; then cp "+productCert.file+" "+productCertDirForAllProductsSubscribableInTheFuture+"; fi;", 0);	// no clobber copy for both RHEL5 ad RHEL6
@@ -941,7 +948,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// determine the serviceLevel and all the products that are subscribable by one common service level 
-		Map<String,Set<String>> serviceLevelToProductIdsMap = getServiceLevelToProductIdsMapFromEntitlementCerts(clienttasks.getCurrentEntitlementCerts());
+//		Map<String,Set<String>> serviceLevelToProductIdsMap = getServiceLevelToProductIdsMapFromEntitlementCerts(clienttasks.getCurrentEntitlementCerts());	// TODO not efficient; testing fix on next line
+		Map<String,Set<String>> serviceLevelToProductIdsMap = getServiceLevelToProductIdsMapFromEntitlementCerts(currentEntitlementCerts);
 //debugTesting serviceLevelToProductIdsMap.get("Premium").add("17000");
 		Map<String,Set<String>> productIdsToServiceLevelsMap = getInvertedMap(serviceLevelToProductIdsMap);
 		Set<String> allProductsSubscribableByOneCommonServiceLevelCandidates = productIdsToServiceLevelsMap.keySet();
@@ -976,7 +984,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		} while (allProductsSubscribableByOneCommonServiceLevelValue==null && allProductsSubscribableByOneCommonServiceLevelDeterminable);
 		// copy the products to productCertDirForAllProductsSubscribableByOneCommonServiceLevel
 		if (allProductsSubscribableByOneCommonServiceLevelDeterminable) {
-			for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+//			for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {	// TODO not efficient; testing fix on next line
+			for (ProductCert productCert : currentProductCerts) {
 				if (allProductsSubscribableByOneCommonServiceLevelCandidates.contains(productCert.productId)) {
 					RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForAllProductsSubscribableByOneCommonServiceLevel, 0);
 				}
@@ -987,7 +996,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// determine the serviceLevels and all the products that are subscribable by more than one common service level
-		serviceLevelToProductIdsMap = getServiceLevelToProductIdsMapFromEntitlementCerts(clienttasks.getCurrentEntitlementCerts());
+//		serviceLevelToProductIdsMap = getServiceLevelToProductIdsMapFromEntitlementCerts(clienttasks.getCurrentEntitlementCerts());	// TODO not efficient; testing fix on next line
+		serviceLevelToProductIdsMap = getServiceLevelToProductIdsMapFromEntitlementCerts(currentEntitlementCerts);
 
 		productIdsToServiceLevelsMap = getInvertedMap(serviceLevelToProductIdsMap);
 		List<String> allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates = new ArrayList<String>();
@@ -1008,7 +1018,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			}
 			
 			// copy the products to productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
-			for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+//			for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {	// TODO not efficient; testing fix on next line
+			for (ProductCert productCert : currentProductCerts) {
 				if (allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.contains(productCert.productId)) {
 					RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel, 0);
 				}
