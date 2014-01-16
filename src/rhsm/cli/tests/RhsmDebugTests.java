@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -51,7 +53,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	public void RhsmDebugSystem_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
 		// attach some random entitlements
 		List<String> poolIds = new ArrayList<String>(); 
@@ -212,10 +214,57 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/var/?\\n", "");
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/var/log/?\\n", "");
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/var/lib/?\\n", "");
+		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/tmp/?\\n", "");	// needed for RhsmDebugSystemWithNonDefaultConfigDirs_Test
 		rhsmDebugTarListing = rhsmDebugTarListing.trim();
 		if (!rhsmDebugTarListing.isEmpty()) Assert.fail("Found the following unexpected files included in the rhsm-debug file '"+rhsmDebugSystemFile+"' :\n"+rhsmDebugTarListing);
 	}
 	
+	
+	@Test(	description="exercise the rhsm-debug tool with non-default configurations for consumerCertDir entitlementCertDir and productCertDir",
+			groups={"RhsmDebugSystemWithNonDefaultConfigDirs_Test","blockedByBug-1040546"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void RhsmDebugSystemWithNonDefaultConfigDirs_Test() {
+		List<File> originalProductCertFiles = getRandomSubsetOfList(clienttasks.getCurrentProductCertFiles(),2);	// 2 is sufficient
+
+		// remember the original configurations
+		if (originalProductCertDir==null) originalProductCertDir = clienttasks.productCertDir;
+		if (originalConsumerCertDir==null) originalConsumerCertDir = clienttasks.consumerCertDir;
+		if (originalEntitlementCertDir==null) originalEntitlementCertDir = clienttasks.entitlementCertDir;
+		
+		// configure non-default rhsm cert directories
+		String rhsmDebugProductCertDir = "/tmp/rhsmDebugProductCertDir";
+		String rhsmDebugConsumerCertDir = "/tmp/rhsmDebugConsumerCertDir";
+		String rhsmDebugEntitlementCertDir = "/tmp/rhsmDebugEntitlementCertDir";
+		client.runCommandAndWait("rm -rf "+rhsmDebugProductCertDir+" && mkdir -p "+rhsmDebugProductCertDir);
+		client.runCommandAndWait("rm -rf "+rhsmDebugConsumerCertDir+" && mkdir -p "+rhsmDebugConsumerCertDir);
+		client.runCommandAndWait("rm -rf "+rhsmDebugEntitlementCertDir+" && mkdir -p "+rhsmDebugEntitlementCertDir);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", rhsmDebugProductCertDir);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "consumerCertDir", rhsmDebugConsumerCertDir);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", rhsmDebugEntitlementCertDir);
+		
+		// copy a few product certs to rhsmDebugProductCertDir
+		for (File originalProductCertFile : originalProductCertFiles) {
+			RemoteFileTasks.runCommandAndAssert(client, "cp "+originalProductCertFile+" "+rhsmDebugProductCertDir, new Integer(0));
+		}
+		
+		// run the basic rhsm-debug system tests (with non-default rhsm cert directories)
+		RhsmDebugSystem_Test();
+	}
+	@AfterGroups(groups="setup", value="RhsmDebugSystemWithNonDefaultConfigDirs_Test")
+	public void afterRhsmDebugSystemWithNonDefaultConfigDirs() {
+		if (clienttasks==null) return;
+		log.info("Restoring the original rhsm cert directory configurations...");
+		if (originalProductCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", originalProductCertDir);
+		if (originalConsumerCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "consumerCertDir", originalConsumerCertDir);
+		if (originalEntitlementCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);
+	}
+	protected String originalProductCertDir=null;
+	protected String originalConsumerCertDir=null;
+	protected String originalEntitlementCertDir=null;
+	
+	
+	// TODO Same as RhsmDebugSystemWithNonDefaultConfigDirs_Test, but with ca_cert_dir pluginconfdir plugindir repo_ca_cert
 	
 	
 	// Candidates for an automated Test:
