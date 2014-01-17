@@ -2489,10 +2489,9 @@ public class SubscriptionManagerTasks {
 //		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;
 //		if (proxypassword!=null)												command += " --proxypassword="+proxypassword;
 		String command = registerCommand(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword);	
-		
-		// workaround for bug 800323 after master commit 1bc25596afaf294cd217200c605737a43112a378 to avoid stderr: 'ascii' codec can't decode byte 0xe5 in position 13: ordinal not in range(128)
-		// TODO copy this to all of the task_ methods
-		if (!SubscriptionManagerCLITestScript.isStringSimpleASCII(command)) command = "PYTHONIOENCODING=ascii "+command;
+		/* this workaround should no longer be needed after rhel70 fixes by ckozak similar to bugs 1052297 1048325 commit 6fe57f8e6c3c35ac7761b9fa5ac7a6014d69ce20 that employs #!/usr/bin/python -S    sys.setdefaultencoding('utf-8')    import site
+		if (!SubscriptionManagerCLITestScript.isStringSimpleASCII(command)) command = "PYTHONIOENCODING=ascii "+command;	// workaround for bug 800323 after master commit 1bc25596afaf294cd217200c605737a43112a378 to avoid stderr: 'ascii' codec can't decode byte 0xe5 in position 13: ordinal not in range(128)
+		*/
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -6552,7 +6551,9 @@ public class SubscriptionManagerTasks {
 			lang="LANG="+lang;
 		}
 		String command = lang+" "+rhsmCommand;
+		/* this workaround should no longer be needed after rhel70 fixes by ckozak similar to bugs 1052297 1048325 commit 6fe57f8e6c3c35ac7761b9fa5ac7a6014d69ce20 that employs #!/usr/bin/python -S    sys.setdefaultencoding('utf-8')    import site
 		command = "PYTHONIOENCODING=ascii "+command;	// THIS WORKAROUND IS NEEDED AFTER master commit 056e69dc833919709bbf23d8a7b73a5345f77fdf RHEL6.4 commit 1bc25596afaf294cd217200c605737a43112a378 for bug 800323
+		*/
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	public SSHCommandResult runCommandWithLangAndAssert(String lang, String rhsmCommand, Integer exitCode, String stdoutRegex, String stderrRegex){
@@ -6574,7 +6575,9 @@ public class SubscriptionManagerTasks {
 			lang="LANG="+lang;
 		}
 		String command = lang+" "+rhsmCommand;
+		/* this workaround should no longer be needed after rhel70 fixes by ckozak similar to bugs 1052297 1048325 commit 6fe57f8e6c3c35ac7761b9fa5ac7a6014d69ce20 that employs #!/usr/bin/python -S    sys.setdefaultencoding('utf-8')    import site
 		command = "PYTHONIOENCODING=ascii "+command;	// THIS WORKAROUND IS NEEDED AFTER master commit 056e69dc833919709bbf23d8a7b73a5345f77fdf RHEL6.4 commit 1bc25596afaf294cd217200c605737a43112a378 for bug 800323
+		*/
 		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, exitCode, stdoutRegexs, stderrRegexs);
 	}
 	

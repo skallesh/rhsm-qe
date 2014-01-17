@@ -945,7 +945,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		//	[root@jsefler-6 ~]# echo $?
 		//	1
 		
-		SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(null, "rct cat-cert "+entitlementCertFiles.get(0));
+		//SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(null/* null will cause command to be prefixed with PYTHONIOENCODING=ascii */, "rct cat-cert "+entitlementCertFiles.get(0));	// need for PYTHONIOENCODING=ascii workaround was eliminated by bug 1048325
+		SSHCommandResult sshCommandResult = client.runCommandAndWait("rct cat-cert "+entitlementCertFiles.get(0));
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from an attempt to run rct cat-cert on an entitlement containing UTF-8 character(s)");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from an attempt to run rct cat-cert on an entitlement containing UTF-8 character(s)");
 	}
