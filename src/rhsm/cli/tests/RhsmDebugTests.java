@@ -4,14 +4,16 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.testng.annotations.AfterClass;
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -157,17 +159,17 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		
 		// current /etc/rhsm files
 		for (String expectedFile : client.runCommandAndWait("find /etc/rhsm").getStdout().trim().split("\n")) {
-			expectedFiles.add(expectedFile);
+			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 		}
 		
 		// current /var/lib/rhsm files
 		for (String expectedFile : client.runCommandAndWait("find /var/lib/rhsm").getStdout().trim().split("\n")) {
-			expectedFiles.add(expectedFile);
+			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 		}
 		
 		// current /var/log/rhsm files
 		for (String expectedFile : client.runCommandAndWait("find /var/log/rhsm").getStdout().trim().split("\n")) {
-			expectedFiles.add(expectedFile);
+			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 		}
 		
 		// current consumer cert files
@@ -188,10 +190,42 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 			expectedFiles.add(productCertFile.getPath());
 		}
 		
-		// assert the presence of expected files... (within the verbose output from tar -xvf)
-		for (String expectedFile : expectedFiles) {
-			Assert.assertTrue(rhsmDebugSystemFileUntarResult.getStdout().contains(expectedFile), "Explosion of '"+rhsmDebugSystemFile+"' appears to contain expected file '"+expectedFile+"'.");
+		// current ca cert files
+		String caCertDir = clienttasks.getConfParameter("ca_cert_dir");
+		for (String expectedFile : client.runCommandAndWait("find "+caCertDir).getStdout().trim().split("\n")) {
+			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 		}
+		
+		// current plugin files
+		String pluginDir = clienttasks.getConfParameter("pluginDir");
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1055664 - jsefler 1/20/2014
+		Boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {String bugId="1055664"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("The workaround while this bug is open is to skip the expected files in rhsm.pluginDir '"+pluginDir+"'.");
+		} else	// do the for (String expectedFile : client.runCommandAndWait("find "+pluginConfDir).getStdout().trim().split("\n")) loop
+		// END OF WORKAROUND
+		for (String expectedFile : client.runCommandAndWait("find "+pluginDir).getStdout().trim().split("\n")) {
+			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+		}
+		
+		// current plugin config files
+		String pluginConfDir = clienttasks.getConfParameter("pluginConfDir");
+		for (String expectedFile : client.runCommandAndWait("find "+pluginConfDir).getStdout().trim().split("\n")) {
+			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+		}
+		
+		// assert the presence of expected files... (within the verbose output from tar -xvf)
+		boolean expectedFilesFound = true;
+		for (String expectedFile : expectedFiles) {
+			if (rhsmDebugSystemFileUntarResult.getStdout().contains(expectedFile)) {
+				Assert.assertTrue(rhsmDebugSystemFileUntarResult.getStdout().contains(expectedFile), "Explosion of '"+rhsmDebugSystemFile+"' appears to contain expected file '"+expectedFile+"'.");			
+			} else {
+				log.warning("Explosion of '"+rhsmDebugSystemFile+"' does NOT contain expected file '"+expectedFile+"'.");
+				expectedFilesFound = false;
+			}
+		}
+		Assert.assertTrue(expectedFilesFound, "Explosion of '"+rhsmDebugSystemFile+"' appears to contain all the expected files (see WARNINGS above when false).");
 		
 		// assert the presence of expected files... (from find untarDir)
 		String findCommand = "find "+untarDir;
@@ -208,29 +242,34 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/?\\n", "");
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/etc/?\\n", "");
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/etc/pki/?\\n", "");
+		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+caCertDir+"/?\\n", "");
+		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+pluginDir+"/?\\n", "");
+		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+pluginConfDir+"/?\\n", "");
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+productCertDir+"/?\\n", "");
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+entitlementCertDir+"/?\\n", "");
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+consumerCertDir+"/?\\n", "");
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/var/?\\n", "");
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/var/log/?\\n", "");
 		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/var/lib/?\\n", "");
-		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/tmp/?\\n", "");	// needed for RhsmDebugSystemWithNonDefaultConfigDirs_Test
+		rhsmDebugTarListing = rhsmDebugTarListing.replaceFirst(rhsmDebugSystemDir+"/tmp/?\\n", "");	// needed for RhsmDebugSystemWithNonDefaultCertDirs_Test
 		rhsmDebugTarListing = rhsmDebugTarListing.trim();
 		if (!rhsmDebugTarListing.isEmpty()) Assert.fail("Found the following unexpected files included in the rhsm-debug file '"+rhsmDebugSystemFile+"' :\n"+rhsmDebugTarListing);
 	}
 	
 	
 	@Test(	description="exercise the rhsm-debug tool with non-default configurations for consumerCertDir entitlementCertDir and productCertDir",
-			groups={"RhsmDebugSystemWithNonDefaultConfigDirs_Test","blockedByBug-1040546"},
+			groups={"RhsmDebugSystemWithNonDefaultCertDirs1_Test","blockedByBug-1040546"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithNonDefaultConfigDirs_Test() {
+	public void RhsmDebugSystemWithNonDefaultCertDirs1_Test() {
 		List<File> originalProductCertFiles = getRandomSubsetOfList(clienttasks.getCurrentProductCertFiles(),2);	// 2 is sufficient
-
+		
 		// remember the original configurations
+		/* already taken care of in saveOriginalCertDirConfigurationsBeforeClass
 		if (originalProductCertDir==null) originalProductCertDir = clienttasks.productCertDir;
 		if (originalConsumerCertDir==null) originalConsumerCertDir = clienttasks.consumerCertDir;
 		if (originalEntitlementCertDir==null) originalEntitlementCertDir = clienttasks.entitlementCertDir;
+		*/
 		
 		// configure non-default rhsm cert directories
 		String rhsmDebugProductCertDir = "/tmp/rhsmDebugProductCertDir";
@@ -251,20 +290,59 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// run the basic rhsm-debug system tests (with non-default rhsm cert directories)
 		RhsmDebugSystem_Test();
 	}
-	@AfterGroups(groups="setup", value="RhsmDebugSystemWithNonDefaultConfigDirs_Test")
-	public void afterRhsmDebugSystemWithNonDefaultConfigDirs() {
+	@AfterGroups(groups="setup", value="RhsmDebugSystemWithNonDefaultCertDirs1_Test")
+	public void afterRhsmDebugSystemWithNonDefaultCertDirs1() {
 		if (clienttasks==null) return;
 		log.info("Restoring the original rhsm cert directory configurations...");
-		if (originalProductCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", originalProductCertDir);
-		if (originalConsumerCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "consumerCertDir", originalConsumerCertDir);
-		if (originalEntitlementCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);
+		if (originalProductCertDir!=null)		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", originalProductCertDir);
+		if (originalConsumerCertDir!=null)		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "consumerCertDir", originalConsumerCertDir);
+		if (originalEntitlementCertDir!=null)	clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);
 	}
-	protected String originalProductCertDir=null;
-	protected String originalConsumerCertDir=null;
-	protected String originalEntitlementCertDir=null;
 	
 	
-	// TODO Same as RhsmDebugSystemWithNonDefaultConfigDirs_Test, but with ca_cert_dir pluginconfdir plugindir repo_ca_cert
+	@Test(	description="exercise the rhsm-debug tool with non-default configurations for ca_cert_dir pluginDir pluginConfDir",
+			groups={"RhsmDebugSystemWithNonDefaultCertDirs2_Test","blockedByBug-1055664"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void RhsmDebugSystemWithNonDefaultCertDirs2_Test() {
+		
+		// remember the original configurations
+		/* already taken care of in saveOriginalCertDirConfigurationsBeforeClass
+		if (originalCaCertDir==null) originalCaCertDir = clienttasks.caCertDir;
+		if (originalPluginDir==null) originalPluginDir = clienttasks.pluginDir;
+		if (originalPluginConfDir==null) originalPluginConfDir = clienttasks.pluginConfDir;
+		*/
+		
+		// configure non-default rhsm cert directories
+		String rhsmDebugCaCertDir = "/tmp/rhsmDebugCaCertDir";
+		String rhsmDebugPluginDir = "/tmp/rhsmDebugPluginDir";
+		String rhsmDebugPluginConfDir = "/tmp/rhsmDebugPluginConfDir";
+		client.runCommandAndWait("rm -rf "+rhsmDebugCaCertDir+" && mkdir -p "+rhsmDebugCaCertDir);
+		client.runCommandAndWait("rm -rf "+rhsmDebugPluginDir+" && mkdir -p "+rhsmDebugPluginDir);
+		client.runCommandAndWait("rm -rf "+rhsmDebugPluginConfDir+" && mkdir -p "+rhsmDebugPluginConfDir);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "ca_cert_dir", rhsmDebugCaCertDir);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "pluginDir", rhsmDebugPluginDir);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "pluginConfDir", rhsmDebugPluginConfDir);
+		
+		// copy the original config dir files to the tmp config dirs 
+		client.runCommandAndWait("cp "+originalCaCertDir.replaceFirst("/$", "")+"/* "+rhsmDebugCaCertDir);
+		client.runCommandAndWait("cp "+originalPluginDir.replaceFirst("/$", "")+"/* "+rhsmDebugPluginDir);
+		client.runCommandAndWait("cp "+originalPluginConfDir.replaceFirst("/$", "")+"/* "+rhsmDebugPluginConfDir);
+		
+		// run the basic rhsm-debug system tests (with non-default rhsm cert directories)
+		RhsmDebugSystem_Test();
+	}
+	@AfterGroups(groups="setup", value="RhsmDebugSystemWithNonDefaultCertDirs2_Test")
+	public void afterRhsmDebugSystemWithNonDefaultCertDirs2() {
+		if (clienttasks==null) return;
+		log.info("Restoring the original rhsm cert directory configurations...");
+		if (originalCaCertDir!=null)		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "ca_cert_dir", originalCaCertDir);
+		if (originalPluginDir!=null)		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "pluginDir", originalPluginDir);
+		if (originalPluginConfDir!=null)	clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "pluginConfDir", originalPluginConfDir);
+	}
+	
+	
+	
 	
 	
 	// Candidates for an automated Test:
@@ -272,10 +350,32 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Configuration methods ***********************************************************************
+
+	@BeforeClass(groups="setup")
+	public void saveOriginalCertDirConfigurationsBeforeClass() {
+		if (clienttasks==null) return;
+		log.info("Remembering the original rhsm cert directory configurations...");
+		
+		if (originalProductCertDir==null)		originalProductCertDir		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"rhsm",*/ "productCertDir");
+		if (originalConsumerCertDir==null)		originalConsumerCertDir		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"rhsm",*/ "consumerCertDir");
+		if (originalEntitlementCertDir==null)	originalEntitlementCertDir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"rhsm",*/ "entitlementCertDir");
+
+		if (originalCaCertDir==null)			originalCaCertDir			= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"rhsm",*/ "ca_cert_dir");
+		if (originalPluginDir==null)			originalPluginDir			= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"rhsm",*/ "pluginDir");
+		if (originalPluginConfDir==null)		originalPluginConfDir		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"rhsm",*/ "pluginConfDir");
+	}
 	
 	
 	
 	// Protected methods ***********************************************************************
+	
+	protected String originalProductCertDir=null;
+	protected String originalConsumerCertDir=null;
+	protected String originalEntitlementCertDir=null;
+	
+	protected String originalCaCertDir=null;
+	protected String originalPluginDir=null;
+	protected String originalPluginConfDir=null;
 	
 	
 	
