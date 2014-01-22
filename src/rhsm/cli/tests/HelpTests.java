@@ -1290,6 +1290,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		//	[root@jsefler-7 ~]# rhsm-debug system --help
 		//	Usage: rhsm-debug system [OPTIONS] 
 		//
+		//	Assemble system information as a tar file or directory
+		//
 		//	Options:
 		//	  -h, --help            show this help message and exit
 		//	  --proxy=PROXY_URL     proxy URL in the form of proxy_hostname:proxy_port
@@ -1298,8 +1300,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		//	  --proxypassword=PROXY_PASSWORD
 		//	                        password for HTTP proxy with basic authentication
 		//	  --destination=DESTINATION
-		//	                        the destination location of the zip file
-
+		//	                        the destination location of the result; default is
+		//	                        /tmp
+		//	  --no-archive          data will be in an uncompressed directory
+		
 		module = "system";
 		options.clear();
 		options.add("-h, --help");
@@ -1307,6 +1311,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
 		options.add("--destination=DESTINATION");	// https://bugzilla.redhat.com/show_bug.cgi?id=1040338#c2
+		options.add("--no-archive");
 		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",command,module);
