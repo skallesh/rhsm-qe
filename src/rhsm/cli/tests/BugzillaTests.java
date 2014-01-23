@@ -843,31 +843,45 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		now.add(Calendar.DATE, 1);
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
 		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
-		if(availOnDate.size()==0) throw new SkipException(
-				"Sufficient future pools are not available");
-			int i= randomGenerator.nextInt(availOnDate.size());
-			List<String> providedPools = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword, sm_serverUrl, availOnDate.get(i).poolId);
-			String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
-					sm_clientOrg, System.currentTimeMillis());
-			Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
-			mapActivationKeyRequest.put("name", name);
-			JSONObject jsonActivationKeyRequest = new JSONObject(
-					mapActivationKeyRequest);
-			JSONObject jsonActivationKey = new JSONObject(
-					CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
-							sm_clientPassword, sm_serverUrl, "/owners/"
-									+ sm_clientOrg + "/activation_keys",
-									jsonActivationKeyRequest.toString()));
-			
-			new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +availOnDate.get(i).poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
-			clienttasks.unregister(null, null, null);
-			clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);			
-			clienttasks.autoheal(null, null, true, null, null, null);
-			for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
-				if(result.productId.equals(providedPools.get(randomGenerator.nextInt(providedPools.size())))){
-					Assert.assertEquals(result.status, "Future Subscription");
-				}
+		if(availOnDate.size()==0) throw new SkipException("Sufficient future pools are not available");
+/* this breaks when the random available SubscriptionPool does not provide any products (e.g. Subscription Name: Management Add-On)
+		int i= randomGenerator.nextInt(availOnDate.size());
+*/
+		int i=-1;
+		availOnDate = getRandomSubsetOfList(availOnDate, availOnDate.size());	// randomize the order of the future available SubscriptionPools
+		for (int j=0; j<availOnDate.size(); j++) {
+			if (!availOnDate.get(j).provides.isEmpty()) {
+				i=j;
+				break;
 			}
+		}
+		Assert.assertTrue(i!=-1, "Found a future available pool that provides products.");
+	
+		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword, sm_serverUrl, availOnDate.get(i).poolId);
+		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername,
+				sm_clientOrg, System.currentTimeMillis());
+		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
+		mapActivationKeyRequest.put("name", name);
+		JSONObject jsonActivationKeyRequest = new JSONObject(
+				mapActivationKeyRequest);
+		JSONObject jsonActivationKey = new JSONObject(
+				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
+						sm_clientPassword, sm_serverUrl, "/owners/"
+								+ sm_clientOrg + "/activation_keys",
+								jsonActivationKeyRequest.toString()));
+		
+		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +availOnDate.get(i).poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);			
+		clienttasks.autoheal(null, null, true, null, null, null);
+		for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
+/* we can be more thorough than this
+			if(result.productId.equals(providedPools.get(randomGenerator.nextInt(providedProductIds.size())))){
+*/
+			if (providedProductIds.contains(result.productId)) {
+				Assert.assertEquals(result.status, "Future Subscription");
+			}
+		}
 	}
 	
 	
