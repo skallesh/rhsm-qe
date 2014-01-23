@@ -2236,7 +2236,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		}
 */
 		List <ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(consumedProductSubscriptions.size()==1 && consumedProductSubscriptions.get(0).productName.equals(Productname),"Registering with an activationKey named '"+name+"' should grant a single entitlement to a subscription named '"+Productname+"'.");
+		Assert.assertTrue(consumedProductSubscriptions.size()==1 && consumedProductSubscriptions.get(0).poolId.equals(poolId),"Registering with an activationKey named '"+name+"' should grant a single entitlement from subscription pool id '"+poolId+"'.");
 		
 		new JSONObject(CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_clientUsername,
 				sm_clientPassword, sm_serverUrl,"/activation_keys/"+name));
@@ -2279,25 +2279,34 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 			groups = {"UpdateWithNoInstalledProducts","blockedByBug-746241" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException,Exception {
 		Boolean actual = false;
-		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
+/* unnecessary for this test
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.restart_rhsmcertd(null, null, false, null);
+*/
 		moveProductCertFiles("*.pem");
+		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		String InstalledProducts=clienttasks.listInstalledProducts().getStdout();
 		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
-		
+/* unnecessary to restart rhsmcertd and sleep for a long time, call run_rhsmcertd_worker instead
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		SubscriptionManagerCLITestScript.sleep(2 * 60 * 1000);
+*/
+		clienttasks.run_rhsmcertd_worker(null);
+/* not sure about RegexInRhsmLog(...) logic, replacing with doesStringContainMatches(...)
 		Boolean	flag = RegexInRhsmLog("Error while updating certificates",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 		Assert.assertEquals(flag, actual);
-		/*actual=true;
+		actual=true;
 		flag = RegexInRhsmLog("Installed product IDs: \\[\\]",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
-		Assert.assertEquals(flag, actual);*/
-				
+		Assert.assertEquals(flag, actual);
+*/
+		String tailFromMarkedFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null);
+		Assert.assertFalse(doesStringContainMatches(tailFromMarkedFile, "Error"),"'Error' messages in rhsm.log");	// "Error while updating certificates" should NOT be in the rhsm.log
+		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "Installed product IDs: \\[\\]"), "'Installed product IDs:' list is empty in rhsm.log");
+		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "certs updated:"),"'certs updated:' in rhsm.log");
 	}
 		
 	
