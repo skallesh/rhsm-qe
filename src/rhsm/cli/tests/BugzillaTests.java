@@ -2168,13 +2168,15 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 			groups = { "AddingVirtualPoolToActivationKey","blockedByBug-755677"}, enabled = true)
 	public void AddingVirtualPoolToActivationKey() throws JSONException,Exception {
 		Integer addQuantity=1;
+/* unnecessary
 		int count =0;
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
-		
+*/
+/* here's a faster way to do this...
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -2184,6 +2186,9 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 				false);
 	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+*/
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, false, null, null, null));
+		
 	ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
 	String Productname,productId;
 	List<String> providedProductIds = new ArrayList<String>();
@@ -2224,10 +2229,15 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		}
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		
-		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, false, null, null, null);
+/* this loop fails to assert anything if the currentlyConsumedProductSubscriptions are empty; following is a better assertion...
 		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 		Assert.assertEquals(consumed.poolId, poolId);
 		}
+*/
+		List <ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue(consumedProductSubscriptions.size()==1 && consumedProductSubscriptions.get(0).productName.equals(Productname),"Registering with an activationKey named '"+name+"' should grant a single entitlement to a subscription named '"+Productname+"'.");
+		
 		new JSONObject(CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_clientUsername,
 				sm_clientPassword, sm_serverUrl,"/activation_keys/"+name));
 	}
