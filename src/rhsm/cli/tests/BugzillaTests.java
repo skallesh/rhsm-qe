@@ -1290,16 +1290,22 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", 
-			groups = { "DipslayServicelevelWhenRegisteredToDiffrentMachine","blockedByBug-916362"}, enabled = true)
-		public void DipslayServicelevelWhenRegisteredToDiffrentMachine() throws JSONException,Exception {
+			groups = {"DipslayServicelevelWhenRegisteredToDifferentServer","blockedByBug-916362"}, enabled = true)
+		public void DipslayServicelevelWhenRegisteredToDifferentServer() {
 		String defaultHostname = "subscription.rhn.redhat.com";
 		String defaultPort = "443";
 		String defaultPrefix = "/subscription";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		String result=clienttasks.service_level_(null, null, null, null, null, null, null,defaultHostname+":"+defaultPort+"/"+defaultPrefix , null, null, null, null).getStdout();
-		Assert.assertEquals(result.trim(), "You are already registered to a different system");
+		String result=clienttasks.service_level_(null, null, null, null, null, null, null,defaultHostname+":"+defaultPort+defaultPrefix , null, null, null, null).getStdout();
+		String expectedResult = "You are already registered to a different system";
+		if (/*bug 916362 is CLOSED NOTABUG is */true) {
+			log.warning("Altering the original expected result '"+expectedResult+"' since Bug 916362 has been CLOSED NOTABUG.");
+			log.warning("For more explanation see https://bugzilla.redhat.com/show_bug.cgi?id=916362#c3");
+			expectedResult = "Unable to verify server's identity: tlsv1 alert unknown ca";
+		}
+		Assert.assertEquals(result.trim(), expectedResult);
 	}
 	
 	/**
@@ -3140,7 +3146,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		RemoteFileTasks.putFile(client.getConnection(),
 				expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate("/root/Expiredcert.pem");
-/* does not assert the expired entitlement si being consumed; added a better assertion below...
+/* does not assert the expired entitlement is being consumed; added a better assertion below...
 		consumed = clienttasks.list_(null, null, true, null, null, null,null, null, null, null, null).getStdout();
 		Assert.assertFalse((consumed == null));
 */
