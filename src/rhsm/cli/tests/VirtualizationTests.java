@@ -1221,19 +1221,24 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"ibm_systemz\nibm_systemz-direct"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"ibm_systemz\nibm_systemz-lpar"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"ibm_systemz\nibm_systemz-zvm"}));
+		ll.add(Arrays.asList(new Object[]{null,	"linux_vserver\nlinux_vserver-host"}));
+		ll.add(Arrays.asList(new Object[]{null,	"linux_vserver\nlinux_vserver-guest"}));
+		ll.add(Arrays.asList(new Object[]{null,	"lxc"}));
 		ll.add(Arrays.asList(new Object[]{null,	"kvm"}));
 		ll.add(Arrays.asList(new Object[]{null,	"openvz"}));
 		ll.add(Arrays.asList(new Object[]{null,	"powervm_lx86"}));
 		ll.add(Arrays.asList(new Object[]{null,	"qemu"}));
 		ll.add(Arrays.asList(new Object[]{null,	"uml"}));
+		ll.add(Arrays.asList(new Object[]{null,	"virt"}));
+		ll.add(Arrays.asList(new Object[]{null,	"virtage"}));
 		ll.add(Arrays.asList(new Object[]{null,	"virtualage"}));
 		ll.add(Arrays.asList(new Object[]{null,	"virtualbox"}));
 		ll.add(Arrays.asList(new Object[]{null,	"virtualpc"}));
 		ll.add(Arrays.asList(new Object[]{null,	"vmware"}));
+		ll.add(Arrays.asList(new Object[]{null,	"xen"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"xen\nxen-domU"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"xen\nxen-hvm"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807","757697"}),	"xen\nxen-dom0"}));
-
 
 		return ll;
 	}
