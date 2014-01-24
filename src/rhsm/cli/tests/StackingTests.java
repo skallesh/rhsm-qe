@@ -244,7 +244,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 				
 				if (!stackableAttributeSubscriptionPools.isEmpty()) {
 					BlockedByBzBug blockedByBzBug = null;
-					if (attribute.equals("vcpu")) blockedByBzBug = new BlockedByBzBug("885785");
+					if (attribute.equals("vcpu")) blockedByBzBug = new BlockedByBzBug(new String[]{"885785","871602"});	// Bug 871602 - [RFE] Virtual Architecture Independence  HAS EFFECTIVELY BEEN FIXED AS A DUP OF Bug 885785 - [RFE] Subscription Manager should alert a user if subscription vcpu limits are lower than system vcpu allocation
 					
 					// Object bugzilla, String attribute, String systemIsGuest, List<SubscriptionPool> stackableAttributeSubscriptionPools
 					ll.add(Arrays.asList(new Object[]{blockedByBzBug, attribute, true, stackableAttributeSubscriptionPools}));
