@@ -125,7 +125,8 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 			if (attribute.equals("cores")) {
 				Assert.assertEquals(entitlementCert.orderNamespace.coreLimit,poolProductAttributeValueMap.get(pool.poolId).toString(),"rct cat-cert tool reports the expected Core Limit value in the Order for subscription '"+pool.subscriptionName+"'.");
 			}
-			/* TODO Open a bug to include vcpu in the order repo 
+			/* TODO Open a bug to include vcpu in the order repo
+			 * Bug 1055617 - [RFE] rct cat-cert should also report the "VCPU Limit" attribute for an Order
 			if (attribute.equals("vcpu")) {
 				Assert.assertEquals(entitlementCert.orderNamespace.vcpuLimit,poolProductAttributeValueMap.get(pool.poolId).toString(),"rct cat-cert tool reports the expected VCPU Limit value in the Order for subscription '"+pool.subscriptionName+"'.");
 			}
