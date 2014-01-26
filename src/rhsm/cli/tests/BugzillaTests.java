@@ -689,7 +689,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
 		List<SubscriptionPool> Availablepools=clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool =Availablepools.get(randomGenerator.nextInt(Availablepools.size()));
 		clienttasks.subscribeToSubscriptionPool(pool);
@@ -2412,6 +2412,8 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		}
 		for (ProductSubscription subscriptions : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 				if(subscriptions.isActive){
+//TODO If the serial number comes from a modifier pool, then this loop may give a "Entitlement Certificate with serial number '6272063836166398810' could not be found."
+//     I would avoid this case by not subscribing to a modifier pool in the prior subscribe loop.	
 					clienttasks.unsubscribe(null, subscriptions.serialNumber, null, null, null);
 				}
 		}
@@ -2436,6 +2438,8 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 						sm_clientPassword, sm_serverUrl, "/owners/"));
 
 		System.out.println(jsonActivationKey);
+//TODO
+throw new SkipException("Finish implementing this test.  Nothing beyond register is being asserted.");
 	}
 
 	/**
@@ -2597,8 +2601,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		int expected = 0;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
 /* unnecessary
 		clienttasks.restart_rhsmcertd(null, null, false, null);
 		clienttasks.deleteFactsFileWithOverridingValues();
