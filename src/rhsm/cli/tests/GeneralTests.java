@@ -411,7 +411,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to subscription-manager-migration",
-			groups={},
+			groups={"blockedByBug-1049037"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForSubscriptionManagerMigration_Test() {
@@ -431,7 +431,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")) {
 			expecetdRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.9.11-1.el6"
-					"manual: rhnlib",
+					"manual: subscription-manager-migration-data",	// Bug 1049037 - subscription-manager-migration should require subscription-manager-migration-data
+					"manual: rhnlib"
 			}));
 		}
 		
