@@ -357,6 +357,26 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager: list of available subscriptions should include contract number",
+			groups={"blockedByBug-1007580"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=, fromPlan=)
+	public void EnsureListAvailableReportsContract_Test() {
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// assert the contract value in all available pools
+		boolean availableSubscriptionPoolsDisplayContract=false;
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+			String none = "None";
+			if (pool.contract!=null) {
+				Assert.assertTrue(!pool.contract.equalsIgnoreCase(none), "The contract '"+pool.contract+"' for subscription pool '"+pool.poolId+"' should not be reported as '"+none+"'.");
+				availableSubscriptionPoolsDisplayContract = true;
+			}
+		}
+		Assert.assertTrue(availableSubscriptionPoolsDisplayContract, "Successfully encountered contracts reported in the list of available subscription pools.");
+	}
+	
+	
 	@Test(	description="subscription-manager-cli: RHEL Personal should be the only available subscription to a consumer registered as type person",
 			groups={"EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test"},
 			enabled=true)
