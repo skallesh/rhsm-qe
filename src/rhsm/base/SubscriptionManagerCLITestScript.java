@@ -197,7 +197,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				servertasks.statusStandalone	= jsonStatus.getBoolean("standalone");
 				} catch(Exception e){log.warning(e.getMessage());log.warning("You should upgrade your candlepin server!");}
 
-				//	[root@jsefler-r63-server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
+				//	# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
 				//	{
 				//	    "release": "1", 
 				//	    "result": true, 
@@ -206,7 +206,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				//	    "version": "0.5.24"
 				//	}
 				
-				//	[root@jsefler-6 ~]# curl --stderr /dev/null --insecure --user ***:*** --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/status | python -m simplejson/tool
+				//	# curl --stderr /dev/null --insecure --user ***:*** --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/status | python -m simplejson/tool
 				//	{
 				//	    "managerCapabilities": [
 				//	        "cores", 
@@ -222,6 +222,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				//	    "standalone": false, 
 				//	    "timeUTC": "2013-09-27T13:51:08.783+0000", 
 				//	    "version": "0.8.28"    <=== COULD ALSO BE "0.8.28.0" IF A HOT FIX WAS APPLIED
+				//	}
+				
+				//	# curl -k -u ***:*** https://katellosach.usersys.redhat.com:443/katello/api/status --stderr /dev/null | python -mjson/tool
+				//	{
+				//	    "release": "Katello",
+				//	    "result": true,
+				//	    "standalone": true,
+				//	    "timeUTC": "2014-01-29T09:04:14Z",
+				//	    "version": "1.4.15-1.el6"
 				//	}
 
 				//TODO git candlepin version on hosted stage:
