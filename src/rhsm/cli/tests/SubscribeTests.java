@@ -1235,7 +1235,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		Assert.fail("Do not know how to assert the attempted attachment of '"+pool.subscriptionName+"'.");
 	}
-	@AfterGroups(groups={"setup"}, value={"VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test"})
+	@AfterGroups(groups={"setup"}, value={"VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test","AutoSubscribeOnVirtualSystemsFavorVirtualPools_Test"})
 	@AfterClass(groups={"setup"})	// insurance; not really needed
 	public void deleteFactsFileWithOverridingValues() {
 		clienttasks.deleteFactsFileWithOverridingValues();
@@ -1266,6 +1266,87 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		return ll;
 	}
+	
+	
+	@Test(	description="subscription-manager: autosubscribe on a virtual system should favor virtual pools",
+			groups={"blockedByBug-927101","AutoSubscribeOnVirtualSystemsFavorVirtualPools_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AutoSubscribeOnVirtualSystemsFavorVirtualPools_Test() throws JSONException, Exception {
+		
+		// force the system to be virtual
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("virt.is_guest", String.valueOf(Boolean.TRUE));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		
+		// get the current product certs
+		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// get the available pools
+		List<SubscriptionPool> availablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		
+		// find available subscriptions for which both a Virtual and a Physical pool is available
+		boolean testAttempted = false;
+		for (SubscriptionPool virtualPool : SubscriptionPool.findAllInstancesWithMatchingFieldFromList("machineType", "Virtual", availablePools)) {
+			for (SubscriptionPool physicalPool : SubscriptionPool.findAllInstancesWithMatchingFieldFromList("machineType", "Physical", availablePools)) {
+				if (virtualPool.productId.equals(physicalPool.productId)) {
+					// found a pair of subscriptions that we can test
+					
+					// get the product certs that are provided by these pools
+					List<String> virtualProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, virtualPool.poolId);
+					List<String> physicalProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, physicalPool.poolId);
+					Assert.assertTrue(virtualProductIds.containsAll(physicalProductIds)&&physicalProductIds.containsAll(virtualProductIds), "Provided product ids from virtual pool '"+virtualPool.poolId+"' and physical pool '"+physicalPool.poolId+"' sharing a common productId '"+virtualPool.productId+"' should be the same.");
+					
+					// configure a temporary product cert directory containing only these provided product certs
+					RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+tmpProductCertDir,Integer.valueOf(0));
+					RemoteFileTasks.runCommandAndAssert(client,"rm -f "+tmpProductCertDir+"/*.pem",Integer.valueOf(0));
+					List<String> productCertIdsFound = new ArrayList<String>();
+					List<String> productCertNamesFound = new ArrayList<String>();
+					for (ProductCert productCert : productCerts) {
+						if (virtualProductIds.contains(productCert.productId)) {
+							RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert.file+" "+tmpProductCertDir,Integer.valueOf(0));
+							productCertIdsFound.add(productCert.productId);
+							productCertNamesFound.add(productCert.productName);
+						}
+					}
+					clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
+					
+					if (!productCertIdsFound.isEmpty()) {
+						
+						// start testing... autosubscribe and assert the consumed subscriptions are Virtual
+						clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+						clienttasks.subscribe(true, null, null, (String)null, null, null, null, null, null, null, null);
+						for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+							Assert.assertEquals(productSubscription.machineType, "Virtual", "Autosubscribing a virtual system should favor granting an entitlement from a Virtual pool that provides "+productCertIdsFound+" over a Physical pool that provides "+productCertIdsFound+"'.");
+							Assert.assertTrue(productSubscription.provides.containsAll(productCertNamesFound), "The autosubscribed virtual subscription '"+productSubscription+"' provides for all of the installed products "+productCertNamesFound+".  (Note: This could potentially fail when the provided product names are do not exactly match the installed product cert names which is okay since the productIds are what really matter).");	// TODO We may need to comment this out or fix it if it starts failing due to changes in the subscription data.
+							testAttempted = true;
+						}
+						//testAttempted = true;	// relocated to inside of loop above
+						
+					} else {
+						log.info("Did not find any installed product certs provided by Virtual and Physical subscriptions '"+virtualPool.productId+"'.");
+					}
+				}
+			}
+		}
+		if (!testAttempted) throw new SkipException("Did not find all the resources needed to attempt this test.");
+		
+	}
+	@AfterGroups(groups="setup", value = {"AutoSubscribeOnVirtualSystemsFavorVirtualPools_Test"})
+	public void restoreRhsmProductCertDir() {
+		if (clienttasks==null) return;
+		if (rhsmProductCertDir==null) return;	
+		log.info("Restoring the originally configured product cert directory...");
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", rhsmProductCertDir);
+	}
+	protected String rhsmProductCertDir = null;
+	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir";
+	
+	
+	
 	
 	
 	
