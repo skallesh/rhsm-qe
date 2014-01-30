@@ -174,7 +174,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify enablement of yum plugin for subscription-manager in /etc/yum/pluginconf.d/subscription-manager.conf ",
-			groups={"VerifyYumPluginForSubscriptionManagerEnablement_Test"/*, "blockedByBug-1017354"*/},
+			groups={"VerifyYumPluginForSubscriptionManagerEnablement_Test", "blockedByBug-1017354"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyYumPluginForSubscriptionManagerEnablement_Test() {
@@ -186,20 +186,22 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
 		expectedMsg = "This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.";
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		Assert.assertTrue(sshCommandResult.getStderr().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=1 displays expected stderr message '"+expectedMsg+"'.");
+//		Assert.assertTrue(sshCommandResult.getStderr().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=1 displays expected stderr message '"+expectedMsg+"'.");
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=1 displays expected stdout message '"+expectedMsg+"'.");
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "0");
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		Assert.assertFalse(sshCommandResult.getStderr().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=0 displays expected stderr message '"+expectedMsg+"'.");
+		Assert.assertFalse((sshCommandResult.getStdout()+sshCommandResult.getStderr()).contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=0 displays expected stderr message '"+expectedMsg+"'.");
 		
 		// test /etc/yum/pluginconf.d/subscription-manager.conf enabled=1 and enabled=0 (REGISTERED)
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null,false,null,null,null);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
 		expectedMsg = "This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.";
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		Assert.assertTrue(sshCommandResult.getStderr().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=1 displays expected stderr message '"+expectedMsg+"'.");
+//		Assert.assertTrue(sshCommandResult.getStderr().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=1 displays expected stderr message '"+expectedMsg+"'.");
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=1 displays expected stdout message '"+expectedMsg+"'.");
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "0");
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		Assert.assertFalse(sshCommandResult.getStderr().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=0 displays expected stderr message '"+expectedMsg+"'.");
+		Assert.assertFalse((sshCommandResult.getStdout()+sshCommandResult.getStderr()).contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=0 displays expected stderr message '"+expectedMsg+"'.");
 	}
 	@AfterGroups(value="VerifyYumPluginForSubscriptionManagerEnablement_Test", alwaysRun=true)
 	protected void afterVerifyYumPluginForSubscriptionManagerEnablement_Test() {
