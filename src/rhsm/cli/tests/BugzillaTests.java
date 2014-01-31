@@ -2392,34 +2392,58 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+/* unnecessary for this test
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-		Calendar now = new GregorianCalendar();
+*/
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		now.add(Calendar.YEAR, 1);
-		now.add(Calendar.DATE, 1);
-		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		Calendar now = new GregorianCalendar();
+		Calendar nextYear = new GregorianCalendar();
+		nextYear.add(Calendar.YEAR, 1);	nextYear.add(Calendar.DATE, -1);	// one day less than one year
+		String onDateToTest = yyyy_MM_dd_DateFormat.format(nextYear.getTime());
+/* unnecessary for this test
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+*/
+/* we can improve the efficiency of this loop
 		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
 		if(availOnDate.size()==0) throw new SkipException(
 				"Sufficient future pools are not available");
 		for (SubscriptionPool subscriptions : availOnDate) {
-			if(!(subscriptions.endDate.before(now))){
+			if(!(subscriptions.endDate.before(nextYear))){
 				clienttasks.subscribe(null, null, subscriptions.poolId, null, null,null, null, null, null, null, null);
 		}
 		}
-		for (ProductSubscription subscriptions : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-				if(subscriptions.isActive){
-//TODO If the serial number comes from a modifier pool, then this loop may give a "Entitlement Certificate with serial number '6272063836166398810' could not be found."
-//     I would avoid this case by not subscribing to a modifier pool in the prior subscribe loop.	
-					clienttasks.unsubscribe(null, subscriptions.serialNumber, null, null, null);
-				}
+*/
+		List<String> subscriptionPoolIds = new ArrayList<String>();
+		for (SubscriptionPool subscription : clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest)) {
+			if (!CandlepinTasks.isPoolAModifier(sm_clientUsername, sm_clientPassword, subscription.poolId, sm_serverUrl)) {
+				subscriptionPoolIds.add(subscription.poolId);
+			}
 		}
-		List<Repo> repo = clienttasks.getCurrentlySubscribedRepos();
-		Assert.assertTrue(repo.isEmpty());
-
+		clienttasks.subscribe(null, null, subscriptionPoolIds, null, null, null, null, null, null, null, null);
+		
+		// determine if both active and inactive entitlements are being consumed
+		boolean activeProductSubscriptionsConsumed = false;
+		boolean inactiveProductSubscriptionsConsumed = false;
+		List<ProductSubscription> currentlyConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		for (ProductSubscription subscriptions : currentlyConsumedProductSubscriptions) {
+			if(subscriptions.isActive) activeProductSubscriptionsConsumed = true;
+			if(!subscriptions.isActive) inactiveProductSubscriptionsConsumed = true;
+		}
+		if (!activeProductSubscriptionsConsumed || !inactiveProductSubscriptionsConsumed) {
+			throw new SkipException("This test assumes that both current and future subscriptions are available on '"+onDateToTest+"' which is determined by the subscriptions loaded on the candlepin server."); 
+		}
+		// the following loop will remove all currently active entitlements
+		Assert.assertTrue(!clienttasks.getCurrentlySubscribedRepos().isEmpty(), "There should be entitled repos since we are consuming current entitlements (indicated by Active:True) are attached.");
+		for (ProductSubscription subscriptions : currentlyConsumedProductSubscriptions) {
+			if(subscriptions.isActive) {
+				clienttasks.unsubscribe(null, subscriptions.serialNumber, null, null, null);
+			}
+		}
+		Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "We should still be consuming future entitlements (indicated by Active:False).");
+		Assert.assertTrue(clienttasks.getCurrentlySubscribedRepos().isEmpty(), "There should not be any entitled repos despite the future attached entitlements (indicated by Active:False).");
 	}
 
 	/**
