@@ -3115,8 +3115,10 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	 */
 	@Test(description = "verify if rhsmcertd process refresh the identity certificate after every restart", groups = {
 			"VerifyrhsmcertdRefreshIdentityCert", "blockedByBug-827034","blockedByBug-923159",
-	"blockedByBug-827035" }, enabled = true)
-	
+	"blockedByBug-827035" }, enabled = false)
+	// TODO disabling this test for two reasons:
+	//  1. it is dangerous to change the system dates
+	//  2. the network service seems to stop when the date changes breaking the ability to ssh into the system
 	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException,
 	Exception {
 		
