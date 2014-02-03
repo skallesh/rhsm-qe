@@ -1314,7 +1314,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify expiration of entitlement certs", 
-			groups = { "ExpirationOfEntitlementCerts","blockedByBug-907638","blockedByBug-953830"}, enabled = true)
+			groups = {"ExpirationOfEntitlementCerts","blockedByBug-907638","blockedByBug-953830"}, enabled = true)
 		public void ExpirationOfEntitlementCerts() throws JSONException,Exception {
 		int endingMinutesFromNow =1;
 /* unnecessary
@@ -1359,8 +1359,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		
 		// attempt to attach an entitlement from an expired pool
 		String result=clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null).getStdout();	
-		// Stdout: Unable to attach pool with ID '8a908740438be86501438cd57718376c'.: Subscriptions for awesomeos-onesocketib expired on: 1/13/14 1:21 PM.
-		String expiredOnDatePattern = "M/dd/yy h:mm a";	//	1/13/14 1:21 PM
+		// Stdout: Unable to attach pool with ID '8a908740438be86501438cd57718376c'.: Subscriptions for awesomeos-onesocketib expired on: 1/3/14 1:21 PM.
+		String expiredOnDatePattern = "M/d/yy h:mm a";	//	1/3/14 1:21 PM
 		DateFormat expiredOnDateFormat = new SimpleDateFormat(expiredOnDatePattern);
 		String expiredOnString = expiredOnDateFormat.format(endDate.getTime());
 /* 
