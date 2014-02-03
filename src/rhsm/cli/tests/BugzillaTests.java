@@ -19,6 +19,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,6 +32,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
@@ -1510,46 +1512,67 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if bind and unbind event is recorded in syslog", 
-			groups = { "VerifyBindAndUnbindInSyslog","blockedByBug-919700"}, enabled = true)
+			groups = {"VerifyBindAndUnbindInSyslog","blockedByBug-919700"}, enabled = true)
 	@ImplementsNitrateTest(caseId=68740)
 	public void VerifyBindAndUnbindInSyslog() throws JSONException,Exception {
-		BigInteger serialnums =null;
-		String poolId=null;
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-	String SyslogMessage="Added subscription for product '";
-	String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-	RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, LogMarker);
-	clienttasks.subscribe(true, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
-	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, LogMarker, null),SyslogMessage);
-
-	
-	SyslogMessage="Removed subscription for ";
-	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-	RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, LogMarker);
-	clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
-	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, LogMarker, null),SyslogMessage);
-	
-	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-	for (SubscriptionPool available : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
-		poolId=available.poolId;
-	}
-	
-	SyslogMessage="Added subscription for ";
-	RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, LogMarker);
-	clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null);
-	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, LogMarker, null),SyslogMessage);
+		String logMarker, expectedSyslogMessage, tailFromSyslogFile;
 		
-	for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-		serialnums=consumed.serialNumber;
-	}
-	SyslogMessage="Removed subscription for ";
-	LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
-	RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, LogMarker);
-	clienttasks.unsubscribe(null, serialnums, null, null, null);
-	Assert.assertContainsMatch(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, LogMarker, null),SyslogMessage);
-
+		logMarker = System.currentTimeMillis()+" Testing Register **********************";
+		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, logMarker);
+		String identity = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (String) null, null, null, null, true, false, null, null, null));
+		tailFromSyslogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, logMarker, null);
+		//	Feb  3 12:50:47 jsefler-7 subscription-manager: Registered system with identity: eddfaf6d-e916-49e3-aa71-e33a2c54e1dd
+		expectedSyslogMessage = String.format("%s: Registered system with identity: %s", clienttasks.command, identity);
+		Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),"After registering', syslog '"+clienttasks.messagesLogFile+"' contains expected message '"+expectedSyslogMessage+"'.");
+		
+		logMarker = System.currentTimeMillis()+" Testing Subscribe **********************";
+		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, logMarker);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<String> poolIds = new ArrayList<String>(); for (SubscriptionPool pool : pools) poolIds.add(pool.poolId);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
+		tailFromSyslogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, logMarker, null);
+		for (SubscriptionPool pool : pools) {
+			//	Feb  3 12:08:01 jsefler-7 subscription-manager: Added subscription for 'Awesome OS Stackable guest limit 4' contract '2'
+			//	Feb  3 12:08:01 jsefler-7 subscription-manager: Added subscription for product 'Awesome OS Server Bits'
+			expectedSyslogMessage = String.format("%s: Added subscription for '%s' contract '%s'", clienttasks.command, pool.subscriptionName,pool.contract);
+			Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),"After subscribing to '"+pool.subscriptionName+"', syslog '"+clienttasks.messagesLogFile+"' contains expected message '"+expectedSyslogMessage+"'.");
+			for (String providedProduct : pool.provides) {
+				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1016300
+				if (providedProduct.equals("Awesome OS Server Bundled")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1016300"; 
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						log.warning("Ignoring the provided MKT product '"+providedProduct+"'.  No syslog assertion for this product will be made.");
+						continue;
+					}
+				}
+				// END OF WORKAROUND
+				expectedSyslogMessage = String.format("%s: Added subscription for product '%s'", clienttasks.command, providedProduct);
+				Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),"After subscribing to '"+pool.subscriptionName+"', syslog '"+clienttasks.messagesLogFile+"' contains expected message '"+expectedSyslogMessage+"'.");
+			}
+		}	
+		
+		logMarker = System.currentTimeMillis()+" Testing Unsubscribe **********************";
+		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, logMarker);
+		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
+		tailFromSyslogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, logMarker, null);
+		for (ProductSubscription productSubscription : productSubscriptions) {
+			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for 'Awesome OS Server Bundled (2 Sockets, Standard Support)' contract '3'
+			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Clustering Bits'
+			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Awesome OS Server Bits'
+			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Load Balancing Bits'
+			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Large File Support Bits'
+			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Shared Storage Bits'
+			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Management Bits'
+			expectedSyslogMessage = String.format("%s: Removed subscription for '%s' contract '%s'", clienttasks.command, productSubscription.productName,productSubscription.contractNumber);
+			Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),"After unsubscribing from '"+productSubscription.productName+"', syslog '"+clienttasks.messagesLogFile+"' contains expected message '"+expectedSyslogMessage+"'.");
+			for (String providedProduct : productSubscription.provides) {
+				expectedSyslogMessage = String.format("%s: Removed subscription for product '%s'", clienttasks.command, providedProduct);
+				Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),"After unsubscribing from '"+productSubscription.productName+"', syslog '"+clienttasks.messagesLogFile+"' contains expected message '"+expectedSyslogMessage+"'.");
+			}
+		}
 	}
 	
 	/**
@@ -1561,14 +1584,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "VerifyRegisterAndUnregisterInSyslog"}, enabled = true)
 	@ImplementsNitrateTest(caseId=68749)
 	public void VerifyRegisterAndUnregisterInSyslog() throws JSONException,Exception {
-	clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
+	clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, false, null, null, null);
 	String consumerid=clienttasks.getCurrentConsumerId();
 	String SyslogMessage="Registered system with identity: "+consumerid;
 		RemoteFileTasks.runCommandAndAssert(client,"tail -10 "+clienttasks.messagesLogFile, null, SyslogMessage, null);
 	clienttasks.unregister(null, null, null);	
 	SyslogMessage="Unregistered machine with identity: "+consumerid;
 	RemoteFileTasks.runCommandAndAssert(client,"tail -10 "+clienttasks.messagesLogFile, null, SyslogMessage, null);
-
 	}
 	
 	
