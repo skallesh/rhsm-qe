@@ -432,11 +432,12 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
 			Set<String> bugIds = new HashSet<String>();
 			
-			// Bug 906567 - [hi][zh_CN][ru][ko]msgids containing "Red Hat" should NOT translate this substring
+			// Bug 906567 - [hi][zh_CN][ru][ko][it]msgids containing "Red Hat" should NOT translate this substring
 			if (translationFile.getPath().contains("/hi/")) bugIds.add("906567");
 			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("906567");
 			if (translationFile.getPath().contains("/ru/")) bugIds.add("906567");
 			if (translationFile.getPath().contains("/ko/")) bugIds.add("906567");
+			if (translationFile.getPath().contains("/it/")) bugIds.add("906567");
 			
 			// Bug 906552 - [es_ES][gu][kn][or][pa][pt_BR][ta_IN][te][zh_CN] msgids containing "subscription-manager" should NOT translate this substring
 			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("906552");
