@@ -449,6 +449,9 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/te/")) bugIds.add("906552");
 			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("906552");
 			
+			// Bug 1061393 - [pa] msgids containing "subscription-manager" should NOT translate this substring
+			if (translationFile.getPath().contains("/pa/")) bugIds.add("1061393");		
+			
 			// Bug 906967 - [as][or][ta_IN][ml][pt_BR][gu][kn][mr][it][hi][zh_CN][te][ru][pa][ko] msgids containing "RHN", "RHN Classic" should NOT translate this substring
 			if (translationFile.getPath().contains("/as/")) bugIds.add("906967");
 			if (translationFile.getPath().contains("/or/")) bugIds.add("906967");
