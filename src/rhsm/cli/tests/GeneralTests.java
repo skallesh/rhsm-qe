@@ -357,6 +357,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					//"post: /bin/sh",
 					//"postun: /bin/sh",
 					"manual: dbus-x11",
+					"manual: gnome-icon-theme",	// added by Bug 995121 - GUI: calendar icon on s390x and ppc64 machines is not displayed
 					"manual: gnome-python2",
 					"manual: gnome-python2-canvas",
 					"manual: pygtk2",
