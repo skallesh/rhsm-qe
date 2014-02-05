@@ -202,7 +202,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// ignore the following special cases of acceptable results for each of the pofilterTests..........
-				
+		
+		// *******************************************************************************************
 		if (pofilterTest.equals("accelerators")) {
 			// these msgids are ignorable for all accelerator language tests because they are NOT used as gnome menu items
 			// Note: If these fail the accelerators test, then that means the underscored words were translated which may or may
@@ -215,6 +216,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			ignorableMsgIds.addAll(Arrays.asList(new String[]{"progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox","manage_repositories_dialog","remove_all_overrides_button"}));	// these are various GTK widget ids, not gnome menu items
 		}
 		
+		// *******************************************************************************************
 		if (pofilterTest.equals("newlines")) {
 			
 			// common newlines msgid translations to ignore for all langs
@@ -295,6 +297,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			// END OF WORKAROUND
 		}
 		
+		// *******************************************************************************************
 		if (pofilterTest.equals("xmltags")) { 
 			Boolean match = false; 
 			for(Translation pofilterFailedTranslation : pofilterFailedTranslations) {
@@ -357,6 +360,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
+		// *******************************************************************************************
 		if (pofilterTest.equals("filepaths")) {
 			
 			// filepaths translations to ignore for specific langs
@@ -399,6 +403,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
+		// *******************************************************************************************
 		// TODO remove or comment this ignore case once the msgID is corrected 
 		// error: 		msgid "Error: you must register or specify --username and password to list service levels"
 		// rectified:	msgid "Error: you must register or specify --username and --password to list service levels"
@@ -406,6 +411,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			ignorableMsgIds = Arrays.asList("Error: you must register or specify --username and password to list service levels");
 		}
 		
+		// *******************************************************************************************
 		if (pofilterTest.equals("short")) {
 			// common short msgid translations to ignore for all langs
 			ignorableMsgIds.addAll(Arrays.asList("No", "Yes", "Key", "Value", "N/A", "None", "Number", "and"));
@@ -429,6 +435,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if((translationFile.getPath().contains("/zh_TW/"))) ignorableMsgIds.addAll(Arrays.asList("automatically attach compatible subscriptions to this system","automatically attach compatible                                subscriptions to this system"));
 		}
 		
+		// *******************************************************************************************
 		if (pofilterTest.equals("doublewords")) {
 			// common doublewords in the translation to ignore for all langs
 			ignorableMsgIds.addAll(Arrays.asList("Subscription Subscriptions Box", "Subscription Subscriptions Label"));
@@ -440,6 +447,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if((translationFile.getPath().contains("/or/"))) ignorableMsgIds.addAll(Arrays.asList("Run the initial checks immediately, with no delay.","Run the initial checks immediatly, with no delay.","run the initial checks immediately, with no delay"));
 		}
 		
+		// *******************************************************************************************
 		if (pofilterTest.equals("unchanged")) {
 			// common unchanged translations to ignore for all langs
 			ignorableMsgIds.addAll(Arrays.asList(
@@ -472,16 +480,25 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (doesStringContainMatches(translationFile.getPath(),"/gu/|/gu\\.po$"))		ignorableMsgIds.addAll(Arrays.asList(                   "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
 		}
 		
+		// *******************************************************************************************
 		if (pofilterTest.equals("urls")) {
 			if(translationFile.getPath().contains("/zh_CN/")) ignorableMsgIds.addAll(Arrays.asList("Server URL has an invalid scheme. http:// and https:// are supported"));
 			
 			// search for failed pofilter urls translation and ignore acceptable cases
 			for (Translation failedTranslation : pofilterFailedTranslations) {
+				// Bug 1061923 - remove trailing period from privacy UR
 				//	msgid ""
 				//	"Did not receive a completed unregistration message from RHN Classic for system %s.\n"
 				//	"Please investigate on the Customer Portal at https://access.redhat.com."
 				// ignore translations that excluded the trailing period on the url
 				if (failedTranslation.msgid.replaceAll("\\n","").matches(".*https://access\\.redhat\\.com\\.$") && failedTranslation.msgstr.contains("https://access.redhat.com")) {
+					ignorableMsgIds.add(failedTranslation.msgid);
+				}
+				
+				// Bug 1061923 - remove trailing period from privacy UR
+				//	msgid "<small><b>Tip:</b> Red Hat values your privacy: http://www.redhat.com/legal/privacy_statement.html.</small>"
+				// ignore translations that excluded the trailing period on the url
+				if (failedTranslation.msgid.replaceAll("</?[A-Za-z]+>","").matches(".*http://www\\.redhat\\.com/legal/privacy_statement\\.html\\.$") && failedTranslation.msgstr.contains("http://www.redhat.com/legal/privacy_statement.html")) {
 					ignorableMsgIds.add(failedTranslation.msgid);
 				}
 				
