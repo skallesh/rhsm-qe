@@ -404,11 +404,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// *******************************************************************************************
-		// TODO remove or comment this ignore case once the msgID is corrected 
-		// error: 		msgid "Error: you must register or specify --username and password to list service levels"
-		// rectified:	msgid "Error: you must register or specify --username and --password to list service levels"
 		if (pofilterTest.equals("options")) {
-			ignorableMsgIds = Arrays.asList("Error: you must register or specify --username and password to list service levels");
+			
 		}
 		
 		// *******************************************************************************************
@@ -465,25 +462,23 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (doesStringContainMatches(translationFile.getPath(),"/bn_IN/|/bn_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Validity Applet","Auto-attach"));
 			if (doesStringContainMatches(translationFile.getPath(),"/ta_IN/|/ta_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","Repo Id:              \\t%s","Repo Url:             \\t%s","Auto-attach"));
 			if (doesStringContainMatches(translationFile.getPath(),"/pt_BR/|/pt_BR\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","<b>Status:</b>","Login:","Virtual","_Help","virtual", "Repo Id:              \\t%s", "Arch:                 \\t%s"/* omaciel says "Arquitetura:" is better */, "Pool Id:              \\t%s"/* omaciel says "ID do pool:" is better */));
-			if (doesStringContainMatches(translationFile.getPath(),"/de_DE/|/de_DE\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","Status","<b>Status:</b>","Status:               \\t%s","Status:","<b>Status Details:</b>","Status Details","Status Details:","Status Details Text","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server","Standard"));
-			if (doesStringContainMatches(translationFile.getPath(),"/es_ES/|/es_ES\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","No","%s: error: %s","General:"));
+			if (doesStringContainMatches(translationFile.getPath(),"/de_DE/|/de_DE\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","<b>Name:</b>","Status","<b>Status:</b>","Status:               \\t%s","Status:","<b>Status Details:</b>","Status Details","Status Details:","Status Details Text","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server","Standard","Repository: %s"));
+			if (doesStringContainMatches(translationFile.getPath(),"/es_ES/|/es_ES\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","Serial:","No","%s: error: %s","General:"));
 			if (doesStringContainMatches(translationFile.getPath(),"/te/|/te\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("page 2"));
 			if (doesStringContainMatches(translationFile.getPath(),"/pa/|/pa\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
 			if (doesStringContainMatches(translationFile.getPath(),"/fr/|/fr\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Arches","Architectures","Version","page 2","Standard"));
-			if (doesStringContainMatches(translationFile.getPath(),"/it/|/it\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","org id: %s","org ID: %s","Account","<b>Account:</b>","Account:              \\t%s","Account","<b>Arch:</b>","Arch:                 \\t%s","Arch:","Arch","Login:","No","Password:","Release: %s","Password: ","Server","Standard"));
+			if (doesStringContainMatches(translationFile.getPath(),"/it/|/it\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","org id: %s","org ID: %s","Account","Account:","<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch:","Arch","Login:","No","Password:","Release: %s","Password: ","Server","Standard","Stack "));
 			if (doesStringContainMatches(translationFile.getPath(),"/zh_TW/|/zh_TW\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Auto-attach"));
-			if (doesStringContainMatches(translationFile.getPath(),"/zh_CN/|/zh_CN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Section: %s, Name: %s"));
+			if (doesStringContainMatches(translationFile.getPath(),"/zh_CN/|/zh_CN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Section: %s, Name: %s", "Subscription Manager"));
 			if (doesStringContainMatches(translationFile.getPath(),"/bn_IN/|/bn_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
 			if (doesStringContainMatches(translationFile.getPath(),"/or/|/or\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
 			if (doesStringContainMatches(translationFile.getPath(),"/zh_TW/|/zh_TW\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
-			if (doesStringContainMatches(translationFile.getPath(),"/fr/|/fr\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
+			if (doesStringContainMatches(translationFile.getPath(),"/fr/|/fr\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE", "%%prog %s [OPTIONS] "));
 			if (doesStringContainMatches(translationFile.getPath(),"/gu/|/gu\\.po$"))		ignorableMsgIds.addAll(Arrays.asList(                   "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
 		}
 		
 		// *******************************************************************************************
 		if (pofilterTest.equals("urls")) {
-			if(translationFile.getPath().contains("/zh_CN/")) ignorableMsgIds.addAll(Arrays.asList("Server URL has an invalid scheme. http:// and https:// are supported"));
-			
 			// search for failed pofilter urls translation and ignore acceptable cases
 			for (Translation failedTranslation : pofilterFailedTranslations) {
 				// Bug 1061923 - remove trailing period from privacy UR
