@@ -211,7 +211,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			ignorableMsgIds.add("proxy URL in the form of proxy_hostname:proxy_port");
 			ignorableMsgIds.add("%%prog %s [OPTIONS] CERT_FILE");
 			ignorableMsgIds.add("%%prog %s [OPTIONS] MANIFEST_FILE");
-			ignorableMsgIds.addAll(Arrays.asList(new String[]{"progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox"}));	// these are various GTK widget ids, not gnome menu items
+			ignorableMsgIds.add("To remove a channel, use 'rhn-channel --remove --channel=<conflicting_channel>'.");
+			ignorableMsgIds.addAll(Arrays.asList(new String[]{"progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox","manage_repositories_dialog","remove_all_overrides_button"}));	// these are various GTK widget ids, not gnome menu items
 		}
 		
 		if (pofilterTest.equals("newlines")) {
@@ -897,7 +898,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			for (String pofilterTest : pofilterTests) {
 				Set<String> bugIds = new HashSet<String>();
 				
-				// skip the accelerators test since there are gnome gui menu items generated from the candlepin msgids
+				// skip the accelerators test since there are no gnome gui menu items generated from the candlepin msgids
 				if (pofilterTest.equals("accelerators")) continue;
 				
 				// Bug 842450 - [ja_JP] failed pofilter newlines option test for candlepin translations
