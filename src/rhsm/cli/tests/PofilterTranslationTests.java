@@ -470,11 +470,13 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (doesStringContainMatches(translationFile.getPath(),"/it/|/it\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","org id: %s","org ID: %s","Account","Account:","<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch:","Arch","Login:","No","Password:","Release: %s","Password: ","Server","Standard","Stack "));
 			if (doesStringContainMatches(translationFile.getPath(),"/zh_TW/|/zh_TW\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Auto-attach"));
 			if (doesStringContainMatches(translationFile.getPath(),"/zh_CN/|/zh_CN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Section: %s, Name: %s", "Subscription Manager"));
+			if (doesStringContainMatches(translationFile.getPath(),"/fr/|/fr\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE", "%%prog %s [OPTIONS] "));
+/*DELETEME jsefler updated these translations in Zanata for subscription-manager 1.10.X
 			if (doesStringContainMatches(translationFile.getPath(),"/bn_IN/|/bn_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
 			if (doesStringContainMatches(translationFile.getPath(),"/or/|/or\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
 			if (doesStringContainMatches(translationFile.getPath(),"/zh_TW/|/zh_TW\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
-			if (doesStringContainMatches(translationFile.getPath(),"/fr/|/fr\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("%prog [options]", "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE", "%%prog %s [OPTIONS] "));
 			if (doesStringContainMatches(translationFile.getPath(),"/gu/|/gu\\.po$"))		ignorableMsgIds.addAll(Arrays.asList(                   "%prog [OPTIONS]","%%prog %s [OPTIONS]", "%%prog %s [OPTIONS] CERT_FILE", "%%prog %s [OPTIONS] MANIFEST_FILE"));
+*/
 		}
 		
 		// *******************************************************************************************
