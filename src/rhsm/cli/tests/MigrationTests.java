@@ -1675,7 +1675,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String originalProductCertDir			= null;
 	protected final String backupProductCertDir		= "/tmp/backupOfProductCertDir";
 	protected final String backupProductIdJsonFile	= "/tmp/backupOfProductIdJsonFile";
-	protected String nonDefaultProductCertDir		= "/tmp/migratedProductCertDir";
+	protected String nonDefaultProductCertDir		= "/tmp/sm-migratedProductCertDir";
 	protected String machineInstNumberFile			= "/etc/sysconfig/rhn/install-num";
 	protected String backupMachineInstNumberFile	= machineInstNumberFile+".bak";
 	protected String rhnBaseChannel = null;
