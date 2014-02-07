@@ -298,7 +298,20 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// *******************************************************************************************
-		if (pofilterTest.equals("xmltags")) { 
+		if (pofilterTest.equals("xmltags")) {
+			String msgid;
+			
+			// failed xmltags msgids to ignore for specific langs
+			for (Translation failedTranslation : pofilterFailedTranslations) {
+				msgid = "To remove a channel, use 'rhn-channel --remove --channel=<conflicting_channel>'.";
+				//	msgstr "Чтобы удалить канал, выполните  «rhn-channel --remove --channel=<канал>»."
+				if ((translationFile.getPath().contains("/ru/")) && failedTranslation.msgid.equals(msgid) && failedTranslation.msgstr.contains("<канал>")) ignorableMsgIds.add(failedTranslation.msgid);
+				
+				msgid = "Receive the latest software updates, including security updates, keeping this Red Hat Enterprise Linux system <b>updated</b> and <b>secure</b>.";
+				// msgstr "セキュリティ更新など最新のソフトウェア更新を受信し、Red Hat Enterprise Linux システムを最新で安全な状態に維持します。"
+				if ((translationFile.getPath().contains("/ja/")) && failedTranslation.msgid.equals(msgid) && !failedTranslation.msgstr.contains("b>")) ignorableMsgIds.add(failedTranslation.msgid);
+			}
+			
 			Boolean match = false; 
 			for(Translation pofilterFailedTranslation : pofilterFailedTranslations) {
 				// Parsing mgID and msgStr for XMLTags
