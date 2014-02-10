@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -13,10 +15,11 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
+
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.data.Environment;
 
-import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -28,7 +31,7 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-
+	
 	
 	@Test(	description="subscription-manager: verify that an on-premises candlepin server does NOT support environments",
 			groups={},
@@ -216,33 +219,28 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-//	TODO create environment tests for a candlepin server that DOES support environments...
 	
-//	@Test(	description="subscription-manager: run the environments module with valid user credentials and verify the expected environments are listed",
-//			groups={"myDevGroup"},
-//			dataProvider="getEnvironmentsForOrgsData",
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void EnvironmentsWithCredentials_Test(String username, String password, String org, List<Environment> expectedEnvironments) {
-//		log.info("Testing subscription-manager environments module using username="+username+" password="+password+" org="+org+" and expecting environmnets="+expectedEnvironments+" ...");
-//		
-//		// use subscription-manager to get the organizations for which the user has access
-//		SSHCommandResult environmentsResult = clienttasks.environments_(username, password, org, null, null, null);
-//		
-//		// when the expectedOrgs is empty, there is a special message, assert it
-//		if (expectedEnvironments.isEmpty()) {
-//			Assert.assertEquals(environmentsResult.getStdout().trim(),username+" cannot register to any organizations.","Special message when the expectedOrgs is empty.");
-//		}
-//		
-//		// parse the actual Orgs from the orgsResult
-//		List<Org> actualEnvironments = Org.parse(environmentsResult.getStdout());
-//		
-//		// assert that all of the expectedOrgs are included in the actualOrgs
-//		for (Environment expectedEnvironment : expectedEnvironments) {
-//			Assert.assertTrue(actualEnvironments.contains(expectedEnvironment), "The list of orgs returned by subscription-manager for user '"+username+"' includes expected org: "+expectedOrg);
-//		}
-//		Assert.assertEquals(actualEnvironments.size(), expectedEnvironments.size(),"The number of orgs returned by subscription-manager for user '"+username+"'.");
-//	}
+	@Test(	description="subscription-manager: run the environments module with valid user credentials and verify the expected environments are listed",
+			groups={"blockedByBug-1063491"},
+			dataProvider="getEnvironmentsForOrgsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void EnvironmentsWithCredentials_Test(String username, String password, String org, List<Environment> expectedEnvironments) {
+		log.info("Testing subscription-manager environments module using username="+username+" password="+password+" org="+org+" and expecting environmnets="+expectedEnvironments+" ...");
+		
+		// use subscription-manager to get the organizations for which the user has access
+		SSHCommandResult environmentsResult = clienttasks.environments_(username, password, org, null, null, null, null, null);
+		
+		// parse the actual Environments from the environmentsResult
+		List<Environment> actualEnvironments = Environment.parse(environmentsResult.getStdout());
+		
+		// assert that all of the expectedEnvironments are included in the actualEnvironments
+		for (Environment expectedEnvironment : expectedEnvironments) {
+			if (expectedEnvironment.envDescription==null)  expectedEnvironment.envDescription="None";	// ignoring bug 1063491
+			Assert.assertTrue(actualEnvironments.contains(expectedEnvironment), "The list of environments returned by subscription-manager for user '"+username+"' under org '"+org+"' includes expected environment: "+expectedEnvironment);
+		}
+		Assert.assertEquals(actualEnvironments.size(), expectedEnvironments.size(),"The number of environments returned by subscription-manager for user '"+username+"' under org '"+org+"'.");
+	}
 	
 	
 	// Candidates for an automated Test:
@@ -263,82 +261,124 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	// Data Providers ***********************************************************************
 
 	
-//	@DataProvider(name="getEnvironmentsForOrgsData")
-//	public Object[][] getEnvironmentsForOrgsDataDataAs2dArray() throws JSONException, Exception {
-//		return TestNGUtils.convertListOfListsTo2dArray(getEnvironmentsForOrgsDataDataAsListOfLists());
-//	}
-//	protected List<List<Object>> getEnvironmentsForOrgsDataDataAsListOfLists() throws JSONException, Exception {
-//		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-//		// Notes...
-//		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
-//		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1 | python -mjson.tool
-//		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool
-//
-//		// get all of the candlepin users
-//		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
-//		JSONArray jsonUsers = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/users"));	
-//		for (int i = 0; i < jsonUsers.length(); i++) {
-//			JSONObject jsonUser = (JSONObject) jsonUsers.get(i);
-//			// {
-//			//   "created": "2011-07-01T06:40:00.951+0000", 
-//			//   "hashedPassword": "05557a2aaec7cb676df574d2eb080691949a6752", 
-//			//   "id": "8a90f8c630e46c7e0130e46ce9b70020", 
-//			//   "superAdmin": false, 
-//			//   "updated": "2011-07-01T06:40:00.951+0000", 
-//			//   "username": "minnie"
-//			// }
-//			Boolean isSuperAdmin = jsonUser.getBoolean("superAdmin");
-//			String username = jsonUser.getString("username");
-//			String password = sm_clientPasswordDefault;
-//			if (username.equals(sm_serverAdminUsername)) password = sm_serverAdminPassword;
-//			
-//			// get the user's owners
-//			// curl -k -u testuser1:password https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool
-//			JSONArray jsonUserOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,username,password,"/users/"+username+"/owners"));	
-//			for (int j = 0; j < jsonUserOwners.length(); j++) {
-//				JSONObject jsonOwner = (JSONObject) jsonUserOwners.get(j);
-//				// {
-//				//    "contentPrefix": null, 
-//				//    "created": "2011-07-01T06:39:58.740+0000", 
-//				//    "displayName": "Snow White", 
-//				//    "href": "/owners/snowwhite", 
-//				//    "id": "8a90f8c630e46c7e0130e46ce114000a", 
-//				//    "key": "snowwhite", 
-//				//    "parentOwner": null, 
-//				//    "updated": "2011-07-01T06:39:58.740+0000", 
-//				//    "upstreamUuid": null
-//				// }
-//				String org = jsonOwner.getString("key");
-//				String orgName = jsonOwner.getString("displayName");
-//				
-//				List<Environment> environments = new ArrayList<Environment>();
-//				
-//				// String username, String password, List<Environment> environments
-//				ll.add(Arrays.asList(new Object[]{username,password,org,environments}));
-//			}
-//			
-//
-//		}
-//		
-//		return ll;
-//	}
-//	
-//	
-//	@DataProvider(name="getInvalidCredentialsForOrgsData")
-//	public Object[][] getInvalidCredentialsForOrgsDataAs2dArray() {
-//		return TestNGUtils.convertListOfListsTo2dArray(getInvalidCredentialsForOrgsDataAsListOfLists());
-//	}
-//	protected List<List<Object>> getInvalidCredentialsForOrgsDataAsListOfLists() {
-//		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-//		String x = String.valueOf(getRandInt());
-//		
-//		// String username, String password
-//		ll.add(Arrays.asList(new Object[]{	sm_clientUsername+x,	sm_clientPassword}));
-//		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,		sm_clientPassword+x}));
-//		ll.add(Arrays.asList(new Object[]{	sm_clientUsername+x,	sm_clientPassword+x}));
-//		
-//		return ll;
-//	}
+	@DataProvider(name="getEnvironmentsForOrgsData")
+	public Object[][] getEnvironmentsForOrgsDataDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getEnvironmentsForOrgsDataDataAsListOfLists());
+	}
+	protected List<List<Object>> getEnvironmentsForOrgsDataDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		// if the candlepin server does not support environments, then there is no data to return
+		if (!CandlepinTasks.isEnvironmentsSupported(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl)) return ll;
+		
+		// get all of the candlepin users
+		JSONArray jsonUsers = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/users"));	
+		for (int i = 0; i < jsonUsers.length(); i++) {
+			JSONObject jsonUser = (JSONObject) jsonUsers.get(i);
+			//[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://katellosach.usersys.redhat.com/katello/api/users | python -m simplejson/tool
+			//	[
+			//	    {
+			//	        "created_at": "2014-01-21T21:13:16Z",
+			//	        "default_environment": null,
+			//	        "default_environment_id": null,
+			//	        "default_organization": null,
+			//	        "disabled": false,
+			//	        "email": "root@localhost",
+			//	        "foreman_id": null,
+			//	        "helptips_enabled": true,
+			//	        "hidden": false,
+			//	        "id": 1,
+			//	        "page_size": 25,
+			//	        "password": "2d7bf191eb6b50f4b4018b019aa347aee4e31b71182d35e8fed1596fc08a33ea1828dc162d5bd2a31321574ce9a5e75e5a1192e6436cb9ca42243de844d832d89mbMTimoY7NCsNDPTeReEPO7Cga5DCGKWNUgxffn8sAr5vfHA03z45YvHS4KRG94",
+			//	        "password_reset_sent_at": null,
+			//	        "password_reset_token": null,
+			//	        "preferences": {},
+			//	        "remote_id": "admin",
+			//	        "updated_at": "2014-01-21T21:13:16Z",
+			//	        "username": "admin"
+			//	    }
+			//	]
+			
+			//Boolean isSuperAdmin = jsonUser.getBoolean("superAdmin");
+			String username = jsonUser.getString("username");
+			String password = sm_clientPasswordDefault;
+			if (username.equals(sm_serverAdminUsername)) password = sm_serverAdminPassword;
+			
+			// get the user's owners
+			JSONArray jsonUserOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,sm_serverUrl,"/users/"+username+"/owners"));	
+			for (int j = 0; j < jsonUserOwners.length(); j++) {
+				JSONObject jsonOwner = (JSONObject) jsonUserOwners.get(j);
+				//[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://katellosach.usersys.redhat.com/katello/api/users/admin/owners | python -m simplejson/tool
+				//	[
+				//	    {
+				//	        "displayName": "redhat",
+				//	        "key": "redhat"
+				//	    },
+				//	    {
+				//	        "displayName": "ACME_Corporation",
+				//	        "key": "ACME_Corporation"
+				//	    }
+				//	]
+
+				String org = jsonOwner.getString("key");
+				String orgName = jsonOwner.getString("displayName");
+				
+				// get the user's owner's environments
+				List<Environment> environments = new ArrayList<Environment>();
+				JSONArray jsonUserOwnersEnvironments = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,sm_serverUrl,"/owners/"+org+"/environments"));	
+				for (int k = 0; k < jsonUserOwnersEnvironments.length(); k++) {
+					JSONObject jsonOwnerEnvironment = (JSONObject) jsonUserOwnersEnvironments.get(k);
+					//[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://katellosach.usersys.redhat.com/katello/api/owners/redhat/environments | python -m simplejson/tool
+					//	[
+					//	    {
+					//	        "description": null,
+					//	        "display_name": "Library",
+					//	        "id": "2",
+					//	        "name": "Library"
+					//	    },
+					//	    {
+					//	        "description": "",
+					//	        "display_name": "dev",
+					//	        "id": "3-3",
+					//	        "name": "dev/pubcv1"
+					//	    },
+					//	    {
+					//	        "description": "",
+					//	        "display_name": "Library",
+					//	        "id": "2-3",
+					//	        "name": "Library/pubcv1"
+					//	    }
+					//	]
+					
+					String envName = jsonOwnerEnvironment.getString("name");
+					String envDescription = jsonOwnerEnvironment.isNull("description")? null:jsonOwnerEnvironment.getString("description");
+					
+					environments.add(new Environment(envName, envDescription));
+				}
+				
+				// String username, String password, String org, List<Environment> environments
+				ll.add(Arrays.asList(new Object[]{username,password,org,environments}));
+			}
+		}
+		return ll;
+	}
+	
+	
+	@DataProvider(name="getInvalidCredentialsForOrgsData")
+	public Object[][] getInvalidCredentialsForOrgsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getInvalidCredentialsForOrgsDataAsListOfLists());
+	}
+	protected List<List<Object>> getInvalidCredentialsForOrgsDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		String x = String.valueOf(getRandInt());
+		
+		// String username, String password
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername+x,	sm_clientPassword}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,		sm_clientPassword+x}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername+x,	sm_clientPassword+x}));
+		
+		return ll;
+	}
 	
 	
 	// NOTE: Assumes
