@@ -2778,7 +2778,10 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "All local data removed");
 		
 		// assert that the consumer cert directory is gone
-		Assert.assertFalse(RemoteFileTasks.testExists(sshCommandRunner,consumerCertDir), consumerCertDir+" does NOT exist after clean.");
+		//Assert.assertFalse(RemoteFileTasks.testExists(sshCommandRunner,consumerCertDir), consumerCertDir+" does NOT exist after clean.");	// this was valid before Bug 1026501 - deleting consumer will move splice identity cert
+		Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner,consumerCertDir), consumerCertDir+" still exists after clean.");	// this is now valid after Bug 1026501 - deleting consumer will move splice identity cert
+		Assert.assertFalse(RemoteFileTasks.testExists(sshCommandRunner,consumerCertDir+"/cert.pem"), consumerCertDir+"/cert.pem"+" does NOT exist after clean.");
+		Assert.assertFalse(RemoteFileTasks.testExists(sshCommandRunner,consumerCertDir+"/key.pem"), consumerCertDir+"/key.pem"+" does NOT exist after clean.");
 		this.currentlyRegisteredUsername = null;
 		this.currentlyRegisteredPassword = null;
 		this.currentlyRegisteredOrg = null;
