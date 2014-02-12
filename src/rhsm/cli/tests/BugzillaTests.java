@@ -1591,6 +1591,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		logMarker = System.currentTimeMillis()+" Testing Unregister **********************";
 		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, logMarker);
 		clienttasks.unregister(null, null, null);	
+		tailFromSyslogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, logMarker, null);
 		//	Feb  3 13:39:21 jsefler-7 subscription-manager: Unregistered machine with identity: 231c2b52-4bc8-4458-8d0a-252b1dd82877
 		expectedSyslogMessage = String.format("%s: Unregistered machine with identity: %s", clienttasks.command, identity);
 		Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),"After unregistering', syslog '"+clienttasks.messagesLogFile+"' contains expected message '"+expectedSyslogMessage+"'.");
@@ -2416,7 +2417,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 	Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
 /* unnecessary for this test
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
@@ -2426,7 +2427,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		Calendar now = new GregorianCalendar();
 		Calendar nextYear = new GregorianCalendar();
-		nextYear.add(Calendar.YEAR, 1);	nextYear.add(Calendar.DATE, -1);	// one day less than one year
+		nextYear.add(Calendar.YEAR, 1);	nextYear.add(Calendar.DATE, -7);	// one week less than one year
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(nextYear.getTime());
 /* unnecessary for this test
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
