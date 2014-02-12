@@ -162,7 +162,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				}
 			}
 		}
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, true);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
 		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.productName.contains("Instance Server")){
@@ -174,7 +174,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
 			clienttasks.facts(null, true, null, null, null);
-			clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+			clienttasks.restart_rhsmcertd(null, healFrequency, false, true);
 			SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.productName.contains("Instance Server")){
@@ -319,13 +319,14 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 		configuredHostname=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server","hostname");
 	}
 	
-	
+/*	this will run restoreConfiguredHealFrequency() before the BugzillaTests class.  This is not what you want to do
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
+*/
 	@AfterClass(groups = "setup")
 	public void restoreConfiguredHealFrequency() {
 		if (clienttasks == null)
 			return;
-		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
+		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,true);
 	}
 	
 	

@@ -2411,7 +2411,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if Repos List is empty for FutureSubscription", 
-			groups = { "EmptyReposListForFutureSubscription","blockedByBug-958775" }, enabled = true)
+			groups = {"EmptyReposListForFutureSubscription","blockedByBug-958775" }, enabled = true)
 	public void EmptyReposListForFutureSubscription() throws JSONException,
 	Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -4322,14 +4322,14 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 	@BeforeGroups(groups = "setup", value = { "VerifyDistinct",
 			"VerifyStatusForPartialSubscription", "AutoHeal",
 			"AutoHealFailForSLA", "VerifyautosubscribeTest",
-			"BugzillaTests", "autohealPartial",
+			/* "BugzillaTests", CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED */ "autohealPartial",
 			"VerifyEntitlementStartDate_Test", "reregister" }, enabled = true)
 	public void unsubscribeBeforeGroup() {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 	}
 
 	@BeforeGroups(groups = "setup", value = { "VerifyDistinct", "AutoHeal",
-			"autohealPartial", "BugzillaTests" }, enabled = true)
+			"autohealPartial"/*, "BugzillaTests" CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED */ }, enabled = true)
 	public void unsetServicelevelBeforeGroup() {
 		clienttasks.service_level_(null, null, null, true, null, null, null,
 				null, null, null, null, null);
@@ -4339,7 +4339,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 
 	@BeforeGroups(groups = "setup", value = { "VerifyDistinct", "AutoHeal",
 			"VerifyStatusForPartialSubscription", "autohealPartial",
-			"VerifyEntitlementStartDate_Test", "BugzillaTests" }, enabled = true)
+			"VerifyEntitlementStartDate_Test"/*, "BugzillaTests" CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED*/ }, enabled = true)
 	public void setHealFrequencyGroup() {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
@@ -4392,18 +4392,20 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 	}
 	
 
+/* this effectively runs BeforeClass since BugzillaTests is tagged to the entire class; this is not what we wanted
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
+*/
 	@AfterClass(groups = "setup")
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null) return;
-		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, false,null);
+		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, false,true);
 	}
 	
 	
 	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA",/*"VerifyFuturesubscription_Test",*/"VerifySubscriptionOf",
 			"VerifySystemCompliantFact","ValidityAfterOversubscribing",/*"certificateStacking",*/
 			"UpdateWithNoInstalledProducts",/*"VerifyHealingForFuturesubscription",*/
-			"VerifyDistinct","BugzillaTests","VerifyStatusCheck",
+			"VerifyDistinct"/*,"BugzillaTests"*/,"VerifyStatusCheck",
 			"VerifyStartEndDateOfSubscription","InstalledProductMultipliesAfterSubscription","AutoHealFailForSLA"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
@@ -4703,7 +4705,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 			sm_sshkeyPassphrase,true);
 	}
 	
-	@AfterGroups(groups = {"setup"}, value = {"VerifyEmptyCertCauseRegistrationFailure_Test","BugzillaTests"})
+	@AfterGroups(groups = {"setup"}, value = {"VerifyEmptyCertCauseRegistrationFailure_Test"/*,"BugzillaTests" CAUSES THIS METHOD TO RUN AFTER THE CLASS; NOT WHAT WE WANTED*/})
 	public void removeMyEmptyCaCertFile() {
 		client.runCommandAndWait("rm -f "+myEmptyCaCertFile);
 	}
@@ -4720,7 +4722,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 */
 	
 	
-	@AfterGroups(groups = {"setup"}, value = {"BugzillaTests","DisplayOfRemoteServerExceptionForServer500Error","RHELWorkstationProduct"})
+	@AfterGroups(groups = {"setup"}, value = {/*"BugzillaTests",*/"DisplayOfRemoteServerExceptionForServer500Error","RHELWorkstationProduct"})
 	public void restoreRHSMConfFileValues() {
 		clienttasks.unregister(null, null, null);
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
