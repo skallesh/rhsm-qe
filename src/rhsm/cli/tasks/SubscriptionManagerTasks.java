@@ -975,10 +975,11 @@ public class SubscriptionManagerTasks {
 		}
 		*/
 		
+		// Waiting 120 second(s) [2.0 minute(s)] before running updates.
+		SubscriptionManagerCLITestScript.sleep(hardWaitForFirstUpdateCheck*1000);
+		
 		// assert the rhsmcertd log for messages stating the cert and heal frequencies have be logged
 		if (assertCertificatesUpdate!=null) {
-			// Waiting 120 second(s) [2.0 minute(s)] before running updates.
-			SubscriptionManagerCLITestScript.sleep(hardWaitForFirstUpdateCheck*1000);
 			
 			// assert these cert and heal update/fail messages are logged (but give the system up to a minute to do it)
 			//String healMsg = assertCertificatesUpdate? "(Healing) Certificates updated.":"(Healing) Update failed (255), retry will occur on next run.";	// msg was changed by bug 882459
@@ -1031,24 +1032,42 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult;
 	}
 	
-	public void waitForRegexInRhsmcertdLog(String logRegex, int timeoutMinutes) {
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -1 "+rhsmcertdLogFile,Integer.valueOf(0));
+	/**
+	 * Wait for the last line appended to the rhsmcertd.log file to contain a match to the given logRegex.
+	 * An assertion failure will be thrown if the timeout is reached without finding a match.
+	 * @param logRegex
+	 * @param timeoutMinutes - do not wait longer than this many minutes for a match 
+	 * @return - last line appended to the rhsmcertd.log
+	 */
+	public String waitForRegexInRhsmcertdLog(String logRegex, int timeoutMinutes) {
 		int retryMilliseconds = Integer.valueOf(getConfFileParameter(rhsmConfFile, /*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval"))*60*1000;  // certFrequency is in minutes
 		int t = 0;
 		
-		while(!sshCommandRunner.runCommandAndWait("tail -1 "+rhsmcertdLogFile).getStdout().trim().matches(logRegex) && (t*retryMilliseconds < timeoutMinutes*60*1000)) {
+		// get the last line of the rhsmcertd.log
+		String lastLine = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -1 "+rhsmcertdLogFile,Integer.valueOf(0)).getStdout().trim();
+		
+		// check for matches to logRegex within the timeout
+		while(t*retryMilliseconds < timeoutMinutes*60*1000) {
+			//if (lastLine.matches(logRegex)) return lastLine;	// successfully waited within the timeout
+			if (SubscriptionManagerCLITestScript.doesStringContainMatches(lastLine,logRegex)) return lastLine;	// successfully waited within the timeout
+			
 			// pause for the sleep interval
 			SubscriptionManagerCLITestScript.sleep(retryMilliseconds); t++;	
+			
+			// get the last line of the rhsmcertd.log again
+			lastLine = sshCommandRunner.runCommandAndWait("tail -1 "+rhsmcertdLogFile).getStdout().trim();
 		}
-		if (t*retryMilliseconds > timeoutMinutes*60*1000) sshCommandRunner.runCommandAndWait("tail -24 "+rhsmLogFile);
+		//if (lastLine.matches(logRegex)) return lastLine;	// final check for success
+		if (SubscriptionManagerCLITestScript.doesStringContainMatches(lastLine,logRegex)) return lastLine;	// final check for success
 		
-		// assert that the state was achieved within the timeout
-		Assert.assertFalse((t*retryMilliseconds > timeoutMinutes*60*1000), "The rhsmcertd log matches '"+logRegex+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
+		// we failed to get a match within the timeout
+		Assert.fail("Reached the timeout of '"+timeoutMinutes+"' minutes waiting for the last line of "+rhsmcertdLogFile+" to match regex '"+logRegex+"' (Actual time waited was "+t*retryMilliseconds+"' milliseconds.)");
+		return lastLine;
 	}
-		
 	
 	
-
+	
+	
 	/**
 	 * @return the current service level returned by subscription-manager service-level --show (must already be registered); will return an empty string when the service level preference is not set.
 	 */
