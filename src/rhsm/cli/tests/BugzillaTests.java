@@ -3699,14 +3699,18 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@Test(description = "Auto-heal with SLA", groups = { "AutoHealWithSLA","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
+	@Test(description = "Auto-heal with SLA",	// TODO Add some more description; has same description as VerifyAutohealFailForSLA()
+			groups = { "AutoHealWithSLA","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
 	public void VerifyAutohealWithSLA() throws JSONException, Exception {
+/* not necessary; will use clienttasks.run_rhsmcertd_worker(true) to invoke an immediate autoheal
 		Integer autoAttachInterval = 2;
+*/
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
 		List<String> availableServiceLevelData = clienttasks
 				.getCurrentlyAvailableServiceLevels();
+/* this assumes two random attempts at finding an SLA that autosubscribes something.  we can do better...
 		String availableService = availableServiceLevelData.get(randomGenerator
 				.nextInt(availableServiceLevelData.size()));
 		clienttasks.subscribe_(true, availableService, (String) null, null,
@@ -3720,25 +3724,50 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 		}
 		clienttasks.service_level_(null, null, null, null, null,
 				availableService, null, null, null, null, null, null);
+*/
+		String randomServiceLevel=null;
+		for (String randomAvailableServiceLevel : getRandomSubsetOfList(availableServiceLevelData,availableServiceLevelData.size())) {
+			randomServiceLevel = randomAvailableServiceLevel;
+			clienttasks.subscribe_(true, randomAvailableServiceLevel, (String) null, null, null, null, null, null, null, null, null);
+			if (!clienttasks.getCurrentEntitlementCertFiles().isEmpty()) break;
+		}
+		if (clienttasks.getCurrentEntitlementCertFiles().isEmpty()) throw new SkipException("Could not find an available SLA that could be used to auto subscribe coverage for an installed product.");
+		String currentServiceLevel = clienttasks.getCurrentServiceLevel();
+		Assert.assertEquals(randomServiceLevel, currentServiceLevel,"The current service level should report the same value used during autosubscribe.");
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+
+/* too time consuming; replacing with a call to run_rhsmcertd_worker(true)
 		clienttasks.restart_rhsmcertd(null, autoAttachInterval, false, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
-		certs = clienttasks.getCurrentEntitlementCerts();
-		Assert.assertTrue(!(certs.isEmpty()),
-				"autoheal is succesfull with Service level" + availableService);
-
+*/
+		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.run_rhsmcertd_worker(true);
+		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue(!productSubscriptions.isEmpty(), "Autoheal with serviceLevel '"+currentServiceLevel+"' has granted this system some entitlement coverage.");
+		for (ProductSubscription productSubscription : productSubscriptions) {
+			if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
+				Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()), "Autohealed subscription '"+productSubscription.productName+"' has been granted with an exempt service level '"+productSubscription.serviceLevel+"'.");		
+			} else {
+				Assert.assertEquals(productSubscription.serviceLevel, currentServiceLevel, "Autohealed subscription '"+productSubscription.productName+"' has been granted with the expected service level.");
+			}
+		}
 	}
 
 	/**
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@Test(description = "verfying Auto-heal when auto-heal parameter is turned off", groups = { "AutohealTurnedOff","blockedByBug-726411" }, enabled = true)
+	@Test(description = "verfying Auto-heal when auto-heal parameter is turned off",
+			groups = { "AutohealTurnedOff","blockedByBug-726411" }, enabled = true)
 	public void AutohealTurnedOff() throws Exception {
+/* not necessary; will use clienttasks.run_rhsmcertd_worker(true) to invoke an immediate autoheal
 		Integer healFrequency = 2;
+*/
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+/* autoheal disablement has now been simplified by calling the autoheal module...
 		String consumerId = clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(
 				sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,
@@ -3746,12 +3775,15 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 		Assert.assertFalse(
 				jsonConsumer.getBoolean("autoheal"),
 				"A consumer's autoheal attribute value can be toggled off (expected value=false).");
+*/
+		clienttasks.autoheal(null, null, true, null, null, null);
+/* this takes too long, lets call run_rhsmcertd_worker(true) instead
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+*/
+		clienttasks.run_rhsmcertd_worker(true);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
-		Assert.assertTrue((certs.isEmpty()), "autoheal is successful");
-
+		Assert.assertTrue((certs.isEmpty()), "When autoheal has been disabled, no entitlements should be granted after the rhsmcertd worker has run.");
 	}
 
 	/**
@@ -3859,8 +3891,11 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 			throw new SkipException(
 					"No expired products are available for testing");
 		} else {
+/* too time consuming; replacing with a call to 
 			clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 			SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
+*/
+			clienttasks.run_rhsmcertd_worker(true);
 			for (InstalledProduct product : clienttasks.getCurrentlyInstalledProducts()) {
 				for (int i = 0; i < Expiredproductid.size(); i++) {
 
@@ -3908,7 +3943,8 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@Test(description = "Auto-heal with SLA", groups = { "AutoHealFailForSLA" }, enabled = true)
+	@Test(description = "Auto-heal with SLA",	// TODO Add some more description; has same description as VerifyAutohealWithSLA()
+			groups = {"debugTest", "AutoHealFailForSLA" }, enabled = true)
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 		Integer healFrequency = 2;
 		String filename = null;
@@ -3939,8 +3975,11 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 		List<EntitlementCert> certsbeforeRHSMService = clienttasks
 				.getCurrentEntitlementCerts();
 		log.info("cert contents are " + certsbeforeRHSMService);
+/* too time consuming; replacing with run_rhsmcertd_worker(true)
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+*/
+		clienttasks.run_rhsmcertd_worker(true);
 		List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue((consumed.isEmpty()), "autoheal has failed");
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
@@ -3986,7 +4025,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	 * @throws Exception
 	 */
 	@Test(description = "Verify that Entitlement Start Dates is the Subscription Start Date ", groups = {
-			"VerifyEntitlementStartDateIsSubStartDate_Test",
+			"VerifyEntitlementStartDate_Test",
 	"blockedByBug-670831" }, enabled = true)
 	public void VerifyEntitlementStartDate_Test() throws JSONException,
 	Exception {
@@ -4214,7 +4253,8 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ", groups = { "VerifyautosubscribeTest" }, enabled = true)
+	@Test(description = "Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ",
+			groups = { "VerifyautosubscribeTest" }, enabled = true)
 	public void VerifyautosubscribeTest() throws JSONException, Exception {
 
 		List<String> ProductIdBeforeAuto = new ArrayList<String>();
@@ -4334,17 +4374,17 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		}
 	}
 
-	@BeforeGroups(groups = "setup", value = { "VerifyDistinct",
-			"VerifyStatusForPartialSubscription", "AutoHeal",
-			"AutoHealFailForSLA", "VerifyautosubscribeTest",
-			/* "BugzillaTests", CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED */ "autohealPartial",
-			"VerifyEntitlementStartDate_Test", "reregister" }, enabled = true)
+	@BeforeGroups(groups = "setup", value = { /*"VerifyDistinct",*/
+			/*"VerifyStatusForPartialSubscription",*/ /*"AutoHeal",*/
+			/*"AutoHealFailForSLA",*/ /*"VerifyautosubscribeTest",*/
+			/* "BugzillaTests", CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED */ /*"autohealPartial",*/
+			/*"VerifyEntitlementStartDate_Test",*/ /*"reregister"*/ }, enabled = true)
 	public void unsubscribeBeforeGroup() {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 	}
 
-	@BeforeGroups(groups = "setup", value = { "VerifyDistinct", "AutoHeal",
-			"autohealPartial"/*, "BugzillaTests" CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED */ }, enabled = true)
+	@BeforeGroups(groups = "setup", value = { /*"VerifyDistinct",*/ /*"AutoHeal",*/
+			/*"autohealPartial",*/ /*"BugzillaTests" CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED */ }, enabled = true)
 	public void unsetServicelevelBeforeGroup() {
 		clienttasks.service_level_(null, null, null, true, null, null, null,
 				null, null, null, null, null);
@@ -4352,9 +4392,9 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 	
 	
 
-	@BeforeGroups(groups = "setup", value = { "VerifyDistinct", "AutoHeal",
-			"VerifyStatusForPartialSubscription", "autohealPartial",
-			"VerifyEntitlementStartDate_Test"/*, "BugzillaTests" CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED*/ }, enabled = true)
+	@BeforeGroups(groups = "setup", value = { /*"VerifyDistinct",*/ /*"AutoHeal",*/
+			/*"VerifyStatusForPartialSubscription",*/ /*"autohealPartial",*/
+			/*"VerifyEntitlementStartDate_Test",*/ /*"BugzillaTests" CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED*/ }, enabled = true)
 	public void setHealFrequencyGroup() {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
@@ -4375,7 +4415,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 	}
 
 /* this methods looks more like a Test than a BeforeGroups configuration method; changing to a Test...
-	@BeforeGroups(groups = "setup", value = { "BugzillaTests","VerifyEntitlementStartDateIsSubStartDate_Test","unsubscribeImportedcert" }, enabled = true)
+	@BeforeGroups(groups = "setup", value = { "BugzillaTests","VerifyEntitlementStartDate_Test","unsubscribeImportedcert" }, enabled = true)
 */
 	@Test(	description = "verify that the autoheal attribute of a new system consumer defaults to true",
 			groups = {},
@@ -4410,7 +4450,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 /* this effectively runs BeforeClass since BugzillaTests is tagged to the entire class; this is not what we wanted
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
 */
-	@AfterGroups(groups = {"setup"}, value = {"VerifyRHSMCertdLogging","AutohealForExpired"})
+	@AfterGroups(groups = {"setup"}, value = {"VerifyRHSMCertdLogging"/*,"AutohealForExpired"*/})
 	@AfterClass(groups = "setup")	// called after class for insurance
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null) return;
@@ -4418,10 +4458,10 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 	}
 	
 	
-	@AfterGroups(groups = { "setup" }, value = { "AutoHealWithSLA",/*"VerifyFuturesubscription_Test",*/"VerifySubscriptionOf",
+	@AfterGroups(groups = { "setup" }, value = { /*"AutoHealWithSLA",*//*"VerifyFuturesubscription_Test",*/"VerifySubscriptionOf",
 			"VerifySystemCompliantFact","ValidityAfterOversubscribing",/*"certificateStacking",*/
 			"UpdateWithNoInstalledProducts",/*"VerifyHealingForFuturesubscription",*/
-			"VerifyDistinct"/*,"BugzillaTests"*/,"VerifyStatusCheck",
+			/*"VerifyDistinct",*//*"BugzillaTests",*/"VerifyStatusCheck",
 			"VerifyStartEndDateOfSubscription","InstalledProductMultipliesAfterSubscription","AutoHealFailForSLA"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
@@ -4431,7 +4471,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		client.runCommandAndWait("rm -rf " + "/root/temp1");
 	}
 
-	@AfterGroups(groups = { "setup" }, value = { "VerifyautosubscribeTest","VerifyStatusForPartialSubscription","certificateStacking",
+	@AfterGroups(groups = { "setup" }, value = { /*"VerifyautosubscribeTest",*/"VerifyStatusForPartialSubscription","certificateStacking",
 	"VerifyautosubscribeIgnoresSocketCount_Test","VerifyDistinct","autohealPartial","VerifyFactsListByOverridingValues"})
 	@AfterClass(groups = { "setup" })	// called after class for insurance
 	public void deleteFactsFileWithOverridingValues() {
@@ -4728,7 +4768,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 
 /* unnecessary
 	@AfterGroups(groups = {"setup"}, value = {"BugzillaTests","FactsUpdateForDeletedConsumer","VerifyOneCertPerOneSubscription",
-	"VerifyIfStatusDisplaysProductNameMultipleTimes","unsubscribeImportedcert","StackingFutureSubscriptionWithCurrentSubscription","VerifyDistinct","VerifyEntitlementStartDateIsSubStartDate_Test"})
+	"VerifyIfStatusDisplaysProductNameMultipleTimes","unsubscribeImportedcert","StackingFutureSubscriptionWithCurrentSubscription","VerifyDistinct","VerifyEntitlementStartDate_Test"})
 	public void enableAutoheal() {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
