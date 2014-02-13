@@ -102,25 +102,25 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, false, null, null, null);
 
 		// fake a splice consumer cert/key pair
-		String consumerCertFile = clienttasks.consumerCertDir+"/cert.pem";
-		String consumerCertKey = clienttasks.consumerCertDir+"/key.pem";
+		String consumerCertFile = clienttasks.consumerCertFile();
+		String consumerKeyFile = clienttasks.consumerKeyFile();
 		String consumerSpliceCertFile = clienttasks.consumerCertDir+"/Splice_identity.cert";
-		String consumerSpliceCertKey = clienttasks.consumerCertDir+"/Splice_identity.key";
+		String consumerSplicetKeyFile = clienttasks.consumerCertDir+"/Splice_identity.key";
 		client.runCommandAndWait("cp -n "+consumerCertFile+" "+consumerSpliceCertFile);
-		client.runCommandAndWait("cp -n "+consumerCertKey+" "+consumerSpliceCertKey);
+		client.runCommandAndWait("cp -n "+consumerKeyFile+" "+consumerSplicetKeyFile);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSpliceCertFile), "Successfully created a fake '"+consumerSpliceCertFile+"'.");
-		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSpliceCertKey), "Successfully created a fake '"+consumerSpliceCertKey+"'.");
+		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSplicetKeyFile), "Successfully created a fake '"+consumerSplicetKeyFile+"'.");
 		
 		// clean
 		clienttasks.clean(null, null, null);
 		
 		// assert the fake splice consumer cert/key pair was NOT deleted
 		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSpliceCertFile), "After running clean, '"+consumerSpliceCertFile+"' should still exist.");
-		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSpliceCertKey), "After running clean, '"+consumerSpliceCertKey+"' should still exist.");
+		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSplicetKeyFile), "After running clean, '"+consumerSplicetKeyFile+"' should still exist.");
 		
 		// cleanup splice files (not absolutely necessary)
 		client.runCommandAndWait("rm -f "+consumerSpliceCertFile);
-		client.runCommandAndWait("rm -f "+consumerSpliceCertKey);
+		client.runCommandAndWait("rm -f "+consumerSplicetKeyFile);
 	}
 	
 	

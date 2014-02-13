@@ -403,10 +403,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(null, null, false, false);	// assertCertificatesUpdate=false since the consumer has been deleted server side and the cert updates should fail
 		
 		// assert that the consumer has been backed up and assert the md5sum matches
-		String consumerCertFileOld = clienttasks.consumerCertDir+".old/cert.pem";
-		String consumerCertKeyOld = clienttasks.consumerCertDir+".old/key.pem";
-		String consumerCertFile = consumerCertFileOld.replace(".old", "");
-		String consumerCertKey = consumerCertKeyOld.replace(".old", "");
+		String consumerCertFileOld = clienttasks.consumerCertFile().replace(clienttasks.consumerCertDir, clienttasks.consumerCertDir+".old");
+		String consumerCertKeyOld = clienttasks.consumerKeyFile().replace(clienttasks.consumerCertDir, clienttasks.consumerCertDir+".old");
 		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerCertFileOld), "For emergency recovery after rhsmcertd triggers, the server-side deleted consumer cert should be copied to: "+consumerCertFileOld);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerCertKeyOld), "For emergency recovery after rhsmcertd triggers, the server-side deleted consumer key should be copied to: "+consumerCertKeyOld);
 		Assert.assertEquals(client.runCommandAndWait("md5sum "+consumerCertFileOld).getStdout().replaceAll(consumerCertFileOld, "").trim(), consumerCert_md5sum.replaceAll(clienttasks.consumerCertFile(), "").trim(), "After the deleted consumer cert is backed up, its md5sum matches that from the original consumer cert.");
@@ -419,8 +417,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// add asserts for Bug 1026501 - deleting consumer will move splice identity cert
 		// assert that the clienttasks.consumerCertDir remains, but the cert.pem and key.pem are gone
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.consumerCertDir), "The original consumer cert dir '"+clienttasks.consumerCertDir+"' should remain after it has been backed up to: "+clienttasks.consumerCertDir+".old");
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, consumerCertFile), "After rhsmcertd triggers, the consumer cert '"+consumerCertFile+"' should have been deleted.");
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, consumerCertKey), "After rhsmcertd triggers, the consumer key '"+consumerCertKey+"' should have been deleted.");
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.consumerCertFile()), "After rhsmcertd triggers, the consumer cert '"+clienttasks.consumerCertFile()+"' should have been deleted.");
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.consumerKeyFile()), "After rhsmcertd triggers, the consumer key '"+clienttasks.consumerKeyFile()+"' should have been deleted.");
 	}
 	@AfterGroups(groups={"setup"}, value={"VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test"})
 	public void afterVerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test() {
@@ -451,7 +449,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration Methods ***********************************************************************
 	
-//debugTest	@BeforeClass(groups="setup")
+	@BeforeClass(groups="setup")
 	public void setupBeforeClass() throws Exception {
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
