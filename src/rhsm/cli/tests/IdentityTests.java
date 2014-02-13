@@ -309,7 +309,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@Test(	description="subscription-manager: assert that the consumer cert is backed up when a server-side deletion is detected.",
-			groups={"AcceptanceTests","VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706","blockedByBug-872847","blockedByBug-894633","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435","blockedByBug-1019747"},
+			groups={"AcceptanceTests","VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706","blockedByBug-872847","blockedByBug-894633","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435","blockedByBug-1019747","blockedByBug-1026501"},
 			dataProvider="getConsumerCertDirData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -405,6 +405,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// assert that the consumer has been backed up and assert the md5sum matches
 		String consumerCertFileOld = clienttasks.consumerCertDir+".old/cert.pem";
 		String consumerCertKeyOld = clienttasks.consumerCertDir+".old/key.pem";
+		String consumerCertFile = consumerCertFileOld.replace(".old", "");
+		String consumerCertKey = consumerCertKeyOld.replace(".old", "");
 		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerCertFileOld), "For emergency recovery after rhsmcertd triggers, the server-side deleted consumer cert should be copied to: "+consumerCertFileOld);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerCertKeyOld), "For emergency recovery after rhsmcertd triggers, the server-side deleted consumer key should be copied to: "+consumerCertKeyOld);
 		Assert.assertEquals(client.runCommandAndWait("md5sum "+consumerCertFileOld).getStdout().replaceAll(consumerCertFileOld, "").trim(), consumerCert_md5sum.replaceAll(clienttasks.consumerCertFile(), "").trim(), "After the deleted consumer cert is backed up, its md5sum matches that from the original consumer cert.");
@@ -413,6 +415,12 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// assert that the system is no longer registered and no entitlements remain
 		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),clienttasks.msg_ConsumerNotRegistered,"The system should no longer be registered after rhsmcertd triggers following a server-side consumer deletion.");
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCertFiles().isEmpty(),"The system should no longer have any entitlements after rhsmcertd triggers following a server-side consumer deletion.");
+		
+		// add asserts for Bug 1026501 - deleting consumer will move splice identity cert
+		// assert that the clienttasks.consumerCertDir remains, but the cert.pem and key.pem are gone
+		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.consumerCertDir), "The original consumer cert dir '"+clienttasks.consumerCertDir+"' should remain after it has been backed up to: "+clienttasks.consumerCertDir+".old");
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, consumerCertFile), "After rhsmcertd triggers, the consumer cert '"+consumerCertFile+"' should have been deleted.");
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, consumerCertKey), "After rhsmcertd triggers, the consumer key '"+consumerCertKey+"' should have been deleted.");
 	}
 	@AfterGroups(groups={"setup"}, value={"VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test"})
 	public void afterVerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test() {
@@ -443,7 +451,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration Methods ***********************************************************************
 	
-	@BeforeClass(groups="setup")
+//debugTest	@BeforeClass(groups="setup")
 	public void setupBeforeClass() throws Exception {
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
