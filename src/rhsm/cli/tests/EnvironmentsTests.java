@@ -236,7 +236,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that all of the expectedEnvironments are included in the actualEnvironments
 		for (Environment expectedEnvironment : expectedEnvironments) {
-			if (expectedEnvironment.envDescription==null)  expectedEnvironment.envDescription="None";	// ignoring bug 1063491
+			//if (expectedEnvironment.envDescription==null)  expectedEnvironment.envDescription="None";	// temporarily ignoring bug 1063491
 			Assert.assertTrue(actualEnvironments.contains(expectedEnvironment), "The list of environments returned by subscription-manager for user '"+username+"' under org '"+org+"' includes expected environment: "+expectedEnvironment);
 		}
 		Assert.assertEquals(actualEnvironments.size(), expectedEnvironments.size(),"The number of environments returned by subscription-manager for user '"+username+"' under org '"+org+"'.");
