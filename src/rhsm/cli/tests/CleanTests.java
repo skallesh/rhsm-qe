@@ -74,6 +74,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		
 	}
 	
+	
 	@Test(	description="verify redhat.repo file is deleted of after calling subscription-manager clean",
 			groups={"blockedByBug-781510"},
 			enabled=true)
@@ -87,6 +88,39 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	    Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to exist after registering and triggering a yum transacton.");
 		clienttasks.clean(null, null, null);
 	    Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to NOT exist after running clean.");
+	}
+	
+	
+	@Test(	description="verify Splice cert/key pair remains after subscription-manager clean",
+			groups={"blockedByBug-1026501"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifySpliceCertsRemainAfterClean_Test() {
+		
+		// Start fresh by registering...
+		log.info("Start fresh by registering...");
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, false, null, null, null);
+
+		// fake a splice consumer cert/key pair
+		String consumerCertFile = clienttasks.consumerCertDir+"/cert.pem";
+		String consumerCertKey = clienttasks.consumerCertDir+"/key.pem";
+		String consumerSpliceCertFile = clienttasks.consumerCertDir+"/Splice_identity.cert";
+		String consumerSpliceCertKey = clienttasks.consumerCertDir+"/Splice_identity.key";
+		client.runCommandAndWait("cp -n "+consumerCertFile+" "+consumerSpliceCertFile);
+		client.runCommandAndWait("cp -n "+consumerCertKey+" "+consumerSpliceCertKey);
+		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSpliceCertFile), "Successfully created a fake '"+consumerSpliceCertFile+"'.");
+		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSpliceCertKey), "Successfully created a fake '"+consumerSpliceCertKey+"'.");
+		
+		// clean
+		clienttasks.clean(null, null, null);
+		
+		// assert the fake splice consumer cert/key pair was NOT deleted
+		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSpliceCertFile), "After running clean, '"+consumerSpliceCertFile+"' should still exist.");
+		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSpliceCertKey), "After running clean, '"+consumerSpliceCertKey+"' should still exist.");
+		
+		// cleanup splice files (not absolutely necessary)
+		client.runCommandAndWait("rm -f "+consumerSpliceCertFile);
+		client.runCommandAndWait("rm -f "+consumerSpliceCertKey);
 	}
 	
 	
