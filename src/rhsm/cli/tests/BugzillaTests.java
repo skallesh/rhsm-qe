@@ -1695,22 +1695,28 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify that system should not be compliant for an expired subscription", 
 			groups = { "VerifySystemCompliantFact"}, enabled = true)
 	public void VerifySystemCompliantFactWhenAllProductsAreExpired_Test() throws JSONException,Exception {
+/* wrong place for this; should already have been called by an AfterGroup
 		restoreProductCerts();
+*/
+/* unnecessary; causes subsequent tests to fail due to unexpected trigger of certCheckInterval
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"certCheckInterval".toLowerCase(), "1" });
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
+*/
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
+/* unnecessary; appears to be pasted from another test
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by future available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factname), "invalid",
 				"Before attempting to subscribe to any future subscription, the system should be non-compliant (see value for fact '"+factname+"').");
 		
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+*/
 		File expectCertFile = new File(System.getProperty("automation.dir",
 				null) + "/expiredcerts/Expiredcert.pem");
 		RemoteFileTasks.putFile(client.getConnection(),
@@ -1722,9 +1728,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				moveProductCertFiles(installed.productId + ".pem");
 			}
 		}
-		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty());
+		clienttasks.facts(null,true,null,null,null); 
+		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertEquals(currentlyInstalledProducts.size(),1,"Expecting one installed product provided by the expired entitlement just imported.");
 		String actual=clienttasks.getFactValue(factname).trim();
-		Assert.assertEquals(actual, "invalid");
+		Assert.assertEquals(actual, "invalid","Value of system fact '"+factname+"'.");
 	}
 	
 	/**
@@ -2202,7 +2210,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
 */
-/* here's a faster way to do this...
+/* there's a faster way to do this...
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -2699,21 +2707,27 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	 * @throws JSONException
 	 */
 	@Test(description = "verify  rhsmcertd is logging update failed (255)", groups = {
-			"VerifyRHSMCertdLogging", "blockedByBug-708512","blockedByBug-907638" }, enabled = true)
+			"VerifyRHSMCertdLogging", "blockedByBug-708512" }, enabled = true)
 	public void VerifyRHSMCertdLogging() throws JSONException, Exception {
 		int autoAttachInterval = 1;
+/* bug 708512 should be tested when unregistered; replacing this register call with a call to unregister
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+*/
+		clienttasks.unregister(null, null, null);
+/* unnecessary
 		String Frequency = clienttasks.getConfFileParameter(
 				clienttasks.rhsmConfFile, "autoAttachInterval");
-		clienttasks.restart_rhsmcertd(autoAttachInterval, null, false, null);
-		clienttasks.waitForRegexInRhsmcertdLog("update failed (255)", 1);
+*/
+		clienttasks.restart_rhsmcertd(autoAttachInterval, null, false, false);
+		clienttasks.waitForRegexInRhsmcertdLog("Update failed", 1);	// Thu Feb 13 02:01:16 2014 [WARN] (Cert Check) Update failed (255), retry will occur on next run.
+/* unnecessary; will be handled by the AfterGroup restoreConfiguredFrequencies()
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), Frequency });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-
+*/
 	}
 
 	/**
@@ -4396,10 +4410,11 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 /* this effectively runs BeforeClass since BugzillaTests is tagged to the entire class; this is not what we wanted
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
 */
-	@AfterClass(groups = "setup")
+	@AfterGroups(groups = {"setup"}, value = {"VerifyRHSMCertdLogging","AutohealForExpired"})
+	@AfterClass(groups = "setup")	// called after class for insurance
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null) return;
-		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, false,true);
+		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, false, null);
 	}
 	
 	
