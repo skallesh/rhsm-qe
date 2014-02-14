@@ -599,7 +599,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups={"setup"})
 	public void restartCertFrequencyBeforeClass() throws Exception {
 		// restart rhsmcertd with a longer certFrequency
-		clienttasks.restart_rhsmcertd(240, null, false, null);
+		clienttasks.restart_rhsmcertd(240, null, null);
 	}
 	
 	@BeforeClass(groups={"setup"}, dependsOnMethods={"restartCertFrequencyBeforeClass"})

@@ -163,7 +163,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@AfterGroups(value="EnableDisableManageReposAndVerifyContentAvailable_Test", alwaysRun=true)
 	protected void afterEnableDisableManageReposAndVerifyContentAvailable_Test() {
 		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","1"});
-		clienttasks.restart_rhsmcertd(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"certFrequency" WAS CHANGED BY BUG 882459 TO */ "certCheckInterval")), null, false, null);
+		clienttasks.restart_rhsmcertd(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"certFrequency" WAS CHANGED BY BUG 882459 TO */ "certCheckInterval")), null, null);
 	}
 	
 

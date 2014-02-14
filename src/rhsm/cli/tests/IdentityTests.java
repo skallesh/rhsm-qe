@@ -321,7 +321,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// register and remember the original consumer identity
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		clienttasks.config(null, null, true, new String[]{"rhsmcertd",/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),"240"});
-		clienttasks.restart_rhsmcertd(null, null, false, true);	// make sure that rhsmcertd will not interfere with test
+		clienttasks.restart_rhsmcertd(null, null, true);	// make sure that rhsmcertd will not interfere with test
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		String consumerCert_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerCertFile()).getStdout().trim();
 		String consumerKey_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerKeyFile()).getStdout().trim();
@@ -400,7 +400,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		
 		// restart rhsmcertd
-		clienttasks.restart_rhsmcertd(null, null, false, false);	// assertCertificatesUpdate=false since the consumer has been deleted server side and the cert updates should fail
+		clienttasks.restart_rhsmcertd(null, null, false);	// assertCertificatesUpdate=false since the consumer has been deleted server side and the cert updates should fail
 		
 		// assert that the consumer has been backed up and assert the md5sum matches
 		String consumerCertFileOld = clienttasks.consumerCertFile().replace(clienttasks.consumerCertDir, clienttasks.consumerCertDir+".old");

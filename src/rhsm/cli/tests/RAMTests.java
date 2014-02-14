@@ -119,7 +119,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "false");
 		servertasks.restartTomcat();
 		SubscriptionManagerCLITestScript.sleep( 1*60 * 1000);
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.restart_rhsmcertd(null, null, null);
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);

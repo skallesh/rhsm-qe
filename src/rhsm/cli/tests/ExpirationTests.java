@@ -37,7 +37,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-655835","blockedByBug-660713","blockedByBug-854312","blockedByBug-907638","blockedByBug-994266"}, dependsOnGroups={},
 			enabled=true)
 	public void VerifyEntitlementsAfterSubscriptionExpires_Test() throws Exception{
-		clienttasks.restart_rhsmcertd(certFrequency, null, false, true);
+		clienttasks.restart_rhsmcertd(certFrequency, null, true);
 
 		// create a subscription pool that will expire 2 minutes from now
 		int endingMinutesFromNow = 2;
@@ -210,7 +210,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	@AfterClass(groups="setup")
 	public void restoreCertFrequencyAfterClass() throws Exception{
 		if (originalCertFrequency==null) return;
-		clienttasks.restart_rhsmcertd(Integer.valueOf(originalCertFrequency), null, false, true);
+		clienttasks.restart_rhsmcertd(Integer.valueOf(originalCertFrequency), null, true);
 	}
 	
 //	@BeforeMethod

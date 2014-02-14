@@ -162,7 +162,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				}
 			}
 		}
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, true);
+		clienttasks.restart_rhsmcertd(null, healFrequency, true);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
 		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.productName.contains("Instance Server")){
@@ -174,7 +174,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
 			clienttasks.facts(null, true, null, null, null);
-			clienttasks.restart_rhsmcertd(null, healFrequency, false, true);
+			clienttasks.restart_rhsmcertd(null, healFrequency, true);
 			SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.productName.contains("Instance Server")){
@@ -326,7 +326,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 	public void restoreConfiguredHealFrequency() {
 		if (clienttasks == null)
 			return;
-		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,true);
+		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, true);
 	}
 	
 	

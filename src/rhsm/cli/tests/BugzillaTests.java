@@ -112,7 +112,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		clienttasks.autoheal(null, true, null, null, null, null);
-		clienttasks.restart_rhsmcertd(null, null, false, true);
+		clienttasks.restart_rhsmcertd(null, null, true);
 		
 		for(InstalledProduct installedproduct:clienttasks.getCurrentlyInstalledProducts() ){
 			for(ProductSubscription pool:clienttasks.getCurrentlyConsumedProductSubscriptions()){
@@ -357,7 +357,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	String consumerid=clienttasks.getCurrentConsumerId();
 	Assert.assertEquals(UUID.trim(), consumerid.trim());
 	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/consumers/"+consumerid);
-	clienttasks.restart_rhsmcertd(null, null, false, null);
+	clienttasks.restart_rhsmcertd(null, null, null);
 	sleep(2*60*1000);
 	UUID=getSystemUUIDFacts();
 	Assert.assertEquals(UUID, "");
@@ -1030,7 +1030,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
 /* this is not the right way to assert the revokedCerts contain the entitlementCert.serialNumber; re-implementing below...
 		clienttasks.autoheal(null, true, null, null, null, null);
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.restart_rhsmcertd(null, null, null);
 		List <RevokedCert> revokedCerts=servertasks.getCurrentlyRevokedCerts();
 		Assert.assertTrue(revokedCerts.contains(entitlementCert.serialNumber));
 */
@@ -1490,7 +1490,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsNoMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
 /* restart_rhsmcertd has nothing to do with testing the ability to DELETE a content resource
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.restart_rhsmcertd(null, null, null);
 		sleep(2*60*1000);
 */
 		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
@@ -2095,7 +2095,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "false");
 		servertasks.restartTomcat();
 		SubscriptionManagerCLITestScript.sleep( 1*60 * 1000);
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.restart_rhsmcertd(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 			sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -2113,7 +2113,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "true");
 		servertasks.restartTomcat();
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.restart_rhsmcertd(null, null, null);
 		SubscriptionManagerCLITestScript.sleep( 1*60*1000);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
@@ -2208,7 +2208,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false,null);
+		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, null);
 */
 /* there's a faster way to do this...
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -2318,7 +2318,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 				(String) null, null, null, null, true, false, null, null, null);
 /* unnecessary for this test
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.restart_rhsmcertd(null, null, null);
 */
 		moveProductCertFiles("*.pem");
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
@@ -2326,7 +2326,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 		String InstalledProducts=clienttasks.listInstalledProducts().getStdout();
 		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
 /* unnecessary to restart rhsmcertd and sleep for a long time, call run_rhsmcertd_worker instead
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.restart_rhsmcertd(null, null, null);
 		SubscriptionManagerCLITestScript.sleep(2 * 60 * 1000);
 */
 		clienttasks.run_rhsmcertd_worker(null);
@@ -2588,7 +2588,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 				null, null, null, null);
 		client.runCommandAndWait("rm -rf " + clienttasks.entitlementCertDir
 				+ "/*.pem");
-		clienttasks.restart_rhsmcertd(Certfrequeny, null, false, null);
+		clienttasks.restart_rhsmcertd(Certfrequeny, null, null);
 		SubscriptionManagerCLITestScript.sleep(Certfrequeny * 60 * 1000);
 		List<File> Cert = clienttasks.getCurrentEntitlementCertFiles();
 		Assert.assertNotNull(Cert.size());
@@ -2661,7 +2661,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
 /* unnecessary
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.restart_rhsmcertd(null, null, null);
 		clienttasks.deleteFactsFileWithOverridingValues();
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 */
@@ -2720,7 +2720,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 		String Frequency = clienttasks.getConfFileParameter(
 				clienttasks.rhsmConfFile, "autoAttachInterval");
 */
-		clienttasks.restart_rhsmcertd(autoAttachInterval, null, false, false);
+		clienttasks.restart_rhsmcertd(autoAttachInterval, null, false);
 		clienttasks.waitForRegexInRhsmcertdLog("Update failed", 1);	// Thu Feb 13 02:01:16 2014 [WARN] (Cert Check) Update failed (255), retry will occur on next run.
 /* unnecessary; will be handled by the AfterGroup restoreConfiguredFrequencies()
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -2906,7 +2906,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 			}
 		}
 /* takes too much time; replacing with a call to run_rhsmcertd_worker with autoheal...
-		clienttasks.restart_rhsmcertd(null, autoAttachInterval, false, null);
+		clienttasks.restart_rhsmcertd(null, autoAttachInterval, null);
 		SubscriptionManagerCLITestScript.sleep(autoAttachInterval * 60 * 1000);
 */
 		clienttasks.autoheal(null, true, null, null, null, null); // enabling autoheal
@@ -3180,7 +3180,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 				+ client.runCommandAndWait("hostname"));
 		setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase, "date -s '15 year 9 month' +'%F'");
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.restart_rhsmcertd(null, null, null);
 		SubscriptionManagerCLITestScript.sleep(2* 60 * 1000);
 		log.info(clienttasks.getCurrentConsumerCert().validityNotBefore.toString() +"   "+ clienttasks.getCurrentConsumerCert().validityNotAfter.toString() +" cert validity After regeneration");
 		Calendar StartTimeAfterRHSM = clienttasks.getCurrentConsumerCert().validityNotBefore;
@@ -3346,7 +3346,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 		String poolId = null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
-// unnecessary		clienttasks.restart_rhsmcertd(null, null, false, null);
+// unnecessary		clienttasks.restart_rhsmcertd(null, null, null);
 		int sockets = 4;
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
@@ -3655,7 +3655,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 /* not needed
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+		clienttasks.restart_rhsmcertd(null, healFrequency, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 
 		clienttasks.subscribe_(null, null, poolId, null, null, null, null,
@@ -3737,7 +3737,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 
 /* too time consuming; replacing with a call to run_rhsmcertd_worker(true)
-		clienttasks.restart_rhsmcertd(null, autoAttachInterval, false, null);
+		clienttasks.restart_rhsmcertd(null, autoAttachInterval, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
 */
@@ -3778,7 +3778,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 */
 		clienttasks.autoheal(null, null, true, null, null, null);
 /* this takes too long, lets call run_rhsmcertd_worker(true) instead
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+		clienttasks.restart_rhsmcertd(null, healFrequency, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
 */
 		clienttasks.run_rhsmcertd_worker(true);
@@ -3892,7 +3892,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 					"No expired products are available for testing");
 		} else {
 /* too time consuming; replacing with a call to 
-			clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+			clienttasks.restart_rhsmcertd(null, healFrequency, null);
 			SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
 */
 			clienttasks.run_rhsmcertd_worker(true);
@@ -3926,7 +3926,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 		clienttasks.service_level_(null, null, null, true, null, null, null,null, null, null, null, null);
 */
 /* takes too long; calling run_rhsmcertd_worker with autoheal instead...
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, true);	// argument assertCertificatesUpdate should be true for this test (and most all tests)  
+		clienttasks.restart_rhsmcertd(null, healFrequency, true);	// argument assertCertificatesUpdate should be true for this test (and most all tests)  
 		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
 */
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().isEmpty(), "After immediately registering with force, there are no entitlements attached.");
@@ -3944,7 +3944,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	 * @throws Exception
 	 */
 	@Test(description = "Auto-heal with SLA",	// TODO Add some more description; has same description as VerifyAutohealWithSLA()
-			groups = {"debugTest", "AutoHealFailForSLA" }, enabled = true)
+			groups = {"AutoHealFailForSLA"}, enabled = true)
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 		Integer healFrequency = 2;
 		String filename = null;
@@ -3976,7 +3976,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 				.getCurrentEntitlementCerts();
 		log.info("cert contents are " + certsbeforeRHSMService);
 /* too time consuming; replacing with run_rhsmcertd_worker(true)
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+		clienttasks.restart_rhsmcertd(null, healFrequency, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
 */
 		clienttasks.run_rhsmcertd_worker(true);
@@ -4454,7 +4454,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 	@AfterClass(groups = "setup")	// called after class for insurance
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null) return;
-		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, false, null);
+		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
 	}
 	
 	
@@ -4748,7 +4748,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 			log.info("Reverted the date of candlepin"
 					+ client.runCommandAndWait("hostname"));
 		}
-		clienttasks.restart_rhsmcertd(null, null, false, null);
+		clienttasks.restart_rhsmcertd(null, null, null);
 		SubscriptionManagerCLITestScript.sleep(3 * 60 * 1000);
 	}
 	
