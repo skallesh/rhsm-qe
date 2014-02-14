@@ -4107,10 +4107,13 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@Test(description = "Verify if rhsm not logging subscriptions and products properly ", groups = { "VerifyRhsmLogging_Test","blockedByBug-668032","blockedByBug-907638" }, enabled = true)
-	public void VerifyRhsmLoggingTest() throws Exception {
+	@Test(	description = "Verify that rhsm.log reports all products provided by an attached subsubscription.",
+			groups = {"blockedByBug-668032"/*,"blockedByBug-1016300"*/ },
+			enabled = true)
+	public void VerifyRhsmLogsProvidedProducts_Test() {
+/* re-implementing this test...
 		Boolean actual = true;
-		
+
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -4130,6 +4133,41 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 			Boolean flag = RegexInRhsmLog("@ /etc/pki/entitlement",RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null));
 			Assert.assertEquals(flag, actual);
 		}else throw new SkipException("no bundled products available for testing");	
+*/
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		boolean foundSubscriptionProvidingMultipleProducts = false;
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+			if (pool.provides.size()>2) {
+				foundSubscriptionProvidingMultipleProducts = true;
+				
+				String logMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+				RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
+				File serialFile = clienttasks.subscribeToSubscriptionPool(pool, sm_clientUsername, sm_clientPassword, sm_serverUrl);
+				BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(serialFile);
+				String rhsmLogTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, serialNumber.toString());
+				//2014-02-14 11:41:34,891 [INFO] subscription-manager @certlib.py:245 - certs updated:
+				//	Total updates: 1
+				//	Found (local) serial# []
+				//	Expected (UEP) serial# [5098711034167311680]
+				//	Added (new)
+				//	  [sn:5098711034167311680 (Clustering Bits,) @ /etc/pki/entitlement/5098711034167311680.pem]
+				//	  [sn:5098711034167311680 (Awesome OS Server Bits,) @ /etc/pki/entitlement/5098711034167311680.pem]
+				//	  [sn:5098711034167311680 (Load Balancing Bits,) @ /etc/pki/entitlement/5098711034167311680.pem]
+				//	  [sn:5098711034167311680 (Large File Support Bits,) @ /etc/pki/entitlement/5098711034167311680.pem]
+				//	  [sn:5098711034167311680 (Shared Storage Bits,) @ /etc/pki/entitlement/5098711034167311680.pem]
+				//	  [sn:5098711034167311680 (Management Bits,) @ /etc/pki/entitlement/5098711034167311680.pem]
+				//	Deleted (rogue):
+				//	  <NONE>
+				
+				// assert that the rhsm.log reports a message for all of the products provided for by this entitlement
+				for (String providedProduct : pool.provides) {
+					if (providedProduct.equals("Awesome OS Server Bundled")) continue;	// avoid Bug 1016300 - the "Provides:" field in subscription-manager list --available should exclude "MKT" products.
+					String expectedLogMessage = String.format("[sn:%s (%s,) @ %s]",serialNumber.toString(), providedProduct, serialFile.getPath());
+					Assert.assertTrue(rhsmLogTail.contains(expectedLogMessage), "Log file '"+clienttasks.rhsmcertdLogFile+"' reports expected message '"+expectedLogMessage+"'.");
+				}
+			}
+		}
+		if (!foundSubscriptionProvidingMultipleProducts) throw new SkipException("Could not find and available subscriptions providing multiple products to test Bug 668032.");
 	}
 
 	/**
