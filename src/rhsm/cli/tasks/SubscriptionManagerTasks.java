@@ -2622,7 +2622,7 @@ public class SubscriptionManagerTasks {
 //		else
 //			Assert.assertTrue(sshCommandResult.getStdout().contains(msg),
 //					"register with autosubscribe should show a list of the \""+msg+"\".");
-		msg = "Installed Product Current Status:"; if (getCurrentProductCertFiles().isEmpty()) msg = "No products installed.";
+		msg = "Installed Product Current Status:"; if (getCurrentProductCertFiles().isEmpty()) msg = "No products installed.";	// bug 962545
 		if ((autosubscribe!=null && Boolean.valueOf(autosubscribe)) || (consumerid!=null) || (activationkeys!=null && !activationkeys.isEmpty())) {
 			Assert.assertTrue(sshCommandResult.getStdout().contains(msg),
 					"register with autosubscribe|consumerid|activationkey should list \""+msg+"\".");

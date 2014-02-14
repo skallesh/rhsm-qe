@@ -573,7 +573,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="when no products are installed, auto-subscribe should abort",
-			groups={"cli.tests","blockedByBug-864207"},
+			groups={"cli.tests","blockedByBug-864207","blockedByBug-962545"},
 			priority=620,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
