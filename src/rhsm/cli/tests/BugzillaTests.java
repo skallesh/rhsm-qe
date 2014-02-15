@@ -955,30 +955,46 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"CRLTest"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=55355)
-	public void CRLTest() throws Exception {
+	public void CRLTest() {
+/* unnecessary
 		clienttasks.deleteFactsFileWithOverridingValues();
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
+*/
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg ,null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null);
+/* unnecessary
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
+*/
 		List<SubscriptionPool> availPools = clienttasks.getCurrentlyAvailableSubscriptionPools(); 
-			File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools.get(randomGenerator.nextInt(availPools.size())),sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools.get(randomGenerator.nextInt(availPools.size())),sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+/* simplify by getting the serialNumber from the entitlementCertFile
 			clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-
+*/
+		BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile);
+/* don't need a loop here to unsubscribe --all, just unsubscribe the serialNumber
 			for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 				System.out.println(consumed.serialNumber);
 				clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 			}
+*/
+		clienttasks.unsubscribe(null,serialNumber, null, null, null);
+		
+		// verify that the currently revoked certs on the server include the serialNumber that we just unsubscribed
+/* we can eliminate this loop since the revocation list will likely have more than one revoked cert 
 			for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
 				Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
 			}
-		
+*/
+		sleep(2/*min*/*60*1000); // give the server time to update; schedule is set in /etc/candlepin/candlepin.conf pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
+		RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber", serialNumber, servertasks.getCurrentlyRevokedCerts());
+		Assert.assertNotNull(revokedCert, "Found expected Revoked Cert on the server's Certificate Revocation List (CRL) after unsubscribing from serial '"+serialNumber+"'.");
+		log.info("Verified revoked certificate: "+revokedCert);
 	}
 
 	
@@ -2654,8 +2670,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	 */
 	@Test(description = "Verify only One Cert is downloaded Per One Subscription", groups = {"VerifyOneCertPerOneSubscription"}, enabled = true)
 	@ImplementsNitrateTest(caseId = 50215)
-	public void VerifyOneCertPerOneSubscription() throws JSONException,
-	Exception {
+	public void VerifyOneCertPerOneSubscription() {
 		int expected = 0;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -4134,13 +4149,14 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 			Assert.assertEquals(flag, actual);
 		}else throw new SkipException("no bundled products available for testing");	
 */
+		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		boolean foundSubscriptionProvidingMultipleProducts = false;
-		for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.provides.size()>2) {
 				foundSubscriptionProvidingMultipleProducts = true;
 				
-				String logMarker = System.currentTimeMillis()+" Testing ***************************************************************";
+				String logMarker = System.currentTimeMillis()+" VerifyRhsmLogsProvidedProducts_Test ****************************************";
 				RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 				File serialFile = clienttasks.subscribeToSubscriptionPool(pool, sm_clientUsername, sm_clientPassword, sm_serverUrl);
 				BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(serialFile);
