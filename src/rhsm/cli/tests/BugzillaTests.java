@@ -64,7 +64,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 @Test(groups = { "BugzillaTests" })
 public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey="";
-	protected String randomAvailableProductId;
+	protected String randomAvailableProductId = null;
 	protected EntitlementCert expiringCert = null;
 	protected String EndingDate;
 	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir"
@@ -1709,7 +1709,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify that system should not be compliant for an expired subscription", 
-			groups = { "VerifySystemCompliantFact"}, enabled = true)
+			groups = {"VerifySystemCompliantFact"}, enabled = true)
 	public void VerifySystemCompliantFactWhenAllProductsAreExpired_Test() throws JSONException,Exception {
 /* wrong place for this; should already have been called by an AfterGroup
 		restoreProductCerts();
@@ -1722,6 +1722,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 */
+		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
@@ -1740,8 +1741,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.importCertificate_("/root/Expiredcert.pem");
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if(!(installed.status.equals("Expired"))){
+/* assumes a product cert filename format that may not be true; fixed by moving the file object from the current product certs
 				moveProductCertFiles(installed.productId+"_"+ ".pem");
 				moveProductCertFiles(installed.productId + ".pem");
+*/
+				ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", installed.productId, productCerts);
+				moveProductCertFiles(productCert.file.getName());
 			}
 		}
 		clienttasks.facts(null,true,null,null,null); 
@@ -3715,7 +3720,7 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	 * @throws Exception
 	 */
 	@Test(description = "Auto-heal with SLA",	// TODO Add some more description; has same description as VerifyAutohealFailForSLA()
-			groups = { "AutoHealWithSLA","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
+			groups = {"AutoHealWithSLA","blockedByBug-907638","blockedByBug-907400"}, enabled = true)
 	public void VerifyAutohealWithSLA() throws JSONException, Exception {
 /* not necessary; will use clienttasks.run_rhsmcertd_worker(true) to invoke an immediate autoheal
 		Integer autoAttachInterval = 2;
@@ -3761,6 +3766,8 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(!productSubscriptions.isEmpty(), "Autoheal with serviceLevel '"+currentServiceLevel+"' has granted this system some entitlement coverage.");
 		for (ProductSubscription productSubscription : productSubscriptions) {
+			//TODO Fix the exempt service level logic in this loop after RFE Bug 1066088 is implemented
+			if (!sm_exemptServiceLevelsInUpperCase.contains("Exempt SLA".toUpperCase())) sm_exemptServiceLevelsInUpperCase.add("Exempt SLA".toUpperCase()); //WORKAROUND for bug 1066088
 			if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
 				Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()), "Autohealed subscription '"+productSubscription.productName+"' has been granted with an exempt service level '"+productSubscription.serviceLevel+"'.");		
 			} else {
@@ -3961,9 +3968,12 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 	@Test(description = "Auto-heal with SLA",	// TODO Add some more description; has same description as VerifyAutohealWithSLA()
 			groups = {"AutoHealFailForSLA"}, enabled = true)
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
+/* unnecessary
 		Integer healFrequency = 2;
 		String filename = null;
 		System.out.println(RemoteFileTasks.testExists(client, "/etc/pki/tmp1"));
+*/
+		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -3981,9 +3991,12 @@ throw new SkipException("Finish implementing this test.  Nothing beyond register
 
 			if (installedProduct.status.equalsIgnoreCase("Subscribed") || installedProduct.status.equalsIgnoreCase(
 							"Partially Subscribed")) {
+/* assumes a product cert filename format that may not be true; fixed by moving the file object from the current product certs
 					moveProductCertFiles(installedProduct.productId + ".pem");
 					moveProductCertFiles(installedProduct.productId + "_.pem");
-
+*/
+				ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", installedProduct.productId, productCerts);
+				moveProductCertFiles(productCert.file.getName());
 			}
 		}
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
