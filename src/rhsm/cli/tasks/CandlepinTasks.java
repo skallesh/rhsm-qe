@@ -2134,6 +2134,12 @@ schema generation failed
 		return virt_only;
 	}
 	
+	public static boolean isPoolPhysicalOnly (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
+		String physical_only = getPoolAttributeValue(authenticator, password, url, poolId, "physical_only");
+		if (physical_only==null) return false; // the absense of a "physical_only" attribute implies physical_only=false
+		return Boolean.valueOf(physical_only);
+	}
+	
 	public static boolean isPoolDerived (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
 		
 		/* [root@jsefler-6 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/pools/8a9086d340d0ae7d0140d0afeb910746 | python -m simplejson/tool
