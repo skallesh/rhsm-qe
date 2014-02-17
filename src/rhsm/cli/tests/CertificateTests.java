@@ -392,12 +392,20 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests","blockedByBug-1011961"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRctCatCertReportsOrdersWithQuantityUnlimited_Test() {
+	public void VerifyRctCatCertReportsOrdersWithQuantityUnlimited_Test() throws JSONException, Exception {
 		int numberOfUnlimitedPools = 0;
+		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 			if (pool.quantity.equalsIgnoreCase("Unlimited")) {
+				
+				// skip physical_only subscriptions when run on a virtual system (not necessary if getCurrentlyAllAvailableSubscriptionPools() was changed to getCurrentlyAvailableSubscriptionPools())
+				if (CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl) && isSystemVirtual) continue;
+				
+				// skip virt_only subscriptions when run on a physical system (not necessary if getCurrentlyAllAvailableSubscriptionPools() was changed to getCurrentlyAvailableSubscriptionPools())
+				if (CandlepinTasks.isPoolVirtOnly(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl) && !isSystemVirtual) continue;
+				
 				numberOfUnlimitedPools++;
 				File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 				EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
