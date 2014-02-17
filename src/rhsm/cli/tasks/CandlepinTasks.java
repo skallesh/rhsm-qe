@@ -2134,8 +2134,8 @@ schema generation failed
 		return virt_only;
 	}
 	
-	public static boolean isPoolPhysicalOnly (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
-		String physical_only = getPoolAttributeValue(authenticator, password, url, poolId, "physical_only");
+	public static boolean isPoolProductPhysicalOnly (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
+		String physical_only = getPoolProductAttributeValue(authenticator, password, url, poolId, "physical_only");
 		if (physical_only==null) return false; // the absense of a "physical_only" attribute implies physical_only=false
 		return Boolean.valueOf(physical_only);
 	}

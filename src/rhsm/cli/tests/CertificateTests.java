@@ -180,6 +180,14 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "cores")!=null) {
 			throw new SkipException("This test is not designed for CORES-based product subscriptions.");
 		}
+		// skip physical_only subscriptions when run on a virtual system
+		if (CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl) && Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) {
+			throw new SkipException("This test is not designed for physical_only subscriptions on a virtual machine.");
+		}
+		// skip virt_only subscriptions when run on a physical system
+		if (CandlepinTasks.isPoolVirtOnly(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl) && !Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) {
+			throw new SkipException("This test is not designed for virt_only subscriptions on a physical machine.");
+		}
 		
 		// adjust quantity for instance_multiplier pools
 		String instance_multiplier = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier");
@@ -194,6 +202,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//^ replaced with the following to save logging/assertion time
 		SSHCommandResult result = clienttasks.subscribe_(null, null, pool.poolId, null, null, quantity, null, null, null, null, null);
 		if (result.getStderr().startsWith("Too many content sets")) throw new SkipException("This test is only designed for system.certificate_version=1.0 compatible subscriptions.");
+		//if (result.getStdout().startsWith("Pool is restricted to")) throw new SkipException("This test is not designed for this subscription pool: "+pool);	// Pool is restricted to physical systems: '8a9087e3443db08f01443db1847a142a'.
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		Assert.assertNotNull(entitlementCert,"Successfully retrieved the entitlement cert granted after subscribing to pool: "+pool);
 		// re-scan the entitlement cert using openssl because it better distinguishes between a "" OID value and a null OID value.
