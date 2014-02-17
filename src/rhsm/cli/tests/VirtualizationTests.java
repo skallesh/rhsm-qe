@@ -285,7 +285,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostAndGuestPoolsAreGeneratedForVirtualizationAwareSubscription_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
+	public void VerifyHostAndGuestPoolsAreGeneratedForVirtualizationAwareSubscription_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
 
 //		log.info("When an owner has purchased a virtualization-aware subscription ("+productName+"; subscriptionId="+subscriptionId+"), he should have subscription access to two pools: one for the host and one for the guest.");
 //
@@ -694,7 +694,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostAndGuestPoolQuantities_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
+	public void VerifyHostAndGuestPoolQuantities_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 //if (!productId.equals("awesomeos-virt-unlimited")) throw new SkipException("debugTesting VerifyHostAndGuestPoolQuantities_Test");
 		JSONObject jsonHostPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+hostPoolId));	
@@ -757,7 +757,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={"VerifyHostAndGuestPoolQuantities_Test"},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyGuestPoolQuantityIsNotClobberedByRefreshPools_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
+	public void VerifyGuestPoolQuantityIsNotClobberedByRefreshPools_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 		if (dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database so that it can updateSubscriptionDatesOnDatabase.");
 
@@ -802,24 +802,43 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="Verify host and guest pools to a virtualization-aware subscription are subscribable on a guest system.",
+	@Test(	description="Verify host and guest pools to a virtualization-aware subscription are subscribable on a guest system (unless it is physical_only).",
 			groups={},
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
+	public void VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
-
+		
 		// trick this system into believing it is a virt guest
 		forceVirtWhatToReturnGuest("kvm");
 		
-		// assert that the hostPoolId is available
+		// assert that the hostPoolId is available...
 		List<SubscriptionPool> availablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool hostPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", hostPoolId, availablePools);
-		Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is available on a guest system: "+hostPool);
-		
-		// attempt to subscribe to the hostPoolId
-		clienttasks.subscribeToSubscriptionPool(hostPool);
+		if (physicalOnly==null || !physicalOnly) {	
+			// ...when the originating subscription is not physical_only
+			Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is available on a guest system.  hostPool="+hostPool);
+			// attempt to subscribe to the hostPoolId (should succeed)
+			//clienttasks.subscribeToSubscriptionPool(hostPool);	// too much overhead
+			clienttasks.subscribe(null, null, hostPoolId, null, null, null, null, null, null, null, null);
+		} else {
+			// ...but not when the originating subscription is physical_only
+			Assert.assertNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' that is physical_only is NOT available on a guest system.");	// introduced by Bug 1066120
+			
+			// however, it should still be available from --all --available
+			hostPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", hostPoolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+			Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' that is physical_only is included in --all available on a guest system.");	// introduced by Bug 1066120
+			Assert.assertEquals(hostPool.machineType, "Physical", "The machine type for a physical_only pool.");
+			// attempt to subscribe to the hostPoolId (should fail)
+			//	[root@jsefler-7 ~]# subscription-manager attach --pool 8a9087e3443db08f01443db1810c125e
+			//	Pool is restricted to physical systems: '8a9087e3443db08f01443db1810c125e'.
+			SSHCommandResult result = clienttasks.subscribe_(null, null, hostPoolId, null, null, null, null, null, null, null, null);
+			String expectedMsg = String.format("Pool is restricted to physical systems: '%s'.", hostPoolId);
+			Assert.assertEquals(result.getStdout().trim(), expectedMsg, "Stdout from an attempt to subscribe a virtual system to physical_only pool: "+hostPool);
+			Assert.assertEquals(result.getStderr(), "", "Stderr from an attempt to subscribe a virtual system to physical_only pool: "+hostPool);
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "Exitcode from an attempt to subscribe a virtual system to physical_only pool: "+hostPool);
+		}
 		
 		// assert that the guestPoolId is available
 		SubscriptionPool guestPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", guestPoolId, availablePools);
@@ -835,7 +854,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
+	public void VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 
 		// trick this system into believing it is a host
@@ -1277,6 +1296,17 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 			
+			// loop through the attributes of this jsonProduct looking for the "physical_only" attribute
+			// introduced by Bug 1066120 - [RFE] need a way to restrict a subscription pool as being consumable only by a physical system
+			Boolean physicalOnly = null;
+			for (int j = 0; j < jsonAttributes.length(); j++) {
+				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
+				String attributeName = jsonAttribute.getString("name");
+				if (attributeName.equals("physical_only")) {
+					physicalOnly = Boolean.valueOf(jsonAttribute.getString("value"));
+				}
+			}
+			
 			// loop through the attributes of this jsonProduct looking for the "virt_limit" attribute
 			for (int j = 0; j < jsonAttributes.length(); j++) {
 				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
@@ -1330,7 +1360,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 								hostPoolId = poolId;
 							}
 						}
-						ll.add(Arrays.asList(new Object[]{subscriptionId, productName, productId, quantity, virt_limit, hostPoolId, guestPoolId}));
+						ll.add(Arrays.asList(new Object[]{subscriptionId, productName, productId, quantity, virt_limit, hostPoolId, guestPoolId, physicalOnly}));
 					}
 				}
 			}
