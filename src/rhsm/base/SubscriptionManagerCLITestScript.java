@@ -1499,14 +1499,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystemHardware, boolean matchSystemSoftware) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
-
+		
+		// is this system virtual
+		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
+		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 		// java.lang.RuntimeException: org.json.JSONException: JSONObject["owner"] not found.
 		// ^^^ this will be thrown when the consumerId has been deleted at the server, but the client does not know it.
-
+		
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
@@ -1580,6 +1583,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				}
 				if (attributeName.equals("stacking_id")) {
 					// productAttributeStackingIdValue = attributeValue; // was already searched for above
+				}
+				if (attributeName.equals("physical_only")) {
+					if (attributeValue!=null && Boolean.valueOf(attributeValue) && isSystemVirtual) {
+						productAttributesPassRulesCheck = false;
+					}
 				}
 				if (attributeName.equals("sockets")) {
 					productAttributeSocketsValue = attributeValue;
