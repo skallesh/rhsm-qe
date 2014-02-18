@@ -1101,7 +1101,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToFutureSubscriptionPool_Test(SubscriptionPool pool) throws Exception {
-		
+//if (!pool.productId.equals("awesomeos-virt-unlimited")) throw new SkipException("debugTesting pool productId="+pool.productId);
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
