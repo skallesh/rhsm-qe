@@ -564,7 +564,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --remove-all",							new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --list",								new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override",										new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.rhsmDebugSystemCommand(null, null, null, null, null),					new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.rhsmDebugSystemCommand(null, null, null, null, null, null),		new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 
 		
 		// negative tests that require the system to be registered before attempting the test...

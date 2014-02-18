@@ -2,6 +2,7 @@ package rhsm.cli.tests;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.xmlrpc.XmlRpcException;
@@ -9,6 +10,7 @@ import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.SubscriptionPool;
 
@@ -39,7 +41,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister_(null, null, null);
 		
 		// attempt to run rhsm-debug system without being registered
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(null, null, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(null, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		// assert results
@@ -50,29 +52,29 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system and verify the expected contents of the written debug file",
-			groups={"AcceptanceTests","blockedByBug-1038206","blockedByBug-1040338"},
+			groups={"AcceptanceTests","blockedByBug-1038206","blockedByBug-1040338","blockedByBug-1060727"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystem_Test() {
 		
 		// run the rhsmDebugSystemTest with no options
-		verifyRhsmDebugSystemTestWithOptions(null,null);
+		verifyRhsmDebugSystemTestWithOptions(null,null, null);
 	}
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --no-archive option and verify the results",
-			groups={"blockedByBug-1060730"},
+			groups={"blockedByBug-1060730","blockedByBug-1060727"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithNoArchive_Test() {
 		
 		// run the rhsmDebugSystemTest with a valid destination
-		verifyRhsmDebugSystemTestWithOptions(null,true);
+		verifyRhsmDebugSystemTestWithOptions(null,true, null);
 	}
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --destination option and verify the results",
-			groups={"blockedByBug-1040338"},
+			groups={"blockedByBug-1040338","blockedByBug-1060727"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithDestination_Test() {
@@ -83,12 +85,23 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -rf "+destination+" && mkdir -p "+destination);
 
 		// run the rhsmDebugSystemTest with a valid destination
-		verifyRhsmDebugSystemTestWithOptions(destination,null);
+		verifyRhsmDebugSystemTestWithOptions(destination,null, null);
+	}
+	
+	
+	@Test(	description="after registering and subscribing, call rhsm-debug system with --sos option and verify the results",
+			groups={"blockedByBug-1040338","blockedByBug-1060727"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void RhsmDebugSystemWithSos_Test() {
+		
+		// run the rhsmDebugSystemTest with a valid destination
+		verifyRhsmDebugSystemTestWithOptions(null,null, true);
 	}
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system with both --no-archive and --destination option and verify the results",
-			groups={"blockedByBug-1040338"},
+			groups={"blockedByBug-1040338","blockedByBug-1060727"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithDestinationAndNoArchive_Test() {
@@ -99,7 +112,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -rf "+destination+" && mkdir -p "+destination);
 
 		// run the rhsmDebugSystemTest with a valid destination
-		verifyRhsmDebugSystemTestWithOptions(destination,true);
+		verifyRhsmDebugSystemTestWithOptions(destination,true, null);
 	}
 	
 	
@@ -117,7 +130,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		
 		// run rhsm-debug system with a non-existent destination
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		// assert results
@@ -142,7 +155,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		
 		// run rhsm-debug system with a bad destination
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		//	[root@jsefler-7 ~]# rhsm-debug system --destination /tmp/foo
@@ -159,7 +172,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="exercise the rhsm-debug tool with non-default configurations for consumerCertDir entitlementCertDir and productCertDir",
-			groups={"RhsmDebugSystemWithNonDefaultCertDirs1_Test","blockedByBug-1040546"},
+			groups={"RhsmDebugSystemWithNonDefaultCertDirs1_Test","blockedByBug-1040546","blockedByBug-1060727"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithNonDefaultCertDirs1_Test() {
@@ -189,7 +202,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// run the basic rhsm-debug system tests (with non-default rhsm cert directories)
-		verifyRhsmDebugSystemTestWithOptions(null,null);
+		verifyRhsmDebugSystemTestWithOptions(null,null, null);
 	}
 	@AfterGroups(groups="setup", value="RhsmDebugSystemWithNonDefaultCertDirs1_Test")
 	public void afterRhsmDebugSystemWithNonDefaultCertDirs1() {
@@ -202,7 +215,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="exercise the rhsm-debug tool with non-default configurations for ca_cert_dir pluginDir pluginConfDir",
-			groups={"RhsmDebugSystemWithNonDefaultCertDirs2_Test","blockedByBug-1055664"},
+			groups={"RhsmDebugSystemWithNonDefaultCertDirs2_Test","blockedByBug-1055664","blockedByBug-1060727"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithNonDefaultCertDirs2_Test() {
@@ -231,7 +244,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("cp "+originalPluginConfDir.replaceFirst("/$", "")+"/* "+rhsmDebugPluginConfDir);
 		
 		// run the basic rhsm-debug system tests (with non-default rhsm cert directories)
-		verifyRhsmDebugSystemTestWithOptions(null,null);
+		verifyRhsmDebugSystemTestWithOptions(null,null, null);
 	}
 	@AfterGroups(groups="setup", value="RhsmDebugSystemWithNonDefaultCertDirs2_Test")
 	public void afterRhsmDebugSystemWithNonDefaultCertDirs2() {
@@ -290,7 +303,14 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		return Boolean.valueOf(result.getStdout().trim());
 	}
 	
-	protected void verifyRhsmDebugSystemTestWithOptions(String destination, Boolean noArchive) {
+	protected void verifyRhsmDebugSystemTestWithOptions(String destination, Boolean noArchive, Boolean sos) {
+		
+		String consumerCertDir = clienttasks.getConfParameter("consumerCertDir");
+		String entitlementCertDir = clienttasks.getConfParameter("entitlementCertDir");
+		String productCertDir = clienttasks.getConfParameter("productCertDir");
+		String caCertDir = clienttasks.getConfParameter("ca_cert_dir");
+		String pluginDir = clienttasks.getConfParameter("pluginDir");
+		String pluginConfDir = clienttasks.getConfParameter("pluginConfDir");
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
@@ -302,7 +322,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
 
 		// run rhsm-debug system
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, noArchive, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, noArchive, sos, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		// assert results
@@ -425,7 +445,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		//	rhsm-debug-system-20140115-968966/var/log/rhsm/rhsmcertd.log
 		//	rhsm-debug-system-20140115-968966/var/log/rhsm/rhsmcertd.log-20131223
 		
-		// current candlepin files
+		// current candlepin sos files
 		expectedFiles.add("/compliance.json");
 		expectedFiles.add("/consumer.json");
 		expectedFiles.add("/entitlements.json");
@@ -433,62 +453,77 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		expectedFiles.add("/subscriptions.json");
 		expectedFiles.add("/version.json");
 		
-		// current /etc/rhsm files
-		for (String expectedFile : client.runCommandAndWait("find /etc/rhsm").getStdout().trim().split("\n")) {
-			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1066593
+		if (sm_serverType.equals(CandlepinType.hosted)) {
+			Boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="1066593"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("The workaround while bug is open is to skip the expected file subscriptions.json");
+				expectedFiles.remove("/subscriptions.json");
+			}
 		}
-		
-		// current /var/lib/rhsm files
-		for (String expectedFile : client.runCommandAndWait("find /var/lib/rhsm").getStdout().trim().split("\n")) {
-			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
-		}
-		
-		// current /var/log/rhsm files
-		for (String expectedFile : client.runCommandAndWait("find /var/log/rhsm").getStdout().trim().split("\n")) {
-			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
-		}
-		
-		// current consumer cert files
-		String consumerCertDir = clienttasks.getConfParameter("consumerCertDir");
-		expectedFiles.add(consumerCertDir+"/key.pem");
-		expectedFiles.add(consumerCertDir+"/cert.pem");
-		
-		// current entitlement cert files
-		String entitlementCertDir = clienttasks.getConfParameter("entitlementCertDir");
-		for (File entitlementCertFile : clienttasks.getCurrentEntitlementCertFiles()) {
-			expectedFiles.add(entitlementCertFile.getPath());
-			expectedFiles.add(clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCertFile).getPath());
-		}
-		
-		// current product cert files
-		String productCertDir = clienttasks.getConfParameter("productCertDir");
-		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
-			expectedFiles.add(productCertFile.getPath());
-		}
-		
-		// current ca cert files
-		String caCertDir = clienttasks.getConfParameter("ca_cert_dir");
-		for (String expectedFile : client.runCommandAndWait("find "+caCertDir).getStdout().trim().split("\n")) {
-			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
-		}
-		
-		// current plugin files
-		String pluginDir = clienttasks.getConfParameter("pluginDir");
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1055664 - jsefler 1/20/2014
-		Boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {String bugId="1055664"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			log.warning("The workaround while this bug is open is to skip the expected files in rhsm.pluginDir '"+pluginDir+"'.");
-		} else	// do the for (String expectedFile : client.runCommandAndWait("find "+pluginConfDir).getStdout().trim().split("\n")) loop
 		// END OF WORKAROUND
-		for (String expectedFile : client.runCommandAndWait("find "+pluginDir).getStdout().trim().split("\n")) {
-			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+		
+		// exclude the remaining debug files when running the sos option
+		if (sos==null || !sos) {
+			
+			// current /etc/rhsm files
+			for (String expectedFile : client.runCommandAndWait("find /etc/rhsm").getStdout().trim().split("\n")) {
+				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+			}
+			
+			// current /var/lib/rhsm files
+			for (String expectedFile : client.runCommandAndWait("find /var/lib/rhsm").getStdout().trim().split("\n")) {
+				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+			}
+			
+			// current /var/log/rhsm files
+			for (String expectedFile : client.runCommandAndWait("find /var/log/rhsm").getStdout().trim().split("\n")) {
+				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+			}
+			
+			// current consumer cert files
+			expectedFiles.add(consumerCertDir+"/key.pem");
+			expectedFiles.add(consumerCertDir+"/cert.pem");
+			
+			// current entitlement cert files
+			for (File entitlementCertFile : clienttasks.getCurrentEntitlementCertFiles()) {
+				expectedFiles.add(entitlementCertFile.getPath());
+				expectedFiles.add(clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCertFile).getPath());
+			}
+			
+			// current product cert files
+			for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
+				expectedFiles.add(productCertFile.getPath());
+			}
+			
+			// current ca cert files
+			for (String expectedFile : client.runCommandAndWait("find "+caCertDir).getStdout().trim().split("\n")) {
+				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+			}
+			
+			// current plugin files
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1055664 - jsefler 1/20/2014
+			Boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="1055664"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("The workaround while this bug is open is to skip the expected files in rhsm.pluginDir '"+pluginDir+"'.");
+			} else	// do the for (String expectedFile : client.runCommandAndWait("find "+pluginConfDir).getStdout().trim().split("\n")) loop
+			// END OF WORKAROUND
+			for (String expectedFile : client.runCommandAndWait("find "+pluginDir).getStdout().trim().split("\n")) {
+				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+			}
+			
+			// current plugin config files
+			for (String expectedFile : client.runCommandAndWait("find "+pluginConfDir).getStdout().trim().split("\n")) {
+				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+			}
 		}
 		
-		// current plugin config files
-		String pluginConfDir = clienttasks.getConfParameter("pluginConfDir");
-		for (String expectedFile : client.runCommandAndWait("find "+pluginConfDir).getStdout().trim().split("\n")) {
-			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+		// exclude key files from the expectedFiles; see Bug 1060727 - rhsm-debug duplicates sos data and may collect secrets
+		String keyPem = "key.pem";
+		for (String expectedFile : Arrays.asList(expectedFiles.toArray(new String[]{}))) {
+			if (expectedFile.endsWith(keyPem)) expectedFiles.remove(expectedFile);
 		}
 		
 		// assert the presence of expected files... (within the verbose output from tar -xvf)
@@ -512,9 +547,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		
 		// check for any unexpected files included in the tar file
 		String tmpListing = explodeListing;
-		for (String expectedFile : expectedFiles) {
-			tmpListing = tmpListing.replaceFirst(explodeSubDir+expectedFile+"/?\\n", "");
-		}
+		for (String expectedFile : expectedFiles) tmpListing = tmpListing.replaceFirst(explodeSubDir+expectedFile+"/?\\n", "");
 		tmpListing = tmpListing.replaceFirst(explodeSubDir+"/?\\n", "");
 		tmpListing = tmpListing.replaceFirst(explodeSubDir+"/etc/?\\n", "");
 		tmpListing = tmpListing.replaceFirst(explodeSubDir+"/etc/pki/?\\n", "");
