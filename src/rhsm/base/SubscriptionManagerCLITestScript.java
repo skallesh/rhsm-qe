@@ -2651,12 +2651,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 */
 	protected List<List<Object>> getAllFutureJSONSubscriptionsDataAsListOfLists(ConsumerType consumerType) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-
+		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
-
+		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
+		
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
@@ -2672,15 +2673,23 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			JSONObject jsonProduct = jsonSubscription.getJSONObject("product");
 			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
 			String requires_consumer_type = null;
+			Boolean physical_only = null;
 			for (int j = 0; j < jsonProductAttributes.length(); j++) {
 				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
 				if (jsonProductAttribute.getString("name").equals("requires_consumer_type")) {
 					requires_consumer_type = jsonProductAttribute.getString("value");
-					break;
+				}
+				if (jsonProductAttribute.getString("name").equals("physical_only")) {
+					physical_only = Boolean.valueOf(jsonProductAttribute.getString("value"));
 				}
 			}
 			if (requires_consumer_type==null) requires_consumer_type = ConsumerType.system.toString();	// the absence of a "requires_consumer_type" implies requires_consumer_type is system
+			
+			// skip subscriptions that do not match the consumer type
 			if (!ConsumerType.valueOf(requires_consumer_type).equals(consumerType)) continue;
+			
+			// skip subscriptions that do not match the machine type
+			if (physical_only!=null && physical_only && isSystemVirtual) continue;
 			
 			// process subscriptions that are in the future
 			if (startDate.after(now)) {
