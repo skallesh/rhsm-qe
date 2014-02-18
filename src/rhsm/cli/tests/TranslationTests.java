@@ -57,8 +57,8 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nRHEL6LanguageSupportCriteria
  *   
  *   
- *   Sample for loop through the translation files:
- *   [root@jsefler-6 ~]# for L in `rpm -ql subscription-manager | grep rhsm.mo`; do echo ""; echo "LOOKING FOR MSGID 'Product ID:' IN LANG FILE $L..."; msgunfmt $L | grep -i 'Product ID:' -A1; done;
+ *   Sample for looping through the translation files:
+ *   [root@jsefler-6 ~]# MSGID="shows pools which provide products that are not already covered"; for L in `rpm -ql subscription-manager | grep rhsm.mo`; do echo ""; echo "Verifying translation for '$MSGID' in LANG file '$L'..."; msgunfmt --no-wrap $L | grep -i "$MSGID" -A1; done;
  *   
  **/
 @Test(groups={"TranslationTests"})
@@ -204,7 +204,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={"AcceptanceTests", "blockedByBug-871152", "blockedByBug-912460", "blockedByBug-1003017", "blockedByBug-1020474"},
+			groups={"AcceptanceTests", "blockedByBug-871152", "blockedByBug-912460", "blockedByBug-1003017", "blockedByBug-1020474", "blockedByBug-1057532"},
 			dataProvider="getTranslationFileData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
