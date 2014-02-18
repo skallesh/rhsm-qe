@@ -16,6 +16,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
+import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.Environment;
@@ -214,12 +215,6 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		if (rhsm_ca_cert_dir!=null) clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
 	}
 	
-	
-	
-	
-	
-	
-	
 	@Test(	description="subscription-manager: run the environments module with valid user credentials and verify the expected environments are listed",
 			groups={"blockedByBug-1063491"},
 			dataProvider="getEnvironmentsForOrgsData",
@@ -241,6 +236,57 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(actualEnvironments.size(), expectedEnvironments.size(),"The number of environments returned by subscription-manager for user '"+username+"' under org '"+org+"'.");
 	}
+	
+	
+	@BeforeGroups(value={"Libraryas_env"}, groups={"setup"})
+	@Test(description="Library as an Env",enabled=true)
+	public void Libraryas_env(){
+		SSHCommandResult sshCommandResult;
+		// added by jsefler 
+		if (!CandlepinType.katello.equals(sm_serverType)) throw new SkipException("This test is only applicable against a server that supports environments.");
+
+		//register client to katello server 
+		sshCommandResult=clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
+		
+		sshCommandResult=clienttasks.identity(null, null, null, null, null, null, null);
+		List<String> outputlist = new ArrayList<String>();
+		for (String consoleoutput : sshCommandResult.getStdout().split("\\+-+\\+")[sshCommandResult.getStdout().split("\\+-+\\+").length-1].trim().split("\\n")) {
+			outputlist.add(consoleoutput);
+		}
+		Assert.assertContains(outputlist, "environment name: Library");
+		sshCommandResult=clienttasks.unregister(null,null, null);
+
+		
+//		Assert.assertEquals(outputlist.get(4).trim(), "environment name: Library", "Library reconize as Environmenet");
+//		
+		
+	}
+	
+	protected String envname=null;
+	@BeforeGroups(value={"Register with All Environment"}, groups={"setup"})
+	@Test(description="Register with env other than Library",enabled=true)
+	
+	public void All_Env_Register(){
+		SSHCommandResult sshCommandResult;
+		// added by jsefler 
+		if (!CandlepinType.katello.equals(sm_serverType)) throw new SkipException("This test is only applicable against a server that supports environments.");
+
+
+		clientOrg=clienttasks.getOrgs(sm_clientUsername, sm_clientPassword).get(0).orgKey;
+		sshCommandResult = clienttasks.environments(sm_clientUsername, sm_clientPassword, clientOrg, null, null, null, null, null);
+
+		for (String consoleoutput : sshCommandResult.getStdout().split("\\+-+\\+")[sshCommandResult.getStdout().split("\\+-+\\+").length-1].trim().split("\\n")) 
+		{
+			String[] cout = consoleoutput.split(":");
+			if(cout[0].trim().equals("Name"))
+						{
+						envname = cout[1].trim().replaceAll("\\s", "");
+
+						sshCommandResult=clienttasks.register(sm_clientUsername, sm_clientPassword, clientOrg, envname, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null);
+						//Assert.assertEquals(sshCommandResult.getExitCode(),Integer.valueOf(0),"Client sucessfully registred with "+envname+"environment"); as per jsefler suggestion
+						sshCommandResult=clienttasks.unregister(null, null, null);
+						}}
+		}
 	
 	
 	// Candidates for an automated Test:
