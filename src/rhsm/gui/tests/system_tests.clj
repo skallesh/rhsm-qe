@@ -318,7 +318,7 @@
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-916666"]
-              :dependsOnMethods ["rhsmcertd_resart_check_timestamp"]}}
+              :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]}}
   rhsmcertd_stop_check_timestamp
   "Checks wheter the timestamp in about dialog is displayed when rhsmcertd is stopped"
   [_]
