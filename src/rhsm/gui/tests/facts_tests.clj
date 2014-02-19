@@ -142,6 +142,7 @@
           expected-levels (sort (conj cli-levels "Not Set"))]
       (tasks/ui click :preferences)
       (tasks/ui waittillwindowexist :system-preferences-dialog 10)
+      (tasks/ui showlist :release-dropdown)
       (let [gui-levels (sort (tasks/ui getallitem :service-level-dropdown))]
         (verify (= expected-levels gui-levels))
         (verify (not (nil? (some #{"Not Set"} gui-levels))))))
@@ -166,6 +167,7 @@
           expected-releases (sort (conj cli-releases "Not Set"))]
       (tasks/ui click :preferences)
       (tasks/ui waittillwindowexist :system-preferences-dialog 10)
+      (tasks/ui showlist :release-dropdown)
       (let [gui-releases (sort (tasks/ui getallitem :release-dropdown))]
         (verify (= expected-releases gui-releases))
         (verify (not (nil? (some #{"Not Set"} gui-releases))))))
@@ -238,7 +240,7 @@
                      :value ["facts-product-status"]
                      :alwaysRun true}}
   after_check_product_status [_]
-  (:stdout (run-command "subscription-manager unsubscribe --all")))
+  (tasks/unsubscribe_all))
 
 (defn ^{Test {:groups ["facts"]
               :dependsOnMethods ["check_product_status"]
@@ -288,10 +290,11 @@
 
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-1012501"
-                       "blockedByBug-1040119"]}}
+                       "blockedByBug-1040119"]
+              :value ["check_status_message_for_subscriptions"]}}
   check_status_message
-  "Asserts is status message displayed in main-window is correct when product is subscribed
-   to subscription on current date, future date and for expired subscriptions"
+  "Asserts that status message displayed in main-window is right when products are subscribed
+   to their subscription on current and  future dates and also for expired subscriptions"
   [_]
   (try
     (tasks/unsubscribe_all)
@@ -338,21 +341,33 @@
                                                      (tasks/ui gettextvalue :overall-status))))
       (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date)))
       ;; scenario after advancing dates and expiring subscriptions
-      (run-command "date -s \"+1 year\"")
-      (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
-      (tasks/restart-app)
-      (reset! subscribed-products-future (count (filter #(= "Subscribed" %)
-                                                        (tasks/get-table-elements :installed-view 2))))
-      (reset! after-future-subscribe (Integer. (re-find #"\d*"
-                                                        (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-future-subscribe (- @status-before-subscribe @subscribed-products-future))))
+      (try
+        (run-command "date -s \"+1 year\"")
+        (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
+        (tasks/restart-app)
+        (reset! subscribed-products-future (count (filter #(= "Subscribed" %)
+                                                          (tasks/get-table-elements :installed-view 2))))
+        (reset! after-future-subscribe (Integer. (re-find #"\d*"
+                                                          (tasks/ui gettextvalue :overall-status))))
+        (verify (= @after-future-subscribe (- @status-before-subscribe @subscribed-products-future)))
+        (finally
+         (run-command "date -s \"-1 year\"")
+         (run-command "date -s \"-1 year\"" :runner @candlepin-runner))))
     (finally
      (tasks/unsubscribe_all)
      ;(run-command "service ntpd stop; ntpdate clock.redhat.com; service ntpd start")
      ;(run-command "service ntpd stop; ntpdate clock.redhat.com; service ntpd start"
      ;            :runner @candlepin-runner
-     (run-command "date -s \"-1 year\"")
-     (run-command "date -s \"-1 year\"" :runner @candlepin-runner))))
+     )))
+
+(defn ^{AfterGroups {:groups ["facts"]
+                     :value ["check_status_message_for_subscriptions"]
+                     :alwaysRun true}}
+  after_check_status_message
+  [_]
+  (:stdout (run-command "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"))
+  (:stdout (run-command "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"
+                        :runner @candlepin-runner)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
@@ -373,7 +388,6 @@
                                :or {debug false}}]
   (if-not (assert-skip :facts)
     (do
-      (tasks/restart-app)
       (let [prods (tasks/get-table-elements :installed-view 0)
             indexes (range 0 (tasks/ui getrowcount :installed-view))
             prodlist (map (fn [item index] [item index]) prods indexes)]

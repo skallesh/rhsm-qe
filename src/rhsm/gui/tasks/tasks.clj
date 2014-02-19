@@ -21,7 +21,6 @@
            [rhsm.cli.tasks CandlepinTasks]
            [rhsm.base SubscriptionManagerBaseTestScript]))
 
-
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
 (def rhsm-gui-pid (atom nil))
 
@@ -273,6 +272,17 @@
         (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
         false)
       (ui showing? window_name component_name))))
+
+(defn visible?
+  "Utility to see if a GUI object has visible state"
+  ([item]
+     (let [state (ui getallstates item)]
+       (if (= nil (some #(= "visible" %)
+                        state))false true)))
+  ([window_name component_name]
+     (let [state (ui getallstates window_name component_name)]
+       (if (= nil (some #(= "visible" %)
+                        state))false true))))
 
 (defn firstboot-register
   "Subscribes subscription-manager from within firstboot."
@@ -742,3 +752,4 @@
                                               (filter stacking-id? stacking-map))))
        stackable-pems (map (fn [i] (get prod-pem-file-map i)) stackable-prods)]
     stackable-pems))
+

@@ -174,8 +174,9 @@
   (if (nil? @common-sla) (throw (SkipException. "Common SLA is unset!")))
   (verify
    (substring? @common-sla
-                     (:stdout (run-command "subscription-manager service-level"))))
-  (let [_ (tasks/ui click :system-preferences)
+               (clojure.string/upper-case
+                (:stdout (run-command "subscription-manager service-level")))))
+  (let [_ (tasks/ui click :preferences)
         _ (tasks/ui waittillguiexist :system-preferences-dialog)
         sla-slected? (tasks/ui showing? :system-preferences-dialog @common-sla)
         _ (tasks/ui click :close-system-prefs)]
@@ -241,6 +242,7 @@
   (try
     (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel @complytests)
     (tasks/restart-app)
+    (verify (dirsetup? multi-sla-dir))
     (tasks/register-with-creds)
     (tasks/ui click :auto-attach)
     (sleep 8000)
@@ -268,6 +270,7 @@
   (try
     (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel @complytests)
     (tasks/restart-app)
+    (verify (dirsetup? multi-sla-dir))
     (tasks/register-with-creds)
     (tasks/ui click :auto-attach)
     (sleep 10000)

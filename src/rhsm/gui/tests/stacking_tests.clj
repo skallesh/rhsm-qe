@@ -460,8 +460,10 @@
 (defn ^{AfterClass {:groups ["cleanup"]
                      :alwaysRun true}}
   cleanup [_]
-  (run-command (str "rm -rf " stacking-dir))
-  (tasks/set-conf-file-value "productCertDir" @prod-dir-atom)
-  (tasks/restart-app))
+  (if (not (empty? @prod-dir-atom))
+    (do
+      (run-command (str "rm -rf " stacking-dir))
+      (tasks/set-conf-file-value "productCertDir" @prod-dir-atom)
+      (tasks/restart-app))))
 
 (gen-class-testng)

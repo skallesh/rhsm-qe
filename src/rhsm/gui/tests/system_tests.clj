@@ -30,7 +30,7 @@
 (def rhsm-log "/var/log/rhsm/rhsm.log")
 (def tmpCAcertpath "/tmp/CA-certs/")
 (def CAcertpath "/etc/rhsm/ca/")
-(def unregStatus "Keep your system up to date by regestering.")
+(def unreg-status "Keep your system up to date by registering.")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
@@ -95,48 +95,51 @@
   "Assertst that the help window opens."
   [_]
   (try
-    (tasks/restart-app)
     (tasks/ui click :getting-started)
-    (sleep 3000)
+    (tasks/ui waittillwindowexist :help-dialog 10)
     (verify (bool (tasks/ui guiexist :help-dialog)))
-    (tasks/ui closewindow :help-dialog)
-    (finally (tasks/restart-app))))
+    (finally
+     (tasks/ui closewindow :help-dialog))))
 
 (defn check_escape_window
   "Asserts that windows correctly render after exiting them with a shortcut."
   [window shortcut]
-  (if (or (= window :question-dialog)
-          (= window :system-preferences-dialog))
-    (tasks/restart-app :reregister? true)
-    (tasks/restart-app :unregister? true))
-  (sleep 3000)
-  (let [exec-shortcut (fn [s] (tasks/ui generatekeyevent s))
-        count-objects (fn [w] (count (tasks/ui getobjectlist w)))
-        beforecount (do (exec-shortcut shortcut)
-                        ;sleeps are necessary because window doesn't instantly render
-                        (tasks/ui waittillwindowexist window 10)
-                        (sleep 3000)
-                        (count-objects window))
-        ;this has to be here due to weird issues in RHEL5
-        ; where the objectlist was getting cached
-        ; creating a traceback dumps the cache and this works for a quick fix
-        fuckcache (fn [] (try+ (tasks/ui getchild "blah")
-                              (catch Exception e "")))]
-    (if (= "RHEL5" (get-release))
-      (do
-        (fuckcache)
-        (log/info (str "Items: " beforecount))
-        (fuckcache)))
-    (exec-shortcut "<ESC>")
-    (tasks/ui waittillguinotexist window 10)
-    (exec-shortcut shortcut)
-    (tasks/ui waittillwindowexist window 10)
-    (if (= window :question-dialog)
-      (verify (tasks/ui showing? :question-dialog
-                        "Are you sure you want to unregister?")))
-    (sleep 3000)
-    (let [newcount (count-objects window)]
-      (verify (= beforecount newcount)))))
+  (if (= "RHEL7" (get-release))
+    (throw (SkipException.
+            (str "Command 'generatekeyevent' failed! Skipping Test 'check_escape_window'.")))
+    (do
+      (if (or (= window :question-dialog)
+              (= window :system-preferences-dialog))
+        (tasks/restart-app :reregister? true)
+        (tasks/restart-app :unregister? true))
+      (sleep 3000)
+      (let [exec-shortcut (fn [s] (tasks/ui generatekeyevent s))
+            count-objects (fn [w] (count (tasks/ui getobjectlist w)))
+            beforecount (do (exec-shortcut shortcut)
+                                        ;sleeps are necessary because window doesn't instantly render
+                            (tasks/ui waittillwindowexist window 10)
+                            (sleep 3000)
+                            (count-objects window))
+                                        ;this has to be here due to weird issues in RHEL5
+                                        ; where the objectlist was getting cached
+                                        ; creating a traceback dumps the cache and this works for a quick fix
+            fuckcache (fn [] (try+ (tasks/ui getchild "blah")
+                                  (catch Exception e "")))]
+        (if (= "RHEL5" (get-release))
+          (do
+            (fuckcache)
+            (log/info (str "Items: " beforecount))
+            (fuckcache)))
+        (exec-shortcut "<ESC>")
+        (tasks/ui waittillguinotexist window 10)
+        (exec-shortcut shortcut)
+        (tasks/ui waittillwindowexist window 10)
+        (if (= window :question-dialog)
+          (verify (tasks/ui showing? :question-dialog
+                            "Are you sure you want to unregister?")))
+        (sleep 3000)
+        (let [newcount (count-objects window)]
+          (verify (= beforecount newcount)))))))
 
 (data-driven
  check_escape_window {Test {:groups ["system"
@@ -171,7 +174,6 @@
   "Asserts that the online documentation opens."
   [_]
   (try
-    (tasks/restart-app)
     (if (substring? "not installed" (:stdout (run-command "rpm -q firefox")))
       (throw (SkipException. (str "Firefox does not exist on this machine"))))
     (let [output (get-logging @clientcmd
@@ -179,11 +181,12 @@
                               "check_online_documentation"
                               nil
                               (tasks/ui click :online-documentation)
-                              (tasks/ui waittillwindowexist :firefox-help-window 10))]
+                              (tasks/ui waittillguiexist :firefox-help-window 20))]
       (verify (bool (tasks/ui guiexist :firefox-help-window)))
       (verify (not (substring? "Traceback" output))))
-    (finally    (if (tasks/ui guiexist :firefox-help-window) (tasks/ui closewindow :firefox-help-window))
-                (tasks/restart-app))))
+    (finally
+     (if (tasks/ui guiexist :firefox-help-window)
+       (tasks/ui closewindow :firefox-help-window)))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-707041"]}}
@@ -213,7 +216,7 @@
   "Verifies that the gui can open with a bad hostname in /etc/rhsm/rhsm.conf."
   [_]
   (let [hostname (tasks/conf-file-value "hostname")]
-    (try+
+    (try
      (run-command "subscription-manager clean")
      (tasks/restart-app)
      (tasks/register-with-creds)
@@ -259,92 +262,79 @@
 (defn ^{Test {:groups ["system"
                        "blockedByBug-923873"]}}
   check_status_when_unregistered
-  "To verify that status in MyInstalledProducts icon color and product status are appropriately displayed when client is unregistered"
+  "To verify that status in MyInstalledProducts icon color and product status
+   are appropriately displayed when client is unregistered"
   [_]
-  (tasks/kill-app)
-  (run-command "subscription-manager unregister")
+  (tasks/restart-app :unregister? true)
   (run-command "subscription-manager clean")
-  (tasks/start-app)
-  (verify (= 1 (tasks/ui guiexist :main-window "Keep your system*")))
+  (verify (= unreg-status (tasks/ui gettextvalue :overall-status)))
   (tasks/do-to-all-rows-in
    :installed-view 2
    (fn [status]
      (verify (= status "Unknown")))))
 
 (defn ^{Test {:groups ["system"
-                        "blockedByBug-916666"]}}
-  rhsmcertd_resart_check_timestamp
-  "Checks whether the timestamp at which cert check was intiated is in sync with that displayed in facts window and help dialog"
+                       "blockedByBug-916666"]}}
+  rhsmcertd_restart_check_timestamp
+  "Checks whether the timestamp at which cert check was intiated is
+   in sync with that displayed in help dialog"
   [_]
   (try
-    (tasks/kill-app)
     (run-command "subscription-manager unregister")
     (run-command "subscription-manager clean")
-    (tasks/start-app)
-    (tasks/register-with-creds)
     (let
         [rhsmcertd-log "/var/log/rhsm/rhsmcertd.log"
          output (get-logging @clientcmd
-                              rhsmcertd-log
-                              "cert-check-timestamp"
-                              "(Cert Check)"
-                              (do
-                                (run-command "service rhsmcertd stop")
-                                (run-command "rhsmcertd -n")
-                                (sleep 90000)))
-          log-timestamp (re-find #"\d+:\d+:\d+" output)
-          ;; The following steps add 4 hours as it is the default
-          ;; interval in conf file. The step which follows is comversion of time
-          ;; formats as the logs have 24hrs time format and in the GUI it
-          ;; 12hrs time format. The last step adds a zero if the time
-          ;; is less than 10hrs which makes sting comparison easier
-          new-time (+ 4 (read-string (first (clojure.string/split log-timestamp #":"))))
-          hours (if (> new-time 12) (- new-time 12) new-time)
-         compare-time (str (if ( < hours 10) (str "0" hours) hours)(re-find #":\d+:\d+" log-timestamp))]
+                             rhsmcertd-log
+                             "cert-check-timestamp"
+                             "Cert check interval"
+                             (run-command "systemctl restart rhsmcertd.service"))
+         log-timestamp (re-find #"\d+:\d+:\d+" output)
+         ;; The following steps add minutes to the time as this is the default
+         ;; interval in conf file. The step which follows is conversion of time
+         ;; formats this is because the logs have 24hrs time format and the GUI 
+         ;; has 12hrs time format. The last step adds a zero if the time
+         ;; is less than 10hrs which makes sting comparison easier
+         interval (trim-newline (:stdout (run-command "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
+         time-to-be-added (/ (read-string (re-find #"\d+" (str interval)))60)
+         new-time (+ time-to-be-added (read-string (first (clojure.string/split log-timestamp #":"))))
+         hours (if (> new-time 12) (- new-time 12) new-time)
+         compare-time (str (if ( < hours 10) (str "0" hours)
+                               hours)(re-find #":\d+:\d+" log-timestamp))]
       (tasks/ui click :about)
       (tasks/ui waittillwindowexist :about-dialog 10)
-      (verify ( = new-time (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check))))
-      (tasks/ui click :close-about-dialog)
-      (tasks/ui click :view-system-facts)
-      (tasks/ui waittillwindowexist :facts-dialog 10)
-      (verify (= log-timestamp (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :update-time))))
-      (tasks/ui click :close-facts))
+      (verify ( = compare-time (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check))))
+      (tasks/ui click :close-about-dialog))
     (finally
      (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
      (if (bool (tasks/ui guiexist :facts-dialog)) (tasks/ui click :close-facts))
-     (if-not (tasks/ui showing? :register-system) (tasks/unregister))
-     (tasks/restart-app)
      ;; Worstcase scenario if service rhsmcertd is stopped we have to
      ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
-     (if-not (substring? "running" (:stdout (run-command "service rhsmcertd status")))
+     (if-not (substring? "Active: active (running)"
+                         (:stdout (run-command "systemctl status rhsmcertd.service")))
        (do
-         (run-command "service rhsmcertd start")
+         (run-command "systemctl start rhsmcertd.service")
          (sleep 150000))))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-916666"]
               :dependsOnMethods ["rhsmcertd_resart_check_timestamp"]}}
   rhsmcertd_stop_check_timestamp
-  "Checks wheter the timestamp in about-dialog is Unknown when rhsmcertd is stopped"
+  "Checks wheter the timestamp in about dialog is displayed when rhsmcertd is stopped"
   [_]
   (try
-    (tasks/kill-app)
     (run-command "subscription-manager unregister")
     (run-command "subscription-manager clean")
-    (tasks/start-app)
-    (tasks/register-with-creds)
-    (run-command "service rhsmcertd stop")
+    (run-command "systemctl stop rhsmcertd.service")
     (tasks/ui click :about)
     (tasks/ui waittillwindowexist :about-dialog 10)
-    (verify ( = "Unknown" (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check))))
+    (verify (not (tasks/ui showing? :next-system-check)))
     (finally
-     (if-not (tasks/ui showing? :register-system) (tasks/unregister))
      (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
-     (tasks/restart-app)
+     (run-command "systemctl start rhsmcertd.service")
      ;; No sleep as we can continue without waiting for the service to
      ;; start as it does not affect the normal functioning of sub-man
-     (if-not (substring? "running" (:stdout (run-command "service rhsmcertd status")))
-       (run-command "service rhsmcertd start")))))
+     )))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-984083"]}}
@@ -370,14 +360,14 @@
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
   [_]
-  (try
-    (tasks/restart-app :unregister? true)
-    (tasks/ui click :main-window "System")
-    (verify (not (tasks/ui showing? :preferences)))
-    (tasks/register-with-creds)
-    (tasks/ui click :main-window "System")
-    (verify (bool (tasks/ui waittillshowing :preferences 10)))
-    (finally (tasks/restart-app))))
+  (tasks/restart-app :unregister? true)
+  (tasks/ui click :main-window "System")
+  (sleep 2000)
+  (verify (not (tasks/visible? :preferences)))
+  (tasks/restart-app :reregister? true)
+  (tasks/ui click :main-window "System")
+  (sleep 2000)
+  (verify (tasks/visible? :preferences)))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-977850"]}}
@@ -470,14 +460,17 @@
   assert_subscription_field
   "Tests whether the subscripton field in installed view is populated when the entitlement is subscribed"
   [_ product]
-  (if (= "Subscribed"
-         (tasks/ui getcellvalue :installed-view
-                   (tasks/skip-dropdown :installed-view product) 2))
-    (let [map (ctasks/build-product-map)
+  (if (not (= "Not Subscribed"
+              (tasks/ui getcellvalue :installed-view
+                        (tasks/skip-dropdown :installed-view product) 2)))
+    (let [map (ctasks/build-product-map :all? true)
           gui-value (set (clojure.string/split-lines
                           (tasks/ui gettextvalue :providing-subscriptions)))
           cli-value (set (get map product))]
-      (verify (clojure.set/subset? cli-value gui-value)))))
+      (if (= 1 (count gui-value))
+        (verify (not (blank? (first gui-value)))))
+      (verify (or (clojure.set/subset? gui-value cli-value)
+                  (clojure.set/subset? cli-value gui-value))))))
 
 (defn ^{AfterGroups {:groups ["system"]
                      :value ["assert_subscription_field"]
@@ -488,7 +481,7 @@
   (tasks/unregister))
 
 (defn ^{Test {:groups ["system"]
-              :value ["check_subscription_type"]
+              :value ["check_subscription_type_all_available"]
               :dataProvider "all-subscriptions"}}
   check_subscription_type_all_subscriptions
   "Checks for subscription type in all available subscriptions"
@@ -497,21 +490,28 @@
   (tasks/skip-dropdown :all-subscriptions-view product)
   (verify (not (blank? (tasks/ui gettextvalue :all-available-subscription-type)))))
 
+(defn ^{AfterGroups {:groups ["system"]
+                     :value ["check_subscription_type_all_available"]
+                     :alwaysRun true}}
+  after_check_subscription_type_all_available
+  [_]
+  (tasks/unsubscribe_all)
+  (tasks/unregister))
+
 (defn ^{Test {:groups ["system"]
-              :value ["check_subscription_type"]
+              :value ["check_subscription_type_my_subs"]
               :dataProvider "my-subscriptions"}}
   check_subscription_type_my_subscriptions
   "Checks for subscription type in my subscriptions"
   [_ product]
-
   (tasks/ui selecttab :my-subscriptions)
   (tasks/skip-dropdown :my-subscriptions-view product)
   (verify (not (blank? (tasks/ui gettextvalue :subscription-type)))))
 
 (defn ^{AfterGroups {:groups ["system"]
-                     :value ["check_subscription_type"]
+                     :value ["check_subscription_type_my_subs"]
                      :alwaysRun true}}
-  after_check_subscription_type
+  after_check_subscription_type_my_subscription
   [_]
   (tasks/unsubscribe_all)
   (tasks/unregister))
