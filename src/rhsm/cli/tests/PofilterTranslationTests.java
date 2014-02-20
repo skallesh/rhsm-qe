@@ -470,6 +470,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			ignorableMsgIds.addAll(Arrays.asList(
 						"connectionStatusLabel","progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox","autoheal_checkbox","gpgcheck_combobox","gpgcheck_edit_button","gpgcheck_readonly","gpgcheck_remove_button","manage_repositories_dialog","remove_all_overrides_button","repository_listview",
 						"hostname[:port][/prefix]",
+						//"Enabled (1)",	// this is a string from src/subscription_manager/gui/data/repositories.glade that is marked as translatable="yes", however it is never seen in the GUI because it gets overwritten by string "Enabled" or "Disabled"
 						"python-rhsm: %s","subscription-manager: %s", "python-rhsm: %s", "%s of %s",
 						"<b>SKU:</b>", "<b>HTTP Proxy</b>", "<b>Gpgcheck:</b>", "<b>python-rhsm version:</b> %s", "<b>python-rhsm Version:</b> %s",
 						"prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8",
