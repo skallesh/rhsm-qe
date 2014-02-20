@@ -495,6 +495,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			"awesomeos-all-x86-cont",
 			"awesomeos-everything",
 			"awesomeos-everything",
+			"awesomeos-guestlimit-4-stackable",
+			"awesomeos-guestlimit-4-stackable",
+			"awesomeos-guestlimit-4-stackable",
+			"awesomeos-guestlimit-4-stackable",
 			"awesomeos-i386",
 			"awesomeos-i386",
 			"awesomeos-i686",
@@ -505,6 +509,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		//	"awesomeos-instancebased",
 			"awesomeos-modifier",
 			"awesomeos-modifier",
+			"awesomeos-onesocketib",
+			"awesomeos-onesocketib",
 			"awesomeos-per-arch-cont",
 			"awesomeos-per-arch-cont",
 			"awesomeos-ppc64",
@@ -523,14 +529,24 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			"awesomeos-server-basic-dc",
 		//	"awesomeos-server-basic-me",	// kept because it is Multi-Entitlement: Yes
 		//	"awesomeos-server-basic-me",
-		//	"awesomeos-virt-4",				// kept because it is virt
-		//	"awesomeos-virt-4",
-		//	"awesomeos-virt-4",
-		//	"awesomeos-virt-4",
-		//	"awesomeos-virt-unlimited",
-		//	"awesomeos-virt-unlimited",
-		//	"awesomeos-virt-unlimited",
-		//	"awesomeos-virt-unlimited",
+			"awesomeos-super-hypervisor",
+			"awesomeos-super-hypervisor",
+			"awesomeos-super-hypervisor",
+			"awesomeos-super-hypervisor",
+			"awesomeos-virt-4",
+			"awesomeos-virt-4",
+			"awesomeos-virt-4",
+			"awesomeos-virt-4",
+			"awesomeos-virt-datacenter",
+			"awesomeos-virt-datacenter",
+			"awesomeos-virt-unlimited",
+			"awesomeos-virt-unlimited",
+			"awesomeos-virt-unlimited",
+			"awesomeos-virt-unlimited",
+			"awesomeos-virt-unlmtd-phys",
+			"awesomeos-virt-unlmtd-phys",
+			"awesomeos-virt-unlmtd-phys",
+			"awesomeos-virt-unlmtd-phys",
 			"awesomeos-workstation-basic",
 			"awesomeos-workstation-basic",
 			"awesomeos-x86",
@@ -569,8 +585,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			"sock-core-ram-multiattr",
 			"stackable-with-awesomeos-x86_64",
 			"stackable-with-awesomeos-x86_64",
-		//	"virt-awesomeos-i386",			// kept because it is virt
-		//	"virt-awesomeos-i386",
+			"virt-awesomeos-i386",
+			"virt-awesomeos-i386",
 			""}));
 		
 		if (sm_clientOrg==null) return;
@@ -584,13 +600,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			String productId = jsonPool.getString("productId");
 			String subscriptionId = jsonPool.getString("subscriptionId");
 			
-			// skip pools that were generated from consumption of a parent pool
-			if (!jsonPool.isNull("sourceEntitlement")) continue;
-			
 			// skip pools that we do not want to delete
 			if (!secondarySkusToDelete.contains(productId)) continue;
 			
-			// skip the first secondarySkusToDelete encountered
+			// skip pools that are not NORMAL (eg. BONUS, ENTITLEMENT_DERIVED, STACK_DERIVED)
+			if (!jsonPool.getString("type").equals("NORMAL")) continue;
+			
+			// skip pools that were generated from consumption of a parent pool
+			if (!jsonPool.isNull("sourceEntitlement")) continue;
+			
+			// skip the first secondarySkusToDelete encountered (this will be the one kept)
 			if (!secondarySkusSkipped.contains(productId)) {
 				secondarySkusSkipped.add(productId);
 				continue;
