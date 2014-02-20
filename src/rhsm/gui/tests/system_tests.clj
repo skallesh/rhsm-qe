@@ -180,12 +180,13 @@
                               ldtpd-log
                               "check_online_documentation"
                               nil
-                              (tasks/ui click :online-documentation)
-                              (tasks/ui waittillguiexist :firefox-help-window 20))]
+                              (do
+                                (tasks/ui click :online-documentation)
+                                (tasks/ui waittillguiexist :firefox-help-window 10)))]
       (verify (bool (tasks/ui guiexist :firefox-help-window)))
       (verify (not (substring? "Traceback" output))))
     (finally
-     (if (tasks/ui guiexist :firefox-help-window)
+     (if (bool (tasks/ui guiexist :firefox-help-window))
        (tasks/ui closewindow :firefox-help-window)))))
 
 (defn ^{Test {:groups ["system"
@@ -307,14 +308,13 @@
       (tasks/ui click :close-about-dialog))
     (finally
      (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
-     (if (bool (tasks/ui guiexist :facts-dialog)) (tasks/ui click :close-facts))
      ;; Worstcase scenario if service rhsmcertd is stopped we have to
      ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
      (if-not (substring? "Active: active (running)"
                          (:stdout (run-command "systemctl status rhsmcertd.service")))
        (do
          (run-command "systemctl start rhsmcertd.service")
-         (sleep 150000))))))
+         (sleep 150000)))))) ()
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-916666"]
@@ -467,10 +467,7 @@
           gui-value (set (clojure.string/split-lines
                           (tasks/ui gettextvalue :providing-subscriptions)))
           cli-value (set (get map product))]
-      (if (= 1 (count gui-value))
-        (verify (not (blank? (first gui-value)))))
-      (verify (or (clojure.set/subset? gui-value cli-value)
-                  (clojure.set/subset? cli-value gui-value))))))
+      (verify (< 0 (count (clojure.set/intersection gui-value cli-value)))))))
 
 (defn ^{AfterGroups {:groups ["system"]
                      :value ["assert_subscription_field"]
