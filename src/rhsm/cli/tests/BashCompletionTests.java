@@ -263,6 +263,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1042897 - bash-completion for "rhsm-debug system -" is missing the proxy options
 			if (bashCommand.startsWith("rhsm-debug system ")) bugIds.add("1042897");
 			
+			// Bug 1057329 - rhsm-debug system <space> <TAB> <TAB> does not auto complete
+			if (bashCommand.startsWith("rhsm-debug system ")) bugIds.add("1057329");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			// append a new row to the dataProvider
