@@ -407,7 +407,7 @@ public class OrderNamespace extends AbstractCommandLineData {
 		regexes.put("endDate",				"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
 		regexes.put("ramLimit",				"Order:(?:(?:\\n.+)+)RAM Limit: (.+)");	// Bug 861993 - Include RAM value in certificates
 		regexes.put("coreLimit",			"Order:(?:(?:\\n.+)+)Core Limit: (.+)");	// Bug 955142 - Core limit info is not added to the entitlement certs
-		regexes.put("virtualizationLimit",	"Order:(?:(?:\\n.+)+)Virt Limit: (.+)");
+		regexes.put("virtualizationLimit",	"Order:(?:(?:\\n.+)+)Virt Limit: (.+)");	// Bug 983193 has removed this field https://bugzilla.redhat.com/show_bug.cgi?id=983193#c4
 		regexes.put("socketLimit",			"Order:(?:(?:\\n.+)+)Socket Limit: (.+)");
 		regexes.put("contractNumber",		"Order:(?:(?:\\n.+)+)Contract: (.+)");
 		regexes.put("quantityUsed",			"Order:(?:(?:\\n.+)+)Quantity Used: (.+)");
