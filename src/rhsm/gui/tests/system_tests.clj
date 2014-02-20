@@ -314,7 +314,7 @@
                          (:stdout (run-command "systemctl status rhsmcertd.service")))
        (do
          (run-command "systemctl start rhsmcertd.service")
-         (sleep 150000)))))) ()
+         (sleep 150000))))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-916666"]
