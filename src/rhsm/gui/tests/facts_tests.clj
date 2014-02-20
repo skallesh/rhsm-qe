@@ -136,14 +136,16 @@
   "Checks that all available service levels are shown in the GUI properly."
   [_]
   (try
+    (if (tasks/ui showing? :register-system)
+      (tasks/register-with-creds))
     (let [rawlevels (:stdout
                      (run-command "subscription-manager service-level --list"))
           cli-levels (drop 3 (split-lines rawlevels))
           expected-levels (sort (conj cli-levels "Not Set"))]
       (tasks/ui click :preferences)
       (tasks/ui waittillwindowexist :system-preferences-dialog 10)
-      (tasks/ui showlist :release-dropdown)
-      (let [gui-levels (sort (tasks/ui getallitem :service-level-dropdown))]
+      (tasks/ui showlist :service-level-dropdown)
+      (let [gui-levels (sort (tasks/ui listsubmenus :service-level-dropdown))]
         (verify (= expected-levels gui-levels))
         (verify (not (nil? (some #{"Not Set"} gui-levels))))))
     (finally (if (bool (tasks/ui guiexist :system-preferences-dialog))
@@ -168,7 +170,7 @@
       (tasks/ui click :preferences)
       (tasks/ui waittillwindowexist :system-preferences-dialog 10)
       (tasks/ui showlist :release-dropdown)
-      (let [gui-releases (sort (tasks/ui getallitem :release-dropdown))]
+      (let [gui-releases (sort (tasks/ui listsubmenus :release-dropdown))]
         (verify (= expected-releases gui-releases))
         (verify (not (nil? (some #{"Not Set"} gui-releases))))))
     (finally (if (bool (tasks/ui guiexist :system-preferences-dialog))
