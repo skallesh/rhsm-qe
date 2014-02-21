@@ -45,7 +45,7 @@
   (zero-proxy-values)
   (start_firstboot))
 
-(defn ^{BeforeClass {:groups ["setup"]}} 
+(defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
@@ -68,3 +68,5 @@
   (zero-proxy-values))
 
 )
+
+(gen-class-testng)
