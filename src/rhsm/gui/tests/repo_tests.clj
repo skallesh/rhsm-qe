@@ -34,10 +34,11 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (try
+  (try+
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/restart-app)
     (tasks/unregister)
+    (catch [:type :not-registered] _)
     (catch Exception e
       (reset! (skip-groups :repo) true)
       (throw e))))
