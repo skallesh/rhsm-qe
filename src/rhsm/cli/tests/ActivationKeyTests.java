@@ -589,7 +589,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key and add many pools to it and then register asserting all the pools get consumed",
-			groups={/*"blockedByBug-1040101"*/},
+			groups={"blockedByBug-1040101"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingMultiplePools_Test() throws JSONException, Exception {
@@ -659,7 +659,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create many activation keys with one added pool per key and then register with --activationkey=comma_separated_string_of_keys asserting all the pools get consumed",
-			groups={"blockedByBug-878986","blockedByBug-979492"/*,"blockedByBug-1040101"*/},
+			groups={"blockedByBug-878986","blockedByBug-979492","blockedByBug-1040101"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithListOfCommaSeparatedActivationKeys_Test() throws JSONException, Exception {
@@ -729,7 +729,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create many activation keys with one added pool per key and then register with a sequence of many --activationkey parameters asserting each pool per key gets consumed",
-			groups={"blockedByBug-878986","blockedByBug-979492"/*,"blockedByBug-1040101"*/},
+			groups={"blockedByBug-878986","blockedByBug-979492","blockedByBug-1040101"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithSequenceOfMultipleActivationKeys_Test() throws JSONException, Exception {
