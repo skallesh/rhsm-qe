@@ -732,7 +732,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 * @param list - the list from which to return a subset of its contents
 	 * @param subsetSize - specify the subset size desired 0<=subsetSize<=list.size();  if the value specified is outsize this range, it will be adjusted.
 	 * @return a random subset of the list
-	 * @throws Exception
 	 */
 	public static <T> List<T> getRandomSubsetOfList(List<T> list,int subsetSize) {
 		if (subsetSize > list.size()) subsetSize = list.size();	// limit subsetSize to the size of the list
@@ -741,6 +740,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List<T> subsetList = new ArrayList<T>(subsetSize);
 		for (int i = 0; i < subsetSize; i++) subsetList.add(clonedList.remove(randomGenerator.nextInt(clonedList.size())));
 		return subsetList;
+	}
+	
+	/**
+	 * @param list
+	 * @return the same list in random order
+	 */
+	public static <T> List<T> getRandomList(List<T> list) {
+		return getRandomSubsetOfList(list,list.size());
 	}
 	
 	/**
