@@ -288,10 +288,16 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		for (String sm_exemptServiceLevel : sm_exemptServiceLevelsInUpperCase) {
 			for (String serviceLevel : serviceLevelsExpected) {
 				
-				// TEMPORARY WORKAROUND FOR BUG: 840022 - product attributes with support_level=Layered also need support_level_exempt=true
+				// TEMPORARY WORKAROUND FOR BUG - product attributes with support_level=Layered also need support_level_exempt=true
 				if (serviceLevel.equalsIgnoreCase(sm_exemptServiceLevel) && sm_serverType.equals(CandlepinType.hosted)) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="840022"; 
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						throw new SkipException("Skipping this test with serviceLevel='"+serviceLevel+"' against a hosted candlepin while bug "+bugId+" is open.");
+					}
+					invokeWorkaroundWhileBugIsOpen = true;
+					bugId="1069291"; 
 					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						throw new SkipException("Skipping this test with serviceLevel='"+serviceLevel+"' against a hosted candlepin while bug "+bugId+" is open.");
