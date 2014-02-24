@@ -566,7 +566,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	@Test(	description="subscription-manager: add more yum repository options to redhat.repo and assert persistence using repo-override module.",
 			enabled=true,	// this test replaces the former YumRepoListPreservesAdditionalOptionsToRedhatRepos_Test
-			groups={"AcceptanceTests","blockedByBug-845349","blockedByBug-834806","blockedByBug-803746"})
+			groups={"AcceptanceTests","blockedByBug-845349","blockedByBug-834806","blockedByBug-803746","blockedByBug-1069230"})
 	//@ImplementsNitrateTest(caseId=)
 	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingRepoOverride_Test() throws JSONException, Exception {
 		
