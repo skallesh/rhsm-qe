@@ -237,6 +237,11 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(actualEnvironments.size(), expectedEnvironments.size(),"The number of environments returned by subscription-manager for user '"+username+"' under org '"+org+"'.");
 	}
 	
+	/**
+	 * @author spandey
+	 *
+	 *
+	 */
 	
 	@BeforeGroups(value={"Libraryas_env"}, groups={"setup"})
 	@Test(description="Library as an Env",enabled=true)
@@ -261,6 +266,12 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 //		
 		
 	}
+	
+	/**
+	 * @author spandey
+	 *
+	 *
+	 */
 	
 	protected String envname=null;
 	@BeforeGroups(value={"Register with All Environment"}, groups={"setup"})
