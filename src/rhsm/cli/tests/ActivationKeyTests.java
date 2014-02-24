@@ -607,7 +607,6 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys",jsonActivationKeyRequest.toString()));
 
 		// process each of the pools adding them to the activation key
-//		List<String> addedPoolIds = new ArrayList<String>();
 		Integer addQuantity=null;
 		JSONArray jsonPoolsAddedToActivationKey = new JSONArray();
 		for (int i = 0; i < jsonPools.length(); i++) {
@@ -628,14 +627,14 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 			
+			// for the purpose of this test, skip physical_only pools when system is virtual otherwise the register will fail with "Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'."
+			if (CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername,sm_clientPassword, jsonPool.getString("id"), sm_serverUrl) && Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) continue;
+			
 			// add the pool to the activation key
-//			int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
-//			int bindQuantity = Math.max(1,randomGenerator.nextInt(quantityAvail+1));	// avoid a bindQuantity < 1 see https://bugzilla.redhat.com/show_bug.cgi?id=729125
 			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
 			if (jsonPoolAddedToActivationKey.has("displayMessage")) {
 				Assert.fail("Failed to add pool '"+jsonPool.getString("productId")+"' '"+jsonPool.getString("id")+"' to activation key '"+jsonActivationKey.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey.getString("displayMessage"));
 			}
-//			addedPoolIds.add(poolId);
 			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
 		}
 		if (addQuantity==null) addQuantity=1;
