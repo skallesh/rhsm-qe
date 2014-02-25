@@ -751,6 +751,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	/**
+	 * @param list
+	 * @return 
+	 * @return a random item from the list
+	 */
+	public static <T> T getRandomListItem(List<T> list) {
+		return getRandomSubsetOfList(list,1).get(0);
+	}
+	
+	/**
 	 * Randomize the input string case.  For example input="Hello World", output="HElLo wORlD"
 	 * @param string
 	 * @return
