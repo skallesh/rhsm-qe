@@ -838,6 +838,15 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		
+		// adjust the expectedContentNamespaces for type that does not equal "yum" before checking the YumRepos
+		for (ContentNamespace contentNamespace : new HashSet<ContentNamespace>(expectedContentNamespaceSet)) {
+			if (!contentNamespace.type.equals("yum")) {	// "file", "kickstart"
+				log.warning("Entitled contentNamespace label '"+contentNamespace.label+"' defined for arches '"+contentNamespace.arches+"' has type '"+contentNamespace.type+"'.  This expected contentNamespace will be moved to the unexpected list when asserting the YumRepos next.");
+				unexpectedContentNamespaceSet.add(contentNamespace);
+				expectedContentNamespaceSet.remove(contentNamespace);
+			}
+		}
+		
 		// YumRepo asserts
 		List<String> actualYumRepoLabels = new ArrayList<String>();
 		for (YumRepo yumRepo : clienttasks.getCurrentlySubscribedYumRepos()) actualYumRepoLabels.add(yumRepo.id);
