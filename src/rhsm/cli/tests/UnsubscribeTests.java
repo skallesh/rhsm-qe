@@ -226,12 +226,13 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	public void UnsubscribeFromAll_Test() {
 	
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, null, null, null, null);
-		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		int numberSubscriptionsConsumed = clienttasks.getCurrentEntitlementCertFiles().size();
 		
 		// unsubscribe from all and assert # subscriptions are unsubscribed
 		SSHCommandResult result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		//Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",pools.size()),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");	// 10/18/2013 NOT SURE WHAT COMMIT/BUG CAUSED THIS CHANGE TO THE FOLLOWING...
-		Assert.assertEquals(result.getStdout().trim(), String.format("%s subscriptions removed at the server."+"\n"+"%s local certificates have been deleted.",pools.size(),pools.size()),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
+		Assert.assertEquals(result.getStdout().trim(), String.format("%s subscriptions removed at the server."+"\n"+"%s local certificates have been deleted.",numberSubscriptionsConsumed,numberSubscriptionsConsumed),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
 		
 		// now attempt to unsubscribe from all again and assert 0 subscriptions are unsubscribed
 		result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);

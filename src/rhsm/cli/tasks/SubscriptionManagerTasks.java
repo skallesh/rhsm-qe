@@ -4828,7 +4828,7 @@ public class SubscriptionManagerTasks {
 		if (!poolIds.isEmpty()) subscribe(null,null,poolIds, null, null, null, null, null,null,null,null);
 		
 		// assert
-		assertNoAvailableSubscriptionPoolsToList(true,"Asserting that no available subscription pools remain after simultaneously subscribing to them all available.");
+		assertNoAvailableSubscriptionPoolsToList(true,"Asserting that no available subscription pools remain after simultaneously subscribing to all available.");
 		
 		return subscriptionPools;
 	}
