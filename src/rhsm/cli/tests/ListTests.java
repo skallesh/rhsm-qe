@@ -80,7 +80,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
 	public void EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException, Exception {
-//if (!productId.equals("awesomeos-virt-unlimited")) throw new SkipException("debugTesting productId="+productId);
+//if (!productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting productId="+productId);
 		// implicitly registered in dataProvider; no need to register with force; saves time
 		//clienttasks.register(clientusername, clientpassword, null, null, null, null, true, null, null, null);
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
@@ -130,7 +130,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException, Exception {
-//if (!productId.equals("awesomeos-virt-unlimited")) throw new SkipException("debugTesting productId="+productId);
+//if (!productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting productId="+productId);
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
 		

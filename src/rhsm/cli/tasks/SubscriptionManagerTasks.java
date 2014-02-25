@@ -4319,6 +4319,7 @@ public class SubscriptionManagerTasks {
 			sshCommandResult.getStdout().startsWith("No entitlements are available") ||					// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.   (Bug 719743)
 			sshCommandResult.getStdout().startsWith("No subscriptions are available") ||				// No subscriptions are available from the pool with id '8a90f8303c98703a013c98715ca80494'.   (Bug 846758)
 			sshCommandResult.getStdout().startsWith("Pool is restricted") ||							// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
+																										// Pool is restricted to physical systems: '8a9086d3443c043501443c052aec1298'.
 			sshCommandResult.getStdout().startsWith("All installed products are covered") ||			// All installed products are covered by valid entitlements. No need to update subscriptions at this time.
 			sshCommandResult.getStdout().startsWith("No Installed products on system.") ||				// No Installed products on system. No need to attach subscriptions.
 			sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) {					// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only

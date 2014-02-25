@@ -1102,12 +1102,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToFutureSubscriptionPool_Test(SubscriptionPool pool) throws Exception {
-//if (!pool.productId.equals("awesomeos-virt-unlimited")) throw new SkipException("debugTesting pool productId="+pool.productId);
+//if (!pool.productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting pool productId="+pool.productId);
+		
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// subscribe to the future subscription pool
 		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null);
+		// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
+		// Pool is restricted to physical systems: '8a9086d3443c043501443c052aec1298'.
+		if (subscribeResult.getStdout().startsWith("Pool is restricted")) {
+			throw new SkipException("Subscribing to this future subscription is not applicable to this test: "+pool);
+		}
 
 		// assert that the granted entitlement cert begins in the future
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);

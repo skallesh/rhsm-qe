@@ -2723,8 +2723,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			// skip subscriptions that do not match the consumer type
 			if (!ConsumerType.valueOf(requires_consumer_type).equals(consumerType)) continue;
 			
+			/* Changed my mind about this because the this method is called getAll which should not filter results by system type
 			// skip subscriptions that do not match the machine type
 			if (physical_only!=null && physical_only && isSystemVirtual) continue;
+			*/
 			
 			// process subscriptions that are in the future
 			if (startDate.after(now)) {
