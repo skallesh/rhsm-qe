@@ -618,6 +618,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test() {
+		if (!clienttasks.isPackageInstalled("rhn-client-tools")) throw new SkipException("Cannot be registered to RHN Classic when package rhn-client-tools is not installed.");
 		
 		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
 		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
@@ -640,9 +641,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenRegisteredToRHNClassic_Test() {
+		if (!clienttasks.isPackageInstalled("rhn-client-tools")) throw new SkipException("Cannot be registered to RHN Classic when package rhn-client-tools is not installed.");
+		
 		String command = clienttasks.rhsmComplianceD+" -s --debug";
 		SSHCommandResult sshCommandResult;
-
+		
 		// verify the stdout message
 		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic, null);
 		sshCommandResult = client.runCommandAndWait(command);
