@@ -105,7 +105,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type and virt.uuid",
-			groups={"AcceptanceTests"}, dependsOnGroups={},
+			groups={"AcceptanceTests","blockedByBug-1018807"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VirtFactsReportedOnThisClient_Test() {
@@ -119,24 +119,25 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		// virt.is_guest
 		String virtIsGuest = factsMap.get("virt.is_guest");	// = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(Boolean.valueOf(virtIsGuest),virtWhatStdout.equals("")?Boolean.FALSE:Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when virt-what returns stdout.");
+		Assert.assertEquals(Boolean.valueOf(virtIsGuest), virtWhatStdout.equals("")?Boolean.FALSE:Boolean.TRUE, "subscription-manager facts list reports virt.is_guest as true when virt-what returns stdout.");
 		
 		// virt.host_type
 		String virtHostType = factsMap.get("virt.host_type");	// = clienttasks.getFactValue("virt.host_type");
-		Assert.assertEquals(virtHostType,virtWhatStdout.equals("")?"Not Applicable":virtWhatStdout,"subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");
+		//Assert.assertEquals(virtHostType,virtWhatStdout.equals("")?"Not Applicable":virtWhatStdout,"subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");
+		Assert.assertEquals(virtHostType, virtWhatStdout.equals("")?"Not Applicable":virtWhatStdout.replaceAll("\\s*\\n\\s*", ", "), "subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");	// collapse multi-line values into one line... Bug 1018807 - newline in subscription-manager facts output on xen-hvm guest 
 		
 		// virt.uuid
 		// dev note: calculation for uuid is done in /usr/share/rhsm/subscription_manager/hwprobe.py def _getVirtUUID(self):
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
 		if (Boolean.parseBoolean(virtIsGuest)) {
 			if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) {
-				Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
+				Assert.assertEquals(virtUuid, "Unknown", "subscription-manager facts list reports virt.uuid as Unknown when the hypervisor contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
 			} else {
 				String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
-				Assert.assertEquals(virtUuid,expectedUuid,"subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
+				Assert.assertEquals(virtUuid, expectedUuid, "subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
 			}
 		} else {
-			Assert.assertNull(virtUuid,"subscription-manager facts list should NOT report virt.uuid when on a host machine.");		
+			Assert.assertNull(virtUuid, "subscription-manager facts list should NOT report virt.uuid when on a host machine.");		
 		}
 	}
 	
