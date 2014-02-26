@@ -81,11 +81,24 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		
 		// get some attributes from the subscription pool
-		Integer poolInstanceMultiplier = Integer.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"));
 		List<String> poolProvidedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
-		Integer poolSockets = Integer.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets"));
+		Integer poolInstanceMultiplier = Integer.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"));
 		String poolVirtLimit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "virt_limit");
-
+		String poolSocketsAsString = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
+		Integer poolSockets = poolSocketsAsString==null? null:Integer.valueOf(poolSocketsAsString);
+		// manipulate a fake value for poolSockets when there is no 'sockets' pool productAttribute
+		if (poolSockets==null) {
+			// NOTE: Red Hat Enterprise Linux Beta for IBM System z  SKU: RH00071  SubscriptionType: Instance Based  SystemType: Physical  has no "sockets" product attribute
+			if (systemIsGuest) {
+				// for compliance calculation purposes assume poolSockets is 1 when the pool has no attribute for sockets
+				poolSockets = 1;
+			} else {
+				// for compliance calculation purposes assume poolSockets is systemSockets when the pool has no attribute for sockets	
+				poolSockets = systemSockets;
+			}
+			log.warning("There is no 'sockets' productAttribute for Subscription '"+pool.subscriptionName+"' SKU '"+pool.productId+"'.  Assuming a value of '"+poolSockets+"' for compliance calculations.");
+		}
+		
 		// instrument the system facts from the dataProvider
 		Map<String,String> factsMap = new HashMap<String,String>();
 		factsMap.clear();
