@@ -35,7 +35,18 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 			dependsOnGroups={},
 			dataProvider="getModifierSubscriptionData",
 			enabled=true)
-	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListAfterTheModifiesPoolIsSubscribed_Test(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> poolsModified) {
+	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListAfterTheModifiesPoolIsSubscribed_Test(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> poolsModified) throws JSONException, Exception {
+		
+		// remove selected pools from the poolsModified list that are not consumable by this system to avoid: Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'.
+		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
+		for (SubscriptionPool subscriptionPool : new ArrayList<SubscriptionPool>(poolsModified)) {
+			if (isSystemVirtual && CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername, sm_clientPassword, subscriptionPool.poolId, sm_serverUrl)) {
+				poolsModified.remove(subscriptionPool);
+			}
+			else if (!isSystemVirtual && CandlepinTasks.isPoolVirtOnly(sm_clientUsername, sm_clientPassword, subscriptionPool.poolId, sm_serverUrl)) {
+				poolsModified.remove(subscriptionPool);
+			}
+		}
 		
 		// make sure we are not subscribed to anything
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
