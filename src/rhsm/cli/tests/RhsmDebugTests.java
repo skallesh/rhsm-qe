@@ -52,7 +52,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system and verify the expected contents of the written debug file",
-			groups={"AcceptanceTests","blockedByBug-1038206","blockedByBug-1040338","blockedByBug-1060727"},
+			groups={"AcceptanceTests","blockedByBug-1038206","blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystem_Test() {
@@ -63,7 +63,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --no-archive option and verify the results",
-			groups={"blockedByBug-1060730","blockedByBug-1060727"},
+			groups={"blockedByBug-1060730","blockedByBug-1060727","blockedByBug-1070737"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithNoArchive_Test() {
@@ -74,7 +74,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --destination option and verify the results",
-			groups={"blockedByBug-1040338","blockedByBug-1060727"},
+			groups={"blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithDestination_Test() {
@@ -90,7 +90,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --sos option and verify the results",
-			groups={"blockedByBug-1040338","blockedByBug-1060727"},
+			groups={"blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithSos_Test() {
@@ -101,7 +101,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system with both --no-archive and --destination option and verify the results",
-			groups={"blockedByBug-1040338","blockedByBug-1060727"},
+			groups={"blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithDestinationAndNoArchive_Test() {
@@ -141,7 +141,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering, call rhsm-debug system with a bad (already existing as a file) --destination option",
-			groups={},
+			groups={"blockedByBug-1070737"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithBadDestination_Test() {
@@ -172,7 +172,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="exercise the rhsm-debug tool with non-default configurations for consumerCertDir entitlementCertDir and productCertDir",
-			groups={"RhsmDebugSystemWithNonDefaultCertDirs1_Test","blockedByBug-1040546","blockedByBug-1060727"},
+			groups={"RhsmDebugSystemWithNonDefaultCertDirs1_Test","blockedByBug-1040546","blockedByBug-1060727","blockedByBug-1070737"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithNonDefaultCertDirs1_Test() {
@@ -215,7 +215,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="exercise the rhsm-debug tool with non-default configurations for ca_cert_dir pluginDir pluginConfDir",
-			groups={"RhsmDebugSystemWithNonDefaultCertDirs2_Test","blockedByBug-1055664","blockedByBug-1060727"},
+			groups={"RhsmDebugSystemWithNonDefaultCertDirs2_Test","blockedByBug-1055664","blockedByBug-1060727","blockedByBug-1070737"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithNonDefaultCertDirs2_Test() {
