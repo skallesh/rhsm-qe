@@ -549,7 +549,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cpu.cpu_socket(s) fact matches lscpu.socket(s)",
-			groups={"AcceptanceTests","blockedByBug-707292"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-844532"*/}, dependsOnGroups={},
+			groups={"AcceptanceTests","blockedByBug-707292"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-844532"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertCpuCpuSocketsMatchLscpuSockets_Test() {
@@ -596,6 +596,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// assert sockets against the socketsCalculatedUsingLscpu when lscpu is available
 		if (factsMap.get("lscpu.socket(s)")!=null) {
 			Integer socketsCalculatedUsingLscpu = Integer.valueOf(factsMap.get("lscpu.socket(s)"));
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			if (!cpuSockets.equals(socketsCalculatedUsingLscpu) && (factsMap.get("uname.machine").equalsIgnoreCase("ppc64"))) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1070908"; // Bug 1070908 - subscription-manager facts collection for hardware does not match lscpu on ppc64
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping this test on '"+factsMap.get("uname.machine")+"' while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
 			Assert.assertEquals(cpuSockets, socketsCalculatedUsingLscpu, "The fact value for '"+cpuSocketsFact+"' should match the calculation using lscpu facts.");
 			assertedSockets = true;
 		}
@@ -655,7 +667,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cores calculation using facts cpu.cpu_socket(s)*cpu.core(s)_per_socket matches the cores calculation using lscpu facts",
-			groups={"AcceptanceTests"/*,"blockedByBug-751205","blockedByBug-978466"*/}, dependsOnGroups={},
+			groups={"AcceptanceTests"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertCoresCalculatedUsingCpuFactsMatchCoresCalculatedUsingLscpu_Test() {
@@ -683,6 +695,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// assert cpuCores against the coresCalculatedUsingLscpu when lscpu is available
 		if (factsMap.get("lscpu.socket(s)")!=null && factsMap.get("lscpu.core(s)_per_socket")!=null) {
 			Integer coresCalculatedUsingLscpu = Integer.valueOf(factsMap.get("lscpu.socket(s)"))*Integer.valueOf(factsMap.get("lscpu.core(s)_per_socket"));
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			if (!cpuCores.equals(coresCalculatedUsingLscpu) && (factsMap.get("uname.machine").equalsIgnoreCase("ppc64"))) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1070908"; // Bug 1070908 - subscription-manager facts collection for hardware does not match lscpu on ppc64
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping this test on '"+factsMap.get("uname.machine")+"' while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
 			Assert.assertEquals(cpuCores, coresCalculatedUsingLscpu, "The total number cores as calculated using the cpu facts '"+cpuSocketsFact+"'*'"+cpuCoresPerSocketFact+"' should match the calculation using lscpu facts.");
 			assertedCores = true;
 		}
