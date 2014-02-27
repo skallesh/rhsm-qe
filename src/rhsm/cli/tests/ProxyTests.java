@@ -1198,7 +1198,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	// RHSM-DEBUG SYSTEM Test methods ***********************************************************************
 
 	@Test(	description="rhsm-debug : system using a proxy server (Positive and Negative Variations)",
-			groups={},
+			groups={"blockedByBug-1070737"},
 			dataProvider="getRhsmDebugSystemAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -1216,7 +1216,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="rhsm-debug : system using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={},
+			groups={"blockedByBug-1070737"},
 			dataProvider="getRhsmDebugSystemAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
