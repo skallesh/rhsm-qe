@@ -949,6 +949,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	final protected List<String> slots = Arrays.asList(
 			"pre_register_consumer",	"post_register_consumer",
 			"pre_product_id_install",	"post_product_id_install",
+			"pre_product_id_update",	"post_product_id_update",	// added by bug https://bugzilla.redhat.com/show_bug.cgi?id=1035115#c13
 			"pre_subscribe",			"post_subscribe",
 			"pre_auto_attach",			"post_auto_attach",
 			/*"pre_facts_collection",*/"post_facts_collection");
