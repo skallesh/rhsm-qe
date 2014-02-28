@@ -1758,7 +1758,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// minimize the number of dataProvided rows (useful during automated testcase development)
-		// WARNING: When true, this will fail the VerifyAvailablePoolsPassTheHardwareRulesCheck_Test
+		// WARNING: When true, this will fail the VerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck_Test
 		if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) ll=ll.subList(0,1);
 
 		return ll;
