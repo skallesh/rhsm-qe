@@ -40,10 +40,10 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		// remove selected pools from the poolsModified list that are not consumable by this system to avoid: Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'.
 		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		for (SubscriptionPool subscriptionPool : new ArrayList<SubscriptionPool>(poolsModified)) {
-			if (isSystemVirtual && CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername, sm_clientPassword, subscriptionPool.poolId, sm_serverUrl)) {
+			if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
 				poolsModified.remove(subscriptionPool);
 			}
-			else if (!isSystemVirtual && CandlepinTasks.isPoolVirtOnly(sm_clientUsername, sm_clientPassword, subscriptionPool.poolId, sm_serverUrl)) {
+			else if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
 				poolsModified.remove(subscriptionPool);
 			}
 		}

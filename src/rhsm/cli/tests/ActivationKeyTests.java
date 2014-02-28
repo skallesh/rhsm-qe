@@ -620,10 +620,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 			
 			// for the purpose of this test, skip physical_only pools when system is virtual otherwise the register will fail with "Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'."
-			if (isSystemVirtual && CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername,sm_clientPassword, jsonPool.getString("id"), sm_serverUrl)) continue;
+			if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
 			
 			// for the purpose of this test, skip virt_only pools when system is physical otherwise the register will fail with "Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'."
-			if (!isSystemVirtual && CandlepinTasks.isPoolVirtOnly(sm_clientUsername,sm_clientPassword, jsonPool.getString("id"), sm_serverUrl)) continue;
+			if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
 			
 			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
 			if (servertasks.statusStandalone) {
@@ -687,10 +687,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 			
 			// for the purpose of this test, skip physical_only pools when system is virtual otherwise the register will fail with "Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'."
-			if (isSystemVirtual && CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername,sm_clientPassword, jsonPool.getString("id"), sm_serverUrl)) continue;
+			if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
 			
 			// for the purpose of this test, skip virt_only pools when system is physical otherwise the register will fail with "Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'."
-			if (!isSystemVirtual && CandlepinTasks.isPoolVirtOnly(sm_clientUsername,sm_clientPassword, jsonPool.getString("id"), sm_serverUrl)) continue;
+			if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
 			
 			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
 			if (servertasks.statusStandalone) {
@@ -764,10 +764,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 			
 			// for the purpose of this test, skip physical_only pools when system is virtual otherwise the register will fail with "Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'."
-			if (isSystemVirtual && CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername,sm_clientPassword, jsonPool.getString("id"), sm_serverUrl)) continue;
+			if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
 			
 			// for the purpose of this test, skip virt_only pools when system is physical otherwise the register will fail with "Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'."
-			if (!isSystemVirtual && CandlepinTasks.isPoolVirtOnly(sm_clientUsername,sm_clientPassword, jsonPool.getString("id"), sm_serverUrl)) continue;
+			if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
 			
 			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
 			if (servertasks.statusStandalone) {

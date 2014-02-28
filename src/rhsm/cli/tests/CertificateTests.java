@@ -181,11 +181,11 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("This test is not designed for CORES-based product subscriptions.");
 		}
 		// skip physical_only subscriptions when run on a virtual system
-		if (CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl) && Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) {
+		if (CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId) && Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) {
 			throw new SkipException("This test is not designed for physical_only subscriptions on a virtual machine.");
 		}
 		// skip virt_only subscriptions when run on a physical system
-		if (CandlepinTasks.isPoolVirtOnly(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl) && !Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) {
+		if (CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId) && !Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) {
 			throw new SkipException("This test is not designed for virt_only subscriptions on a physical machine.");
 		}
 		
@@ -401,10 +401,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			if (pool.quantity.equalsIgnoreCase("Unlimited")) {
 				
 				// skip physical_only subscriptions when run on a virtual system (not necessary if getCurrentlyAllAvailableSubscriptionPools() was changed to getCurrentlyAvailableSubscriptionPools())
-				if (CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl) && isSystemVirtual) continue;
+				if (CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId) && isSystemVirtual) continue;
 				
 				// skip virt_only subscriptions when run on a physical system (not necessary if getCurrentlyAllAvailableSubscriptionPools() was changed to getCurrentlyAvailableSubscriptionPools())
-				if (CandlepinTasks.isPoolVirtOnly(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl) && !isSystemVirtual) continue;
+				if (CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId) && !isSystemVirtual) continue;
 				
 				numberOfUnlimitedPools++;
 				File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);

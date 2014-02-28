@@ -1044,6 +1044,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeWithQuantityToMultiplePools_Test() throws JSONException, Exception {
 		
+		// is this system virtual
+		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
+		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
@@ -1073,13 +1076,22 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		No free entitlements are available for the pool with id '8a90f8c6320e9a4401320e9be30c04e8'.
 		Multi-entitlement not supported for pool with id '8a90f8c6320e9a4401320e9be3b80505'.
 		Multi-entitlement not supported for pool with id '8a90f8c6320e9a4401320e9be4660520'.
+		Pool is restricted to physical systems: '8a9086d34470376901447038624d0f87'.
+		Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'.
 		*/
 		
 		// assert that the expected pools were subscribed to based on quantity
 		Assert.assertEquals(subscribeResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
+		String expectedSubscribeResultStdoutSubString = null;
 		for (SubscriptionPool pool : pools) {
-			if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
-				String expectedSubscribeResultStdoutSubString = String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId);
+			if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
+				expectedSubscribeResultStdoutSubString = String.format("Pool is restricted to physical systems: '%s'.",pool.poolId);
+				Assert.assertTrue(subscribeResult.getStdout().contains(expectedSubscribeResultStdoutSubString),"Subscribe attempt to physical_only pool '"+pool.poolId+"' was NOT successful when system is virtual.");				
+			} else if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
+				expectedSubscribeResultStdoutSubString = String.format("Pool is restricted to virtual guests: '%s'.",pool.poolId);
+				Assert.assertTrue(subscribeResult.getStdout().contains(expectedSubscribeResultStdoutSubString),"Subscribe attempt to virt_only pool '"+pool.poolId+"' was NOT successful when system is physical.");				
+			} else if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
+				expectedSubscribeResultStdoutSubString = String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId);
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedSubscribeResultStdoutSubString = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
 				Assert.assertTrue(subscribeResult.getStdout().contains(expectedSubscribeResultStdoutSubString),"Subscribe attempt to non-multi-entitlement pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than one.");				
 			} else if (pool.quantity.equalsIgnoreCase("unlimited") || quantity <= Integer.valueOf(pool.quantity)) {
@@ -1087,7 +1099,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //				Assert.assertTrue(subscribeResult.getStdout().contains(String.format("Successfully consumed a subscription for: %s",pool.subscriptionName)),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");	// changed by Bug 874804 Subscribe -> Attach
 				Assert.assertTrue(subscribeResult.getStdout().contains(String.format("Successfully attached a subscription for: %s",pool.subscriptionName)),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
 			} else {
-				String expectedSubscribeResultStdoutSubString = String.format("No entitlements are available from the pool with id '%s'.",pool.poolId);	// expected string changed by bug 876758
+				expectedSubscribeResultStdoutSubString = String.format("No entitlements are available from the pool with id '%s'.",pool.poolId);	// expected string changed by bug 876758
 				expectedSubscribeResultStdoutSubString = String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId);
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedSubscribeResultStdoutSubString = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
 				Assert.assertTrue(subscribeResult.getStdout().contains(expectedSubscribeResultStdoutSubString),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
