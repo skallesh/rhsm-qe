@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -98,7 +99,7 @@ import com.redhat.qe.tools.SSHCommandResult;
 // https://docspace.corp.redhat.com/people/ndevos/blog/2011/05/26/how-to-quickly-install-a-rhel-5-system-running-xen-and-install-a-guest
 
 
-@Test(groups="VirtualizationTests")
+@Test(groups={"VirtualizationTests"})
 public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 	
@@ -144,7 +145,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: facts list reports the host hypervisor type and uuid on which the guest client is running",
 			dataProvider="getVirtWhatData",
-			groups={}, dependsOnGroups={},
+			groups={"VirtFactsWhenClientIsAGuest_Test"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70202)
 	public void VirtFactsWhenClientIsAGuest_Test(Object bugzilla, String host_type) {
@@ -185,7 +186,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: facts list reports when the client is running on bare metal",
-			groups={"blockedByBug-726440"}, dependsOnGroups={},
+			groups={"blockedByBug-726440","VirtFactsWhenClientIsAHost_Test"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70203)
 	public void VirtFactsWhenClientIsAHost_Test() {
@@ -224,7 +225,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: facts list should not crash on virt facts when virt-what fails",
-			groups={"blockedByBug-668936","blockedByBug-768397"}, dependsOnGroups={},
+			groups={"blockedByBug-668936","blockedByBug-768397","VirtFactsWhenVirtWhatFails_Test"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VirtFactsWhenVirtWhatFails_Test() {
@@ -691,7 +692,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify host and guest pools quantities generated from a virtualization-aware subscription",
-			groups={"AcceptanceTests"}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
+			groups={"AcceptanceTests","VerifyHostAndGuestPoolQuantities_Test"}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
@@ -804,7 +805,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify host and guest pools to a virtualization-aware subscription are subscribable on a guest system (unless it is physical_only).",
-			groups={},
+			groups={"VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem_Test"},
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
@@ -851,7 +852,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify only the derived host pool from a virtualization-aware subscription is subscribable on a host system.  The guest pool should not be available nor subscribable.",
-			groups={},
+			groups={"VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot_Test"},
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
@@ -884,7 +885,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify the subscription-manager list --avail appropriately displays pools with MachineType: virtual",
-			groups={},
+			groups={"VerifyVirtualMachineTypeIsReportedInListAvailablePools_Test"},
 			dependsOnGroups={},
 			enabled=true)
 	public void VerifyVirtualMachineTypeIsReportedInListAvailablePools_Test() throws JSONException, Exception {
@@ -905,7 +906,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="Verify the subscription-manager list --avail appropriately displays pools with MachineType: physical",
-			groups={},
+			groups={"VerifyPhysicalMachineTypeValuesInListAvailablePools_Test"},
 			dependsOnGroups={},
 			enabled=true)
 	public void VerifyPhysicalMachineTypeValuesInListAvailablePools_Test() throws JSONException, Exception {
@@ -927,7 +928,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify the Candlepin API accepts PUTting of guestIds onto host consumer (to be used by virt-who)",
-			groups={"blockedByBug-737935"},
+			groups={"blockedByBug-737935","VerifyGuestIdsCanBePutOntoHostConsumer_Test"},
 			dependsOnGroups={},
 			enabled=true)
 	public void VerifyGuestIdsCanBePutOntoHostConsumer_Test() throws JSONException, Exception {
@@ -1027,7 +1028,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify the Candlepin API denies PUTting of guestIds onto a guest consumer",
-			groups={"blockedByBug-737935"},
+			groups={"blockedByBug-737935","VerifyGuestIdsCanNOTBePutOntoGuestConsumer_Test"},
 			dependsOnGroups={},
 			enabled=true)
 	public void VerifyGuestIdsCanNOTBePutOntoGuestConsumer_Test() throws JSONException, Exception {
@@ -1065,7 +1066,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="When Host B PUTs the same guestId as HostA, the guestId should be removed from HostA (simulation of a guest moved from Host A to Host B)",
-			groups={"blockedByBug-737935"},
+			groups={"blockedByBug-737935","VerifyGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId_Test"},
 			dependsOnGroups={},
 			enabled=true)
 	public void VerifyGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId_Test() throws JSONException, Exception {
@@ -1180,6 +1181,14 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, virtWhatFileBackup.getPath())==1,"successfully made a backup of virt-what to: "+virtWhatFileBackup);
 
+	}
+	
+	@AfterGroups(groups="setup", value={"VirtFactsWhenClientIsAGuest_Test","VirtFactsWhenClientIsAHost_Test","VirtFactsWhenVirtWhatFails_Test","VerifyHostAndGuestPoolQuantities_Test","VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem_Test","VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot_Test","VerifyVirtualMachineTypeIsReportedInListAvailablePools_Test","VerifyPhysicalMachineTypeValuesInListAvailablePools_Test","VerifyGuestIdsCanBePutOntoHostConsumer_Test","VerifyGuestIdsCanNOTBePutOntoGuestConsumer_Test","VerifyGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId_Test"})
+	public void restoreVirtWhatAfterGroups() {
+		// restoring backup of virt-what
+		if (virtWhatFileBackup!=null && RemoteFileTasks.testExists(client, virtWhatFileBackup.getPath())) {
+			RemoteFileTasks.runCommandAndAssert(client, "rm -f "+virtWhatFile+" && cp "+virtWhatFileBackup+" "+virtWhatFile, 0);
+		}
 	}
 	
 	@AfterClass(groups="setup")
