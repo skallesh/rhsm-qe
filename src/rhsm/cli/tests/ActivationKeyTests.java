@@ -963,6 +963,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				if (consumedProductSubscription.subscriptionType.equals("Stackable")) {
 					for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 						if (providedProductIdsFromActivationKeyPool.contains(installedProduct.productId)) {
+							if (!clienttasks.arch.equals(installedProduct.arch)) {
+								Assert.assertEquals(installedProduct.status,"Partially Subscribed", "When Installed Product '"+installedProduct.productName+"' provided by pool '"+consumedProductSubscription.productName+"' attached from a Smart ActivationKey (quantity='"+addQuantity/*null*/+"') mismatches the system architecture, then it should be partially compliant.");
+								Assert.assertEquals(installedProduct.statusDetails.get(0)/*assumes only one detail*/, String.format("Supports architecture %s but the system is %s.", installedProduct.arch, clienttasks.arch), "When Installed Product '"+installedProduct.productName+"' provided by pool '"+consumedProductSubscription.productName+"' attached from a Smart ActivationKey (quantity='"+addQuantity/*null*/+"') mismatches the system architecture, then the Status Details should state this.");
+							}
 							Assert.assertEquals(installedProduct.status,"Subscribed", "Installed Product '"+installedProduct.productName+"' provided by pool '"+consumedProductSubscription.productName+"' attached from a Smart ActivationKey (quantity='"+addQuantity/*null*/+"') should be fully compliant.");
 						}
 					}
@@ -1018,7 +1022,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> l : getRandomSubsetOfList(getAllJSONPoolsDataAsListOfLists(),10)) {
 			JSONObject jsonPool = (JSONObject)l.get(0);
 			String keyName = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), jsonPool.getString("id"));
-
+//debugTesting if (!jsonPool.getString("productName").equals("Awesome OS for ia64")) continue;
 			// Object blockedByBug, String keyName, JSONObject jsonPool)
 			ll.add(Arrays.asList(new Object[] {null, keyName, jsonPool}));
 		}
