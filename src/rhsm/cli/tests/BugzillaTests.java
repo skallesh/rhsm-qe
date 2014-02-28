@@ -1489,8 +1489,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if bind and unbind event is recorded in syslog", 
-			groups = { "DeleteContentSourceFromProduct","blockedByBug-687970"}, enabled = true)
+	@Test(description = "verify that a content set can be deleted after being added to a product.", 
+			groups = {"DeleteContentSourceFromProduct","blockedByBug-687970","blockedByBug-834125"}, enabled = true)
 	public void DeleteContentSourceFromProduct() throws JSONException,Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -1513,13 +1513,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(jsonActivationKey.getString("displayMessage"), "Content with id "+contentId+" could not be found.");
 		requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, modifiedProductIds).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/content", requestBody);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/products/" + "fooproduct");	// in case it already exists from prior run
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"fooname","fooproduct", null,attributes ,null);
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/products/fooproduct/content/"+contentId+"?enabled=false",null);
+		String jsonProduct = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/" + "fooproduct");
+		Assert.assertContainsMatch(jsonProduct, contentId, "Added content set '"+contentId+"' to product "+"fooproduct");
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
 		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
+/* This assertion is reinforcing a bug in candlepin.
+ * The prior call to delete content 99999 should always pass even when it has been added to a product.
+ * This was fixed by https://bugzilla.redhat.com/show_bug.cgi?id=834125#c17
+ * Changing the assertion to Assert.assertContainsMatch
 		Assert.assertContainsNoMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
+ */
+		Assert.assertContainsMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
+		jsonProduct = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/" + "fooproduct");
+		Assert.assertContainsNoMatch(jsonProduct, contentId, "After deleting content set '"+contentId+"', it was removed from the product "+"fooproduct");
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/" + "fooproduct");
-
 	}
 	
 	/**
