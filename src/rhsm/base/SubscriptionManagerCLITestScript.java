@@ -1624,6 +1624,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						productAttributesPassRulesCheck = false;
 					}
 				}
+				if (attributeName.equals("virt_only")) {
+					if (attributeValue!=null && Boolean.valueOf(attributeValue) && !isSystemVirtual) {
+						productAttributesPassRulesCheck = false;
+					}
+				}
 				if (attributeName.equals("sockets")) {
 					productAttributeSocketsValue = attributeValue;
 					
