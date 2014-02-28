@@ -2140,6 +2140,22 @@ schema generation failed
 		return Boolean.valueOf(physical_only);
 	}
 	
+	public static boolean isPoolRestrictedToPhysicalSystems (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		String physicalOnlyPool = getPoolAttributeValue(authenticator, password, url, poolId, "physical_only");
+		String physicalOnlyPoolProduct = getPoolProductAttributeValue(authenticator, password, url, poolId, "physical_only");
+		if (physicalOnlyPool!=null) return Boolean.valueOf(physicalOnlyPool);
+		if (physicalOnlyPoolProduct!=null) return Boolean.valueOf(physicalOnlyPoolProduct);
+		return false;	// the absence of a physical_only attribute means this pool is NOT restricted to physical systems
+	}
+	
+	public static boolean isPoolRestrictedToVirtualSystems (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		String virtOnlyPool = getPoolAttributeValue(authenticator, password, url, poolId, "virt_only");
+		String virtOnlyPoolProduct = getPoolProductAttributeValue(authenticator, password, url, poolId, "virt_only");
+		if (virtOnlyPool!=null) return Boolean.valueOf(virtOnlyPool);
+		if (virtOnlyPoolProduct!=null) return Boolean.valueOf(virtOnlyPoolProduct);
+		return false;	// the absence of a virt_only attribute means this pool is NOT restricted to virtual systems
+	}
+	
 	public static boolean isPoolDerived (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
 		
 		/* [root@jsefler-6 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/pools/8a9086d340d0ae7d0140d0afeb910746 | python -m simplejson/tool
@@ -2439,6 +2455,16 @@ schema generation failed
 		return getPoolDerivedProductAttributeValue(jsonPool,derivedProductAttributeName);
 	}
 	
+	/**
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param poolId
+	 * @param productAttributeName
+	 * @return the value of the pool's productAttribute with the name "productAttributeName".  null is returned when the productAttributeName is not found.  null can also be returned when the value for productAttributeName is actually null.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static String getPoolProductAttributeValue (String authenticator, String password, String url, String poolId, String productAttributeName) throws JSONException, Exception {
 
 		// get the pool for the authenticator
@@ -2514,6 +2540,16 @@ schema generation failed
 		return providedProductModifiedIds;
 	}
 	
+	/**
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param poolId
+	 * @param attributeName
+	 * @return the String "value" of the pool's attribute with the given "name".  If not found, then null is returned.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static String getPoolAttributeValue (String authenticator, String password, String url, String poolId, String attributeName) throws JSONException, Exception {
 
 		// get the pool for the authenticator
@@ -2524,6 +2560,16 @@ schema generation failed
 		return getPoolAttributeValue(jsonPool,attributeName);
 	}
 	
+	/**
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param poolId
+	 * @param jsonName - the name of the first level of json parameters (e.g. "productId", "productName", "consumed", "quantity", etc.)
+	 * @return the String "value" of the pool's first level "name" parameter.  If not found, then null is returned.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static Object getPoolValue (String authenticator, String password, String url, String poolId, String jsonName) throws JSONException, Exception {
 
 		// get the pool for the authenticator
