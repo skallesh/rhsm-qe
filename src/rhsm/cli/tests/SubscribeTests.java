@@ -591,13 +591,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager: make sure the available pools come from subscriptions that pass the hardware rules for availability.",
+	@Test(	description="subscription-manager: make sure the normal available pools come from subscriptions that pass the hardware rules for availability.",
 			groups={"AcceptanceTests"},
 			dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
-	public void VerifyAvailablePoolsPassTheHardwareRulesCheck_Test() throws Exception {
+	public void VerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck_Test() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,false);
@@ -616,6 +616,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+productId+"' to be available to registered user '"+sm_clientUsername+"'.");
 		}
 		for (SubscriptionPool availableSubscriptionPool : availableSubscriptionPools) {
+			
+			// skip pools that are not NORMAL (eg. BONUS, ENTITLEMENT_DERIVED, STACK_DERIVED)
+			String poolType = (String) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId, "type");
+			if (!poolType.equals("NORMAL")) {
+				log.warning("Skipping '"+poolType+"' pool: "+availableSubscriptionPool);
+				continue;
+			}
+			
 			boolean productIdFound = false;
 			for (List<Object> subscriptionPoolProductDatum : subscriptionPoolProductData) {
 				if (availableSubscriptionPool.productId.equals((String)subscriptionPoolProductDatum.get(0))) {
@@ -623,7 +631,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					break;
 				}
 			}
-			Assert.assertTrue(productIdFound, "Available SubscriptionPool with ProductId '"+availableSubscriptionPool.productId+"' passes the hardware rules check.");
+			Assert.assertTrue(productIdFound, "Available SubscriptionPool '"+availableSubscriptionPool.productId+"' poolId='"+availableSubscriptionPool.poolId+"' passes the hardware rules check.");
 		}
 	}
 	protected List<List<Object>> subscriptionPoolProductData;
