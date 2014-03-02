@@ -4,8 +4,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
@@ -409,6 +411,19 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 
 				return registerResult;
 			}
+		}
+		
+		// handle the case when the pool is restricted to a system that is not the same type as the pool
+		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
+		if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId)) {
+			Assert.assertEquals(registerResult.getStderr().trim(),"Pool is restricted to physical systems: '"+poolId+"'.");
+			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a physical_only pool while the registering system is virtual.");
+			return registerResult;
+		}
+		if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId)) {
+			Assert.assertEquals(registerResult.getStderr().trim(),"Pool is restricted to virtual guests: '"+poolId+"'.");
+			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a virt_only pool while the registering system is physical.");
+			return registerResult;
 		}
 		
 		// assert success
@@ -963,11 +978,15 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				if (consumedProductSubscription.subscriptionType.equals("Stackable")) {
 					for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 						if (providedProductIdsFromActivationKeyPool.contains(installedProduct.productId)) {
-							if (!clienttasks.arch.equals(installedProduct.arch)) {
+							Set<String> installedProductArches = new HashSet<String>(Arrays.asList(installedProduct.arch.split("\\s*,\\s*")));	// arch can be defined as a comma seperated string
+							if (installedProductArches.contains("x86")) {installedProductArches.add("i386"); installedProductArches.add("i486"); installedProductArches.add("i586"); installedProductArches.add("i686");}
+							if (installedProductArches.contains(clienttasks.arch) || installedProductArches.contains("ALL")) {
+								Assert.assertEquals(installedProduct.status,"Subscribed", "Installed Product '"+installedProduct.productName+"' provided by pool '"+consumedProductSubscription.productName+"' attached from a Smart ActivationKey (quantity='"+addQuantity/*null*/+"') should be fully compliant.");
+								Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "When Installed Product '"+installedProduct.productName+"' provided by pool '"+consumedProductSubscription.productName+"' attached from a Smart ActivationKey (quantity='"+addQuantity/*null*/+"') is Subscribed, then it's Status Details should be empty.");
+							} else {
 								Assert.assertEquals(installedProduct.status,"Partially Subscribed", "When Installed Product '"+installedProduct.productName+"' provided by pool '"+consumedProductSubscription.productName+"' attached from a Smart ActivationKey (quantity='"+addQuantity/*null*/+"') mismatches the system architecture, then it should be partially compliant.");
 								Assert.assertEquals(installedProduct.statusDetails.get(0)/*assumes only one detail*/, String.format("Supports architecture %s but the system is %s.", installedProduct.arch, clienttasks.arch), "When Installed Product '"+installedProduct.productName+"' provided by pool '"+consumedProductSubscription.productName+"' attached from a Smart ActivationKey (quantity='"+addQuantity/*null*/+"') mismatches the system architecture, then the Status Details should state this.");
 							}
-							Assert.assertEquals(installedProduct.status,"Subscribed", "Installed Product '"+installedProduct.productName+"' provided by pool '"+consumedProductSubscription.productName+"' attached from a Smart ActivationKey (quantity='"+addQuantity/*null*/+"') should be fully compliant.");
 						}
 					}
 				}
@@ -1018,11 +1037,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getRegisterWithActivationKeyContainingPool_TestDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-//		for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {	// takes a long time and rarely reveals a bug, limiting the loop to a random subset...
+		//for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {	// takes a long time and rarely reveals a bug, limiting the loop to a random subset...
 		for (List<Object> l : getRandomSubsetOfList(getAllJSONPoolsDataAsListOfLists(),10)) {
 			JSONObject jsonPool = (JSONObject)l.get(0);
 			String keyName = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), jsonPool.getString("id"));
 //debugTesting if (!jsonPool.getString("productName").equals("Awesome OS for ia64")) continue;
+			
 			// Object blockedByBug, String keyName, JSONObject jsonPool)
 			ll.add(Arrays.asList(new Object[] {null, keyName, jsonPool}));
 		}
