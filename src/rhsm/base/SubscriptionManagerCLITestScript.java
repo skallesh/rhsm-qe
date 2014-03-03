@@ -598,7 +598,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String productId = jsonPool.getString("productId");
-			String subscriptionId = jsonPool.getString("subscriptionId");
 			
 			// skip pools that we do not want to delete
 			if (!secondarySkusToDelete.contains(productId)) continue;
@@ -616,6 +615,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 						
 			// delete the subscription
+			String subscriptionId = jsonPool.getString("subscriptionId");
 			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/subscriptions/"+subscriptionId);
 			secondarySubscriptionIdsDeleted.add(subscriptionId);
 		}
