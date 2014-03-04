@@ -387,9 +387,27 @@ schema generation failed
 	}
 	
 	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
-		return putResourceUsingRESTfulAPI(authenticator,password,url,path,null);
+		return putResourceUsingRESTfulAPI(authenticator,password,url,path,(JSONObject)null);
 	}
 	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, JSONObject jsonData) throws Exception {
+		PutMethod put = new PutMethod(url+path);
+		if (jsonData != null) {
+			put.setRequestEntity(new StringRequestEntity(jsonData.toString(), "application/json", null));
+			put.addRequestHeader("accept", "application/json");
+			put.addRequestHeader("content-type", "application/json");
+		}
+		
+		// log the curl alternative to HTTP request
+		// Example: curl --insecure --user testuser1:password --request PUT --data '{"autoheal":"false"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19
+		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
+		String request	= "--request "+put.getName()+" ";
+		String data		= (jsonData==null)? "":"--data '"+jsonData+"' ";
+		String headers	= ""; if (jsonData != null) for (org.apache.commons.httpclient.Header header : put.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
+		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+data+headers+put.getURI());
+
+		return getHTTPResponseAsString(client, put, authenticator, password);
+	}
+	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, JSONArray jsonData) throws Exception {
 		PutMethod put = new PutMethod(url+path);
 		if (jsonData != null) {
 			put.setRequestEntity(new StringRequestEntity(jsonData.toString(), "application/json", null));

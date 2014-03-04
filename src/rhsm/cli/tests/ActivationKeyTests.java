@@ -26,6 +26,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.InstalledProduct;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
@@ -824,6 +825,223 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles().size(), activationKeyNames.size(), "Expecting a new entitlement cert file in '"+clienttasks.entitlementCertDir+"' for each of the single pooled activation keys used during register.");
 	}
+	
+	
+	@Test(	description="create an activation key, add a release to it, and then register with the activation key",
+			groups={"blockedByBug-1062292"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithActivationKeyContainingReleaseVer_Test() throws JSONException, Exception {
+		
+		// generate a unique activation key name for this test
+		String keyName = String.format("ActivationKey%s_WithReleaseVer", System.currentTimeMillis());
+		
+		// choose a releaseVer value
+		String releaseVer = "R_1.0";
+		
+		// create a JSON object to represent the request body
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", keyName);
+		mapActivationKeyRequest.put("releaseVer", releaseVer);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		
+		// call the candlepin api to create an activation key
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
+		//jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3448960ba01448dd50b1b2c0b | python -m simplejson/tool
+		//	{
+		//	    "contentOverrides": [],
+		//	    "created": "2014-03-04T16:02:33.371+0000",
+		//	    "id": "8a9087e3448960ba01448dd50b1b2c0b",
+		//	    "name": "ActivationKey1393948948190_WithReleaseVer",
+		//	    "owner": {
+		//	        "displayName": "Admin Owner",
+		//	        "href": "/owners/admin",
+		//	        "id": "8a9087e3448960ba01448960df840001",
+		//	        "key": "admin"
+		//	    },
+		//	    "pools": [],
+		//	    "releaseVer": {
+		//	        "releaseVer": "R_1.0"
+		//	    },
+		//	    "updated": "2014-03-04T16:02:33.371+0000"
+		//	}
+		
+		// register with the activation key
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		
+		// verify the current release equals the value set in the activation key
+		Assert.assertEquals(clienttasks.getCurrentRelease(), releaseVer, "After registering with an activation key containing a releaseVer, the current release is properly set.");
+		
+		// POST a new releaseVer on the same key and register again
+		releaseVer = "R_2.0";
+		mapActivationKeyRequest.clear();
+		mapActivationKeyRequest.put("releaseVer", releaseVer);
+		jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/"+jsonActivationKey.getString("id")+"/release", jsonActivationKeyRequest.toString()));
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3448960ba01448df4e5b92cdb | python -m simplejson/tool
+		//	{
+		//	    "contentOverrides": [],
+		//	    "created": "2014-03-04T16:37:20.953+0000",
+		//	    "id": "8a9087e3448960ba01448df4e5b92cdb",
+		//	    "name": "ActivationKey1393951040595_WithReleaseVer",
+		//	    "owner": {
+		//	        "displayName": "Admin Owner",
+		//	        "href": "/owners/admin",
+		//	        "id": "8a9087e3448960ba01448960df840001",
+		//	        "key": "admin"
+		//	    },
+		//	    "pools": [],
+		//	    "releaseVer": {
+		//	        "releaseVer": "R_2.0"
+		//	    },
+		//	    "updated": "2014-03-04T16:37:52.768+0000"
+		//	}
+		
+		// reregister with the same activation key
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		
+		// verify the current release equals the new value set in the activation key
+		Assert.assertEquals(clienttasks.getCurrentRelease(), releaseVer, "After registering with an activation key containing an updated releaseVer, the current release is properly set.");
+		
+		// finally, verify that there are no contentOverrides
+		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		Assert.assertEquals(listResult.getStdout().trim(),"This system does not have any content overrides applied to it.","After registering with an activation key containing a releaseVer, but no contentOverrides, this is the subscription-manager repo-override report.");
+	}
+	
+	
+	@Test(	description="create an activation key, add content overrides, and then register with the activation key",
+			groups={"blockedByBug-1062292"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithActivationKeyContainingContentOverrides_Test() throws JSONException, Exception {
+		
+		// generate a unique activation key name for this test
+		String keyName = String.format("ActivationKey%s_WithContentOverrides", System.currentTimeMillis());
+		
+		// create an array of content overrides
+		JSONArray jsonContentOverrides = new JSONArray();
+		JSONObject contentOverrides;
+		contentOverrides = new JSONObject();
+		contentOverrides.put("contentLabel", "awesomeos-repo-label");
+		contentOverrides.put("name", "gpgcheck");
+		contentOverrides.put("name", randomizeCaseOfCharactersInString("gpgcheck"));	// Bug 1034375 - Candlepin should ensure all content override names are lowercase
+		contentOverrides.put("value", "1");
+		jsonContentOverrides.put(contentOverrides);
+		contentOverrides = new JSONObject();
+		contentOverrides.put("contentLabel", "awesomeos-repo-label");
+		contentOverrides.put("name", "enabled");
+		contentOverrides.put("value", "1");
+		jsonContentOverrides.put(contentOverrides);
+		
+		// create a JSON object to represent the request body
+		JSONObject jsonActivationKeyRequest = new JSONObject();
+		jsonActivationKeyRequest.put("name", keyName);
+		jsonActivationKeyRequest.put("contentOverrides", jsonContentOverrides);
+		
+		// call the candlepin api to create an activation key
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3448960ba01448e5811932d85 | python -m simplejson/tool
+		//	{
+		//	    "contentOverrides": [
+		//	        {
+		//	            "contentLabel": "awesomeos-repo-label",
+		//	            "created": "2014-03-04T18:25:40.243+0000",
+		//	            "name": "enabled",
+		//	            "updated": "2014-03-04T18:25:40.243+0000",
+		//	            "value": "1"
+		//	        },
+		//	        {
+		//	            "contentLabel": "awesomeos-repo-label",
+		//	            "created": "2014-03-04T18:25:40.243+0000",
+		//	            "name": "gpgcheck",
+		//	            "updated": "2014-03-04T18:25:40.243+0000",
+		//	            "value": "1"
+		//	        }
+		//	    ],
+		//	    "created": "2014-03-04T18:25:40.243+0000",
+		//	    "id": "8a9087e3448960ba01448e5811932d85",
+		//	    "name": "ActivationKey1393957445718_WithContentOverrides",
+		//	    "owner": {
+		//	        "displayName": "Admin Owner",
+		//	        "href": "/owners/admin",
+		//	        "id": "8a9087e3448960ba01448960df840001",
+		//	        "key": "admin"
+		//	    },
+		//	    "pools": [],
+		//	    "releaseVer": {
+		//	        "releaseVer": null
+		//	    },
+		//	    "updated": "2014-03-04T18:25:40.243+0000"
+		//	}
+		
+		// register with the activation key
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		
+		// verify the current contentOverrides set in the activation key are listed on the consumer		
+		SSHCommandResult repoOverrideListResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		for (int i=0; i<jsonContentOverrides.length(); i++) {
+			JSONObject jsonContentOverride = jsonContentOverrides.getJSONObject(i);
+			String label = jsonContentOverride.getString("contentLabel");
+			String name = jsonContentOverride.getString("name").toLowerCase();;
+			String value = jsonContentOverride.getString("value");
+			String regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,label,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(repoOverrideListResult.getStdout(), regex),"After registering with an activation key containing contentOverrides, the subscription-manager repo-override list reports expected override repo='"+label+"' name='"+name+"' value='"+value+"'.");
+		}
+		
+		// add another content override to the existing activation key and re-test
+		JSONArray jsonMoreContentOverrides = new JSONArray();
+		contentOverrides = new JSONObject();
+		contentOverrides.put("contentLabel", "lameos-repo-label");
+		contentOverrides.put("name", "enabled");
+		contentOverrides.put("name", randomizeCaseOfCharactersInString("enabled"));	// Bug 1034375 - Candlepin should ensure all content override names are lowercase
+		contentOverrides.put("value", "0");
+		jsonMoreContentOverrides.put(contentOverrides);
+		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/"+jsonActivationKey.getString("id")+"/content_overrides", jsonMoreContentOverrides);
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request PUT --data '[{"contentLabel":"lameos-repo-label","name":"enabled","value":"0"}]' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3448960ba01448ea4b68d2e3b/content_overrides | python -m simplejson/tool
+		//	[
+		//	    {
+		//	        "contentLabel": "awesomeos-repo-label",
+		//	        "created": "2014-03-04T19:49:23.213+0000",
+		//	        "name": "enabled",
+		//	        "updated": "2014-03-04T19:49:23.213+0000",
+		//	        "value": "1"
+		//	    },
+		//	    {
+		//	        "contentLabel": "awesomeos-repo-label",
+		//	        "created": "2014-03-04T19:49:23.213+0000",
+		//	        "name": "gpgcheck",
+		//	        "updated": "2014-03-04T19:49:23.213+0000",
+		//	        "value": "1"
+		//	    },
+		//	    {
+		//	        "contentLabel": "lameos-repo-label",
+		//	        "created": "2014-03-04T19:49:56.529+0000",
+		//	        "name": "enabled",
+		//	        "updated": "2014-03-04T19:49:56.529+0000",
+		//	        "value": "0"
+		//	    }
+		//	]
+		jsonContentOverrides.put(contentOverrides);
+		
+		// re-register with the same activation key whose contentOverrides has been added to
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		
+		// verify the current contentOverrides set in the activation key are listed on the consumer		
+		repoOverrideListResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		for (int i=0; i<jsonContentOverrides.length(); i++) {
+			JSONObject jsonContentOverride = jsonContentOverrides.getJSONObject(i);
+			String label = jsonContentOverride.getString("contentLabel");
+			String name = jsonContentOverride.getString("name").toLowerCase();
+			String value = jsonContentOverride.getString("value");
+			String regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,label,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(repoOverrideListResult.getStdout(), regex),"After registering with an activation key containing contentOverrides, the subscription-manager repo-override list reports expected override repo='"+label+"' name='"+name+"' value='"+value+"'.");
+		}
+		
+		// finally, verify the current release was not set
+		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The expected releaseVer after registering with an activation key containing contentOverrides but no releaseVer.");
+	}
+	
 	
 	
 	// Candidates for an automated Test:
