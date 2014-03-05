@@ -465,30 +465,31 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		
 		// exclude the remaining debug files when running the sos option...  unless their configuration is found outside /etc/ to avoid double collection by the sosreport tool; see https://bugzilla.redhat.com/show_bug.cgi?id=1060727#c0
-
+		if (sos==null) sos = false;
+			
 		// current /etc/rhsm files
-		if (sos==null || !sos) for (String expectedFile : client.runCommandAndWait("find /etc/rhsm").getStdout().trim().split("\n")) {
+		if (!sos) for (String expectedFile : client.runCommandAndWait("find /etc/rhsm").getStdout().trim().split("\n")) {
 			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 		}
 		
 		// current /var/lib/rhsm files
-		if (sos==null || !sos) for (String expectedFile : client.runCommandAndWait("find /var/lib/rhsm").getStdout().trim().split("\n")) {
+		if (!sos) for (String expectedFile : client.runCommandAndWait("find /var/lib/rhsm").getStdout().trim().split("\n")) {
 			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 		}
 		
 		// current /var/log/rhsm files
-		if (sos==null || !sos) for (String expectedFile : client.runCommandAndWait("find /var/log/rhsm").getStdout().trim().split("\n")) {
+		if (!sos) for (String expectedFile : client.runCommandAndWait("find /var/log/rhsm").getStdout().trim().split("\n")) {
 			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 		}
 		
 		// current consumer cert files
-		if (!consumerCertDir.startsWith("/etc/") || sos==null || !sos) {
+		if (!sos || !consumerCertDir.startsWith("/etc/")) {
 			expectedFiles.add(consumerCertDir+"/key.pem");
 			expectedFiles.add(consumerCertDir+"/cert.pem");
 		}
 		
 		// current entitlement cert files
-		if (!entitlementCertDir.startsWith("/etc/") || sos==null || !sos) {
+		if (!sos || !entitlementCertDir.startsWith("/etc/")) {
 			for (File entitlementCertFile : clienttasks.getCurrentEntitlementCertFiles()) {
 				expectedFiles.add(entitlementCertFile.getPath());
 				expectedFiles.add(clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCertFile).getPath());
@@ -496,14 +497,14 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// current product cert files
-		if (!productCertDir.startsWith("/etc/") || sos==null || !sos) {
+		if (!sos || !productCertDir.startsWith("/etc/")) {
 			for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
 				expectedFiles.add(productCertFile.getPath());
 			}
 		}
 		
 		// current ca cert files
-		if (!caCertDir.startsWith("/etc/") || sos==null || !sos) {
+		if (!sos || !caCertDir.startsWith("/etc/")) {
 			for (String expectedFile : client.runCommandAndWait("find "+caCertDir).getStdout().trim().split("\n")) {
 				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 			}
@@ -511,7 +512,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		
 		// current plugin files
 		/* NO: alikins decided NOT to collect the plugins; see https://bugzilla.redhat.com/show_bug.cgi?id=1055664#c1
-		if (!pluginDir.startsWith("/etc/") || sos==null || !sos) {
+		if (!sos || !pluginDir.startsWith("/etc/")) {
 			for (String expectedFile : client.runCommandAndWait("find "+pluginDir).getStdout().trim().split("\n")) {
 				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 			}
@@ -519,7 +520,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		*/
 		
 		// current plugin config files
-		if (!pluginConfDir.startsWith("/etc/") || sos==null || !sos) {
+		if (!sos || !pluginConfDir.startsWith("/etc/")) {
 			for (String expectedFile : client.runCommandAndWait("find "+pluginConfDir).getStdout().trim().split("\n")) {
 				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 			}
