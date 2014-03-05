@@ -145,8 +145,16 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		//configureProductCertDirAfterClass(); is not needed since the priority of this test is implied as 0 and run first before the other tests alter the productCertDir
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		List<String> productIdArchTested = new ArrayList<String>();
+		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		for (List<Object> allAvailableSubscriptionPoolsDataList : getAllAvailableSubscriptionPoolsDataAsListOfLists()) {
 			SubscriptionPool availableSubscriptionPool = (SubscriptionPool) allAvailableSubscriptionPoolsDataList.get(0);
+			
+			// for the purpose of this test, skip physical_only pools when system is virtual otherwise the register will fail with "Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'."
+			if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId)) continue;
+			
+			// for the purpose of this test, skip virt_only pools when system is physical otherwise the register will fail with "Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'."
+			if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId)) continue;
+			
 			List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId);
 			String poolProductArch = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId, "arch");
 			for (ProductCert productCert : productCerts) {
