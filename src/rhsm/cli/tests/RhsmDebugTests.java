@@ -464,57 +464,62 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		}
 		// END OF WORKAROUND
 		
-		// exclude the remaining debug files when running the sos option
-		if (sos==null || !sos) {
-			
-			// current /etc/rhsm files
-			for (String expectedFile : client.runCommandAndWait("find /etc/rhsm").getStdout().trim().split("\n")) {
-				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
-			}
-			
-			// current /var/lib/rhsm files
-			for (String expectedFile : client.runCommandAndWait("find /var/lib/rhsm").getStdout().trim().split("\n")) {
-				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
-			}
-			
-			// current /var/log/rhsm files
-			for (String expectedFile : client.runCommandAndWait("find /var/log/rhsm").getStdout().trim().split("\n")) {
-				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
-			}
-			
-			// current consumer cert files
+		// exclude the remaining debug files when running the sos option...  unless their configuration is found outside /etc/ to avoid double collection by the sosreport tool; see https://bugzilla.redhat.com/show_bug.cgi?id=1060727#c0
+
+		// current /etc/rhsm files
+		if (sos==null || !sos) for (String expectedFile : client.runCommandAndWait("find /etc/rhsm").getStdout().trim().split("\n")) {
+			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+		}
+		
+		// current /var/lib/rhsm files
+		if (sos==null || !sos) for (String expectedFile : client.runCommandAndWait("find /var/lib/rhsm").getStdout().trim().split("\n")) {
+			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+		}
+		
+		// current /var/log/rhsm files
+		if (sos==null || !sos) for (String expectedFile : client.runCommandAndWait("find /var/log/rhsm").getStdout().trim().split("\n")) {
+			if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
+		}
+		
+		// current consumer cert files
+		if (!consumerCertDir.startsWith("/etc/") || sos==null || !sos) {
 			expectedFiles.add(consumerCertDir+"/key.pem");
 			expectedFiles.add(consumerCertDir+"/cert.pem");
-			
-			// current entitlement cert files
+		}
+		
+		// current entitlement cert files
+		if (!entitlementCertDir.startsWith("/etc/") || sos==null || !sos) {
 			for (File entitlementCertFile : clienttasks.getCurrentEntitlementCertFiles()) {
 				expectedFiles.add(entitlementCertFile.getPath());
 				expectedFiles.add(clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCertFile).getPath());
 			}
-			
-			// current product cert files
+		}
+		
+		// current product cert files
+		if (!productCertDir.startsWith("/etc/") || sos==null || !sos) {
 			for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
 				expectedFiles.add(productCertFile.getPath());
 			}
-			
-			// current ca cert files
+		}
+		
+		// current ca cert files
+		if (!caCertDir.startsWith("/etc/") || sos==null || !sos) {
 			for (String expectedFile : client.runCommandAndWait("find "+caCertDir).getStdout().trim().split("\n")) {
 				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 			}
-			
-			// current plugin files
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1055664 - jsefler 1/20/2014
-			Boolean invokeWorkaroundWhileBugIsOpen = true;
-			try {String bugId="1055664"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				log.warning("The workaround while this bug is open is to skip the expected files in rhsm.pluginDir '"+pluginDir+"'.");
-			} else	// do the for (String expectedFile : client.runCommandAndWait("find "+pluginConfDir).getStdout().trim().split("\n")) loop
-			// END OF WORKAROUND
+		}
+		
+		// current plugin files
+		/* NO: alikins decided NOT to collect the plugins; see https://bugzilla.redhat.com/show_bug.cgi?id=1055664#c1
+		if (!pluginDir.startsWith("/etc/") || sos==null || !sos) {
 			for (String expectedFile : client.runCommandAndWait("find "+pluginDir).getStdout().trim().split("\n")) {
 				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 			}
-			
-			// current plugin config files
+		}
+		*/
+		
+		// current plugin config files
+		if (!pluginConfDir.startsWith("/etc/") || sos==null || !sos) {
 			for (String expectedFile : client.runCommandAndWait("find "+pluginConfDir).getStdout().trim().split("\n")) {
 				if (!expectedFiles.contains(expectedFile)) expectedFiles.add(expectedFile);
 			}
