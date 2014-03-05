@@ -471,26 +471,33 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Calendar now = new GregorianCalendar();
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		now.add(Calendar.YEAR, 1);
-		now.add(Calendar.DATE, 5);
+		now.add(Calendar.MONTH, 6);
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
+		
+		// attach future stackable subscriptions for "awesomeos-x86_64"
 		for(SubscriptionPool availOnDate :getAvailableFutureSubscriptionsOndate(onDateToTest)){
 			if(availOnDate.productId.equals("awesomeos-x86_64")){
 				clienttasks.subscribe(null, null, availOnDate.poolId, null, null,null, null, null, null, null, null);
 			}
 		}
-		for(SubscriptionPool pool :clienttasks.getCurrentlyAvailableSubscriptionPools()){
-			if(pool.productId.equals("awesomeos-x86_64")){
-				clienttasks.subscribe(null, null, pool.poolId, null, null,"2", null, null, null, null, null);
-			}	
+		List<ProductSubscription> futureConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		for (ProductSubscription productSubscription : futureConsumedProductSubscriptions) {
+			Assert.assertEquals(productSubscription.isActive, Boolean.FALSE, "Attached future subscription is not active: "+futureConsumedProductSubscriptions);
 		}
-		boolean testComplete=false;
-		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if(installed.productId.equals("100000000000002")){
-				Assert.assertEquals(installed.status, "Partially Subscribed");
-				testComplete = true;
-			}
-		}
-		if (!testComplete) throw new SkipException("Expected product from candlepin TESTDATA was not found to perform this test.");
+		Assert.assertTrue(!futureConsumedProductSubscriptions.isEmpty(), "Future subscriptions for awesomeos-x86_64 have been attached.");
+		
+		InstalledProduct awesomeos_x86_64_bits = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "100000000000002", clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertNotNull(awesomeos_x86_64_bits, "Found a currently installed product for awesomeos-x86_64 bits.");
+		Assert.assertEquals(awesomeos_x86_64_bits.status, "Future Subscription", "The stackable subscriptions for awesomeos-x86_64 that are attached should all be inactive.  The result should be a future covered installed product.");
+
+		// attach one currently available stackable subscription for "awesomeos-x86_64"
+		SubscriptionPool awesomeos_x86_64_pool = SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId","awesomeos-x86_64", clienttasks.getCurrentlyAvailableSubscriptionPools());
+		Assert.assertNotNull(awesomeos_x86_64_pool, "Found a currently available pool for awesomeos-x86_64.");
+		clienttasks.subscribe(null, null, awesomeos_x86_64_pool.poolId, null, null,"2", null, null, null, null, null);
+		
+		/*InstalledProduct*/ awesomeos_x86_64_bits = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "100000000000002", clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertNotNull(awesomeos_x86_64_bits, "Found a currently installed product for awesomeos-x86_64 bits.");
+		Assert.assertEquals(awesomeos_x86_64_bits.status, "Partially Subscribed", "The future stackable subscriptions for awesomeos-x86_64 that are attached should NOT stack with the currently active subscription.  The result should be a partially covered installed product.");
 	}
 	
 	
@@ -4531,7 +4538,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 	@AfterClass(groups = "setup")	// called after class for insurance
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null) return;
-		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
+//debugtesting		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
 	}
 	
 	
