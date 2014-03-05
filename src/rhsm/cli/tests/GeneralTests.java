@@ -275,8 +275,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: python-dmidecode",
 					"manual: python-ethtool",
 					"manual: python-iniparse",
-					//"manual: python-rhsm >= 1.9.1-1"/*RHEL65*/,
-					"manual: python-rhsm >= 1.10.9"/*RHEL70*/,
+					"manual: python-rhsm >= 1.9.1-1",	// RHEL6.5
 					//"manual: python-simplejson",	// removed by bug 1006748
 					"manual: usermode",
 					"manual: virt-what",
@@ -285,24 +284,23 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			expecetdRequiresList.addAll(Arrays.asList(new String[]{
-					"post: systemd-units",
-					"preun: systemd-units",
-					"postun: systemd-units",
+					"post: systemd",	//"post: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
+					"preun: systemd",	//"preun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
+					"postun: systemd",	//"postun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
 					//"manual: config(subscription-manager) = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: config(subscription-manager) = 1.9.11-1.el6",
 					//"post: /bin/sh",
 					//"preun: /bin/sh",
 					//"postun: /bin/sh",
-					"post: chkconfig",
-					"preun: chkconfig",
+					//"post: chkconfig",	// removed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
+					//"preun: chkconfig",	// removed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
 					"manual: dbus-python",
-					"preun: initscripts",
+					//"preun: initscripts",	// removed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
 					"manual: pygobject2",
 					"manual: python-dateutil",
 					"manual: python-dmidecode",
 					"manual: python-ethtool",
 					"manual: python-iniparse",
-					//"manual: python-rhsm >= 1.9.1-1"/*RHEL65*/,
-					"manual: python-rhsm >= 1.10.9"/*RHEL70*/,
+					"manual: python-rhsm >= 1.10.9",	// RHEL7.0
 					//"manual: python-simplejson",	// removed by bug 1006748
 					"manual: usermode",
 					"manual: virt-what",
