@@ -4538,7 +4538,7 @@ if (true) throw new SkipException("The remaining test logic in this test needs a
 	@AfterClass(groups = "setup")	// called after class for insurance
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null) return;
-//debugtesting		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
+		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
 	}
 	
 	
