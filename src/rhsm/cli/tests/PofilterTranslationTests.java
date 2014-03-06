@@ -82,10 +82,10 @@ import com.redhat.qe.tools.SSHCommandRunner;
 					[gguerrer@redhat.com]	(Gladys Guerrero-Lozan)
 			fr		[sfriedma@redhat.com]	(Sam Friedmann)
 			gu		[swkothar@redhat.com]	(Sweta Kothari)
-			hi		[rranjan@redhat.com]	(Rajesh Ranjan)
+			hi		[rranjan@redhat.com]	(Rajesh Ranjan)			Sharath
 			it		[fvalen@redhat.com]		(Francesco Valente)
 			ja		[noriko@redhat.com]		(Noriko Mizumoto)
-			kn		[svenkate@redhat.com]	(Prasad Shankar)
+			kn		[svenkate@redhat.com]	(Prasad Shankar)  		Sharath
 			ko		[eukim@redhat.com]		(Eun Ju Kim)
 			ml		[apeter@redhat.com]		(Ani Peter)
 			mr		[sshedmak@redhat.com]	(Sandeep Shedmake)
@@ -94,8 +94,8 @@ import com.redhat.qe.tools.SSHCommandRunner;
 					[asaini@redhat.com]		(Amandeep Singh Saini)
 			pt-BR	[gcintra@redhat.com]	(Glaucia Cintra de Freitas)
 			ru		[ypoyarko@redhat.com]	(Yulia Poyarkova)
-			ta_IN	[shkumar@redhat.com]	(Shantha Kumar)
-			te		[kkrothap@redhat.com]	(Krishnababu Krothap)
+			ta_IN	[shkumar@redhat.com]	(Shantha Kumar)			Sharath's friends
+			te		[kkrothap@redhat.com]	(Krishnababu Krothap)	Sharath's friends
 			zh-CN	[lliu@redhat.com]		(Leah Liu)
 			zh-TW	[tchuang@redhat.com]	(Terry Chuang)
 			
