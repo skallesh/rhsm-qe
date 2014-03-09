@@ -324,6 +324,17 @@ schema generation failed
 	public void setupTranslateToolkit(String gitRepository) {
 		if (gitRepository.equals("")) return;
 		
+		// NOTES:
+		//	3/9/2014 Started getting the following error when running pofilter 
+		//	ImportError: No module named six.moves.html_entities
+		// SOLUTION:
+		//	https://pypi.python.org/pypi/six/#downloads
+		//	cd ~
+		//	wget https://pypi.python.org/packages/source/s/six/six-1.5.2.tar.gz#md5=322b86d0c50a7d165c05600154cecc0a --no-check-certificate
+		//	tar -xvf six-1.5.2.tar.gz
+		//	cd six-1.5.2
+		//	python setup.py install --force
+		
 		// git clone git://github.com/translate/translate.git
 		log.info("Cloning Translate Toolkit...");
 		final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
