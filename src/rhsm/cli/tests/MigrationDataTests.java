@@ -999,7 +999,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 
 		// get all of the available RHN Classic child channels available for consumption under this base channel
 		rhnAvailableChildChannels.clear();
-		String command = String.format("rhn-channels.py --username=%s --password=%s --server=%s --basechannel=%s --no-custom --available", sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnBaseChannel);
+		String serverUrl = sm_rhnHostname; if (!serverUrl.startsWith("http")) serverUrl="https://"+sm_rhnHostname;
+		String command = String.format("rhn-channels.py --username=%s --password=%s --serverurl=%s --basechannel=%s --no-custom --available", sm_rhnUsername, sm_rhnPassword, serverUrl, rhnBaseChannel);
 		//debugTesting if (true) command = "echo rhel-x86_64-server-5 && echo rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 && echo rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5";
 		
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0));
