@@ -196,6 +196,7 @@
   "Asserts that all the information in the about dialog is correct."
   [_]
   (try
+    (tasks/restart-app)
     (tasks/ui click :about)
     (tasks/ui waittillwindowexist :about-dialog 10)
     (let [get-gui-version (fn [k] (last (split (tasks/ui gettextvalue k) #" ")))
@@ -260,6 +261,7 @@
   "Asserts that the selection made in the autohal checkbox is persistant."
   [_]
   (try
+    (tasks/restart-app)
     (let [is-checked? (fn [] (bool (tasks/ui verifycheck :autoheal-checkbox)))
           waittillcheck (fn [b s]
                           (try
