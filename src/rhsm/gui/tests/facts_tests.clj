@@ -30,6 +30,7 @@
 (def cli-facts (atom nil))
 (def installed-certs (atom nil))
 (def productstatus (atom nil))
+(def status-before-subscribe (atom {}))
 
 (defn get-cli-facts []
   (let [allfacts (:stdout
@@ -196,6 +197,7 @@
   "Asserts that all the information in the about dialog is correct."
   [_]
   (try
+    (tasks/restart-app)
     (tasks/ui click :about)
     (tasks/ui waittillwindowexist :about-dialog 10)
     (let [get-gui-version (fn [k] (last (split (tasks/ui gettextvalue k) #" ")))
@@ -260,6 +262,7 @@
   "Asserts that the selection made in the autohal checkbox is persistant."
   [_]
   (try
+    (tasks/restart-app)
     (let [is-checked? (fn [] (bool (tasks/ui verifycheck :autoheal-checkbox)))
           waittillcheck (fn [b s]
                           (try
@@ -290,38 +293,42 @@
       (if (bool (tasks/ui guiexist :system-preferences-dialog))
         (tasks/ui click :close-system-prefs)))))
 
+(defn ^{BeforeGroups {:groups ["facts"]
+                     :value ["check_status_message_for_subscriptions"]}}
+  before_check_status_message
+  [_]
+  (tasks/unsubscribe_all)
+  (tasks/restart-app :reregister? true))
+
 (defn ^{Test {:groups ["facts"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"]
-              :value ["check_status_message_for_subscriptions"]}}
-  check_status_message
-  "Asserts that status message displayed in main-window is right when products are subscribed
-   to their subscription on current and  future dates and also for expired subscriptions"
+              :value ["check_status_message_for_subscriptions"]
+              :priority (int 100)}}
+  check_status_message_before_attaching
+  "Asserts that status message displayed in main-window is right before subscriptions are attached"
   [_]
   (try
-    (tasks/unsubscribe_all)
-    (tasks/restart-app :reregister? true)
-    (let [installed-products (atom {})
-          status-before-subscribe (atom {})
-          subscribed-products (atom {})
-          after-subscribe (atom {})
-          subscribed-products-date (atom {})
-          after-date-products (atom {})
-          subscribed-products-future (atom {})
-          after-future-subscribe (atom {})
-          present-date (do (tasks/ui selecttab :all-available-subscriptions)
-                           (tasks/ui gettextvalue :date-entry))
-          date-split (split present-date #"-")
-          year (first date-split)
-          month (second date-split)
-          day (last date-split)
-          new-year (+ (Integer. (re-find  #"\d+" year)) 1)]
-      ;; scenario without subscribing
+    (let
+  	[installed-products (atom {})]
       (reset! installed-products (tasks/ui getrowcount :installed-view))
       (reset! status-before-subscribe
               (Integer. (re-find #"\d*" (tasks/ui gettextvalue :overall-status))))
-      (verify (= @installed-products @status-before-subscribe))
-      ;; scenario after subscribing
+      (verify (= @installed-products @status-before-subscribe)))))
+
+(defn ^{Test {:groups ["facts"
+                       "blockedByBug-1012501"
+                       "blockedByBug-1040119"]
+              :value ["check_status_message_for_subscriptions"]
+              :dependsOnMethods ["check_status_message_before_subscribing"]
+              :priority (int 101)}}
+  check_status_message_after_attaching
+  "Asserts that status message displayed in main-window is right after attaching subscriptions"
+  [_]
+  (try
+    (let
+  	[subscribed-products (atom {})
+         after-subscribe (atom {})]
       (tasks/search :match-installed? true)
       (dotimes [n 3]
         (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
@@ -330,8 +337,29 @@
                                                  (tasks/get-table-elements :installed-view 2))))
       (reset! after-subscribe (Integer. (re-find #"\d*"
                                                  (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-subscribe (- @status-before-subscribe @subscribed-products)))
-      ;; scenario after subscribing to future subscriptions
+      (verify (= @after-subscribe (- @status-before-subscribe @subscribed-products))))))
+
+(defn ^{Test {:groups ["facts"
+                       "blockedByBug-1012501"
+                       "blockedByBug-1040119"]
+              :value ["check_status_message_for_subscriptions"]
+              :dependsOnMethods ["check_status_message_after_attaching"]
+              :priority (int 102)}}
+  check_status_message_future_subscriptions
+  "Asserts that status message displayed in main-window is right after attaching future
+   subscriptions"
+  [_]
+  (try
+    (let
+  	[subscribed-products-date (atom {})
+         after-date-products (atom {})
+         present-date (do (tasks/ui selecttab :all-available-subscriptions)
+                          (tasks/ui gettextvalue :date-entry))
+         date-split (split present-date #"-")
+         year (first date-split)
+         month (second date-split)
+         day (last date-split)
+         new-year (+ (Integer. (re-find  #"\d+" year)) 1)]
       (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
       (tasks/search :match-installed? true)
       (dotimes [n 3]
@@ -341,34 +369,43 @@
                                                       (tasks/get-table-elements :installed-view 2))))
       (reset! after-date-products (Integer. (re-find #"\d*"
                                                      (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date)))
-      ;; scenario after advancing dates and expiring subscriptions
-      (try
-        (run-command "date -s \"+1 year\"")
-        (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
-        (tasks/restart-app)
-        (reset! subscribed-products-future (count (filter #(= "Subscribed" %)
-                                                          (tasks/get-table-elements :installed-view 2))))
-        (reset! after-future-subscribe (Integer. (re-find #"\d*"
-                                                          (tasks/ui gettextvalue :overall-status))))
-        (verify (= @after-future-subscribe (- @status-before-subscribe @subscribed-products-future)))
-        (finally
-         (run-command "date -s \"-1 year\"")
-         (run-command "date -s \"-1 year\"" :runner @candlepin-runner))))
-    (finally
-     (tasks/unsubscribe_all)
-     ;(run-command "service ntpd stop; ntpdate clock.redhat.com; service ntpd start")
-     ;(run-command "service ntpd stop; ntpdate clock.redhat.com; service ntpd start"
-     ;            :runner @candlepin-runner
-     )))
+      (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date))))))
+
+(defn ^{Test {:groups ["facts"
+                       "blockedByBug-1012501"
+                       "blockedByBug-1040119"]
+              :value ["check_status_message_for_subscriptions"]
+              :dependsOnMethods ["check_status_message_future_subscriptions"]
+              :priority (int 103)}}
+  check_status_message_expired_subscriptions
+  "Asserts that status message displayed in main-window is right after expiring
+   attached subscriptions"
+  [_]
+  (try
+    (let
+  	[subscribed-products-future (atom {})
+         after-future-subscribe (atom {})]
+      (run-command "date -s \"+1 year\"")
+      (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
+      (tasks/restart-app)
+      (reset! subscribed-products-future (count (filter #(= "Subscribed" %)
+                                                        (tasks/get-table-elements :installed-view 2))))
+      (reset! after-future-subscribe (Integer. (re-find #"\d*"
+                                                        (tasks/ui gettextvalue :overall-status))))
+      (verify (= @after-future-subscribe (- @status-before-subscribe @subscribed-products-future)))
+      (finally
+    	(run-command "date -s \"-1 year\"")
+        (run-command "date -s \"-1 year\"" :runner @candlepin-runner)))))
 
 (defn ^{AfterGroups {:groups ["facts"]
                      :value ["check_status_message_for_subscriptions"]
                      :alwaysRun true}}
   after_check_status_message
   [_]
-  (:stdout (run-command "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"))
-  (:stdout (run-command "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"
+  (:stdout (run-command
+            "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"))
+  (:stdout (run-command
+            "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"
                         :runner @candlepin-runner)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
