@@ -61,6 +61,18 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *  product 150 is at
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree;f=product_ids/rhev-3.0;hb=HEAD
  *
+ *	Connecting to a Satellite (instead of rhn hosted
+ *	1. Set automation parameters:
+ *		sm.rhn.hostname : https://sat-56-server.usersys.redhat.com
+ *		sm.rhn.username : admin
+ *		sm.rhn.password : *****
+ *  2. Use firefox to login to the Satellite account
+ *      https://sat-56-server.usersys.redhat.com/rhn/Login.do
+ *      do whatever work you need to there
+ *  3. Get the CA cert from Satellite and install it onto your client
+ *      wget --no-verbose --no-check-certificate --output-document=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com https://sat-56-server.usersys.redhat.com/pub/RHN-ORG-TRUSTED-SSL-CERT
+ *  4. Update the /etc/sysconfig/rhn/up2date with
+ *      sslCACert=RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com
  */
 @Test(groups={"MigrationTests"})
 public class MigrationTests extends SubscriptionManagerCLITestScript {
@@ -747,7 +759,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//	1375391532.900    356 10.16.120.123 TCP_MISS/200 3571 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
 			//	1375391533.435    514 10.16.120.123 TCP_MISS/200 1811 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
 			if (proxyLogRegex.equals("TCP_MISS") && !proxyLogResult.trim().isEmpty()) for (String proxyLogEntry : proxyLogResult.trim().split("\n")) {
-				Assert.assertTrue(proxyLogEntry.contains(rhnHostname), "Running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
+				Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", "")), "Running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
 			}
 			// /var/log/tinyproxy.log
 			//	CONNECT   Aug 01 17:44:56 [10139]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
@@ -773,9 +785,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//	1375391374.579     51 10.16.120.123 TCP_MISS/200 2110 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
 			//	1375391374.701    106 10.16.120.123 TCP_MISS/200 1518 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
 			if (proxyLogRegex.equals("TCP_MISS") && !proxyLogResult.trim().isEmpty()) {
-				Assert.assertTrue(proxyLogResult.contains(rhnHostname) && proxyLogResult.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should log proxy attempts to '"+rhnHostname+"' and '"+candlepinServerHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
-				for (String proxyLogEntry : proxyLogResult.trim().split("\n")) Assert.assertTrue(proxyLogEntry.contains(rhnHostname)||proxyLogEntry.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname+"' or '"+candlepinServerHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
-				Assert.assertEquals(getSubstringMatches(proxyLogResult,rhnHostname).size(), numberOfConnectionAttempts, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield exactly this number of connection attempts through the proxy to RHN hostname '"+rhnHostname+"'.");
+				Assert.assertTrue(proxyLogResult.contains(rhnHostname.replaceFirst("https?://", "")) && proxyLogResult.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' and '"+candlepinServerHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
+				for (String proxyLogEntry : proxyLogResult.trim().split("\n")) Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", ""))||proxyLogEntry.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' or '"+candlepinServerHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
+				Assert.assertEquals(getSubstringMatches(proxyLogResult,rhnHostname.replaceFirst("https?://", "")).size(), numberOfConnectionAttempts, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield exactly this number of connection attempts through the proxy to RHN hostname '"+rhnHostname.replaceFirst("https?://", "")+"'.");
 			}
 			// /var/log/tinyproxy.log
 			//	CONNECT   Aug 01 17:40:55 [10134]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
@@ -1454,6 +1466,30 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (String pkg : new String[]{"subscription-manager-migration", "subscription-manager-migration-data", "expect"}) {
 			Assert.assertTrue(clienttasks.isPackageInstalled(pkg),"Required package '"+pkg+"' is installed for MigrationTests.");
 		}
+		
+		// make sure we have the RHN-ORG-TRUSTED-SSL-CERT for the rhn/satellite server
+		/*
+		 * 	1. Set automation parameters:
+		 * 		sm.rhn.hostname : https://sat-56-server.usersys.redhat.com
+		 *		sm.rhn.username : admin
+		 *		sm.rhn.password : *****
+		 *  2. Use firefox to login to the Satellite account
+		 *      https://sat-56-server.usersys.redhat.com/rhn/Login.do
+		 *      do whatever work you need to there
+		 *  3. Get the CA cert from Satellite and install it onto your client
+		 *      wget --no-verbose --no-check-certificate --output-document=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com https://sat-56-server.usersys.redhat.com/pub/RHN-ORG-TRUSTED-SSL-CERT
+		 *  4. Update the /etc/sysconfig/rhn/up2date with
+		 *      sslCACert=RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com
+		 */
+		// Get the CA cert from Satellite and install it onto your client
+		if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
+			String satHostname = sm_rhnHostname.split("/")[2];	// https://sat-56-server.usersys.redhat.com
+			String satCaCertPath = "/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"+"_"+satHostname;
+			RemoteFileTasks.runCommandAndAssert(client,"wget --no-verbose --no-check-certificate --output-document="+satCaCertPath+" "+sm_rhnHostname+"/pub/RHN-ORG-TRUSTED-SSL-CERT",Integer.valueOf(0),null,"-> \""+satCaCertPath+"\"");
+			
+			// Update /etc/sysconfig/rhn/up2date->sslCACert with satCaCertPath
+			clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "sslCACert", satCaCertPath);	// sslCACert[comment]=The CA cert used to verify the ssl server
+		}
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods={/*NOT TRUE "setupBeforeClass"*/})
@@ -1567,7 +1603,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		// get all of the available RHN Classic child channels available for consumption under this base channel
 		rhnAvailableChildChannels.clear();
-		String command = String.format("rhn-channels.py --username=%s --password=%s --server=%s --basechannel=%s --no-custom --available", sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnBaseChannel);
+		String serverUrl = sm_rhnHostname; if (!serverUrl.startsWith("http")) serverUrl="https://"+sm_rhnHostname;
+		String command = String.format("rhn-channels.py --username=%s --password=%s --serverurl=%s --basechannel=%s --no-custom --available", sm_rhnUsername, sm_rhnPassword, serverUrl, rhnBaseChannel);
 		///*debugTesting RHEL5*/ if (true) command = "echo rhel-x86_64-server-5 && echo rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 && echo rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5";
 		///*debugTesting RHEL6*/ if (true) command = "echo rhel-x86_64-server-6 && echo rhel-x86_64-server-rs-6 && echo rhel-x86_64-server-sfs-6 && echo rhel-x86_64-server-lb-6";
 		
@@ -1579,7 +1616,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (String rhnChannel : rhnChannels) {
 			if (!rhnChannel.equals(rhnBaseChannel)) rhnAvailableChildChannels.add(rhnChannel.trim()); 
 		}
-		Assert.assertTrue(rhnAvailableChildChannels.size()>0,"A positive number of child channels under the RHN Classic base channel '"+rhnBaseChannel+"' are available for consumption.");
+		//Assert.assertTrue(rhnAvailableChildChannels.size()>0,"A positive number of child channels under the RHN Classic base channel '"+rhnBaseChannel+"' are available for consumption.");
+		if (rhnAvailableChildChannels.isEmpty()) log.warning("Did NOT find any child channels under the RHN Classic base channel '"+rhnBaseChannel+"' available for consumption.");
 	}
 	
 	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test","RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test"})
@@ -1877,6 +1915,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// 8/4/2012 new behavior...
 		// the migration tool will always prompt rhn credentials to migrate the system "from"
 		// the migration tool will only prompt for destination credentials to migrate the system "to" when the configured hostname does not match subscription.rhn(.*).redhat.com
+		// we do this to avoid unnecessary prompting for duplicate credentials.
+		// If you try to migrate from a non-hosted rhn (such as satellite) to a hosted rhsm system, you will get this... 
+		// Unable to connect to certificate server: Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html.  See /var/log/rhsm/rhsm.log for more details.
 		
 		// surround tcl args containing white space with ticks and call the TCL expect script for rhn-migrate-classic-to-rhsm
 		if (options!=null && options.contains(" "))				options			= String.format("'%s'", options);
@@ -2158,56 +2199,84 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		int rhnChildChannelSubSize = 40;	// 50;	// used to break down rhnAvailableChildChannels into smaller sub-lists to avoid bugs 818786 881952
-		
-		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
-		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
-		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
-			rhsmUsername = sm_clientUsername;
-			rhsmPassword = sm_clientPassword;
-			rhsmOrg = sm_clientOrg;
+
+// DELETEME
+//		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose good credentials for registration
+//		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
+//		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
+//			rhsmUsername = sm_clientUsername;
+//			rhsmPassword = sm_clientPassword;
+//			rhsmOrg = sm_clientOrg;
+//		}
+//		
+//		// predict the valid service levels that will be available to the migrated consumer
+//		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(rhsmUsername==null?sm_rhnUsername:rhsmUsername, rhsmPassword==null?sm_rhnPassword:rhsmPassword, rhsmOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+//		String orgKey = CandlepinTasks.getOwnerKeyOfConsumerId(rhsmUsername==null?sm_rhnUsername:rhsmUsername, rhsmPassword==null?sm_rhnPassword:rhsmPassword, sm_serverUrl, consumerId);
+//		List<String> rhsmServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(rhsmUsername==null?sm_rhnUsername:rhsmUsername, rhsmPassword==null?sm_rhnPassword:rhsmPassword, sm_serverUrl, orgKey);	
+//		clienttasks.unregister(null, null, null);
+//		
+//		// predict the expected service level from the defaultServiceLevel on the Org
+//		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(rhsmUsername==null?sm_rhnUsername:rhsmUsername, rhsmPassword==null?sm_rhnPassword:rhsmPassword, sm_serverUrl, "/owners/"+orgKey));
+//		String defaultServiceLevel = (jsonOrg.get("defaultServiceLevel").equals(JSONObject.NULL))? "":jsonOrg.getString("defaultServiceLevel");
+		// when we are migrating away from RHN Classic to a non-hosted candlepin server, determine good credentials for rhsm registration
+		String rhsmUsername=sm_clientUsername, rhsmPassword=sm_clientPassword, rhsmOrg=sm_clientOrg;	// default
+		if (clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null).getExitCode().equals(new Integer(0))) { // try sm_rhnUsername sm_rhnPassword...
+			rhsmUsername=sm_rhnUsername; rhsmPassword=sm_rhnPassword; rhsmOrg = null;
 		}
 		
 		// predict the valid service levels that will be available to the migrated consumer
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(rhsmUsername==null?sm_rhnUsername:rhsmUsername, rhsmPassword==null?sm_rhnPassword:rhsmPassword, rhsmOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
-		String orgKey = CandlepinTasks.getOwnerKeyOfConsumerId(rhsmUsername==null?sm_rhnUsername:rhsmUsername, rhsmPassword==null?sm_rhnPassword:rhsmPassword, sm_serverUrl, consumerId);
-		List<String> rhsmServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(rhsmUsername==null?sm_rhnUsername:rhsmUsername, rhsmPassword==null?sm_rhnPassword:rhsmPassword, sm_serverUrl, orgKey);	
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(rhsmUsername, rhsmPassword, rhsmOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		String orgKey = CandlepinTasks.getOwnerKeyOfConsumerId(rhsmUsername, rhsmPassword, sm_serverUrl, consumerId);
+		List<String> rhsmServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(rhsmUsername, rhsmPassword, sm_serverUrl, orgKey);	
 		clienttasks.unregister(null, null, null);
 		
 		// predict the expected service level from the defaultServiceLevel on the Org
-		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(rhsmUsername==null?sm_rhnUsername:rhsmUsername, rhsmPassword==null?sm_rhnPassword:rhsmPassword, sm_serverUrl, "/owners/"+orgKey));
+		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(rhsmUsername, rhsmPassword, sm_serverUrl, "/owners/"+orgKey));
 		String defaultServiceLevel = (jsonOrg.get("defaultServiceLevel").equals(JSONObject.NULL))? "":jsonOrg.getString("defaultServiceLevel");
+		
+		// Note: To avoid redundent prompting for credentials, rhn-migrate-classic-to-rhsm will NOT prompt for rhsm Username/Password/Org when the rhsm server matches subscription\.rhn\.(.+\.)*redhat\.com
+		// This causes a testing problem when migrating from a satellite server to rhsm hosted - adding a valid --serverurl to the options is a good workaround
+		String rhsmServerUrlOption="";
+		if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
+			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+				// force a valid --serverurl
+				rhsmServerUrlOption = " --serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;
+			}
+		}
 		
 		// create some variations on a valid serverUrl to test the --serverurl option
 		List<String> rhsmServerUrls = new ArrayList<String>();
-		if (isHostnameHosted(originalServerHostname)) {
-			rhsmServerUrls.add(originalServerHostname);
-			rhsmServerUrls.add("https://"+originalServerHostname);
-			rhsmServerUrls.add("https://"+originalServerHostname+originalServerPrefix);
-			rhsmServerUrls.add("https://"+originalServerHostname+":"+originalServerPort);
-			rhsmServerUrls.add("https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix);
-		} else {	// Note: only a fully qualified server url will work for a non-hosted hostname because otherwise the (missing port/prefix defaults to 443/subscription) results will end up with: Unable to connect to certificate server: (111, 'Connection refused'). See /var/log/rhsm/rhsm.log for more details.
-			rhsmServerUrls.add(originalServerHostname+":"+originalServerPort+originalServerPrefix);
-			rhsmServerUrls.add("https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix);
+		if (rhsmServerUrlOption.isEmpty()) {	// skip testing variations on a valid serverUrl when a valid rhsmServerUrlOption is already being included in all data provided rows
+			if (isHostnameHosted(originalServerHostname)) {
+				rhsmServerUrls.add(originalServerHostname);
+				rhsmServerUrls.add("https://"+originalServerHostname);
+				rhsmServerUrls.add("https://"+originalServerHostname+originalServerPrefix);
+				rhsmServerUrls.add("https://"+originalServerHostname+":"+originalServerPort);
+				rhsmServerUrls.add("https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix);
+			} else {	// Note: only a fully qualified server url will work for a non-hosted hostname because otherwise the (missing port/prefix defaults to 443/subscription) results will end up with: Unable to connect to certificate server: (111, 'Connection refused'). See /var/log/rhsm/rhsm.log for more details.
+				rhsmServerUrls.add(originalServerHostname+":"+originalServerPort+originalServerPrefix);
+				rhsmServerUrls.add("https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix);
+			}
 		}
 		
 		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String rhsmUsername, String rhsmPassword, String rhsmOrg, Integer serviceLevelIndex, String serviceLevelExpected
 
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"-n",		sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"-n",		sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"-n"+rhsmServerUrlOption,		sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
+		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"-n"+rhsmServerUrlOption,		sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
 		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
 			List<String> rhnSubsetOfAvailableChildChannels = rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize);
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"849644","980209"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnSubsetOfAvailableChildChannels,	"-n -f",	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));		
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"849644","980209"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnSubsetOfAvailableChildChannels,	"-n -f"+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));		
 			List<String> rhnNonBetaSubsetOfAvailableChildChannels = new ArrayList<String>(); for (String rhnChannel: rhnSubsetOfAvailableChildChannels) if (!rhnChannel.contains("-beta")) rhnNonBetaSubsetOfAvailableChildChannels.add(rhnChannel);
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"849644","980209"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnNonBetaSubsetOfAvailableChildChannels,	"-n -f",	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));		
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"849644","980209"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnNonBetaSubsetOfAvailableChildChannels,	"-n -f"+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));		
 		}
 
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"",			sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"",			sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	/*areAllChannelsMapped(rhnAvailableChildChannels)?noServiceLevelIndex:*/null,	defaultServiceLevel}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		""+rhsmServerUrlOption,			sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
+		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		""+rhsmServerUrlOption,			sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	/*areAllChannelsMapped(rhnAvailableChildChannels)?noServiceLevelIndex:*/null,	defaultServiceLevel}));
 		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
 			List<String> rhnSubsetOfAvailableChildChannels = rhnAvailableChildChannels.subList(i,i+rhnChildChannelSubSize>rhnAvailableChildChannels.size()?rhnAvailableChildChannels.size():i+rhnChildChannelSubSize);
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnSubsetOfAvailableChildChannels,	"-f",	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));		
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnSubsetOfAvailableChildChannels,	"-f"+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));		
 			List<String> rhnNonBetaSubsetOfAvailableChildChannels = new ArrayList<String>(); for (String rhnChannel: rhnSubsetOfAvailableChildChannels) if (!rhnChannel.contains("-beta")) rhnNonBetaSubsetOfAvailableChildChannels.add(rhnChannel);
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnNonBetaSubsetOfAvailableChildChannels,	"-f",	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));		
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnNonBetaSubsetOfAvailableChildChannels,	"-f"+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));		
 		}
 		
 		// test variations of a valid serverUrl
@@ -2220,9 +2289,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (String serviceLevel : rhsmServiceLevels) {
 			String options;
 			options = String.format("--force --servicelevel=%s",serviceLevel); if (serviceLevel.contains(" ")) options = String.format("--force --servicelevel \"%s\"", serviceLevel);
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	serviceLevel}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	serviceLevel}));	
 			options = String.format("-f -s %s",randomizeCaseOfCharactersInString(serviceLevel)); if (serviceLevel.contains(" ")) options = String.format("-f -s \"%s\"", randomizeCaseOfCharactersInString(serviceLevel));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	serviceLevel}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	serviceLevel}));
 		}
 		
 		// attempt an unavailable servicelevel, then choose an available one from the index table
@@ -2230,24 +2299,24 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			int serviceLevelIndex = randomGenerator.nextInt(rhsmServiceLevels.size());
 			String serviceLevel = rhsmServiceLevels.get(serviceLevelIndex);
 			serviceLevelIndex++;	// since the interactive menu of available service-levels to choose from is indexed starting at 1.
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA",				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	serviceLevelIndex,	serviceLevel}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA"+rhsmServerUrlOption,				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	serviceLevelIndex,	serviceLevel}));	
 		}
 		
 		// attempt an unavailable servicelevel, then choose no service level
 		if (!rhsmServiceLevels.isEmpty()) {
 			int noServiceLevelIndex = rhsmServiceLevels.size()+1;	// since the last item in the interactive menu of available service-levels is "#. No service level preference"
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA",				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	noServiceLevelIndex,	""}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA"+rhsmServerUrlOption,				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	noServiceLevelIndex,	""}));	
 		}
 		
 		// test --org as a command line option
 		if (rhsmOrg!=null) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"849644","877331"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto --org="+rhsmOrg,			sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	null,	null,	defaultServiceLevel}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"849644","877331"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto --org="+rhsmOrg+rhsmServerUrlOption,			sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	null,	null,	defaultServiceLevel}));
 		}
 		
 		// test --redhat-user --redhat-password --subscription-service-user --subscription-service-password as a command line option
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("912375"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--redhat-user=%s --redhat-password=%s",sm_rhnUsername,sm_rhnPassword),			null,	null,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("912375"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--subscription-service-user=%s --subscription-service-password=%s",rhsmUsername,rhsmPassword),			sm_rhnUsername,	sm_rhnPassword,	null,	null,	rhsmOrg,	null,	defaultServiceLevel}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("912375"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--redhat-user=%s --redhat-password=%s --subscription-service-user=%s --subscription-service-password=%s",sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword),			null,	null,	null,	null,	rhsmOrg,	null,	defaultServiceLevel}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("912375"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--redhat-user=%s --redhat-password=%s",sm_rhnUsername,sm_rhnPassword)+rhsmServerUrlOption,			null,	null,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("912375"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--subscription-service-user=%s --subscription-service-password=%s",rhsmUsername,rhsmPassword)+rhsmServerUrlOption,			sm_rhnUsername,	sm_rhnPassword,	null,	null,	rhsmOrg,	null,	defaultServiceLevel}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("912375"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--redhat-user=%s --redhat-password=%s --subscription-service-user=%s --subscription-service-password=%s",sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword)+rhsmServerUrlOption,			null,	null,	null,	null,	rhsmOrg,	null,	defaultServiceLevel}));
 
 		
 		// when rhsmOrg is not null, add bug BlockedByBzBug 849483 to all rows
@@ -2257,6 +2326,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			bugIds.add("849483");	// 849483 - rhn-migrate-classic-to-rhsm fails to prompt for needed System Engine org credentials 
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			l.set(0, blockedByBzBug);
+		}
+		
+		// when testing with child channels, add bug BlockedByBzBug 1075167 to affected rows
+		for (List<Object> l : ll) {
+			if (!((List<String>)(l.get(4))).isEmpty()) {	// affected rows have a positive List<String> rhnChannelsToAdd
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+				bugIds.add("1075167");	// Bug 1075167 - rhn-migrate-classic-to-rhsm throws Traceback KeyError: "Unknown feature: 'IDENTITY'"
+				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				l.set(0, blockedByBzBug);
+			}
 		}
 		
 		return ll;
@@ -2275,33 +2355,60 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		String basicauthproxyUrl = String.format("%s:%s", sm_basicauthproxyHostname,sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", sm_noauthproxyHostname,sm_noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
+
+// DELETEME
+//		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
+//		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
+//		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
+//			rhsmUsername = sm_clientUsername;
+//			rhsmPassword = sm_clientPassword;
+//			rhsmOrg = sm_clientOrg;
+//		}
+		// when we are migrating away from RHN Classic to a non-hosted candlepin server, determine good credentials for rhsm registration
+		String rhsmUsername=sm_clientUsername, rhsmPassword=sm_clientPassword, rhsmOrg=sm_clientOrg;	// default
+		if (clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null).getExitCode().equals(new Integer(0))) { // try sm_rhnUsername sm_rhnPassword...
+			rhsmUsername=sm_rhnUsername; rhsmPassword=sm_rhnPassword; rhsmOrg = null;
+		}
 		
-		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
-		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
-		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
-			rhsmUsername = sm_clientUsername;
-			rhsmPassword = sm_clientPassword;
-			rhsmOrg = sm_clientOrg;
+		// Note: To avoid redundent prompting for credentials, rhn-migrate-classic-to-rhsm will NOT prompt for rhsm Username/Password/Org when the rhsm server matches subscription\.rhn\.(.+\.)*redhat\.com
+		// This causes a testing problem when migrating from a satellite server to rhsm hosted - adding a valid --serverurl to the options is a good workaround
+		String rhsmServerUrlOption="";
+		if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
+			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+				// force a valid --serverurl
+				rhsmServerUrlOption = " --serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;
+			}
 		}
 		
 		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String rhsmUsername, String rhsmPassword, String rhsmOrg, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex
 
 		// basic auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("915847"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto --no-proxy",		sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	"http://"+sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force",	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto"+rhsmServerUrlOption,				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("915847"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto --no-proxy"+rhsmServerUrlOption,		sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto"+rhsmServerUrlOption,				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	"http://"+sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force"+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
 		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("980209") /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	"--no-auto --force",	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("980209") /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	"--no-auto --force"+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
 		}
 		
 		// no auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("915847"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto --no-proxy",		sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	"http://"+sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force",	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto"+rhsmServerUrlOption,				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("915847"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto --no-proxy"+rhsmServerUrlOption,		sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto"+rhsmServerUrlOption,				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	"http://"+sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force"+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
 		for (int i=0; i<rhnAvailableChildChannels.size(); i+=rhnChildChannelSubSize) {	// split rhnAvailableChildChannels into sub-lists of 50 channels to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("980209") /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	"--no-auto --force",	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("980209") /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	"--no-auto --force"+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		}
+		
+		// when testing with child channels, add bug BlockedByBzBug 1075167 to affected rows
+		for (List<Object> l : ll) {
+			if (!((List<String>)(l.get(4))).isEmpty()) {	// affected rows have a positive List<String> rhnChannelsToAdd
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+				bugIds.add("1075167");	// Bug 1075167 - rhn-migrate-classic-to-rhsm throws Traceback KeyError: "Unknown feature: 'IDENTITY'"
+				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				l.set(0, blockedByBzBug);
+			}
 		}
 		
 		return ll;
