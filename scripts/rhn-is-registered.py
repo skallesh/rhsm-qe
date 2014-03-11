@@ -12,7 +12,7 @@ parser = OptionParser(usage=usage)
 parser.add_option("-u", "--username", dest="username", help="Username")
 parser.add_option("-p", "--password", dest="password", help="Password")
 #parser.add_option("-i", "--systemid", dest="systemid", help="System id to check for registration")
-parser.add_option("-s", "--server", dest="server", help="Server hostname rhn.redhat.com", default="rhn.redhat.com")
+parser.add_option("-s", "--serverurl", dest="serverurl", help="Server URL https://rhn.redhat.com", default="https://rhn.redhat.com")
 (options, args) = parser.parse_args()
 
 if not options.username or not options.password or not args:
@@ -25,7 +25,7 @@ systemid = args[0];
 
 # create an api connection to the server
 # RHN API documentation: https://access.stage.redhat.com/knowledge/docs/Red_Hat_Network/
-client = Server("https://%s/rpc/api/" % options.server)
+client = Server("%s/rpc/api/" % options.serverurl)
 # sessionKey = client.auth.login(options.username, options.password)
 sessionKey = None
 count = 0
@@ -44,7 +44,7 @@ while (sessionKey == None):
 system_list = client.system.listUserSystems(sessionKey)
 registered = False;
 for system in system_list:
-    if system["id"] == systemid:
+    if str(system["id"]) == str(systemid):
         registered = True;
         break;
 
