@@ -6392,11 +6392,12 @@ public class SubscriptionManagerTasks {
 	 * @return SSHCommandResult containing stdout stderr and exitCode
 	 */
 	public SSHCommandResult registerToRhnClassic_(String rhnUsername, String rhnPassword, String rhnHostname) {
+		String serverUrl = rhnHostname+"/XMLRPC"; if (!rhnHostname.startsWith("http")) serverUrl = "https://xmlrpc."+serverUrl;
 		
 		// register to RHN Classic
 		// [root@jsefler-onprem-5server ~]# rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
 		//	ERROR: refreshing remote package list for System Profile
-		String command = String.format("rhnreg_ks --serverUrl=https://xmlrpc.%s/XMLRPC --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", rhnHostname, rhnUsername, rhnPassword, "rhsm-automation."+hostname);
+		String command = String.format("rhnreg_ks --serverUrl=%s --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", serverUrl, rhnUsername, rhnPassword, "rhsm-automation."+hostname);
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
@@ -6527,7 +6528,8 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public boolean isRhnSystemIdRegistered(String rhnUsername, String rhnPassword,String rhnHostname, String systemId) {
-		String command = String.format("rhn-is-registered.py --username=%s --password=%s --server=%s  %s", rhnUsername, rhnPassword, rhnHostname, systemId);
+		String serverUrl = rhnHostname; if (!serverUrl.startsWith("http")) serverUrl="https://"+serverUrl;
+		String command = String.format("rhn-is-registered.py --username=%s --password=%s --serverurl=%s  %s", rhnUsername, rhnPassword, serverUrl, systemId);
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
 		return Boolean.valueOf(result.getStdout().trim());
 	}
