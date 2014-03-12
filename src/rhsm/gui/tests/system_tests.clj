@@ -293,7 +293,7 @@
          log-timestamp (re-find #"\d+:\d+:\d+" output)
          ;; The following steps add minutes to the time as this is the default
          ;; interval in conf file. The step which follows is conversion of time
-         ;; formats this is because the logs have 24hrs time format and the GUI 
+         ;; formats this is because the logs have 24hrs time format and the GUI
          ;; has 12hrs time format. The last step adds a zero if the time
          ;; is less than 10hrs which makes sting comparison easier
          interval (trim-newline (:stdout (run-command "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
@@ -458,7 +458,8 @@
               :value ["assert_subscription_field"]
               :dataProvider "subscribed"}}
   assert_subscription_field
-  "Tests whether the subscripton field in installed view is populated when the entitlement is subscribed"
+  "Tests whether the subscripton field in installed view is populated when the entitlement
+   is subscribed"
   [_ product]
   (if (not (= "Not Subscribed"
               (tasks/ui getcellvalue :installed-view
