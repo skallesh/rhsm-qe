@@ -320,7 +320,7 @@
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"]
               :value ["check_status_message_for_subscriptions"]
-              :dependsOnMethods ["check_status_message_before_subscribing"]
+              :dependsOnMethods ["check_status_message_before_attaching"]
               :priority (int 101)}}
   check_status_message_after_attaching
   "Asserts that status message displayed in main-window is right after attaching subscriptions"
