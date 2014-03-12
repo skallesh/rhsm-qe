@@ -287,6 +287,11 @@
      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
      (tasks/unregister))))
 
+(def ^{Test {:groups ["autosubscribe"
+                      "blockedByBug 857147"]}}
+  (verify (tasks/ui showing? :auto-attach))
+  )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
