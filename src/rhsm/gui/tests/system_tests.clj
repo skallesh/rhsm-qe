@@ -522,9 +522,12 @@
   []
   (if (not (tasks/ui showing? :register-system))
     (tasks/register-with-creds))
-  (tasks/subscribe_all)
-  (let [status (distinct (tasks/get-table-elements :installed-view 2))]
-    (verify (= 3 (count status)))))
+  (try
+    (tasks/subscribe_all)
+    (let [status (distinct (tasks/get-table-elements :installed-view 2))]
+      (verify (= 3 (count status))))
+    (finally
+      (tasks/unsubscribe_all))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      DATA PROVIDERS      ;;
