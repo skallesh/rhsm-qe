@@ -1252,22 +1252,30 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
 	    removeProxyServerConfigurations();	// cleanup from prior tests
+	    
+// DELETEME
+//		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
+//		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
+//		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
+//			rhsmUsername = sm_clientUsername;
+//			rhsmPassword = sm_clientPassword;
+//			rhsmOrg = sm_clientOrg;
+//		}
+		// when we are migrating away from RHN Classic to a non-hosted candlepin server, determine good credentials for rhsm registration
+		String rhsmUsername=sm_clientUsername, rhsmPassword=sm_clientPassword, rhsmOrg=sm_clientOrg;	// default
+		if (clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null).getExitCode().equals(new Integer(0))) { // try sm_rhnUsername sm_rhnPassword...
+			rhsmUsername=sm_rhnUsername; rhsmPassword=sm_rhnPassword; rhsmOrg = null;
+		}
 	    clienttasks.unregister(null,null,null);
 	    clienttasks.removeRhnSystemIdFile();
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"This system is not registered using RHN Classic.");
 		
-		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
-		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
-		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
-			rhsmUsername = sm_clientUsername;
-			rhsmPassword = sm_clientPassword;
-			rhsmOrg = sm_clientOrg;
-		}
-		
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
+		// execute rhn-migrate-classic-to-rhsm
+		String rhsmServerUrlOption = "--serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;	// passing the --serverurl forces prompting for rhsm credentials
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(rhsmServerUrlOption,sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
 		String expectedStdout = "Unable to locate SystemId file. Is this system registered?";
 		expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";	// changed to this value by subscription-manager commit 53c7f0745d1857cd5e1e080e06d577e67e76ecdd for the benefit of unit testing on Fedora
-		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";	// "Red Hat Network Classic is not supported." on RHEL 7
+		//if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";	// "Red Hat Network Classic is not supported." on RHEL 7
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file.");
 		
