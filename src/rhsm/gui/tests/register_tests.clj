@@ -7,7 +7,6 @@
         [slingshot.slingshot :only (try+
                                     throw+)]
         [clojure.string :only (blank?
-                               replace
                                split
                                trim)]
         rhsm.gui.tasks.tools
@@ -63,7 +62,7 @@
                        (:stdout
                         (run-command
                          "subscription-manager identity | grep 'org ID' | cut -d: -f 2")))
-              read-ownerid (replace (last facts-org) #"\)$" "")]
+              read-ownerid (clojure.string/replace (last facts-org) #"\)$" "")]
           (verify (= owner read-owner))
           (verify (= ownerid read-ownerid))))
       (finally (if (bool (tasks/ui guiexist :facts-dialog))
