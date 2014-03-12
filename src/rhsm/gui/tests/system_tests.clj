@@ -183,7 +183,7 @@
                               (do
                                 (tasks/ui click :online-documentation)
                                 (tasks/ui waittillguiexist :firefox-help-window 10)))]
-      (verify (bool (tasks/ui guiexist :firefox-help-window)))
+      (verify (bool (tasks/ui appundertest "Firefox")))
       (verify (not (substring? "Traceback" output))))
     (finally
      (if (bool (tasks/ui guiexist :firefox-help-window))
@@ -514,9 +514,9 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; DATA PROVIDERS
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;      DATA PROVIDERS      ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ^{DataProvider {:name "subscribed"}}
   installed_products [_ & {:keys [debug]
