@@ -514,6 +514,18 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-1051383"]}}
+  check_status_column
+  "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
+   and 'Not Subscribed'"
+  []
+  (if (not (tasks/ui showing? :register-system))
+    (tasks/register-with-creds))
+  (tasks/subscribe_all)
+  (let [status (distinct (tasks/get-table-elements :installed-view 2))]
+    (verify (= 3 (count status)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      DATA PROVIDERS      ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
