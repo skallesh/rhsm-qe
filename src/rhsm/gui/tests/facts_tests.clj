@@ -392,10 +392,10 @@
                                                         (tasks/get-table-elements :installed-view 2))))
       (reset! after-future-subscribe (Integer. (re-find #"\d*"
                                                         (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-future-subscribe (- @status-before-subscribe @subscribed-products-future)))
-      (finally
-    	(run-command "date -s \"-1 year\"")
-        (run-command "date -s \"-1 year\"" :runner @candlepin-runner)))))
+      (verify (= @after-future-subscribe (- @status-before-subscribe @subscribed-products-future))))
+    (finally
+      (run-command "date -s \"-1 year\"")
+      (run-command "date -s \"-1 year\"" :runner @candlepin-runner))))
 
 (defn ^{AfterGroups {:groups ["facts"]
                      :value ["check_status_message_for_subscriptions"]
