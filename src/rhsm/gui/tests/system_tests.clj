@@ -519,8 +519,8 @@
   check_status_column
   "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
    and 'Not Subscribed'"
-  []
-  (if (not (tasks/ui showing? :register-system))
+  [_]
+  (if (tasks/ui showing? :register-system)
     (tasks/register-with-creds))
   (try
     (tasks/subscribe_all)
