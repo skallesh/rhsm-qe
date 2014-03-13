@@ -186,7 +186,7 @@
       (verify (bool (tasks/ui appundertest "Firefox")))
       (verify (not (substring? "Traceback" output))))
     (finally
-      (run-command "killall firefox"))))
+      (run-command "killall -9 firefox"))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-707041"]}}
