@@ -182,12 +182,11 @@
                               nil
                               (do
                                 (tasks/ui click :online-documentation)
-                                (tasks/ui waittillguiexist :firefox-help-window 10)))]
-      (verify (bool (tasks/ui guiexist :firefox-help-window)))
+                                (sleep 5000)))]
+      (verify (bool (tasks/ui appundertest "Firefox")))
       (verify (not (substring? "Traceback" output))))
     (finally
-     (if (bool (tasks/ui guiexist :firefox-help-window))
-       (tasks/ui closewindow :firefox-help-window)))))
+      (run-command "killall -9 firefox"))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-707041"]}}
@@ -514,9 +513,24 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; DATA PROVIDERS
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-1051383"]}}
+  check_status_column
+  "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
+   and 'Not Subscribed'"
+  [_]
+  (if (tasks/ui showing? :register-system)
+    (tasks/register-with-creds))
+  (try
+    (tasks/subscribe_all)
+    (let [status (distinct (tasks/get-table-elements :installed-view 2))]
+      (verify (= 3 (count status))))
+    (finally
+      (tasks/unsubscribe_all))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;      DATA PROVIDERS      ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ^{DataProvider {:name "subscribed"}}
   installed_products [_ & {:keys [debug]
