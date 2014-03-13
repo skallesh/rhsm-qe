@@ -327,13 +327,45 @@ schema generation failed
 		// NOTES:
 		//	3/9/2014 Started getting the following error when running pofilter 
 		//	ImportError: No module named six.moves.html_entities
-		// SOLUTION:
+		//
+		// SOLUTION A:
 		//	https://pypi.python.org/pypi/six/#downloads
 		//	cd ~
 		//	wget https://pypi.python.org/packages/source/s/six/six-1.5.2.tar.gz#md5=322b86d0c50a7d165c05600154cecc0a --no-check-certificate
 		//	tar -xvf six-1.5.2.tar.gz
 		//	cd six-1.5.2
 		//	python setup.py install --force
+		//
+		// SOLUTION B:
+		//  [root@jsefler-f14-7candlepin ~]# easy_install six
+		//  Command not found. Install package 'python-setuptools' to provide command 'easy_install'? [N/y] 
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "yum -y install python-setuptools", new Integer(0));
+		//
+		//	[root@jsefler-f14-7candlepin ~]# pip uninstall -y six
+		//	Uninstalling six:
+		//	  Successfully uninstalled six
+		//	
+		//	[root@jsefler-f14-7candlepin ~]# easy_install six
+		//	Searching for six
+		//	Reading https://pypi.python.org/simple/six/
+		//	Best match: six 1.5.2
+		//	Downloading https://pypi.python.org/packages/source/s/six/six-1.5.2.tar.gz#md5=322b86d0c50a7d165c05600154cecc0a
+		//	Processing six-1.5.2.tar.gz
+		//	Writing /tmp/easy_install-evlX6g/six-1.5.2/setup.cfg
+		//	Running six-1.5.2/setup.py -q bdist_egg --dist-dir /tmp/easy_install-evlX6g/six-1.5.2/egg-dist-tmp-LCKBIt
+		//	no previously-included directories found matching 'documentation/_build'
+		//	zip_safe flag not set; analyzing archive contents...
+		//	six: module references __file__
+		//	Adding six 1.5.2 to easy-install.pth file
+		//
+		//	Installed /usr/lib/python2.7/site-packages/six-1.5.2-py2.7.egg
+		//	Processing dependencies for six
+		//	Finished processing dependencies for six
+		//	[root@jsefler-f14-7candlepin ~]# echo $?
+		//	0
+		
+		// easy_install six
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "easy_install six", new Integer(0));
 		
 		// git clone git://github.com/translate/translate.git
 		log.info("Cloning Translate Toolkit...");

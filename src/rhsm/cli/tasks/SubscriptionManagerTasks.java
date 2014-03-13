@@ -525,6 +525,30 @@ public class SubscriptionManagerTasks {
 	public void setupTranslateToolkit(String gitRepository) {
 		if (gitRepository.equals("")) return;
 		
+		//	[root@jsefler-7 ~]# pip uninstall -y six
+		//	Uninstalling six:
+		//	  Successfully uninstalled six
+		//	
+		//	[root@jsefler-7 ~]# easy_install six
+		//	Searching for six
+		//	Reading https://pypi.python.org/simple/six/
+		//	Best match: six 1.5.2
+		//	Downloading https://pypi.python.org/packages/source/s/six/six-1.5.2.tar.gz#md5=322b86d0c50a7d165c05600154cecc0a
+		//	Processing six-1.5.2.tar.gz
+		//	Writing /tmp/easy_install-evlX6g/six-1.5.2/setup.cfg
+		//	Running six-1.5.2/setup.py -q bdist_egg --dist-dir /tmp/easy_install-evlX6g/six-1.5.2/egg-dist-tmp-LCKBIt
+		//	no previously-included directories found matching 'documentation/_build'
+		//	zip_safe flag not set; analyzing archive contents...
+		//	six: module references __file__
+		//	Adding six 1.5.2 to easy-install.pth file
+		//
+		//	Installed /usr/lib/python2.7/site-packages/six-1.5.2-py2.7.egg
+		//	Processing dependencies for six
+		//	Finished processing dependencies for six
+		//	[root@jsefler-7 ~]# echo $?
+		//	0
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "easy_install six", new Integer(0));
+		
 		// git clone git://github.com/translate/translate.git
 		log.info("Cloning Translate Toolkit...");
 		final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
