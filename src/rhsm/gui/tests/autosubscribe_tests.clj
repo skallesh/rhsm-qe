@@ -287,17 +287,6 @@
      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
      (tasks/unregister))))
 
-(comment
-  (def ^{Test {:groups ["autosubscribe"
-                        "blockedByBug 857147"]}}
-    check_autoattach_window_name
-    "Aserts window name while attaching is 'Subscription Attachment'"
-    [_]
-    (if (tasks/ui showing? :register-system)
-      (tasks/register-with-creds))
-    (verify (tasks/ui showing? :auto-attach))
-    (tasks/ui click :auto-attach)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
