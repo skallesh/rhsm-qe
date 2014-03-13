@@ -182,12 +182,11 @@
                               nil
                               (do
                                 (tasks/ui click :online-documentation)
-                                (tasks/ui waittillguiexist :firefox-help-window 10)))]
+                                (sleep 5000)))]
       (verify (bool (tasks/ui appundertest "Firefox")))
       (verify (not (substring? "Traceback" output))))
     (finally
-     (if (bool (tasks/ui guiexist :firefox-help-window))
-       (tasks/ui closewindow :firefox-help-window)))))
+      (run-command "killall firefox"))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-707041"]}}
