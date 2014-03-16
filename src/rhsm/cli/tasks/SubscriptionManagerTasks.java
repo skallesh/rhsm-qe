@@ -525,6 +525,30 @@ public class SubscriptionManagerTasks {
 	public void setupTranslateToolkit(String gitRepository) {
 		if (gitRepository.equals("")) return;
 		
+		//	[root@jsefler-7 ~]# pip uninstall -y six
+		//	Uninstalling six:
+		//	  Successfully uninstalled six
+		//	
+		//	[root@jsefler-7 ~]# easy_install six
+		//	Searching for six
+		//	Reading https://pypi.python.org/simple/six/
+		//	Best match: six 1.5.2
+		//	Downloading https://pypi.python.org/packages/source/s/six/six-1.5.2.tar.gz#md5=322b86d0c50a7d165c05600154cecc0a
+		//	Processing six-1.5.2.tar.gz
+		//	Writing /tmp/easy_install-evlX6g/six-1.5.2/setup.cfg
+		//	Running six-1.5.2/setup.py -q bdist_egg --dist-dir /tmp/easy_install-evlX6g/six-1.5.2/egg-dist-tmp-LCKBIt
+		//	no previously-included directories found matching 'documentation/_build'
+		//	zip_safe flag not set; analyzing archive contents...
+		//	six: module references __file__
+		//	Adding six 1.5.2 to easy-install.pth file
+		//
+		//	Installed /usr/lib/python2.7/site-packages/six-1.5.2-py2.7.egg
+		//	Processing dependencies for six
+		//	Finished processing dependencies for six
+		//	[root@jsefler-7 ~]# echo $?
+		//	0
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "easy_install six", new Integer(0));
+		
 		// git clone git://github.com/translate/translate.git
 		log.info("Cloning Translate Toolkit...");
 		final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
@@ -6400,11 +6424,12 @@ public class SubscriptionManagerTasks {
 	 * @return SSHCommandResult containing stdout stderr and exitCode
 	 */
 	public SSHCommandResult registerToRhnClassic_(String rhnUsername, String rhnPassword, String rhnHostname) {
+		String serverUrl = rhnHostname+"/XMLRPC"; if (!rhnHostname.startsWith("http")) serverUrl = "https://xmlrpc."+serverUrl;
 		
 		// register to RHN Classic
 		// [root@jsefler-onprem-5server ~]# rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
 		//	ERROR: refreshing remote package list for System Profile
-		String command = String.format("rhnreg_ks --serverUrl=https://xmlrpc.%s/XMLRPC --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", rhnHostname, rhnUsername, rhnPassword, "rhsm-automation."+hostname);
+		String command = String.format("rhnreg_ks --serverUrl=%s --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", serverUrl, rhnUsername, rhnPassword, "rhsm-automation."+hostname);
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
@@ -6535,7 +6560,8 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public boolean isRhnSystemIdRegistered(String rhnUsername, String rhnPassword,String rhnHostname, String systemId) {
-		String command = String.format("rhn-is-registered.py --username=%s --password=%s --server=%s  %s", rhnUsername, rhnPassword, rhnHostname, systemId);
+		String serverUrl = rhnHostname; if (!serverUrl.startsWith("http")) serverUrl="https://"+serverUrl;
+		String command = String.format("rhn-is-registered.py --username=%s --password=%s --serverurl=%s  %s", rhnUsername, rhnPassword, serverUrl, systemId);
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
 		return Boolean.valueOf(result.getStdout().trim());
 	}

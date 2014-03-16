@@ -938,8 +938,17 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			for (String pofilterTest : pofilterTests) {
 				Set<String> bugIds = new HashSet<String>();
 				
-				// skip the accelerators test since there are no gnome gui menu items generated from the candlepin msgids
-				if (pofilterTest.equals("accelerators")) continue;
+				// skip candlepin accelerators tests
+				if (pofilterTest.equals("accelerators")) {
+					log.warning("Skipping the Candlepin accelerators pofilter tests because there are no gnome gui menu items generated from the candlepin msgids");
+					continue;
+				}
+				
+				// skip candlepin untranslated tests
+				if (pofilterTest.equals("untranslated")) {
+					log.warning("Skipping the Candlepin untranslated pofilter tests because candlepin master translations are a moving target and may never be 100% complete.  Moreover, candlepin releases do NOT follow the RHEL schedule like subscription-manager does.");
+					continue;
+				}
 				
 				// Bug 842450 - [ja_JP] failed pofilter newlines option test for candlepin translations
 				if (pofilterTest.equals("newlines") && translationFile.getName().equals("ja.po")) bugIds.add("842450");

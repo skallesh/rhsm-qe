@@ -100,7 +100,6 @@
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (if (bash-bool (:exitcode (run-command (str "test -d " stacking-dir))))
       (run-command (str "rm -rf " stacking-dir)))
-    (tasks/restart-app :reregister? true)
     (run-command (str "mkdir " stacking-dir))
     (reset! prod-dir-atom (tasks/conf-file-value "productCertDir"))
     (let [stackable-pems (tasks/get-stackable-pem-files)

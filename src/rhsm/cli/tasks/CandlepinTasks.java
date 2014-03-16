@@ -327,13 +327,45 @@ schema generation failed
 		// NOTES:
 		//	3/9/2014 Started getting the following error when running pofilter 
 		//	ImportError: No module named six.moves.html_entities
-		// SOLUTION:
+		//
+		// SOLUTION A:
 		//	https://pypi.python.org/pypi/six/#downloads
 		//	cd ~
 		//	wget https://pypi.python.org/packages/source/s/six/six-1.5.2.tar.gz#md5=322b86d0c50a7d165c05600154cecc0a --no-check-certificate
 		//	tar -xvf six-1.5.2.tar.gz
 		//	cd six-1.5.2
 		//	python setup.py install --force
+		//
+		// SOLUTION B:
+		//  [root@jsefler-f14-7candlepin ~]# easy_install six
+		//  Command not found. Install package 'python-setuptools' to provide command 'easy_install'? [N/y] 
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "yum -y install python-setuptools", new Integer(0));
+		//
+		//	[root@jsefler-f14-7candlepin ~]# pip uninstall -y six
+		//	Uninstalling six:
+		//	  Successfully uninstalled six
+		//	
+		//	[root@jsefler-f14-7candlepin ~]# easy_install six
+		//	Searching for six
+		//	Reading https://pypi.python.org/simple/six/
+		//	Best match: six 1.5.2
+		//	Downloading https://pypi.python.org/packages/source/s/six/six-1.5.2.tar.gz#md5=322b86d0c50a7d165c05600154cecc0a
+		//	Processing six-1.5.2.tar.gz
+		//	Writing /tmp/easy_install-evlX6g/six-1.5.2/setup.cfg
+		//	Running six-1.5.2/setup.py -q bdist_egg --dist-dir /tmp/easy_install-evlX6g/six-1.5.2/egg-dist-tmp-LCKBIt
+		//	no previously-included directories found matching 'documentation/_build'
+		//	zip_safe flag not set; analyzing archive contents...
+		//	six: module references __file__
+		//	Adding six 1.5.2 to easy-install.pth file
+		//
+		//	Installed /usr/lib/python2.7/site-packages/six-1.5.2-py2.7.egg
+		//	Processing dependencies for six
+		//	Finished processing dependencies for six
+		//	[root@jsefler-f14-7candlepin ~]# echo $?
+		//	0
+		
+		// easy_install six
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "easy_install six", new Integer(0));
 		
 		// git clone git://github.com/translate/translate.git
 		log.info("Cloning Translate Toolkit...");
@@ -618,13 +650,16 @@ schema generation failed
 	}
 	
 	static public JSONObject setAttributeForOrg(String authenticator, String password, String url, String org, String attributeName, Object attributeValue) throws Exception {
-
+		JSONObject jsonOrg = new JSONObject();
+		
 		// workaround for bug Bug 821797 - Owner update does not properly allow for partial updates
 		// get the current org as a JSONObject and then overlay the entire object with the updated attributeValue
-		JSONObject jsonOrg = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+org));
+		/* Bug 821797 Status: CLOSED CURRENTRELEASE
+		jsonOrg = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+org));
+		*/
 		jsonOrg.put(attributeName, attributeValue);
 		
-		//	[root@jsefler-63server ~]# curl -k -u admin:admin --request PUT --data '{   "contentPrefix": null,     "created": "2012-05-15T00:07:23.109+0000",     "defaultServiceLevel": "PREMIUM",   "displayName": "Admin Owner",    "href": "/owners/admin",     "id": "8a90f814374dd1f101374dd216e50002",     "key": "admin",     "parentOwner": null,    "updated": "2012-05-15T00:07:23.109+0000",     "upstreamUuid": null}' --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -msimplejson/tool
+		//	[root@jsefler-63server ~]# curl -k -u admin:admin --request PUT --data '{"defaultServiceLevel": "PREMIUM"}' --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -msimplejson/tool
 		//	{
 		//	    "contentPrefix": null, 
 		//	    "created": "2012-05-15T00:07:23.109+0000", 
@@ -638,7 +673,6 @@ schema generation failed
 		//	    "upstreamUuid": null
 		//	}
 		
-
 		// update the org and return it too
 		jsonOrg = new JSONObject(putResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+org, jsonOrg));
 		if (jsonOrg.has("displayMessage")) {
@@ -3031,9 +3065,32 @@ schema generation failed
 
 	}
 	
-	static public JSONObject createOwnerUsingRESTfulAPI(String owner, String password, String url, String owner_name) throws Exception {
-// NOT TESTED
-		return new JSONObject(postResourceUsingRESTfulAPI(owner, password, url, "/owners", owner_name));
+	static public JSONObject createOwnerUsingRESTfulAPI(String owner, String password, String url, String key, String displayName, String defaultServiceLevel, String contentPrefix, String upstreamUuid, String parentOwner) throws Exception {
+		
+		JSONObject jsonData = new JSONObject();
+		
+		//	[root@jsefler-63server ~]# curl -k -u admin:admin --request PUT --data '{   "contentPrefix": null,     "created": "2012-05-15T00:07:23.109+0000",     "defaultServiceLevel": "PREMIUM",   "displayName": "Admin Owner",    "href": "/owners/admin",     "id": "8a90f814374dd1f101374dd216e50002",     "key": "admin",     "parentOwner": null,    "updated": "2012-05-15T00:07:23.109+0000",     "upstreamUuid": null}' --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -msimplejson/tool
+		//	{
+		//	    "contentPrefix": null, 
+		//	    "created": "2012-05-15T00:07:23.109+0000", 
+		//	    "defaultServiceLevel": "PREMIUM", 
+		//	    "displayName": "Admin Owner", 
+		//	    "href": "/owners/admin", 
+		//	    "id": "8a90f814374dd1f101374dd216e50002", 
+		//	    "key": "admin", 
+		//	    "parentOwner": null, 
+		//	    "updated": "2012-05-15T14:08:50.700+0000", 
+		//	    "upstreamUuid": null
+		//	}
+		
+		// initialize the owner
+		jsonData.put("key", key);
+		jsonData.put("displayName", displayName);
+		jsonData.put("defaultServiceLevel", defaultServiceLevel);
+		jsonData.put("upstreamUuid", upstreamUuid);		// NOT TESTED
+		jsonData.put("contentPrefix", contentPrefix);		// NOT TESTED
+		jsonData.put("parentOwner", parentOwner);		// FAILS on candlepin
+		return new JSONObject(postResourceUsingRESTfulAPI(owner, password, url, "/owners", jsonData.toString()));
 	}
 	
 	public SSHCommandResult deleteOwnerUsingCPC(String owner_name) {

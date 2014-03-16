@@ -282,6 +282,62 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="create an owner via the candlepin api and then update fields on the owner",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void CreateAnOwnerAndSetAttributesOnTheOwner_Test() throws Exception {
+		String mother="mother", daughter="daughter";
+		String result;
+		JSONObject jsonOwner;
+		
+		//	Example Owner...
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/daughter | python -msimplejson/tool{
+		//	    "contentPrefix": null,
+		//	    "created": "2014-03-14T12:49:13.558+0000",
+		//	    "defaultServiceLevel": null,
+		//	    "displayName": "Orphan Annie",
+		//	    "href": "/owners/daughter",
+		//	    "id": "8a9087e3448ecab80144c0a3a3566696",
+		//	    "key": "daughter",
+		//	    "logLevel": null,
+		//	    "parentOwner": null,
+		//	    "updated": "2014-03-14T12:49:13.558+0000",
+		//	    "upstreamConsumer": null
+		//	}
+		
+		// an orphan girl is born with no mother...
+		result = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/"+daughter);
+		// result is null when successful or {"displayMessage":"owner with key: daughter was not found.","requestUuid":"9bad7da4-7148-40c3-bd2e-77edae19e267"}
+		jsonOwner = CandlepinTasks.createOwnerUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, daughter, "Orphan Annie",null, null, null, null);
+		Assert.assertNotNull(jsonOwner.getString("id"), "The candlepin API appears to have created a new owner: "+jsonOwner);
+	
+		// a loving mother searches for a daughter...
+		result = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/"+mother);
+		// result is null when successful or {"displayMessage":"owner with key: daughter was not found.","requestUuid":"9bad7da4-7148-40c3-bd2e-77edae19e267"}
+		jsonOwner = CandlepinTasks.createOwnerUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, mother, "Mrs. Jones","TLC (Tender Loving Care)", null, null, null);
+		Assert.assertNotNull(jsonOwner.getString("id"), "The candlepin API appears to have created a new owner: "+jsonOwner);
+		
+		// the mother adopts the daughter...
+		/* The following throws a Runtime Error; 3/14/2014 Development says the parentOwner attribute was never completely developed.  Do not test it.
+		jsonOwner = CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, daughter, "parentOwner", mother);
+		[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request PUT --data '{"parentOwner":"mother"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/daughter | python -msimplejson/tool
+		{
+		    "displayMessage": "Runtime Error org.hibernate.TransientPropertyValueException: object references an unsaved transient instance - save the transient instance before flushing: org.candlepin.model.Owner.parentOwner -> org.candlepin.model.Owner at org.hibernate.engine.spi.CascadingAction$8.noCascade:380",
+		    "requestUuid": "6169b416-6302-4dbd-a412-c8d55a723391"
+		}
+		Assert.assertEquals(jsonOwner.getString("parentOwner"), "mother", "The candlepin API appears to have updated the parentOwner: "+jsonOwner);
+		*/
+		jsonOwner = CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, daughter, "displayName", "Annie Jones");
+		Assert.assertEquals(jsonOwner.getString("displayName"), "Annie Jones", "The candlepin API appears to have updated the displayName: "+jsonOwner);
+		try {
+			jsonOwner = CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, daughter, "defaultServiceLevel", "Eternal Gratitude");
+			Assert.fail("Expected an attempt to update org with an unavailable service level to fail.");
+		} catch (AssertionError ae) {
+			Assert.assertEquals(ae.getMessage(), "Attempt to update org 'daughter' failed: Service level 'Eternal Gratitude' is not available to units of organization daughter.");
+		}
+	}
+	
 	
 	
 	
