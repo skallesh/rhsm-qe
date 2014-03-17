@@ -185,8 +185,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		String expectedMsgRHSM = "This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.";
 		String expectedMsgRHN = null;	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
 		if (Float.valueOf(clienttasks.redhatReleaseXY)>=6.4) expectedMsgRHN = "This system is receiving updates from RHN Classic or RHN Satellite.";
-		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) {
-			log.warning("With RHEL7 (and beyond), registration to RHN Classic is no longer supported and therefore no base rhel channel (e.g. rhel-x86_64-server-7) will be available.");
+		if (Float.valueOf(clienttasks.redhatReleaseXY)>=7.0) expectedMsgRHN = "This system is receiving updates from RHN Classic or Red Hat Satellite.";
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// exceptional case when a rhel7 system attempts to register to RHN HOSTED 
+			log.warning("With RHEL7 (and beyond), registration to RHN Classic (HOSTED) is no longer supported and therefore no base rhel channel (e.g. rhel-x86_64-server-7) will be available.");
 			Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHSM), "When registered to RHN but not RHSM, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 			Assert.assertFalse((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When registered to RHN but not RHSM, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN_NoChannels), "On RHEL7... When registered to RHN but not RHSM, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN_NoChannels+"\n");
@@ -252,8 +253,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		String expectedMsgRHSM = "This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.";
 		String expectedMsgRHN = null;	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
 		if (Float.valueOf(clienttasks.redhatReleaseXY)>=6.4) expectedMsgRHN = "This system is receiving updates from RHN Classic or RHN Satellite.";
-		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) {
-			log.warning("With RHEL7 (and beyond), registration to RHN Classic is no longer supported and therefore no base rhel channel (e.g. rhel-x86_64-server-7) will be available.");
+		if (Float.valueOf(clienttasks.redhatReleaseXY)>=7.0) expectedMsgRHN = "This system is receiving updates from RHN Classic or Red Hat Satellite.";
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// exceptional case when a rhel7 system attempts to register to RHN HOSTED 
+			log.warning("With RHEL7 (and beyond), registration to RHN Classic (HOSTED) is no longer supported and therefore no base rhel channel (e.g. rhel-x86_64-server-7) will be available.");
 			Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (but not subscribed), the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 			Assert.assertFalse((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When registered to both RHN and RHSM (but not subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN_NoChannels), "On RHEL7... When registered to both RHN and RHSM (but not subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN_NoChannels+"\n");
@@ -276,15 +278,17 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		String expectedMsgRHSM = "This system is receiving updates from Red Hat Subscription Management.";
 		String expectedMsgRHN = null;	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
 		if (Float.valueOf(clienttasks.redhatReleaseXY)>=6.4) expectedMsgRHN = "This system is receiving updates from RHN Classic or RHN Satellite.";
-		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) {
-			log.warning("With RHEL7 (and beyond), registration to RHN Classic is no longer supported and therefore no base rhel channel (e.g. rhel-x86_64-server-7) will be available.");
+		if (Float.valueOf(clienttasks.redhatReleaseXY)>=7.0) expectedMsgRHN = "This system is receiving updates from RHN Classic or Red Hat Satellite.";
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// exceptional case when a rhel7 system attempts to register to RHN HOSTED 
+			log.warning("With RHEL7 (and beyond), registration to RHN Classic (HOSTED) is no longer supported and therefore no base rhel channel (e.g. rhel-x86_64-server-7) will be available.");
 			//NOT TRUE ANYMORE Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (and subscribed), the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
 			Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (and subscribed), the subscription-manager yum plugin NO LONGER informs that:\n"+expectedMsgRHSM+"\nFor justification, see https://bugzilla.redhat.com/show_bug.cgi?id=1017354#c12");	// commit 39eadae14eead4bb79978e52d38da2b3e85cba57 1017354: remove msg printed to stderr via yum
 			Assert.assertFalse((result.getStdout()+result.getStderr()).contains(expectedMsgRHN), "When registered to both RHN and RHSM (and subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 			Assert.assertTrue((result.getStdout()+result.getStderr()).contains(expectedMsgRHN_NoChannels), "On RHEL7... When registered to both RHN and RHSM (and subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN_NoChannels+"\n");
 			return;
 		}
-		Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (and subscribed), the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
+		//NOT TRUE ANYMORE Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (and subscribed), the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
+		Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (and subscribed), the subscription-manager yum plugin NO LONGER informs that:\n"+expectedMsgRHSM+"\nFor justification, see https://bugzilla.redhat.com/show_bug.cgi?id=1017354#c12");	// commit 39eadae14eead4bb79978e52d38da2b3e85cba57 1017354: remove msg printed to stderr via yum
 		if (expectedMsgRHN!=null) Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHN), "When registered to both RHN and RHSM (and subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
 	
@@ -312,6 +316,33 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		if (!isRhnClientToolsInstalled) {
 			String rhnDir =  new File(clienttasks.rhnSystemIdFile).getParent();
 			client.runCommandAndWait("mkdir -p "+rhnDir);
+		}
+		
+		
+		// make sure we have the RHN-ORG-TRUSTED-SSL-CERT for the rhn/satellite server
+		/*
+		 * 	1. Set automation parameters:
+		 * 		sm.rhn.hostname : https://sat-56-server.usersys.redhat.com
+		 *		sm.rhn.username : admin
+		 *		sm.rhn.password : *****
+		 *  2. Use firefox to login to the Satellite account
+		 *      https://sat-56-server.usersys.redhat.com/rhn/Login.do
+		 *      do whatever work you need to there
+		 *  3. Get the CA cert from Satellite and install it onto your client
+		 *      wget --no-verbose --no-check-certificate --output-document=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com https://sat-56-server.usersys.redhat.com/pub/RHN-ORG-TRUSTED-SSL-CERT
+		 *  4. Update the /etc/sysconfig/rhn/up2date with
+		 *      sslCACert=RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com
+		 */
+		// Get the CA cert from Satellite and install it onto your client
+		if (!sm_rhnHostname.isEmpty()) {
+			if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
+				String satHostname = sm_rhnHostname.split("/")[2];	// https://sat-56-server.usersys.redhat.com
+				String satCaCertPath = "/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"+"_"+satHostname;
+				RemoteFileTasks.runCommandAndAssert(client,"wget --no-verbose --no-check-certificate --output-document="+satCaCertPath+" "+sm_rhnHostname+"/pub/RHN-ORG-TRUSTED-SSL-CERT",Integer.valueOf(0),null,"-> \""+satCaCertPath+"\"");
+				
+				// Update /etc/sysconfig/rhn/up2date->sslCACert with satCaCertPath
+				clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "sslCACert", satCaCertPath);	// sslCACert[comment]=The CA cert used to verify the ssl server
+			}
 		}
 	}
 	
