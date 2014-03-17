@@ -283,7 +283,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an owner via the candlepin api and then update fields on the owner",
-			groups={},
+			groups={"CreateAnOwnerAndSetAttributesOnTheOwner_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void CreateAnOwnerAndSetAttributesOnTheOwner_Test() throws Exception {
@@ -307,14 +307,10 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		//	}
 		
 		// an orphan girl is born with no mother...
-		result = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/"+daughter);
-		// result is null when successful or {"displayMessage":"owner with key: daughter was not found.","requestUuid":"9bad7da4-7148-40c3-bd2e-77edae19e267"}
 		jsonOwner = CandlepinTasks.createOwnerUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, daughter, "Orphan Annie",null, null, null, null);
 		Assert.assertNotNull(jsonOwner.getString("id"), "The candlepin API appears to have created a new owner: "+jsonOwner);
 	
 		// a loving mother searches for a daughter...
-		result = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/"+mother);
-		// result is null when successful or {"displayMessage":"owner with key: daughter was not found.","requestUuid":"9bad7da4-7148-40c3-bd2e-77edae19e267"}
 		jsonOwner = CandlepinTasks.createOwnerUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, mother, "Mrs. Jones","TLC (Tender Loving Care)", null, null, null);
 		Assert.assertNotNull(jsonOwner.getString("id"), "The candlepin API appears to have created a new owner: "+jsonOwner);
 		
@@ -336,6 +332,17 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		} catch (AssertionError ae) {
 			Assert.assertEquals(ae.getMessage(), "Attempt to update org 'daughter' failed: Service level 'Eternal Gratitude' is not available to units of organization daughter.");
 		}
+	}
+	@BeforeGroups(value={"CreateAnOwnerAndSetAttributesOnTheOwner_Test"},groups={"setup"})
+	@AfterGroups(value={"CreateAnOwnerAndSetAttributesOnTheOwner_Test"},groups={"setup"})
+	public void afterCreateAnOwnerAndSetAttributesOnTheOwner_Test() throws Exception {
+		// delete owners mother and daughter after this test because they cause unnecessary failures
+		// in ServiceLevelTests because: Service level 'TLC (Tender Loving Care)' is not available to units of organization mother.
+		String result;
+		result = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/"+"daughter");
+		// result is null when successful or {"displayMessage":"owner with key: daughter was not found.","requestUuid":"9bad7da4-7148-40c3-bd2e-77edae19e267"}
+		result = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/"+"mother");
+		// result is null when successful or {"displayMessage":"owner with key: daughter was not found.","requestUuid":"9bad7da4-7148-40c3-bd2e-77edae19e267"}
 	}
 	
 	
