@@ -956,6 +956,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// start fresh by returning all entitlements
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
+		// for debugging purposes, list what is currently available so we can see the available quantity before we attempt to attach
+		clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null);
+		
 		// subscribe with quantity
 		SSHCommandResult sshCommandResult = clienttasks.subscribe_(null,null,pool.poolId,null,null,quantity,null,null,null, null, null);
 		
@@ -1624,8 +1627,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",pool.poolId);	// expected string changed by bug 876758
 			expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
+			if (!CandlepinType.hosted.equals(sm_serverType)) {	// exclude this test from running on a hosted server since parallel running tests often consume available quantities affecting the expected results
+				ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
+			}
+			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+10),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with \"multi-entitlement\" product attribute set true."}));
 		}
@@ -1658,12 +1663,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(2*instanceMultiplier),																							Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("746262"),	pool,	"+"+String.valueOf(2*instanceMultiplier),																						Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
 			if (!CandlepinType.hosted.equals(sm_serverType)) {	// exclude this test from running on a hosted server since parallel running tests often consume available quantities affecting the expected results
-				ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier),								Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
+				ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier),								Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null})); 	// testing with a quantity one increment within the availability
 			}
 			expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier + instanceMultiplier),		Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf((Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier + instanceMultiplier)*10),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
+			if (!CandlepinType.hosted.equals(sm_serverType)) {	// exclude this test from running on a hosted server since parallel running tests often consume available quantities affecting the expected results
+				ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier + instanceMultiplier),		Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));	// testing with a quantity one increment over the availability
+			}
+			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier + instanceMultiplier*10),		Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));	// testing with a quantity ten increments over the availability
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with \"instance_multipler\" product attribute set."}));
 		}
