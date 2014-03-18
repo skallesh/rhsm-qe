@@ -244,7 +244,9 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	 */
 	
 	@BeforeGroups(value={"Libraryas_env"}, groups={"setup"})
-	@Test(description="Library as an Env",enabled=true)
+	@Test(description="Library as an Env",
+			groups={"blockedByBug-963579"},
+			enabled=true)
 	public void Libraryas_env(){
 		SSHCommandResult sshCommandResult;
 		// added by jsefler 

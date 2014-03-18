@@ -641,7 +641,9 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// Object bugzilla, String username, String password, String org
 		ll.add(Arrays.asList(new Object[]{null,	sm_clientUsername, sm_clientPassword, sm_clientOrg}));
 
-		if (sm_serverType.equals(CandlepinType.hosted) && !sm_rhnUsername.isEmpty())
+		// add another row only if the RHN credentials are valid against sm_serverHostname...
+		//if (sm_serverType.equals(CandlepinType.hosted) && !sm_rhnUsername.isEmpty())
+		if (doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com") && doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com") && !sm_rhnUsername.isEmpty())
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"861151","870141"}),	sm_rhnUsername, sm_rhnPassword, null}));
 
 		return ll;
