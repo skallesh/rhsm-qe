@@ -1321,6 +1321,14 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
+	 * @return list of objects representing the subscription-manager list --available --matchinstalled
+	 */
+	public  List<SubscriptionPool> getAvailableSubscriptionsMatchingInstalledProducts() {
+		
+		return SubscriptionPool.parse(list_(null, true, null, null, null, null, true, null, null, null, null).getStdout()); 
+	}
+	
+	/**
 	 * @return list of objects representing the subscription-manager list --consumed
 	 */
 	public List<ProductSubscription> getCurrentlyConsumedProductSubscriptions() {

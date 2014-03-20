@@ -66,23 +66,11 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
 		String productname=productCert32060.productName;
 		
-// DELETEME
-//		String productname=null;
+
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			if(!(installed.productId.equals("32060"))){
-//				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-//			}
-//		}
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			
-//				productname=installed.productName;
-//			
-//		
-//		}
+
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
