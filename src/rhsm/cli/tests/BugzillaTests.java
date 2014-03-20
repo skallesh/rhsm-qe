@@ -3102,15 +3102,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.facts(null, true, null, null, null);
 		String listAfterUpdate = clienttasks.facts(true, null, null, null,
 				null).getStdout();
-		Assert.assertFalse(listAfterUpdate.contentEquals("fuzzing"));
-		Assert.assertEquals(listAfterUpdate, listBeforeUpdate);
+		Assert.assertFalse(listAfterUpdate.contains("fuzzing"));
 		client.runCommandAndWait("cp /var/lib/rhsm/facts/facts.json /var/lib/rhsm/facts/facts.json.save");
-		client.runCommandAndWait("sed /'uname.machine: x86_64'/d /var/lib/rhsm/facts/facts.json");
+		client.runCommandAndWait("sed /'uname.machine:'/d /var/lib/rhsm/facts/facts.json");
 		clienttasks.facts(null, true, null, null, null);
 		listAfterUpdate = clienttasks.facts(true, null, null, null, null)
 				.getStdout();
 		client.runCommandAndWait("mv -f /var/lib/rhsm/facts/facts.json.save /var/lib/rhsm/facts/facts.json");
-		Assert.assertEquals(listAfterUpdate, listBeforeUpdate);
+		Assert.assertTrue(listAfterUpdate.contains("uname"));
 
 	}
 
