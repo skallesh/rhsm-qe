@@ -870,6 +870,246 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
+			groups={"AcceptanceTests","blockedByBug-1078527"/*,"blockedByBug-1078530"*/},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyExpectedBaseChannelsSupportThisSystemsRhelVersion_Test() {
+		
+		List<String> expectedBaseChannels = new ArrayList<String>();
+		if (clienttasks.redhatReleaseX.equals("7")) {
+			expectedBaseChannels.add("rhel-x86_64-client-7");		// 68	Red Hat Enterprise Linux Desktop
+			expectedBaseChannels.add("rhel-x86_64-server-7");		// 69	Red Hat Enterprise Linux Server
+			expectedBaseChannels.add("rhel-x86_64-workstation-7");	// 71	Red Hat Enterprise Linux Workstation
+			expectedBaseChannels.add("rhel-s390x-server-7");		// 72	Red Hat Enterprise Linux for IBM System z
+			expectedBaseChannels.add("rhel-ppc64-server-7");		// 74	Red Hat Enterprise Linux for IBM POWER
+			expectedBaseChannels.add("rhel-x86_64-hpc-node-7");		// 76	Red Hat Enterprise Linux for Scientific Computing
+		} else
+		if (clienttasks.redhatReleaseX.equals("6")) {
+			expectedBaseChannels.add("rhel-i386-client-6");			// 68	Red Hat Enterprise Linux Desktop
+			expectedBaseChannels.add("rhel-i386-server-6");			// 69	Red Hat Enterprise Linux Server
+			expectedBaseChannels.add("rhel-i386-workstation-6");	// 71	Red Hat Enterprise Linux Workstation
+			expectedBaseChannels.add("rhel-x86_64-client-6");		// 68	Red Hat Enterprise Linux Desktop
+			expectedBaseChannels.add("rhel-x86_64-server-6");		// 69	Red Hat Enterprise Linux Server
+			expectedBaseChannels.add("rhel-x86_64-workstation-6");	// 71	Red Hat Enterprise Linux Workstation
+			expectedBaseChannels.add("rhel-s390x-server-6");		// 72	Red Hat Enterprise Linux for IBM System z
+			expectedBaseChannels.add("rhel-ppc64-server-6");		// 74	Red Hat Enterprise Linux for IBM POWER
+			expectedBaseChannels.add("rhel-x86_64-hpc-node-6");		// 76	Red Hat Enterprise Linux for Scientific Computing
+		} else
+		if (clienttasks.redhatReleaseX.equals("5")) {
+			expectedBaseChannels.add("rhel-i386-client-5");					// 68	Red Hat Enterprise Linux Desktop
+			expectedBaseChannels.add("rhel-i386-server-5");					// 69	Red Hat Enterprise Linux Server
+			expectedBaseChannels.add("rhel-i386-client-workstation-5");		// 71	Red Hat Enterprise Linux Workstation
+			expectedBaseChannels.add("rhel-x86_64-client-5");				// 68	Red Hat Enterprise Linux Desktop
+			expectedBaseChannels.add("rhel-x86_64-server-5");				// 69	Red Hat Enterprise Linux Server
+			expectedBaseChannels.add("rhel-x86_64-client-workstation-5");	// 71	Red Hat Enterprise Linux Workstation
+			expectedBaseChannels.add("rhel-ia64-server-5");					// 69	Red Hat Enterprise Linux Server
+			expectedBaseChannels.add("rhel-s390x-server-5");				// 72	Red Hat Enterprise Linux for IBM System z
+			expectedBaseChannels.add("rhel-ppc-server-5");					// 74	Red Hat Enterprise Linux for IBM POWER
+		}
+		if (expectedBaseChannels.isEmpty()) Assert.fail("Do not know the expected RHN Base Channels for this test.");
+		
+		// verify all expectedBaseChannels are accounted for in the channel mapping file
+		boolean allExpectedBaseChannelsMapped = true;
+		for (String expectedBaseChannel : expectedBaseChannels) {
+			if (channelsToProductCertFilenamesMap.containsKey(expectedBaseChannel)) {
+				Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(expectedBaseChannel),"RHN Channel mapping file '"+channelCertMappingFilename+"' accounts for RHN base channel '"+expectedBaseChannel+"'.");
+			} else {
+				log.warning("RHN Channel mapping file '"+channelCertMappingFilename+"' does NOT account for RHN base channel '"+expectedBaseChannel+"'.");
+				allExpectedBaseChannelsMapped = false;
+			}
+		}
+		
+		// NOTE: This test block is also covered by VerifyRhnRhelChannelsProductCertSupportThisSystemsRhelVersion_Test (Keeping it here for completeness)
+		// verify all of the expectedBaseChannels are mapped to a product cert that supports this system's dot release of RHEL
+		boolean allBaseChannelProductCertsMatchThisRhelRelease = true;
+		for (String expectedBaseChannel : expectedBaseChannels) {
+			if (channelsToProductCertFilenamesMap.containsKey(expectedBaseChannel)) {
+				if (channelsToProductCertFilenamesMap.get(expectedBaseChannel).equalsIgnoreCase("none")) {
+					log.warning("RHN RHEL Base Channel '"+expectedBaseChannel+"' should NOT be mapped to none in mapping file '"+channelCertMappingFilename+"'.");
+					allBaseChannelProductCertsMatchThisRhelRelease = false;
+				} else {
+					ProductCert migrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+channelsToProductCertFilenamesMap.get(expectedBaseChannel)));
+					if (clienttasks.redhatReleaseXY.equals(migrationProductCert.productNamespace.version)) {
+						Assert.assertEquals(clienttasks.redhatReleaseXY, migrationProductCert.productNamespace.version,"RHN RHEL Base Channel '"+expectedBaseChannel+"' maps to the following product cert that matches RHEL dot release '"+clienttasks.redhatReleaseXY+"': "+migrationProductCert);
+					} else {
+						log.warning("RHN RHEL Base Channel '"+expectedBaseChannel+"' maps to the following product cert that does NOT match RHEL dot release '"+clienttasks.redhatReleaseXY+"': "+migrationProductCert);
+						allBaseChannelProductCertsMatchThisRhelRelease = false;
+					}
+				}
+			}
+		}
+		
+		if (!allExpectedBaseChannelsMapped) Assert.fail("Review logged warnings above for expected RHN base channels that are not mapped.");
+		if (!allBaseChannelProductCertsMatchThisRhelRelease) Assert.fail("Review logged warnings above for expected RHN base channel product cert versions that do not match this system.s dot release.");
+	}
+	
+	@Test(	description="Verify that the expected RHN Rhel channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y",
+			groups={"AcceptanceTests"/*,"blockedByBug-1080072"*/},
+			dataProvider="RhnRhelChannelsFromChanneMappingData",
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyRhnRhelChannelsProductCertSupportThisSystemsRhelVersion_Test(Object bugzilla, String rhnRhelChannel) {
+		Assert.assertTrue(!channelsToProductCertFilenamesMap.get(rhnRhelChannel).equalsIgnoreCase("none"), "RHN RHEL Channel '"+rhnRhelChannel+"' does not map to None.");
+		ProductCert rhnRhelProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+channelsToProductCertFilenamesMap.get(rhnRhelChannel)));
+		if (rhnRhelChannel.contains(/*clienttasks.redhatReleaseX+*/"-beta-") || rhnRhelChannel.endsWith(/*clienttasks.redhatReleaseX+*/"-beta")) {
+			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY+" Beta", "RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that matches this RHEL dot release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);			
+		} else {
+			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY, "RHN RHEL Channel '"+rhnRhelChannel+"' maps to the following product cert that matches this RHEL dot release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);
+		}
+	}
+	@DataProvider(name="RhnRhelChannelsFromChanneMappingData")
+	public Object[][] getRhnRhelChannelsFromChanneMappingDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getRhnRhelChannelsFromChanneMappingDataAsListOfLists());
+	}
+	public List<List<Object>> getRhnRhelChannelsFromChanneMappingDataAsListOfLists() throws JSONException {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
+		
+		for (String rhnChannel : channelsToProductCertFilenamesMap.keySet()) {
+			ProductCert rhnRhelProductCert = null;
+			if (channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")) rhnRhelProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+channelsToProductCertFilenamesMap.get(rhnChannel)));
+			
+			// get all of the provided tags from the rhnRhelProductCert
+			List<String> rhnRhelProductProvidedTags = new ArrayList<String>();
+			if (rhnRhelProductCert != null) {
+				if (rhnRhelProductCert.productNamespace.providedTags != null) {
+					for (String providedTag : rhnRhelProductCert.productNamespace.providedTags.split("\\s*,\\s*")) {
+						rhnRhelProductProvidedTags.add(providedTag);
+					}
+				}
+			}
+			
+			// consider skipping channels that do NOT provide the base release rhel-X tag
+			if (!rhnRhelProductProvidedTags.contains("rhel-"+clienttasks.redhatReleaseX)) {
+				
+				// skip non-RHEL channels that do not apply to clienttasks.redhatReleaseX
+				//	rhel-x86_64-workstation-6
+				//	rhel-x86_64-workstation-6-beta
+				//	rhel-x86_64-workstation-6-beta-debuginfo
+				//	rhel-x86_64-workstation-6-debuginfo
+				if (!rhnChannel.startsWith("rhel-")) continue;
+				if (!rhnChannel.endsWith("-"+clienttasks.redhatReleaseX) && !rhnChannel.contains("-"+clienttasks.redhatReleaseX+"-")) continue;
+				
+				// skip Red Hat OpenShift Enterprise channels
+				//	rhel-x86_64-server-6-ose-2.0-rhc
+				//	rhel-x86_64-server-6-osop-1-rhc
+				if (rhnChannel.contains("-ose-")) continue;
+				if (rhnChannel.contains("-osop-")) continue;
+				
+				// skip Red Hat OpenStack channels
+				//	rhel-x86_64-server-6-ost-3
+				if (rhnChannel.contains("-ost-")) continue;
+				
+				// skip Red Hat Enterprise MRG Messaging
+				//	rhel-i386-server-6-mrg-messaging-2
+				if (rhnChannel.contains("-mrg-messaging-")) continue;
+				
+				// skip MRG Realtime
+				//	rhel-x86_64-server-6-mrg-realtime-2
+				if (rhnChannel.contains("-mrg-realtime-")) continue;
+				
+				// skip Red Hat Enterprise Virtualization
+				//	rhel-x86_64-server-6-rhevm-3-beta
+				//  rhel-x86_64-server-6-rhevh
+				//	rhel-x86_64-rhev-mgmt-agent-6
+				if (rhnChannel.contains("-rhevm-")) continue;
+				if (rhnChannel.contains("-rhevh-") || rhnChannel.endsWith("-rhevh")) continue;
+				if (rhnChannel.contains("-rhev-mgmt-")) continue;
+				
+				// skip Red Hat Storage
+				//	rhel-x86_64-server-6-rhs-2.0
+				if (rhnChannel.contains("-rhs-")) continue;
+				
+				// skip Red Hat Developer Toolset
+				//	rhel-i386-server-dts-5
+				//	rhel-i386-server-dts2-5
+				if (rhnChannel.contains("-dts-")) continue;
+				if (rhnChannel.contains("-dts2-")) continue;	
+				
+				// skip Red Hat Hardware Certification Test Suite
+				//	rhel-x86_64-server-hts-6
+				if (rhnChannel.contains("-hts-")) continue;
+				
+				// skip Red Hat Directory Server
+				//	rhel-x86_64-server-5-rhdirserv-8
+				if (rhnChannel.contains("-rhdirserv-")) continue;
+				
+				// skip Red Hat S-JIS Support (for RHEL Server)
+				//	rhel-i386-server-sjis-6
+				if (rhnChannel.contains("-sjis-")) continue;
+				
+				// skip Red Hat EUCJP Support (for RHEL Server)
+				//	rhel-x86_64-server-eucjp-6
+				if (rhnChannel.contains("-eucjp-")) continue;
+				
+				// skip Red Hat CloudForms
+				//	rhel-x86_64-server-6-cf-ce-1
+				//	rhel-x86_64-server-6-cf-me-3
+				//	rhel-x86_64-server-6-cf-se-1
+				if (rhnChannel.contains("-cf-ce-")) continue;
+				if (rhnChannel.contains("-cf-me-")) continue;
+				if (rhnChannel.contains("-cf-se-")) continue;
+				
+				// skip Red Hat Open vSwitch
+				//	rhel-x86_64-server-6-ovs-supplemental
+				if (rhnChannel.contains("-ovs-")) continue;
+				
+				// skip Red Hat Enterprise Linux High Performance Networking (for RHEL Compute Node)
+				// skip Red Hat Enterprise Linux High Performance Networking (for RHEL for IBM POWER)
+				// skip Red Hat Enterprise Linux High Performance Networking (for RHEL Server)
+				//	rhel-x86_64-hpc-node-hpn-6
+				//	rhel-ppc64-server-hpn-6
+				//	rhel-x86_64-server-hpn-6
+				if (rhnChannel.contains("-hpn-")) continue;
+				
+				// skip Red Hat Enterprise Linux for SAP
+				//	rhel-x86_64-server-sap-6
+				if (rhnChannel.contains("-sap-")) continue;
+				
+				// skip Kernel Derivative Works for Bluegene/Q
+				//	rhel-ppc64-server-bluegene-6
+				if (rhnChannel.contains("-bluegene-")) continue;
+				
+				// skip Kernel Derivative Works for HPC for Power Systems
+				//	rhel-ppc64-server-p7ih-6
+				if (rhnChannel.contains("-p7ih-")) continue;
+				
+				// skip Red Hat Enterprise Linux Resilient Storage (for RHEL Server)
+				//	rhel-ppc-server-cluster-storage-5
+				if (rhnChannel.contains("-storage-")) continue;
+				
+				// skip Red Hat Enterprise Linux High Availability (for RHEL Server)
+				//	rhel-ppc-server-cluster-5
+				if (rhnChannel.contains("-cluster-")) continue;
+				
+				// skip Red Hat Certificate System
+				//	rhel-x86_64-server-5-rhcmsys-8
+				if (rhnChannel.contains("-rhcmsys-")) continue;
+			}
+			
+			// bugzillas
+			Set<String> bugIds = new HashSet<String>();
+			if (rhnChannel.equals("rhel-x86_64-hpc-node-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-rh-common-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-7-debuginfo")) {
+				// Bug 1078527 - channel-cert-mapping for ComputeNode rhel-7 product certs are missing and wrong
+				bugIds.add("1078527");
+			}
+			
+			// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnChannel}));
+		}
+		
+		return ll;
+	}
+	
+	
+	
 	
 	
 	// Candidates for an automated Test:

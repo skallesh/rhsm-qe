@@ -23,6 +23,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 	public String arch;			// comma separated list of architectures: x86_64,x86
 	public String providedTags;	// comma separated list of tags: rhel-6,rhel-6-server
 	public String brandType;
+	public String brandName;	// added by https://bugzilla.redhat.com/show_bug.cgi?id=884290#c12
 
 	public String id;
 	
@@ -45,6 +46,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 		if (arch != null)			string += String.format(" %s='%s'", "arch",arch);
 		if (providedTags != null)	string += String.format(" %s='%s'", "providedTags",providedTags);
 		if (brandType != null)		string += String.format(" %s='%s'", "brandType",brandType);
+		if (brandName != null)		string += String.format(" %s='%s'", "brandName",brandName);
 		
 		return string.trim();
 	}
@@ -361,6 +363,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 		regexes.put("arch",					"^\\s+Arch: (.+)");
 		regexes.put("providedTags",			"^\\s+Tags: (.+)");
 		regexes.put("brandType",			"^\\s+Brand Type: (.+)");
+		regexes.put("brandName",			"^\\s+Brand Name: (.+)");
 		
 		// find all the raw "Product:" groupings and then create one ProductNamespace per raw "Product:" grouping
 		String rawProductRegex = "Product:((\\n.+)+)";

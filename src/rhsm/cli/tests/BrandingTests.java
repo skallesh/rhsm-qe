@@ -78,7 +78,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// throw SkipException when no flexible branding was tested
-		if (!flexibleBrandedSubscriptionsFound) throw new SkipException("No flexible branded subscriptions were found among the available subscriptions for testing.");
+		if (!flexibleBrandedSubscriptionsFound) throw new SkipException("No branding subscriptions were found among the available subscriptions that will brand one the currently installed OS products.");
 	}
 	
 	
@@ -319,8 +319,12 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 				if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productNamespace.id, currentProductCerts) != null) {
 					if (productNamespace.brandType != null) {
 						if (productNamespace.brandType.equals("OS")) {
+							/* THE ORIGINAL FLEX BRANDING IMPLEMENTATION DUAL-PURPOSED THE PRODUCT NAME AS THE SOURCE OF THE BRANDING NAME
 							eligibleBrandNamesList.add(productNamespace.name);
 							eligibleBrandNamesSet.add(productNamespace.name);
+							*/
+							eligibleBrandNamesList.add(productNamespace.brandName);
+							eligibleBrandNamesSet.add(productNamespace.brandName);
 						}
 					}
 				}
@@ -330,8 +334,6 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			log.warning("Currently there are multiple entitled OS brand products by the same name "+eligibleBrandNamesList+".  This can happen when multiple OS subscriptions have been stacked.");
 		}
 		return eligibleBrandNamesSet;
-		
-
 	}
 	
 	/**
@@ -412,6 +414,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		// 
 		// Design Doc: https://mojo.redhat.com/docs/DOC-186259
 		// Developer Test Notes: https://mojo.redhat.com/docs/DOC-21827
+		// Revised/Enhancements Design March 2014: https://engineering.redhat.com/trac/Entitlement/wiki/FlexibleBranding
 		String expectedBrandNameAfterSubscribing=null;
 		if (eligibleBrandNames.size()>1) {
 			log.warning("Currently there are multiple eligible brand names "+eligibleBrandNames+", therefore the actual brand name should remain unchanged.");
