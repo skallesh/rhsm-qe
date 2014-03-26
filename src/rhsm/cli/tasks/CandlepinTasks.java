@@ -3308,7 +3308,7 @@ schema generation failed
         return feed;
 	}
 		
-	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, List<String> providedProducts) throws JSONException{
+	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, List<String> providedProducts, List<Map<String, String>> brandingMaps) throws JSONException{
 		
 		/*
 		[root@jsefler-onprem-62server ~]# curl -k --user admin:admin --request POST
@@ -3335,7 +3335,17 @@ schema generation failed
 			jo.put("id", id);
 			pprods.add(jo);
 		}
-		sub.put("providedProducts", pprods);
+		if (providedProducts!=null) sub.put("providedProducts", pprods);
+		
+		JSONArray jsonBrandings = new JSONArray();
+		if (brandingMaps!=null) for (Map<String,String> brandingMap: brandingMaps) {
+			JSONObject jsonBranding = new JSONObject();
+			for (String key : brandingMap.keySet()) {	// Valid branding keys: "productId", "type", "name"
+				jsonBranding.put(key, brandingMap.get(key));
+			}
+			jsonBrandings.put(jsonBranding);
+		}
+		if (brandingMaps!=null) sub.put("branding", jsonBrandings);
 
 		JSONObject prod = new JSONObject();
 		prod.put("id", product);
@@ -3386,14 +3396,23 @@ schema generation failed
 	
 	
 	/**
-	 * @param url TODO
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param ownerKey
+	 * @param quantity
 	 * @param startingMinutesFromNow
 	 * @param endingMinutesFromNow
+	 * @param contractNumber
+	 * @param accountNumber
+	 * @param productId
+	 * @param providedProductIds
+	 * @param brandingMaps
 	 * @return JSONObject representing the pool corresponding to the subscription
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	public static JSONObject createSubscriptionAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, List<String> providedProductIds) throws JSONException, Exception  {
+	public static JSONObject createSubscriptionAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, List<String> providedProductIds, List<Map<String,String>> brandingMaps) throws JSONException, Exception  {
 		
 		// set the start and end dates
 		Calendar endCalendar = new GregorianCalendar();
@@ -3404,7 +3423,7 @@ schema generation failed
 		Date startDate = startCalendar.getTime();
 		
 		// create the subscription
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds, brandingMaps).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/owners/" + ownerKey + "/subscriptions",requestBody));
 		
 		if (jsonSubscription.has("displayMessage")) {
