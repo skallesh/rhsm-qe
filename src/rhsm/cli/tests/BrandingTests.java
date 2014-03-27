@@ -2,12 +2,17 @@ package rhsm.cli.tests;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -64,21 +69,38 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		client.runCommandAndWait("rm -f "+brandingFile);
 		 
-		// loop through all the available subscription pools searching for FlexibleBranded subscriptions
+		// choose subscription pools for FlexibleBranded tests from among the available subscription pools
+		// too time consuming List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> subscriptionPools = getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),10);
+		
+		// include the brandedSubscriptionProductId in subscriptionPools
+		if (brandedSubscriptionProductId!=null) {
+			SubscriptionPool brandedSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", brandedSubscriptionProductId, subscriptionPools);
+			if (brandedSubscriptionPool==null) {
+				brandedSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", brandedSubscriptionProductId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+			}
+			if (brandedSubscriptionPool!=null) subscriptionPools.add(0, brandedSubscriptionPool);
+		}
+		
+		// loop through subscription pools and assert flexible branding tests after attaching each subscription
 		boolean flexibleBrandedSubscriptionsFound = false;
-		// too time consuming for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-		for (SubscriptionPool pool : getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),10)) {
-			if (CandlepinTasks.isPoolAModifier(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl)) continue; // skip modifier pools
+		for (SubscriptionPool pool : subscriptionPools) {
+// this should not matter			if (CandlepinTasks.isPoolAModifier(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl)) continue; // skip modifier pools
 			String brandNameBeforeSubscribing = getCurrentBrandName();
 			String brandNameStatBeforeSubscribing = getCurrentBrandNameFileStat();
 			String prettyNameBeforeSubscribing = getCurrentPrettyName();
 			log.info("Currently, the flexible brand name prior to subscribing to pool '"+pool.subscriptionName+"' is '"+brandNameBeforeSubscribing+"'.");
 			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
-			if (verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(brandNameBeforeSubscribing,brandNameStatBeforeSubscribing,prettyNameBeforeSubscribing,"subscribing to pool '"+pool.subscriptionName+"'")) flexibleBrandedSubscriptionsFound=true;
+			Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeSubscribing,brandNameStatBeforeSubscribing,prettyNameBeforeSubscribing,"subscribing to pool '"+pool.subscriptionName+"'");
+			if (verifiedSystemsExpectedBrandedNameAfterEvent==null) {
+				// unentitle the system to clear the undefined case of multiple installed OS products
+				//clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+				RemoveSubscriptionsForFlexibleBranding_Test();
+			} else if (verifiedSystemsExpectedBrandedNameAfterEvent) flexibleBrandedSubscriptionsFound=true; 
 		}
 		
 		// throw SkipException when no flexible branding was tested
-		if (!flexibleBrandedSubscriptionsFound) throw new SkipException("No branding subscriptions were found among the available subscriptions that will brand one the currently installed OS products.");
+		if (!flexibleBrandedSubscriptionsFound) throw new SkipException("No branding subscriptions were found among the available subscriptions that will brand one of the currently installed OS products.");
 	}
 	
 	
@@ -94,9 +116,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			String brandNameBeforeUnsubscribing = getCurrentBrandName();
 			String brandNameStatBeforeUnsubscribing = getCurrentBrandNameFileStat();
 			String prettyNameBeforeUnsubscribing = getCurrentPrettyName();
-			log.info("Currently, the flexible brand name prior to unsubscribing from subscription '"+productSubscription.productName+"' is '"+brandNameBeforeUnsubscribing+"'.");
-			clienttasks.unsubscribe(null,productSubscription.serialNumber, null, null, null);
-			verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(brandNameBeforeUnsubscribing,brandNameStatBeforeUnsubscribing,prettyNameBeforeUnsubscribing,"unsubscribing from '"+productSubscription.productName+"'");
+			log.info("The flexible brand name prior to unsubscribing from subscription '"+productSubscription.productName+"' is currently '"+brandNameBeforeUnsubscribing+"'.");
+			clienttasks.unsubscribe_(null,productSubscription.serialNumber, null, null, null);
+			verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeUnsubscribing,brandNameStatBeforeUnsubscribing,prettyNameBeforeUnsubscribing,"unsubscribing from '"+productSubscription.productName+"'");
 		}
 	}
 	
@@ -120,8 +142,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null,(List<String>)null, null, null, null, null, null, null, null, null);
 		
 		// tests for branding
-		if (!verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(brandNameBeforeRegisteringWithAutosubscribe,brandNameStatBeforeRegisteringWithAutosubscribe,prettyNameBeforeRegisteringWithAutosubscribe,"registering with autosubscribe")) {
-			throw new SkipException("No flexible branded subscriptions were found after registering with autosubscribe.");
+		Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeRegisteringWithAutosubscribe,brandNameStatBeforeRegisteringWithAutosubscribe,prettyNameBeforeRegisteringWithAutosubscribe,"registering with autosubscribe");
+		if (verifiedSystemsExpectedBrandedNameAfterEvent==null || !verifiedSystemsExpectedBrandedNameAfterEvent) {
+			throw new SkipException("Could not verify the systems expected branded name after registering with autosubscribe.");
 		}
 	}
 	
@@ -145,8 +168,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.run_rhsmcertd_worker(false);
 		
 		// tests for branding
-		if (!verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(brandNameBeforeRunningRhsmcertdCheck,brandNameStatBeforeRunningRhsmcertdCheck,prettyNameBeforeRunningRhsmcertdCheck,"running the rhsmcertd-worker check")) {
-			Assert.fail("Expected the rhsmcertd-worker to restore the consumer's entitlements from the prior AutoSubscribeForFlexibleBranding_Test.");
+		Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeRunningRhsmcertdCheck,brandNameStatBeforeRunningRhsmcertdCheck,prettyNameBeforeRunningRhsmcertdCheck,"running the rhsmcertd-worker check");
+		if (verifiedSystemsExpectedBrandedNameAfterEvent==null || !verifiedSystemsExpectedBrandedNameAfterEvent) {
+			throw new SkipException("Could not verify the systems expected branded name after running the rhsmcertd-worker to restore the consumer's entitlements from the prior AutoSubscribeForFlexibleBranding_Test.");
 		}
 	}
 	
@@ -166,12 +190,16 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		String prettyNameBeforeRunningRhsmcertdHealCheck = getCurrentPrettyName();
 		log.info("Currently, the flexible brand name prior to an rhsmcertd heal check is '"+brandNameBeforeRunningRhsmcertdHealCheck+"'.");
 		
+		// make sure autoheal is enabled
+		clienttasks.autoheal(null, true, null, null, null, null);
+		
 		// run rhsmcertd check for healing
 		clienttasks.run_rhsmcertd_worker(true);
 		
 		// tests for branding
-		if (!verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(brandNameBeforeRunningRhsmcertdHealCheck,brandNameStatBeforeRunningRhsmcertdHealCheck,prettyNameBeforeRunningRhsmcertdHealCheck,"running the rhsmcertd-worker healing check")) {
-			throw new SkipException("No flexible branded subscriptions were found after running the rhsmcertd-worker check for healing.");
+		Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeRunningRhsmcertdHealCheck,brandNameStatBeforeRunningRhsmcertdHealCheck,prettyNameBeforeRunningRhsmcertdHealCheck,"running the rhsmcertd-worker healing check");
+		if (verifiedSystemsExpectedBrandedNameAfterEvent==null || !verifiedSystemsExpectedBrandedNameAfterEvent) {
+			throw new SkipException("Could not verify the systems expected branded name after running the rhsmcertd-worker with healing.");
 		}
 	}
 	
@@ -294,26 +322,24 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
-	// Configuration Methods ***********************************************************************
-	
-	
 	// Protected Methods ***********************************************************************
 	protected final String brandingFile = "/var/lib/rhsm/branded_name";
 	protected final String osReleaseFile = "/etc/os-release";
+	protected String brandedSubscriptionProductId = null;
 	
 	/**
-	 * @return the eligible brand names based on the currently attached entitlement certs and the currently installed product certs
+	 * @param entitlementCerts TODO
+	 * @return the eligible brand names based on the current entitlement certs and the currently installed product certs
 	 */
-	Set<String> getEligibleBrandNamesFromCurrentEntitlements() {
+	Set<String> getEligibleBrandNamesFromCurrentEntitlementCerts() {
 		
 		// Rules:
 		//  - eligible brand names come from the currently entitled productNamespaces and are identified by a brandType = "OS"
 		//  - the corresponding productId must be among the currently installed product certs to be eligible
 		
-		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
-		List<String> eligibleBrandNamesList = new ArrayList<String>();
 		Set<String> eligibleBrandNamesSet = new HashSet<String>();
+		List<String> eligibleBrandNamesList = new ArrayList<String>();
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
 			for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
 				if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productNamespace.id, currentProductCerts) != null) {
@@ -396,12 +422,13 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	 * @param brandNameStatBeforeEvent - value from getCurrentBrandNameFileStat() before the event is called
 	 * @param prettyNameBeforeEvent - value from getCurrentPrettyName() before the event is called
 	 * @param afterEventDescription - a description of the event like "after subscribing to pool 'Awesome OS'."
-	 * @return - whether or not a flexible branded subscription is currently entitled
+	 * @param entitlementCerts TODO
+	 * @return - true or false indicates when a flexible branded event was actually asserted; null is returned when the system is entitled to more than one installed OS product (an undefined case).
 	 */
-	protected boolean verifyCurrentEntitlementsForFlexibleBrandingAfterEvent(String brandNameBeforeEvent, String brandNameStatBeforeEvent, String prettyNameBeforeEvent, String afterEventDescription) { 
+	protected Boolean verifySystemsExpectedBrandedNameAfterEvent(String brandNameBeforeEvent, String brandNameStatBeforeEvent, String prettyNameBeforeEvent, String afterEventDescription) { 
 		
 		boolean flexibleBrandedSubscriptionsFound = false;
-		Set<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlements();
+		Set<String> eligibleBrandNames = getEligibleBrandNamesFromCurrentEntitlementCerts();
 		
 		// determine the expected brand name after subscribing
 		// Rules:
@@ -417,17 +444,16 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		// Revised/Enhancements Design March 2014: https://engineering.redhat.com/trac/Entitlement/wiki/FlexibleBranding
 		String expectedBrandNameAfterSubscribing=null;
 		if (eligibleBrandNames.size()>1) {
-			log.warning("Currently there are multiple eligible brand names "+eligibleBrandNames+", therefore the actual brand name should remain unchanged.");
-			expectedBrandNameAfterSubscribing = brandNameBeforeEvent;
-			flexibleBrandedSubscriptionsFound=true;
+ 			log.warning("Currently there are multiple eligible brand names "+eligibleBrandNames+" which means that more than one OS product is installed and entitled.  Skipping brand name assertion because this is not a valid scenario and the expected brand name is undefined.");
+			return null;
 		}
 		if (eligibleBrandNames.isEmpty()) {
-			log.warning("Currently there are no eligible brand names based on the attached entitlements, therefore the actual brand name should remain unchanged.");
+			log.warning("There are no eligible brand names based on the currently attached entitlements, therefore the actual brand name should remain unchanged.");
 			expectedBrandNameAfterSubscribing = brandNameBeforeEvent;
 		}
 		if (eligibleBrandNames.size()==1) {
 			expectedBrandNameAfterSubscribing = (String) eligibleBrandNames.toArray()[0];
-			log.info("Currently there is only one eligible brand name based on the attached entitlements, therefore the actual brand name should be '"+expectedBrandNameAfterSubscribing+"'.");
+			log.info("There is only one eligible brand name based on the currently attached entitlements, therefore the actual brand name should be '"+expectedBrandNameAfterSubscribing+"'.");
 			flexibleBrandedSubscriptionsFound=true;
 		}
 	
@@ -464,5 +490,72 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Data Providers ***********************************************************************
+	
+	
+	
+	// Configuration Methods ***********************************************************************
+	@BeforeClass(groups="setup")
+	public void createProductsAndSubscriptionWithBranding() throws JSONException, Exception {
+		
+		if (server==null) {
+			log.warning("Skipping createProductsAndSubscriptionWithBranding() when server is null.");
+			return;	
+		}
+		
+		// Subscription with an branding
+		String productId = "branded-generic-os-sku";
+		brandedSubscriptionProductId = productId;
+		List<String> providedProductIds = new ArrayList<String>();
+		providedProductIds.add("99010");
+		providedProductIds.add("99020");
+		providedProductIds.add("99030");
+		providedProductIds.add("99040");
+		
+		// delete already existing subscription, marketing product, and provided engineering products
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		for (String providedProductId : providedProductIds)	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductId);
+		
+		// create new engineering products, a marketing product that provides the engineering products, and a subscription for the marketing product
+		Map<String,String> attributes = new HashMap<String,String>();
+		attributes.put("type", "SVC");
+		//attributes.put("variant", "server");
+		attributes.put("arch", "ALL");
+		attributes.put("version", "1.0.0");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Generic non-OS Product V"+attributes.get("version"), "99010", 1, attributes, null);
+		attributes.put("version", "2.0.0");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Generic OSX Product V"+attributes.get("version"), "99020", 1, attributes, null);
+		attributes.put("version", "3.0.0");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Generic OS Product V"+attributes.get("version"), "99030", 1, attributes, null);
+		attributes.put("version", "4.0.0");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Generic OS Product V"+attributes.get("version"), "99040", 1, attributes, null);
+		attributes.put("type", "MKT");
+		attributes.put("version", "1.0");
+		attributes.put("support_level", "Generic SLA");
+		attributes.put("support_level_exempt", "false");
+		attributes.put("warning_period", "90");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Branded subscription for Generic Products", productId, 1, attributes, null);
+		List<Map<String,String>> brandingMaps = new ArrayList<Map<String,String>>();
+		//brandingMaps.add(new HashMap<String,String>(){{put("productId","99010");put("type",null);put("name",null);}});	// Runtime Error not-null property references a null or transient value: org.candlepin.model.Branding.name at org.hibernate.engine.internal.Nullability.checkNullability:103
+		//brandingMaps.add(new HashMap<String,String>(){{put("productId","99010");put("type","");put("name","");}});	// Runtime Error not-null property references a null or transient value: org.candlepin.model.Branding.name at org.hibernate.engine.internal.Nullability.checkNullability:103
+		brandingMaps.add(new HashMap<String,String>(){{put("productId","99010");put("type"," ");put("name"," ");}});
+		brandingMaps.add(new HashMap<String,String>(){{put("productId","99020");put("type","OSX");put("name","Branded Generic OSX Product V20");}});
+		brandingMaps.add(new HashMap<String,String>(){{put("productId","99030");put("type","OS");put("name","Branded Generic OS Product V30");}});
+		brandingMaps.add(new HashMap<String,String>(){{put("productId","99040");put("type","OS");put("name","Branded Generic OS Product V40");}});
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 15, -1*24*60/*1 day ago*/, 30*24*60/*30 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds, brandingMaps);
+		
+		// now install the engineering product certificates
+		for (String providedProductId : providedProductIds) {
+			JSONObject jsonProduct = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductId));
+			JSONObject jsonProductCert = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductId+"/certificate"));
+			String cert = jsonProductCert.getString("cert");
+			String key = jsonProductCert.getString("key");
+			String installedProductCertFilename = (/*jsonProduct.getString("name")*/"GenericProduct"+" "+jsonProduct.getString("id")+"_.pem").replaceAll(" ", "_");
+			client.runCommandAndWait("rm -f "+clienttasks.productCertDir+"/"+installedProductCertFilename);
+//			if (providedProductId.equals("99030") && randomGenerator.nextBoolean()) continue;	// randomly skip the install of 99030
+			if (providedProductId.equals("99030")) continue;	// skip the install of 99030
+			client.runCommandAndWait("echo \""+cert+"\" > "+clienttasks.productCertDir+"/"+installedProductCertFilename);
+		}
+	}
 }
 
