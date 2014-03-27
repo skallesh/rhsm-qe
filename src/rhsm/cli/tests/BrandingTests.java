@@ -58,7 +58,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="incrementally attach all available subscriptions and verify tests for Flexible Branding",
-			groups={"AttachSubscriptionsForFlexibleBranding_Test","AcceptanceTests"},
+			groups={"AttachSubscriptionsForFlexibleBranding_Test","AcceptanceTests","blockedByBug-884290"},
 			priority=100,
 			enabled=true)
 	public void AttachSubscriptionsForFlexibleBranding_Test() throws JSONException, Exception {
