@@ -2018,6 +2018,11 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1021664");
 			}
 			
+			if (rhnAvailableChildChannel.matches("rhel-x86_64-hpc-node(.*-7$|.*-7-.+)")) {	// rhel-x86_64-hpc-node-7 rhel-x86_64-hpc-node-optional-7 rhel-x86_64-hpc-node-optional-7-debuginfo rhel-x86_64-hpc-node-supplementary-7 rhel-x86_64-hpc-node-rh-common-7
+				// Bug 1078527 - channel-cert-mapping for ComputeNode rhel-7 product certs are missing and wrong
+				bugIds.add("1078527");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
