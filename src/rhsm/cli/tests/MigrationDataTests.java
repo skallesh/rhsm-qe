@@ -1998,7 +1998,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1009109");
 			}
 			
-			if (rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-ost-4") || rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-ost-beta")) {
+			if (rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-ost-4") ||
+				rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-ost-beta")) {
 				// Bug 1019981 - OpenStack-4.0 rhel-x86_64-server-6-ost-4 channel maps are missing
 				bugIds.add("1019981");
 			}
@@ -2013,12 +2014,17 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1021661");
 			}
 			
-			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-2") || rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-2-debuginfo")) {
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-2") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-2-debuginfo")) {
 				// Bug 1021664 - Red Hat CloudForms rhel-x86_64-server-6-cf-me-2 channel mappings are missing
 				bugIds.add("1021664");
 			}
 			
-			if (rhnAvailableChildChannel.matches("rhel-x86_64-hpc-node(.*-7$|.*-7-.+)")) {	// rhel-x86_64-hpc-node-7 rhel-x86_64-hpc-node-optional-7 rhel-x86_64-hpc-node-optional-7-debuginfo rhel-x86_64-hpc-node-supplementary-7 rhel-x86_64-hpc-node-rh-common-7
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-7") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-supplementary-7") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-optional-7") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-optional-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-rh-common-7")) {
 				// Bug 1078527 - channel-cert-mapping for ComputeNode rhel-7 product certs are missing and wrong
 				bugIds.add("1078527");
 			}
