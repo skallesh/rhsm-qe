@@ -4686,7 +4686,7 @@ public class SubscriptionManagerTasks {
 	}
 	/**
 	 * @param pool
-	 * @return null; Note this overloaded method ALWAYS RETURNS NULL!
+	 * @return null; WARNING this overloaded method ALWAYS RETURNS NULL (on purpose)!
 	 */
 	public File subscribeToSubscriptionPool(SubscriptionPool pool)  {
 		return subscribeToSubscriptionPool(pool, null, null, null);
