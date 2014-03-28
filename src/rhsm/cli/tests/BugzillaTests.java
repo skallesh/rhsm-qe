@@ -92,8 +92,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"VerifyStartEndDateOfSubscription","blockedByBug-994853"},
 			enabled=true)
 	public void VerifyStartEndDateOfSubscription() throws Exception {
-		moveProductCertFiles("*");
-		client.runCommandAndWait("cp /root/temp1/100000000000002.pem "+clienttasks.productCertDir);
+		installProductCert("100000000000002.pem");
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -101,10 +100,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(4));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.autoheal(null, null, true, null, null, null);
-		for(SubscriptionPool AvailablePools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
-			 if(AvailablePools.productId.equals("awesomeos-x86_64")){
+		for(SubscriptionPool AvailablePools:clienttasks.getAvailableSubscriptionsMatchingInstalledProducts()){
 				 clienttasks.subscribe(null, null, AvailablePools.poolId, null, null, "1", null, null, null, null, null);
-			}
 		}
 		for(InstalledProduct installedproduct:clienttasks.getCurrentlyInstalledProducts() ){
 			for(ProductSubscription pool:clienttasks.getCurrentlyConsumedProductSubscriptions()){
@@ -135,13 +132,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"VerifyStatusCheck","blockedByBug-921870"},
 			enabled=true)
 	public void VerifyStatusCheck() throws Exception {
-/* takes too much time; calling configureTmpProductCertDirWithInstalledProductCerts instead
-		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if(!(installed.productId.equals("32060"))){
-				moveProductCertFiles("*");
-			}
-		}
-*/
 		String result,expectedStatus;
 		ProductCert installedProductCert32060 = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "32060", clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert32060, "Found installed product cert 32060 needed for this test.");
@@ -155,11 +145,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(result.contains(expectedStatus), "System status displays '"+expectedStatus+"' because no products are installed.");	
 		client.runCommandAndWait("cp "+installedProductCert32060.file+" "+tmpProductCertDir);	// OR THIS IS VALID TOO configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[]{installedProductCert32060}));
 		result=clienttasks.status(null, null, null, null).getStdout();
-		// The test behavior demonstrated in https://bugzilla.redhat.com/show_bug.cgi?id=921870 seems to have improved; commenting out the following few lines...
-//		expectedStatus = "Overall Status: Current";
-//		Assert.assertTrue(result.contains(expectedStatus), "System status displays '"+expectedStatus+"' after manually installing a product cert because this is the cached value.  Rhsmcertd needs to be triggered.");
-//		clienttasks.run_rhsmcertd_worker(false);
-//		result=clienttasks.status(null, null, null, null).getStdout();
 		expectedStatus = "Overall Status: Invalid";
 		Assert.assertTrue(result.contains(expectedStatus), "System status displays '"+expectedStatus+"' after manully installing a product cert and running the rhsmcertd worker.");
 		clienttasks.run_rhsmcertd_worker(true);
@@ -178,6 +163,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"VerifyIfStatusDisplaysProductNameMultipleTimes","blockedByBug-972752"},
 			enabled=true)
 	public void VerifyIfStatusDisplaysProductNameMultipleTimes() throws Exception {
+		installProductCert("100000000000002.pem");
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -187,10 +173,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-		 for(SubscriptionPool AvailablePools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
-			 if(AvailablePools.productId.equals("awesomeos-x86_64")){
+		 for(SubscriptionPool AvailablePools:clienttasks.getAvailableSubscriptionsMatchingInstalledProducts()){
 			 clienttasks.subscribe(null, null, AvailablePools.poolId, null, null, "1", null, null, null, null, null);
-			 }
 		 
 		 }
 		 String result=clienttasks.status(null, null, null, null).getStdout();
@@ -250,18 +234,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);	// disable
-/* let's make this more efficient...
-		String pool = null;
-		client.runCommand("mkdir "+importCertificatesDir1);
-
-		 for(SubscriptionPool AvailablePools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
-			 pool=AvailablePools.poolId;
-		 }
-		
-		 clienttasks.subscribe(null, null, pool, null, null, null, null, null, null, null, null);
-		 entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
-		 File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
-*/
 		SubscriptionPool pool = getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),1).get(0);
 		File importEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_clientUsername, sm_clientPassword,sm_serverUrl);
 		 File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
@@ -884,9 +856,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);			
 		clienttasks.autoheal(null, null, true, null, null, null);
 		for(InstalledProduct result:clienttasks.getCurrentlyInstalledProducts()){
-/* we can be more thorough than this
-			if(result.productId.equals(providedPools.get(randomGenerator.nextInt(providedProductIds.size())))){
-*/
 			if (providedProductIds.contains(result.productId)) {
 				Assert.assertEquals(result.status, "Future Subscription");
 			}
@@ -963,41 +932,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	@ImplementsNitrateTest(caseId=55355)
 	public void CRLTest() {
-/* unnecessary
-		clienttasks.deleteFactsFileWithOverridingValues();
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"autoAttachInterval".toLowerCase(), "1440" });
-		clienttasks.config(null, null, true, listOfSectionNameValues);
-*/
+
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg ,null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
-/* unnecessary
-		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
-		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
-*/
 		List<SubscriptionPool> availPools = clienttasks.getCurrentlyAvailableSubscriptionPools(); 
 		File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools.get(randomGenerator.nextInt(availPools.size())),sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-/* simplify by getting the serialNumber from the entitlementCertFile
-			clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-*/
+
 		BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile);
-/* don't need a loop here to unsubscribe --all, just unsubscribe the serialNumber
-			for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-				System.out.println(consumed.serialNumber);
-				clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
-			}
-*/
 		clienttasks.unsubscribe(null,serialNumber, null, null, null);
 		
-		// verify that the currently revoked certs on the server include the serialNumber that we just unsubscribed
-/* we can eliminate this loop since the revocation list will likely have more than one revoked cert 
-			for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
-				Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
-			}
-*/
+		
 		sleep(2/*min*/*60*1000); // give the server time to update; schedule is set in /etc/candlepin/candlepin.conf pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
 		RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber", serialNumber, servertasks.getCurrentlyRevokedCerts());
 		Assert.assertNotNull(revokedCert, "Found expected Revoked Cert on the server's Certificate Revocation List (CRL) after unsubscribing from serial '"+serialNumber+"'.");
@@ -1051,16 +996,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertFalse(consumedSusbscription.isEmpty());
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
-/* this is not the right way to assert the revokedCerts contain the entitlementCert.serialNumber; re-implementing below...
-		clienttasks.autoheal(null, true, null, null, null, null);
-		clienttasks.restart_rhsmcertd(null, null, null);
-		List <RevokedCert> revokedCerts=servertasks.getCurrentlyRevokedCerts();
-		Assert.assertTrue(revokedCerts.contains(entitlementCert.serialNumber));
-*/
-		// sleep long enough for the CertificateRevocationListTask on the server to update
-		//	[root@jsefler-f14-candlepin candlepin]# grep CertificateRevocationListTask.schedule /etc/candlepin/candlepin.conf 
-		//	pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
-		//	pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
+
 		sleep(2/*min*/*60*1000);
 		
 		// verify the entitlement serial has been added to the CRL on the server
@@ -1979,10 +1915,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(List<String>)null, (String) null, null, null, true, null, null, null,null);
-/* too time consuming; replacing with configureTmpProductCertDirWithInstalledProductCerts...
-		moveProductCertFiles( "*.pem");
-		client.runCommandAndWait("cp /root/temp1/100000000000002.pem "+clienttasks.productCertDir);
-*/
+
 		ProductCert installedProductCert100000000000002 = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "100000000000002", clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert100000000000002, "Found installed product cert 100000000000002 needed for this test.");
 		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[]{installedProductCert100000000000002}));
@@ -3102,15 +3035,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.facts(null, true, null, null, null);
 		String listAfterUpdate = clienttasks.facts(true, null, null, null,
 				null).getStdout();
-		Assert.assertFalse(listAfterUpdate.contentEquals("fuzzing"));
-		Assert.assertEquals(listAfterUpdate, listBeforeUpdate);
+		Assert.assertFalse(listAfterUpdate.contains("fuzzing"));
 		client.runCommandAndWait("cp /var/lib/rhsm/facts/facts.json /var/lib/rhsm/facts/facts.json.save");
-		client.runCommandAndWait("sed /'uname.machine: x86_64'/d /var/lib/rhsm/facts/facts.json");
+		client.runCommandAndWait("sed /'uname.machine:'/d /var/lib/rhsm/facts/facts.json");
 		clienttasks.facts(null, true, null, null, null);
 		listAfterUpdate = clienttasks.facts(true, null, null, null, null)
 				.getStdout();
 		client.runCommandAndWait("mv -f /var/lib/rhsm/facts/facts.json.save /var/lib/rhsm/facts/facts.json");
-		Assert.assertEquals(listAfterUpdate, listBeforeUpdate);
+		Assert.assertTrue(listAfterUpdate.contains("uname"));
 
 	}
 
@@ -4316,7 +4248,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ", groups = { "VerifyautosubscribeIgnoresSocketCount_Test","blockedByBug-743704" }, enabled = true)
 	public void VerifyautosubscribeIgnoresSocketCount_Test() throws Exception {
 		installProductCert("1000000000000023.pem");
-		String socketvalue=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
