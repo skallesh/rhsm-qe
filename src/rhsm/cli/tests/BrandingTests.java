@@ -68,24 +68,19 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		// we will start out by removing the current brand name.
 		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		client.runCommandAndWait("rm -f "+brandingFile);
-		 
-		// choose subscription pools for FlexibleBranded tests from among the available subscription pools
-		// too time consuming List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		List<SubscriptionPool> subscriptionPools = getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),10);
 		
-		// include the brandedSubscriptionProductId in subscriptionPools
-		if (brandedSubscriptionProductId!=null) {
-			SubscriptionPool brandedSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", brandedSubscriptionProductId, subscriptionPools);
-			if (brandedSubscriptionPool==null) {
-				brandedSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", brandedSubscriptionProductId, clienttasks.getCurrentlyAvailableSubscriptionPools());
-			}
-			if (brandedSubscriptionPool!=null) subscriptionPools.add(0, brandedSubscriptionPool);
-		}
+		// choose subscription pools for FlexibleBranded tests from among the available subscription pools
+		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool brandedSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", brandedSubscriptionProductId, subscriptionPools);
+		subscriptionPools = getRandomSubsetOfList(subscriptionPools,10);	// randomly reduce the number of subscriptionPools tested
+		
+		// include the branded subscription pool for brandedSubscriptionProductId at the head of subscriptionPools
+		if (brandedSubscriptionPool!=null) subscriptionPools.add(0, brandedSubscriptionPool);
 		
 		// loop through subscription pools and assert flexible branding tests after attaching each subscription
 		boolean flexibleBrandedSubscriptionsFound = false;
 		for (SubscriptionPool pool : subscriptionPools) {
-// this should not matter			if (CandlepinTasks.isPoolAModifier(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl)) continue; // skip modifier pools
+// TODO this should not matter			if (CandlepinTasks.isPoolAModifier(sm_clientUsername, sm_clientPassword, pool.poolId, sm_serverUrl)) continue; // skip modifier pools
 			String brandNameBeforeSubscribing = getCurrentBrandName();
 			String brandNameStatBeforeSubscribing = getCurrentBrandNameFileStat();
 			String prettyNameBeforeSubscribing = getCurrentPrettyName();
@@ -325,7 +320,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	// Protected Methods ***********************************************************************
 	protected final String brandingFile = "/var/lib/rhsm/branded_name";
 	protected final String osReleaseFile = "/etc/os-release";
-	protected String brandedSubscriptionProductId = null;
+	protected final String brandedSubscriptionProductId = "branded-generic-os-sku";
 	
 	/**
 	 * @param entitlementCerts TODO
@@ -503,8 +498,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// Subscription with an branding
-		String productId = "branded-generic-os-sku";
-		brandedSubscriptionProductId = productId;
+		String productId = brandedSubscriptionProductId;
 		List<String> providedProductIds = new ArrayList<String>();
 		providedProductIds.add("99010");
 		providedProductIds.add("99020");
@@ -533,6 +527,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		attributes.put("version", "1.0");
 		attributes.put("support_level", "Generic SLA");
 		attributes.put("support_level_exempt", "false");
+		attributes.put("multi-entitlement", "yes");
 		attributes.put("warning_period", "90");
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Branded subscription for Generic Products", productId, 1, attributes, null);
 		List<Map<String,String>> brandingMaps = new ArrayList<Map<String,String>>();
