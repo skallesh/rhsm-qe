@@ -1825,7 +1825,18 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		// add the base channel
-		if (rhnBaseChannel!=null) ll.add(Arrays.asList(new Object[]{null,	rhnBaseChannel}));
+		if (rhnBaseChannel!=null) {
+			
+			// bugzillas
+			Set<String> bugIds = new HashSet<String>();
+			if (rhnBaseChannel.equals("rhel-x86_64-hpc-node-7")) {
+				// Bug 1078527 - channel-cert-mapping for ComputeNode rhel-7 product certs are missing and wrong
+				bugIds.add("1078527");
+			}
+			
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnBaseChannel}));
+		}
 		
 		// add the child channels
 		for (String rhnAvailableChildChannel : rhnAvailableChildChannels) {
