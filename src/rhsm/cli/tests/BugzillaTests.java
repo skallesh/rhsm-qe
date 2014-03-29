@@ -885,7 +885,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions",requestBody));
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
-		String poolid=CandlepinTasks.getPoolIdFromProductNameAndContractNumber(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "admin", productId, contractNumber.toString());
+		String poolid=CandlepinTasks.getPoolIdFromProductNameAndContractNumber(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "admin", name, contractNumber.toString());
 		String isGuest=clienttasks.getFactValue("virt.is_guest");
 		if(isGuest.equalsIgnoreCase("true")){
 			
