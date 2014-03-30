@@ -1710,6 +1710,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("multi-entitlement", "no");
 		List<String> providedProducts = new ArrayList<String>();
 		providedProducts.add("27060");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/subscriptions/"+"virtualPool");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/products/"+"virtual-pool");
+	
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"virtual-product","virtualPool", 1,attributes ,null);
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(10, todaysDate, futureDate,"virtualPool", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts,null).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody);	
@@ -3644,32 +3647,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId = 119327)
 	public void VerifyStatusForPartialSubscription() throws JSONException,
 	Exception {
-/* unnecessary
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"autoAttachInterval".toLowerCase(), "1440" });
-		clienttasks.config(null, null, true, listOfSectionNameValues);
-*/
+
 		String Flag = "false";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
-/* unnecessary
-		List<ProductSubscription> consumed = clienttasks
-				.getCurrentlyConsumedProductSubscriptions();
-		if (!(consumed.isEmpty())) {
-			clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
-		}
-*/
+
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		for (SubscriptionPool SubscriptionPool : clienttasks
 				.getCurrentlyAllAvailableSubscriptionPools()) {
-/* pool.multiEntitlement is not longer used; has been replaced with CandlepinTasks.isPoolProductMultiEntitlement(...)
-			if (!(SubscriptionPool.multiEntitlement)) {
-*/
 			if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId)) {
 				String poolProductSocketsAttribute = CandlepinTasks
 						.getPoolProductAttributeValue(sm_clientUsername,
@@ -3696,11 +3685,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				Flag = "true";
 			}
 		}
-/* not necessary
-		moreSockets = 1;
-		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues(factsMap);
-*/
 		Assert.assertEquals(Flag, "true","Verified Partially Subscribed installed product(s).");
 	}
 
@@ -4339,6 +4323,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
+	@BeforeGroups(groups="setup", value = {"VerifyStatusCheck"})
 	@AfterGroups(groups="setup", value = {"VerifyStatusCheck","certificateStacking"})
 	@AfterClass(groups="setup")	// called after class for insurance
 	public void restoreRhsmProductCertDir() {
