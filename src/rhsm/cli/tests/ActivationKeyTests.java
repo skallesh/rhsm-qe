@@ -1057,12 +1057,15 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	// Configuration methods ***********************************************************************
 
 	@AfterClass(groups={"setup"})
-	public void unregisterAllSystemConsumerIds() {
+	public void unregisterAllSystemConsumerIds() throws Exception {
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
+				/* it is faster to call the candlepin API directly
 				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
 				clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 				clienttasks.unregister_(null, null, null);
+				*/
+				CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl, "/consumers/"+systemConsumerId);
 			}
 			systemConsumerIds.clear();
 		}
@@ -1387,5 +1390,4 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		return ll;
 	}
-	
 }
