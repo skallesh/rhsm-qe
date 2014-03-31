@@ -243,7 +243,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to subscription-manager",
-			groups={"blockedbyBug-801280","blockedByBug-1006748","blockedByBug-800744"},
+			groups={"blockedbyBug-801280","blockedByBug-1006748","blockedByBug-800744","blockedByBug-1080531"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForSubscriptionManager_Test() {
@@ -300,7 +300,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: python-dmidecode",
 					"manual: python-ethtool",
 					"manual: python-iniparse",
-					"manual: python-rhsm >= 1.10.9",	// RHEL7.0
+					"manual: python-rhsm >= 1.10.12-2",	// RHEL7.0 Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
 					//"manual: python-simplejson",	// removed by bug 1006748
 					"manual: usermode",
 					"manual: virt-what",
