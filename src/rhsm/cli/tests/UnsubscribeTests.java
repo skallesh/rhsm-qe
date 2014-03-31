@@ -77,7 +77,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41903)
 	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool) throws JSONException, Exception{
-		client.runCommandAndWait("killall -9 yum");
+		client.runCommandAndWaitWithoutLogging("killall -9 yum");
 		
 		// choose a quantity before subscribing to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
 		String quantity = null;

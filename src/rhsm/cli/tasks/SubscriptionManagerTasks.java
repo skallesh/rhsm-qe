@@ -573,7 +573,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public void removeAllCerts(boolean consumers, boolean entitlements, boolean products) {
-		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 		String certDir;
 		
 		if (consumers) {
@@ -5418,7 +5418,7 @@ public class SubscriptionManagerTasks {
 		
 		
 		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
-		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 		List<String> yumRepolistAll = getYumRepolist("all");
  		for (EntitlementCert entitlementCert : entitlementCerts) {
  			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
@@ -5449,7 +5449,7 @@ public class SubscriptionManagerTasks {
 	public ArrayList<String> getYumRepolist(String options){
 		if (options==null) options="";
 		ArrayList<String> repoList = new ArrayList<String>();
-		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 		sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 				
 		// TEMPORARY WORKAROUND FOR BUG
@@ -5603,7 +5603,7 @@ public class SubscriptionManagerTasks {
 	@Deprecated	// replaced by public ArrayList<String> getYumListAvailable (String options)
 	public ArrayList<String> getYumListOfAvailablePackagesFromRepo (String repoLabel) {
 		ArrayList<String> packages = new ArrayList<String>();
-		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 
 		int min = 5;
 		log.fine("Using a timeout of "+min+" minutes for next command...");
@@ -5638,7 +5638,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public ArrayList<String> getYumListAvailable (String options) {
 		ArrayList<String> packages = new ArrayList<String>();
-		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 		if (options==null) options="";
 
 //		String							command  = "yum list available";
@@ -5773,7 +5773,7 @@ public class SubscriptionManagerTasks {
 	
 	public ArrayList<String> yumGroupList (String Installed_or_Available, String options) {
 		ArrayList<String> groups = new ArrayList<String>();
-		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 
 		String command = "yum grouplist "+options+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		
@@ -5882,7 +5882,17 @@ public class SubscriptionManagerTasks {
 		// attempt to install the pkg from repo with the installOptions, but say N at the prompt: Is this ok [y/N]: N
 		if (installOptions==null) installOptions=""; installOptions = installOptions.replaceFirst("-y", "");
 		String command = "echo N | yum install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 1);
+		SSHCommandResult result;
+		if (false) {
+			// extremely verbose, consumes a lot of diskspace in the log file.
+			result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 1);
+		} else {
+			// less verbose, but harder to troubleshoot
+			result = sshCommandRunner.runCommandAndWaitWithoutLogging(command);
+			Assert.assertEquals(result.getExitCode(), new Integer(1),"ExitCode from: "+command);
+			if (result.getStdout().contains("Is this ok [y/")) log.fine("Package '"+pkg+"' appears to be installable from repo '"+repoLabel+"'. (Stdout/Stderr/ExitCode was not logged to conserve disk space)");
+			else log.fine("Package '"+pkg+"' does NOT appear to be installable from repo '"+repoLabel+"'. (Stdout/Stderr/ExitCode was not logged to conserve disk space)");
+		}
 
 		// disregard the package if it was obsoleted...
 		
@@ -5896,7 +5906,7 @@ public class SubscriptionManagerTasks {
 		//	---> Package cman.x86_64 0:3.0.12.1-21.el6 will be installed
 		String regex="Package "+pkg.split("\\.")[0]+".* is obsoleted by (.+), trying to install .+ instead";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-		Matcher matcher = pattern.matcher(sshCommandRunner.getStdout());
+		Matcher matcher = pattern.matcher(result.getStdout());
 		String obsoletedByPkg = null;
 		if (matcher.find()) {
 			obsoletedByPkg = matcher.group(1);
@@ -5906,11 +5916,21 @@ public class SubscriptionManagerTasks {
 			return false;
 		}
 		
+        // RHEL6...
 		//	Total download size: 2.1 M
 		//	Installed size: 4.8 M
 		//	Is this ok [y/N]: N
 		//	Exiting on user Command
-		return result.getStdout().contains("Is this ok [y/N]:");
+		
+        // RHEL7...
+		//	Total download size: 80 k
+		//	Installed size: 210 k
+		//	Is this ok [y/d/N]: N
+		//	Exiting on user command
+		//	Your transaction was saved, rerun it with:
+		//	 yum load-transaction /tmp/yum_save_tx.2014-03-28.18-55.EY43Gr.yumtx
+		
+		return result.getStdout().contains("Is this ok [y/");
 	}
 	
 	// 
@@ -6293,12 +6313,17 @@ public class SubscriptionManagerTasks {
 		// FIXME, If the package is obsoleted, then the obsoletedByPkg may not come from the same repo and the following assert will fail
 		
 		// assert the installed package came from repoLabel
-		//	spice-server     x86_64     0.7.3-2.el6      rhel-6-server-beta-rpms     245 k
-		//  cman x86_64 3.0.12.1-19.el6 beaker-HighAvailability 427 k
+		// =======================================================================================
+		//  Package          Arch       Version           Repository                         Size
+		// =======================================================================================
+		// Installing:
+		//	spice-server     x86_64     0.7.3-2.el6       rhel-6-server-beta-rpms            245 k
+		//  cman             x86_64     3.0.12.1-19.el6   beaker-HighAvailability            427 k
+		//  cmirror          x86_64     7:2.02.103-5.el7  rhel-rs-for-rhel-7-server-htb-rpms 166 k
 		if (repoLabel==null) {
-			regex=pkg.split("\\.")[0]+"\\n? +(\\w+) +([\\w\\.-]+) +([\\w-]+)";		
+			regex=pkg.split("\\.")[0]+"\\n? +(\\w+) +([\\w:\\.-]+) +([\\w-]+)";		
 		} else {
-			regex=pkg.split("\\.")[0]+"\\n? +(\\w+) +([\\w\\.-]+) +("+repoLabel+")";
+			regex=pkg.split("\\.")[0]+"\\n? +(\\w+) +([\\w:\\.-]+) +("+repoLabel+")";
 		}
 		pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		matcher = pattern.matcher(sshCommandRunner.getStdout());
