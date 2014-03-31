@@ -325,7 +325,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate+".";
 		Assert.assertEquals(result.trim(), expected_message);
 		result=clienttasks.identity_(null, null, null, null, null, null, null).getStdout();
-		Assert.assertEquals(result.trim(), clienttasks.msg_ConsumerNotRegistered);
+		String msg_ConsumerNotRegistered = "Currently, there is no consumer registered.";
+		Assert.assertEquals(result.trim(), msg_ConsumerNotRegistered);
 
 	}
 	
