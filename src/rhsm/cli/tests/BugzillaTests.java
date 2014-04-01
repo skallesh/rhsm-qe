@@ -238,18 +238,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);	// disable
-/* let's make this more efficient...
-		String pool = null;
-		client.runCommand("mkdir "+importCertificatesDir1);
-
-		 for(SubscriptionPool AvailablePools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
-			 pool=AvailablePools.poolId;
-		 }
-		
-		 clienttasks.subscribe(null, null, pool, null, null, null, null, null, null, null, null);
-		 entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
-		 File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
-*/
 		SubscriptionPool pool = getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),1).get(0);
 		File importEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_clientUsername, sm_clientPassword,sm_serverUrl);
 		 File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
@@ -516,7 +504,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify if refresh pools will not notice change in provided products",
 			groups={"RefreshPoolAfterChangeInProvidedProducts","blockedByBug-665118"},
-			enabled=true)
+			enabled=false)
 	public void RefreshPoolAfterChangeInProvidedProducts() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
