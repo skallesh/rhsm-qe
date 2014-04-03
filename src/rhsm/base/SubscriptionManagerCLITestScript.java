@@ -132,7 +132,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks.cleanOutCRL();
 			servertasks.deploy();
 			server.runCommandAndWait("df -h");server.runCommandAndWait("ls -Slh /var/log/tomcat6 | head");	// log candlepin's starting disk usage (for debugging information only)
-			servertasks.setupTranslateToolkit(sm_translateToolkitGitRepository);
+			servertasks.setupTranslateToolkitFromTarUrl(sm_translateToolkitTarUrl);
 			servertasks.reportAPI();
 			
 			// also connect to the candlepin server database
@@ -328,7 +328,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.removeRhnSystemIdFile();
 		smt.installRepoCaCerts(sm_repoCaCertUrls);
 		smt.setupRhnDefinitions(sm_rhnDefinitionsGitRepository);
-		smt.setupTranslateToolkit(sm_translateToolkitGitRepository);
+		smt.setupTranslateToolkitFromTarUrl(sm_translateToolkitTarUrl);
 
 		// create a facts file that will tell candlepin what version of x509 entitlement certificates this client understands;  removeAllFacts() should be called before this block of code!
 		if (sm_clientCertificateVersion!=null) {

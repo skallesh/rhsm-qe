@@ -522,7 +522,8 @@ public class SubscriptionManagerTasks {
 		
 	}
 	
-	public void setupTranslateToolkit(String gitRepository) {
+	@Deprecated
+	public void setupTranslateToolkitFromGitRepo(String gitRepository) {
 		if (gitRepository.equals("")) return;
 		
 		//	[root@jsefler-7 ~]# pip uninstall -y six
@@ -553,7 +554,7 @@ public class SubscriptionManagerTasks {
 		log.info("Cloning Translate Toolkit...");
 		final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+translateToolkitDir+" && mkdir "+translateToolkitDir, new Integer(0));
-		/* git may is not always installed (e.g. RHEL5/epel s390,ia64), therefore stop asserting which causes entire setupBeforeSuite to fail.
+		/* git is not always installed (e.g. RHEL5/epel s390,ia64), therefore stop asserting which causes entire setupBeforeSuite to fail.
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "git clone "+gitRepository+" "+translateToolkitDir, new Integer(0));
 		sshCommandRunner.runCommandAndWaitWithoutLogging("cd "+translateToolkitDir+" && ./setup.py install --force");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", new Integer(0));
@@ -564,7 +565,21 @@ public class SubscriptionManagerTasks {
 		sshCommandRunner.runCommandAndWait("which pofilter");
 		if (sshCommandRunner.getExitCode()!=0) log.warning("Encountered problems while installing pofilter; related tests will likely fail or skip.");
 	}
-	
+	public void setupTranslateToolkitFromTarUrl(String tarUrl) {
+		if (tarUrl.isEmpty()) return;
+		
+		sshCommandRunner.runCommandAndWait("easy_install six");	 // needed for translate-toolkit-1.11.0 and newer
+		
+		log.info("Getting Translate Toolkit...");
+		final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
+		final String translateToolkitTarPath	= translateToolkitDir+"/translate-toolkit.tar";
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+translateToolkitDir+" && mkdir "+translateToolkitDir, new Integer(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "wget --no-verbose --no-check-certificate --output-document="+translateToolkitTarPath+" "+tarUrl,Integer.valueOf(0),null,"-> \""+translateToolkitTarPath+"\"");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "tar --extract --directory="+translateToolkitDir+" --file="+translateToolkitTarPath,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+translateToolkitDir+"/translate-toolkit* && ./setup.py install --force", Integer.valueOf(0));
+		sshCommandRunner.runCommandAndWait("rm -rf ~/.local");	// 9/27/2013 Fix for the following... Traceback ImportError: cannot import name pofilter
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", Integer.valueOf(0));
+	}
 	
 	public void removeAllFacts() {
 		log.info("Cleaning out facts directory: "+this.factsDir);

@@ -321,7 +321,8 @@ schema generation failed
 		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
 	}
 	
-	public void setupTranslateToolkit(String gitRepository) {
+	@Deprecated
+	public void setupTranslateToolkitFromGitRepo(String gitRepository) {
 		if (gitRepository.equals("")) return;
 		
 		// NOTES:
@@ -375,6 +376,21 @@ schema generation failed
 		sshCommandRunner.runCommandAndWaitWithoutLogging("cd "+translateToolkitDir+" && ./setup.py install --force");
 		sshCommandRunner.runCommandAndWait("rm -rf ~/.local");	// 9/27/2013 Fix for the following... Don't know why I started getting Traceback ImportError: cannot import name pofilter
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", new Integer(0));
+	}
+	public void setupTranslateToolkitFromTarUrl(String tarUrl) {
+		if (tarUrl.isEmpty()) return;
+		
+		sshCommandRunner.runCommandAndWait("easy_install six");	 // needed for translate-toolkit-1.11.0 and newer
+		
+		log.info("Getting Translate Toolkit...");
+		final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
+		final String translateToolkitTarPath	= translateToolkitDir+"/translate-toolkit.tar";
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+translateToolkitDir+" && mkdir "+translateToolkitDir, new Integer(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "wget --no-verbose --no-check-certificate --output-document="+translateToolkitTarPath+" "+tarUrl,Integer.valueOf(0),null,"-> \""+translateToolkitTarPath+"\"");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "tar --extract --directory="+translateToolkitDir+" --file="+translateToolkitTarPath,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+translateToolkitDir+"/translate-toolkit* && ./setup.py install --force", Integer.valueOf(0));
+		sshCommandRunner.runCommandAndWait("rm -rf ~/.local");	// 9/27/2013 Fix for the following... Traceback ImportError: cannot import name pofilter
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", Integer.valueOf(0));
 	}
 	
 	public void cleanOutCRL() {
