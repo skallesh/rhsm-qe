@@ -1191,7 +1191,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 
-//debugTesting	@AfterClass(groups={"setup"})
+	@AfterClass(groups={"setup"})
 	public void unregisterAllSystemConsumerIds() throws Exception {
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
