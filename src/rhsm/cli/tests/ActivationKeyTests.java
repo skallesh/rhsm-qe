@@ -846,6 +846,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 		
 		// call the candlepin api to create an activation key
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request POST --data '{"name":"ActivationKey1393948948190_WithReleaseVer","releaseVer":"R_1.0"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/activation_keys | python -m simplejson/tool
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 		//jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
 		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3448960ba01448dd50b1b2c0b | python -m simplejson/tool
@@ -1073,6 +1074,110 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="use the candlepin api to attempt creation of an activation key with a bad service level",
+			groups={},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void AttemptActivationKeyCreationWithBadServiceLevel_Test() throws JSONException, Exception {
+		
+		// create a JSON object to represent the request body (with bad service level)
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", String.format("ActivationKey%s_WithNonExistantServiceLevel", System.currentTimeMillis()));
+		mapActivationKeyRequest.put("serviceLevel", "NonExistantServiceLevel");
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		
+		// call the candlepin api to create an activation key
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
+
+		// assert that the creation was NOT successful (contains a displayMessage)
+		if (jsonActivationKey.has("displayMessage")) {
+			String displayMessage = jsonActivationKey.getString("displayMessage");
+			Assert.assertEquals(displayMessage, String.format("Service level '%s' is not available to units of organization %s.",mapActivationKeyRequest.get("serviceLevel"),sm_clientOrg),"Expected the creation of this activation key to fail because this service level is non-existant for any of the subscriptions in this org.");
+		} else {
+			log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an invalid service level '"+mapActivationKeyRequest.get("serviceLevel")+"'.");
+			Assert.fail("The following activation key should not have been created with bad serviceLevel '"+mapActivationKeyRequest.get("serviceLevel")+"': "+jsonActivationKey);
+		}
+	}
+	
+	@Test(	description="create an activation key, add a service level to it, and then register with the activation key",
+			groups={},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithActivationKeyContainingServiceLevel_Test() throws JSONException, Exception {
+		
+		// generate a unique activation key name for this test
+		String keyName = String.format("ActivationKey%s_WithServiceLevel", System.currentTimeMillis());
+		
+		// randomly choose an valid service level value
+		String serviceLevel = getRandomListItem(clienttasks.getAvailableServiceLevels(sm_clientUsername, sm_clientPassword, sm_clientOrg));
+		if (serviceLevel==null) throw new SkipException("Could not find any available service levels for this test.");
+		
+		// create a JSON object to represent the request body
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", keyName);
+		mapActivationKeyRequest.put("serviceLevel", serviceLevel);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		
+		// call the candlepin api to create an activation key
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request POST --data '{"name":"ActivationKey1396648820555_WithServiceLevel","serviceLevel":"Super"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/activation_keys | python -m simplejson/tool
+		//	{
+		//	    "contentOverrides": [],
+		//	    "created": "2014-04-04T22:00:50.225+0000",
+		//	    "id": "8a9087e3452995d301452ec233313b7a",
+		//	    "name": "ActivationKey1396648820555_WithServiceLevel",
+		//	    "owner": {
+		//	        "displayName": "Admin Owner",
+		//	        "href": "/owners/admin",
+		//	        "id": "8a9087e3452995d30145299600ac0004",
+		//	        "key": "admin"
+		//	    },
+		//	    "pools": [],
+		//	    "releaseVer": {
+		//	        "releaseVer": null
+		//	    },
+		//	    "serviceLevel": "Super",
+		//	    "updated": "2014-04-04T22:00:50.225+0000"
+		//	}
+		
+		// register with the activation key
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		
+		// verify the current serviceLevel equals the value set in the activation key
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "After registering with an activation key containing a serviceLevel, the current service level is properly set.");
+		
+		// PUT to /activation_keys/<id> to set an updated serviceLevel...
+		serviceLevel = getRandomListItem(clienttasks.getAvailableServiceLevels(sm_clientUsername, sm_clientPassword, sm_clientOrg));
+		mapActivationKeyRequest.clear();
+		mapActivationKeyRequest.put("serviceLevel", serviceLevel);
+		jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		jsonActivationKey = new JSONObject(CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/"+jsonActivationKey.getString("id"), jsonActivationKeyRequest));
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request PUT --data '{"serviceLevel":"Premium"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3452995d301452ec233313b7a | python -msimplejson/tool
+		//	{
+		//	    "contentOverrides": [],
+		//	    "created": "2014-04-04T22:00:50.225+0000",
+		//	    "id": "8a9087e3452995d301452ec233313b7a",
+		//	    "name": "ActivationKey1396648820555_WithServiceLevel",
+		//	    "owner": {
+		//	        "displayName": "Admin Owner",
+		//	        "href": "/owners/admin",
+		//	        "id": "8a9087e3452995d30145299600ac0004",
+		//	        "key": "admin"
+		//	    },
+		//	    "pools": [],
+		//	    "releaseVer": {
+		//	        "releaseVer": null
+		//	    },
+		//	    "serviceLevel": "Premium",
+		//	    "updated": "2014-04-04T22:06:11.344+0000"
+		//	}
+		
+		// reregister with the same activation key
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		
+		// verify the current serviceLevel equals the new value set in the activation key
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "After registering with an activation key containing an updated serviceLevel, the current service level is properly set.");
+	}
 	
 	// Candidates for an automated Test:
 	// TODO Bug 755677 - failing to add a virt unlimited pool to an activation key  (SHOULD CREATE AN UNLIMITED POOL IN A BEFORE CLASS FOR THIS BUG TO AVOID RESTARTING CANDLEPIN IN standalone=false) https://github.com/RedHatQE/rhsm-qe/issues/113
@@ -1086,7 +1191,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 
-	@AfterClass(groups={"setup"})
+//debugTesting	@AfterClass(groups={"setup"})
 	public void unregisterAllSystemConsumerIds() throws Exception {
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
