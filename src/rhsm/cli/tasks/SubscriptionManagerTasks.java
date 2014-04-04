@@ -1157,8 +1157,18 @@ public class SubscriptionManagerTasks {
 	 * @return list of the service labels returned by subscription-manager service-level --list (must already be registered)
 	 */
 	public List<String> getCurrentlyAvailableServiceLevels() {
+		return getAvailableServiceLevels(null,null,null);
+	}
+	
+	/**
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @return list of the service labels returned by subscription-manager service-level --list --username=username --password=password --org=org
+	 */
+	public List<String> getAvailableServiceLevels(String username, String password, String org) {
 		
-		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = service_level_(false, true, null, null, username, password, org, null, null, null, null, null);
 		
 		List<String> serviceLevels = new ArrayList<String>();
 		if (!result.getExitCode().equals(Integer.valueOf(0))) return serviceLevels;
