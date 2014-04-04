@@ -873,11 +873,13 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// verify the current release equals the value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentRelease(), releaseVer, "After registering with an activation key containing a releaseVer, the current release is properly set.");
 		
-		// POST a new releaseVer on the same key and register again
+		// POST to /activation_keys/<id>/release to set an updated releaseVer...
+		/* NOT ANYMORE... Candlepin Commit d005f2e7f00546ab5c66208225e99d4db105f33e changed this behavior to use PUT /activation_keys/<id>
 		releaseVer = "R_2.0";
 		mapActivationKeyRequest.clear();
 		mapActivationKeyRequest.put("releaseVer", releaseVer);
 		jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request POST --data '{"releaseVer":"R_2.0"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3448960ba01448df4e5b92cdb/release
 		jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/"+jsonActivationKey.getString("id")+"/release", jsonActivationKeyRequest.toString()));
 		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3448960ba01448df4e5b92cdb | python -m simplejson/tool
 		//	{
@@ -896,6 +898,34 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		//	        "releaseVer": "R_2.0"
 		//	    },
 		//	    "updated": "2014-03-04T16:37:52.768+0000"
+		//	}
+		 */
+		
+		// PUT to /activation_keys/<id> to set an updated releaseVer...
+		releaseVer = "R_2.0";
+		mapActivationKeyRequest.clear();
+		mapActivationKeyRequest.put("releaseVer", releaseVer);
+		jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request PUT --data '{"releaseVer":"R_2.0"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3452995d301452d14c41e3858 | python -msimplejson/tool
+		jsonActivationKey = new JSONObject(CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/"+jsonActivationKey.getString("id"), jsonActivationKeyRequest));
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3452995d301452d14c41e3858 | python -m simplejson/tool
+		//	{
+		//	    "contentOverrides": [],
+		//	    "created": "2014-04-04T14:11:46.846+0000",
+		//	    "id": "8a9087e3452995d301452d14c41e3858",
+		//	    "name": "ActivationKey1396620706731_WithReleaseVer",
+		//	    "owner": {
+		//	        "displayName": "Admin Owner",
+		//	        "href": "/owners/admin",
+		//	        "id": "8a9087e3452995d30145299600ac0004",
+		//	        "key": "admin"
+		//	    },
+		//	    "pools": [],
+		//	    "releaseVer": {
+		//	        "releaseVer": "R_2.0"
+		//	    },
+		//	    "serviceLevel": null,
+		//	    "updated": "2014-04-04T14:12:12.546+0000"
 		//	}
 		
 		// reregister with the same activation key
