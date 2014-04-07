@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -1178,6 +1179,136 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// verify the current serviceLevel equals the new value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "After registering with an activation key containing an updated serviceLevel, the current service level is properly set.");
 	}
+	
+	@Test(	description="create an activation key, add a service level (for a future subscription) to it, and then register with the activation key",
+			groups={"RegisterWithActivationKeyContainingFutureServiceLevel_Test"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithActivationKeyContainingFutureServiceLevel_Test() throws JSONException, Exception {
+		
+		// generate a unique activation key name for this test
+		String keyName = String.format("ActivationKey%s_WithFutureServiceLevel", System.currentTimeMillis());
+		
+		// choose service level value that is available on a future subscription
+		if (futureServiceLevel==null) throw new SkipException("Future service level '"+futureServiceLevel+"' is not available for this test.");
+		
+		// create a JSON object to represent the request body
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", keyName);
+		mapActivationKeyRequest.put("serviceLevel", futureServiceLevel);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		
+		// call the candlepin api to create an activation key
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
+		
+		// register with the activation key
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		
+		// verify the current serviceLevel equals the value set in the activation key
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), futureServiceLevel, "After registering with an activation key containing a serviceLevel, the current service level is properly set.");
+	}
+	protected String futureServiceLevel = null;
+	@BeforeGroups(value={"RegisterWithActivationKeyContainingFutureServiceLevel_Test"}, groups={"setup"})
+	public void beforeRegisterWithActivationKeyContainingFutureServiceLevel_Test() throws JSONException, Exception {
+		String name,productId, serviceLevel;
+		List<String> providedProductIds = new ArrayList<String>();
+		Map<String,String> attributes = new HashMap<String,String>();
+		if (server==null) {
+			log.warning("Skipping beforeRegisterWithActivationKeyContainingFutureServiceLevel_Test() when server is null.");
+			return;	
+		}
+	
+		// Subscription with an exempt_support_level
+		futureServiceLevel = "Future SLA";
+		name = "A \""+futureServiceLevel+"\" service level subscription";
+		productId = "future-sla-product-sku";
+		providedProductIds.clear();
+		attributes.clear();
+		attributes.put("support_level", futureServiceLevel);
+		attributes.put("support_level_exempt", "false");
+		attributes.put("version", "100.0");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "25");
+		// delete already existing subscription and products
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		// create a new marketing product that provides the engineering product, and a subscription for the marketing product
+		attributes.put("type", "MKT");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 4, 100*24*60/*100 days from now*/, 200*24*60/*200 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds, null);
+	}
+	
+	
+	@Test(	description="create an activation key, add a service level (for an expired subscription) to it, and then register with the activation key",
+			groups={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithActivationKeyContainingExpiredServiceLevel_Test() throws JSONException, Exception {
+		
+		// generate a unique activation key name for this test
+		String keyName = String.format("ActivationKey%s_WithExpiredServiceLevel", System.currentTimeMillis());
+		
+		// choose service level value that is available, but about to expire
+		if (expiredServiceLevel==null) throw new SkipException("Expired service level '"+expiredServiceLevel+"' is not available for this test.");
+		
+		// create a JSON object to represent the request body
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", keyName);
+		mapActivationKeyRequest.put("serviceLevel", expiredServiceLevel);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		
+		// call the candlepin api to create an activation key
+		sleep(1*60*1000);	// wait 1 minute for the pool which is about to expire
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
+		
+		// register with the activation key - should succeed because the expired pool has not yet been refreshed
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		
+		// verify the current serviceLevel equals the value set in the activation key
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), expiredServiceLevel, "After registering with an activation key containing a serviceLevel, the current service level is properly set.");
+		
+		// refresh the candlepin pools which will remove the availability of the expired pool
+		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg);
+		
+		// register with the activation key - should fail because the expired pool was the only one that supported the expiredServiceLevel
+		SSHCommandResult result = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The exit code from the register command indicates we could not register with activation key '"+keyName+"'.");
+		Assert.assertEquals(result.getStderr().trim(), String.format("Service level '%s' is not available to units of organization admin.",expiredServiceLevel));	
+	}
+	protected String expiredServiceLevel = null;
+	@BeforeGroups(value={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test"}, groups={"setup"})
+	public void beforeRegisterWithActivationKeyContainingExpiredServiceLevel_Test() throws JSONException, Exception {
+		String name,productId, serviceLevel;
+		List<String> providedProductIds = new ArrayList<String>();
+		Map<String,String> attributes = new HashMap<String,String>();
+		if (server==null) {
+			log.warning("Skipping beforeRegisterWithActivationKeyContainingExpiredServiceLevel_Test() when server is null.");
+			return;	
+		}
+	
+		// Subscription that has expired
+		expiredServiceLevel = "Expired SLA";
+		name = "An \""+expiredServiceLevel+"\" service level subscription";
+		productId = "expired-sla-product-sku";
+		providedProductIds.clear();
+		attributes.clear();
+		attributes.put("support_level", expiredServiceLevel);
+		attributes.put("support_level_exempt", "false");
+		attributes.put("version", "0.001");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "25");
+		// delete already existing subscription and products
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		// create a new marketing product that provides the engineering product, and a subscription for the marketing product
+		attributes.put("type", "MKT");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 4, -10*24*60/*10 days ago*/, 1/*1 minute from now*/, getRandInt(), getRandInt(), productId, providedProductIds, null);
+	}
+	
+	
+	
+	
 	
 	// Candidates for an automated Test:
 	// TODO Bug 755677 - failing to add a virt unlimited pool to an activation key  (SHOULD CREATE AN UNLIMITED POOL IN A BEFORE CLASS FOR THIS BUG TO AVOID RESTARTING CANDLEPIN IN standalone=false) https://github.com/RedHatQE/rhsm-qe/issues/113
