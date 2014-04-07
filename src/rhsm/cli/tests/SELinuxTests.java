@@ -64,6 +64,9 @@ Hash: rhsmcertd-worke,rhsmcertd_t,user_tmp_t,file,open
 
 [root@jsefler-7 ~]# 
 
+ * To fix the above avc denial, run the following...   Reference: https://bugzilla.redhat.com/show_bug.cgi?id=1084557#c3
+ * 4. restorecon -Rv /usr/lib/python2.7/site-packages
+ *
  */
 @Test(groups={"SELinuxTests"})
 public class SELinuxTests extends SubscriptionManagerCLITestScript {
