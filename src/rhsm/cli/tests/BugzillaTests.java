@@ -1646,7 +1646,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify that system should not be compliant for an expired subscription", 
-			groups = {"VerifySystemCompliantFact"}, enabled = true)
+			groups = {"VerifySystemCompliantFact"}, enabled = false)
 	public void VerifySystemCompliantFactWhenAllProductsAreExpired_Test() throws JSONException,Exception {
 
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
@@ -1845,52 +1845,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	/**
-	 * @author skallesh
-	 * @throws Exception
-	 * @throws JSONException
-	 */
-	@Test(description = "verify if system.entitlements_valid goes from valid to partial after oversubscribing", 
-			groups = { "ValidityAfterOversubscribing","blockedByBug-845126"}, enabled = false)
-	public void systemEntitlementsValidityAfterOversubscribing() throws JSONException,Exception {
-		Boolean noMultiEntitlements=true;
-		int sockets=2;
-		Map<String, String> factsMap = new HashMap<String, String>();
-		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
-		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, true, null, null,
-				(List<String>)null, (String)null, null, null, true, null, null, null, null);
-		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if (installed.status.equals("Not Subscribed") || installed.status.equals("Partially Subscribed"))
-				moveProductCertFiles(installed.productId + "*");
-		}		
-	
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		String consumerId = clienttasks.getCurrentConsumerId();
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
-		for (SubscriptionPool availList : clienttasks
-				.getCurrentlyAvailableSubscriptionPools()) {
-			boolean isMultiEntitled=CandlepinTasks.isSubscriptionMultiEntitlement(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey , availList.poolId);
-			
-			if(isMultiEntitled){
-				noMultiEntitlements=false;
-				clienttasks.subscribe(null, null, availList.poolId, null, null, "4", null, null, null, null, null);
-			}
-		}
-		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if (installed.status.equals("Not Subscribed")
-					|| installed.status.equals("Partially Subscribed"))
-				moveProductCertFiles(installed.productId + "*");
-
-				clienttasks.refresh(null, null, null);
-		}
-		
-		String actual=clienttasks.getFactValue(factname).trim();
-		if(!noMultiEntitlements) throw new SkipException("No mutli-entitled subscriptions available for testing");
-		Assert.assertEquals(actual, "valid");
-	}
 	
 	
 	/**
@@ -2257,7 +2211,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
 
 		clienttasks.run_rhsmcertd_worker(null);
+		
 		String tailFromMarkedFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null);
+		restoreProductCerts();
 		Assert.assertFalse(doesStringContainMatches(tailFromMarkedFile, "Error"),"'Error' messages in rhsm.log");	// "Error while updating certificates" should NOT be in the rhsm.log
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "Installed product IDs: \\[\\]"), "'Installed product IDs:' list is empty in rhsm.log");
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "certs updated:"),"'certs updated:' in rhsm.log");
@@ -4214,7 +4170,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"VerifyStartEndDateOfSubscription","InstalledProductMultipliesAfterSubscription","AutoHealFailForSLA","VerifyautosubscribeIgnoresSocketCount_Test"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
-		client.runCommandAndWait("mv " + "/root/temp1/*.pem" + " "
+		client.runCommandAndWait("mv " + "/root/temp1/*" + " "
 				+ clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf " + "/root/temp1");
 	}
