@@ -214,7 +214,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 		}
 			for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 				if(consumed.productName.contains("Instance Based")){
-				Assert.assertEquals(consumed.quantityUsed, "sockets");
+				Assert.assertEquals(consumed.quantityUsed, sockets);
 			}}
 			
 			}if(clienttasks.getFactValue("virt.is_guest").equals("True")){
