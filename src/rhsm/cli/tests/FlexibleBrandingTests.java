@@ -23,6 +23,7 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
+import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
@@ -64,14 +65,13 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-		String productname=productCert32060.productName;
-		
-
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
 	}
@@ -90,24 +90,15 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-		String productname=productCert32060.productName;
 		
-// DELETEME
-//		String productname=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			if(!(installed.productId.equals("32060"))){
-//				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-//			}
-//		}
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			productname=installed.productName;
-//			
-//		}
+
+		
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
@@ -127,38 +118,19 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-		String productname=productCert32060.productName;
 		
-// DELETEME
-//		String productname=null;
+
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			if(!(installed.productId.equals("32060"))){
-//				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-//			}
-//		}
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			productname=installed.productName;
-//			
-//		}
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
+
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 		Assert.assertEquals(result.trim(), productname.trim());
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			if(!(installed.productId.equals("37060"))){
-//				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-//			}
-//		}
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			productname=installed.productName;
-//			
-//		}
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
 		result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
@@ -181,24 +153,14 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-		String productname=productCert32060.productName;
-		
-// DELETEME
-//		String productname=null;
+
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			if(!(installed.productId.equals("32060"))){
-//				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-//			}
-//		}
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			productname=installed.productName;
-//			
-//		}
+
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		client.runCommandAndWaitWithoutLogging("find "+clienttasks.entitlementCertDir+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
 		String certificates = client.getStdout();
 		String BrandType=parseInfo(certificates);
@@ -222,24 +184,15 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-		String productname=productCert32060.productName;
-		
-// DELETEME
-//		String productname=null;
+
+
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			if(!(installed.productId.equals("32060"))){
-//				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-//			}
-//		}
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			productname=installed.productName;
-//			
-//		}
+
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		client.runCommandAndWait("mkdir /root/importedcertDir");
 		client.runCommandAndWait("cat "+clienttasks.entitlementCertDir+"/* >> /root/importedcertDir/importedcert.pem");
 		client.runCommandAndWait("rm -rf "+Brand_Name);
@@ -265,21 +218,12 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-		String productname=productCert32060.productName;
-		
-// DELETEME
-//		String productname=null;
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
+			clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, null, null, null, null, null);
-// DELETEME
-//		client.runCommandAndWait("cp /root/temp1/32060.pem "+clienttasks.productCertDir);
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			productname=installed.productName;
-//			
-//		}
-//		clienttasks.restart_rhsmcertd(null, null, false, null);
 		clienttasks.run_rhsmcertd_worker(true);
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
@@ -306,12 +250,6 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		client.runCommandAndWait("rm -f "+Brand_Name);
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			if((!(installed.productId.equals("32060")))|| (!(installed.productId.equals("37060")))){
-//				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-//			}
-//		}
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStderr();
 		String expectedMessage="cat: /var/lib/rhsm/branded_name: No such file or directory";
@@ -332,10 +270,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-		String productname=productCert32060.productName;
 		
-// DELETEME
-//		String productname=null;
 		Integer addQuantity=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -357,27 +292,19 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 								+ sm_clientOrg + "/activation_keys",
 								jsonActivationKeyRequest.toString()));
 		String poolId=null;
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			if(!(installed.productId.equals("32060"))){
-//				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-//			}
-//		}
-//
-//		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
+
 		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 					if(availList.subscriptionName.contains("Instance")){
 						poolId=availList.poolId;
 			
 		}
 		}
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			productname=installed.productName;
-//		}
+
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		
 		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
 	}
@@ -399,10 +326,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		
-// DELETEME
-//				moveProductCertFiles("*");
-//			
-//		client.runCommand("rm -rf "+Brand_Name);
+
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(pool.subscriptionName.contains("Instance")){
@@ -427,26 +351,16 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-		String productname=productCert32060.productName;
-		
-// DELETEME
-//		String productname=null;
+	
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			if(!(installed.productId.equals("32060"))){
-//				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-//			}
-//		}
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			productname=installed.productName;
-//			
-//		}
+
 		for (int i=1; i <= 2; i++) {	// Repeated RHSMCERTD Updates
 			RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
 			clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+			List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+			String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 			String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 			Assert.assertEquals(result.trim(), productname.trim());
 			
@@ -470,10 +384,6 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-		String productname=productCert32060.productName;
-		
-// DELETEME
-//		String productname=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -481,42 +391,16 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("system.certificate_version", String.valueOf(1));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-// DELETEME
-//		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			if(!(installed.productId.equals("32060"))){
-//				moveProductCertFiles("*"+installed.productId+"*"+ ".pem");
-//			}
-//		}		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-//			productname=installed.productName;
-//			
-//		}
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		clienttasks.deleteFactsFileWithOverridingValues();
 		Assert.assertEquals(result.trim(), productname.trim());
 	}
 	
 	
-// DELETEME
-//	protected void moveProductCertFiles(String filename) throws IOException {
-//		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
-//		if(!(RemoteFileTasks.testExists(client, "/root/temp1/"))){
-//			client.runCommandAndWait("mkdir " + "/root/temp1/");
-//		}
-//			client.runCommandAndWait("mv " + clienttasks.productCertDir + "/"+ filename + " " + "/root/temp1/");
-//	
-//		}
-	
-// DELETEME
-//	@AfterGroups(groups = { "setup" }, value = {"FlexibleBranding","verifyFile","verifyFileduringrhsmupdates","CreationWithTActivationKey","CreationWithTwoRhelproducts","CreationWithRHSMCERTD","CreationWithImport","VerifyBrand_TypeValue","VerifyBrandFileContents","VerifyBrandFileCreation","VerifyBrandFileDeletion"})
-//			@AfterClass(groups = "setup")
-//			public void restoreProductCerts() throws IOException {
-//				client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
-//				client.runCommandAndWait("mv " + "/root/temp1/*.pem" + " "
-//						+ clienttasks.productCertDir);
-//				client.runCommandAndWait("rm -rf " + "/root/temp1");
-//	}
-	
+
 	static public String parseInfo(String rawCertificates) {
 		Map<String,String> regexes = new HashMap<String,String>();
 		List certData = new ArrayList();
