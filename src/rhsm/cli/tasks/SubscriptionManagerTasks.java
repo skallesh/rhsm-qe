@@ -2570,6 +2570,7 @@ public class SubscriptionManagerTasks {
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
 		
 		// copy the current consumer cert and key to allRegisteredConsumerCertsDir for recollection by deleteAllRegisteredConsumerEntitlementsAfterSuite()
 		ConsumerCert consumerCert = getCurrentConsumerCert();
@@ -2835,7 +2836,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -2892,7 +2895,9 @@ public class SubscriptionManagerTasks {
 //		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -2963,7 +2968,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -3014,7 +3021,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)			command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -3087,7 +3096,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -3163,7 +3174,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -3280,7 +3293,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -3337,7 +3352,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -3384,7 +3401,9 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -3724,7 +3743,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -3769,6 +3790,7 @@ public class SubscriptionManagerTasks {
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
 		
 		// reset this.currentlyRegistered values
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {			// success
@@ -3868,7 +3890,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)					command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	public SSHCommandResult list(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String proxy, String proxyuser, String proxypassword) {
@@ -3981,7 +4005,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -4035,7 +4061,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 
 	public SSHCommandResult redeem(String email, String locale, String serverurl, String proxy, String proxyuser, String proxypassword) {
@@ -4066,7 +4094,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	public SSHCommandResult repos_(Boolean list, String enableRepo, String disableRepo, String proxy,String proxyuser,String proxypassword) {
 		List<String> enableRepos = enableRepo==null?null:Arrays.asList(new String[]{enableRepo});
@@ -4196,7 +4226,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)												command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	public SSHCommandResult repo_override_(Boolean list, Boolean removeAll, String repoId, String removeName, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
 		List<String> repoIds = repoId==null?null:Arrays.asList(new String[]{repoId});
@@ -4283,7 +4315,9 @@ public class SubscriptionManagerTasks {
 		if (verbose!=null && verbose)		command += " --verbose";
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -4327,6 +4361,7 @@ public class SubscriptionManagerTasks {
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "981689"; // 'SubscribeCommand' object has no attribute 'sorter'
@@ -4969,7 +5004,9 @@ public class SubscriptionManagerTasks {
 		if (all!=null && all && serials==null) workaroundForBug844455();
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	/**
 	 * unsubscribe without asserting results
@@ -5200,7 +5237,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -5252,7 +5291,9 @@ public class SubscriptionManagerTasks {
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		return sshCommandResult;
 	}
 	
 	/**
@@ -6843,5 +6884,56 @@ public class SubscriptionManagerTasks {
 		// For a short time the expected consumer/unit strings will be different depending on CandlepinType
 		//return !type.equals(CandlepinType.standalone);
 		return false;	// as of 9/4/2013, candlepin-0.8.25-1 has been deployed in stage which includes POST Bug 876764
+	}
+	
+	
+	/**
+	 * Check the SSHCommandResult for errors.  If an error is detected, log a warning with information to help troubleshoot it. 
+	 * @param result
+	 */
+	protected void logRuntimeErrors(SSHCommandResult result) {
+		
+		//	ssh root@cloud-qe-13.idm.lab.bos.redhat.com subscription-manager unregister
+		//	Stdout: Unable to verify server's identity: timed out
+		//	Stderr:
+		//	ExitCode: 255
+		
+		//	ssh root@yttrium.idm.lab.bos.redhat.com subscription-manager unregister
+		//	Stdout: Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.
+		//	Stderr:
+		//	ExitCode: 255
+		
+		//	2014-04-08 16:41:56,930 [INFO] subscription-manager @managercli.py:299 - Server Versions: {'candlepin': 'Unknown', 'server-type': 'Red Hat Subscription Management'}
+		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:418 - Loaded CA certificates from /etc/rhsm/ca/: candlepin-stage.pem, redhat-uep.pem
+		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:450 - Making request: DELETE /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e
+		//	2014-04-08 16:42:07,444 [DEBUG] subscription-manager @connection.py:473 - Response: status=500
+		//	2014-04-08 16:42:07,444 [ERROR] subscription-manager @connection.py:502 - Response: 500
+		//	2014-04-08 16:42:07,444 [ERROR] subscription-manager @connection.py:503 - JSON parsing error: Expecting value: line 1 column 1 (char 0)
+		//	2014-04-08 16:42:07,445 [ERROR] subscription-manager @managercli.py:156 - Unregister failed
+		//	2014-04-08 16:42:07,445 [ERROR] subscription-manager @managercli.py:157 - Server error attempting a DELETE to /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e returned status 500
+		//	Traceback (most recent call last):
+		//	  File "/usr/share/rhsm/subscription_manager/managercli.py", line 1161, in _do_command
+		//	    managerlib.unregister(self.cp, consumer)
+		//	  File "/usr/share/rhsm/subscription_manager/managerlib.py", line 796, in unregister
+		//	    uep.unregisterConsumer(consumer_uuid)
+		//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 898, in unregisterConsumer
+		//	    return self.conn.request_delete(method)
+		//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 566, in request_delete
+		//	    return self._request("DELETE", method, params)
+		//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 482, in _request
+		//	    self.validateResponse(result, request_type, handler)
+		//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 530, in validateResponse
+		//	    handler=handler)
+		//	RemoteServerException: Server error attempting a DELETE to /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e returned status 500
+		//debugTesting result = new SSHCommandResult(new Integer(255), "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.", "");
+		if (result.getExitCode().equals(255)) {
+			if (result.getStdout().contains("timed out") ||
+				result.getStdout().contains("see "+rhsmLogFile+" for more information")) {
+				// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+				String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
+				SSHCommandResult getTracebackCommandResult = sshCommandRunner.runCommandAndWaitWithoutLogging(getTracebackCommand);
+				if (!getTracebackCommandResult.getStdout().isEmpty()) log.warning("Last request from "+rhsmLogFile+":\n"+getTracebackCommandResult.getStdout());
+			}
+		}
 	}
 }
