@@ -2421,6 +2421,20 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
+		// when testing with no child channels on Rhel7 ComputeNode, add bug BlockedByBzBug 1078527 to affected rows
+		//if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("ComputeNode")) {
+		if ("rhel-x86_64-hpc-node-7".equals(rhnBaseChannel)) {
+			for (List<Object> l : ll) {
+				if (((List<String>)(l.get(4))).isEmpty()) {	// affected rows have an empty List<String> rhnChannelsToAdd
+					BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1078527");	// Bug 1078527 - channel-cert-mapping for ComputeNode rhel-7 product certs are missing and wrong
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+				}
+			}
+		}
+		
 		return ll;
 	}
 	
