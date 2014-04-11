@@ -6936,4 +6936,103 @@ public class SubscriptionManagerTasks {
 			}
 		}
 	}
+	
+	/**
+	 * Compare the version of an installed package to a given version. For example...
+	 * @param packageName - "subscription-manager"
+	 * @param comparator - valid values: ">", "<", ">=", "<=", "=="
+	 * @param version - "1.10.14-7"
+	 * @return true or false
+	 * 
+	 * <br>Examples:
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >  1.10 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >= 1.10 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 == 1.10 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <= 1.10 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <  1.10 is false
+	 * <br>
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >  1.10.14 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >= 1.10.14 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 == 1.10.14 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <= 1.10.14 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <  1.10.14 is false
+	 * <br>
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >  1.10.14-1 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >= 1.10.14-1 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 == 1.10.14-1 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <= 1.10.14-1 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <  1.10.14-1 is false
+	 * <br>
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >  1.10.14-7 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >= 1.10.14-7 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 == 1.10.14-7 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <= 1.10.14-7 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <  1.10.14-7 is false
+	 * <br>
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >  1.10.14-7.5 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >= 1.10.14-7.5 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 == 1.10.14-7.5 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <= 1.10.14-7.5 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <  1.10.14-7.5 is true
+	 */
+	public boolean isPackageVersion(String packageName, String comparator, String version) {
+		// example package versions:
+		//	libXau-1.0.8-2.1.el7.x86_64
+		//	subscription-manager-1.10.14-7.git.0.798ba5c.el7.x86_64
+		//	xz-libs-5.1.2-8alpha.el7.x86_64
+		//	xorg-x11-drv-ati-7.2.0-9.20140113git3213df1.el7.x86_64
+		//	device-mapper-event-1.02.84-10.el7.x86_64
+		//	subscription-manager-migration-data-2.0.7-1.el7.noarch
+		//	subscription-manager-migration-data-1.11.3.2-1.el5
+		//	ntpdate-4.2.6p5-18.el7.x86_64
+		
+		// get the currently installed version of the packageName of the form subscription-manager-1.10.14-7.el7.x86_64
+		String installedPackageVersion = this.installedPackageVersion.get(packageName);
+		if (installedPackageVersion==null) {
+			SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("rpm -q "+packageName);
+			if (sshCommandResult.getExitCode()==0) installedPackageVersion = sshCommandResult.getStdout().trim();
+		}
+		
+		// strip the packageName from installedPackageVersion to reveal the form 1.10.14-7.el7.x86_64
+		installedPackageVersion = installedPackageVersion.replace(packageName+"-", "");
+
+		String s1 = installedPackageVersion;
+		String s2 = version;
+		
+		// convert version strings into arrays of the form:  a1[] = 1, 10, 14-7, el7, x86_64
+		String[] a1 = s1.split("\\.");
+		String[] a2 = s2.split("\\.");
+		
+		// individually start comparing numbers left to right
+		int l1 = s1.split("\\.").length;
+		int l2 = s2.split("\\.").length;
+		for (int i=0; i<Math.min(l1,l2); i++) {
+			
+			// convert 14-7 to 14.7
+			if (a1[i].matches("\\d+-\\d+"))  a1[i] = a1[i].replace("-", ".");
+			if (a2[i].matches("\\d+-\\d+"))  a2[i] = a2[i].replace("-", ".");
+			
+			// convert el7 to 0
+			try {Float.valueOf(a1[i]);} catch (NumberFormatException e) {a1[i]="0";}
+			try {Float.valueOf(a2[i]);} catch (NumberFormatException e) {a2[i]="0";}
+			
+			// convert to float
+			float f1=Float.valueOf(a1[i]);
+			float f2=Float.valueOf(a2[i]);
+			
+			// compare
+			if (comparator.startsWith("<")) {
+				if (f1 < f2) return true;
+				if (f1 > f2) return false;
+			}
+			if (comparator.startsWith(">")) {
+				if (f1 > f2) return true;
+				if (f1 < f2) return false;
+			}
+			if (comparator.contains("=") && (i+1)>=Math.min(l1,l2)) {
+				if (f1 == f2) return true;
+			}
+		}
+		return false;
+	}
 }
