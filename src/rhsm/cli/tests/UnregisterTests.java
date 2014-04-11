@@ -3,6 +3,7 @@ package rhsm.cli.tests;
 
 import java.util.List;
 
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
@@ -46,6 +47,8 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnregisterShouldNotThrowUnauthorizedRequests_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.10.1-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersion.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=997935 which is fixed in a newer version.");
+
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
 		String logMarker = System.currentTimeMillis()+" Testing UnregisterShouldNotThrowUnauthorizedRequests_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -60,16 +63,12 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Response").trim();
 		String unexpectedLogMessage = "Response status: 401";
-		unexpectedLogMessage = "Response: status=401";	// changed by python-rhsm commit ce3727f73c5ac6f77db5e52027443ec456a5d733 Log the new requestUuid from candlepin if it is present in the response.
+		if (clienttasks.isPackageVersion("python-rhsm", ">", "1.10.3-1")) unexpectedLogMessage = "Response: status=401";	// changed by python-rhsm commit ce3727f73c5ac6f77db5e52027443ec456a5d733 Log the new requestUuid from candlepin if it is present in the response.
 		Assert.assertFalse(logTail.contains(unexpectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' should not encounter unexpected log message '"+unexpectedLogMessage+"' after unregister.");
 		String expectedLogMessage = "Response status: 204";
-		expectedLogMessage = "Response: status=204";	// changed by python-rhsm commit ce3727f73c5ac6f77db5e52027443ec456a5d733 Log the new requestUuid from candlepin if it is present in the response.
+		if (clienttasks.isPackageVersion("python-rhsm", ">", "1.10.3-1")) expectedLogMessage = "Response: status=204";	// changed by python-rhsm commit ce3727f73c5ac6f77db5e52027443ec456a5d733 Log the new requestUuid from candlepin if it is present in the response.
 		Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' should encounter expected log message '"+expectedLogMessage+"' after unregister (indicative of a successful DELETE request).");
 	}
-	
-	
-	
-	
 	
 	
 	
