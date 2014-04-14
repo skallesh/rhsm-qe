@@ -2665,28 +2665,35 @@ public class SubscriptionManagerTasks {
 		}
 
 		// assert results for a successful registration exit code
-//		if (autosubscribe==null || !autosubscribe)	// https://bugzilla.redhat.com/show_bug.cgi?id=689608
-//			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
-		if ((autosubscribe!=null && Boolean.valueOf(autosubscribe)) || (consumerid!=null) || (activationkeys!=null && !activationkeys.isEmpty())) {	// https://bugzilla.redhat.com/show_bug.cgi?id=689608
+		if (isPackageVersion("subscription-manager", "<", "1.10")) {
+			if (autosubscribe==null || !autosubscribe)	// https://bugzilla.redhat.com/show_bug.cgi?id=689608
+				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
 		} else {
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
+			if ((autosubscribe!=null && Boolean.valueOf(autosubscribe)) || (consumerid!=null) || (activationkeys!=null && !activationkeys.isEmpty())) {	// https://bugzilla.redhat.com/show_bug.cgi?id=689608
+				// skip exit code assertion
+			} else {
+				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
+			}
 		}
 		
 		// assert the heading for the current status of the installed products (applicable to register with autosubscribe|consumerid|activationkey)
-//		msg = "Installed Product Current Status:";
-//		if (autosubscribe!=null || !autosubscribe)
-//			Assert.assertFalse(sshCommandResult.getStdout().contains(msg),
-//					"register without autosubscribe should not show a list of the \""+msg+"\".");
-//		else
-//			Assert.assertTrue(sshCommandResult.getStdout().contains(msg),
-//					"register with autosubscribe should show a list of the \""+msg+"\".");
-		msg = "Installed Product Current Status:"; if (getCurrentProductCertFiles().isEmpty()) msg = "No products installed.";	// bug 962545
-		if ((autosubscribe!=null && Boolean.valueOf(autosubscribe)) || (consumerid!=null) || (activationkeys!=null && !activationkeys.isEmpty())) {
-			Assert.assertTrue(sshCommandResult.getStdout().contains(msg),
-					"register with autosubscribe|consumerid|activationkey should list \""+msg+"\".");
+		if (isPackageVersion("subscription-manager", "<", "1.10")) {
+			msg = "Installed Product Current Status:";
+			if (autosubscribe==null || !autosubscribe)
+				Assert.assertFalse(sshCommandResult.getStdout().contains(msg),
+						"register without autosubscribe should not show a list of the \""+msg+"\".");
+			else
+				Assert.assertTrue(sshCommandResult.getStdout().contains(msg),
+						"register with autosubscribe should show a list of the \""+msg+"\".");
 		} else {
-			Assert.assertTrue(!sshCommandResult.getStdout().contains(msg),
-					"register without autosubscribe|consumerid|activationkey should NOT list \""+msg+"\".");
+			msg = "Installed Product Current Status:"; if (getCurrentProductCertFiles().isEmpty()) msg = "No products installed.";	// bug 962545
+			if ((autosubscribe!=null && Boolean.valueOf(autosubscribe)) || (consumerid!=null) || (activationkeys!=null && !activationkeys.isEmpty())) {
+				Assert.assertTrue(sshCommandResult.getStdout().contains(msg),
+						"register with autosubscribe|consumerid|activationkey should list \""+msg+"\".");
+			} else {
+				Assert.assertTrue(!sshCommandResult.getStdout().contains(msg),
+						"register without autosubscribe|consumerid|activationkey should NOT list \""+msg+"\".");
+			}
 		}
 		
 		// assert stdout results for a successful registration id
