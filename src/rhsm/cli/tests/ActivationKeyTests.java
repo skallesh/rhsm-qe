@@ -937,8 +937,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.getCurrentRelease(), releaseVer, "After registering with an activation key containing an updated releaseVer, the current release is properly set.");
 		
 		// finally, verify that there are no contentOverrides
-		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
-		Assert.assertEquals(listResult.getStdout().trim(),"This system does not have any content overrides applied to it.","After registering with an activation key containing a releaseVer, but no contentOverrides, this is the subscription-manager repo-override report.");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) {
+			SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+			Assert.assertEquals(listResult.getStdout().trim(),"This system does not have any content overrides applied to it.","After registering with an activation key containing a releaseVer, but no contentOverrides, this is the subscription-manager repo-override report.");
+		}
 	}
 	
 	
