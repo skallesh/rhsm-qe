@@ -47,20 +47,20 @@ set timeout 180
 
 if {$rhnUsername != "null"} {
   set prompt "RHN Username:";			# obsoleted by bug 847380
-  set prompt "Red Hat account:";		# obsoleted by bug 912375
-  set prompt "Red Hat username:";
-  expect $prompt {send "${rhnUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+  set prompt "Red Hat account:|$prompt";	# obsoleted by bug 912375
+  set prompt "Red Hat username:|$prompt";
+  expect -re $prompt {send "${rhnUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
   set prompt "Password:";			# obsoleted by bug 912375
-  set prompt "Red Hat password:";
-  expect $prompt {send "${rhnPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+  set prompt "Red Hat password:|$prompt";
+  expect -re $prompt {send "${rhnPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
 if {$rhsmUsername != "null"} {
   set prompt "System Engine Username:"; 	# obsoleted by bug 912375
-  set prompt "Subscription Service username:";
-  expect $prompt {send "${rhsmUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+  set prompt "Subscription Service username:|$prompt";
+  expect -re $prompt {send "${rhsmUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
   set prompt "Password:";			# obsoleted by bug 912375
-  set prompt "Subscription Service password:";
-  expect $prompt {send "${rhsmPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+  set prompt "Subscription Service password:|$prompt";
+  expect -re $prompt {send "${rhsmPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
 if {$rhsmOrg != "null"} {
   set prompt "Org:";
