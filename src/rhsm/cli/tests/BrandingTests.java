@@ -490,10 +490,10 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration Methods ***********************************************************************
 	@BeforeClass(groups="setup")
-	public void createProductsAndSubscriptionWithBranding() throws JSONException, Exception {
+	public void createProductsAndSubscriptionWithBrandingBeforeClass() throws JSONException, Exception {
 		
 		if (server==null) {
-			log.warning("Skipping createProductsAndSubscriptionWithBranding() when server is null.");
+			log.warning("Skipping createProductsAndSubscriptionWithBrandingBeforeClass() when server is null.");
 			return;	
 		}
 		
@@ -550,6 +550,13 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 //			if (providedProductId.equals("99030") && randomGenerator.nextBoolean()) continue;	// randomly skip the install of 99030
 			if (providedProductId.equals("99030")) continue;	// skip the install of 99030
 			client.runCommandAndWait("echo \""+cert+"\" > "+clienttasks.productCertDir+"/"+installedProductCertFilename);
+		}
+	}
+	
+	@BeforeClass(groups="setup",dependsOnMethods={"createProductsAndSubscriptionWithBrandingBeforeClass"})	// continue to run createProductsAndSubscriptionWithBrandingBeforeClass as a no-break for other Tests.
+	public void skipBrandingTestsForOldVerionsBeforeClass() {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.14-7") && clienttasks.isPackageVersion("python-rhsm","<","1.10.12-2")) {	// rhel7.0 GA packages
+			throw new SkipException("Flexible Branding is a subscription feature available in RHEL7.");
 		}
 	}
 }
