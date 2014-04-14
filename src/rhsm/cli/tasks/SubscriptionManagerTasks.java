@@ -3711,7 +3711,7 @@ public class SubscriptionManagerTasks {
 			defaultNames.add("report_package_profile");
 			defaultNames.add("pluginDir");
 			defaultNames.add("pluginConfDir");
-			defaultNames.add("full_refresh_on_yum");	// was added as part of RFE Bug 803746
+			if (isPackageVersion("subscription-manager",">=","1.10.7-1")) defaultNames.add("full_refresh_on_yum");	// was added as part of RFE Bug 803746
 		}
 		if (section.equalsIgnoreCase("rhsmcertd")) {
 			defaultNames.add(/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");

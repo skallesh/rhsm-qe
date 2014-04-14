@@ -308,7 +308,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.add("attach");	// added by bug 874804
 		modules.add("remove");	// added by bug 874749
 		modules.add("plugins");	// added by https://engineering.redhat.com/trac/Entitlement/wiki/SubscriptionManagerPlugins
-		modules.add("repo-override");https:	// added as part of bug 803746
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) modules.add("repo-override");	// added as part of bug 803746
 		modules.add("status");
 		modules.add("auto-attach");	//modules.add("autoheal"); changed by Bug 976867 - subscription-manager autoheal needs feedback and a review of options
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
@@ -585,8 +585,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--all");
 		options.add("--servicelevel=SERVICE_LEVEL");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=800999
 		options.add("--ondate=ON_DATE");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=672562
-		options.add("--no-overlap");		// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
-		options.add("--match-installed");	// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--no-overlap");		// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--match-installed");	// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
@@ -606,7 +606,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
-		options.add("--ondate=ON_DATE");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.9.2-1")) options.add("--ondate=ON_DATE");	// subscription-manager commit 957f3f5fb4689f22355e0101185bd560e67f3462
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -828,6 +828,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// subscription-manager repo-override OPTIONS
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) {	// introduced by RFE Bug 803746
 		module = "repo-override";
 		options.clear();
 		options.add("-h, --help");
@@ -846,6 +847,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("977481"), smHelpCommand, 0, optionsRegex, new ArrayList<String>(options)}));
+		}
 		}
 		
 		// subscription-manager version OPTIONS
@@ -1001,10 +1003,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			options.add("--no-proxy");	// added by Bug 915847 - rhn-migrate-classic-to-rhsm fails when used with a proxy with an internal SAM
 			options.add("--org=ORG");					// added by Bug 877331 - missing --org --environment arguments for migration script
 			options.add("--environment=ENVIRONMENT");	// added by Bug 877331 - missing --org --environment arguments for migration script
-			options.add("--redhat-user=REDHATUSER");							// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
-			options.add("--redhat-password=REDHATPASSWORD");					// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
-			options.add("--subscription-service-user=SUBSERVICEUSER");			// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
-			options.add("--subscription-service-password=SUBSERVICEPASSWORD");	// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--redhat-user=REDHATUSER");							// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--redhat-password=REDHATPASSWORD");					// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--subscription-service-user=SUBSERVICEUSER");			// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--subscription-service-password=SUBSERVICEPASSWORD");	// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();
