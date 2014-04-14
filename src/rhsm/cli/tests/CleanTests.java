@@ -96,6 +96,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifySpliceCertsRemainAfterClean_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.10.14-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersion.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=1026501 which is fixed in a newer version.");
 		
 		// Start fresh by registering...
 		log.info("Start fresh by registering...");
