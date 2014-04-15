@@ -35,6 +35,7 @@
                    :invalid-cert #"The following files are not valid certificates and were not imported"
                    :cert-does-not-exist #"The following certificate files did not exist"
                    :no-sla-available #"No service level will cover all installed products"
+                   :error-getting-subscription #"Pool is restricted to physical systems"
                    })
 
 (defn matching-error
@@ -411,9 +412,12 @@
   (ui click :attach)
   (checkforerror)
   (if-not (bool (ui waittillwindowexist :contract-selection-dialog 5))
-    (throw+ {:type :contract-selection-not-available
-             :name s
-             :msg (str s " does not have multiple contracts.")})))
+    (do
+      (unsubscribe s)
+      (ui selecttab :all-available-subscriptions)
+      (throw+ {:type :contract-selection-not-available
+                 :name s
+                 :msg (str s " does not have multiple contracts.")}))))
 
 (defn subscribe
   "Subscribes to a given subscription, s."
@@ -752,4 +756,3 @@
                                               (filter stacking-id? stacking-map))))
        stackable-pems (map (fn [i] (get prod-pem-file-map i)) stackable-prods)]
     stackable-pems))
-
