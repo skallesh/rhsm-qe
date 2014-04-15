@@ -101,9 +101,11 @@
              random-row-num (nth list-row (rand (count list-row)))]
           (tasks/ui selectrowindex :repo-table random-row-num)
           (tasks/ui checkrow :repo-table random-row-num)
+          (sleep 1000)
           (verify (bool (and (tasks/ui hasstate :repo-remove-override "enabled")
                              (tasks/ui hasstate :repo-remove-override "sensitive"))))
           (tasks/ui uncheckrow :repo-table random-row-num)
+          (sleep 1000)
           (verify (bash-bool (and (tasks/ui hasstate :repo-remove-override "enabled")
                                   (tasks/ui hasstate :repo-remove-override "sensitive")))))))
     (finally
@@ -155,6 +157,7 @@
   (tasks/ui waittillguiexist :repositories-dialog)
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
+                             (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
                              (if (bool (tasks/ui hasstate :gpg-check-edit "visible"))
                                (tasks/ui click :gpg-check-edit)))))
@@ -194,6 +197,7 @@
   (tasks/ui waittillguiexist :repositories-dialog)
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
+                             (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
                              (if (bool (tasks/ui hasstate :gpg-check-edit "visible"))
                                (tasks/ui click :gpg-check-edit))))
@@ -210,6 +214,7 @@
   (tasks/ui waittillguiexist :repositories-dialog)
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
+                             (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
                              (verify (bool (tasks/ui hasstate :gpg-check-remove "visible")))
                              (verify (bash-bool (tasks/ui hasstate :gpg-check-edit "visible"))))))
@@ -268,5 +273,5 @@
           (to-array-2d repos)
           repos)))
     (to-array-2d [])))
-  
+
 (gen-class-testng)
