@@ -73,6 +73,7 @@
   (try+
    (tasks/subscribe subscription)
    (catch [:type :item-not-available] _)
+   (catch [:type :error-getting-subscription] _)
    (catch [:type :wrong-consumer-type]
        {:keys [log-warning]} (log-warning))))
 
@@ -201,6 +202,7 @@
               (verify (= default (get-quantity)))))
           (recur (dec row)))))
     (catch [:type :subscription-not-available] _)
+    (catch [:type :error-getting-subscription] _)
     (catch [:type :wrong-consumer-type]
         {:keys [log-warning]} (log-warning))
     (catch [:type :contract-selection-not-available] _)
@@ -437,13 +439,15 @@
   "Asserts that subscribe events are logged in the syslog."
   [_]
   (allsearch)
-  (let [subscription (rand-nth (tasks/get-table-elements :all-subscriptions-view 0))
-        output (get-logging @clientcmd
-                                  sys-log
-                                  "subscribe_check_syslog"
-                                  nil
-                                  (tasks/subscribe subscription))]
-      (verify (not (blank? output)))))
+  (try+
+   (let [subscription (rand-nth (tasks/get-table-elements :all-subscriptions-view 0))
+         output (get-logging @clientcmd
+                             sys-log
+                             "subscribe_check_syslog"
+                             nil
+                             (tasks/subscribe subscription))]
+     (catch [:type :error-getting-subscription] _)
+     (verify (not (blank? output))))))
 
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-918617"]
@@ -542,9 +546,9 @@
         client-type-virt? (= "true" (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
     (if client-type-virt?
       (do
-        (try+
          (tasks/skip-dropdown  :all-subscriptions-view subscription)
          (tasks/open-contract-selection subscription)
+         (try
          (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
            (if (>= row 0)
              (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
@@ -560,18 +564,21 @@
                (if (> multiplier 1)
                  (do
                    (tasks/ui selectrowindex :contract-selection-table row)
-                   (let [quantity-before (Integer. (re-find #"\d+"
-                                                            (tasks/ui getcellvalue :contract-selection-table row 5)))
+                   (let [quantity-before
+                         (Integer. (re-find #"\d+"
+                                            (tasks/ui getcellvalue :contract-selection-table row 5)))
                          action (tasks/ui generatekeyevent
                                           (str (repeat-cmd 5 "<right> ")
                                                "<space> " "<up> " "<enter>"))
-                         quantity-after (Integer. (re-find #"\d+"
-                                                           (tasks/ui getcellvalue :contract-selection-table row 5)))]
+                         quantity-after
+                         (Integer. (re-find #"\d+"
+                                            (tasks/ui getcellvalue :contract-selection-table row 5)))]
                      (verify (not (= multiplier (- quantity-after quantity-before))))))))))
+         (catch [:type :error-getting-subscription] _)
          (catch [:type :contract-selection-not-available] _)
          (finally
-          (if (tasks/ui showing? :contract-selection-table)
-            (tasks/ui click :cancel-contract-selection))))))))
+           (if (tasks/ui showing? :contract-selection-table)
+             (tasks/ui click :cancel-contract-selection))))))))
 
 (defn ^{Test {:groups ["subscribe"
                        "acceptance"
@@ -580,22 +587,25 @@
   check_contract_number
   "Checks if every subscipion has contract numbers displayed"
   [_ subscription]
-  (try
+  (try+
     (allsearch)
     (let [sub-contract-map (ctasks/build-contract-map :all? true)
           contracts (sort (get sub-contract-map subscription))]
       (tasks/skip-dropdown :all-subscriptions-view subscription)
       (tasks/ui click :attach)
+      (tasks/checkforerror)
       (tasks/ui waittillwindowexist :contract-selection-dialog 5)
       (if (bool (tasks/ui guiexist :contract-selection-dialog))
-        (verify (= contracts (sort (tasks/get-table-elements :contract-selection-table 0))))
+        (verify (= contracts
+                   (sort (tasks/get-table-elements :contract-selection-table 0))))
         (do
           (tasks/unsubscribe subscription)
           (tasks/ui selecttab :all-available-subscriptions)
           (verify (= 1 (count contracts))))))
+    (catch [:type :error-getting-subscription] _)
     (finally
-     (if (bool (tasks/ui guiexist :contract-selection-dialog))
-       (tasks/ui click :cancel-contract-selection)))))
+      (if (bool (tasks/ui guiexist :contract-selection-dialog))
+        (tasks/ui click :cancel-contract-selection)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
