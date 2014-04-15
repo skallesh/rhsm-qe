@@ -161,6 +161,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyPermissionsOnEtcCronDailyRhsmd_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersion.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=1012566 which is fixed in subscription-manager-1.10.3-1.");
+		
 		//	[root@jsefler-6 ~]# ls -l /etc/cron.daily/rhsmd 
 		//	-rwxr-xr-x. 1 root root 256 Sep 23 14:53 /etc/cron.daily/rhsmd
 		
@@ -216,19 +218,29 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRpmRequireListForPythonRhsm_Test() {
 		String pkg = "python-rhsm";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
-		SSHCommandResult sshCommandResult = client.runCommandAndWait("rpm --query --requires "+pkg+" --verbose | egrep '(^manual:|^preun:|^postun:|^post:)'");
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
 		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
 			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
 		}
 
-		List<String> expecetdRequiresList = new ArrayList<String>();
+		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
-			// TODO
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"m2crypto",
+					"python-iniparse",
+					"python-simplejson",
+					"rpm-python",
+			}));
+			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")) {
-			expecetdRequiresList.addAll(Arrays.asList(new String[]{
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: m2crypto",
 					"manual: python-iniparse",
 					//"manual: python-simplejson",	// removed by bug 1006748
@@ -236,9 +248,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}));
 		}
 		
-		for (String expectedRequires : expecetdRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-		for (String actualRequires : actualRequiresList) if (!expecetdRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
-		Assert.assertTrue(expecetdRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expecetdRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expecetdRequiresList);
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
 	
 	
@@ -249,19 +261,42 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRpmRequireListForSubscriptionManager_Test() {
 		String pkg = "subscription-manager";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
-		SSHCommandResult sshCommandResult = client.runCommandAndWait("rpm --query --requires "+pkg+" --verbose | egrep '(^manual:|^preun:|^postun:|^post:)'");
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
 		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
 			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
 		}
 		
-		List<String> expecetdRequiresList = new ArrayList<String>();
+		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
-			// TODO
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"config(subscription-manager) = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: config(subscription-manager) = 1.9.11-1.el6",
+					"/bin/sh",
+					"/bin/sh",
+					"/bin/sh",
+					"chkconfig",
+					"chkconfig",
+					"dbus-python",
+					"initscripts",
+					"pygobject2",
+					"python-dmidecode",
+					"python-ethtool",
+					"python-iniparse",
+					"python-rhsm >= 1.8.16-1",	// RHEL5.10
+					"python-simplejson",
+					"usermode",
+					"virt-what",
+					"yum >= 3.2.19-15"
+			}));
+			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
-			expecetdRequiresList.addAll(Arrays.asList(new String[]{
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: config(subscription-manager) = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: config(subscription-manager) = 1.9.11-1.el6",
 					"post: /bin/sh",
 					"preun: /bin/sh",
@@ -283,7 +318,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}));
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
-			expecetdRequiresList.addAll(Arrays.asList(new String[]{
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"post: systemd",	//"post: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
 					"preun: systemd",	//"preun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
 					"postun: systemd",	//"postun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
@@ -308,9 +343,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}));
 		}
 		
-		for (String expectedRequires : expecetdRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-		for (String actualRequires : actualRequiresList) if (!expecetdRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
-		Assert.assertTrue(expecetdRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expecetdRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expecetdRequiresList);
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
 	
 	
@@ -321,19 +356,37 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRpmRequireListForSubscriptionManagerGui_Test() {
 		String pkg = "subscription-manager-gui";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
-		SSHCommandResult sshCommandResult = client.runCommandAndWait("rpm --query --requires "+pkg+" --verbose | egrep '(^manual:|^preun:|^postun:|^post:)'");
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
 		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
 			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
 		}
 		
-		List<String> expecetdRequiresList = new ArrayList<String>();
+		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
-			// TODO
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
+					"librsvg2",
+					"/bin/sh",
+					"/bin/sh",
+					"dbus-x11",
+					"gnome-python2",
+					"gnome-python2-canvas",
+					"pygtk2",
+					"pygtk2-libglade",
+					"scrollkeeper",
+					"scrollkeeper",
+					"usermode-gtk"
+			}));
+			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
-			expecetdRequiresList.addAll(Arrays.asList(new String[]{
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
 					"manual: librsvg2("+clienttasks.arch.replace("_","-")+")",	//"manual: librsvg2(x86-64)",
 					"post: /bin/sh",
@@ -349,7 +402,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}));
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
-			expecetdRequiresList.addAll(Arrays.asList(new String[]{
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
 					"manual: librsvg2("+clienttasks.arch.replace("_","-")+")",	//"manual: librsvg2(x86-64)",
 					//"post: /bin/sh",
@@ -366,9 +419,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}));
 		}
 		
-		for (String expectedRequires : expecetdRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-		for (String actualRequires : actualRequiresList) if (!expecetdRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
-		Assert.assertTrue(expecetdRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expecetdRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expecetdRequiresList);
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
 	
 	
@@ -379,35 +432,44 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRpmRequireListForSubscriptionManagerFirstboot_Test() {
 		String pkg = "subscription-manager-firstboot";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
-		SSHCommandResult sshCommandResult = client.runCommandAndWait("rpm --query --requires "+pkg+" --verbose | egrep '(^manual:|^preun:|^postun:|^post:)'");
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
 		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
 			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
 		}
 		
-		List<String> expecetdRequiresList = new ArrayList<String>();
+		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
-			// TODO
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"subscription-manager-gui = "+clienttasks.installedPackageVersion.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
+					"librsvg2",
+					"rhn-setup-gnome"
+			}));
+			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
-			expecetdRequiresList.addAll(Arrays.asList(new String[]{
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersion.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
 					"manual: librsvg2",
 					"manual: rhn-setup-gnome"
 			}));
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
-			expecetdRequiresList.addAll(Arrays.asList(new String[]{
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersion.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
 					"manual: librsvg2",
 					//"manual: rhn-setup-gnome"	// removed by git commit 72e37ab24d5ba1ea9ff8ccc756246df721e204b1 Fix firstboot on Fedora 19. (will help fix Bug 1021013 - RHEL7 firstboot: missing option to skip Subscription Management Registration)
 			}));
 		}
 		
-		for (String expectedRequires : expecetdRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-		for (String actualRequires : actualRequiresList) if (!expecetdRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
-		Assert.assertTrue(expecetdRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expecetdRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expecetdRequiresList);
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
 	
 	
@@ -418,28 +480,36 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRpmRequireListForSubscriptionManagerMigration_Test() {
 		String pkg = "subscription-manager-migration";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
-		SSHCommandResult sshCommandResult = client.runCommandAndWait("rpm --query --requires "+pkg+" --verbose | egrep '(^manual:|^preun:|^postun:|^post:)'");
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
 		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
 			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
 		}
 		
-		List<String> expecetdRequiresList = new ArrayList<String>();
+		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
-			// TODO
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-manager = 1.9.11-1.el6",
+					"rhnlib"
+			}));
+			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")) {
-			expecetdRequiresList.addAll(Arrays.asList(new String[]{
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.9.11-1.el6"
 					"manual: subscription-manager-migration-data",	// Bug 1049037 - subscription-manager-migration should require subscription-manager-migration-data
 					"manual: rhnlib"
 			}));
 		}
 		
-		for (String expectedRequires : expecetdRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-		for (String actualRequires : actualRequiresList) if (!expecetdRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
-		Assert.assertTrue(expecetdRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expecetdRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expecetdRequiresList);
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
 	
 	
@@ -450,16 +520,21 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRpmRequireListForSubscriptionManagerMigrationData_Test() {
 		String pkg = "subscription-manager-migration-data";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
-		SSHCommandResult sshCommandResult = client.runCommandAndWait("rpm --query --requires "+pkg+" --verbose | egrep '(^manual:|^preun:|^postun:|^post:)'");
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
 		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
 			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
 		}
 		
-		List<String> expecetdRequiresList = new ArrayList<String>();
+		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
-			// TODO
+			// empty list
+			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
 			// empty list
@@ -468,9 +543,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			// empty list
 		}
 		
-		for (String expectedRequires : expecetdRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-		for (String actualRequires : actualRequiresList) if (!expecetdRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
-		Assert.assertTrue(expecetdRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expecetdRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expecetdRequiresList);
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
 	
 	
@@ -539,31 +614,34 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --product=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --regtoken=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --pool=FOO",								new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --repo",								new Integer(2),		clienttasks.command+": error: --repo option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --remove",								new Integer(2),		clienttasks.command+": error: --remove option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --add",									new Integer(2),		clienttasks.command+": error: --add option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --add=foo",								new Integer(2),		clienttasks.command+": error: --add arguments should be in the form of \"name:value\"",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" register --servicelevel=foo",							new Integer(255),	"Error: Must use --auto-attach with --servicelevel.", ""}));	// changed by bug 874804,876305		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("856236"),	clienttasks.command+" register --activationkey=foo --org=foo --env=foo",	new Integer(255),	"Error: Activation keys do not allow environments to be specified.", ""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --match-installed",								new Integer(255),	"Error: --match-installed is only applicable with --available", ""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --no-overlap",									new Integer(255),	"Error: --no-overlap is only applicable with --available", ""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --installed --servicelevel=foo",					new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --repo=foo",							new Integer(255),	"Error: The --repo option must be used with --list or --add or --remove.",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --remove=foo",							new Integer(255),	"Error: You must specify a repository to modify",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --add=foo:bar",							new Integer(255),	"Error: You must specify a repository to modify",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --list --remove-all",					new Integer(255),	"Error: You may not use --list with --remove-all",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --remove-all --add=foo:bar --repo=fb",	new Integer(255),	"Error: You may not use --add or --remove with --remove-all and --list",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --remove-all --remove=foo --repo=fb",	new Integer(255),	"Error: You may not use --add or --remove with --remove-all and --list",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --list --remove=foo --repo=fb",			new Integer(255),	"Error: You may not use --add or --remove with --remove-all and --list",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --list --remove=foo --repo=fb",			new Integer(255),	"Error: You may not use --add or --remove with --remove-all and --list",	""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe",											new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --remove=foo --repo=foobar",			new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --add=foo:bar --repo=foobar",			new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --remove-all",							new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override --list",								new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" repo-override",										new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.rhsmDebugSystemCommand(null, null, null, null, null, null),		new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
-
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) {
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" list --no-overlap",									new Integer(255),	"Error: --no-overlap is only applicable with --available", ""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" list --match-installed",								new Integer(255),	"Error: --match-installed is only applicable with --available", ""}));
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.7-1")) {
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --repo",								new Integer(2),		clienttasks.command+": error: --repo option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --remove",								new Integer(2),		clienttasks.command+": error: --remove option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --add",									new Integer(2),		clienttasks.command+": error: --add option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --add=foo",								new Integer(2),		clienttasks.command+": error: --add arguments should be in the form of \"name:value\"",	"Usage: subscription-manager repo-override [OPTIONS]"}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --repo=foo",							new Integer(255),	"Error: The --repo option must be used with --list or --add or --remove.",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --remove=foo",							new Integer(255),	"Error: You must specify a repository to modify",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --add=foo:bar",							new Integer(255),	"Error: You must specify a repository to modify",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --list --remove-all",					new Integer(255),	"Error: You may not use --list with --remove-all",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --remove-all --add=foo:bar --repo=fb",	new Integer(255),	"Error: You may not use --add or --remove with --remove-all and --list",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --remove-all --remove=foo --repo=fb",	new Integer(255),	"Error: You may not use --add or --remove with --remove-all and --list",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --list --remove=foo --repo=fb",			new Integer(255),	"Error: You may not use --add or --remove with --remove-all and --list",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --list --remove=foo --repo=fb",			new Integer(255),	"Error: You may not use --add or --remove with --remove-all and --list",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --remove=foo --repo=foobar",			new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --add=foo:bar --repo=foobar",			new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --remove-all",							new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --list",								new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override",										new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+		}
 		
 		// negative tests that require the system to be registered before attempting the test...
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+(sm_clientOrg==null?"":" --org "+sm_clientOrg),									new Integer(0),	null,	""}));
