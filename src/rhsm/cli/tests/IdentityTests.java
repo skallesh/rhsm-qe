@@ -120,11 +120,11 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		SSHCommandResult identityResult = clienttasks.identity(null,null,null,null,null,null,null);
 		List<String> expectedStdoutRegexs = new ArrayList<String>();
-		//expectedStdoutRegexs.add("^Current identity is: "+consumerId);
-		expectedStdoutRegexs.add("^system identity: "+consumerId);	// changed to this by commit 7da29583efa091337be233b9795b0157283aad0f Change wording for identity in CLI command.
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.6-1")) expectedStdoutRegexs.add("^system identity: "+consumerId);	// changed to this by commit 7da29583efa091337be233b9795b0157283aad0f Change wording for identity in CLI command.
+		else expectedStdoutRegexs.add("^Current identity is: "+consumerId);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.1.4-1")) expectedStdoutRegexs.add("^server type: RHN Classic and Red Hat Subscription Management$");
+		else expectedStdoutRegexs.add("^server type: RHN classic and Red Hat Subscription Management$");	// changed by bug 852328
 		//expectedStdoutRegexs.add("^remote entitlement server type: RHN classic and subscription management service$");	// changed by bug 846834
-		//expectedStdoutRegexs.add("^server type: RHN classic and Red Hat Subscription Management$");	// changed by bug 852328
-		expectedStdoutRegexs.add("^server type: RHN Classic and Red Hat Subscription Management$");
 		for (String expectedStdoutRegex : expectedStdoutRegexs) {
 			Assert.assertTrue(Pattern.compile(expectedStdoutRegex, Pattern.MULTILINE/* | Pattern.DOTALL*/).matcher(identityResult.getStdout()).find(),"Stdout contains expected regex: "+expectedStdoutRegex);
 		}
@@ -136,6 +136,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void Identity_Test() throws JSONException, Exception {
+		String identityRegex;
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
@@ -148,16 +149,19 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// ALPHA: Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
 		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clientusername);
 		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clienttasks.hostname);	// RHEL61 RHEL57
-		// Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "Current identity is: ",consumerId));
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "system identity: ",consumerId));	// changed to this by commit 7da29583efa091337be233b9795b0157283aad0f Change wording for identity in CLI command.
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "name: ",clienttasks.hostname));
+		identityRegex = String.format("^%s%s$", "Current identity is: ",consumerId);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.6-1")) identityRegex = String.format("^%s%s$", "system identity: ",consumerId);	// changed to this by commit 7da29583efa091337be233b9795b0157283aad0f Change wording for identity in CLI command.
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), identityRegex);
+		identityRegex = String.format("^%s%s$", "name: ",clienttasks.hostname);
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), identityRegex);
 		
 		// also assert additional output from the new multi-owner function
 		JSONObject owner = CandlepinTasks.getOwnerOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org name: ",owner.getString("displayName")));
 		//Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org id: ",owner.getString("id")));	// RHEL63
 		//Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org id: ",owner.getString("key")));	// technically the org id has been changed to display "key" which is more useful (after bug fix 852001)	// msgid changed by bug 878634
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org ID: ",owner.getString("key")));	// technically the org id has been changed to display "key" which is more useful (after bug fix 852001)
+		identityRegex = String.format("^%s%s$", "org ID: ",owner.getString("key"));	// technically the org id has been changed to display "key" which is more useful (after bug fix 852001)
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), identityRegex);
 	}
 	
 	
@@ -166,6 +170,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void IdentityWithName_Test() {
+		String identityRegex;
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
@@ -177,8 +182,11 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the current identity matches what was returned from register
 		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+nickname);	// RHEL61 RHEL57
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^system identity: "+consumerId);
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^name: "+nickname);
+		identityRegex = String.format("^%s%s$", "Current identity is: ",consumerId);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.6-1")) identityRegex = String.format("^%s%s$", "system identity: ",consumerId);	// changed to this by commit 7da29583efa091337be233b9795b0157283aad0f Change wording for identity in CLI command.
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), identityRegex);
+		identityRegex = String.format("^%s%s$", "name: ",nickname);
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), identityRegex);
 	}
 	
 	
@@ -397,7 +405,6 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
-
 		
 		// restart rhsmcertd
 		clienttasks.restart_rhsmcertd(null, null, false);	// assertCertificatesUpdate=false since the consumer has been deleted server side and the cert updates should fail
@@ -416,9 +423,11 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// add asserts for Bug 1026501 - deleting consumer will move splice identity cert
 		// assert that the clienttasks.consumerCertDir remains, but the cert.pem and key.pem are gone
-		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.consumerCertDir), "The original consumer cert dir '"+clienttasks.consumerCertDir+"' should remain after it has been backed up to: "+clienttasks.consumerCertDir+".old");
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.consumerCertFile()), "After rhsmcertd triggers, the consumer cert '"+clienttasks.consumerCertFile()+"' should have been deleted.");
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.consumerKeyFile()), "After rhsmcertd triggers, the consumer key '"+clienttasks.consumerKeyFile()+"' should have been deleted.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.14-1")) {
+			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.consumerCertDir), "The original consumer cert dir '"+clienttasks.consumerCertDir+"' should remain after it has been backed up to: "+clienttasks.consumerCertDir+".old");
+			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.consumerCertFile()), "After rhsmcertd triggers, the consumer cert '"+clienttasks.consumerCertFile()+"' should have been deleted.");
+			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.consumerKeyFile()), "After rhsmcertd triggers, the consumer key '"+clienttasks.consumerKeyFile()+"' should have been deleted.");
+		}
 	}
 	@AfterGroups(groups={"setup"}, value={"VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test"})
 	public void afterVerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test() {
