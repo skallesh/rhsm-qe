@@ -23,8 +23,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
+
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
@@ -214,6 +216,11 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 		}
 			for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 				if(consumed.productName.contains("Instance Based")){
+					String SocketsCount = CandlepinTasks
+							.getPoolProductAttributeValue(sm_clientUsername,
+									sm_clientPassword, sm_serverUrl,
+									consumed.poolId, "sockets");
+					sockets=sockets/Integer.parseInt(SocketsCount);
 				Assert.assertEquals(consumed.quantityUsed, sockets);
 			}}
 			
