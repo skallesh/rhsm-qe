@@ -949,6 +949,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingContentOverrides_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.7-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersion.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=803746 which is fixed in subscription-manager-1.10.7-1.");
 		
 		// generate a unique activation key name for this test
 		String keyName = String.format("ActivationKey%s_WithContentOverrides", System.currentTimeMillis());
@@ -1324,7 +1325,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 
-	@AfterClass(groups={"setup"})
+//debugTest	@AfterClass(groups={"setup"})
 	public void unregisterAllSystemConsumerIds() throws Exception {
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
@@ -1340,7 +1341,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(null,null,null);
 	}
 
-	@BeforeClass(groups="setup")
+//debugTest	@BeforeClass(groups="setup")
 	public void setupBeforeClass() throws Exception {
 		if (sm_clientOrg!=null) return;
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
