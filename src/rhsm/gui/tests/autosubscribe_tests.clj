@@ -249,7 +249,7 @@
     (tasks/ui waittillwindowexist :register-dialog 80)
     (tasks/ui click :register-dialog (clojure.string/capitalize(first @sla-list)))
     (tasks/ui click :register)
-    (verify (tasks/ui showing? :register-dialog "Select Service Level"))
+    (verify (tasks/ui showing? :register-dialog "Confirm Subscriptions"))
     (let [values (into [] (tasks/get-table-elements :auto-attach-subscriptions-table 1))
           phy-virt? (fn [val]
                       (not (or (= (.toLowerCase val) "virtual")
@@ -282,7 +282,7 @@
         (sleep 3000)
         (tasks/ui click :register)
         (tasks/ui waittillwindownotexist :register-dialog 80)))
-    (verify (= 1 (tasks/ui guiexist :main-window "System is properly subscribed*")))
+    (verify (substring? "System is properly subscribed" (tasks/ui gettextvalue :overall-status)))
     (finally
      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
      (tasks/unregister))))
