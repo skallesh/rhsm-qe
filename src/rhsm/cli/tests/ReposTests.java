@@ -483,8 +483,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 				
 		for(Repo repo:subscribedRepos) {
 			SSHCommandResult result = clienttasks.repos_(false,repo.repoId,null,null,null,null);
-			//Assert.assertEquals(result.getStdout().trim(),"Repo " +repo.repoId+" is enabled for this system.");
-			Assert.assertEquals(result.getStdout().trim(),String.format("Repo '%s' is enabled for this system.",repo.repoId));
+			String expectedStdout = String.format("Repo %s is enabled for this system.",repo.repoId);
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdout = String.format("Repo '%s' is enabled for this system.",repo.repoId);	// subscription-manager commit b9e7f7abb949bc007f2db02662e2abba76528082
+			Assert.assertEquals(result.getStdout().trim(),expectedStdout);
 		}
 	}
 	@Test(	description="subscription-manager: disable a repo.",
@@ -501,8 +502,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 				
 		for(Repo repo:subscribedRepos) {
 			SSHCommandResult result = clienttasks.repos_(false,null,repo.repoId,null,null,null);
-			//Assert.assertEquals(result.getStdout().trim(),"Repo " +repo.repoId+" is disabled for this system.");
-			Assert.assertEquals(result.getStdout().trim(),String.format("Repo '%s' is disabled for this system.",repo.repoId));
+			String expectedStdout = String.format("Repo %s is disabled for this system.",repo.repoId);
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdout = String.format("Repo '%s' is disabled for this system.",repo.repoId);	// subscription-manager commit b9e7f7abb949bc007f2db02662e2abba76528082
+			Assert.assertEquals(result.getStdout().trim(),expectedStdout);
 		}
 	}
 	
