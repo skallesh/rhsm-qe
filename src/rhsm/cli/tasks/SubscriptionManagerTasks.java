@@ -82,49 +82,42 @@ public class SubscriptionManagerTasks {
 	public final String rhsmCertDWorker		= "/usr/libexec/rhsmcertd-worker";
 	public final String rhsmComplianceD		= "/usr/libexec/rhsmd";	// /usr/libexec/rhsm-complianced; RHEL61
 	public final String rhnDefinitionsDir	= "/tmp/"+"rhnDefinitionsDir";
-
 	
-	//public final String msg_ConsumerNotRegistered		= "Consumer not registered. Please register using --username and --password";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=749332
-	//public final String msg_ConsumerNotRegistered		= "Error: You need to register this system by running `register` command.  Try register --help.";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=767790
-	public final String msg_ConsumerNotRegistered		= "This system is not yet registered. Try 'subscription-manager register --help' for more information.";
-	public final String msg_NeedListOrUpdateOption		= "Error: Need either --list or --update, Try facts --help";
-	
-	//public final String msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server.\n Please see "+rhsmLogFile+" for more information.";
-	//public final String msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server.\nPlease see "+rhsmLogFile+" for more information."; // effective in RHEL58
-	public final String msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server. Please see "+rhsmLogFile+" for more information."; // effective after subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
-	public final String msg_NetworkErrorCheckConnection = "Network error. Please check the connection details, or see "+rhsmLogFile+" for more information.";
+	// will be initialized by installSubscriptionManagerRPMs()
+	public Map<String,String> installedPackageVersion = new HashMap<String,String>();	// contains key=python-rhsm, value=python-rhsm-0.98.9-1.el5
+	public String msg_ConsumerNotRegistered			= null;
+	public String msg_NeedListOrUpdateOption		= null;
+	public String msg_NetworkErrorUnableToConnect	= null;
+	public String msg_NetworkErrorCheckConnection	= null;
 	
 	// will be initialized by initializeFieldsFromConfigFile()
-	public String productCertDir				= null; // "/etc/pki/product";
-	public String entitlementCertDir			= null; // "/etc/pki/entitlement";
-	public String consumerCertDir				= null; // "/etc/pki/consumer";
-	public String caCertDir						= null; // "/etc/rhsm/ca";
-	public String baseurl						= null;
-	public String consumerKeyFile()	{			return this.consumerCertDir+"/key.pem";}
-	public String consumerCertFile() {			return this.consumerCertDir+"/cert.pem";}
-
+	public String productCertDir					= null; // "/etc/pki/product";
+	public String entitlementCertDir				= null; // "/etc/pki/entitlement";
+	public String consumerCertDir					= null; // "/etc/pki/consumer";
+	public String caCertDir							= null; // "/etc/rhsm/ca";
+	public String baseurl							= null;
+	public String consumerKeyFile()	{				return this.consumerCertDir+"/key.pem";}
+	public String consumerCertFile() {				return this.consumerCertDir+"/cert.pem";}
 	
-	public String hostname						= null;	// of the client
-	public String ipaddr						= null;	// of the client
-	public String arch							= null;	// of the client
-	public String sockets						= null;	// of the client
-	public String coresPerSocket				= null;	// of the client
-	public String cores							= null;	// of the client
-	public String vcpu							= null;	// of the client
-	public String variant						= null;	// of the client
-	public String releasever					= null;	// of the client	 // e.g. 5Server	// e.g. 5Client
+	// will be initialized by constructor SubscriptionManagerTasks(SSHCommandRunner runner)
+	public String redhatRelease						= null;	// of the client; Red Hat Enterprise Linux Server release 5.8 Beta (Tikanga)
+	public String redhatReleaseX					= null;	// of the client; 5
+	public String redhatReleaseXY					= null;	// of the client; 5.8
+	public String hostname							= null;	// of the client
+	public String ipaddr							= null;	// of the client
+	public String arch								= null;	// of the client
+	public String sockets							= null;	// of the client
+	public String coresPerSocket					= null;	// of the client
+	public String cores								= null;	// of the client
+	public String vcpu								= null;	// of the client
+	public String variant							= null;	// of the client
+	public String releasever						= null;	// of the client; 5Server 5Client
 	
 	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
 	protected String currentlyRegisteredPassword	= null;	// most recent password used during register
 	protected String currentlyRegisteredOrg			= null;	// most recent owner used during register
 	protected ConsumerType currentlyRegisteredType	= null;	// most recent consumer type used during register
 	
-	public String redhatRelease			= null;	// Red Hat Enterprise Linux Server release 5.8 Beta (Tikanga)
-	public String redhatReleaseX		= null;	// 5
-	public String redhatReleaseXY		= null;	// 5.8
-	
-	public Map<String,String> installedPackageVersion = new HashMap<String,String>();	// contains key=python-rhsm, value=python-rhsm-0.98.9-1.el5
-
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
@@ -505,6 +498,17 @@ public class SubscriptionManagerTasks {
 			String version = sshCommandRunner.runCommandAndWait("rpm -q "+pkg).getStdout().trim();
 			installedPackageVersion.put(pkg,version);
 		}
+		
+		// initialize client fields that depend on the installed package version
+		msg_ConsumerNotRegistered		= "Consumer not registered. Please register using --username and --password";
+		if (isPackageVersion("subscription-manager", ">=", "0.98.4-1"))		msg_ConsumerNotRegistered = "Error: You need to register this system by running `register` command.  Try register --help.";	// effective after bug fix 749332 subscription-manager commit 6241cd1495b9feac2ed123f60405061b03815721
+		if (isPackageVersion("subscription-manager", ">=", "0.99.11-1"))	msg_ConsumerNotRegistered = "This system is not yet registered. Try 'subscription-manager register --help' for more information.";	// effective after bug fix 767790 subscription-manager commit 913ca2f8f3febd210634988162e14426ae4bfe76
+		msg_NeedListOrUpdateOption		= "Error: Need either --list or --update, Try facts --help";
+		
+		msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server.\n Please see "+rhsmLogFile+" for more information.";
+		msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server.\nPlease see "+rhsmLogFile+" for more information."; // effective in RHEL58
+		if (isPackageVersion("subscription-manager", ">=", "1.10.9-1"))		msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server. Please see "+rhsmLogFile+" for more information."; // effective after subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
+		msg_NetworkErrorCheckConnection = "Network error. Please check the connection details, or see "+rhsmLogFile+" for more information.";
 	}
 	
 	public void setupRhnDefinitions(String gitRepository) {
