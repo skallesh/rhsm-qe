@@ -1325,7 +1325,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 
-//debugTest	@AfterClass(groups={"setup"})
+	@AfterClass(groups={"setup"})
 	public void unregisterAllSystemConsumerIds() throws Exception {
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
@@ -1341,7 +1341,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(null,null,null);
 	}
 
-//debugTest	@BeforeClass(groups="setup")
+	@BeforeClass(groups="setup")
 	public void setupBeforeClass() throws Exception {
 		if (sm_clientOrg!=null) return;
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
