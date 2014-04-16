@@ -114,6 +114,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// make sure the original virt-what is in place 
 		RemoteFileTasks.runCommandAndAssert(client, "cp -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
 		String virtWhatStdout = client.runCommandAndWait("virt-what").getStdout().trim();
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.11-1")) virtWhatStdout = virtWhatStdout.replaceAll("\\s*\\n\\s*", ", ");	// collapse multi-line values into one line... Bug 1018807 - newline in subscription-manager facts output on xen-hvm guest; subscription-manager commit ed7a68aaac1eeef64936cb5fef6ee6e5eb93b281
 		
 		log.info("Running virt-what version: "+client.runCommandAndWait("rpm -q virt-what").getStdout().trim());
 		Map<String,String> factsMap = clienttasks.getFacts();
@@ -124,8 +125,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		// virt.host_type
 		String virtHostType = factsMap.get("virt.host_type");	// = clienttasks.getFactValue("virt.host_type");
-		//Assert.assertEquals(virtHostType,virtWhatStdout.equals("")?"Not Applicable":virtWhatStdout,"subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");
-		Assert.assertEquals(virtHostType, virtWhatStdout.equals("")?"Not Applicable":virtWhatStdout.replaceAll("\\s*\\n\\s*", ", "), "subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");	// collapse multi-line values into one line... Bug 1018807 - newline in subscription-manager facts output on xen-hvm guest 
+		Assert.assertEquals(virtHostType,virtWhatStdout.equals("")?"Not Applicable":virtWhatStdout,"subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");
 		
 		// virt.uuid
 		// dev note: calculation for uuid is done in /usr/share/rhsm/subscription_manager/hwprobe.py def _getVirtUUID(self):
@@ -168,12 +168,12 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// virt.is_guest
 		String virtIsGuest = factsMap.get("virt.is_guest");	// = clienttasks.getFactValue("virt.is_guest");
 		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when the client is running on a '"+host_type+"' hypervisor.");
-
+		
 		// virt.host_type
 		String virtHostType = factsMap.get("virt.host_type");	// = clienttasks.getFactValue("virt.host_type");
-		host_type = host_type.replaceAll("\\s*\\n\\s*", ", ");	// collapse multi-line values into one line... Bug 1018807 - newline in subscription-manager facts output on xen-hvm guest 
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.11-1")) host_type = host_type.replaceAll("\\s*\\n\\s*", ", ");	// collapse multi-line values into one line... Bug 1018807 - newline in subscription-manager facts output on xen-hvm guest; subscription-manager commit ed7a68aaac1eeef64936cb5fef6ee6e5eb93b281
 		Assert.assertEquals(virtHostType,host_type,"subscription-manager facts list reports the same virt.host_type value of as returned by "+virtWhatFile);
-
+		
 		// virt.uuid
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
 		if (host_type.contains("ibm_systemz") || host_type.contains("xen-dom0") || host_type.contains("powervm")) {
@@ -204,11 +204,12 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// virt.is_guest
 		String virtIsGuest = factsMap.get("virt.is_guest");	// = clienttasks.getFactValue("virt.is_guest");
 		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.FALSE,"subscription-manager facts list reports virt.is_guest as false when the client is running on bare metal.");
-
+		
 		// virt.host_type
 		String virtHostType = factsMap.get("virt.host_type");	// = clienttasks.getFactValue("virt.host_type");
 		String virtWhatStdout = client.runCommandAndWait("virt-what").getStdout().trim();
-		virtWhatStdout = virtWhatStdout.replaceAll("\\s*\\n\\s*", ", ");	// collapse multi-line values into one line... Bug 1018807 - newline in subscription-manager facts output on xen-hvm guest 
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.11-1")) virtWhatStdout = virtWhatStdout.replaceAll("\\s*\\n\\s*", ", ");	// collapse multi-line values into one line... Bug 1018807 - newline in subscription-manager facts output on xen-hvm guest; subscription-manager commit ed7a68aaac1eeef64936cb5fef6ee6e5eb93b281
+		
 		//if (virtWhatStdout.equals("xen\nxen-dom0")) {
 		if (virtWhatStdout.contains("xen-dom0")) {
 			log.warning("Normally on a bare metal system (indicated by virt.is_guest=false), virt.host_type will be reported as Not Applicable.  An exception to this case occurs when virt-what reports xen-dom0, then virt.host_type will report xen-dem0 and subscription-manager will treat the system as a bare metal system.");
