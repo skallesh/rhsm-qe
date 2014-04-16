@@ -309,6 +309,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusOnFutureDate_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.9.2-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersion.get("subscription-manager")+"' does not support status --ondate option.  It was introduced in subscription-manager-1.9.2-1.");
 		
 		// register with autosubscribe to establish today's status
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
@@ -362,6 +363,8 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusOnPastDate_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.9.2-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersion.get("subscription-manager")+"' does not support status --ondate option.  It was introduced in subscription-manager-1.9.2-1.");
+		
 		// get yeterday's status
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		Calendar yesterday = new GregorianCalendar(); yesterday.add(Calendar.HOUR, -24);
@@ -378,6 +381,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusOnInvalidDate_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.9.2-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersion.get("subscription-manager")+"' does not support status --ondate option.  It was introduced in subscription-manager-1.9.2-1.");
 		
 		// call status with an invalid ondate
 		SSHCommandResult statusResultYesterday = clienttasks.status_("2000-13-01",null,null, null);	// lucky month 13
