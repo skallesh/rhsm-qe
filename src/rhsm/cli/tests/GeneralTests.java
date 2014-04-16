@@ -161,7 +161,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyPermissionsOnEtcCronDailyRhsmd_Test() {
-		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersion.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=1012566 which is fixed in subscription-manager-1.10.3-1.");
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=1012566 which is fixed in subscription-manager-1.10.3-1.");
 		
 		//	[root@jsefler-6 ~]# ls -l /etc/cron.daily/rhsmd 
 		//	-rwxr-xr-x. 1 root root 256 Sep 23 14:53 /etc/cron.daily/rhsmd
@@ -273,7 +273,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"config(subscription-manager) = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: config(subscription-manager) = 1.9.11-1.el6",
+					"config(subscription-manager) = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: config(subscription-manager) = 1.9.11-1.el6",
 					"/bin/sh",
 					"/bin/sh",
 					"/bin/sh",
@@ -297,7 +297,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"manual: config(subscription-manager) = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: config(subscription-manager) = 1.9.11-1.el6",
+					"manual: config(subscription-manager) = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: config(subscription-manager) = 1.9.11-1.el6",
 					"post: /bin/sh",
 					"preun: /bin/sh",
 					"postun: /bin/sh",
@@ -368,7 +368,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
+					"subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
 					"librsvg2",
 					"/bin/sh",
 					"/bin/sh",
@@ -387,7 +387,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"manual: subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
+					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
 					"manual: librsvg2("+clienttasks.arch.replace("_","-")+")",	//"manual: librsvg2(x86-64)",
 					"post: /bin/sh",
 					"postun: /bin/sh",
@@ -403,7 +403,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"manual: subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
+					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
 					"manual: librsvg2("+clienttasks.arch.replace("_","-")+")",	//"manual: librsvg2(x86-64)",
 					//"post: /bin/sh",
 					//"postun: /bin/sh",
@@ -444,7 +444,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"subscription-manager-gui = "+clienttasks.installedPackageVersion.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
+					"subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
 					"librsvg2",
 					"rhn-setup-gnome"
 			}));
@@ -454,14 +454,14 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersion.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
+					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
 					"manual: librsvg2",
 					"manual: rhn-setup-gnome"
 			}));
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersion.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
+					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.9.11-1.el6",
 					"manual: librsvg2",
 					//"manual: rhn-setup-gnome"	// removed by git commit 72e37ab24d5ba1ea9ff8ccc756246df721e204b1 Fix firstboot on Fedora 19. (will help fix Bug 1021013 - RHEL7 firstboot: missing option to skip Subscription Management Registration)
 			}));
@@ -492,7 +492,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-manager = 1.9.11-1.el6",
+					"subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-manager = 1.9.11-1.el6",
 					"rhnlib"
 			}));
 			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -501,7 +501,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"manual: subscription-manager = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.9.11-1.el6"
+					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.9.11-1.el6"
 					"manual: subscription-manager-migration-data",	// Bug 1049037 - subscription-manager-migration should require subscription-manager-migration-data
 					"manual: rhnlib"
 			}));

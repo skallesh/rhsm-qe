@@ -1045,16 +1045,16 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		String actualSystemCertificateVersion = clienttasks.getFactValue("system.certificate_version");
 		String expectedSystemCertificateVersion = "3.2";
 		
-		if (clienttasks.installedPackageVersion.get("subscription-manager").startsWith("subscription-manager-0.")) {
+		if (clienttasks.installedPackageVersionMap.get("subscription-manager").startsWith("subscription-manager-0.")) {
 			expectedSystemCertificateVersion = null;
 		}
-		if (clienttasks.installedPackageVersion.get("subscription-manager").startsWith("subscription-manager-1.0.")) {
+		if (clienttasks.installedPackageVersionMap.get("subscription-manager").startsWith("subscription-manager-1.0.")) {
 			expectedSystemCertificateVersion = "3.0";
 		}
-		if (clienttasks.installedPackageVersion.get("subscription-manager").startsWith("subscription-manager-1.1.")) {
+		if (clienttasks.installedPackageVersionMap.get("subscription-manager").startsWith("subscription-manager-1.1.")) {
 			expectedSystemCertificateVersion = "3.1";
 		}
-		if (clienttasks.installedPackageVersion.get("subscription-manager").startsWith("subscription-manager-1.8.")) {
+		if (clienttasks.installedPackageVersionMap.get("subscription-manager").startsWith("subscription-manager-1.8.")) {
 			expectedSystemCertificateVersion = "3.2";
 		}
 		Assert.assertEquals(actualSystemCertificateVersion, expectedSystemCertificateVersion,"fact value for system.certificate_version");

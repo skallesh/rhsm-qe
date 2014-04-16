@@ -949,7 +949,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingContentOverrides_Test() throws JSONException, Exception {
-		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.7-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersion.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=803746 which is fixed in subscription-manager-1.10.7-1.");
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.7-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=803746 which is fixed in subscription-manager-1.10.7-1.");
 		
 		// generate a unique activation key name for this test
 		String keyName = String.format("ActivationKey%s_WithContentOverrides", System.currentTimeMillis());

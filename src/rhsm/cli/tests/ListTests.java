@@ -603,7 +603,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithMatchInstalled_Test() throws JSONException, Exception {
-		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersion.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=654501 which is fixed in subscription-manager-1.10.3-1.");
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=654501 which is fixed in subscription-manager-1.10.3-1.");
 		
  		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);

@@ -84,7 +84,6 @@ public class SubscriptionManagerTasks {
 	public final String rhnDefinitionsDir	= "/tmp/"+"rhnDefinitionsDir";
 	
 	// will be initialized by installSubscriptionManagerRPMs()
-	public Map<String,String> installedPackageVersion = new HashMap<String,String>();	// contains key=python-rhsm, value=python-rhsm-0.98.9-1.el5
 	public String msg_ConsumerNotRegistered			= null;
 	public String msg_NeedListOrUpdateOption		= null;
 	public String msg_NetworkErrorUnableToConnect	= null;
@@ -495,8 +494,7 @@ public class SubscriptionManagerTasks {
 		
 		// remember the versions of the packages installed
 		for (String pkg : Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"})) {
-			String version = sshCommandRunner.runCommandAndWait("rpm -q "+pkg).getStdout().trim();
-			installedPackageVersion.put(pkg,version);
+			isPackageVersion(pkg, "==", "0.0");	// this will simply populate the cached Map<String,String> installedPackageVersionMap
 		}
 		
 		// initialize client fields that depend on the installed package version
@@ -4153,15 +4151,15 @@ public class SubscriptionManagerTasks {
 		
 		// assert the enable feedback
 		if (enableRepos!=null) for (String enableRepo : enableRepos) {
-			String expectedStdout = "Repo "+enableRepo+" is enabled for this system.";
-			expectedStdout = String.format("Repo '%s' is enabled for this system.",enableRepo);
+			String expectedStdout = String.format("Repo %s is enabled for this system.",enableRepo);
+			if (isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdout = String.format("Repo '%s' is enabled for this system.",enableRepo);
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedStdout), "Stdout from repos --enable includes expected feedback '"+expectedStdout+"'.");
 		}
 		
 		// assert the disable feedback
 		if (disableRepos!=null) for (String disableRepo : disableRepos) {
-			String expectedStdout = "Repo "+disableRepo+" is disabled for this system.";
-			expectedStdout = String.format("Repo '%s' is disabled for this system.",disableRepo);
+			String expectedStdout = String.format("Repo %s is disabled for this system.",disableRepo);
+			if (isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdout = String.format("Repo '%s' is disabled for this system.",disableRepo);
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedStdout), "Stdout from repos --disable includes expected feedback '"+expectedStdout+"'.");
 		}
 		
@@ -6956,7 +6954,7 @@ public class SubscriptionManagerTasks {
 	 * @param packageName - "subscription-manager"
 	 * @param comparator - valid values: ">", "<", ">=", "<=", "=="
 	 * @param version - "1.10.14-7"
-	 * @return true or false
+	 * @return true or false or null when the packageName is not installed
 	 * 
 	 * <br>Examples:
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >  1.10 is false
@@ -6989,7 +6987,7 @@ public class SubscriptionManagerTasks {
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <= 1.10.14-7.5 is true
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <  1.10.14-7.5 is true
 	 */
-	public boolean isPackageVersion(String packageName, String comparator, String version) {
+	public Boolean isPackageVersion(String packageName, String comparator, String version) {
 		// example package versions:
 		//	libXau-1.0.8-2.1.el7.x86_64
 		//	subscription-manager-1.10.14-7.git.0.798ba5c.el7.x86_64
@@ -7001,11 +6999,16 @@ public class SubscriptionManagerTasks {
 		//	ntpdate-4.2.6p5-18.el7.x86_64
 		
 		// get the currently installed version of the packageName of the form subscription-manager-1.10.14-7.el7.x86_64
-		String installedPackageVersion = this.installedPackageVersion.get(packageName);
-		if (installedPackageVersion==null) {
-			SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("rpm -q "+packageName);
-			if (sshCommandResult.getExitCode()==0) installedPackageVersion = sshCommandResult.getStdout().trim();
+		if (this.installedPackageVersionMap.get(packageName)==null) {
+			SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("rpm --query "+packageName);
+			if (sshCommandResult.getExitCode()==0) {
+				this.installedPackageVersionMap.put(packageName,sshCommandResult.getStdout().trim());
+			} else {
+				log.warning("Package '"+packageName+"' is not installed.");
+				return null;
+			}
 		}
+		String installedPackageVersion = this.installedPackageVersionMap.get(packageName);
 		
 		// strip the packageName from installedPackageVersion to reveal the form 1.10.14-7.el7.x86_64
 		installedPackageVersion = installedPackageVersion.replace(packageName+"-", "");
@@ -7049,4 +7052,6 @@ public class SubscriptionManagerTasks {
 		}
 		return false;
 	}
+	public Map<String,String> installedPackageVersionMap = new HashMap<String,String>();	// contains key=python-rhsm, value=python-rhsm-0.98.9-1.el5
+
 }
