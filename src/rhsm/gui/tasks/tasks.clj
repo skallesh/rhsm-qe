@@ -399,6 +399,21 @@
                    :name item
                    :msg (str "Invalid item:" item)}))))))
 
+(defn unsubscribe
+  "Unsubscribes from a given subscription, s"
+  [s]
+  (ui selecttab :my-subscriptions)
+  (sleep 5000)
+  (if-not (ui rowexist? :my-subscriptions-view s)
+    (throw+ {:type :not-subscribed
+             :name s
+             :msg (str "Not found in 'My Subscriptions': " s)}))
+  (ui selectrow :my-subscriptions-view s)
+  (ui click :remove)
+  (ui waittillwindowexist :question-dialog 60)
+  (ui click :yes)
+  (checkforerror))
+
 (defn open-contract-selection
   "Opens the contract selection dialog for a given subscription."
   [s]
@@ -468,21 +483,6 @@
            (ui click :attach-contract-selection)))
      (checkforerror)
      (wait-for-progress-bar)))
-
-(defn unsubscribe
-  "Unsubscribes from a given subscription, s"
-  [s]
-  (ui selecttab :my-subscriptions)
-  (sleep 5000)
-  (if-not (ui rowexist? :my-subscriptions-view s)
-    (throw+ {:type :not-subscribed
-             :name s
-             :msg (str "Not found in 'My Subscriptions': " s)}))
-  (ui selectrow :my-subscriptions-view s)
-  (ui click :remove)
-  (ui waittillwindowexist :question-dialog 60)
-  (ui click :yes)
-  (checkforerror))
 
 (defn subscribe_all
   "Subscribes to everything available"
