@@ -446,8 +446,8 @@
                              "subscribe_check_syslog"
                              nil
                              (tasks/subscribe subscription))]
-     (catch [:type :error-getting-subscription] _)
-     (verify (not (blank? output))))))
+     (verify (not (blank? output))))
+   (catch [:type :error-getting-subscription] _)))
 
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-918617"]
@@ -546,9 +546,9 @@
         client-type-virt? (= "true" (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
     (if client-type-virt?
       (do
+        (try+
          (tasks/skip-dropdown  :all-subscriptions-view subscription)
          (tasks/open-contract-selection subscription)
-         (try
          (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
            (if (>= row 0)
              (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
