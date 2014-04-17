@@ -285,12 +285,14 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"python-dmidecode",
 					"python-ethtool",
 					"python-iniparse",
-					"python-rhsm >= 1.8.16-1",	// RHEL5.10
 					"python-simplejson",
 					"usermode",
 					"virt-what",
 					"yum >= 3.2.19-15"
 			}));
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.8.23-1"))	expectedRequiresList.add("python-rhsm >= 1.8.18-1");	// RHEL5.11
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.8.22-1"))	expectedRequiresList.add("python-rhsm >= 1.8.16-1");	// RHEL5.10
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.0.13-1"))	expectedRequiresList.add("python-rhsm >= 1.0.5");		// RHEL5.9
 			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
 			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
 			return;
@@ -310,12 +312,14 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: python-dmidecode",
 					"manual: python-ethtool",
 					"manual: python-iniparse",
-					"manual: python-rhsm >= 1.9.1-1",	// RHEL6.5
 					//"manual: python-simplejson",	// removed by bug 1006748
 					"manual: usermode",
 					"manual: virt-what",
 					"manual: yum >= 3.2.19-15"
 			}));
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.9.2-1"))	expectedRequiresList.add("python-rhsm >= 1.9.1-1");		// RHEL6.5
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.8.12-1"))	expectedRequiresList.add("python-rhsm >= 1.8.13-1");	// RHEL6.4
+
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
@@ -335,12 +339,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: python-dmidecode",
 					"manual: python-ethtool",
 					"manual: python-iniparse",
-					"manual: python-rhsm >= 1.10.12-2",	// RHEL7.0 Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
 					//"manual: python-simplejson",	// removed by bug 1006748
 					"manual: usermode",
 					"manual: virt-what",
 					"manual: yum >= 3.2.19-15"
 			}));
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.14-6"))	expectedRequiresList.add("python-rhsm >= 1.10.12-2");	// RHEL7.0	// Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1"))	expectedRequiresList.add("python-rhsm >= 1.10.9");		// RHEL7.0
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
