@@ -184,7 +184,9 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 			log.warning("Skipping the assertion of quantity while bug '"+bugId+"' is open.");
 		} else {
 		// END OF WORKAROUND
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1") && hostEntitlementCert.orderNamespace.quantity.equals("-1")) {log.warning("The rct cat-cert tool encountered a Quantity of -1 which is fixed in subscription-manager-1.10.3-1.  Skipping assertion.");} else	// Bug 1011961 - rct cat-cert should display "Unlimited" for Quantity instead of "-1";  subscription-manager commit 7554c869608a0276151993d34fee4ddb54185f7a
 		Assert.assertEquals(hostEntitlementCert.orderNamespace.quantity, pool.quantity,																																	"hostEntitlementCert.orderNamespace.quantity should match the data center pool's quantity");
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1") && derivedEntitlementCert.orderNamespace.quantity.equals("-1")) {log.warning("The rct cat-cert tool encountered a Quantity of -1 which is fixed in subscription-manager-1.10.3-1.  Skipping assertion.");} else	// Bug 1011961 - rct cat-cert should display "Unlimited" for Quantity instead of "-1";  subscription-manager commit 7554c869608a0276151993d34fee4ddb54185f7a
 		Assert.assertEquals(derivedEntitlementCert.orderNamespace.quantity, derivedPool.quantity,																														"derivedEntitlementCert.orderNamespace.quantity should match the derivedPool's quantity");
 		}
 		
