@@ -231,21 +231,21 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@Test(	description="subscription-manager-cli: attempt to register a user who has unaccepted Terms and Conditions",
-			groups={},
+	@Test(	description="subscription-manager-cli: attempt to register a user who has not yet accepted the Red Hat Terms and Conditions",
+			groups={"AcceptanceTests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=48502)
 	public void AttemptRegistrationWithUnacceptedTermsAndConditions_Test() {
 		String username = sm_usernameWithUnacceptedTC;
 		String password = sm_passwordWithUnacceptedTC;
-		if (username.equals("")) throw new SkipException("Must specify a username who has not accepted Terms & Conditions before attempting this test.");
+		if (username.equals("")) throw new SkipException("Must specify a username who has not yet accepted the Red Hat Terms and Conditions before attempting this test.");
 
 		// ensure we are unregistered
 		clienttasks.unregister(null, null, null);
 		
-		log.info("Attempting to register to a candlepin server using invalid credentials");
+		log.info("Attempting to register to a candlepin server using an account that has not yet accepted the Red Hat Terms and Conditions");
 		String stderrRegex = "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc";
-		String command = String.format("%s register --username=%s --password=%s", clienttasks.command, username, password);
+		String command = clienttasks.registerCommand(username, password, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		RemoteFileTasks.runCommandAndAssert(client, command, new Integer(255), null, stderrRegex);
 		
 		// assert that a consumer cert and key have NOT been installed
