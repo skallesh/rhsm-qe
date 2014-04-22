@@ -607,7 +607,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"pluginconfdir",			"/tmp/rhsm/pluginconfdir"}));
 //988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"100"}));
 //988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"1000"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"full_refresh_on_yum",	"1"}));	// was added as part of RFE Bug 803746
+		if (clienttasks.isPackageVersion("python-rhsm",">=","1.10.6-1")) ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"full_refresh_on_yum",	"1"}));	// was added as part of RFE Bug 803746  python_rhsm commit 1bbbfad490bb7985a50d80465f726e7514825a1a
 		
 //988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"ca_cert_dir",			"/tmp/rhsmcertd/ca_cert_dir"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"300"}));
