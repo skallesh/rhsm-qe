@@ -1017,9 +1017,11 @@ schema generation failed
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String poolId = jsonPool.getString("id");
-			String subscriptionId = jsonPool.getString("subscriptionId");
-			if (forSubscriptionId.equals(subscriptionId)) {
-				pools.add(jsonPool);
+			if (!jsonPool.isNull("subscriptionId")) {	// "subscriptionId": null will occur for pools of "type": "STACK_DERIVED"
+				String subscriptionId = jsonPool.getString("subscriptionId");
+				if (forSubscriptionId.equals(subscriptionId)) {
+					pools.add(jsonPool);
+				}
 			}
 		}
 		return pools;
