@@ -903,15 +903,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				
 				// attempt to avoid bug 881095 RuntimeError: could not open display
 				if ((Integer.valueOf(clienttasks.redhatReleaseX)==6 && Float.valueOf(clienttasks.redhatReleaseXY)<6.4) || 
-					(Integer.valueOf(clienttasks.redhatReleaseX)==5 && Float.valueOf(clienttasks.redhatReleaseXY)<5.10)){
+					(Integer.valueOf(clienttasks.redhatReleaseX)==5 && Float.valueOf(clienttasks.redhatReleaseXY)<5.12)){
+					log.warning("Employing WORKAROUND for https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7 by exporting DISPLAY");
 					commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
 					//commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
 				}
-				// 2013-10-11 update... WONTFIX "Unable to open a display"; see https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7
-				log.warning("Employing WORKAROUND for https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7 by exporting DISPLAY");
-				//commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
-				//commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
-				commandHelp = "export DISPLAY=:0 && "+commandHelp;
+				if ((Integer.valueOf(clienttasks.redhatReleaseX)==7 && Float.valueOf(clienttasks.redhatReleaseXY)<7.1)){
+					// 2013-10-11 update... WONTFIX "Unable to open a display"; see https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7
+					log.warning("Employing WORKAROUND for https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7 by exporting DISPLAY");
+					//commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
+					//commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
+					commandHelp = "export DISPLAY=:0 && "+commandHelp;
+				}
 				
 				List <String> usages = new ArrayList<String>();
 				String usage = String.format("Usage: %s [OPTIONS]",command);
@@ -1283,8 +1286,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s MODULE-NAME [MODULE-OPTIONS] [--help]",command);
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null/*new BlockedByBzBug("906124")*/, commandHelp, exitCode, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
-			ll.add(Arrays.asList(new Object[] {null/*new BlockedByBzBug("906124")*/, commandHelp, exitCode, modulesRegex, new ArrayList<String>(modules)}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("1039653"), commandHelp, exitCode, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("1039653"), commandHelp, exitCode, modulesRegex, new ArrayList<String>(modules)}));
 		}
 		
 		// rhsm-debug system OPTIONS
@@ -1319,8 +1322,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",command,module);
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("1039653"), commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("1039653"), commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		return ll;
