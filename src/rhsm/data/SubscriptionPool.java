@@ -32,7 +32,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	public String poolId;
 	public String contract;	// added by Bug 1007580 - RFE: list-available output should include contract number and not sku
 	public String quantity;	// public Integer quantity;	// can be "unlimited"
-	public Integer suggested;	// introduced by Bug 1008557 - [RFE] CLI list --available should include a "Quantity Needed" field to facilitate compliance and provide parity with GUI
+	public Integer suggested;	// introduced by Bug 1008557 - [RFE] CLI list --available should include a "Quantity Needed" field to facilitate compliance and provide parity with GUI; subscription-manager commit 411764095e1f3468381b0b27448e849876f0da66
 	public Boolean multiEntitlement;	// replaced by subscriptionType
 	public String subscriptionType;	// introduced by Bug 1029968 - [RFE] request for new subscription-manager list installed/consumed field called "Subscription Type"
 	public Calendar endDate;
