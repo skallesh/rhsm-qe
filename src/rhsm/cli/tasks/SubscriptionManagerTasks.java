@@ -1403,7 +1403,9 @@ public class SubscriptionManagerTasks {
 			sshCommandRunner.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		}
 		// END OF WORKAROUND
-//		if (isPackageVersion("subscription-manager","<","1.10.3-1")) sshCommandRunner.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin");	// subscription-manager commit cebde288bbe4005a82345882fcfcce742b49b039
+		// TODO Fix these two lines if bug 1090206 is rejected for rhel5.11 - choose the second "1.9.8-1"
+		//if (isPackageVersion("subscription-manager","<","1.10.3-1")) sshCommandRunner.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin");	// subscription-manager master commit cebde288bbe4005a82345882fcfcce742b49b039
+		//if (isPackageVersion("subscription-manager","<","1.9.8-1")) sshCommandRunner.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin");	// subscription-manager RHEL6.5 commit 030a7fca1d48213edb247ca035fdd9143200a41e
 		
 		return YumRepo.parse(sshCommandRunner.runCommandAndWait("cat "+redhatRepoFile).getStdout());
 	}
