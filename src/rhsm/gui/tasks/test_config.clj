@@ -92,13 +92,14 @@
   (when (@config :ssh-timeout)
     (.setEmergencyTimeout @noauth-proxyrunner (Long/valueOf (@config :ssh-timeout))))
   ;; command runner to run ssh commands on the candlepin server
+  (comment
   (reset! candlepin-runner (SSHCommandRunner. (@config :server-hostname)
                                               (@config :ssh-user)
                                               (@config :ssh-key-private)
                                               (@config :ssh-key-passphrase)
                                               nil))
   (when (@config :ssh-timeout)
-    (.setEmergencyTimeout @candlepin-runner (Long/valueOf (@config :ssh-timeout))))
+    (.setEmergencyTimeout @candlepin-runner (Long/valueOf (@config :ssh-timeout)))))
   ;; instantiate CandlepinTasks
   (reset! candlepin-tasks (CandlepinTasks.))
   ;; turn off SSL Checking so rest API works
