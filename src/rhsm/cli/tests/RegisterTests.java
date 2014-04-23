@@ -232,7 +232,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to register a user who has not yet accepted the Red Hat Terms and Conditions",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-1089034"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=48502)
 	public void AttemptRegistrationWithUnacceptedTermsAndConditions_Test() {
@@ -256,7 +256,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to register a user who has been disabled",
-			groups={},
+			groups={"AcceptanceTests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50210)
 	public void AttemptRegistrationWithDisabledUserCredentials_Test() {
