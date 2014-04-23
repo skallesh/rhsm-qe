@@ -321,12 +321,11 @@
          (do
            (run-command "systemctl start rhsmcertd.service")
            (sleep 150000)))
-       (do
-         (if-not (substring? "running"
-                           (:stdout (run-command "service rhsmcertd sstatus")))
+       (if-not (substring? "running"
+                           (:stdout (run-command "service rhsmcertd status")))
          (do
            (run-command "service rhsmcertd start")
-           (sleep 150000))))))))
+           (sleep 150000)))))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-916666"]
@@ -898,9 +897,9 @@
                        :or {debug false}}]
   (if-not (assert-skip :system)
     (do
-      ;(tasks/restart-app)
-      ;(tasks/register-with-creds)
-      ;(tasks/subscribe_all)
+      (tasks/restart-app)
+      (tasks/register-with-creds)
+      (tasks/subscribe_all)
       (tasks/ui selecttab :my-installed-products)
       (let [subs (into [] (map vector (tasks/get-table-elements
                                        :installed-view
