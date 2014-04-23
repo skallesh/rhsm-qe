@@ -81,8 +81,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// choose a quantity before subscribing to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
 		String quantity = null;
-		if (subscriptionPool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
-		if (subscriptionPool.suggested>1 && quantity==null) quantity = subscriptionPool.suggested.toString();
+		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (subscriptionPool.suggested!=null) {
+			if (subscriptionPool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
+			if (subscriptionPool.suggested>1 && quantity==null) quantity = subscriptionPool.suggested.toString();
+		}
 
 		// subscribe to a pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(subscriptionPool,quantity,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
