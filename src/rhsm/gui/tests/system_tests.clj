@@ -276,8 +276,9 @@
      (verify (= status "Unknown")))))
 
 (defn ^{Test {:groups ["system"
-                       "blockedByBug-916666"
-                       "blockedByBug-1086377"]}}
+                       "blockedByBug-1086377"
+                       "blockedByBug-916666"]
+              :priority (int 30)}}
   rhsmcertd_restart_check_timestamp
   "Checks whether the timestamp at which cert check was intiated is
    in sync with that displayed in help dialog"
@@ -295,41 +296,47 @@
                                (run-command "systemctl restart rhsmcertd.service")
                                (run-command "service rhsmcertd restart")))
          log-timestamp (re-find #"\d+:\d+:\d+" output)
-         ;; The following steps add minutes to the time as this is the default
-         ;; interval in conf file. The step which follows is conversion of time
-         ;; formats this is because the logs have 24hrs time format and the GUI
-         ;; has 12hrs time format. The last step adds a zero if the time
-         ;; is less than 10hrs which makes sting comparison easier
+           ;; The following steps add minutes to the time as this is the default
+           ;; interval in conf file. The step which follows is conversion of time
+           ;; formats this is because the logs have 24hrs time format and the GUI
+           ;; has 12hrs time format. The last step adds a zero if the time
+           ;; is less than 10hrs which makes sting comparison easier
          interval (trim-newline (:stdout
                                  (run-command "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
          time-to-be-added (/ (read-string (re-find #"\d+" (str interval)))60)
-         new-time (+ time-to-be-added (read-string (first (clojure.string/split log-timestamp #":"))))
+         hours-log (first (clojure.string/split log-timestamp #":"))
+           ;; read-string throws exception on strings '08' and '09'
+         processed-hours-log (if (or (= interval "08") (= interval "09"))
+                               (re-find #"[^0]" hours-log)
+                               hours-log)
+         new-time (+ time-to-be-added (read-string (processed-hours-log)))
          hours (if (> new-time 12) (- new-time 12) new-time)
          compare-time (str (if ( < hours 10) (str "0" hours)
-                               hours)(re-find #":\d+:\d+" log-timestamp))]
+                                         hours)(re-find #":\d+:\d+" log-timestamp))]
       (tasks/ui click :about)
       (tasks/ui waittillwindowexist :about-dialog 10)
-      (verify ( = compare-time (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check))))
-      (tasks/ui click :close-about-dialog))
+      (verify ( = compare-time (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check)))))
     (finally
-     (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
-     ;; Worstcase scenario if service rhsmcertd is stopped we have to
-     ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
-     (if (= (get-release) "RHEL7")
-       (if-not (substring? "Active: active (running)"
-                           (:stdout (run-command "systemctl status rhsmcertd.service")))
-         (do
-           (run-command "systemctl start rhsmcertd.service")
-           (sleep 150000)))
-       (if-not (substring? "running"
-                           (:stdout (run-command "service rhsmcertd status")))
-         (do
-           (run-command "service rhsmcertd start")
-           (sleep 150000)))))))
+      (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
+      ;; Worstcase scenario if service rhsmcertd is stopped we have to
+      ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
+      (if (= (get-release) "RHEL7")
+        (if-not (substring? "Active: active (running)"
+                            (:stdout (run-command "systemctl status rhsmcertd.service")))
+          (do
+            (run-command "systemctl start rhsmcertd.service")
+            (sleep 150000)))
+        (if-not (substring? "running"
+                            (:stdout (run-command "service rhsmcertd status")))
+          (do
+            (run-command "service rhsmcertd start")
+            (sleep 150000)))))))
 
 (defn ^{Test {:groups ["system"
+                       "blockedByBug-1086377"
                        "blockedByBug-916666"]
-              :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]}}
+              :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]
+              :priority (int 31)}}
   rhsmcertd_stop_check_timestamp
   "Checks wheter the timestamp in about dialog is displayed when rhsmcertd is stopped"
   [_]
