@@ -124,6 +124,7 @@
           (finally
            (tasks/ui click :cancel-contract-selection)))
         (catch [:type :item-not-available] _)
+        (catch [:type :error-getting-subscription] _)
         (catch [:type :wrong-consumer-type]
             {:keys [log-warning]} (log-warning))))
 
@@ -240,7 +241,8 @@
     (catch [:type :item-not-available] _)
     (catch [:type :wrong-consumer-type]
         {:keys [log-warning]} (log-warning))
-    (catch [:type :contract-selection-not-available] _)))
+    (catch [:type :contract-selection-not-available] _)
+    (catch [:type :error-getting-subscription] _)))
 
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-755861"
@@ -408,6 +410,7 @@
                             1)
                   (get (get @contractlist subscription) contract)))))
     (catch [:type :contract-selection-not-available] _)
+    (catch [:type :error-getting-subscription] _)
     (finally (if (tasks/ui showing? :contract-selection-table)
                (tasks/ui click :cancel-contract-selection)))))
 
