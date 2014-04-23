@@ -35,6 +35,7 @@
                    :invalid-cert #"The following files are not valid certificates and were not imported"
                    :cert-does-not-exist #"The following certificate files did not exist"
                    :no-sla-available #"No service level will cover all installed products"
+                   :error-getting-subscription #"Pool is restricted to physical systems"
                    })
 
 (defn matching-error
@@ -398,6 +399,21 @@
                    :name item
                    :msg (str "Invalid item:" item)}))))))
 
+(defn unsubscribe
+  "Unsubscribes from a given subscription, s"
+  [s]
+  (ui selecttab :my-subscriptions)
+  (sleep 5000)
+  (if-not (ui rowexist? :my-subscriptions-view s)
+    (throw+ {:type :not-subscribed
+             :name s
+             :msg (str "Not found in 'My Subscriptions': " s)}))
+  (ui selectrow :my-subscriptions-view s)
+  (ui click :remove)
+  (ui waittillwindowexist :question-dialog 60)
+  (ui click :yes)
+  (checkforerror))
+
 (defn open-contract-selection
   "Opens the contract selection dialog for a given subscription."
   [s]
@@ -411,9 +427,12 @@
   (ui click :attach)
   (checkforerror)
   (if-not (bool (ui waittillwindowexist :contract-selection-dialog 5))
-    (throw+ {:type :contract-selection-not-available
-             :name s
-             :msg (str s " does not have multiple contracts.")})))
+    (do
+      (unsubscribe s)
+      (ui selecttab :all-available-subscriptions)
+      (throw+ {:type :contract-selection-not-available
+                 :name s
+                 :msg (str s " does not have multiple contracts.")}))))
 
 (defn subscribe
   "Subscribes to a given subscription, s."
@@ -464,21 +483,6 @@
            (ui click :attach-contract-selection)))
      (checkforerror)
      (wait-for-progress-bar)))
-
-(defn unsubscribe
-  "Unsubscribes from a given subscription, s"
-  [s]
-  (ui selecttab :my-subscriptions)
-  (sleep 5000)
-  (if-not (ui rowexist? :my-subscriptions-view s)
-    (throw+ {:type :not-subscribed
-             :name s
-             :msg (str "Not found in 'My Subscriptions': " s)}))
-  (ui selectrow :my-subscriptions-view s)
-  (ui click :remove)
-  (ui waittillwindowexist :question-dialog 60)
-  (ui click :yes)
-  (checkforerror))
 
 (defn subscribe_all
   "Subscribes to everything available"
@@ -752,4 +756,3 @@
                                               (filter stacking-id? stacking-map))))
        stackable-pems (map (fn [i] (get prod-pem-file-map i)) stackable-prods)]
     stackable-pems))
-

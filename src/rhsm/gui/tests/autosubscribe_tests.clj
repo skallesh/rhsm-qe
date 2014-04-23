@@ -133,7 +133,8 @@
 (defn ^{Test {:groups ["autosubscribe"
                        "acceptance"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
-                       "blockedByBug-857147"]}}
+                       "blockedByBug-857147"]
+              :priority (int 100)}}
   simple_autosubscribe
   "Tests simple autosubscribe when all products can be covered by one service level."
   [_]
@@ -167,7 +168,8 @@
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
                        "blockedByBug-921245"]
-              :dependsOnMethods ["simple_autosubscribe"]}}
+              :dependsOnMethods ["simple_autosubscribe"]
+              :priority (int 101)}}
   assert_service_level
   "Asserts that the service level was set system wide after simple autosubscribe."
   [_]
@@ -249,7 +251,7 @@
     (tasks/ui waittillwindowexist :register-dialog 80)
     (tasks/ui click :register-dialog (clojure.string/capitalize(first @sla-list)))
     (tasks/ui click :register)
-    (verify (tasks/ui showing? :register-dialog "Select Service Level"))
+    (verify (tasks/ui showing? :register-dialog "Confirm Subscriptions"))
     (let [values (into [] (tasks/get-table-elements :auto-attach-subscriptions-table 1))
           phy-virt? (fn [val]
                       (not (or (= (.toLowerCase val) "virtual")
@@ -282,7 +284,7 @@
         (sleep 3000)
         (tasks/ui click :register)
         (tasks/ui waittillwindownotexist :register-dialog 80)))
-    (verify (= 1 (tasks/ui guiexist :main-window "System is properly subscribed*")))
+    (verify (substring? "System is properly subscribed" (tasks/ui gettextvalue :overall-status)))
     (finally
      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
      (tasks/unregister))))

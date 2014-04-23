@@ -170,7 +170,7 @@
     </groups>
   </test>
 
-<test name="GUI: Repo">
+  <test name="GUI: Repo">
     <packages>
       <package name="rhsm.gui.tests" />
       <package name="rhsm.base"></package>

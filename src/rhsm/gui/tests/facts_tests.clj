@@ -167,16 +167,17 @@
           cli-releases  (if (clojure.string/blank? stdout)
                           []
                           (drop 3 (split-lines stdout)))
-          expected-releases (sort (conj cli-releases "Not Set"))]
+          expected-releases (into [] (sort (conj cli-releases "Not Set")))]
       (tasks/ui click :preferences)
       (tasks/ui waittillwindowexist :system-preferences-dialog 10)
       (tasks/ui showlist :release-dropdown)
-      (let [gui-releases (sort (tasks/ui listsubmenus :release-dropdown))]
-        (verify (= expected-releases gui-releases))
+      (sleep 2000)
+      (let [gui-releases (into [] (sort (tasks/ui listsubmenus :release-dropdown)))]
+        (verify (bash-bool (compare expected-releases gui-releases)))
         (verify (not (nil? (some #{"Not Set"} gui-releases))))))
-    (finally (if (bool (tasks/ui guiexist :system-preferences-dialog))
-               (tasks/ui click :close-system-prefs))
-             (tasks/unsubscribe_all))))
+    (finally (tasks/unsubscribe_all)
+             (if (bool (tasks/ui guiexist :system-preferences-dialog))
+               (tasks/ui click :close-system-prefs)))))
 
 (defn ^{Test {:groups ["acceptance"]}}
   check_releases
@@ -224,8 +225,13 @@
                 (run-command "subscription-manager attach --auto"))
         not-blank? (fn [s] (not (blank? s)))
         raw-cli-data (filter not-blank? (drop 1 (split-lines output)))
+        status (fn [s] (re-find #"Status.*" s))
+        products (fn [s] (re-find #"Product Name.*" s))
         grab-value (fn [item] (trim (last (split item #":"))))
-        cli-data (apply hash-map (map grab-value raw-cli-data))]
+        not-nil? (fn [s] (not (nil? s)))
+        list-status (into [] (map grab-value (filter not-nil? (map status raw-cli-data))))
+        list-products (into [] (map grab-value (filter not-nil? (map products raw-cli-data))))
+        cli-data (zipmap list-products list-status)]
     (reset! productstatus cli-data)))
 
 (defn ^{Test {:groups ["facts"

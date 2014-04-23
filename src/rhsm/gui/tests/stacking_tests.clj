@@ -98,6 +98,7 @@
   setup [_]
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
+    (tasks/restart-app :reregister? true)
     (if (bash-bool (:exitcode (run-command (str "test -d " stacking-dir))))
       (run-command (str "rm -rf " stacking-dir)))
     (run-command (str "mkdir " stacking-dir))
