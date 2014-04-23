@@ -92,6 +92,7 @@
   (when (@config :ssh-timeout)
     (.setEmergencyTimeout @noauth-proxyrunner (Long/valueOf (@config :ssh-timeout))))
   ;; command runner to run ssh commands on the candlepin server
+  ;; *******  This can be used only against Standalone Candlepin and against Stage  ******* 
   (comment
   (reset! candlepin-runner (SSHCommandRunner. (@config :server-hostname)
                                               (@config :ssh-user)
