@@ -97,8 +97,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			log.warning("While bug '"+bugId+"' is open, skip assertion that the actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
 		} else
 		// END OF WORKAROUND
-		// assert that the pool's list of Provides matches the list of bundled product names after implementation of Bug 996993 - [RFE] Search for or list matching providedProducts
-		Assert.assertTrue(bundledProductNames.containsAll(pool.provides) && pool.provides.containsAll(bundledProductNames), "The actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
+		// assert that the pool's list of Provides matches the list of bundled product names after implementation of Bug 996993 - [RFE] Search for or list matching providedProducts; subscription-manager commit b8738a74c1109975e387fc51105c8ff58eaa8f01
+		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.provides!=null) {
+			Assert.assertTrue(bundledProductNames.containsAll(pool.provides) && pool.provides.containsAll(bundledProductNames), "The actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
+		}
 		
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
 		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -120,8 +122,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// adjust quantity for instance_multiplier pools
 		String instance_multiplier = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier");
 		String quantity = null;
-		if (pool.suggested<1 && instance_multiplier!=null) {
-			quantity = instance_multiplier;
+		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) {
+			if (pool.suggested<1 && instance_multiplier!=null) {
+				quantity = instance_multiplier;
+			}
 		}
 		
 		// subscribe to the pool
@@ -138,15 +142,21 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert that the quantityUsed matches the quantitySuggested after implementation of Bug 1008647 - [RFE] bind requests that do not specify a quantity should automatically use the quantity needed to achieve compliance
 		if (quantity!=null) {
 			Assert.assertEquals(consumedProductSubscription.quantityUsed, Integer.valueOf(quantity), "When the attachment quantity '"+quantity+"' is specified, the quantity used from the consumed product subscription should match.");		
-		} else if (pool.suggested > 1) {
-			Assert.assertEquals(consumedProductSubscription.quantityUsed, pool.suggested, "When the suggested consumption quantity '"+pool.suggested+"' from the available pool is greater than one, the quantity used from the consumed product subscription should match.");
 		} else {
-			Assert.assertEquals(consumedProductSubscription.quantityUsed, Integer.valueOf(1), "When the suggested consumption quantity '"+pool.suggested+"' from the available pool is NOT greater than one, the quantity used from the consumed product subscription should be one.");
+			/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) {
+				if (pool.suggested > 1) {
+					Assert.assertEquals(consumedProductSubscription.quantityUsed, pool.suggested, "When the suggested consumption quantity '"+pool.suggested+"' from the available pool is greater than one, the quantity used from the consumed product subscription should match.");
+				} else {
+					Assert.assertEquals(consumedProductSubscription.quantityUsed, Integer.valueOf(1), "When the suggested consumption quantity '"+pool.suggested+"' from the available pool is NOT greater than one, the quantity used from the consumed product subscription should be one.");
+				}
+			}
 		}
 		
 		// assert that the System Type matches between the available pool and the consumed product subscription after implementation of Bug 1009600 - Show System Type in list --consumed; Show System Type in attach confirmation gui dialog.
-		Assert.assertEquals(consumedProductSubscription.machineType, pool.machineType, "After subscribing from a pool with a machine type '"+pool.machineType+"', the consumed product subscription's machine type should match.");
-
+		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (consumedProductSubscription.machineType!=null) {
+			Assert.assertEquals(consumedProductSubscription.machineType, pool.machineType, "After subscribing from a pool with a machine type '"+pool.machineType+"', the consumed product subscription's machine type should match.");
+		}
+		
 		// assert that the consumed product subscription provides all the expected bundled products.
 		Assert.assertTrue(consumedProductSubscription.provides.containsAll(bundledProductNames)&&bundledProductNames.containsAll(consumedProductSubscription.provides),"The consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
 		

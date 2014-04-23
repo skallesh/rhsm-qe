@@ -34,7 +34,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 	public String serviceLevel;
 	public String serviceType;
 	public List<String> statusDetails;
-	public String machineType;	// added by bug 1009600 - Show System Type in list --consumed
+	public String machineType;	// added by bug 1009600 - Show System Type in list --consumed; subscription-manager commit 61b8098164c8abfd568c06250097ab12e302da02
 	public String poolId;		// added by bug 908671 // Including the pool ID in the certificate required a change to Candlepin.  If the pool ID is not present in the entitlement certificate, subscription-manager will report the pool ID as "Not Available".
 	public String subscriptionType;	// added by bug 1029968 - [RFE] request for new subscription-manager list installed/consumed field called "Subscription Type"
 
