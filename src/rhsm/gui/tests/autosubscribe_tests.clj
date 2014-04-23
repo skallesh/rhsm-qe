@@ -133,7 +133,8 @@
 (defn ^{Test {:groups ["autosubscribe"
                        "acceptance"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
-                       "blockedByBug-857147"]}}
+                       "blockedByBug-857147"]
+              :priority (int 100)}}
   simple_autosubscribe
   "Tests simple autosubscribe when all products can be covered by one service level."
   [_]
@@ -167,7 +168,8 @@
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
                        "blockedByBug-921245"]
-              :dependsOnMethods ["simple_autosubscribe"]}}
+              :dependsOnMethods ["simple_autosubscribe"]
+              :priority (int 101)}}
   assert_service_level
   "Asserts that the service level was set system wide after simple autosubscribe."
   [_]
