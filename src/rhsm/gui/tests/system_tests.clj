@@ -895,6 +895,26 @@
     (finally
       (tasks/unsubscribe_all))))
 
+(defn try-catch-helper [sub]
+  (try
+    (tasks/subscribe sub)
+    (catch Exception e
+      (substring? "Error getting subscription:" (.getMessage e)))))
+
+(defn ^{Test {:groups ["system"]}}
+  check_physical_only_pools
+  "Identifies physical only pools from JSON and checks
+   whether it throws appropriate error message"
+  [_]
+  (let [prod-attr-map (ctasks/build-subscription-attr-type-map :all? true)
+        phy-only? (fn [v] (if (not (nil? (re-find #"physical_only" v)))
+                           true false))
+        filter-product (fn [m] (if (not (empty? (filter phy-only? (val m)))) (key m)))
+        subscriptions (into [] (filter string? (map filter-product prod-attr-map)))]
+    (tasks/search :match-system? false :do-not-overlap? false)
+    (for [x subscriptions]
+      (verify (try-catch-helper x)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      DATA PROVIDERS      ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
