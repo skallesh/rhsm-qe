@@ -325,7 +325,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(true,"Migration productCert '"+productCert.file+"' supports this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 				numberOfMigrationProductCertsSupportingThisRelease++;
 			} else {
-				log.warning("Migration productCert '"+productCert.file+"' providesTags '"+productCert.productNamespace.providedTags+"' version '"+productCert.version+"' does NOT support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
+				log.warning("Migration productCert '"+productCert.file+"' providesTags '"+productCert.productNamespace.providedTags+"' version '"+productCert.productNamespace.version+"' does NOT support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 			}
 		}
 		Assert.assertTrue(numberOfMigrationProductCertsSupportingThisRelease>0,"At least one 'actual="+numberOfMigrationProductCertsSupportingThisRelease+"' migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
