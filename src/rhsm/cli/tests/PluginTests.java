@@ -808,7 +808,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		String quantity = null; if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
+		String quantity = null;
+		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
 		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null);
 		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
@@ -937,8 +938,19 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client,"cat "+backupProductIdJsonFile+" > "+clienttasks.productIdJsonFile, Integer.valueOf(0));
 		clienttasks.yumClean("all");
 	}
-
-
+	
+	@BeforeClass(groups="setup")
+	protected void initializeSlotsBeforeClass() {
+		if (clienttasks==null) return;
+		slots.add("pre_register_consumer");		slots.add("post_register_consumer");
+		slots.add("pre_product_id_install");	slots.add("post_product_id_install");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.11.1-1")) {
+		slots.add("pre_product_id_update");		slots.add("post_product_id_update");	// added by bug https://bugzilla.redhat.com/show_bug.cgi?id=1035115#c13; subscription-manager commit 9ee2f98ece8e1f86ed6fa22ee847c8df9814f792
+		}
+		slots.add("pre_subscribe");				slots.add("post_subscribe");
+		slots.add("pre_auto_attach");			slots.add("post_auto_attach");
+		/*slots.add("pre_facts_collection");*/	slots.add("post_facts_collection");
+	}
 	
 	// Protected methods ***********************************************************************
 
@@ -946,13 +958,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	protected String pluginDir = null;
 	protected String pluginConfDir = null;
 	protected List<Plugin> installedPlugins = new ArrayList<Plugin>();
-	final protected List<String> slots = Arrays.asList(
-			"pre_register_consumer",	"post_register_consumer",
-			"pre_product_id_install",	"post_product_id_install",
-			"pre_product_id_update",	"post_product_id_update",	// added by bug https://bugzilla.redhat.com/show_bug.cgi?id=1035115#c13
-			"pre_subscribe",			"post_subscribe",
-			"pre_auto_attach",			"post_auto_attach",
-			/*"pre_facts_collection",*/"post_facts_collection");
+	protected List<String> slots = new ArrayList<String>();
 	
 	
 	// data object representing an installed plugin
