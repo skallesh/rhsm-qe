@@ -192,8 +192,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// adjust quantity for instance_multiplier pools
 		String instance_multiplier = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier");
 		String quantity = null;
-		if (pool.suggested<1 && instance_multiplier!=null) {
-			quantity = instance_multiplier;
+		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) {
+			if (pool.suggested<1 && instance_multiplier!=null) {
+				quantity = instance_multiplier;
+			}
 		}
 		
 		// subscribe to the pool and get the EntitlementCert
