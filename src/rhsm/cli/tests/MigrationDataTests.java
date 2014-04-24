@@ -116,7 +116,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify RHEL4 channel mappings exist in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","blockedByBug-1009932","blockedByBug-1025338"},
+			groups={"AcceptanceTests","blockedByBug-1009932","blockedByBug-1025338","blockedByBug-1080072"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -307,7 +307,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338"},
+			groups={"AcceptanceTests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
@@ -595,8 +595,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)), productBaselineProductId,
 				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productBaselineRhnChannel+"' to the same productId as dictated in the CDN Product Baseline.");
 	}
-	@Test(	description="Verify that all of the required RHN Channels in the ProductCerts file are accounted for in channel-cert-mapping.txt",
-			groups={"blockedByBug-1025338"},
+	@Test(	description="Verify that all of the required RHN Channels in the product-certs.json file are accounted for in channel-cert-mapping.txt",
+			groups={"blockedByBug-1025338","blockedByBug-1080072"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnChannelFromProductCertsData",
 			enabled=true) // Starting in RHEL65, we are moving away from product-baseline.json and replacing it with product-certs.json
@@ -715,7 +715,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all of the classic RHN Channels available to a classically registered consumer are accounted for in the in the channel-cert-mapping.txt or is a known exception",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-1080072"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="getRhnClassicBaseAndAvailableChildChannelsData",
 			enabled=true)
