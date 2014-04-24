@@ -454,7 +454,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	    //Assert.assertEquals(client.getStderr().trim(),"","Stderr from prior command");	// changed by Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.
 //	    String expectedStderr = "This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.";
 //	    Assert.assertTrue(client.getStderr().contains(expectedStderr),"Stderr from prior command should show subscription-manager plugin warning '"+expectedStderr+"'.  See https://bugzilla.redhat.com/show_bug.cgi?id=901612 ");	// 901612 was reverted by 1017354
-	    Assert.assertEquals(client.getStdout()+client.getStderr().trim(),"","Stdout+Stderr from prior command should be blank due to --quiet option.");	// Bug 1017969 - subscription manager plugin ignores yum --quiet
+	    if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.12-1")) {	// Bug 1017354 - yum subscription-manager plugin puts non-error information on stderr; subscription-manager commit 39eadae14eead4bb79978e52d38da2b3e85cba57
+	    	Assert.assertEquals(client.getStdout()+client.getStderr().trim(),"","Stdout+Stderr from prior command should be blank due to --quiet option.");	// Bug 1017969 - subscription manager plugin ignores yum --quiet
+	    }
 	    Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to exist after unregistering.");
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside '"+clienttasks.redhatRepoFile+"' after unregistering.");
@@ -466,8 +468,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	    client.runCommandAndWait("yum --quiet repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 	    //Assert.assertTrue(client.getStderr().contains("Unable to read consumer identity"),"Yum repolist should not touch redhat.repo when there is no consumer and state in stderr 'Unable to read consumer identity'.");	// TODO 8/9/2012 FIND OUT WHAT BUG CAUSED THIS CHANGE IN EXPECTED STDERR
 	    //Assert.assertEquals(client.getStderr().trim(),"","Stderr from prior command");	// changed by Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.
-//	    Assert.assertTrue(client.getStderr().contains(expectedStderr),"Stderr from prior command should show subscription-manager plugin warning '"+expectedStderr+"'.  See https://bugzilla.redhat.com/show_bug.cgi?id=901612 ");	// 901612 was reverted by 1017354
-	    Assert.assertEquals(client.getStdout()+client.getStderr().trim(),"","Stdout+Stderr from prior command should be blank due to --quiet option.");	// Bug 1017969 - subscription manager plugin ignores yum --quiet
+//		Assert.assertTrue(client.getStderr().contains(expectedStderr),"Stderr from prior command should show subscription-manager plugin warning '"+expectedStderr+"'.  See https://bugzilla.redhat.com/show_bug.cgi?id=901612 ");	// 901612 was reverted by 1017354
+	    if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.12-1")) {	// Bug 1017354 - yum subscription-manager plugin puts non-error information on stderr; subscription-manager commit 39eadae14eead4bb79978e52d38da2b3e85cba57
+	    	Assert.assertEquals(client.getStdout()+client.getStderr().trim(),"","Stdout+Stderr from prior command should be blank due to --quiet option.");	// Bug 1017969 - subscription manager plugin ignores yum --quiet
+	    }
 		String redhatRepoFileContents2 = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsMatch(redhatRepoFileContents2,regex,null,"File "+clienttasks.redhatRepoFile+" is still infiltrated with excessive blank lines.");
 		Assert.assertEquals(redhatRepoFileContents2, redhatRepoFileContents,"File "+clienttasks.redhatRepoFile+" remains unchanged when there is no consumer.");
