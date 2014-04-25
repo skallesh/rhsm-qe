@@ -32,6 +32,7 @@
 (def CAcertpath "/etc/rhsm/ca/")
 (def unreg-status "Keep your system up to date by registering.")
 
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
   (try
@@ -895,25 +896,54 @@
     (finally
       (tasks/unsubscribe_all))))
 
-(defn try-catch-helper [sub]
-  (try
-    (tasks/subscribe sub)
-    (catch Exception e
-      (substring? "Error getting subscription:" (.getMessage e)))))
+(comment
 
-(defn ^{Test {:groups ["system"]}}
-  check_physical_only_pools
-  "Identifies physical only pools from JSON and checks
+  (defn try-catch-helper [sub]
+    (try
+      (tasks/subscribe sub)
+      (catch Exception e
+        (substring? "Error getting subscription:" (.getMessage e)))))
+
+  (defn ^{Test {:groups ["system"]}}
+    check_physical_only_pools
+    "Identifies physical only pools from JSON and checks
    whether it throws appropriate error message"
-  [_]
-  (let [prod-attr-map (ctasks/build-subscription-attr-type-map :all? true)
-        phy-only? (fn [v] (if (not (nil? (re-find #"physical_only" v)))
-                           true false))
-        filter-product (fn [m] (if (not (empty? (filter phy-only? (val m)))) (key m)))
-        subscriptions (into [] (filter string? (map filter-product prod-attr-map)))]
-    (tasks/search :match-system? false :do-not-overlap? false)
-    (for [x subscriptions]
-      (verify (try-catch-helper x)))))
+    [_]
+    (tasks/unsubscribe_all)
+    (tasks/restart-app :reregister? true)
+    (let [cli-cmd (:stdout
+                   (run-command "subscription-manager facts --list | grep \"virt.is_guest\""))
+          virt? (trim (re-find #" .*" cli-cmd))
+          prod-attr-map (ctasks/build-subscription-attr-type-map :all? true)
+          phy-only? (fn [v] (if (not (nil? (re-find #"physical_only" v)))
+                             true false))
+          filter-product (fn [m] (if (not (empty? (filter phy-only? (val m)))) (key m)))
+          subscriptions (into [] (filter string? (map filter-product prod-attr-map)))]
+      (try
+                                        ;(reset! virt-value virt?)
+        (tasks/write-facts "{\"virt.is_guest\": \"True\"}")
+        (run-command "subscription-manager facts --update")
+        (tasks/ui click :view-system-facts)
+        (tasks/ui click :update-facts)
+
+        (tasks/ui click :close-facts)
+        (sleep 5000)
+                                        ;(print subscriptions)
+                                        ;(tasks/restart-app)
+                                        ;(print subscriptions)
+        (comment
+                                        ;(tasks/restart-app)
+          )
+        (tasks/search :match-system? false :do-not-overlap? false)
+        (tasks/checkforerror)
+        (for [x subscriptions]
+          (verify (try-catch-helper x)))
+        (finally
+          (tasks/write-facts (str "{\"virt.is_guest\":" \space "\"" virt? "\"" "}"))
+          (run-command "subscription-manager facts --update")
+          (tasks/unsubscribe_all)
+          (tasks/restart-app)
+          )))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      DATA PROVIDERS      ;;
