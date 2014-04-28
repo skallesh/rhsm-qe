@@ -46,13 +46,14 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * Dec  4 14:23:59 jsefler-7 systemd: brandbot.service start request repeated too quickly, refusing to start.
  * Dec  4 14:23:59 jsefler-7 systemd: Unit brandbot.service entered failed state.
  */
-@Test(groups = { "BrandingTests" })
+@Test(groups = {"BrandingTests"})
 public class BrandingTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="assert that brandbot service is running",
 			groups={"AcceptanceTests"},
 			enabled=false)	// TODO not sure how this works... the status of this service is inactive, yet it appears to be automatically started/stopped as needed NEEDINFO from notting
 	public void BrandbotServiceShouldBeRunning_Test() {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
 		RemoteFileTasks.runCommandAndAssert(client, "systemctl is-active brandbot.service", Integer.valueOf(0), "^active$", null);
 	}
 	
@@ -203,8 +204,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-1031490"},
 			enabled=true)
 	public void BrandbotShouldHandleMultiLineBrandingFile_Test() {
-		String actualBrandName,actualPrettyName;
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
 		
+		String actualBrandName,actualPrettyName;
 		log.info("Testing a single line branding file...");
 		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL/Branded OS (line 1)' > "+brandingFile, 0);
@@ -227,8 +229,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			enabled=true)
 	public void BrandbotShouldTrimWhiteSpaceFromBrandingFile_Test() {
-		String actualBrandName,actualPrettyName;
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
 		
+		String actualBrandName,actualPrettyName;
 		log.info("Testing a single line branding file with leading and trailing white space...");
 		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		RemoteFileTasks.runCommandAndAssert(client, "echo '  RHEL-x.y Branded OS  ' > "+brandingFile, 0);
@@ -243,6 +246,8 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			enabled=true)
 	public void BrandbotShouldHandleNonExistantBrandingFile_Test() {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
+		
 		//	> If /var/lib/rhsm/branded_name is removed, what should PRETTY_NAME be? In
 		//	> initscripts-9.49.11-1.el7.x86_64 it retains its prior value before the
 		//	> branded_name was removed.  I don't know if that is correct.
@@ -251,7 +256,6 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		//	Bill
 				
 		String actualBrandName,actualPrettyName;
-		
 		log.info("Testing a single line branding to make sure PRETTY_NAME exists before testing the non-existant branding file...");
 		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL Branded OS' > "+brandingFile, 0);
@@ -274,6 +278,8 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-1031490"},
 			enabled=true)
 	public void BrandbotShouldHandleEmptyBrandingFile_Test() {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
+		
 		//	> If /var/lib/rhsm/branded_name is an empty file, what should PRETTY_NAME
 		//	> be?  In initscripts-9.49.11-1.el7.x86_64 PRETTY_NAME is removed from
 		//	> /etc/os-release.  I think it should be PRETTY_NAME = "".
@@ -290,7 +296,6 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		//	Bill
 		
 		String actualBrandName,actualPrettyName;
-		
 		log.info("Testing an empty branding file...");
 		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
 		RemoteFileTasks.runCommandAndAssert(client, "rm -f "+brandingFile+" && touch "+brandingFile, 0);
@@ -383,6 +388,10 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	 * @return the value of PRETTY_NAME from /etc/os-release which is under the control of /usr/lib/systemd/system/brandbot.service (owned by package initscripts); null if not found
 	 */
 	String getCurrentPrettyName() {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
+			log.warning("Brandbot and the setting of PRETTY_NAME in '"+osReleaseFile+"' is a feature of Flexible Branding in RHEL7.  Skipping the retrieval of PRETTY_NAME."); 
+			return null;
+		}
 		//	[root@jsefler-7 ~]# cat /etc/os-release
 		//	NAME="Red Hat Enterprise Linux Server"
 		//	VERSION="7.0 (Maipo)"
@@ -467,18 +476,20 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// verify that /usr/sbin/brandbot has updated PRETTY_NAME in /etc/os-release
-		String actualPrettyNameAfterSubscribing = getCurrentPrettyName();
-		if (expectedBrandNameAfterSubscribing!=null) {
-			if (expectedBrandNameAfterSubscribing.isEmpty()) {
-				// see BrandbotShouldHandleEmptyBrandingFile_Test
-				Assert.assertNull(actualPrettyNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should be removed when the first line of the brand file '"+brandingFile+"' is empty after "+afterEventDescription+".");
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) {
+			String actualPrettyNameAfterSubscribing = getCurrentPrettyName();
+			if (expectedBrandNameAfterSubscribing!=null) {
+				if (expectedBrandNameAfterSubscribing.isEmpty()) {
+					// see BrandbotShouldHandleEmptyBrandingFile_Test
+					Assert.assertNull(actualPrettyNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should be removed when the first line of the brand file '"+brandingFile+"' is empty after "+afterEventDescription+".");
+				} else {
+					Assert.assertEquals(actualPrettyNameAfterSubscribing, expectedBrandNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should match the first line of the brand file '"+brandingFile+"' after "+afterEventDescription+".");
+				}
 			} else {
-				Assert.assertEquals(actualPrettyNameAfterSubscribing, expectedBrandNameAfterSubscribing, "The PRETTY_NAME in '"+osReleaseFile+"' governed by /usr/lib/systemd/system/brandbot.service should match the first line of the brand file '"+brandingFile+"' after "+afterEventDescription+".");
+				// see BrandbotShouldHandleNonExistantBrandingFile_Test
+				Assert.assertEquals(actualPrettyNameAfterSubscribing,prettyNameBeforeEvent, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' should remain unchanged when the expected brand name is null after "+afterEventDescription+".");
 			}
-		} else {
-			// see BrandbotShouldHandleNonExistantBrandingFile_Test
-			Assert.assertEquals(actualPrettyNameAfterSubscribing,prettyNameBeforeEvent, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' should remain unchanged when the expected brand name is null after "+afterEventDescription+".");
-		}
+		} else log.warning("Brandbot and the setting of PRETTY_NAME in '"+osReleaseFile+"' is a feature of Flexible Branding in RHEL7.  Skipping assertions for expected PRETTY_NAME in '"+clienttasks.redhatRelease+"'.");
 		
 		return flexibleBrandedSubscriptionsFound;
 	}
