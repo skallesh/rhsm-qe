@@ -655,6 +655,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 										ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	successfulStdout/*"[a-f,0-9,\\-]{36} "+name*/,	null}));
 		name = "249_characters_678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
 										ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	successfulStdout/*"[a-f,0-9,\\-]{36} "+name*/,	null}));
+		name = "255_characters_678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345";
+										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"672233","1065369"}),	name,	Integer.valueOf(0),	successfulStdout/*"[a-f,0-9,\\-]{36} "+name*/,	null}));
 
 		// the tolerable characters has increased due to bugzilla 677405 and agilo task http://gibson.usersys.redhat.com/agilo/ticket/5235 (6.1) As an IT Person, I would like to ensure that user service and candlepin enforce the same valid character rules (QE); Developer beav "Christopher Duryee" <cduryee@redhat.com>
 		// https://bugzilla.redhat.com/show_bug.cgi?id=677405#c1
@@ -707,9 +709,12 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 
 		// names that are too long (>=250 chars)
+		if (false) {	// changed from 250 to 255 chars by candlepin commit a0db7c35f8d7ee71daeabaf39788b3f47206e0e0; 1065369: Use Hibernate Validation to supersede database error reporting.
 		name = "250_characters_6789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
 										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("672233"),	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
-
+		}
+		name = "256_characters_6789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456";
+										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"672233","1065369"}),	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
 
 		return ll;
 	}
