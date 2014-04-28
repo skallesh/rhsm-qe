@@ -1271,7 +1271,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), expiredServiceLevel, "After registering with an activation key containing a serviceLevel, the current service level is properly set.");
 		
 		// refresh the candlepin pools which will remove the availability of the expired pool
-		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, jobDetail,"FINISHED", 5*1000, 1);
 		
 		// register with the activation key - should fail because the expired pool was the only one that supported the expiredServiceLevel
 		SSHCommandResult result = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
@@ -1338,7 +1339,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			}
 			systemConsumerIds.clear();
 		}
-		clienttasks.restart_rhsmcertd(null,null,null);
+//debugTest		clienttasks.restart_rhsmcertd(null,null,null);
 	}
 
 	@BeforeClass(groups="setup")
