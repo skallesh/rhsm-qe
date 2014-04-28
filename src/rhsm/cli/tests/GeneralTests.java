@@ -170,8 +170,17 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		// It should have permissions 0700.
 		// http://people.redhat.com/sgrubb/files/stig-2011/stig-2011-checklist.html#item-SV-978r7_rule
 		
+		//	[root@jsefler-5 ~]# ls -l /etc/cron.daily/rhsmd
+		//	-rwx------ 1 root root 256 Apr 28 11:55 /etc/cron.daily/rhsmd
+		//
+		//	[root@jsefler-6 ~]# ls -l /etc/cron.daily/rhsmd
+		//	-rwx------. 1 root root 256 Oct 16  2013 /etc/cron.daily/rhsmd
+		//
+		//	[root@jsefler-7 ~]# ls -l /etc/cron.daily/rhsmd
+		//	-rwx------. 1 root root 256 Mar 25 13:19 /etc/cron.daily/rhsmd
+		
 		File cronDailyFile = new File("/etc/cron.daily/rhsmd");
-		RemoteFileTasks.runCommandAndAssert(client, "ls -l "+cronDailyFile, Integer.valueOf(0), "-rwx------\\. 1 root root .* "+cronDailyFile+"\\n", null);
+		RemoteFileTasks.runCommandAndAssert(client, "ls -l "+cronDailyFile, Integer.valueOf(0), "-rwx------\\.? 1 root root .* "+cronDailyFile+"\\n", null);
 	}
 	
 	
@@ -232,9 +241,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"m2crypto",
 					"python-iniparse",
-					"python-simplejson",
+					"python-simplejson",	// removed by bug 1006748
 					"rpm-python",
 			}));
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.5-1")) expectedRequiresList.remove("python-simplejson");	// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
 			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
 			return;
@@ -243,9 +253,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: m2crypto",
 					"manual: python-iniparse",
-					//"manual: python-simplejson",	// removed by bug 1006748
+					"manual: python-simplejson",	// removed by bug 1006748
 					"manual: rpm-python"
 			}));
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.5-1")) expectedRequiresList.remove("manual: python-simplejson");	// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -285,12 +296,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"python-dmidecode",
 					"python-ethtool",
 					"python-iniparse",
-					"python-simplejson",
+					"python-simplejson",	// removed by bug 1006748
 					"usermode",
 					"virt-what",
 					"yum >= 3.2.19-15"
 			}));
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.8.23-1"))	expectedRequiresList.add("python-rhsm >= 1.8.18-1");	// RHEL5.11
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.11.3-1"))	expectedRequiresList.add("python-rhsm >= 1.11.3-2");	// RHEL5.11
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.8.22-1"))	expectedRequiresList.add("python-rhsm >= 1.8.16-1");	// RHEL5.10
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.0.13-1"))	expectedRequiresList.add("python-rhsm >= 1.0.5");		// RHEL5.9
 			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -312,11 +324,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: python-dmidecode",
 					"manual: python-ethtool",
 					"manual: python-iniparse",
-					//"manual: python-simplejson",	// removed by bug 1006748
+					"manual: python-simplejson",	// removed by bug 1006748
 					"manual: usermode",
 					"manual: virt-what",
 					"manual: yum >= 3.2.19-15"
 			}));
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.9.2-1"))	expectedRequiresList.add("python-rhsm >= 1.9.1-1");		// RHEL6.5
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.8.12-1"))	expectedRequiresList.add("python-rhsm >= 1.8.13-1");	// RHEL6.4
 
@@ -339,11 +352,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: python-dmidecode",
 					"manual: python-ethtool",
 					"manual: python-iniparse",
-					//"manual: python-simplejson",	// removed by bug 1006748
+					"manual: python-simplejson",	// removed by bug 1006748
 					"manual: usermode",
 					"manual: virt-what",
 					"manual: yum >= 3.2.19-15"
 			}));
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.14-6"))	expectedRequiresList.add("python-rhsm >= 1.10.12-2");	// RHEL7.0	// Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1"))	expectedRequiresList.add("python-rhsm >= 1.10.9");		// RHEL7.0
 		}
