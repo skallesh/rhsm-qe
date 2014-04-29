@@ -126,21 +126,25 @@
                                         ; creating a traceback dumps the cache and this works for a quick fix
             fuckcache (fn [] (try+ (tasks/ui getchild "blah")
                                   (catch Exception e "")))]
-        (if (= "RHEL5" (get-release))
-          (do
-            (fuckcache)
-            (log/info (str "Items: " beforecount))
-            (fuckcache)))
+        (comment
+          (if (= "RHEL5" (get-release))
+            (do
+              (fuckcache)
+              (log/info (str "Items: " beforecount))
+              (fuckcache))))
         (exec-shortcut "<ESC>")
-        (tasks/ui waittillguinotexist window 10)
-        (exec-shortcut shortcut)
-        (tasks/ui waittillwindowexist window 10)
-        (if (= window :question-dialog)
-          (verify (tasks/ui showing? :question-dialog
-                            "Are you sure you want to unregister?")))
-        (sleep 3000)
-        (let [newcount (count-objects window)]
-          (verify (= beforecount newcount)))))))
+        (tasks/ui waittillguinotexist window)
+        (try
+          (exec-shortcut shortcut)
+          (tasks/ui waittillwindowexist window 10)
+          (if (= window :question-dialog)
+            (verify (tasks/ui showing? :question-dialog
+                              "Are you sure you want to unregister?")))
+          (sleep 3000)
+          (let [newcount (count-objects window)]
+            (verify (= beforecount newcount)))
+          (finally
+            (tasks/restart-app :unregister? true)))))))
 
 (data-driven
  check_escape_window {Test {:groups ["system"
@@ -379,14 +383,15 @@
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
   [_]
-  (tasks/restart-app :unregister? true)
+  (if-not (tasks/ui showing? :register-system)
+    (tasks/unregister))
   (tasks/ui click :main-window "System")
   (sleep 2000)
-  (verify (not (tasks/visible? :preferences)))
-  (tasks/restart-app :reregister? true)
+  (verify (not (some #(= "VISIBLE" %) (tasks/ui getallstates :preferences))))
+  (tasks/register-with-creds)
   (tasks/ui click :main-window "System")
   (sleep 2000)
-  (verify (tasks/visible? :preferences)))
+  (verify (some #(= "VISIBLE" %) (tasks/ui getallstates :preferences))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-977850"]}}
@@ -895,6 +900,31 @@
       (verify (> 4 (count status))))
     (finally
       (tasks/unsubscribe_all))))
+
+(defn ^{Test {:groups ["system"
+                       "acceptance"]}}
+    launch_gui_from_gnome
+    "Launches gui from gnome"
+    [_]
+    (try
+      (if (bool (tasks/ui guiexist :main-window))
+        (tasks/kill-app))
+      (sleep 3000)
+      (let [release (get-release)]
+        (case release
+          "RHEL5" (do
+                    (tasks/ui click "Top Panel" "Red Hat Subscription Manager")
+                    (sleep 5000)
+                    (verify (tasks/ui guiexist :main-window)))
+          "RHEL6" (do
+                    (tasks/ui click "frmTopExpandedEdgePanel" "Red Hat Subscription Manager")
+                    (tasks/ui activatewindow :main-window)
+                    (verify (tasks/ui guiexist :main-window)))
+
+          (throw (Exception. "Error: Release not identified"))))
+      (finally
+        (if (not (bool (tasks/ui guiexist :main-window)))
+          (tasks/start-app)))))
 
 (comment
 
