@@ -172,7 +172,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		
 		// attempt to create a very long "value" override
 		repoOverrideNameValueMap.clear();
-		repoOverrideNameValueMap.put("name", "value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456");
+		repoOverrideNameValueMap.put("param", "value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456");
 		result = clienttasks.repo_override_(null, null, "label", null, repoOverrideNameValueMap, null, null, null);
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo1 --add=param_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456:value
 		//	Runtime Error Could not execute JDBC batch update at org.postgresql.jdbc2.AbstractJdbc2Statement$BatchResultHandler.handleError:2,598
@@ -182,11 +182,12 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a value exceeding 255 chars.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add a repo-override with a value exceeding 255 chars.");
 		//Assert.assertEquals(result.getStdout().trim(), "Name and value of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");	// stdout changed by candlepin commit 8a3a1da251673408fc630db35b455cd805b03315
-		Assert.assertEquals(result.getStdout().trim(), "Name, value, and label of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");
+		//Assert.assertEquals(result.getStdout().trim(), "Name, value, and label of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");	// stdout changed by candlepin commit a0db7c35f8d7ee71daeabaf39788b3f47206e0e0; 1065369: Use Hibernate Validation to supersede database error reporting.
+		Assert.assertEquals(result.getStdout().trim(), "value: size must be between 0 and 255", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");
 		
 		// attempt to create a very long parameter "name" override
 		repoOverrideNameValueMap.clear();
-		repoOverrideNameValueMap.put("name_67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456", "value");
+		repoOverrideNameValueMap.put("param_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456", "value");
 		result = clienttasks.repo_override_(null, null, "label", null, repoOverrideNameValueMap, null, null, null);
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo1 --add=param:value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456
 		//	Runtime Error Batch entry 0 update cp_consumer_content_override set created='2013-12-09 11:03:23.169000 -05:00:00', updated='2013-12-09 11:04:42.821000 -05:00:00', consumer_id='8a90874042bf59cd0142c9fe0de12d1c', content_label='repo1', name='param', value='value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456' where id='8a90874042bf59cd0142d81941a1401a' was aborted.  Call getNextException to see the cause. at org.postgresql.jdbc2.AbstractJdbc2Statement$BatchResultHandler.handleError:2,598
@@ -196,17 +197,20 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a name exceeding 255 chars.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add a repo-override with a name exceeding 255 chars.");
 		//Assert.assertEquals(result.getStdout().trim(), "Name and value of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a name exceeding 255 chars.");	// stdout changed by candlepin commit 8a3a1da251673408fc630db35b455cd805b03315
-		Assert.assertEquals(result.getStdout().trim(), "Name, value, and label of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a name exceeding 255 chars.");
-		
+		//Assert.assertEquals(result.getStdout().trim(), "Name, value, and label of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a name exceeding 255 chars.");
+		Assert.assertEquals(result.getStdout().trim(), "name: size must be between 0 and 255", "Stdout from an attempt to add a repo-override with a name exceeding 255 chars.");
+
 		// attempt to create a very long "label" override
 		repoOverrideNameValueMap.clear();
-		repoOverrideNameValueMap.put("name", "value");
+		repoOverrideNameValueMap.put("param", "value");
 		result = clienttasks.repo_override_(null, null, "label_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456", null, repoOverrideNameValueMap, null, null, null);
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo_67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456 --add=param:value
 		//	Name, value, and label of the override must not exceed 255 characters.
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a label exceeding 255 chars.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add a repo-override with a label exceeding 255 chars.");
-		Assert.assertEquals(result.getStdout().trim(), "Name, value, and label of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a label exceeding 255 chars.");
+		//Assert.assertEquals(result.getStdout().trim(), "Name, value, and label of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a label exceeding 255 chars.");
+		Assert.assertEquals(result.getStdout().trim(), "contentLabel: size must be between 0 and 255", "Stdout from an attempt to add a repo-override with a label exceeding 255 chars.");
+
 	}
 	
 	@Test(	description="attempt to add an override to a non-existant repo (while NOT consuming entitlements)",
