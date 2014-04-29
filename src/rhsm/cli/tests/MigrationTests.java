@@ -2162,17 +2162,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.redhatReleaseX.equals("7")) return ll;
 		
 		// REFRENCE DATA FROM: http://linuxczar.net/articles/rhel-installation-numbers
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("790217"),	"0000000e0017fc01"}));	// Client
-		ll.add(Arrays.asList(new Object[]{null,							"000000990007fc02"}));	// Red Hat Global Desktop
-		ll.add(Arrays.asList(new Object[]{null,							"000000e90007fc00"}));	// Server
-		ll.add(Arrays.asList(new Object[]{null,							"00000065000bfc00"}));	// Server with Cluster
-		ll.add(Arrays.asList(new Object[]{null,							"000000ab000ffc00"}));	// Server with ClusterStorage
-		ll.add(Arrays.asList(new Object[]{null,							"000000e30013fc00"}));	// Server with HPC
-		ll.add(Arrays.asList(new Object[]{null,							"000000890017fc00"}));	// Server with Directory
-		ll.add(Arrays.asList(new Object[]{null,							"00000052001bfc00"}));	// Server with SMB
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1092754","790217"}),	"0000000e0017fc01"}));	// Client
+		ll.add(Arrays.asList(new Object[]{null,													"000000990007fc02"}));	// Red Hat Global Desktop
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1092754"}),			"000000e90007fc00"}));	// Server
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1092754"}),			"00000065000bfc00"}));	// Server with Cluster
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1092754"}),			"000000ab000ffc00"}));	// Server with ClusterStorage
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1092754"}),			"000000e30013fc00"}));	// Server with HPC
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1092754"}),			"000000890017fc00"}));	// Server with Directory
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1092754"}),			"00000052001bfc00"}));	// Server with SMB
 
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("790217"),	"000000a4004ffc01"}));	// Product: RHEL Client   Options: Basic FullProd Workstation  {'Workstation': 'Workstation', 'Base': 'Client'}
-		ll.add(Arrays.asList(new Object[]{null,							"000000870003fc01"}));	// Product: RHEL Client   Options: NoSLA FullProd  {'Base': 'Client'}
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1092754","790217"}),	"000000a4004ffc01"}));	// Product: RHEL Client   Options: Basic FullProd Workstation  {'Workstation': 'Workstation', 'Base': 'Client'}
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1092754"}),			"000000870003fc01"}));	// Product: RHEL Client   Options: NoSLA FullProd  {'Base': 'Client'}
 		return ll;
 	}
 	
