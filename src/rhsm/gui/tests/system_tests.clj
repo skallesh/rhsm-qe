@@ -927,7 +927,7 @@
         (tasks/ui click :update-facts)
 
         (tasks/ui click :close-facts)
-        (sleep 5000)
+                                        ;(sleep 5000)
                                         ;(print subscriptions)
                                         ;(tasks/restart-app)
                                         ;(print subscriptions)
@@ -937,13 +937,20 @@
         (tasks/search :match-system? false :do-not-overlap? false)
         (tasks/checkforerror)
         (for [x subscriptions]
-          (verify (try-catch-helper x)))
+          (try
+                                        ;(tasks/subscribe x)
+            (tasks/skip-dropdown :all-subscriptions-view x)
+            (tasks/open-contract-selection x)
+            ()
+            (catch Exception e
+              (substring? "Error getting subscription:" (.getMessage e)))
+                                        ;(verify (try-catch-helper x))
+            ))
         (finally
           (tasks/write-facts (str "{\"virt.is_guest\":" \space "\"" virt? "\"" "}"))
           (run-command "subscription-manager facts --update")
           (tasks/unsubscribe_all)
-          (tasks/restart-app)
-          )))))
+          (tasks/restart-app))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      DATA PROVIDERS      ;;
