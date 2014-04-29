@@ -359,7 +359,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="run subscription-manager status ondate (yesterday)",
-			groups={},
+			groups={"blockedByBug-1092594"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusOnPastDate_Test() throws JSONException, Exception {
