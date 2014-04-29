@@ -107,8 +107,8 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		String consumerKeyFile = clienttasks.consumerKeyFile();
 		String consumerSpliceCertFile = clienttasks.consumerCertDir+"/Splice_identity.cert";
 		String consumerSplicetKeyFile = clienttasks.consumerCertDir+"/Splice_identity.key";
-		client.runCommandAndWait("cp -n "+consumerCertFile+" "+consumerSpliceCertFile);
-		client.runCommandAndWait("cp -n "+consumerKeyFile+" "+consumerSplicetKeyFile);
+		client.runCommandAndWait("cp -u "+consumerCertFile+" "+consumerSpliceCertFile);
+		client.runCommandAndWait("cp -u "+consumerKeyFile+" "+consumerSplicetKeyFile);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSpliceCertFile), "Successfully created a fake '"+consumerSpliceCertFile+"'.");
 		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSplicetKeyFile), "Successfully created a fake '"+consumerSplicetKeyFile+"'.");
 		
