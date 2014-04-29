@@ -329,10 +329,12 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		String updateSubscriptionPoolEndDateSql = "";
 		String updateSubscriptionPoolStartDateSql = "";
 		if (endDate!=null) {
-			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
 		}
 		if (startDate!=null) {
-			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
 		}
 		
 		Statement sql = dbConnection.createStatement();
@@ -368,8 +370,8 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,sm_dbUsername,sm_dbPassword));
 			dbConnection1 = DriverManager.getConnection(url, sm_dbUsername, sm_dbPassword);
 			sql = dbConnection1.createStatement();
-			String getSubscriptionPoolEndDateSql = String
-					.format("select %s from cp_subscription where id=(select subscriptionid from cp_pool where id='%s');", field, pool.poolId);
+			String getSubscriptionPoolEndDateSql = String.format("select %s from cp_subscription where id=(select subscriptionid from cp_pool where id='%s');", field, pool.poolId);		// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+			getSubscriptionPoolEndDateSql = String.format("select %s from cp_subscription where id=(select subscriptionid from cp_pool_source_sub where pool_id='%s');", field, pool.poolId);
 			sql.execute(getSubscriptionPoolEndDateSql);
 			ResultSet resultSet = sql.getResultSet();
 			if (resultSet.next()) {
