@@ -100,7 +100,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that do NOT satisfy the hardware are NOT listed as available",
 			groups={"AcceptanceTests", "blockedByBug-712502","unsubscribeBeforeGroup"},
 			dataProvider="getNonAvailableSystemSubscriptionPoolProductData",
-			enabled=true)
+			enabled=false)	// TODO: 4/30/2014 This test is flawed.  The data provider for this test should be based on poolIds, not productIds.  Because a physical_only pool with a virt_limit can create a BONUS pool, the productId can be available to both physical and virtual systems under two different poolIds.  e.g. "productId": "awesomeos-virt-unlmtd-phys" from TESTDATA which causes this test to fail erroneously. 
 	@ImplementsNitrateTest(caseId=41678)
 	public void EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(String productId) {
 		// implicitly registered in dataProvider; no need to register with force; saves time

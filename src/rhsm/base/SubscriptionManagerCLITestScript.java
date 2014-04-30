@@ -1767,13 +1767,21 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 	}
 	
+	/**
+	 * TODO: 4/30/2014 This DataProvider is flawed.  Do not use.  It should be based on poolIds, not productIds.  Because a physical_only pool with a virt_limit can create a BONUS pool, the productId can be available to both physical and virtual systems under two different poolIds.  e.g. "productId": "awesomeos-virt-unlmtd-phys" from TESTDATA
+	 * @return
+	 * @throws Exception
+	 */
+	@Deprecated
 	@DataProvider(name="getNonAvailableSystemSubscriptionPoolProductData")
 	public Object[][] getNonAvailableSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getNonAvailableSystemSubscriptionPoolProductDataAsListOfLists());
 	}
 	/**
+	 * TODO: 4/30/2014 This DataProvider is flawed.  Do not use.  It should be based on poolIds, not productIds.  Because a physical_only pool with a virt_limit can create a BONUS pool, the productId can be available to both physical and virtual systems under two different poolIds.  e.g. "productId": "awesomeos-virt-unlmtd-phys" from TESTDATA
 	 * @return List of [String productId]
 	 */
+	@Deprecated
 	protected List<List<Object>> getNonAvailableSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToNonAvailableSystemSubscriptionPoolProductData = new ArrayList<String>();
