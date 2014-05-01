@@ -31,6 +31,7 @@
 (def tmpCAcertpath "/tmp/CA-certs/")
 (def CAcertpath "/etc/rhsm/ca/")
 (def unreg-status "Keep your system up to date by registering.")
+(def virt? (atom nil)) ;; Used to hold the virt value of system
 
 
 (defn ^{BeforeClass {:groups ["setup"]}}
@@ -920,67 +921,50 @@
                     (tasks/ui click "frmTopExpandedEdgePanel" "Red Hat Subscription Manager")
                     (tasks/ui activatewindow :main-window)
                     (verify (tasks/ui guiexist :main-window)))
-
+          ; "RHEL7" (do)
+          ; Not automated for RHEL7 as automation doesnt start
           (throw (Exception. "Error: Release not identified"))))
       (finally
         (if (not (bool (tasks/ui guiexist :main-window)))
           (tasks/start-app)))))
 
-(comment
-
-  (defn try-catch-helper [sub]
-    (try
-      (tasks/subscribe sub)
-      (catch Exception e
-        (substring? "Error getting subscription:" (.getMessage e)))))
-
-  (defn ^{Test {:groups ["system"]}}
-    check_physical_only_pools
-    "Identifies physical only pools from JSON and checks
+(defn ^{Test {:groups ["system"
+                       "acceptance"]}}
+  check_physical_only_pools
+  "Identifies physical only pools from JSON and checks
    whether it throws appropriate error message"
-    [_]
-    (tasks/unsubscribe_all)
-    (tasks/restart-app :reregister? true)
+  [_]
+  (tasks/unsubscribe_all)
+  (tasks/ui selecttab :my-installed-products)
+  (if (tasks/ui showing? :register-system)
+    (tasks/register-with-creds))
+  (try
     (let [cli-cmd (:stdout
                    (run-command "subscription-manager facts --list | grep \"virt.is_guest\""))
-          virt? (trim (re-find #" .*" cli-cmd))
+          virt (trim (re-find #" .*" cli-cmd))
           prod-attr-map (ctasks/build-subscription-attr-type-map :all? true)
           phy-only? (fn [v] (if (not (nil? (re-find #"physical_only" v)))
                              true false))
           filter-product (fn [m] (if (not (empty? (filter phy-only? (val m)))) (key m)))
-          subscriptions (into [] (filter string? (map filter-product prod-attr-map)))]
-      (try
-                                        ;(reset! virt-value virt?)
-        (tasks/write-facts "{\"virt.is_guest\": \"True\"}")
-        (run-command "subscription-manager facts --update")
-        (tasks/ui click :view-system-facts)
-        (tasks/ui click :update-facts)
-
-        (tasks/ui click :close-facts)
-                                        ;(sleep 5000)
-                                        ;(print subscriptions)
-                                        ;(tasks/restart-app)
-                                        ;(print subscriptions)
-        (comment
-                                        ;(tasks/restart-app)
-          )
-        (tasks/search :match-system? false :do-not-overlap? false)
-        (tasks/checkforerror)
-        (for [x subscriptions]
-          (try
-                                        ;(tasks/subscribe x)
-            (tasks/skip-dropdown :all-subscriptions-view x)
-            (tasks/open-contract-selection x)
-            ()
-            (catch Exception e
-              (substring? "Error getting subscription:" (.getMessage e)))
-                                        ;(verify (try-catch-helper x))
-            ))
-        (finally
-          (tasks/write-facts (str "{\"virt.is_guest\":" \space "\"" virt? "\"" "}"))
-          (run-command "subscription-manager facts --update")
-          (tasks/unsubscribe_all)
-          (tasks/restart-app))))))
+          subscriptions (into [] (filter string? (map filter-product prod-attr-map)))
+          subscribe (fn [sub] (try
+                          (tasks/subscribe sub)
+                          (catch Exception e
+                            (let [result (substring? "Error getting subscription:" (.getMessage e))]
+                              result))))]
+      (reset! virt? virt)
+      (if (= @virt? "False")
+        (do
+          (tasks/write-facts "{\"virt.is_guest\": \"True\"}")
+          (run-command "subscription-manager facts --update")))
+      (tasks/search :match-system? false :do-not-overlap? false)
+      (verify (not (some false? (map subscribe subscriptions)))))
+    (finally
+      (if (= @virt? "False")
+        (do
+          (tasks/write-facts (str "{\"virt.is_guest\":" \space "\"" @virt? "\"" "}"))
+          (run-command "subscription-manager facts --update")))
+      (tasks/unsubscribe_all))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      DATA PROVIDERS      ;;
