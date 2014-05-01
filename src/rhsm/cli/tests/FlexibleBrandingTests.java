@@ -330,7 +330,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(pool.subscriptionName.contains("Instance")){
-				clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+				clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
 			}
 		}
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStderr();

@@ -64,7 +64,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 
 		log.info("Now individually subscribe to each of the subscribing products being modified and assert that once both the modifier pool and product subscription being modified are both subscribed, then the modifier (repo id) '"+label+"' will become available.");
 		for (SubscriptionPool pool : poolsModified) {
-			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl));
 			if (areAllRequiredTagsProvided) {
 				Assert.assertTrue(clienttasks.getYumRepolist("all").contains(label),
 					"Having subscribed to both the modifier pool and the pool it modifies for productId '"+pool.productId+"', now the modifier pool's (repo id) '"+label+"' is available in yum repolist all.");

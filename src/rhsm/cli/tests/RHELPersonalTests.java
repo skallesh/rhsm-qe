@@ -288,7 +288,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(personSubscriptionPool,"Personal subscription with ProductId '"+personProductId+"' is available to user '"+username+"' registered as a person.");
 			//client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null);
 			//personalEntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1tasks.subscribeToSubscriptionPool(personSubscriptionPool));
-			personEntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1tasks.subscribeToSubscriptionPool(personSubscriptionPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
+			personEntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1tasks.subscribeToSubscriptionPool(personSubscriptionPool,/*sm_serverAdminUsername*/username,/*sm_serverAdminPassword*/password,sm_serverUrl));
 	
 			log.info("Register "+multipleSystems+" new systems under username '"+username+"' and subscribe to sub productId '"+systemProductId+"'...");
 			systemConsumerIds = new ArrayList<String>();

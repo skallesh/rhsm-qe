@@ -90,7 +90,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNotNull(pool, "Successfully found the SubscriptionPool with the poolId that we are about to test from list --available.");
 	
 		log.info("Subscribe client (already registered as a system under username '"+sm_clientUsername+"') to subscription pool "+pool+"...");
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
 		Assert.assertNotNull(entitlementCertFile, "Our attempt to subscribe resulted in a new entitlement cert on our system.");
 		alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test.add(pool.productId);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);

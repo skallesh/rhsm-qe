@@ -107,7 +107,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 
 				pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 				Assert.assertNotNull(pool, "Subscription pool for product '"+productId+"' is only listed in --all --available when the client arch (actual='"+clienttasks.arch+"') is not contained in '"+arches+"'.");
-				File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl); currentlySubscribedProductIds.add(productId);
+				File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/username,/*sm_serverAdminPassword*/password,sm_serverUrl); currentlySubscribedProductIds.add(productId);
 				EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 				assertEngProductsAreProvidedInEntitlementCert(engProductId, entitlementCert);
 				log.warning("No need for further testing of subscription productId '"+productId+"' on this hardware since the providing pool is not normally available.");
@@ -118,7 +118,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 		// subscribe to the first available pool providing the productId
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availablePools);
 		Assert.assertNotNull(pool,"Found first available pool to subscribe to productId '"+productId+"'.");
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl); currentlySubscribedProductIds.add(productId);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/username,/*sm_serverAdminPassword*/password,sm_serverUrl); currentlySubscribedProductIds.add(productId);
 		
 		// setup data for subsequent tests
 		// TODO MAYBE WE SHOULD ONLY DO THIS WHEN variants.contains(clienttasks.variant)) OR WHEN SUBSCRIPTION IS AVAILABLE?

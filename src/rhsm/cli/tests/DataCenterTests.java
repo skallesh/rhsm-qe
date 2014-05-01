@@ -76,7 +76,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// subscribe the host to the data center pool
-		File hostEntitlementFile = clienttasks.subscribeToSubscriptionPool(pool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		File hostEntitlementFile = clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
 		EntitlementCert hostEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(hostEntitlementFile); client.runCommandAndWait("rct cat-cert "+hostEntitlementFile);
 		
 		// in general the data center pool will not provide any engineering products
