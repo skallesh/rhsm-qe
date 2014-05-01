@@ -141,7 +141,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering, call rhsm-debug system with a bad (already existing as a file) --destination option",
-			groups={"blockedByBug-1070737","blockedByBug-1039653"},
+			groups={"blockedByBug-1070737","blockedByBug-1039653","blockedByBug-1093382"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithBadDestination_Test() {
@@ -163,7 +163,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		//	[root@jsefler-7 ~]# echo $?
 		//	255
 		String expectedStderr = "[Errno 20] Not a directory:";	// [Errno 20] Not a directory: '/tmp/foo/rhsm-debug-system-20140121-342280.tar.gz'
-
+		
 		// assert results
 		Assert.assertEquals(result.getExitCode(), new Integer(255), "The exit code from an attempt to run '"+rhsmDebugSystemCommand+"'.");
 		Assert.assertTrue(result.getStderr().trim().startsWith(expectedStderr), "The stderr from an attempt to run '"+rhsmDebugSystemCommand+"' should indicate '"+expectedStderr+"'.");
