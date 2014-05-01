@@ -921,8 +921,8 @@
                     (tasks/ui click "frmTopExpandedEdgePanel" "Red Hat Subscription Manager")
                     (tasks/ui activatewindow :main-window)
                     (verify (tasks/ui guiexist :main-window)))
-          ; "RHEL7" (do)
-          ; Not automated for RHEL7 as automation doesnt start
+          "RHEL7" (throw (SkipException.
+                          (str "Skipping Test: ldtp on RHEL7 not starting")))
           (throw (Exception. "Error: Release not identified"))))
       (finally
         (if (not (bool (tasks/ui guiexist :main-window)))
