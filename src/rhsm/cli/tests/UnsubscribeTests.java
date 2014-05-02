@@ -87,7 +87,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 
 		// subscribe to a pool
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(subscriptionPool,quantity,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(subscriptionPool,quantity,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		List <EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
 		entitlementCerts.add(entitlementCert);
