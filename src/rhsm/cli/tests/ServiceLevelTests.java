@@ -278,7 +278,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.service_level(null,null,null,null,null,null,null,null, null, null, null, null).getStdout().trim(), "Service level preference not set", "When the system has been registered without a service level, the current service level value should be empty.");
 
 		// get all the valid service levels available to this org	
-		List<String> serviceLevelsExpected = CandlepinTasks.getServiceLevelsForOrgKey(/*username or*/sm_serverAdminUsername, /*password or*/sm_serverAdminPassword, sm_serverUrl, org);
+		List<String> serviceLevelsExpected = CandlepinTasks.getServiceLevelsForOrgKey(/*sm_serverAdminUsername*/username, /*sm_serverAdminPassword*/password, sm_serverUrl, org);
 		
 		// assert that all the valid service levels are returned by service-level --list
 		List<String> serviceLevelsActual = clienttasks.getCurrentlyAvailableServiceLevels();		
@@ -538,7 +538,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 
 		// get all the valid service levels available to this org	
-		List<String> serviceLevelsExpected = CandlepinTasks.getServiceLevelsForOrgKey(/*username or*/sm_serverAdminUsername, /*password or*/sm_serverAdminPassword, sm_serverUrl, sm_clientOrg);
+		List<String> serviceLevelsExpected = CandlepinTasks.getServiceLevelsForOrgKey(/*sm_serverAdminUsername*/sm_clientUsername, /*sm_serverAdminPassword*/sm_clientPassword, sm_serverUrl, sm_clientOrg);
 		String serviceLevel = serviceLevelsExpected.get(randomGenerator.nextInt(serviceLevelsExpected.size()));
 		
 		//clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, serviceLevel, null, (String)null, null, false, null, null, null);
