@@ -141,7 +141,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	//public String sm_translateToolkitGitRepository	= getProperty("sm.translate.toolkitGitRepository","");
 	public String sm_translateToolkitTarUrl				= getProperty("sm.translate.toolkitTarUrl","");
 
-	protected List<String> sm_exemptServiceLevelsInUpperCase	= new ArrayList<String>();	// TODO Get rid of this field.  Use Candlpin API to fetch this list.  See Bug 1066088 - [RFE] expose an option to the servicelevels api to return exempt service levels
+	protected List<String> sm_exemptServiceLevelsInUpperCase	= new ArrayList<String>();	// TODO Get rid of this field.  Use Candlepin API to fetch this list.  See Bug 1066088 - [RFE] expose an option to the servicelevels api to return exempt service levels
 	protected List<String> sm_rhnDefinitionsProductCertsDirs	= new ArrayList<String>();
 	protected List<String> sm_clientUsernames					= new ArrayList<String>();
 	protected List<String> sm_rpmInstallUrls					= new ArrayList<String>();
