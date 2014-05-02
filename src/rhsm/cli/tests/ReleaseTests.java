@@ -404,7 +404,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		
 		// find an available RHEL subscription pool that provides for this base RHEL product cert
 		//List<SubscriptionPool> rhelSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools(rhelProductCert.productId, sm_serverUrl);	// no longer works; encounters "Insufficient permissions"
-		List<SubscriptionPool> rhelSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools(rhelProductCert.productId, sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl);
+		List<SubscriptionPool> rhelSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools(rhelProductCert.productId,/*sm_serverAdminUsername*/username,/*sm_serverAdminPassword*/password, sm_serverUrl);
 		if (rhelSubscriptionPools.isEmpty()) throw new SkipException("Cannot find an available SubscriptionPool that provides for this installed RHEL Product: "+rhelProductCert);
 		SubscriptionPool rhelSubscriptionPool = rhelSubscriptionPools.get(0);	// choose one
 		
