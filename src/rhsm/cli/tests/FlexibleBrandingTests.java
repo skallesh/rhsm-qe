@@ -240,6 +240,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 			groups={"CreationWithTwoRhelproducts"},
 			enabled=true) 
 	public void VerifyBrand_NameFileCreationWithTwoRhelProductInstalled() throws Exception {
+		clienttasks.unregister(null, null, null);
+		
 		// reset the installed product certs and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
@@ -247,10 +249,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		client.runCommandAndWait("rm -f "+Brand_Name);
-		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, null, false, null, null, null);
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStderr();
 		String expectedMessage="cat: /var/lib/rhsm/branded_name: No such file or directory";
 		Assert.assertEquals(result.trim(), expectedMessage);
