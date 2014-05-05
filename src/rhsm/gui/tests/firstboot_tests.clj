@@ -19,15 +19,13 @@
             org.testng.SkipException
             [com.redhat.qe.auto.bugzilla BzChecker]))
 
-(comment
-
 (defn start_firstboot []
   (tasks/start-firstboot)
   (tasks/ui click :firstboot-forward)
   (verify (tasks/fbshowing? :register-now))
   (tasks/ui click :register-now)
   (tasks/ui click :firstboot-forward)
-  (assert ( bool (tasks/ui guiexist :firstboot-window window-name))))
+  (assert (bool (tasks/ui guiexist :firstboot-window))))
 
 (defn kill_firstboot []
   (run-command "killall -9 firstboot")
@@ -48,7 +46,10 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
   (try
-    (if (= "RHEL7" (get-release)) (base/startup nil))
+    (if (= "RHEL7" (get-release))
+      ;(base/startup nil)
+      (throw (SkipException. (str "Skipping Suite: RHEL7 firstboot-boot tests are skipped"
+                                  " because first-boot window has dynamic compnents"))))
     (skip-if-bz-open "922806")
     (skip-if-bz-open "1016643" (= "RHEL7" (get-release)))
     ;; new rhsm and classic have to be totally clean for this to run
@@ -67,6 +68,5 @@
   (run-command "subscription-manager clean")
   (zero-proxy-values))
 
-)
 
 (gen-class-testng)

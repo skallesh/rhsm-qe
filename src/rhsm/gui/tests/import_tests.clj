@@ -106,8 +106,8 @@
                   (trim (:stdout (run-command command))))]
     (import-cert certlocation)
     (verify (bool (tasks/ui guiexist
-                           :information-dialog
-                           "Certificate import was successful.")))
+                            :information-dialog
+                            "Certificate import was successful.")))
     (tasks/ui click :info-ok)
     ;verify that it added to My Subscriptons
     (tasks/ui selecttab :my-subscriptions)

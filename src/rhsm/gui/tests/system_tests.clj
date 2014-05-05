@@ -31,6 +31,8 @@
 (def tmpCAcertpath "/tmp/CA-certs/")
 (def CAcertpath "/etc/rhsm/ca/")
 (def unreg-status "Keep your system up to date by registering.")
+(def virt? (atom nil)) ;; Used to hold the virt value of system
+
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
@@ -125,21 +127,25 @@
                                         ; creating a traceback dumps the cache and this works for a quick fix
             fuckcache (fn [] (try+ (tasks/ui getchild "blah")
                                   (catch Exception e "")))]
-        (if (= "RHEL5" (get-release))
-          (do
-            (fuckcache)
-            (log/info (str "Items: " beforecount))
-            (fuckcache)))
+        (comment
+          (if (= "RHEL5" (get-release))
+            (do
+              (fuckcache)
+              (log/info (str "Items: " beforecount))
+              (fuckcache))))
         (exec-shortcut "<ESC>")
-        (tasks/ui waittillguinotexist window 10)
-        (exec-shortcut shortcut)
-        (tasks/ui waittillwindowexist window 10)
-        (if (= window :question-dialog)
-          (verify (tasks/ui showing? :question-dialog
-                            "Are you sure you want to unregister?")))
-        (sleep 3000)
-        (let [newcount (count-objects window)]
-          (verify (= beforecount newcount)))))))
+        (tasks/ui waittillguinotexist window)
+        (try
+          (exec-shortcut shortcut)
+          (tasks/ui waittillwindowexist window 10)
+          (if (= window :question-dialog)
+            (verify (tasks/ui showing? :question-dialog
+                              "Are you sure you want to unregister?")))
+          (sleep 3000)
+          (let [newcount (count-objects window)]
+            (verify (= beforecount newcount)))
+          (finally
+            (tasks/restart-app :unregister? true)))))))
 
 (data-driven
  check_escape_window {Test {:groups ["system"
@@ -378,14 +384,15 @@
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
   [_]
-  (tasks/restart-app :unregister? true)
+  (if-not (tasks/ui showing? :register-system)
+    (tasks/unregister))
   (tasks/ui click :main-window "System")
   (sleep 2000)
-  (verify (not (tasks/visible? :preferences)))
-  (tasks/restart-app :reregister? true)
+  (verify (not (some #(= "VISIBLE" %) (tasks/ui getallstates :preferences))))
+  (tasks/register-with-creds)
   (tasks/ui click :main-window "System")
   (sleep 2000)
-  (verify (tasks/visible? :preferences)))
+  (verify (some #(= "VISIBLE" %) (tasks/ui getallstates :preferences))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-977850"]}}
@@ -893,6 +900,70 @@
     (let [status (distinct (tasks/get-table-elements :installed-view 2))]
       (verify (> 4 (count status))))
     (finally
+      (tasks/unsubscribe_all))))
+
+(defn ^{Test {:groups ["system"
+                       "acceptance"]}}
+    launch_gui_from_gnome
+    "Launches gui from gnome"
+    [_]
+    (try
+      (if (bool (tasks/ui guiexist :main-window))
+        (tasks/kill-app))
+      (sleep 3000)
+      (let [release (get-release)]
+        (case release
+          "RHEL5" (do
+                    (tasks/ui click "Top Panel" "Red Hat Subscription Manager")
+                    (sleep 5000)
+                    (verify (tasks/ui guiexist :main-window)))
+          "RHEL6" (do
+                    (tasks/ui click "frmTopExpandedEdgePanel" "Red Hat Subscription Manager")
+                    (tasks/ui activatewindow :main-window)
+                    (verify (tasks/ui guiexist :main-window)))
+          "RHEL7" (throw (SkipException.
+                          (str "Skipping Test: ldtp on RHEL7 not starting")))
+          (throw (Exception. "Error: Release not identified"))))
+      (finally
+        (if (not (bool (tasks/ui guiexist :main-window)))
+          (tasks/start-app)))))
+
+(defn ^{Test {:groups ["system"
+                       "acceptance"]}}
+  check_physical_only_pools
+  "Identifies physical only pools from JSON and checks
+   whether it throws appropriate error message"
+  [_]
+  (tasks/unsubscribe_all)
+  (tasks/ui selecttab :my-installed-products)
+  (if (tasks/ui showing? :register-system)
+    (tasks/register-with-creds))
+  (try
+    (let [cli-cmd (:stdout
+                   (run-command "subscription-manager facts --list | grep \"virt.is_guest\""))
+          virt (trim (re-find #" .*" cli-cmd))
+          prod-attr-map (ctasks/build-subscription-attr-type-map :all? true)
+          phy-only? (fn [v] (if (not (nil? (re-find #"physical_only" v)))
+                             true false))
+          filter-product (fn [m] (if (not (empty? (filter phy-only? (val m)))) (key m)))
+          subscriptions (into [] (filter string? (map filter-product prod-attr-map)))
+          subscribe (fn [sub] (try
+                          (tasks/subscribe sub)
+                          (catch Exception e
+                            (let [result (substring? "Error getting subscription:" (.getMessage e))]
+                              result))))]
+      (reset! virt? virt)
+      (if (= @virt? "False")
+        (do
+          (tasks/write-facts "{\"virt.is_guest\": \"True\"}")
+          (run-command "subscription-manager facts --update")))
+      (tasks/search :match-system? false :do-not-overlap? false)
+      (verify (not (some false? (map subscribe subscriptions)))))
+    (finally
+      (if (= @virt? "False")
+        (do
+          (tasks/write-facts (str "{\"virt.is_guest\":" \space "\"" @virt? "\"" "}"))
+          (run-command "subscription-manager facts --update")))
       (tasks/unsubscribe_all))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

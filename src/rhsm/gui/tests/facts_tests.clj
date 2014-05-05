@@ -31,6 +31,7 @@
 (def installed-certs (atom nil))
 (def productstatus (atom nil))
 (def status-before-subscribe (atom {}))
+(def socket-val (atom nil)) ;; holds system socket value
 
 (defn get-cli-facts []
   (let [allfacts (:stdout
@@ -413,6 +414,26 @@
   (:stdout (run-command
             "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"
                         :runner @candlepin-runner)))
+
+(defn ^{Test {:groups ["facts"
+                       "acceptance"]}}
+  verify_update_facts
+  "Verifies if update facts grabs updated facts value"
+  [_]
+  (try
+    (tasks/unsubscribe_all)
+    (if (tasks/ui showing? :register-system)
+      (tasks/register-with-creds))
+    (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
+    (tasks/ui click :view-system-facts)
+    (tasks/ui click :update-facts)
+    (let [sockets (get @gui-facts "cpu.cpu_socket(s)")
+          facts-map (tasks/get-all-facts)]
+      (reset! socket-val sockets)
+      (verify (not (= @socket-val (get facts-map "cpu.cpu_socket(s)")))))
+    (finally
+      (tasks/ui click :close-facts)
+      (tasks/write-facts "{\"cpu.cpu_socket(s)\":" \space "\"" @socket-val "\"" "}"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS

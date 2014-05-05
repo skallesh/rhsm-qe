@@ -9,14 +9,14 @@
                                blank?)]
         [slingshot.slingshot :only [throw+
                                     try+]]
-        rhsm.gui.tasks.tools
+         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.subscribe_tests :as subscribe]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
-             rhsm.gui.tasks.ui)
+            rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
             AfterClass
@@ -34,6 +34,7 @@
 (def nonedir (ComplianceTests/productCertDirForNoProductsinstalled))
 (def one-sla-dir (ComplianceTests/productCertDirForAllProductsSubscribableByOneCommonServiceLevel))
 (def multi-sla-dir (ComplianceTests/productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel))
+
 (def complytests (atom nil))
 (def productmap (atom {}))
 (def common-sla (atom nil))
@@ -288,6 +289,7 @@
     (finally
      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
      (tasks/unregister))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
