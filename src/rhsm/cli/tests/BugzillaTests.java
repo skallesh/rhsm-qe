@@ -301,8 +301,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
-		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
 		Calendar endCalendar = new GregorianCalendar();
+		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate=yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
@@ -313,9 +313,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		System.out.println(EndingDate);
 		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate+".";
 		Assert.assertEquals(result.trim(), expected_message);
-		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
+		result=clienttasks.identity_(null, null, null, null, null, null, null).getStdout();
 		Assert.assertEquals(result.trim(), clienttasks.msg_ConsumerNotRegistered);
-
 	}
 	
 
@@ -4074,8 +4073,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String subscribeResult = getEntitlementCertFilesWithPermissions();
 		Pattern p = Pattern.compile("[,\\s]+");
 		String[] result = p.split(subscribeResult);
+		String permissions = "-rw-------";	// RHEL5
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>5) permissions = "-rw-------.";
 		for (int i = 0; i < result.length; i++) {
-			Assert.assertEquals(result[i], "-rw-------.",
+			Assert.assertEquals(result[i], permissions,
 					"permission for etc/pki/entitlement/<serial>-key.pem is -rw-------");
 			i++;
 		}
