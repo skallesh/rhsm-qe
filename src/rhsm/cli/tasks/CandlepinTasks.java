@@ -441,7 +441,7 @@ schema generation failed
 		
 		// log the curl alternative to HTTP request
 		// Example: curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19 | python -mjson.tool
-		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
+		String user		= (authenticator==null || authenticator.isEmpty())? "":"--user "+authenticator+":"+password+" ";
 		String request	= "--request "+get.getName()+" ";
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
 
@@ -584,7 +584,7 @@ schema generation failed
 		return sb.toString();
 	}	
 	protected static void setCredentials(HttpClient client, String server, int port, String username, String password) {
-		if (!username.equals(""))
+		if (username!=null && !username.isEmpty())
 			client.getState().setCredentials(
 	            new AuthScope(server, port, AuthScope.ANY_REALM),
 	            new UsernamePasswordCredentials(username, password)

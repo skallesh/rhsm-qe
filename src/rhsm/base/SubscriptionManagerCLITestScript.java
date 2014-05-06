@@ -183,7 +183,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			//201108251644:10.040 - INFO: SSH alternative to HTTP request: curl -k  --request GET https://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/status (rhsm.cli.tasks.CandlepinTasks.getResourceUsingRESTfulAPI)
 			//201108251644:10.049 - WARNING: Required credentials not available for BASIC <any realm>@rubyvip.web.stage.ext.phx2.redhat.com:80 (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
 			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
-			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/status"));
+			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*sm_serverAdminUsername*/null,/*sm_serverAdminPassword*/null,sm_serverUrl,"/status"));
 			if (jsonStatus!=null) {
 				servertasks.statusCapabilities.clear();
 				for (int i=0; i<jsonStatus.getJSONArray("managerCapabilities").length(); i++) {
