@@ -432,7 +432,6 @@
       (reset! socket-val sockets)
       (verify (not (= @socket-val (get facts-map "cpu.cpu_socket(s)")))))
     (finally
-      (tasks/ui click :close-facts)
       (tasks/write-facts "{\"cpu.cpu_socket(s)\":" \space "\"" @socket-val "\"" "}"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
