@@ -115,7 +115,7 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 		
 		if (!clienttasks.isPackageInstalled("bash-completion")) {
 			if (clienttasks.redhatReleaseX.equals("5")) {
-				client.runCommandAndWait("yum install --assumeyes --quiet http://dl.fedoraproject.org/pub/epel/5/x86_64/bash-completion-1.3-7.el5.noarch.rpm");
+				client.runCommandAndWait("rpm --install http://dl.fedoraproject.org/pub/epel/5/x86_64/bash-completion-1.3-7.el5.noarch.rpm");
 			}
 			if (clienttasks.redhatReleaseX.equals("6")) {
 				client.runCommandAndWait("yum install --assumeyes --quiet http://dl.fedoraproject.org/pub/epel/6/x86_64/bash-completion-1.3-7.el6.noarch.rpm");
@@ -265,6 +265,13 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			
 			// Bug 1057329 - rhsm-debug system <space> <TAB> <TAB> does not auto complete
 			if (bashCommand.startsWith("rhsm-debug system ")) bugIds.add("1057329");
+			
+			// Bug 1094869 - on rhel5, bash-completion of rhsm-icon options should show -? instead of -h 
+			if (bashCommand.startsWith("rhsm-icon ") && clienttasks.redhatReleaseX.equals("5")) bugIds.add("1094869");
+			if (bashCommand.startsWith("rhsmcertd ") && clienttasks.redhatReleaseX.equals("5")) bugIds.add("1094869");
+			
+			// Bug 1094879 - install-num-migrate-to-rhsm does not bash-complete its options
+			if (bashCommand.startsWith("install-num-migrate-to-rhsm ")) bugIds.add("1094879");
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
