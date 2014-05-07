@@ -86,7 +86,7 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 
 		
 		// Subscribe to the RHUI subscription productId
-		entitlementCertFile = clienttasks.subscribeToSubscriptionPool(rhuiPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		entitlementCertFile = clienttasks.subscribeToSubscriptionPool(rhuiPool,/*sm_serverAdminUsername*/sm_rhuiUsername,/*sm_serverAdminPassword*/sm_rhuiPassword,sm_serverUrl);
 	}
 	
 	@Test(	description="download an expected RHUI iso from an expected yum repoUrl",
