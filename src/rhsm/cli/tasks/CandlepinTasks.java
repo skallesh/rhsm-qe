@@ -51,10 +51,12 @@ import org.testng.SkipException;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.jul.TestRecords;
+
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.RevokedCert;
+
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -245,7 +247,7 @@ public class CandlepinTasks {
 		} else {
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/proxy && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && bundle exec buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && bundle buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
 			// Update 1/21/2011                                    ^^^^^^ TESTDATA is new for master branch                                                            ^^^^^^ IMPORTDIR applies to branches <= BETA
 		}
 
@@ -315,7 +317,7 @@ schema generation failed
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildr candlepin:apicrawl", Integer.valueOf(0), "Wrote Candlepin API to: target/candlepin_methods.json", null);
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then bundle exec buildr candlepin:apicrawl; fi;", Integer.valueOf(0));	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
 		log.info("Following is a report of all the candlepin API urls:");
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());		// 9/18/2012 the path appears to have moved
 		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
@@ -1017,11 +1019,9 @@ schema generation failed
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String poolId = jsonPool.getString("id");
-			if (!jsonPool.isNull("subscriptionId")) {	// "subscriptionId": null will occur for pools of "type": "STACK_DERIVED"
-				String subscriptionId = jsonPool.getString("subscriptionId");
-				if (forSubscriptionId.equals(subscriptionId)) {
-					pools.add(jsonPool);
-				}
+			String subscriptionId = jsonPool.getString("subscriptionId");
+			if (forSubscriptionId.equals(subscriptionId)) {
+				pools.add(jsonPool);
 			}
 		}
 		return pools;
@@ -3394,6 +3394,9 @@ schema generation failed
 	}
 	
 	
+	
+	
+	
 	public static JSONObject createContentRequestBody(String name, String contentId, String label, String type, String vendor, String contentUrl, String gpgUrl, String metadataExpire, String requiredTags, String arches, List<String> modifiedProductIds) throws JSONException{
 		
 		JSONObject jsonContentData = new JSONObject();
@@ -3492,6 +3495,7 @@ schema generation failed
 		
 	}
 	
+
 	public static JSONObject createContentUsingRESTfulAPI(String authenticator, String password, String url, String name, String contentId, String label, String type, String vendor, String contentUrl, String gpgUrl, String metadataExpire, String requiredTags, String arches, List<String> modifiedProductIds) throws JSONException, Exception  {
 
 		// create the product
