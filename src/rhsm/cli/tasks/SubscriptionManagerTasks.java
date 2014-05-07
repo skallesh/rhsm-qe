@@ -6924,6 +6924,11 @@ public class SubscriptionManagerTasks {
 		//	Stderr:
 		//	ExitCode: 255
 		
+		//	ssh root@cloud-qe-9.idm.lab.bos.redhat.com subscription-manager facts --update
+		//	Stdout:
+		//	Stderr: Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.
+		//	ExitCode: 255
+		
 		//	ssh root@yttrium.idm.lab.bos.redhat.com subscription-manager unregister
 		//	Stdout: Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.
 		//	Stderr:
@@ -6954,7 +6959,7 @@ public class SubscriptionManagerTasks {
 		//debugTesting result = new SSHCommandResult(new Integer(255), "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.", "");
 		if (result.getExitCode().equals(255)) {
 			if (result.getStdout().contains("timed out") ||
-				result.getStdout().contains("see "+rhsmLogFile+" for more information")) {
+				result.getStdout().contains("see "+rhsmLogFile+" for more ")) {
 				// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
 				String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
 				SSHCommandResult getTracebackCommandResult = sshCommandRunner.runCommandAndWaitWithoutLogging(getTracebackCommand);
