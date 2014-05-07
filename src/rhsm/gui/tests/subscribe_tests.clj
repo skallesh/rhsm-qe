@@ -100,6 +100,7 @@
   [_ subscription]
   (tasks/ui selecttab :my-subscriptions)
   (try+ (tasks/unsubscribe subscription)
+        (tasks/checkforerror)
         (sleep 4000)
         (verify (= false (tasks/ui rowexist? :my-subscriptions-view subscription)))
         (catch [:type :not-subscribed] _)))
@@ -351,10 +352,16 @@
   (tasks/ui selecttab :all-available-subscriptions)
   (tasks/search :contain-text "DOESNOTEXIST")
   (let [label "No subscriptions match current filters."]
-    (verify (tasks/ui showing? :no-subscriptions-label))
-    (verify (= label (tasks/ui gettextvalue :no-subscriptions-label))))
-  (tasks/search)
-  (verify (not (tasks/ui showing? :no-subscriptions-label))))
+    (if (= "RHEL5" (get-release))
+      (do
+        (verify (tasks/ui showing? :all-available-subscriptions label))
+        (tasks/search)
+        (verify (tasks/ui showing? :all-subscriptions-view)))
+      (do
+        (verify (tasks/ui showing? :no-subscriptions-label))
+        (verify (= label (tasks/ui gettextvalue :no-subscriptions-label)))
+        (tasks/search)
+        (verify (not (tasks/ui showing? :no-subscriptions-label)))))))
 
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-817901"]}}
@@ -364,10 +371,16 @@
   (tasks/restart-app :reregister? true)
   (tasks/ui selecttab :all-available-subscriptions)
   (let [label "Press Update to search for subscriptions."]
-    (verify (tasks/ui showing? :no-subscriptions-label))
-    (verify (= label (tasks/ui gettextvalue :no-subscriptions-label))))
-  (tasks/search)
-  (verify (not (tasks/ui showing? :no-subscriptions-label))))
+    (if (= "RHEL5" (get-release))
+      (do
+        (verify (tasks/ui showing? :all-available-subscriptions label))
+        (tasks/search)
+        (verify (tasks/ui showing? :all-subscriptions-view)))
+      (do
+        (verify (tasks/ui showing? :no-subscriptions-label))
+        (verify (= label (tasks/ui gettextvalue :no-subscriptions-label)))
+        (tasks/search)
+        (verify (not (tasks/ui showing? :no-subscriptions-label)))))))
 
 ;;https://tcms.engineering.redhat.com/case/77359/?from_plan=2110
 (defn ^{Test {:groups ["subscribe"
@@ -708,8 +721,7 @@
            (tasks/ui click :cancel-contract-selection)
            (swap! subs conj [s])
            (catch [:type :subscription-not-available] _)
-           (catch [:type :contract-selection-not-available] _
-             (tasks/unsubscribe s))))
+           (catch [:type :contract-selection-not-available] _)))
         (if-not debug
           (to-array-2d @subs)
           @subs)))
