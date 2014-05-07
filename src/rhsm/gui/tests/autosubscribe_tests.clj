@@ -161,8 +161,13 @@
                         pass
                         :skip-autosubscribe false
                         :owner ownername)
-        (tasks/ui waittillwindownotexist :register-dialog 600)
-        (sleep 20000)
+             ;; old code: long wait times were used because
+             ;; autosubscribe used to take a long time
+        ;(tasks/ui waittillwindownotexist :register-dialog 600)
+        ;(sleep 20000)
+        (if (bool (tasks/ui guiexist :register-dialog
+                            "Please enter the following for this system"))
+          (throw (Exception. "'Enter Activation Key' window should not be displayed")))
         (verify (<= (tasks/warn-count) beforesubs))
         (verify (tasks/compliance?))))))
 
