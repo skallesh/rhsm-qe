@@ -129,7 +129,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// subscribe to the pool
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,quantity,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,quantity,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
 		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
