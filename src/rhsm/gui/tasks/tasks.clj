@@ -282,12 +282,14 @@
   "Utility to see if a GUI object has visible state"
   ([item]
      (let [state (ui getallstates item)]
-       (if (= nil (some #(= "visible" %)
-                        state))false true)))
+       (if (and (= nil (some #(= "visible" %) state))
+                (= nil (some #(= "VISIBLE" %) state)))
+         false true)))
   ([window_name component_name]
      (let [state (ui getallstates window_name component_name)]
-       (if (= nil (some #(= "visible" %)
-                        state))false true))))
+       (if (and (= nil (some #(= "visible" %) state))
+                (= nil (some #(= "VISIBLE" %) state)))
+         false true))))
 
 (defn firstboot-register
   "Subscribes subscription-manager from within firstboot."
