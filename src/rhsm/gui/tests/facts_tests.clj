@@ -127,8 +127,10 @@
                    (run-command "subscription-manager identity | grep 'org ID'"))
           cli-val (trim (last (split cli-raw #":")))
           gui-raw (tasks/ui gettextvalue :facts-org)
-          gui-val (re-find #"\w+" (last (split gui-raw #" ")))]
-      (verify (= gui-val cli-val)))
+          ;gui-val (re-find #"\w+" (last (split gui-raw #" ")))
+          ]
+      ;(verify (= gui-val cli-val))
+      (verify (substring? cli-val gui-raw)))
     (finally (tasks/ui click :close-facts))))
 
 (defn ^{Test {:groups ["facts"
