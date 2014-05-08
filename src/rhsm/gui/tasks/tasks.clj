@@ -9,7 +9,8 @@
         [clojure.string :only (split
                                split-lines
                                trim
-                               blank?)]
+                               blank?
+                               upper-case)]
         rhsm.gui.tasks.tools
         matchure
         gnome.ldtp)
@@ -289,6 +290,21 @@
      (let [state (ui getallstates window_name component_name)]
        (if (and (= nil (some #(= "visible" %) state))
                 (= nil (some #(= "VISIBLE" %) state)))
+         false true))))
+
+(defn has-state?
+  "Utility to see if a GUI object has visible state"
+  ([item state]
+     (let [gui-state (ui getallstates item)
+           state-upper (upper-case state)]
+       (if (and (= nil (some #(= state %) gui-state))
+                (= nil (some #(= state-upper %) gui-state)))
+         false true)))
+  ([window_name component_name state]
+     (let [gui-state (ui getallstates window_name component_name)
+           state-upper (upper-case state)]
+       (if (and (= nil (some #(= state %) gui-state))
+                (= nil (some #(= state-upper %) gui-state)))
          false true))))
 
 (defn firstboot-register
