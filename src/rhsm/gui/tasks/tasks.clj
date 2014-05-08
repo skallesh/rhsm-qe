@@ -237,9 +237,13 @@
      (do
        (if auto-select-sla
          (do
-           (if (bool (ui guiexist :register-dialog "Confirm Subscriptions")) ;; sla selection is presented
-             (do (when sla (ui click :register-dialog sla))
-                 (ui click :register)))
+           (if (bool (ui guiexist :register-dialog "Confirm Subscriptions"))
+             ;; sla selection is presented
+             (do
+               (sleep 2000)
+               (when sla (ui click :register-dialog sla))
+               (ui click :register)))
+           (sleep 2000)
            (ui click :register))
          ;; else leave sla dialog open
          (when sla (ui click :register-dialog sla)))))
