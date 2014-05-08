@@ -944,8 +944,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return;
 		slots.add("pre_register_consumer");		slots.add("post_register_consumer");
 		slots.add("pre_product_id_install");	slots.add("post_product_id_install");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.11.1-1")) {
-		slots.add("pre_product_id_update");		slots.add("post_product_id_update");	// added by bug https://bugzilla.redhat.com/show_bug.cgi?id=1035115#c13; subscription-manager commit 9ee2f98ece8e1f86ed6fa22ee847c8df9814f792
+		if (clienttasks.isPackageVersion("subscription-manager",">","1.10.14-2")) {
+		slots.add("pre_product_id_update");		slots.add("post_product_id_update");	// added by bug https://bugzilla.redhat.com/show_bug.cgi?id=1035115#c13; subscription-manager commit 9ee2f98ece8e1f86ed6fa22ee847c8df9814f792;   RHEL7.0 branch commit 985dab22befbc70cf068465e64f3ae4c7a41144e
 		}
 		slots.add("pre_subscribe");				slots.add("post_subscribe");
 		slots.add("pre_auto_attach");			slots.add("post_auto_attach");
