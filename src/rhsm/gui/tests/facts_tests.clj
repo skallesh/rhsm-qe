@@ -210,9 +210,9 @@
                                  (run-command
                                   (str "rpm -qi " p " | grep " s " | awk '{print $3}'")))))
           get-cli-version (fn [p] (str (rpm-qi p "Version") "-" (rpm-qi p "Release")))
-          cli-pyrhsm (get-cli-version "python-rhsm")
-          cli-rhsm (get-cli-version "subscription-manager-gui")
-          cli-rhsm-service (ctasks/get-rhsm-service-version)]
+          cli-pyrhsm (trim (get-cli-version "python-rhsm"))
+          cli-rhsm (trim (get-cli-version "subscription-manager-gui"))
+          cli-rhsm-service (trim (ctasks/get-rhsm-service-version))]
       (verify (= gui-pyrhsm cli-pyrhsm))
       (verify (= gui-rhsm cli-rhsm))
       (verify (= gui-rhsm-service cli-rhsm-service)))
@@ -415,6 +415,7 @@
             "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"
                         :runner @candlepin-runner)))
 
+
 (defn ^{Test {:groups ["facts"
                        "acceptance"]}}
   verify_update_facts
@@ -427,12 +428,24 @@
     (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
     (tasks/ui click :view-system-facts)
     (tasks/ui click :update-facts)
-    (let [sockets (get @gui-facts "cpu.cpu_socket(s)")
-          facts-map (tasks/get-all-facts)]
-      (reset! socket-val sockets)
-      (verify (not (= @socket-val (get facts-map "cpu.cpu_socket(s)")))))
+    (let [old-val (reset! socket-val
+                          (get @gui-facts "cpu.cpu_socket(s)"))
+          groups (tasks/get-table-elements :facts-view 0)
+          items (zipmap groups (range (count groups)))
+          row-num (get items "cpu")
+          new-val (do
+                    (tasks/ui selectrowindex :facts-view row-num)
+                    (sleep 500)
+                    (tasks/ui doubleclickrow :facts-view "cpu")
+                    (sleep 500)
+                    (last (for [x (range row-num 100)
+                                :let [y (tasks/ui getcellvalue :facts-view x 0)]
+                                :while (not (= "cpu.cpu_socket(s)" y))]
+                            (tasks/ui getcellvalue :facts-view (+ x 1) 1))))]
+      (verify (not (= old-val new-val))))
     (finally
-      (tasks/write-facts "{\"cpu.cpu_socket(s)\":" \space "\"" @socket-val "\"" "}"))))
+      (tasks/ui click :close-facts)
+      (tasks/write-facts (str "{\"cpu.cpu_socket(s)\":" \space "\"" @socket-val "\"}")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
