@@ -5013,12 +5013,11 @@ public class SubscriptionManagerTasks {
 	
 	
 	// unsubscribe module tasks ************************************************************
-
 	/**
-	 * unsubscribe without asserting results
+	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public SSHCommandResult unsubscribe_(Boolean all, List<BigInteger> serials, String proxy, String proxyuser, String proxypassword) {
-
+	public String unsubscribeCommand(Boolean all, List<BigInteger> serials, String proxy, String proxyuser, String proxypassword) {
+		
 		// assemble the command
 		String command = this.command;							command += " unsubscribe";
 		if (all!=null && all)									command += " --all";
@@ -5027,6 +5026,23 @@ public class SubscriptionManagerTasks {
 		if (proxyuser!=null)									command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)								command += " --proxypassword="+proxypassword;
 		
+		return command;
+	}
+	
+	/**
+	 * unsubscribe without asserting results
+	 */
+	public SSHCommandResult unsubscribe_(Boolean all, List<BigInteger> serials, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+//		String command = this.command;							command += " unsubscribe";
+//		if (all!=null && all)									command += " --all";
+//		if (serials!=null)	for (BigInteger serial : serials)	command += " --serial="+serial;
+//		if (proxy!=null)										command += " --proxy="+proxy;
+//		if (proxyuser!=null)									command += " --proxyuser="+proxyuser;
+//		if (proxypassword!=null)								command += " --proxypassword="+proxypassword;
+		String command = unsubscribeCommand(all, serials, proxy, proxyuser, proxypassword);	
+
 		if (all!=null && all && serials==null) workaroundForBug844455();
 		
 		// run command without asserting results

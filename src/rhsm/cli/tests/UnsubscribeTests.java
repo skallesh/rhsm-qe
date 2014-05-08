@@ -18,6 +18,8 @@ import org.testng.annotations.Test;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
+import com.redhat.qe.jul.TestRecords;
+
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
@@ -419,7 +421,51 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	
+	@Test(	description="after attaching many subscriptions (in a different order) to two different consumers, call unsubscribe --all on each consumer",
+			groups={"blockedByBug-1095939"})
+			//@ImplementsNitrateTest(caseId=)
+	public void MultiClientAttemptToDeadLockOnUnsubscribeAll_Test() throws JSONException, Exception {
+		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
+		
+		// register two clients
+		String client1ConsumerId = client1tasks.getCurrentConsumerId(client1tasks.register(sm_client1Username, sm_client1Password, sm_client1Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null));
+		String client2ConsumerId = client2tasks.getCurrentConsumerId(client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null));
+		String client1OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_client1Username, sm_client1Password, sm_serverUrl, client1ConsumerId);
+		String client2OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_client2Username, sm_client2Password, sm_serverUrl, client2ConsumerId);
+		if (!client1OwnerKey.equals(client2OwnerKey)) throw new SkipException("This multi-client test requires that both client registerers belong to the same owner. (client1: username="+sm_client1Username+" ownerkey="+client1OwnerKey+") (client2: username="+sm_client2Username+" ownerkey="+client2OwnerKey+")");
+		
+		// get a list of all of the available pools for each client
+		List<SubscriptionPool> client1pools = client1tasks.getCurrentlyAllAvailableSubscriptionPools();
+		List<SubscriptionPool> client2pools = client2tasks.getCurrentlyAllAvailableSubscriptionPools();
+		
+		// attempt this test more than once
+		for (int attempt=1; attempt<5; attempt++) {
+			
+			// subscribe each client to each of the pools in a different order (this is crucial)
+			List<String> client1poolIds = new ArrayList<String>();
+			List<String> client2poolIds = new ArrayList<String>();
+			for (SubscriptionPool pool : /*getRandomList(*/client1pools/*)*/) client1poolIds.add(pool.poolId);
+			for (SubscriptionPool pool : /*getRandomList(*/client2pools/*)*/) client2poolIds.add(0,pool.poolId);
+			client1tasks.subscribe_(null, null, client1poolIds, null, null, null, null, null, null, null, null);
+			client2tasks.subscribe_(null, null, client2poolIds, null, null, null, null, null, null, null, null);
+			
+			// unsubscribe from all subscriptions on each client simultaneously 
+			client1.runCommand(client1tasks.unsubscribeCommand(true, null, null, null, null), TestRecords.action());
+			client2.runCommand(client2tasks.unsubscribeCommand(true, null, null, null, null), TestRecords.action());
+			client1.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
+			client2.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
+			SSHCommandResult client1Result = client1.getSSHCommandResult();
+			SSHCommandResult client2Result = client2.getSSHCommandResult();
+			
+			// assert the results
+			log.info("SSHCommandResult from an attempt to unsubscribe all on '"+client1tasks.hostname+"': \n"+client1Result);
+			log.info("SSHCommandResult from an attempt to unsubscribe all on '"+client2tasks.hostname+"': \n"+client2Result);
+			Assert.assertEquals(client1Result.getExitCode(), Integer.valueOf(0), "The exit code from the unsubscribe all command on '"+client1tasks.hostname+"'.");
+			Assert.assertEquals(client1Result.getStderr(), "", "Stderr from the unsubscribe all on '"+client1tasks.hostname+"'.");
+			Assert.assertEquals(client2Result.getExitCode(), Integer.valueOf(0), "The exit code from the unsubscribe all command on '"+client2tasks.hostname+"'.");
+			Assert.assertEquals(client2Result.getStderr(), "", "Stderr from the unsubscribe all on '"+client2tasks.hostname+"'.");
+		}
+	}
 	
 	
 	
@@ -427,12 +473,12 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Candidates for an automated Test:
-
+	
 
 	
 	// Data Providers ***********************************************************************
 	
-
 	
-
+	
+	
 }
