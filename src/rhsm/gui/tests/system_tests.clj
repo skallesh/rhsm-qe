@@ -327,16 +327,18 @@
       ;; Worstcase scenario if service rhsmcertd is stopped we have to
       ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
       (if (= (get-release) "RHEL7")
-        (if-not (substring? "Active: active (running)"
-                            (:stdout (run-command "systemctl status rhsmcertd.service")))
-          (do
-            (run-command "systemctl start rhsmcertd.service")
-            (sleep 150000)))
-        (if-not (substring? "running"
-                            (:stdout (run-command "service rhsmcertd status")))
-          (do
-            (run-command "service rhsmcertd start")
-            (sleep 150000)))))))
+        (do
+          (if-not (substring? "Active: active (running)"
+                              (:stdout (run-command "systemctl status rhsmcertd.service")))
+            (do
+              (run-command "systemctl start rhsmcertd.service")
+              (sleep 150000))))
+        (do
+          (if-not (substring? "running"
+                              (:stdout (run-command "service rhsmcertd status")))
+            (do
+              (run-command "service rhsmcertd start")
+              (sleep 150000))))))))
 
 (defn ^{Test {:groups ["system"
                        "blockedByBug-1086377"
@@ -349,13 +351,17 @@
   (try
     (run-command "subscription-manager unregister")
     (run-command "subscription-manager clean")
-    (run-command "systemctl stop rhsmcertd.service")
+    (if (= (get-release) "RHEL7")
+      (run-command "systemctl stop rhsmcertd.service")
+      (run-command "service rhsmcertd stop"))
     (tasks/ui click :about)
     (tasks/ui waittillwindowexist :about-dialog 10)
     (verify (not (tasks/ui showing? :next-system-check)))
     (finally
-     (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
-     (run-command "systemctl start rhsmcertd.service")
+      (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
+      (if (= (get-release) "RHEL7")
+        (run-command "systemctl start rhsmcertd.service")
+        (run-command "service rhsmcertd start"))
      ;; No sleep as we can continue without waiting for the service to
      ;; start as it does not affect the normal functioning of sub-man
      )))
