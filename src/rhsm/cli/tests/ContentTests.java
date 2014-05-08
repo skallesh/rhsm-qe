@@ -329,6 +329,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.yumInstallPackageFromRepo(pkg, repoLabel, null); //pkgInstalled = true;
 		
 		// now remove the package
+		//TODO: Should also remove any dependencies that were installed with pkg; get the dependencies from SSHCommandResult returned above
 		clienttasks.yumRemovePackage(pkg);
 	}
 	
