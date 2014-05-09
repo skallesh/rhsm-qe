@@ -449,13 +449,21 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			client1tasks.subscribe_(null, null, client1poolIds, null, null, null, null, null, null, null, null);
 			client2tasks.subscribe_(null, null, client2poolIds, null, null, null, null, null, null, null, null);
 			
-			// unsubscribe from all subscriptions on each client simultaneously 
-			client1.runCommand(client1tasks.unsubscribeCommand(true, null, null, null, null), TestRecords.action());
-			client2.runCommand(client2tasks.unsubscribeCommand(true, null, null, null, null), TestRecords.action());
+			// unsubscribe from all subscriptions on each client simultaneously
+			log.info("Simultaneously attempting to unsubscribe all on '"+client1tasks.hostname+"' and '"+client2tasks.hostname+"'...");
+			client1.runCommand/*AndWait*/(client1tasks.unsubscribeCommand(true, null, null, null, null), TestRecords.action());
+			client2.runCommand/*AndWait*/(client2tasks.unsubscribeCommand(true, null, null, null, null), TestRecords.action());
 			client1.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 			client2.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 			SSHCommandResult client1Result = client1.getSSHCommandResult();
 			SSHCommandResult client2Result = client2.getSSHCommandResult();
+			//	201405091632:43.313 - INFO: SSHCommandResult from an attempt to unsubscribe all on 'jsefler-7server.usersys.redhat.com': 
+			//		exitCode=255
+			//		stdout=''
+			//		stderr='Runtime Error ERROR: deadlock detected
+			//		  Detail: Process 3247 waits for ShareLock on transaction 45358106; blocked by process 3221.
+			//		Process 3221 waits for ShareLock on transaction 45358105; blocked by process 3247.
+			//		  Hint: See server log for query details. at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse:2,102'
 			
 			// assert the results
 			log.info("SSHCommandResult from an attempt to unsubscribe all on '"+client1tasks.hostname+"': \n"+client1Result);
