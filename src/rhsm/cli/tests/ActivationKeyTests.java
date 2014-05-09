@@ -24,6 +24,8 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.jul.TestRecords;
+
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
@@ -1309,6 +1311,114 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 4, -10*24*60/*10 days ago*/, 1/*1 minute from now*/, getRandInt(), getRandInt(), productId, providedProductIds, null);
 	}
+	
+	
+	@Test(	description="attempt to register two different consumers with multiple activation keys (in reverse order) containing many subscriptions",
+			groups={"blockedByBug-1095939"})
+			//@ImplementsNitrateTest(caseId=)
+	public void MultiClientAttemptToDeadLockOnRegisterWithActivationKeys_Test() throws JSONException, Exception {
+		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
+		
+		// register two clients
+		String client1ConsumerId = client1tasks.getCurrentConsumerId(client1tasks.register(sm_client1Username, sm_client1Password, sm_client1Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null));
+		String client2ConsumerId = client2tasks.getCurrentConsumerId(client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null));
+		String client1OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_client1Username, sm_client1Password, sm_serverUrl, client1ConsumerId);
+		String client2OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_client2Username, sm_client2Password, sm_serverUrl, client2ConsumerId);
+		if (!client1OwnerKey.equals(client2OwnerKey)) throw new SkipException("This multi-client test requires that both client registerers belong to the same owner. (client1: username="+sm_client1Username+" ownerkey="+client1OwnerKey+") (client2: username="+sm_client2Username+" ownerkey="+client2OwnerKey+")");
+		
+		// get all of the pools belonging to ownerKey
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+client1OwnerKey+"/pools?listall=true"));	
+		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_client1Org+"'."); 
+		jsonPools = clienttasks.workaroundForBug1040101(jsonPools);
+		
+		// create two activation key each containing the same pools (added in reverse order)
+		long currentTimeMillis = System.currentTimeMillis();
+		final String activationKeyName1 = String.format("ActivationKey1_%sWithMultiplePoolsForOrgKey_%s", currentTimeMillis,client1OwnerKey);
+		final String activationKeyName2 = String.format("ActivationKey2_%sWithMultiplePoolsForOrgKey_%s", currentTimeMillis,client2OwnerKey);
+		Map<String,String> mapActivationKeyRequest1 = new HashMap<String,String>(){{put("name",activationKeyName1);}};
+		Map<String,String> mapActivationKeyRequest2 = new HashMap<String,String>(){{put("name",activationKeyName2);}};
+		JSONObject jsonActivationKey1 = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + client1OwnerKey + "/activation_keys",new JSONObject(mapActivationKeyRequest1).toString()));
+		JSONObject jsonActivationKey2 = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + client2OwnerKey + "/activation_keys",new JSONObject(mapActivationKeyRequest2).toString()));
+
+		// process each of the pools to choosing friendly ones to add to the activation keys
+		List<String> poolIds = new ArrayList<String>();
+		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			
+			// for the purpose of this test, skip pools with no available entitlements (consumed>=quantity) (quantity=-1 is unlimited)
+			if (jsonPool.getInt("quantity")>0 && jsonPool.getInt("consumed")>=jsonPool.getInt("quantity")) continue;
+			
+			// for the purpose of this test, skip pools that do not have at least 4 available entitlements
+			if (jsonPool.getInt("quantity")>=0 && (jsonPool.getInt("quantity")-jsonPool.getInt("consumed"))<4) continue;
+			
+			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
+			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
+			
+			// for the purpose of this test, skip physical_only pools when system is virtual otherwise the register will fail with "Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'."
+			if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
+			
+			// for the purpose of this test, skip virt_only pools when system is physical otherwise the register will fail with "Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'."
+			if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
+			
+			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
+			if (servertasks.statusStandalone) {
+				String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
+				String virt_only = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
+				if (pool_derived!=null && virt_only!=null && Boolean.valueOf(pool_derived) && Boolean.valueOf(virt_only)) {
+					continue;
+				}
+			}
+			
+			// for the purpose of this test, skip non-multi-entitlement pools otherwise the multi-activation key register will fail with "This unit has already had the subscription matching pool ID '8a9087e345a9f5f90145b36429073724' attached."
+			if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"))) continue;
+			
+			poolIds.add(jsonPool.getString("id"));
+		}
+		// add each of the pools to jsonActivationKey1
+		for (int i=0; i<poolIds.size(); i++) {
+			JSONObject jsonPoolAddedToActivationKey1 = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_client1Username, sm_client1Password, sm_serverUrl, "/activation_keys/" + jsonActivationKey1.getString("id") + "/pools/" + poolIds.get(i)/* + (addQuantity==null?"":"?quantity="+addQuantity)*/, null));
+			if (jsonPoolAddedToActivationKey1.has("displayMessage")) {
+				Assert.fail("Failed to add pool '"+poolIds.get(i)+"' to activation key '"+jsonActivationKey1.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey1.getString("displayMessage"));
+			}
+		}
+		// add each of the pools to jsonActivationKey2 (in reverse order)
+		for (int i=poolIds.size()-1; i>=0; i--) {
+			JSONObject jsonPoolAddedToActivationKey2 = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_client2Username, sm_client2Password, sm_serverUrl, "/activation_keys/" + jsonActivationKey2.getString("id") + "/pools/" + poolIds.get(i)/* + (addQuantity==null?"":"?quantity="+addQuantity)*/, null));
+			if (jsonPoolAddedToActivationKey2.has("displayMessage")) {
+				Assert.fail("Failed to add pool '"+poolIds.get(i)+"' to activation key '"+jsonActivationKey2.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey2.getString("displayMessage"));
+			}
+		}
+		
+		// attempt this test more than once
+		for (int attempt=1; attempt<5; attempt++) {
+			client1tasks.unregister(null, null, null);
+			client2tasks.unregister(null, null, null);
+
+			// register each client simultaneously using the activation keys (one in reverse order of the other)
+			log.info("Simultaneously attempting to register with activation keys on '"+client1tasks.hostname+"' and '"+client2tasks.hostname+"'...");
+			client1.runCommand/*AndWait*/(client1tasks.registerCommand(null, null, client1OwnerKey, null, null, null, null, null, null, null, new ArrayList<String>(){{add(activationKeyName1);add(activationKeyName2);}}, null, null, null, null, null, null, null, null), TestRecords.action());
+			client2.runCommand/*AndWait*/(client2tasks.registerCommand(null, null, client2OwnerKey, null, null, null, null, null, null, null, new ArrayList<String>(){{add(activationKeyName2);add(activationKeyName1);}}, null, null, null, null, null, null, null, null), TestRecords.action());
+			client1.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
+			client2.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
+			SSHCommandResult client1Result = client1.getSSHCommandResult();
+			SSHCommandResult client2Result = client2.getSSHCommandResult();
+			//	201405091623:44.055 - INFO: SSHCommandResult from an attempt to register with activation keys on 'jsefler-7server.usersys.redhat.com': 
+			//		exitCode=255
+			//		stdout=''
+			//		stderr='Problem creating unit Consumer [id = 8a9087e345a9f5f90145e2a740c200ad, type = ConsumerType [id=1000, label=system], getName() = jsefler-7server.usersys.redhat.com]'
+			
+			// assert the results
+			log.info("SSHCommandResult from an attempt to register with activation keys on '"+client1tasks.hostname+"': \n"+client1Result);
+			log.info("SSHCommandResult from an attempt to register with activation keys on '"+client2tasks.hostname+"': \n"+client2Result);
+			Assert.assertEquals(client1Result.getExitCode(), Integer.valueOf(0), "The exit code from register with activation keys on '"+client1tasks.hostname+"'.");
+			Assert.assertEquals(client1Result.getStderr(), "", "Stderr from the unsubscribe all on '"+client1tasks.hostname+"'.");
+			Assert.assertEquals(client2Result.getExitCode(), Integer.valueOf(0), "The exit code from register with activation keys on '"+client2tasks.hostname+"'.");
+			Assert.assertEquals(client2Result.getStderr(), "", "Stderr from the unsubscribe all on '"+client2tasks.hostname+"'.");
+		}
+	}
+	
+	
 	
 	
 	
