@@ -31,8 +31,6 @@ import com.redhat.qe.tools.SSHCommandResult;
 @Test(groups = { "GuestLimitingTests" })
 public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 	protected String ownerKey = "";
-	protected File virtWhatFile = null;
-	protected File virtWhatFileBackup = null;
 	protected List<String> providedProductId=null;
 	protected String factname="system.entitlements_valid";
 	public static final String factValueForSystemCompliance = "valid"; 			
@@ -47,7 +45,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 			groups={"complianceOfHostWithOnlyGuests"},
 			enabled=true)
 	protected void complianceOfHostWithtwoGuestsAndGuestLimitOfFour()  throws JSONException, Exception {
-		forceVirtWhatToReturnHost();
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
 		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			Map<String, String> factsMap = new HashMap<String, String>();
@@ -87,7 +84,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 			groups={"complianceOfHostWithFiveGuests"},
 			enabled=true)
 	protected void complianceOfHostWithFiveGuestsAndGuestLimitOfFour()  throws JSONException, Exception {
-		forceVirtWhatToReturnHost();
+		
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
 		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			Map<String, String> factsMap = new HashMap<String, String>();
@@ -130,7 +127,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 			groups={"complianceOfGuests"},
 			enabled=true)
 	protected void VerifyGuestLimitIsGlobal()  throws JSONException, Exception {
-		forceVirtWhatToReturnHost();
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
 		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			Map<String, String> factsMap = new HashMap<String, String>();
@@ -172,7 +168,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 			groups={"complianceOfHostWithOneInactiveGuest"},
 			enabled=true)
 	protected void complianceOfHostWithOneOftheGuestReportedInactive()  throws JSONException, Exception {
-		forceVirtWhatToReturnHost();
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
 		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			Map<String, String> factsMap = new HashMap<String, String>();
@@ -209,12 +204,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(compliance, factValueForSystemCompliance);
 	}
 
-
-	protected void forceVirtWhatToReturnHost() {
-		// Note: when client is a host, virt-what returns stdout="" and exitcode=0
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, TestRecords.action());
-	}
-
+	
 	protected String getGuestlimitPool(String guestLimit) throws JSONException, Exception {
 		String poolId=null;
 		for (SubscriptionPool pool : clienttasks
@@ -246,29 +236,8 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 				+ clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf " + "/root/temp1");
 	}
-	@BeforeClass(groups="setup")
-	public void backupVirtWhatBeforeClass() {
-		// finding location of virt-what...
-		SSHCommandResult result = client.runCommandAndWait("which virt-what");
-		virtWhatFile = new File(result.getStdout().trim());
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, virtWhatFile.getPath())==1,"virt-what is in the client's path");
-
-		// making a backup of virt-what...
-		virtWhatFileBackup = new File(virtWhatFile.getPath()+".bak");
-		//RemoteFileTasks.runCommandAndAssert(client, "cp -np "+virtWhatFile+" "+virtWhatFileBackup, 0); // cp option -n does not exist on RHEL5 
-		if (RemoteFileTasks.testFileExists(client, virtWhatFileBackup.getPath())==0) {
-			RemoteFileTasks.runCommandAndAssert(client, "cp -p "+virtWhatFile+" "+virtWhatFileBackup, 0);
-		}
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, virtWhatFileBackup.getPath())==1,"successfully made a backup of virt-what to: "+virtWhatFileBackup);
-
-	}
-	@AfterClass(groups="setup")
-	public void restoreVirtWhatAfterClass() {
-		// restoring backup of virt-what
-		if (virtWhatFileBackup!=null && RemoteFileTasks.testFileExists(client, virtWhatFileBackup.getPath())==1) {
-			RemoteFileTasks.runCommandAndAssert(client, "mv -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
-		}
-	}
+	
+	
 	public static JSONObject createGuestIdRequestBody(String guestId,Map<String,String> attributes) throws JSONException{
 		JSONObject jsonGuestData = new JSONObject();
 	
