@@ -107,7 +107,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		}
 		jsonData.put("guestIds", expectedGuestIds);
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId, jsonData);
-		//	client.runCommandAndWait("service virt-who restart");
 		System.out.println(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 
 		String pool=getGuestlimitPool(String.valueOf(guestLimit-1));
@@ -149,8 +148,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		}
 		jsonData.put("guestIds", expectedGuestIds);
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId, jsonData);
-		client.runCommandAndWait("service virt-who restart");
-
 		String pool=getGuestlimitPool("-1");
 		installProductCert(providedProductId.get(randomGenerator.nextInt(providedProductId.size())));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null);
@@ -193,8 +190,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		}
 		jsonData.put("guestIds", expectedGuestIds);
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId, jsonData);
-		client.runCommandAndWait("service virt-who restart");
-
 		String pool=getGuestlimitPool(String.valueOf(guestLimit));
 
 		installProductCert(providedProductId.get(randomGenerator.nextInt(providedProductId.size())));
@@ -240,18 +235,18 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 	
 	public static JSONObject createGuestIdRequestBody(String guestId,Map<String,String> attributes) throws JSONException{
 		JSONObject jsonGuestData = new JSONObject();
-	
+
 		if (guestId!=null)	jsonGuestData.put("guestId", guestId);
-	
+
 		Map<String,String> jsonAttribute = new HashMap<String,String>();
 		for (String attributeName : attributes.keySet()) {
 			if(attributeName.equals("virtWhoType")){
-			jsonAttribute.put("virtWhoType", attributes.get(attributeName));
+				jsonAttribute.put("virtWhoType", attributes.get(attributeName));
 			}if(attributeName.equals("active")){
-			jsonAttribute.put("active", attributes.get(attributeName));
+				jsonAttribute.put("active", attributes.get(attributeName));
 			}
-		
-		jsonGuestData.put("attributes", jsonAttribute);
+
+			jsonGuestData.put("attributes", jsonAttribute);
 		}
 		return jsonGuestData;
 	}
