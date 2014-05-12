@@ -326,11 +326,13 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 
 		// install the package and assert that it is successfully installed
-		clienttasks.yumInstallPackageFromRepo(pkg, repoLabel, null); //pkgInstalled = true;
+		SSHCommandResult yumInstallPackageResult = clienttasks.yumInstallPackageFromRepo(pkg, repoLabel, null); //pkgInstalled = true;
 		
 		// now remove the package
-		//TODO: Should also remove any dependencies that were installed with pkg; get the dependencies from SSHCommandResult returned above
 		clienttasks.yumRemovePackage(pkg);
+		
+		// also remove any dependencies that were installed with pkg
+		for (String depPkg : getYumDependencyPackagesInstalledFromYumInstallPackageResult(yumInstallPackageResult)) clienttasks.yumRemovePackage(depPkg);
 	}
 	
 	
@@ -1203,6 +1205,50 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(entitlementCert.contentNamespaces.size(), totalContentSets, "The number of content sets provided in this version '"+entitlementCert.version+"' entitlement cert parsed using the rct cat-cert tool.");
 		clienttasks.assertEntitlementCertsInYumRepolist(Arrays.asList(entitlementCert), true);
 		clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
+	}
+	
+	protected List<String> getYumDependencyPackagesInstalledFromYumInstallPackageResult(SSHCommandResult yumInstallPackageResult) {
+		
+		// partial stdout from yumInstallPackageResult
+		//	Installed:
+		//	  cman.x86_64 0:3.0.12.1-19.el6
+		//
+		//	Dependency Installed:
+		//	  clusterlib.x86_64 0:3.0.12.1-19.el6 corosync.x86_64 0:1.4.1-3.el6
+		//	  corosynclib.x86_64 0:1.4.1-3.el6 fence-agents.x86_64 0:3.1.5-9.el6
+		//	  fence-virt.x86_64 0:0.2.3-4.el6 ipmitool.x86_64 0:1.8.11-12.el6
+		//	  libibverbs.x86_64 0:1.1.5-3.el6 librdmacm.x86_64 0:1.0.14.1-3.el6
+		//	  lm_sensors-libs.x86_64 0:3.1.1-10.el6 modcluster.x86_64 0:0.16.2-13.el6
+		//	  net-snmp-libs.x86_64 1:5.5-37.el6 net-snmp-utils.x86_64 1:5.5-37.el6
+		//	  nss-tools.x86_64 0:3.12.10-4.el6 oddjob.x86_64 0:0.30-5.el6
+		//	  openais.x86_64 0:1.1.1-7.el6 openaislib.x86_64 0:1.1.1-7.el6
+		//	  perl-Net-Telnet.noarch 0:3.03-11.el6 pexpect.noarch 0:2.3-6.el6
+		//	  python-suds.noarch 0:0.4.1-3.el6 ricci.x86_64 0:0.16.2-42.el6
+		//	  sg3_utils.x86_64 0:1.28-4.el6 telnet.x86_64 1:0.17-47.el6
+		//
+		//	Complete!
+		
+		// partial stdout from yumInstallPackageResult
+		//	Installed:
+		//	  saslwrapper-devel.x86_64 0:0.10-5.el5                                                  
+		//
+		//	Dependency Installed:
+		//	  saslwrapper.x86_64 0:0.10-5.el5                                                        
+		//
+		//	Complete!
+		
+		// partial stdout from yumInstallPackageResult
+		//	Installed:
+		//	  zsh-html.x86_64 0:4.2.6-9.el5                                                          
+		//
+		//	Complete!
+		
+		String regex = "Dependency Installed:(\n.*?)+Complete!";
+		List<String> matches = getSubstringMatches(yumInstallPackageResult.getStdout(), regex);
+		if (matches.size()>1) Assert.fail("Unexpectedly encountered more than one match to '"+regex+"' during a former call to yum install package.");	// no dependencies installed
+		if (matches.isEmpty()) return new ArrayList<String>();	// return empty list
+			
+		return Arrays.asList(matches.get(0).replaceFirst("Dependency Installed:", "").replaceFirst("Complete!", "").trim().split("\\s*\\n\\s*"));
 	}
 	
 	
