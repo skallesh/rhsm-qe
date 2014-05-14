@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -319,6 +320,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		List<String> poolIds = new ArrayList<String>(); 
 		List<SubscriptionPool> subscriptionPools = getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(), 3);	// 3 is sufficient
 		for (SubscriptionPool subscriptionPool : subscriptionPools) poolIds.add(subscriptionPool.poolId);
+		if (poolIds.isEmpty()) throw new SkipException("Cannot test rhsm-debug when no subscription pools are available."); 
 		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
 
 		// run rhsm-debug system
