@@ -19,6 +19,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
+
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
@@ -30,6 +31,8 @@ import rhsm.data.OrderNamespace;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductNamespace;
 import rhsm.data.SubscriptionPool;
+
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -641,6 +644,138 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		"fZoRA85ol5M1QdmOHKXuOhZXaresFw9E3M92hFKrp5XBo1cTthWbkPsUrj6WmWf6"+"\n"+
 		"b2h6lEAZ0zjcWjGzwW+W1N/HVs833/qydQ4heQEC60K/gUreSKekA0I="+"\n"+
 		"-----END RSA PRIVATE KEY-----";
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	@Test(	description="Verify that the base RHEL product cert will upgrade to match the /etc/redhat-release installed",
+			groups={"debugTest","VerifyBaseRHELProductCertUpdates_Test"/*,"AcceptanceTests","blockedByBug-1086301","blockedByBug-1035115","blockedByBug-1000281"*/},
+//			dependsOnMethods={"VerifyOnlyOneBaseRHELProductCertIsInstalled_Test"},
+			enabled=false)	// TODO WORK IN PROGRESS
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyBaseRHELProductCertUpdates_Test() {
+		clienttasks.unregister(null, null, null);
+		
+		// Step 1: determine the currently install RHEL product cert
+		ProductCert rhelProductCert=clienttasks.getCurrentRhelProductCert();
+		Assert.assertNotNull(rhelProductCert,"Expected a base RHEL product cert to be installed.");
+		
+		// Step 2: configure a temporary productCertDir
+		log.info("Configuring a temporary product cert directory...");
+		rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
+		Assert.assertNotNull(rhsmProductCertDir);
+		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+tmpProductCertDir,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+tmpProductCertDir+"/*.pem",Integer.valueOf(0));
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
+		
+		// Step 3: install an old RHEL product cert
+		List<ProductCert> migrationProductCerts = clienttasks.getProductCerts("/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX);
+		ProductCert oldProductCert = null;
+		for (ProductCert productCert : migrationProductCerts) {
+			if (!productCert.productId.equals(rhelProductCert.productId)) continue;
+			if (!productCert.productNamespace.arch.equals(rhelProductCert.productNamespace.arch)) continue;
+			if (clienttasks.redhatReleaseX.equals("5")) {
+				if (productCert.productNamespace.version.equals("5.8")) {	// TODO should also test version 5.8 Beta
+					oldProductCert = productCert;
+					break;
+				}
+			}
+			if (clienttasks.redhatReleaseX.equals("6")) {
+				if (productCert.productNamespace.version.equals("6.3")) {	// TODO should also test version 5.8 Beta
+					oldProductCert = productCert;
+					break;
+				}
+			}
+			if (clienttasks.redhatReleaseX.equals("7")) {
+				if (productCert.productNamespace.version.equals("7.0")) {	// TODO should also test version 5.8 Beta
+					oldProductCert = productCert;
+					break;
+				}
+			}	
+		}
+		Assert.assertNotNull(oldProductCert,"Will use this old RHEL product cert initiate this test: "+oldProductCert);
+		RemoteFileTasks.runCommandAndAssert(client,"cp "+oldProductCert.file+" "+tmpProductCertDir+"/"+oldProductCert.productId+".pem",Integer.valueOf(0));
+		Assert.assertNotNull(clienttasks.getInstalledProductCorrespondingToProductCert(oldProductCert),"The old product cert is installed and recognized by subscription-manager.");
+
+		// Step 4: register with autosubscribe for RHEL content
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, null, null, null, null);
+		if (!clienttasks.isRhelProductCertSubscribed()) throw new SkipException("Failed to autosubscribe to an available RHEL subscription.");
+		
+		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
+
+		// Step 5: set a newer release
+		if (clienttasks.redhatReleaseX.equals("5")) clienttasks.release(null, null, "5.10", null, null, null, null);
+		if (clienttasks.redhatReleaseX.equals("6")) clienttasks.release(null, null, "6.4", null, null, null, null);
+		if (clienttasks.redhatReleaseX.equals("7")) clienttasks.release(null, null, "7.1", null, null, null, null);
+		
+		// Step 6:
+		// yum remove zsh
+		// yum clean all
+		// yum install zsh
+		
+		//	2014-05-13 21:15:39,344 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
+		//	2014-05-13 21:15:39,358 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
+		//	2014-05-13 21:15:39,358 [DEBUG] yum @productid.py:363 - Latest version of product cert for Red Hat Enterprise Linux Server 6.3 is already install, not updating
+		//	2014-05-13 21:15:39,358 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-rpms
+		//	2014-05-13 21:15:39,359 [DEBUG] yum @productid.py:359 - Updating installed product cert for Red Hat Enterprise Linux Server 6.3 to Red Hat Enterprise Linux Server 6.4
+		//	2014-05-13 21:15:39,359 [DEBUG] yum @productid.py:407 - about to run post_product_id_install
+		//	2014-05-13 21:15:39,359 [INFO] yum @productid.py:430 - Installed product cert 69: Red Hat Enterprise Linux Server /tmp/sm-tmpProductCertDir/69.pem
+		//	2014-05-13 21:15:39,360 [DEBUG] yum @productid.py:418 - about to run post_product_id_update
+		
+		// assert productId version 6.4 is now installed
+		
+		// subscription-manager release --unset
+		
+		// yum update zsh
+		
+		//	2014-05-13 21:23:04,452 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
+		//	2014-05-13 21:23:04,453 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
+		//	2014-05-13 21:23:04,453 [DEBUG] yum @productid.py:363 - Latest version of product cert for Red Hat Enterprise Linux Server 6.3 is already install, not updating
+		//	2014-05-13 21:23:04,453 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-rpms
+		//	2014-05-13 21:23:04,453 [DEBUG] yum @productid.py:359 - Updating installed product cert for Red Hat Enterprise Linux Server 6.4 to Red Hat Enterprise Linux Server 6.5
+		//	2014-05-13 21:23:04,454 [DEBUG] yum @productid.py:407 - about to run post_product_id_install
+		//	2014-05-13 21:23:04,454 [INFO] yum @productid.py:430 - Installed product cert 69: Red Hat Enterprise Linux Server /tmp/sm-tmpProductCertDir/69.pem
+		//	2014-05-13 21:23:04,455 [DEBUG] yum @productid.py:418 - about to run post_product_id_update
+
+		// assert productId version 6.5 (original) is now installed
+		
+		// subscription-manager release --set 6.4
+		
+		// yum clean all
+		
+		// yum downgrade zsh
+		
+		//	2014-05-13 21:27:28,050 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
+		//	2014-05-13 21:27:28,050 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
+		//	2014-05-13 21:27:28,050 [DEBUG] yum @productid.py:363 - Latest version of product cert for Red Hat Enterprise Linux Server 6.3 is already install, not updating
+		//	2014-05-13 21:27:28,050 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-rpms
+		//	2014-05-13 21:27:28,051 [DEBUG] yum @productid.py:363 - Latest version of product cert for Red Hat Enterprise Linux Server 6.4 is already install, not updating
+		//	2014-05-13 21:27:28,051 [DEBUG] yum @productid.py:407 - about to run post_product_id_install
+		//	2014-05-13 21:27:28,051 [DEBUG] yum @productid.py:418 - about to run post_product_id_update
+
+		// assert productId version 6.5 (original) is still installed
+		
+		// done
+	}
+	@AfterGroups(groups="setup", value = {"VerifyBaseRHELProductCertUpdates_Test"})
+//	@AfterClass(groups="setup")	// called after class for insurance
+	public void restoreRhsmProductCertDir() {
+		if (clienttasks==null) return;
+		if (rhsmProductCertDir==null) return;	
+		log.info("Restoring the originally configured product cert directory...");
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", rhsmProductCertDir);
+	}
+	protected String rhsmProductCertDir = null;
+	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir";
+
+	
+	
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=659735
