@@ -186,9 +186,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*sm_serverAdminUsername*/null,/*sm_serverAdminPassword*/null,sm_serverUrl,"/status"));
 			if (jsonStatus!=null) {
 				servertasks.statusCapabilities.clear();
-				for (int i=0; i<jsonStatus.getJSONArray("managerCapabilities").length(); i++) {
-					servertasks.statusCapabilities.add(jsonStatus.getJSONArray("managerCapabilities").getString(i));
-				}
 				servertasks.statusRelease		= jsonStatus.getString("release");
 				servertasks.statusResult		= jsonStatus.getBoolean("result");
 				servertasks.statusVersion		= jsonStatus.getString("version");
@@ -196,6 +193,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				try {
 				servertasks.statusStandalone	= jsonStatus.getBoolean("standalone");
 				} catch(Exception e){log.warning(e.getMessage());log.warning("You should upgrade your candlepin server!");}
+				for (int i=0; i<jsonStatus.getJSONArray("managerCapabilities").length(); i++) {	// not displayed on Katello; see Bug 1097875 - /katello/api/status neglects to report all of the fields that /candlepin/status reports
+					servertasks.statusCapabilities.add(jsonStatus.getJSONArray("managerCapabilities").getString(i));
+				}
 
 				//	# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
 				//	{
