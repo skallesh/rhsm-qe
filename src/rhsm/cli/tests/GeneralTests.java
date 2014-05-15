@@ -48,7 +48,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to access functionality that does not exist",
-			groups={},
+			groups={"blockedByBug-1098308"},
 			dataProvider="NegativeFunctionalityData")
 	public void AttemptingCommandsThatAreInvalid_Test(Object blockedByBug, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		log.info("Testing subscription-manager-cli command that is invalid, expecting it to fail: "+ command);
@@ -629,6 +629,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		// String command, int expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
 		
 		// negative tests that require the system to be unregistered first...
+		// Object blockedByBug, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr
 		clienttasks.unregister(null,null,null);
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --product=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --regtoken=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
