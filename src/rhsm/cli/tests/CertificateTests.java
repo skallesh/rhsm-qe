@@ -655,16 +655,25 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the base RHEL product cert will upgrade to match the /etc/redhat-release installed",
-			groups={"debugTest","VerifyBaseRHELProductCertUpdates_Test"/*,"AcceptanceTests","blockedByBug-1086301","blockedByBug-1035115","blockedByBug-1000281"*/},
+			groups={"debugTest","VerifyBaseRHELProductCertUpdates_Test","AcceptanceTests"/*,"blockedByBug-1086301","blockedByBug-1035115","blockedByBug-1000281"*/},
 //			dependsOnMethods={"VerifyOnlyOneBaseRHELProductCertIsInstalled_Test"},
 			enabled=false)	// TODO WORK IN PROGRESS
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyBaseRHELProductCertUpdates_Test() {
 		clienttasks.unregister(null, null, null);
 		
+		// Step 0: remove the test package (choose a RHEL package that changes often)
+		// https://errata.devel.redhat.com/package/show/zsh
+		//	RHEL-5.8.0 		zsh-4.2.6-6.el5
+		//	RHEL-5.10.0 	zsh-4.2.6-9.el5
+		//	RHEL-6.3.0 		zsh-4.3.10-5.el6
+		//	RHEL-6.5.0 		zsh-4.3.10-7.el6
+		String testPackage = "zsh";
+		if (clienttasks.isPackageInstalled(testPackage)) clienttasks.yumRemovePackage(testPackage);
+		
 		// Step 1: determine the currently install RHEL product cert
-		ProductCert rhelProductCert=clienttasks.getCurrentRhelProductCert();
-		Assert.assertNotNull(rhelProductCert,"Expected a base RHEL product cert to be installed.");
+		ProductCert originalRhelProductCert=clienttasks.getCurrentRhelProductCert();
+		Assert.assertNotNull(originalRhelProductCert,"Expected a base RHEL product cert to be installed.");
 		
 		// Step 2: configure a temporary productCertDir
 		log.info("Configuring a temporary product cert directory...");
@@ -677,27 +686,17 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// Step 3: install an old RHEL product cert
 		List<ProductCert> migrationProductCerts = clienttasks.getProductCerts("/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX);
 		ProductCert oldProductCert = null;
+		String oldRelease = null;
+		if (clienttasks.redhatReleaseX.equals("5")) oldRelease = "5.8";	// TODO should also test version 5.8 Beta
+		if (clienttasks.redhatReleaseX.equals("6")) oldRelease = "6.3";
+		if (clienttasks.redhatReleaseX.equals("7")) oldRelease = "7.0";
 		for (ProductCert productCert : migrationProductCerts) {
-			if (!productCert.productId.equals(rhelProductCert.productId)) continue;
-			if (!productCert.productNamespace.arch.equals(rhelProductCert.productNamespace.arch)) continue;
-			if (clienttasks.redhatReleaseX.equals("5")) {
-				if (productCert.productNamespace.version.equals("5.8")) {	// TODO should also test version 5.8 Beta
-					oldProductCert = productCert;
-					break;
-				}
+			if (!productCert.productId.equals(originalRhelProductCert.productId)) continue;
+			if (!productCert.productNamespace.arch.equals(originalRhelProductCert.productNamespace.arch)) continue;
+			if (productCert.productNamespace.version.equals(oldRelease)) {
+				oldProductCert = productCert;
+				break;
 			}
-			if (clienttasks.redhatReleaseX.equals("6")) {
-				if (productCert.productNamespace.version.equals("6.3")) {	// TODO should also test version 5.8 Beta
-					oldProductCert = productCert;
-					break;
-				}
-			}
-			if (clienttasks.redhatReleaseX.equals("7")) {
-				if (productCert.productNamespace.version.equals("7.0")) {	// TODO should also test version 5.8 Beta
-					oldProductCert = productCert;
-					break;
-				}
-			}	
 		}
 		Assert.assertNotNull(oldProductCert,"Will use this old RHEL product cert initiate this test: "+oldProductCert);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+oldProductCert.file+" "+tmpProductCertDir+"/"+oldProductCert.productId+".pem",Integer.valueOf(0));
@@ -709,16 +708,19 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
 
-		// Step 5: set a newer release
-		if (clienttasks.redhatReleaseX.equals("5")) clienttasks.release(null, null, "5.10", null, null, null, null);
-		if (clienttasks.redhatReleaseX.equals("6")) clienttasks.release(null, null, "6.4", null, null, null, null);
-		if (clienttasks.redhatReleaseX.equals("7")) clienttasks.release(null, null, "7.1", null, null, null, null);
+		// Step 5: set a newer release than the installed product id
+		String newerRelease = null;
+		if (clienttasks.redhatReleaseX.equals("5")) newerRelease = "5.9";
+		if (clienttasks.redhatReleaseX.equals("6")) newerRelease = "6.4";
+		if (clienttasks.redhatReleaseX.equals("7")) newerRelease = "7.1";
+		clienttasks.release(null, null, newerRelease, null, null, null, null);
 		
-		// Step 6:
-		// yum remove zsh
-		// yum clean all
-		// yum install zsh
-		
+		// Note: yum @productid.py:290 - Checking for product id certs to install or update.  THIS ONLY TRIGGERS WHEN THE RPM LIST IS CHANGED BY A REMOVAL, INSTALL, OR UPDATE.
+
+		// Step 6: install the test package and assert the product id has been upgraded.
+		clienttasks.yumClean("metadata");	// to avoid... Not using downloaded repomd.xml because it is older than what we have:
+		clienttasks.yumInstallPackage(testPackage);
+		// tail -f /var/log/rhsm/rhsm.log
 		//	2014-05-13 21:15:39,344 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
 		//	2014-05-13 21:15:39,358 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
 		//	2014-05-13 21:15:39,358 [DEBUG] yum @productid.py:363 - Latest version of product cert for Red Hat Enterprise Linux Server 6.3 is already install, not updating
@@ -727,13 +729,15 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	2014-05-13 21:15:39,359 [DEBUG] yum @productid.py:407 - about to run post_product_id_install
 		//	2014-05-13 21:15:39,359 [INFO] yum @productid.py:430 - Installed product cert 69: Red Hat Enterprise Linux Server /tmp/sm-tmpProductCertDir/69.pem
 		//	2014-05-13 21:15:39,360 [DEBUG] yum @productid.py:418 - about to run post_product_id_update
+		ProductCert newerRhelProductCert=clienttasks.getCurrentRhelProductCert();
+		Assert.assertNotNull(newerRhelProductCert,"Expected a base RHEL product cert to be installed.");
+		Assert.assertEquals(newerRhelProductCert.productNamespace.version, newerRelease, "After installing package '"+testPackage+"' from release '"+newerRelease+"', the installed product cert version is updated from '"+oldRelease+"'.");
 		
-		// assert productId version 6.4 is now installed
+		// Step 6: unset the release thereby giving access to the latest content
+		clienttasks.release(null, null, null, true, null, null, null);
 		
-		// subscription-manager release --unset
-		
-		// yum update zsh
-		
+		// Step 7: yum update the test package to the latest version and assert the product id has been upgraded to the original product cert.
+		clienttasks.yumUpdatePackage(testPackage);
 		//	2014-05-13 21:23:04,452 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
 		//	2014-05-13 21:23:04,453 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
 		//	2014-05-13 21:23:04,453 [DEBUG] yum @productid.py:363 - Latest version of product cert for Red Hat Enterprise Linux Server 6.3 is already install, not updating
@@ -742,15 +746,16 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	2014-05-13 21:23:04,454 [DEBUG] yum @productid.py:407 - about to run post_product_id_install
 		//	2014-05-13 21:23:04,454 [INFO] yum @productid.py:430 - Installed product cert 69: Red Hat Enterprise Linux Server /tmp/sm-tmpProductCertDir/69.pem
 		//	2014-05-13 21:23:04,455 [DEBUG] yum @productid.py:418 - about to run post_product_id_update
-
-		// assert productId version 6.5 (original) is now installed
+		ProductCert latestRhelProductCert=clienttasks.getCurrentRhelProductCert();
+		Assert.assertNotNull(latestRhelProductCert,"Expected a base RHEL product cert to be installed.");
+		Assert.assertEquals(latestRhelProductCert.productNamespace.version, originalRhelProductCert.productNamespace.version, "After updating package '"+testPackage+"' from the latest release, the installed product cert version is updated from '"+newerRelease+"' to the original version '"+originalRhelProductCert.productNamespace.version+"'.");
 		
-		// subscription-manager release --set 6.4
+		// Step 8: set the rhel release backward to perform downgrade testing
+		clienttasks.release(null, null, newerRelease, null, null, null, null);
 		
-		// yum clean all
-		
-		// yum downgrade zsh
-		
+		// Step 9: downgrade the test package and assert the original product id remains installed.
+		clienttasks.yumClean("metadata");	// to avoid... Not using downloaded repomd.xml because it is older than what we have:
+		clienttasks.yumDowngradePackage(testPackage);
 		//	2014-05-13 21:27:28,050 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
 		//	2014-05-13 21:27:28,050 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
 		//	2014-05-13 21:27:28,050 [DEBUG] yum @productid.py:363 - Latest version of product cert for Red Hat Enterprise Linux Server 6.3 is already install, not updating
@@ -758,10 +763,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	2014-05-13 21:27:28,051 [DEBUG] yum @productid.py:363 - Latest version of product cert for Red Hat Enterprise Linux Server 6.4 is already install, not updating
 		//	2014-05-13 21:27:28,051 [DEBUG] yum @productid.py:407 - about to run post_product_id_install
 		//	2014-05-13 21:27:28,051 [DEBUG] yum @productid.py:418 - about to run post_product_id_update
+		ProductCert finalRhelProductCert=clienttasks.getCurrentRhelProductCert();
+		Assert.assertNotNull(finalRhelProductCert,"Expected a base RHEL product cert to be installed.");
+		Assert.assertEquals(finalRhelProductCert.productNamespace.version, originalRhelProductCert.productNamespace.version, "After downgrading package '"+testPackage+"' from the latest release, the installed product cert version remains the same as the original version '"+originalRhelProductCert.productNamespace.version+"'.");
 
-		// assert productId version 6.5 (original) is still installed
-		
-		// done
 	}
 	@AfterGroups(groups="setup", value = {"VerifyBaseRHELProductCertUpdates_Test"})
 //	@AfterClass(groups="setup")	// called after class for insurance
