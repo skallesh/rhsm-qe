@@ -6088,13 +6088,13 @@ public class SubscriptionManagerTasks {
 		return pkgFile;
 	}
 	
-	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
+	public SSHCommandResult yumDoPackageFromRepo (String installUpdateOrDowngrade, String pkg, String repoLabel, String options) {
 		
-		// install the package with repoLabel enabled
-		String command = "yum -y install "+pkg;
+		// install or update the package with repoLabel enabled
+		String command = "yum -y "+installUpdateOrDowngrade+" "+pkg;
 		command += " --disableplugin=rhnplugin";	// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		if (repoLabel!=null) command += " --enablerepo="+repoLabel;
-		if (installOptions!=null) command += " "+installOptions; 
+		if (options!=null) command += " "+options; 
 		//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
 		Assert.assertTrue(!result.getStderr().toLowerCase().contains("error"), "Stderr from command '"+command+"' did not report an error.");
@@ -6435,7 +6435,7 @@ public class SubscriptionManagerTasks {
 		}
 		pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		matcher = pattern.matcher(sshCommandRunner.getStdout());
-		Assert.assertTrue(matcher.find(), "Package '"+pkg+"' appears to have been installed"+(repoLabel==null?"":" from repository '"+repoLabel+"'")+".");
+		Assert.assertTrue(matcher.find(), "Attempted "+installUpdateOrDowngrade+" of package '"+pkg+"' "+(repoLabel==null?"":" from repository '"+repoLabel+"'")+" appears to have been successful.");
 		String arch = matcher.group(1);
 		String version = matcher.group(2);
 		String repo = matcher.group(3);
@@ -6471,6 +6471,19 @@ public class SubscriptionManagerTasks {
 		return result;
 	}
 	
+	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
+		return yumDoPackageFromRepo ("install", pkg, repoLabel, installOptions);
+	}
+	/**
+	 * yum -y install pkg installOptions <br>
+	 * Assert the install is Complete! and pkg is installed.
+	 * @param pkg
+	 * @param installOptions
+	 * @return
+	 */
+	public SSHCommandResult yumInstallPackage (String pkg, String installOptions) {
+		return yumInstallPackageFromRepo(pkg,null,installOptions);
+	}
 	/**
 	 * yum -y install pkg<br>
 	 * Assert the install is Complete! and pkg is installed.
@@ -6481,15 +6494,30 @@ public class SubscriptionManagerTasks {
 		return yumInstallPackageFromRepo(pkg,null,null);
 	}
 	
+	public SSHCommandResult yumUpdatePackageFromRepo (String pkg, String repoLabel, String updateOptions) {
+		return yumDoPackageFromRepo ("update", pkg, repoLabel, updateOptions);
+	}
 	/**
-	 * yum -y install pkg installOptions <br>
-	 * Assert the install is Complete! and pkg is installed.
+	 * yum -y update pkg<br>
+	 * Assert the update is Complete! and pkg is installed.
 	 * @param pkg
-	 * @param installOptions
 	 * @return
 	 */
-	public SSHCommandResult yumInstallPackage (String pkg, String installOptions) {
-		return yumInstallPackageFromRepo(pkg,null,installOptions);
+	public SSHCommandResult yumUpdatePackage (String pkg) {
+		return yumUpdatePackageFromRepo(pkg,null,null);
+	}
+	
+	public SSHCommandResult yumDowngradePackageFromRepo (String pkg, String repoLabel, String downgradeOptions) {
+		return yumDoPackageFromRepo ("downgrade", pkg, repoLabel, downgradeOptions);
+	}
+	/**
+	 * yum -y downgrade pkg<br>
+	 * Assert the downgrade is Complete! and pkg is installed.
+	 * @param pkg
+	 * @return
+	 */
+	public SSHCommandResult yumDowngradePackage (String pkg) {
+		return yumDowngradePackageFromRepo(pkg,null,null);
 	}
 	
 	/**
