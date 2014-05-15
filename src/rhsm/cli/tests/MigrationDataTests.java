@@ -55,6 +55,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  product 150 is at
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree;f=product_ids/rhev-3.0;hb=HEAD
  *
+ *  for F in `rpm -ql subscription-manager-migration-data | grep .pem`; do echo ""; rct cat-cert $F | grep -i "Version"; done;
  */
 @Test(groups={"MigrationDataTests"})
 public class MigrationDataTests extends SubscriptionManagerCLITestScript {
