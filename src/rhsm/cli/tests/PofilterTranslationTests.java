@@ -72,6 +72,10 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   	Subscription Manger 1.10.X Translation Request
  *		https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.10.X
  *		https://engineering.redhat.com/rt/Ticket/Display.html?id=276556
+ *
+ *  	Subscription Manger 1.11.X Translation Request
+ *		https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.11.X
+ *		https://engineering.redhat.com/rt/Ticket/Display.html?id=294989
  *   
  *   Translators:
  *   
