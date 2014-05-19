@@ -359,7 +359,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: list of available subscriptions should include contract number",
-			groups={"blockedByBug-1007580"},
+			groups={"blockedByBug-1007580","blockedByBug-1088507"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=, fromPlan=)
 	public void EnsureListAvailableReportsContract_Test() {
