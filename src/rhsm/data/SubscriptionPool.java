@@ -283,7 +283,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		regexes.put("contract",					"Contract:(.*)");	// "Contract"; added by Bug 1007580
 		regexes.put("poolId",					"Pool ID:(.*)");	// "Pool Id:(.*)"); changed by Bug 878634
 		regexes.put("quantity",					"(?:Quantity:|Available:)(.*)");	// "Quantity:(.*)"); changed by Bug 986971	// "quantity:(.*)"); changed by Bug 612730	// may eventually be changed by Bug 963874
-		regexes.put("suggested",				"Suggested:(.*)");	// added by Bug 1008557
+		regexes.put("suggested",				"Suggested:(.*)");	// added by Bug 1008557 and Bug 1088372
 		regexes.put("serviceLevel",				"Service Level:(.*)");
 		regexes.put("serviceType",				"Service Type:(.*)");
 		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");
