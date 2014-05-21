@@ -221,14 +221,15 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to python-rhsm",
-			groups={"blockedByBug-1006748","blockedByBug-800732"},
+			groups={"blockedByBug-1006748","blockedByBug-800732","blockedByBug-1096676"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForPythonRhsm_Test() {
 		String pkg = "python-rhsm";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
-		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
 		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
@@ -241,19 +242,20 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"m2crypto",
 					"python-iniparse",
-					"python-simplejson",	// removed by bug 1006748
+					"python-simplejson",
 					"rpm-python",
 			}));
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.5-1")) expectedRequiresList.remove("python-simplejson");	// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
-			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
-			return;
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.11.3-2")) expectedRequiresList.add("python-simplejson");	// Bug 1096676 - missing dependency on json; python-rhsm commit 19b9b55404c5a9bf4eb2828692f8a578a7645da1
+//			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+//			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+//			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: m2crypto",
 					"manual: python-iniparse",
-					"manual: python-simplejson",	// removed by bug 1006748
+					"manual: python-simplejson",
 					"manual: rpm-python"
 			}));
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.5-1")) expectedRequiresList.remove("manual: python-simplejson");	// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
@@ -273,7 +275,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		String pkg = "subscription-manager";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
-		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
 		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
@@ -284,7 +287,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"config(subscription-manager) = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: config(subscription-manager) = 1.9.11-1.el6",
+					"/bin/bash",
+					"/usr/bin/python",
+					//TODO figure out how to keep this: "config(subscription-manager) = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: config(subscription-manager) = 1.9.11-1.el6",
 					"/bin/sh",
 					"/bin/sh",
 					"/bin/sh",
@@ -293,6 +298,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"dbus-python",
 					"initscripts",
 					"pygobject2",
+					"python-dateutil",
 					"python-dmidecode",
 					"python-ethtool",
 					"python-iniparse",
@@ -305,9 +311,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.11.3-1"))	expectedRequiresList.add("python-rhsm >= 1.11.3-2");	// RHEL5.11
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.8.22-1"))	expectedRequiresList.add("python-rhsm >= 1.8.16-1");	// RHEL5.10
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.0.13-1"))	expectedRequiresList.add("python-rhsm >= 1.0.5");		// RHEL5.9
-			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
-			return;
+//			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+//			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+//			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
@@ -330,8 +336,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: yum >= 3.2.19-15"
 			}));
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.9.2-1"))	expectedRequiresList.add("python-rhsm >= 1.9.1-1");		// RHEL6.5
-			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.8.12-1"))	expectedRequiresList.add("python-rhsm >= 1.8.13-1");	// RHEL6.4
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.9.2-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.9.1-1");		// RHEL6.5
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.8.12-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.8.13-1");	// RHEL6.4
 
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
@@ -339,10 +345,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"post: systemd",	//"post: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
 					"preun: systemd",	//"preun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
 					"postun: systemd",	//"postun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
-					//"manual: config(subscription-manager) = "+clienttasks.installedPackageVersion.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: config(subscription-manager) = 1.9.11-1.el6",
-					//"post: /bin/sh",
-					//"preun: /bin/sh",
-					//"postun: /bin/sh",
+					"config: config(subscription-manager) = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"config: config(subscription-manager) = 1.10.14-7.el7
+					"post,interp: /bin/sh",
+					"preun,interp: /bin/sh",
+					"postun,interp: /bin/sh",
 					//"post: chkconfig",	// removed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
 					//"preun: chkconfig",	// removed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
 					"manual: dbus-python",
@@ -358,8 +364,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: yum >= 3.2.19-15"
 			}));
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.14-6"))	expectedRequiresList.add("python-rhsm >= 1.10.12-2");	// RHEL7.0	// Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
-			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1"))	expectedRequiresList.add("python-rhsm >= 1.10.9");		// RHEL7.0
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.14-6"))	expectedRequiresList.add("manual: python-rhsm >= 1.10.12-2");	// RHEL7.0	// Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.10.9");		// RHEL7.0
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -376,7 +382,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		String pkg = "subscription-manager-gui";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
-		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
 		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
@@ -391,7 +398,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"librsvg2",
 					"/bin/sh",
 					"/bin/sh",
+					"/bin/sh",
+					"/usr/bin/python",
 					"dbus-x11",
+					"gnome-icon-theme",	// added by Bug 995121 - GUI: calendar icon on s390x and ppc64 machines is not displayed
 					"gnome-python2",
 					"gnome-python2-canvas",
 					"pygtk2",
@@ -401,16 +411,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"usermode-gtk"
 			}));
 			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
-			return;
+//			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+//			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
 					"manual: librsvg2("+clienttasks.arch.replace("_","-")+")",	//"manual: librsvg2(x86-64)",
+					"interp: /bin/sh",
 					"post: /bin/sh",
 					"postun: /bin/sh",
 					"manual: dbus-x11",
+					"manual: gnome-icon-theme",	// added by Bug 995121 - GUI: calendar icon on s390x and ppc64 machines is not displayed
 					"manual: gnome-python2",
 					"manual: gnome-python2-canvas",
 					"manual: pygtk2",
@@ -424,8 +436,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
 					"manual: librsvg2("+clienttasks.arch.replace("_","-")+")",	//"manual: librsvg2(x86-64)",
-					//"post: /bin/sh",
-					//"postun: /bin/sh",
+					"interp,posttrans: /bin/sh",
+					"post,interp: /bin/sh",
+					"postun,interp: /bin/sh",
 					"manual: dbus-x11",
 					"manual: gnome-icon-theme",	// added by Bug 995121 - GUI: calendar icon on s390x and ppc64 machines is not displayed
 					"manual: gnome-python2",
@@ -452,7 +465,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		String pkg = "subscription-manager-firstboot";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
-		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
 		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
@@ -467,9 +481,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"librsvg2",
 					"rhn-setup-gnome"
 			}));
-			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
-			return;
+//			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+//			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+//			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
@@ -500,7 +514,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		String pkg = "subscription-manager-migration";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
-		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
 		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
@@ -511,19 +526,22 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"/usr/bin/python",
 					"subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-manager = 1.9.11-1.el6",
 					"rhnlib"
 			}));
-			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
-			return;
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.10-1"))	expectedRequiresList.add("subscription-manager-migration-data");			// Bug 1049037 - subscription-manager-migration should require subscription-manager-migration-data; subscription-manager commit 8e988551fae03a51a72dd8852066ff9b204d982c
+//			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+//			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+//			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.9.11-1.el6"
-					"manual: subscription-manager-migration-data",	// Bug 1049037 - subscription-manager-migration should require subscription-manager-migration-data
 					"manual: rhnlib"
 			}));
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.10-1"))	expectedRequiresList.add("manual: subscription-manager-migration-data");			// Bug 1049037 - subscription-manager-migration should require subscription-manager-migration-data; subscription-manager commit 8e988551fae03a51a72dd8852066ff9b204d982c
+
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -540,7 +558,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		String pkg = "subscription-manager-migration-data";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
-		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep '(^manual:|^preun:|^postun:|^post:)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
 		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
 		
 		List<String> actualRequiresList = new ArrayList<String>();
@@ -551,9 +570,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List<String> expectedRequiresList = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("5")) { 
 			// empty list
-			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
-			return;
+//			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+//			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
+//			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
 			// empty list
