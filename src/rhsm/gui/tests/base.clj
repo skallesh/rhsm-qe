@@ -8,6 +8,8 @@
             AfterSuite]
            org.testng.SkipException))
 
+;(def user "testuser")
+
 (defn run-and-assert
   "Wrapper around run-command that throws a SkipException if the command fails"
   [command]
@@ -20,7 +22,8 @@
   [url]
   (when url
     (if (= "RHEL5" (get-release))
-      (let [path "/root/bin/ldtpd"]
+      (let [;path (str "/home/" user "/bin/ldtpd")
+        path (str "/root/bin/ldtpd")]
         (run-and-assert (str "wget " url " -O " path))
         (run-and-assert (str "chmod +x " path))))))
 
@@ -66,6 +69,6 @@
   (log/info "Contents of ldtpd.log:")
   (log/info (:stdout
              (run-command
-              "cat /var/log/ldtpd/ldtpd.log"))))
+              (str "cat /home/" user "/ldtpd/ldtpd.log")))))
 
 (gen-class-testng)
