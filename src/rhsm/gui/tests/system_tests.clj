@@ -302,26 +302,27 @@
                                (run-command "systemctl restart rhsmcertd.service")
                                (run-command "service rhsmcertd restart")))
          log-timestamp (re-find #"\d+:\d+:\d+" output)
-           ;; The following steps add minutes to the time as this is the default
-           ;; interval in conf file. The step which follows is conversion of time
-           ;; formats this is because the logs have 24hrs time format and the GUI
-           ;; has 12hrs time format. The last step adds a zero if the time
-           ;; is less than 10hrs which makes sting comparison easier
+         ;; The following steps add minutes to the time as this is the default
+         ;; interval in conf file. The step which follows is conversion of time
+         ;; formats this is because the logs have 24hrs time format and the GUI
+         ;; has 12hrs time format. The last step adds a zero if the time
+         ;; is less than 10hrs which makes sting comparison easier
          interval (trim-newline (:stdout
-                                 (run-command "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
+                                 (run-command
+                                  "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
          time-to-be-added (/ (read-string (re-find #"\d+" (str interval)))60)
          hours-log (first (clojure.string/split log-timestamp #":"))
-           ;; read-string throws exception on strings '08' and '09'
+         ;; read-string throws exception on strings '08' and '09'
          processed-hours-log (if (or (= interval "08") (= interval "09"))
-                               (re-find #"[^0]" hours-log)
-                               hours-log)
-         new-time (+ time-to-be-added (read-string (processed-hours-log)))
+                               (re-find #"[^0]" hours-log) hours-log)
+         new-time (+ time-to-be-added (Integer. (re-find  #"\d+" processed-hours-log)))
          hours (if (> new-time 12) (- new-time 12) new-time)
-         compare-time (str (if ( < hours 10) (str "0" hours)
-                                         hours)(re-find #":\d+:\d+" log-timestamp))]
+         compare-time (str (if ( < hours 10) (str "0" hours) hours)
+                           (re-find #":\d+:\d+" log-timestamp))]
       (tasks/ui click :about)
       (tasks/ui waittillwindowexist :about-dialog 10)
-      (verify ( = compare-time (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check)))))
+      (verify ( = compare-time (re-find #"\d+:\d+:\d+"
+                                        (tasks/ui gettextvalue :next-system-check)))))
     (finally
       (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
       ;; Worstcase scenario if service rhsmcertd is stopped we have to
@@ -934,6 +935,31 @@
         (if (not (bool (tasks/ui guiexist :main-window)))
           (tasks/start-app)))))
 
+(comment
+  (defn ^{BeforeGroups {:groups ["system"
+                                 "acceptance"]
+                        :value ["launch_gui_as_non_root_user"]}}
+    before_launch_gui_non_root
+    [_]
+    )
+
+  (defn ^{Test {:groups ["system"
+                         "acceptance"]
+                :value ["launch_gui_as_non_root_user"]}}
+    launch_gui_non_root
+    "Asserts that GUI can be launched as non-root user"
+    [_]
+    )
+
+  (defn ^{AfterGroups {:groups ["system"
+                                "acceptance"]
+                       :value ["launch_gui_as_non_root_user"]
+                       :alwaysRun true}}
+    after_launch_gui_non_root
+    [_]
+    )
+)
+
 (defn ^{Test {:groups ["system"
                        "acceptance"]}}
   check_physical_only_pools
@@ -983,7 +1009,6 @@
     (do
       (tasks/restart-app)
       (tasks/register-with-creds)
-      (tasks/subscribe_all)
       (tasks/ui selecttab :my-installed-products)
       (let [subs (into [] (map vector (tasks/get-table-elements
                                        :installed-view
