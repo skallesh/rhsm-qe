@@ -2324,9 +2324,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// test --redhat-user --redhat-password --subscription-service-user --subscription-service-password as a command line option
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("912375"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--redhat-user=%s --redhat-password=%s",sm_rhnUsername,sm_rhnPassword)+rhsmServerUrlOption,			null,	null,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("912375"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--subscription-service-user=%s --subscription-service-password=%s",rhsmUsername,rhsmPassword)+rhsmServerUrlOption,			sm_rhnUsername,	sm_rhnPassword,	null,	null,	rhsmOrg,	null,	defaultServiceLevel}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("912375"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--redhat-user=%s --redhat-password=%s --subscription-service-user=%s --subscription-service-password=%s",sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword)+rhsmServerUrlOption,			null,	null,	null,	null,	rhsmOrg,	null,	defaultServiceLevel}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"912375","1087603"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--redhat-user=%s --redhat-password=%s",sm_rhnUsername,sm_rhnPassword)+rhsmServerUrlOption,			null,	null,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"912375","1087603"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--subscription-service-user=%s --subscription-service-password=%s",rhsmUsername,rhsmPassword)+rhsmServerUrlOption,			sm_rhnUsername,	sm_rhnPassword,	null,	null,	rhsmOrg,	null,	defaultServiceLevel}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"912375","1087603"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--redhat-user=%s --redhat-password=%s --subscription-service-user=%s --subscription-service-password=%s",sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword)+rhsmServerUrlOption,			null,	null,	null,	null,	rhsmOrg,	null,	defaultServiceLevel}));
 
 		
 		// when rhsmOrg is not null, add bug BlockedByBzBug 849483 to all rows
