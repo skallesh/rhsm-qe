@@ -46,7 +46,8 @@
                          :ssh-key-passphrase "sm.sshkey.passphrase"
                          :ssh-key-private (DefaultMapKey. "sm.sshkey.private" ".ssh/id_auto_dsa")
                          :ssh-timeout "sm.ssh.emergencyTimeoutMS"
-                         :ssh-user (DefaultMapKey. "sm.ssh.user" "root")
+                         :ssh-user (DefaultMapKey. "sm.ssh.user" "testuser")
+                         :ssh-super-user (DefaultMapKey. "sm.ssh.super-user" "root")
                          :username "sm.client1.username"
                          :username1 "sm.client2.username"
                          })]
@@ -60,13 +61,14 @@
 (def auth-proxyrunner (atom nil))
 (def noauth-proxyrunner (atom nil))
 (def candlepin-runner (atom nil))
+(def clientcmd-testuser (atom nil))
 
 (defn init []
   (TestScript.) ;;sets up logging, reads properties
   (swap! config merge (get-properties))
   ;; client command runner to run ssh commands on the rhsm client box
   (reset! clientcmd (SSHCommandRunner. (@config :client-hostname)
-                                       (@config :ssh-user)
+                                       (@config :ssh-super-user)
                                        (@config :ssh-key-private)
                                        (@config :ssh-key-passphrase)
                                        nil))
@@ -77,7 +79,7 @@
   (.initializeFieldsFromConfigFile @cli-tasks)
   ;; command runner to run ssh commands on the squid proxy server (with auth)
   (reset! auth-proxyrunner (SSHCommandRunner. (@config :basicauth-proxy-hostname)
-                                              (@config :ssh-user)
+                                              (@config :ssh-super-user)
                                               (@config :ssh-key-private)
                                               (@config :ssh-key-passphrase)
                                               nil))
@@ -85,22 +87,31 @@
     (.setEmergencyTimeout @auth-proxyrunner (Long/valueOf (@config :ssh-timeout))))
   ;; command runner to run ssh commands on the proxy server (no authentication)
   (reset! noauth-proxyrunner (SSHCommandRunner. (@config :noauth-proxy-hostname)
-                                                (@config :ssh-user)
+                                                (@config :ssh-super-user)
                                                 (@config :ssh-key-private)
                                                 (@config :ssh-key-passphrase)
                                                 nil))
   (when (@config :ssh-timeout)
     (.setEmergencyTimeout @noauth-proxyrunner (Long/valueOf (@config :ssh-timeout))))
   ;; command runner to run ssh commands on the candlepin server
-  ;; *******  This can be used only against Standalone Candlepin and against Stage  ******* 
+  ;; *******  This can be used only against Standalone Candlepin and against Stage  *******
   (comment
   (reset! candlepin-runner (SSHCommandRunner. (@config :server-hostname)
-                                              (@config :ssh-user)
+                                              (@config :ssh-super-user)
                                               (@config :ssh-key-private)
                                               (@config :ssh-key-passphrase)
                                               nil))
   (when (@config :ssh-timeout)
     (.setEmergencyTimeout @candlepin-runner (Long/valueOf (@config :ssh-timeout)))))
+  ;; command runner to run ssh commands on rhsm client box as non-root user
+  (comment
+    (reset! clientcmd-testuser (SSHCommandRunner. (@config :client-hostname)
+                                                  (@config :ssh-user)
+                                                  (@config :ssh-key-private)
+                                                  (@config :ssh-key-passphrase)
+                                                  nil))
+    (when (@config :ssh-timeout)
+      (.setEmergencyTimeout @clientcmd-testuser (Long/valueOf (@config :ssh-timeout)))))
   ;; instantiate CandlepinTasks
   (reset! candlepin-tasks (CandlepinTasks.))
   ;; turn off SSL Checking so rest API works
