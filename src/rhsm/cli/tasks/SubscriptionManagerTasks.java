@@ -3824,7 +3824,12 @@ public class SubscriptionManagerTasks {
 			this.currentlyRegisteredPassword = null;
 			this.currentlyRegisteredOrg = null;
 			this.currentlyRegisteredType = null;
-		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {		// already unregistered	
+		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {		// already unregistered
+			// as insurance, reset these (they should already be null)
+			this.currentlyRegisteredUsername = null;
+			this.currentlyRegisteredPassword = null;
+			this.currentlyRegisteredOrg = null;
+			this.currentlyRegisteredType = null;
 		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {	// failure
 		}
 		
