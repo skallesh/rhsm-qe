@@ -69,6 +69,7 @@
   (log/info "Contents of ldtpd.log:")
   (log/info (:stdout
              (run-command
-              (str "cat /home/" user "/ldtpd/ldtpd.log")))))
+              ;(str "cat /home/" user "/ldtpd/ldtpd.log")
+              (str "cat /root/ldtpd/ldtpd.log")))))
 
 (gen-class-testng)
