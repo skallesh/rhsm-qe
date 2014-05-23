@@ -117,7 +117,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify RHEL4 channel mappings exist in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","blockedByBug-1009932","blockedByBug-1025338","blockedByBug-1080072"},
+			groups={"AcceptanceTests","blockedByBug-1009932","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1100872"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
