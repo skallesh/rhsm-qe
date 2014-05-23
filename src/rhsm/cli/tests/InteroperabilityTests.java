@@ -114,7 +114,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin should inform that: The subscription for following product(s) has expired: etc.",
-			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-871146", "blockedbyBug-901612", "blockedbyBug-1017354"},
+			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-871146", "blockedbyBug-901612", "blockedbyBug-1017354","blockedByBug-1087620"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void YumPluginMessageCase0_Test() throws JSONException, Exception {
