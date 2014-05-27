@@ -107,7 +107,7 @@ MESSAGES.put("ACTIVATIONKEYDELETED",
  */
 
 
-@Test(groups={"EventTests"})
+@Test(groups={"EventTests","Tier3Tests"})
 public class EventTests extends SubscriptionManagerCLITestScript{
 
 	// Test methods ***********************************************************************

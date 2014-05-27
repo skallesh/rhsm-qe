@@ -23,7 +23,7 @@ import com.redhat.qe.Assert;
  *
  */
 
-@Test(groups={"RAMTests"})
+@Test(groups={"RAMTests","Tier2Tests"})
 public class RAMTests extends SubscriptionManagerCLITestScript {
 	Map<String, String> factsMap = new HashMap<String, String>();
 	int value=(int) 1.049e+6;

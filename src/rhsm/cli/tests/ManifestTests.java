@@ -41,7 +41,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *     click "Download manifest" to /tmp/manifest.zip
  *   copy the manifest.zip to the sm_manifestsUrl so it will be included in these tests
  */
-@Test(groups={"ManifestTests"})
+@Test(groups={"ManifestTests","Tier2Tests"})
 public class ManifestTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************

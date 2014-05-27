@@ -27,7 +27,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *
  * Reference: flowchart https://docspace.corp.redhat.com/docs/DOC-65246
  */
-@Test(groups={"RedeemTests"})
+@Test(groups={"RedeemTests","Tier2Tests"})
 public class RedeemTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
@@ -50,7 +50,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem without --email option",
-			groups={"blockedByBug-727600","AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-727600"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutEmail_Test() {
@@ -132,7 +132,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	
 	// This test is the hosted equivalent for CASE 2 from getOnPremisesMockAttemptToRedeemData
 	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server using a non-found Dell service tag",
-			groups={"AcceptanceTests","MockRedeemTests", "blockedByBug-688806"},
+			groups={"AcceptanceTests","Tier1Tests","MockRedeemTests", "blockedByBug-688806"},
 			enabled=false)	// TODO THIS TEST IS BLOCKED SINCE WE CANNOT CHANGE THE "canActivate" ATTRIBUTE
 	//@ImplementsNitrateTest(caseId=)
 	public void HostedMockAttemptToRedeemUsingNonFoundDellServiceTag_Test() throws Exception {
@@ -166,7 +166,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	
 	// This test is the hosted equivalent for CASE 4 from getOnPremisesMockAttemptToRedeemData
 	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server when consumer's canActivate attribute is false",
-			groups={"AcceptanceTests","MockRedeemTests", "blockedByBug-688806"},
+			groups={"AcceptanceTests","Tier1Tests","MockRedeemTests", "blockedByBug-688806"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void HostedMockAttemptToRedeemWhenCanActivateIsFalse_Test() throws JSONException, Exception {

@@ -47,7 +47,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  @author jsefler
  *
  */
-@Test(groups={"StatusTests"})
+@Test(groups={"StatusTests","Tier2Tests"})
 public class StatusTests extends SubscriptionManagerCLITestScript{
 	
 	
@@ -93,7 +93,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="run subscription-manager status when registered without entitlements",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusWhileRegisteredWithoutEntitlements_Test() {
@@ -138,7 +138,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="run subscription-manager status when registered with entitlements",
-			groups={"AcceptanceTests", "blockedByBug-958827","StatusWhileRegisteredWithEntitlements_Test"},
+			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-958827","StatusWhileRegisteredWithEntitlements_Test"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusWhileRegisteredWithEntitlements_Test() throws JSONException, Exception {
@@ -305,7 +305,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="run subscription-manager status ondate (tomorrow and a future date after one of today's entitlements expire)",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusOnFutureDate_Test() throws JSONException, Exception {

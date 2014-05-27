@@ -50,7 +50,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  * @author jsefler
  *
  */
-@Test(groups={"RegisterTests"})
+@Test(groups={"RegisterTests","Tier2Tests"})
 public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 	
@@ -64,7 +64,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister_(null, null, null);
 	}
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
-			groups={"RegisterWithCredentials_Test", "AcceptanceTests"},
+			groups={"RegisterWithCredentials_Test", "AcceptanceTests","Tier1Tests"},
 			dataProvider="getRegisterCredentialsData")
 	@ImplementsNitrateTest(caseId=41677)
 	public void RegisterWithCredentials_Test(String username, String password, String org) {
@@ -232,7 +232,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to register a user who has not yet accepted the Red Hat Terms and Conditions",
-			groups={"AcceptanceTests","blockedByBug-1089034"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1089034"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=48502)
 	public void AttemptRegistrationWithUnacceptedTermsAndConditions_Test() {
@@ -256,7 +256,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to register a user who has been disabled",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50210)
 	public void AttemptRegistrationWithDisabledUserCredentials_Test() {
@@ -280,7 +280,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
+			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests","Tier1Tests"},
 			enabled=false)	// the strategy for this test has been improved in the new implementation of RegisterWithAutosubscribe_Test() 
 	@Deprecated
 	public void RegisterWithAutosubscribe_Test_DEPRECATED() throws JSONException, Exception {
@@ -390,7 +390,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
 	}
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
+			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests","Tier1Tests"},
 			enabled=false)
 	@Deprecated
 	public void RegisterWithAutosubscribe_Test_DEPRECATED_2() throws JSONException, Exception {
@@ -481,7 +481,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				"As expected, ProductName '"+tmpProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
 	}
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"AcceptanceTests", "blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "blockedByBug-919700"},
+			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "blockedByBug-919700"},
 			enabled=true)
 	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
 
@@ -823,7 +823,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	        * check the consumed entitlements have not changed
 	 */
 	@Test(	description="subscription-manager-cli: reregister basic registration",
-			groups={"blockedByBug-636843","AcceptanceTests","blockedByBug-962520"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-636843","blockedByBug-962520"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56327)
 	public void ReregisterBasicRegistration_Test() {
@@ -1203,7 +1203,7 @@ Expected Results:
 	}
 	@Test(	description="subscription-manager-cli: register with --baseurl",
 			dataProvider="getRegisterWithBaseurl_TestData",
-			groups={"RegisterWithBaseurl_Test","AcceptanceTests"},
+			groups={"RegisterWithBaseurl_Test","AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithBaseurl_Test(Object bugzilla, String baseurl, String baseurlConfigured, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
@@ -1330,7 +1330,7 @@ Expected Results:
 	}
 	@Test(	description="subscription-manager-cli: register with --serverurl",
 			dataProvider="getServerurl_TestData",
-			groups={"RegisterWithServerurl_Test","AcceptanceTests"},
+			groups={"RegisterWithServerurl_Test","AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithServerurl_Test(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {

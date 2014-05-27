@@ -32,13 +32,13 @@ import com.redhat.qe.auto.testng.TestNGUtils;
  * https://engineering.redhat.com/trac/Entitlement/wiki/DataCenterSkuDesign
  * More Information :: https://docspace.corp.redhat.com/docs/DOC-145057
  */
-@Test(groups={"DataCenterTests"})
+@Test(groups={"DataCenterTests","Tier2Tests"})
 public class DataCenterTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
 	@Test(	description="given an available data center pool, consume it and assert that a pool for the derivedProduct is generated and available only to its guests",
-			groups={"AcceptanceTests","VerifyAvailabilityOfDerivedProductSubpools_Test"},
+			groups={"AcceptanceTests","Tier1Tests","VerifyAvailabilityOfDerivedProductSubpools_Test"},
 			dataProvider="getAvailableDataCenterSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

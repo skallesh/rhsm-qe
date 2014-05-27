@@ -35,7 +35,7 @@ import com.redhat.qe.tools.SSHCommandResult;
 "subscription-manager config --[section.name] [value]" sets the value for an attribute by the section. Only existing attribute names are allowed. Adding new attribute names would not be useful anyway as the python code would be in need of altering to use it.
 
  */
-@Test(groups={"ConfigTests"})
+@Test(groups={"ConfigTests","Tier2Tests"})
 public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
@@ -56,7 +56,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: use config to set each of the rhsm.conf parameter values and verify it is persisted to /etc/rhsm.rhsm.conf",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getConfigSectionNameData",
 			priority=10,
 			enabled=true)

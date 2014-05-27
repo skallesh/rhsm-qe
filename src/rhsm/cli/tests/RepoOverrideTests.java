@@ -24,7 +24,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  @author jsefler
  *
  */
-@Test(groups={"RepoOverrideTests"})
+@Test(groups={"RepoOverrideTests","Tier3Tests"})
 public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	
 	
@@ -317,7 +317,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="add yum repo overrides, verify they persist, and remove them one repo at a time",
-			groups={"AcceptanceTests","blockedByBug-1069230","blockedByBug-1034396"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1069230","blockedByBug-1034396"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AddAndRemoveRepoOverridesOneRepoAtATime_Test() {
@@ -399,7 +399,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="add yum repo overrides, verify they persist, and remove them across multiple repo ids simultaneously (use multiple --repo args)",
-			groups={"AcceptanceTests","blockedByBug-1069230","blockedByBug-1034396"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1069230","blockedByBug-1034396"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AddAndRemoveRepoOverridesUsingMultipleRepos_Test() {

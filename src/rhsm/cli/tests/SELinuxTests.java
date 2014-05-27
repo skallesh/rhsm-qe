@@ -68,13 +68,13 @@ Hash: rhsmcertd-worke,rhsmcertd_t,user_tmp_t,file,open
  * 4. restorecon -Rv /usr/lib/python2.7/site-packages
  *
  */
-@Test(groups={"SELinuxTests"})
+@Test(groups={"SELinuxTests","AcceptanceTests","Tier1Tests","Tier2Tests","Tier3Tests"})
 public class SELinuxTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
 	@Test(	description="assert that no SELinux denials were logged during this TestSuite",
-			groups={"AcceptanceTests", "blockedByBug-694879", "blockedByBug-822402"},
+			groups={"blockedByBug-694879", "blockedByBug-822402"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyNoSELinuxDenialsWereLogged_Test() {

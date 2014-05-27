@@ -24,7 +24,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	// Test Methods ***********************************************************************
 
 	@Test(description="unregister the consumer",
-			groups={"blockedByBug-589626"},
+			groups={"blockedByBug-589626","Tier2Tests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=46714)
 	public void RegisterSubscribeAndUnregisterTest() {

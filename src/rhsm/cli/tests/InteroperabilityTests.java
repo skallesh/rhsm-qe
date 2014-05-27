@@ -27,13 +27,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  *
  *
  */
-@Test(groups={"InteroperabilityTests"})
+@Test(groups={"InteroperabilityTests","Tier2Tests"})
 public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
 	@Test(	description="User is warned when already registered using RHN Classic",
-			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018", "blockedByBug-755130", "blockedByBug-847795", "blockedByBug-859090", "blockedByBug-877590"},
+			groups={"InteroperabilityRegister_Test", "AcceptanceTests","Tier1Tests", "blockedByBug-730018", "blockedByBug-755130", "blockedByBug-847795", "blockedByBug-859090", "blockedByBug-877590"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=75972)	
 	public void InteroperabilityRegister_Test() {

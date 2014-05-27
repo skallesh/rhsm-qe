@@ -28,7 +28,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * 
  * 
  */
-@Test(groups = { "GuestLimitingTests" })
+@Test(groups = { "GuestLimitingTests","Tier2Tests" })
 public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 	protected String ownerKey = "";
 	protected List<String> providedProductId=null;

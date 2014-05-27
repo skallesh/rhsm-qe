@@ -25,7 +25,7 @@ import rhsm.data.SubscriptionPool;
  * </BR>
  * These tests target subscriptions that do not provide any products, but instead are intended to grant an entitlement to a server-side function such as a Management Add-On.
  */
-@Test(groups="ManagementAddOnTests")
+@Test(groups={"ManagementAddOnTests","Tier2Tests"})
 public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 
 	

@@ -46,7 +46,7 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  *
  */
 
-@Test(groups={"InstanceBasedTests"})
+@Test(groups={"InstanceBasedTests","Tier2Tests"})
 public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	Map<String, String> factsMap = new HashMap<String, String>();
 	protected Integer configuredHealFrequency = null;

@@ -56,7 +56,7 @@ cpu.cpu_socket(s)
 --mstead
  
  */
-@Test(groups={"FactsTests"})
+@Test(groups={"FactsTests","Tier2Tests"})
 public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
@@ -157,7 +157,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: facts and rules: consumer facts list",
-			groups={"AcceptanceTests","blockedByBug-1017299"}, dependsOnGroups={},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1017299"}, dependsOnGroups={},
 			dataProvider="getClientsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56386)
@@ -539,7 +539,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert presence of the new fact cpu.topology_source use to tell us what algorithm subscription-manager employed",
-			groups={"AcceptanceTests","blockedByBug-978466"}, dependsOnGroups={},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-978466"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertFactForCpuTopology_Test() {
@@ -549,7 +549,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cpu.cpu_socket(s) fact matches lscpu.socket(s)",
-			groups={"AcceptanceTests","blockedByBug-707292"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-844532"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-707292"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-844532"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertCpuCpuSocketsMatchLscpuSockets_Test() {
@@ -667,7 +667,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cores calculation using facts cpu.cpu_socket(s)*cpu.core(s)_per_socket matches the cores calculation using lscpu facts",
-			groups={"AcceptanceTests"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
+			groups={"AcceptanceTests","Tier1Tests"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertCoresCalculatedUsingCpuFactsMatchCoresCalculatedUsingLscpu_Test() {

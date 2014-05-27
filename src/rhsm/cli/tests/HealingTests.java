@@ -33,7 +33,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *
  *
  */
-@Test(groups={"HealingTests"})
+@Test(groups={"HealingTests","Tier2Tests"})
 public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
@@ -70,7 +70,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="using autoheal module, a consumer's autoheal attribute can be toggled off/on",
-			groups={"AcceptanceTests","blockedByBug-976867"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-976867"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCLI_Test() throws Exception {

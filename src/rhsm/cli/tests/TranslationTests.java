@@ -62,7 +62,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do echo ""; echo "# LANG=$L.UTF-8 subscription-manager --help | grep -- --help"; LANG=$L.UTF-8 subscription-manager  --help | grep -- --help; done;
  *   
  **/
-@Test(groups={"TranslationTests"})
+@Test(groups={"TranslationTests","Tier2Tests"})
 public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
@@ -85,7 +85,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to register to a Candlepin server using bogus credentials and check for localized strings results",
-			groups={"blockedByBug-919584","AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-919584"},
 			dataProvider="getInvalidRegistrationWithLocalizedStringsData")
 	@ImplementsNitrateTest(caseId=41691)
 	public void AttemptLocalizedRegistrationWithInvalidCredentials_Test(Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
@@ -131,7 +131,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt redeem without --email option using LANG",
-			groups={"blockedByBug-766577","AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-766577"},
 			enabled=false)	// TODO PASSES ON THE COMMAND LINE BUT FAILS WHEN RUN THROUGH AUTOMATION - NOTE STDOUT DISPLAYS DOUBLE BYTE BUT NOT STDERR
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutEmailUsingLang_Test() {
@@ -162,7 +162,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="verify that rhsm.mo is installed for each of the supported locales",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getSupportedLocalesData",
 			enabled=false)	// replaced by VerifyOnlyExpectedTranslationFilesAreInstalled_Test
 	@Deprecated
@@ -174,7 +174,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={"AcceptanceTests", "blockedByBug-824100"},
+			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-824100"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOnlyExpectedTranslationFilesAreInstalled_Test() {
@@ -205,7 +205,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={"AcceptanceTests", "blockedByBug-871152", "blockedByBug-912460", "blockedByBug-1003017", "blockedByBug-1020474", "blockedByBug-1057532"},
+			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-871152", "blockedByBug-912460", "blockedByBug-1003017", "blockedByBug-1020474", "blockedByBug-1057532"},
 			dataProvider="getTranslationFileData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

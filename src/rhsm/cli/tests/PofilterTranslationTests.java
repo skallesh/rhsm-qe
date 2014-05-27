@@ -113,7 +113,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  **/
 
 
-@Test(groups={"PofilterTranslationTests"})
+@Test(groups={"PofilterTranslationTests","Tier2Tests"})
 public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 	
 	

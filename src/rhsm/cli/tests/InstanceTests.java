@@ -32,13 +32,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  * Reference Design Doc:
  * https://engineering.redhat.com/trac/Entitlement/wiki/InstanceBasedDesign
  */
-@Test(groups={"InstanceTests"})
+@Test(groups={"InstanceTests","Tier2Tests"})
 public class InstanceTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
 	@Test(	description="test compliance using variations on sockets and system type when subscribing to an instance-based subscription",
-			groups={"AcceptanceTests","QuantityNeededToAchieveSocketCompliance_Test","blockedByBug-979492"},
+			groups={"AcceptanceTests","Tier1Tests","QuantityNeededToAchieveSocketCompliance_Test","blockedByBug-979492"},
 			dataProvider="getAvailableInstanceBasedSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

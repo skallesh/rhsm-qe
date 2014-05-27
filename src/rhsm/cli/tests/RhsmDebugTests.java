@@ -26,7 +26,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *
  *
  */
-@Test(groups={"RhsmDebugTests"})
+@Test(groups={"RhsmDebugTests","Tier2Tests"})
 public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 
 	
@@ -53,7 +53,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system and verify the expected contents of the written debug file",
-			groups={"AcceptanceTests","blockedByBug-1038206","blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1070737","blockedByBug-1039653"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1038206","blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystem_Test() {

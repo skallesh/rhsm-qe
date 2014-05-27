@@ -22,7 +22,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"VersionTests"})
+@Test(groups={"VersionTests","Tier2Tests"})
 public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	// SAMPLE RESULTS
@@ -134,7 +134,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the candlepin sever version and type are reported by the subscription-manager version module",
-			groups={"blockedByBug-843649","AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843649"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfCandlepinWhenRegistered_Test() {

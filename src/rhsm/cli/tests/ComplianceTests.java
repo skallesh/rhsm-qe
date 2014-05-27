@@ -42,7 +42,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  */
 
 
-@Test(groups={"ComplianceTests","AcceptanceTests"})
+@Test(groups={"ComplianceTests","AcceptanceTests","Tier1Tests"})
 public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	

@@ -34,7 +34,7 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  * @author jsefler
  *
  */
-@Test(groups={"CRLTests"})
+@Test(groups={"CRLTests","Tier2Tests"})
 public class CRLTests extends SubscriptionManagerCLITestScript{
 	String ownerKey = null;
 

@@ -22,7 +22,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *
  *
  */
-@Test(groups={"RolesTests"})
+@Test(groups={"RolesTests","Tier2Tests"})
 public class RolesTests extends SubscriptionManagerCLITestScript {
 
 	

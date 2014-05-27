@@ -27,7 +27,7 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
 
-@Test(groups="ExpirationTests")
+@Test(groups={"ExpirationTests","Tier2Tests"})
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
 	

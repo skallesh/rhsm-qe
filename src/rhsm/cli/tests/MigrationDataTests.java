@@ -57,13 +57,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  *
  *  for F in `rpm -ql subscription-manager-migration-data | grep .pem`; do echo ""; rct cat-cert $F | grep -i "Version"; done;
  */
-@Test(groups={"MigrationDataTests"})
+@Test(groups={"MigrationDataTests","Tier3Tests"})
 public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -72,7 +72,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -117,7 +117,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify RHEL4 channel mappings exist in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","blockedByBug-1009932","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1100872"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1009932","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1100872"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -221,7 +221,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all product cert files mapped in channel-cert-mapping.txt exist",
-			groups={"AcceptanceTests","blockedByBug-771615"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-771615"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -242,7 +242,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","blockedByBug-799103","blockedByBug-849274","blockedByBug-909436","blockedByBug-1025338"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-799103","blockedByBug-849274","blockedByBug-909436","blockedByBug-1025338"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -284,7 +284,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","blockedByBug-782208"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=false)	// 9/12/2013 RHEL65: disabled in favor of new VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test; this old test was based on the generation of subscription-manager-migration-data from product-baseline.json
 	@ImplementsNitrateTest(caseId=130940)
@@ -308,7 +308,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
@@ -334,7 +334,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
-			groups={"AcceptanceTests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802"},
 			enabled=false)	// 9/9/2013 RHEL65: disabled in favor of new VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test_OLD() {
@@ -401,7 +401,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedMatchForAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' match the current ["+sm_rhnDefinitionsGitRepository+"] product certs for this RHEL release '"+clienttasks.redhatReleaseXY+"' ");
 	}
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
-			groups={"AcceptanceTests"/*,"blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802"*/},
+			groups={"AcceptanceTests","Tier1Tests"/*,"blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test() {
@@ -716,7 +716,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all of the classic RHN Channels available to a classically registered consumer are accounted for in the in the channel-cert-mapping.txt or is a known exception",
-			groups={"AcceptanceTests","blockedByBug-1080072"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="getRhnClassicBaseAndAvailableChildChannelsData",
 			enabled=true)
@@ -857,7 +857,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt does NOT contain any High Touch Beta channel mappings",
-			groups={"AcceptanceTests","blockedByBug-1011992"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1011992"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -872,7 +872,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
-			groups={"AcceptanceTests","blockedByBug-1078527"/*,"blockedByBug-1078530"*/},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1078527"/*,"blockedByBug-1078530"*/},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -947,7 +947,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="Verify that the expected RHN Rhel channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y",
-			groups={"AcceptanceTests"/*,"blockedByBug-1080072"*/},
+			groups={"AcceptanceTests","Tier1Tests"/*,"blockedByBug-1080072"*/},
 			dataProvider="RhnRhelChannelsFromChanneMappingData",
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)

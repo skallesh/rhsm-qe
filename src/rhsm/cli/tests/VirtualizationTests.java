@@ -99,14 +99,14 @@ import com.redhat.qe.tools.SSHCommandResult;
 // https://docspace.corp.redhat.com/people/ndevos/blog/2011/05/26/how-to-quickly-install-a-rhel-5-system-running-xen-and-install-a-guest
 
 
-@Test(groups={"VirtualizationTests"})
+@Test(groups={"VirtualizationTests","Tier2Tests"})
 public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type and virt.uuid",
-			groups={"AcceptanceTests","blockedByBug-1018807"}, dependsOnGroups={},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1018807"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VirtFactsReportedOnThisClient_Test() {
@@ -284,7 +284,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify host and guest pools are generated from a virtualization-aware subscription.",
-			groups={"AcceptanceTests"/*,"blockedByBug-750279"*/},
+			groups={"AcceptanceTests","Tier1Tests"/*,"blockedByBug-750279"*/},
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
@@ -693,7 +693,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify host and guest pools quantities generated from a virtualization-aware subscription",
-			groups={"AcceptanceTests","VerifyHostAndGuestPoolQuantities_Test"}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
+			groups={"AcceptanceTests","Tier1Tests","VerifyHostAndGuestPoolQuantities_Test"}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)

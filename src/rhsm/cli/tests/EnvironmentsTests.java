@@ -28,7 +28,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *
  *
  */
-@Test(groups={"EnvironmentsTests"})
+@Test(groups={"EnvironmentsTests","Tier2Tests"})
 public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************

@@ -27,7 +27,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"GeneralTests"})
+@Test(groups={"GeneralTests","Tier2Tests"})
 public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
@@ -72,7 +72,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="assert the exit code from service rhsmcertd status when running and stopped",
-			groups={"AcceptanceTests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113"})
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113"})
 	protected void verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
 		String marker = System.currentTimeMillis()+" Testing verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test...";

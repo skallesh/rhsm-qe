@@ -38,14 +38,14 @@ import com.redhat.qe.tools.SSHCommandResult;
  * rpm -Uvh ftp://fr2.rpmfind.net/linux/epel/6/i386/bash-completion-1.3-7.el6.noarch.rpm
  * 
  */
-@Test(groups={"BashCompletionTests"})
+@Test(groups={"BashCompletionTests","Tier2Tests"})
 public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
 	
 	@Test(	description="when subscription-manager is run with no args, it should default to the help report",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="BashCompletionData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)

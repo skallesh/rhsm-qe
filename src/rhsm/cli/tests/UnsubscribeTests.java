@@ -33,7 +33,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"UnsubscribeTests"})
+@Test(groups={"UnsubscribeTests","Tier2Tests"})
 public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
@@ -73,7 +73,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Malicious Test - Unsubscribe and then attempt to reuse the revoked entitlement cert.",
-			groups={"AcceptanceTests","blockedByBug-584137","blockedByBug-602852","blockedByBug-672122","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-962520","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-584137","blockedByBug-602852","blockedByBug-672122","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-962520","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)

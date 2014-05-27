@@ -55,7 +55,7 @@ using the username/password as authentication
 
 -- bk
  */
-@Test(groups={"IdentityTests"})
+@Test(groups={"IdentityTests","Tier2Tests"})
 public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 	
@@ -191,7 +191,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity regenerate",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64179)
 	public void IdentityRegenerate_Test() {
@@ -317,7 +317,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@Test(	description="subscription-manager: assert that the consumer cert is backed up when a server-side deletion is detected.",
-			groups={"AcceptanceTests","VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706","blockedByBug-872847","blockedByBug-894633","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435","blockedByBug-1019747","blockedByBug-1026501"},
+			groups={"AcceptanceTests","Tier1Tests","VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706","blockedByBug-872847","blockedByBug-894633","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435","blockedByBug-1019747","blockedByBug-1026501"},
 			dataProvider="getConsumerCertDirData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

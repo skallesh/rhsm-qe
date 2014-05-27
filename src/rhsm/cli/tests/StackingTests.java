@@ -30,7 +30,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
  *
  *
  */
-@Test(groups={"StackingTests"})
+@Test(groups={"StackingTests","Tier2Tests"})
 public class StackingTests extends SubscriptionManagerCLITestScript {
 
 	
@@ -38,7 +38,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance",
 			enabled=true,
-			groups={"AcceptanceTests","blockedByBug-739671", "blockedByBug-740377", "blockedByBug-861993", "blockedByBug-955142"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-739671", "blockedByBug-740377", "blockedByBug-861993", "blockedByBug-955142"},
 			dataProvider="getAvailableStackableAttributeSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
 	public void StackEachPoolToAchieveAttributeCompliance_Test(Object bugzilla, String attribute, boolean systemIsGuest, List<SubscriptionPool> stackableAttributeSubscriptionPools) throws JSONException, Exception{
@@ -362,7 +362,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 //	
 //	@Test(	description="subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance",
 //			enabled=true,
-//			groups={"AcceptanceTests","blockedByBug-739671", "blockedByBug-740377", "blockedByBug-861993", "blockedByBug-955142"},
+//			groups={"AcceptanceTests","Tier1Tests","blockedByBug-739671", "blockedByBug-740377", "blockedByBug-861993", "blockedByBug-955142"},
 //			dataProvider="getAvailableStackableAttributeSubscriptionPoolsData")
 //	//@ImplementsNitrateTest(caseId=)
 //	public void StackEachPoolToAchieveAttributeCompliance_Test(Object bugzilla, String attribute, List<SubscriptionPool> stackableAttributeSubscriptionPools) throws JSONException, Exception{

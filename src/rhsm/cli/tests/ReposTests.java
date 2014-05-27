@@ -37,14 +37,14 @@ import com.redhat.qe.tools.SSHCommandResult;
  *
  *
  */
-@Test(groups={"ReposTests"})
+@Test(groups={"ReposTests","Tier3Tests"})
 public class ReposTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: subscribe to a pool and verify that the newly entitled content namespaces are represented in the repos list",
-			groups={"AcceptanceTests","blockedByBug-807407","blockedByBug-962520","blockedByBug-1034649"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-807407","blockedByBug-962520","blockedByBug-1034649"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
@@ -213,7 +213,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options specified multiple times in a single call) to repos in redhat.repo are preserved.",
-			groups={"AcceptanceTests","blockedByBug-843915","blockedByBug-962520","blockedByBug-1034649"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843915","blockedByBug-962520","blockedByBug-1034649"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListPreservesSimultaneousEnablementOfRedhatRepos_Test(){
@@ -311,7 +311,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: set manage_repos to 0 and assert redhat.repo is removed.",
-			groups={"blockedByBug-767620","blockedByBug-797996","blockedByBug-895462","blockedByBug-1034649","ManageReposTests","AcceptanceTests"},
+			groups={"ManageReposTests","AcceptanceTests","Tier1Tests","blockedByBug-767620","blockedByBug-797996","blockedByBug-895462","blockedByBug-1034649"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListIsDisabledByConfigurationAfterRhsmManageReposIsConfiguredOff_Test() throws JSONException, Exception{
@@ -513,7 +513,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: manually add more yum repository options to redhat.repo and assert persistence.",
 			enabled=false, 	// with the implementation of RFE Bug 803746, manual edits to add more repository options to the redhat.repos is now forbidden.  This test is being disabled in favor of ManualEditsToEnablementOfRedhatReposIsForbidden_Test and 
-			groups={"AcceptanceTests","blockedByBug-845349","blockedByBug-834806"})
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806"})
 	//@ImplementsNitrateTest(caseId=)
 	public void YumRepoListPreservesAdditionalOptionsToRedhatRepos_Test() throws JSONException, Exception {
 		
@@ -576,7 +576,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	@Test(	description="subscription-manager: add more yum repository options to redhat.repo and assert persistence using repo-override module.",
 			enabled=true,	// this test replaces the former YumRepoListPreservesAdditionalOptionsToRedhatRepos_Test
-			groups={"AcceptanceTests","blockedByBug-845349","blockedByBug-834806","blockedByBug-803746","blockedByBug-1086316","blockedByBug-1069230"})
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806","blockedByBug-803746","blockedByBug-1086316","blockedByBug-1069230"})
 	//@ImplementsNitrateTest(caseId=)
 	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingRepoOverride_Test() throws JSONException, Exception {
 		
@@ -650,7 +650,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="Verify that the redhat.repo file is refreshed with changes to the entitlements (yum transactions are no longer required to update the redhat.repo)",
 			enabled=true,
-			groups={"AcceptanceTests","blockedByBug-1008016","blockedByBug-1090206","blockedByBug-1034429"})	// TODO: review all tests and tasks that issue yum transactions simply to re-populate the redhat.repo
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1008016","blockedByBug-1090206","blockedByBug-1034429"})	// TODO: review all tests and tasks that issue yum transactions simply to re-populate the redhat.repo
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyYumTransactionsAreNoLongerRequiredToTriggerUpdatesToRedhatRepo_Test() {
 		

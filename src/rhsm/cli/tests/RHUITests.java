@@ -47,7 +47,7 @@ RHEL-6.2-RHUI-2.0.3-20120416.0-Server-x86_64-DVD1.iso.sha256sum
 [root@storm ~]# 
 
  */
-@Test(groups={"RHUITests","AcceptanceTests"})
+@Test(groups={"RHUITests","AcceptanceTests","Tier1Tests"})
 public class RHUITests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************

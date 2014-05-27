@@ -37,7 +37,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * Design Document:
  * https://engineering.redhat.com/trac/Entitlement/wiki/SubscriptionManagerPlugins
  */
-@Test(groups={"PluginTests","AcceptanceTests"})
+@Test(groups={"PluginTests","AcceptanceTests","Tier1Tests"})
 public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************

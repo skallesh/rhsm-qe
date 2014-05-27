@@ -48,13 +48,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  that the CDN sends from the edge server to the java app thingy that does auth so if DER size
  *  is over 120kb or so you have a problem. if subject key id size is over 28kb or so you have a problem.
  */
-@Test(groups={"CertificateTests"})
+@Test(groups={"CertificateTests","Tier2Tests"})
 public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that no more than one RHEL product cert is ever installed.",
-			groups={"AcceptanceTests","blockedByBug-854879"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-854879"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOnlyOneBaseRHELProductCertIsInstalled_Test() {
@@ -80,7 +80,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that a base product cert corresponding to the /etc/redhat-release is installed",
-			groups={"AcceptanceTests","blockedByBug-706518","blockedByBug-844368"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706518","blockedByBug-844368"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			dependsOnMethods={"VerifyOnlyOneBaseRHELProductCertIsInstalled_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -133,7 +133,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="candidate product cert validity dates",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getProductCertFilesData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64656)
@@ -170,7 +170,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 	}
 	@Test(	description="Make sure the entitlement cert contains all expected OIDs",
-			groups={"VerifyEntitlementCertContainsExpectedOIDs_Test","AcceptanceTests","blockedByBug-744259","blockedByBug-754426","blockedByBug-962520","blockedByBug-997970","blockedByBug-1021581"},
+			groups={"VerifyEntitlementCertContainsExpectedOIDs_Test","AcceptanceTests","Tier1Tests","blockedByBug-744259","blockedByBug-754426","blockedByBug-962520","blockedByBug-997970","blockedByBug-1021581"},
 			dataProvider="getAllAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -351,7 +351,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the rct cat-cert tool reports the issuer of consumer/entitlement/product certificates",
-			groups={"AcceptanceTests","blockedByBug-968364"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-968364"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyIssuerOfConsumerProductAndEntitlementCerts_Test() {
@@ -395,7 +395,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the rct cat-cert tool reports orders as Unlimited instead of -1",
-			groups={"AcceptanceTests","blockedByBug-1011961"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1011961"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyRctCatCertReportsOrdersWithQuantityUnlimited_Test() throws JSONException, Exception {
@@ -489,7 +489,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for currently subscribed entitlements",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertEntitlementCertStatistics_Test() {
@@ -656,7 +656,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the base RHEL product cert will upgrade to match the releaseVer set when a package is installed/upgraded/downgraded",
-			groups={"VerifyBaseRHELProductCertVersionUpdates_Test","AcceptanceTests"},
+			groups={"VerifyBaseRHELProductCertVersionUpdates_Test","AcceptanceTests","Tier1Tests"},
 			dataProvider="getVerifyBaseRHELProductCertVersionUpdates_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

@@ -40,7 +40,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"ActivationKeyTests"})
+@Test(groups={"ActivationKeyTests","Tier3Tests"})
 public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	

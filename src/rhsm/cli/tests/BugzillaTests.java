@@ -61,7 +61,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  * 
  * 
  */
-@Test(groups = { "BugzillaTests" })
+@Test(groups = { "BugzillaTests","Tier3Tests" })
 public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey="";
 	protected String randomAvailableProductId = null;
@@ -344,7 +344,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify if subscription manager cli uses product name comparisons in the list command ",
-			groups={"blockedByBug-709412","AcceptanceTests","InstalledProductMultipliesAfterSubscription"},
+			groups={"InstalledProductMultipliesAfterSubscription","AcceptanceTests","Tier1Tests","blockedByBug-709412"},
 			enabled=true)
 	public void InstalledProductMultipliesAfterSubscription() throws Exception {
 		client.runCommandAndWait("mkdir /root/generatedCertsFolder");
@@ -1021,8 +1021,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", 
-			groups = { "blockedByBug-889573","AcceptanceTests"}, enabled = true)
+	@Test(	description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", 
+			groups = {"AcceptanceTests","Tier1Tests","blockedByBug-889573"},
+			enabled = true)
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException,Exception {
 		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
 	String clientUsername="stage_test_12";
@@ -1111,7 +1112,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	//To be tested against stage
 	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe",
-			groups = {"blockedByBug-878994","AcceptanceTests"},
+			groups = {"AcceptanceTests","Tier1Tests","blockedByBug-878994"},
 			enabled = true)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
 		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");

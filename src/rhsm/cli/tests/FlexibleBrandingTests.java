@@ -36,7 +36,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  * 
  * 
  */
-@Test(groups = { "FlexibleBrandingTests" })
+@Test(groups = { "FlexibleBrandingTests","Tier2Tests" })
 public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	protected  static String BrandType = null;
 	protected String ownerKey="";

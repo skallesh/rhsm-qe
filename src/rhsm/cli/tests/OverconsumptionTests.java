@@ -27,7 +27,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  */
 
 
-@Test(groups={"OverconsumptionTests"})
+@Test(groups={"OverconsumptionTests","Tier2Tests"})
 public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 	
 	

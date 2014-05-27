@@ -46,7 +46,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"SubscribeTests"})
+@Test(groups={"SubscribeTests","Tier2Tests"})
 public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	// Test methods ***********************************************************************
@@ -55,7 +55,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
-			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520","blockedByBug-1008647","blockedByBug-1009600","blockedByBug-996993"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520","blockedByBug-1008647","blockedByBug-1009600","blockedByBug-996993"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
@@ -602,7 +602,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: make sure the normal available pools come from subscriptions that pass the hardware rules for availability.",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -647,7 +647,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	protected List<List<Object>> subscriptionPoolProductData;
 	
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AcceptanceTests","AutoSubscribeAndVerify", "blockedByBug-680399", "blockedByBug-734867", "blockedByBug-740877"},
+			groups={"AcceptanceTests","Tier1Tests","AutoSubscribeAndVerify", "blockedByBug-680399", "blockedByBug-734867", "blockedByBug-740877"},
 			dependsOnMethods={"VerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -717,7 +717,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AcceptanceTests","AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049","blockedByBug-743082","blockedByBug-865193","blockedByBug-864383","blockedByBug-977321"},
+			groups={"AcceptanceTests","Tier1Tests","AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049","blockedByBug-743082","blockedByBug-865193","blockedByBug-864383","blockedByBug-977321"},
 			dependsOnMethods={"InititiateAutoSubscribe_Test"},
 			dataProvider="getInstalledProductCertsData",
 			enabled=true)
@@ -811,7 +811,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with a valid service level",
-			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-962520"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-962520"},
 			dataProvider="getSubscribeWithAutoAndServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -955,7 +955,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe using various good and bad values for the --quantity option",
-			groups={"AcceptanceTests","blockedByBug-962520"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-962520"},
 			dataProvider="getSubscribeWithQuantityData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

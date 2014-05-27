@@ -44,7 +44,7 @@ Loaded plugins: product-id
 
  */
 
-@Test(groups={"ReleaseTests","AcceptanceTests"})
+@Test(groups={"ReleaseTests","AcceptanceTests","Tier1Tests"})
 public class ReleaseTests extends SubscriptionManagerCLITestScript {
 
 	

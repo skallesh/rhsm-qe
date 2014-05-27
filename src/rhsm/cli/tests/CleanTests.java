@@ -21,13 +21,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  *
  *
  */
-@Test(groups={"CleanTests"})
+@Test(groups={"CleanTests","Tier2Tests"})
 public class CleanTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager-cli: clean and verify the identity is removed",
-			groups={"AcceptanceTests","blockedByBug-654429","blockedByBug-962520"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-654429","blockedByBug-962520"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64178)	// http://gibson.usersys.redhat.com/agilo/ticket/4020
 	public void Clean_Test() {
@@ -60,7 +60,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: set manage_repos to 0 and assert clean still works.",
 			enabled=true,
-			groups={"AcceptanceTests", "blockedByBug-799394", "CleanAfterRhsmManageReposIsConfigured_Test"})
+			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-799394", "CleanAfterRhsmManageReposIsConfigured_Test"})
 	//@ImplementsNitrateTest(caseId=)
 	public void CleanAfterRhsmManageReposIsConfigured_Test() throws JSONException, Exception{
 		List<String[]> rhsmManageRepo = new ArrayList<String[]>();

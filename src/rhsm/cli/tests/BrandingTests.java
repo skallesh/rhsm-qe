@@ -46,11 +46,11 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * Dec  4 14:23:59 jsefler-7 systemd: brandbot.service start request repeated too quickly, refusing to start.
  * Dec  4 14:23:59 jsefler-7 systemd: Unit brandbot.service entered failed state.
  */
-@Test(groups = {"BrandingTests"})
+@Test(groups = {"BrandingTests","Tier2Tests"})
 public class BrandingTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="assert that brandbot service is running",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=false)	// TODO not sure how this works... the status of this service is inactive, yet it appears to be automatically started/stopped as needed NEEDINFO from notting
 	public void BrandbotServiceShouldBeRunning_Test() {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
@@ -59,7 +59,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="incrementally attach all available subscriptions and verify tests for Flexible Branding",
-			groups={"AttachSubscriptionsForFlexibleBranding_Test","AcceptanceTests","blockedByBug-884290"},
+			groups={"AttachSubscriptionsForFlexibleBranding_Test","AcceptanceTests","Tier1Tests","blockedByBug-884290"},
 			priority=100,
 			enabled=true)
 	public void AttachSubscriptionsForFlexibleBranding_Test() throws JSONException, Exception {
@@ -103,7 +103,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="incrementally remove attached subscriptions and verify tests for Flexible Branding",
 			//depend on priority instead of dependsOnMethods={"AttachSubscriptionsForFlexibleBranding_Test"},
 			priority=101,
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	public void RemoveSubscriptionsForFlexibleBranding_Test() {
 		
@@ -122,7 +122,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="autosubscribe and verify tests for Flexible Branding",
 			dependsOnGroups={},
 			priority=200,
-			groups={"AcceptanceTests","AutoSubscribeForFlexibleBranding_Test"},
+			groups={"AcceptanceTests","Tier1Tests","AutoSubscribeForFlexibleBranding_Test"},
 			enabled=true)
 	public void AutoSubscribeForFlexibleBranding_Test() {
 		// we will start out by unregistering and removing the current brand name.
@@ -148,7 +148,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="run an rhsmcertd event and verify tests for Flexible Branding",
 			//depend on priority instead of dependsOnMethods={"AutoSubscribeForFlexibleBranding_Test"},
 			priority=201,
-			groups={"AcceptanceTests","blockedByBug-1038664"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1038664"},
 			enabled=true)
 	public void RhsmcertdCheckForFlexibleBranding_Test() {
 		// we will start out by removing the current brand name and the current entitlements.
@@ -174,7 +174,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="run an rhsmcertd healing event and verify tests for Flexible Branding",
 			//depend on priority instead of dependsOnMethods={"AutoSubscribeForFlexibleBranding_Test"},
 			priority=202,
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	public void RhsmcertdHealingUpdateForFlexibleBranding_Test() {
 		// we will start out by removing the current brand name and removing the current entitlements.

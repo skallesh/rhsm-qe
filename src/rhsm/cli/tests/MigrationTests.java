@@ -74,7 +74,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *  4. Update the /etc/sysconfig/rhn/up2date with
  *      sslCACert=RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com
  */
-@Test(groups={"MigrationTests"})
+@Test(groups={"MigrationTests","Tier3Tests"})
 public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
@@ -84,7 +84,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// install-num-migrate-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a known instnumber and assert the expected productCerts are copied",
-			groups={"blockedByBug-853187","AcceptanceTests","InstallNumMigrateToRhsmWithInstNumber_Test"},
+			groups={"AcceptanceTests","Tier1Tests","InstallNumMigrateToRhsmWithInstNumber_Test","blockedByBug-853187"},
 			dependsOnMethods={},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
@@ -192,7 +192,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with install-num used to provision this machine",
-			groups={"AcceptanceTests","InstallNumMigrateToRhsm_Test","blockedByBug-854879"},
+			groups={"AcceptanceTests","Tier1Tests","InstallNumMigrateToRhsm_Test","blockedByBug-854879"},
 			dependsOnMethods={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130760)
@@ -333,7 +333,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// rhn-migrate-classic-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-966745","blockedByBug-840169","blockedbyBug-878986","blockedByBug-1052297"},
+			groups={"AcceptanceTests","Tier1Tests","RhnMigrateClassicToRhsm_Test","blockedByBug-966745","blockedByBug-840169","blockedbyBug-878986","blockedByBug-1052297"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
@@ -680,7 +680,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="With a proxy configured in rhn/up2date, register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015","blockedbyBug-861693","blockedbyBug-878986","blockedbyBug-912776","blockedByBug-1052297"},
+			groups={"AcceptanceTests","Tier1Tests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015","blockedbyBug-861693","blockedbyBug-878986","blockedbyBug-912776","blockedByBug-1052297"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmUsingProxyServerData",
 			enabled=true)
@@ -909,7 +909,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="migrating a RHEL5 Client - Desktop versus Workstation",
-			groups={"blockedByBug-786257","blockedByBug-853233","RhnMigrateClassicToRhsm_Test","AcceptanceTests"},
+			groups={"RhnMigrateClassicToRhsm_Test","AcceptanceTests","Tier1Tests","blockedByBug-786257","blockedByBug-853233"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() throws JSONException {
@@ -1247,7 +1247,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
-			groups={"blockedByBug-807477","blockedByBug-1052297","AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-807477","blockedByBug-1052297"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {

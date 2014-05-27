@@ -50,14 +50,14 @@ import rhsm.data.SubscriptionPool;
  * if no productid is there, then contact rhel-eng/jgreguske/dgregor
  */
 
-@Test(groups={"ContentIntegrationTests"})
+@Test(groups={"ContentIntegrationTests","Tier2Tests"})
 public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Test Methods ***********************************************************************
 
 	@Test(	description="register and subscribe to expected product subscription",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getSubscribeData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId

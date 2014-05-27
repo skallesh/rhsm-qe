@@ -43,7 +43,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  * 		refresh
  * 		list
  */
-@Test(groups={"ProxyTests"})
+@Test(groups={"ProxyTests","Tier3Tests"})
 public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 
@@ -53,7 +53,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	// REGISTER Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager : register using a proxy server (Positive and Negative Variations)",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getRegisterAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

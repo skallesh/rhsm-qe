@@ -42,7 +42,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
  */
 
-@Test(groups={"ServiceLevelTests"})
+@Test(groups={"ServiceLevelTests","Tier3Tests"})
 public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 		
@@ -257,7 +257,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --show (after registering without a service level)",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=155949)
@@ -362,7 +362,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid service level; assert the entitlements granted match the requested service level",
-			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-919700"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-919700"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -390,7 +390,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid random case SeRviCEleVel; assert the installed product status is independent of the specified service level case.",
-			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-859652","blockedByBug-919700"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-859652","blockedByBug-919700"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -461,7 +461,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: subscribe with auto while specifying an valid service level; assert the entitlements granted match the requested service level",
-			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-977321"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-977321"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157229)	// 147971
@@ -567,14 +567,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@Test(	description="subscription-manager: subscribe with auto without specifying any service level; assert the service level used matches whatever the consumer's current preference level is set",
-			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-977321"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-977321"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeWithNullServiceLevel_Test() throws JSONException, Exception {
 		AutoSubscribeWithServiceLevel_Test(null,null);
 	}
 	@Test(	description="subscription-manager: subscribe with auto specifying a service level of \"\"; assert the service level is unset and the autosubscribe proceeds without any service level preference",
-			groups={"AcceptanceTests","blockedByBug-859652","blockedByBug-977321","blockedByBug-1001169"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-977321","blockedByBug-1001169"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeWithBlankServiceLevel_Test() throws JSONException, Exception {
@@ -590,7 +590,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
  
 	@Test(	description="subscription-manager: autosubscribe while specifying an valid service level; assert the installed product status is independent of the specified SerViceLeVEL case.",
-			groups={"blockedByBug-818319","blockedByBug-859652","AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-818319","blockedByBug-859652"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157227) // 157226 //157225
@@ -647,7 +647,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="installed products provided by available pools with an exempt service level should be auto-subscribed regardless of what service level is specified (or is not specified)",
-			groups={"AcceptanceTests","blockedByBug-818319","blockedByBug-859652","blockedByBug-919700"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-818319","blockedByBug-859652","blockedByBug-919700"},
 			dataProvider="getExemptInstalledProductAndServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157229)
@@ -828,7 +828,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --list should be unique (regardless of case)",
-			groups={/*"blockedByBug-845043",*/"AcceptanceTests"},
+			groups={/*"blockedByBug-845043",*/"AcceptanceTests","Tier1Tests"},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

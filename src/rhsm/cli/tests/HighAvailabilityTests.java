@@ -64,14 +64,14 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  # http://download.devel.redhat.com/released/RHEL-5-Server/U7/x86_64/os/Cluster/
  *  sm.ha.packages = Cluster_Administration-bn-IN, Cluster_Administration-de-DE, Cluster_Administration-en-US, Cluster_Administration-es-ES, Cluster_Administration-fr-FR, Cluster_Administration-gu-IN, Cluster_Administration-hi-IN, Cluster_Administration-it-IT, Cluster_Administration-ja-JP, Cluster_Administration-kn-IN, Cluster_Administration-ko-KR, Cluster_Administration-ml-IN, Cluster_Administration-mr-IN, Cluster_Administration-or-IN, Cluster_Administration-pa-IN, Cluster_Administration-pt-BR, Cluster_Administration-ru-RU, Cluster_Administration-si-LK, Cluster_Administration-ta-IN, Cluster_Administration-te-IN, Cluster_Administration-zh-CN, Cluster_Administration-zh-TW, cluster-cim, cluster-snmp, ipvsadm, luci, modcluster, piranha, rgmanager, ricci, system-config-cluster
  */
-@Test(groups={"HighAvailabilityTests","AcceptanceTests"})
+@Test(groups={"HighAvailabilityTests","Tier3Tests"})
 public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
 	
 	@Test(	description="make sure there are no High Availability packages installed",
-			groups={/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			groups={"AcceptanceTests","Tier1Tests"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			priority=10,
 			dependsOnMethods={},
 			enabled=true)
@@ -105,7 +105,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="verify product database and installed products are in sync",
-			groups={},
+			groups={"AcceptanceTests","Tier1Tests"},
 			priority=12,
 			dependsOnMethods={},
 			enabled=true)
@@ -137,7 +137,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="register to the stage/prod environment with credentials to access High Availability product subscription",
-			groups={},
+			groups={"AcceptanceTests","Tier1Tests"},
 			priority=14,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -150,7 +150,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="verify that a local yum install will not delete the product database when repolist is empty",
-			groups={"blockedByBug-806457"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-806457"},
 			priority=16,
 			dependsOnMethods={"RegisterToHighAvailabilityAccount_Test"},
 			enabled=true)
@@ -193,7 +193,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscribe to the expected High Availability product subscription",
-			groups={},
+			groups={"AcceptanceTests","Tier1Tests"},
 			priority=20,
 			//dependsOnMethods={"VerifyHighAvailabilityIsNotInstalled_Test"},
 			dependsOnMethods={"VerifyLocalYumInstallAndRemoveDoesNotAlterInstalledProducts_Test"},
@@ -220,7 +220,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="verify the expected High Availability packages are availabile for yum install",
-			groups={},
+			groups={"AcceptanceTests","Tier1Tests"},
 			priority=30,
 			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
 			enabled=true)
@@ -247,7 +247,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="yum install a High Availability package ccs and assert installed products",
-			groups={"blockedByBug-859197","blockedByBug-958548","blockedByBug-1004893"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859197","blockedByBug-958548","blockedByBug-1004893"},
 			priority=40,
 			//dependsOnMethods={"VerifyHighAvailabilityPackagesAreAvailabile_Test"},
 			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
@@ -271,7 +271,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="yum install a second High Availability package cman and assert installed products",
-			groups={"blockedByBug-859197","blockedByBug-958548","blockedByBug-1004893"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859197","blockedByBug-958548","blockedByBug-1004893"},
 			priority=50,
 			//dependsOnMethods={"YumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
 			dependsOnMethods={"SubscribeToHighAvailabilitySKU_Test"},
@@ -295,7 +295,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="yum remove second High Availability package cman and assert installed products",
-			groups={},
+			groups={"AcceptanceTests","Tier1Tests"},
 			priority=60,
 			dependsOnMethods={"YumInstallSecondHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
 			enabled=true)
@@ -318,7 +318,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="yum remove first High Availability package cman and assert installed products",
-			groups={"blockedByBug-859197"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859197"},
 			priority=70,
 			dependsOnMethods={"YumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},
 			//dependsOnMethods={"YumRemoveSecondHighAvailabilityPackageAndAssertInstalledProductCerts_Test"},

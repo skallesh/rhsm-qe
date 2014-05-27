@@ -31,14 +31,14 @@ import com.redhat.qe.tools.SSHCommandResult;
  * Bug 712980 - Import Certificate neglects to also import the corresponding key.pem - https://bugzilla.redhat.com/show_bug.cgi?id=712980
  * Bug 733873 - subscription-manager import --help should not use proxy options - https://bugzilla.redhat.com/show_bug.cgi?id=733873
  */
-@Test(groups={"ImportTests"})
+@Test(groups={"ImportTests","Tier2Tests"})
 public class ImportTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
 	
 	@Test(	description="subscription-manager: import a valid version 1.0 entitlement cert/key bundle and verify subscriptions are consumed",
-			groups={"AcceptanceTests","blockedByBug-962520"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-962520"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementVersion1CertAndKeyFromFile_Test() {
@@ -87,7 +87,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: import a valid entitlement cert/key bundle and verify subscriptions are consumed",
-			groups={"blockedByBug-712980","blockedByBug-730380","blockedByBug-860344","AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-712980","blockedByBug-730380","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementCertAndKeyFromFile_Test() {

@@ -25,7 +25,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"HelpTests"})
+@Test(groups={"HelpTests","Tier2Tests"})
 public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	
