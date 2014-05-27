@@ -1,0 +1,153 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
+<suite name="SM GUI Tier 3 TestSuite">
+
+	<listeners>
+		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
+		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+		<listener class-name="org.uncommons.reportng.HTMLReporter" />
+		<listener class-name="org.testng.reporters.XMLReporter" />
+	</listeners>
+
+  <!-- GUI TIER 3 TESTS -->
+
+  <test name="GUI: Registration">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.register_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="tier3"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Subscribe/Unsubscribe">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	 
+      <class name="rhsm.gui.tests.subscribe_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="tier3"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Autosubscribe">
+    <classes>
+      <class name="rhsm.cli.tests.ComplianceTests"/>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>		
+      <class name="rhsm.gui.tests.autosubscribe_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="tier3"/>
+        <include name="ComplianceTests" />
+        <exclude name="cli.tests" />
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Facts">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/> 
+      <class name="rhsm.gui.tests.facts_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="tier3"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>  
+  </test>
+
+  <test name="GUI: Proxy">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.proxy_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+	    <include name="tier3"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Interop">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.rhn_interop_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="tier3"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Firstboot">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.firstboot_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="tier3"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Import">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.import_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="tier3"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: System">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.gui.tests.system_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="tier3"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+</suite>
