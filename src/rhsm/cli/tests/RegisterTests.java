@@ -715,7 +715,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//								ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("672233"),	name,	Integer.valueOf(255),	null,				maxCharsStderr}));
 										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("672233"),	name,	Integer.valueOf(0),		successfulStdout,	null}));
 		name = "256_characters_6789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456";
-										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"672233","1065369","1094492"}),	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
+										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"672233","1065369","1094492","1101552"}),	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
 
 		return ll;
 	}
