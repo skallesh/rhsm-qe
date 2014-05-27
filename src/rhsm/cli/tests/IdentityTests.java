@@ -132,7 +132,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity",
-			groups={"blockedByBug-852001"},
+			groups={"blockedByBug-852001","blockedByBug-1101522"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void Identity_Test() throws JSONException, Exception {
@@ -166,7 +166,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity (when the client registered with --name)",
-			groups={"blockedByBug-647891"},
+			groups={"blockedByBug-647891","blockedByBug-1101522"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void IdentityWithName_Test() {
