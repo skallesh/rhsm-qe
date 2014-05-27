@@ -752,6 +752,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: GuestLimiting Tests">
+		<classes>
+			<class name="rhsm.cli.tests.GuestLimitingTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: FlexibleBranding Tests">
 		<classes>
 			<class name="rhsm.cli.tests.FlexibleBrandingTests" />
