@@ -96,6 +96,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	protected SSHCommandResult InstallNumMigrateToRhsmWithInstNumber(String instNumber) throws JSONException {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
+			throw new SkipException("Due to bug 1092754, the migration tool '"+installNumTool+"' has been removed from RHEL5.");
+		}
 		String command;
 		SSHCommandResult result;
 		
@@ -198,6 +201,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId=130760)
 	public void InstallNumMigrateToRhsm_Test() throws JSONException {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
+			throw new SkipException("Due to bug 1092754, the migration tool '"+installNumTool+"' has been removed from RHEL5.");
+		}
 		if (!RemoteFileTasks.testExists(client, machineInstNumberFile) &&
 			RemoteFileTasks.testExists(client, backupMachineInstNumberFile)	) {
 			log.info("Restoring backup of the rhn install-num file...");
@@ -255,6 +261,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String instNumber) throws JSONException {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
+			throw new SkipException("Due to bug 1092754, the migration tool '"+installNumTool+"' has been removed from RHEL5.");
+		}
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "773707"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -287,6 +296,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId=130760)
 	public void InstallNumMigrateToRhsmWithInvalidInstNumber_Test(Object bugzilla, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
+			throw new SkipException("Due to bug 1092754, the migration tool '"+installNumTool+"' has been removed from RHEL5.");
+		}
+		
 		SSHCommandResult result = client.runCommandAndWait(command);
 		if (expectedStdout!=null) Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from running :"+command);
 		if (expectedStderr!=null) Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from running :"+command);
@@ -310,6 +323,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void InstallNumMigrateToRhsmWithMissingInstNumber_Test() {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
+			throw new SkipException("Due to bug 1092754, the migration tool '"+installNumTool+"' has been removed from RHEL5.");
+		}
+		
 		if (RemoteFileTasks.testExists(client, machineInstNumberFile)) {
 			log.info("Backing up the rhn install-num file...");
 			client.runCommandAndWait("mv -f "+machineInstNumberFile+" "+backupMachineInstNumberFile);
@@ -319,12 +336,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Assert that install-num-migrate-to-rhsm is only installed on RHEL5",
-			groups={"blockedByBug-790205"},
+			groups={"blockedByBug-790205","blockedByBug-1092754"},
 			dependsOnMethods={},
 			enabled=true)
 	public void InstallNumMigrateToRhsmShouldOnlyBeInstalledOnRHEL5_Test() {
 		// make sure subscription-manager-migration is installed on RHEL5
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, "rpm -ql "+clienttasks.command+"-migration", 0);
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
+			log.warning("Due to bug 1092754, the migration tool '"+installNumTool+"' has been removed from RHEL5.");
+			Assert.assertFalse(result.getStdout().contains(installNumTool), "Due to bug 1092754, the migration tool "+clienttasks.command+"-migration package should no longer provide '"+installNumTool+"' on RHEL5.");
+			return;	// end of testing for install-num-migrate-to-rhsm tool
+		}
 		Assert.assertEquals(result.getStdout().contains(installNumTool), clienttasks.redhatReleaseX.equals("5"), "The "+clienttasks.command+"-migration package should only provide '"+installNumTool+"' on RHEL5.");
 	}
 	

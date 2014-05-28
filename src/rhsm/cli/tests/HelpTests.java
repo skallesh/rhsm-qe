@@ -112,6 +112,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
 			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 			throw new SkipException(command+" is not installed and therefore its man page cannot be installed.");
+			
 		} else if (!clienttasks.redhatReleaseX.equals("5")) {
 			log.info("The man page for '"+command+"' should only be installed on RHEL5.");
 			//RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);		// exit codes changed on RHEL7
@@ -121,6 +122,15 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			result = client.runCommandAndWait("whatis "+command);
 			Assert.assertEquals(result.getStdout().trim()+result.getStderr().trim(),command+": nothing appropriate"+(Integer.valueOf(clienttasks.redhatReleaseX)>=7?".":""));	// the expected message is appended with a period on RHEL7+
 			throw new SkipException("The migration tool '"+command+"' and its man page is only applicable on RHEL5.");
+			
+		} else if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4")) {	// install-num-migrate-to-rhsm was removed by bug 1092754
+			log.warning("The '"+command+"' was removed as a result of bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1092754");
+			result = client.runCommandAndWait("man -P cat "+command);
+			Assert.assertEquals(result.getStdout()+result.getStderr().trim(),"No manual entry for "+command);
+			result = client.runCommandAndWait("whatis "+command);
+			Assert.assertEquals(result.getStdout().trim()+result.getStderr().trim(),command+": nothing appropriate"+(Integer.valueOf(clienttasks.redhatReleaseX)>=7?".":""));	// the expected message is appended with a period on RHEL7+
+			throw new SkipException("Due to bug 1092754, the migration tool '"+command+"' and its man page have been removed from RHEL5.");
+			
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);	// run "mandb" if the result is Stderr: install-num-migrate-to-rhsm: nothing appropriate.
@@ -1024,30 +1034,32 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// ========================================================================================
 		// install-num-migrate-to-rhsm OPTIONS
 		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {	// test only when the rpm is installed
-		if (clienttasks.redhatReleaseX.equals("5")) {	// test only on RHEL5
-			//	[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --help
-			//	usage: install-num-migrate-to-rhsm [options]
-			//	
-			//	options:
-			//	  -h, --help            show this help message and exit
-			//	  -i INSTNUMBER, --instnumber=INSTNUMBER
-			//	                        Install number to run against
-			//	  -d, --dryrun          Only print the files which would be copied over
-			
-			command = MigrationTests.installNumTool; 
-			options.clear();
-			options.add("-h, --help");
-			options.add("-i INSTNUMBER, --instnumber=INSTNUMBER");
-			options.add("-d, --dryrun");
-			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
-				List <String> usages = new ArrayList<String>();
-				String usage = String.format("usage: %s [options]",command);
-				usage = String.format("Usage: %s [OPTIONS]",command);	// changed by bug 876692
-				usages.add(usage);
-				ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
-				ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
+			if (clienttasks.redhatReleaseX.equals("5")) {	// test only on RHEL5
+				if (clienttasks.isPackageVersion("subscription-manager-migration", "<=", "1.11.3-4")) {	// install-num-migrate-to-rhsm was removed by bug 1092754
+					//	[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --help
+					//	usage: install-num-migrate-to-rhsm [options]
+					//	
+					//	options:
+					//	  -h, --help            show this help message and exit
+					//	  -i INSTNUMBER, --instnumber=INSTNUMBER
+					//	                        Install number to run against
+					//	  -d, --dryrun          Only print the files which would be copied over
+					
+					command = MigrationTests.installNumTool; 
+					options.clear();
+					options.add("-h, --help");
+					options.add("-i INSTNUMBER, --instnumber=INSTNUMBER");
+					options.add("-d, --dryrun");
+					for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
+						List <String> usages = new ArrayList<String>();
+						String usage = String.format("usage: %s [options]",command);
+						usage = String.format("Usage: %s [OPTIONS]",command);	// changed by bug 876692
+						usages.add(usage);
+						ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
+						ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
+					}
+				}
 			}
-		}
 		}
 		
 		// ========================================================================================
