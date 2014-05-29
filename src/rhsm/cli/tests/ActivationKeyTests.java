@@ -644,14 +644,21 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// for the purpose of this test, skip virt_only pools when system is physical otherwise the register will fail with "Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'."
 			if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
 			
+			/* skipping pools that are not NORMAL is more reliable than this...
 			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
-			if (servertasks.statusStandalone) {
+			//if (servertasks.statusStandalone) {	// 5/29/2014 removed this check, I can't remember why I originally set it 
+			// for the purpose of this test, skip virt_only derived_pool when otherwise the register will fail with "Guest's host does not match owner of pool: '8a908775463fef2301464072ee68496e'."
+			if (true) {
 				String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
 				String virt_only = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
 				if (pool_derived!=null && virt_only!=null && Boolean.valueOf(pool_derived) && Boolean.valueOf(virt_only)) {
 					continue;
 				}
 			}
+			*/
+			// for the purpose of this test, skip pools that are not NORMAL (eg. BONUS, ENTITLEMENT_DERIVED, STACK_DERIVED)
+			String poolType = (String) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "type");
+			if (!poolType.equals("NORMAL")) continue;
 			
 			// add the pool to the activation key
 			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
@@ -711,14 +718,21 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// for the purpose of this test, skip virt_only pools when system is physical otherwise the register will fail with "Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'."
 			if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
 			
+			/* skipping pools that are not NORMAL is more reliable than this...
 			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
-			if (servertasks.statusStandalone) {
+			//if (servertasks.statusStandalone) {	// 5/29/2014 removed this check, I can't remember why I originally set it 
+			// for the purpose of this test, skip virt_only derived_pool when otherwise the register will fail with "Guest's host does not match owner of pool: '8a908775463fef2301464072ee68496e'."
+			if (true) {
 				String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
 				String virt_only = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
 				if (pool_derived!=null && virt_only!=null && Boolean.valueOf(pool_derived) && Boolean.valueOf(virt_only)) {
 					continue;
 				}
 			}
+			*/
+			// for the purpose of this test, skip pools that are not NORMAL (eg. BONUS, ENTITLEMENT_DERIVED, STACK_DERIVED)
+			String poolType = (String) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "type");
+			if (!poolType.equals("NORMAL")) continue;
 			
 			// create an activation key
 			String activationKeyName = String.format("ActivationKey%sWithPool%sForOrg_%s", System.currentTimeMillis(),jsonPool.getString("id"),sm_clientOrg);
@@ -788,14 +802,21 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// for the purpose of this test, skip virt_only pools when system is physical otherwise the register will fail with "Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'."
 			if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) continue;
 			
+			/* skipping pools that are not NORMAL is more reliable than this...
 			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
-			if (servertasks.statusStandalone) {
+			//if (servertasks.statusStandalone) {	// 5/29/2014 removed this check, I can't remember why I originally set it 
+			// for the purpose of this test, skip virt_only derived_pool when otherwise the register will fail with "Guest's host does not match owner of pool: '8a908775463fef2301464072ee68496e'."
+			if (true) {
 				String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
 				String virt_only = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
 				if (pool_derived!=null && virt_only!=null && Boolean.valueOf(pool_derived) && Boolean.valueOf(virt_only)) {
 					continue;
 				}
 			}
+			*/
+			// for the purpose of this test, skip pools that are not NORMAL (eg. BONUS, ENTITLEMENT_DERIVED, STACK_DERIVED)
+			String poolType = (String) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "type");
+			if (!poolType.equals("NORMAL")) continue;
 			
 			// create an activation key
 			String activationKeyName = String.format("ActivationKey%sWithPool%sForOrg_%s", System.currentTimeMillis(),jsonPool.getString("id"),sm_clientOrg);
