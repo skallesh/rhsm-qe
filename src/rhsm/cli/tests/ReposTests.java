@@ -482,6 +482,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
+		subscribedRepos = getRandomSubsetOfList(subscribedRepos, 5);	// reduce the runtime of this test by randomly reducing the subscribedRepos tested
 		if (subscribedRepos.isEmpty()) throw new SkipException("There are no entitled repos available for this test.");
 				
 		for(Repo repo:subscribedRepos) {
@@ -501,6 +502,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
+		subscribedRepos = getRandomSubsetOfList(subscribedRepos, 5);	// reduce the runtime of this test by randomly reducing the subscribedRepos tested
 		if (subscribedRepos.isEmpty()) throw new SkipException("There are no entitled repos available for this test.");
 				
 		for(Repo repo:subscribedRepos) {
