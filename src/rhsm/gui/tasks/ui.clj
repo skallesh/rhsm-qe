@@ -239,7 +239,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :license "License"
        :close-about-dialog "Close"})
     (define-elements (windows :repositories-dialog)
-      {:repo-table "repository_listview"
+      {:repo-table "Repository View"
        :repo-message "No repositories are available*"
        :close-repo-dialog "close_button"
        :repo-remove-override "remove_all_overrides_button"
