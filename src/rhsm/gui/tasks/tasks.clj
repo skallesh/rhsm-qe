@@ -525,7 +525,7 @@
         syntax (fn [item] (str "--pool=" item " "))
         command (str "subscription-manager attach "
                      (clojure.string/join (map syntax (vals (mapify all-prods all-pools)))))]
-        (run-command command)))
+    (:stdout (run-command command))))
 
 (defn unsubscribe_all
   "Unsubscribes from everything available"
