@@ -107,9 +107,9 @@
       (tasks/register-with-creds))
     (tasks/subscribe_all)
     (tasks/ui click :repositories)
-    (tasks/ui waittillwindowexist :repositories-dialog 10)
+    (tasks/ui waittillwindowexist :repositories-dialog 30)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
-    (verify (bash-bool (tasks/has-state? :repo-remove-override "enabled")))
+    (verify (not (tasks/has-state? :repo-remove-override "enabled")))
     (if (= 0 (tasks/ui getrowcount :repo-table))
       (throw (Exception. "Repositories table is not populated"))
       (do
@@ -120,12 +120,12 @@
           (tasks/ui selectrowindex :repo-table random-row-num)
           (tasks/ui checkrow :repo-table random-row-num)
           (sleep 2000)
-          (verify (bool (and (tasks/has-state? :repo-remove-override "enabled")
-                             (tasks/has-state? :repo-remove-override "sensitive"))))
+          (verify (and (tasks/has-state? :repo-remove-override "enabled")
+                       (tasks/has-state? :repo-remove-override "sensitive")))
           (tasks/ui uncheckrow :repo-table random-row-num)
           (sleep 1000)
-          (verify (bash-bool (and (tasks/has-state? :repo-remove-override "enabled")
-                                  (tasks/has-state? :repo-remove-override "sensitive")))))))
+          (verify (not (and (tasks/has-state? :repo-remove-override "enabled")
+                            (tasks/has-state? :repo-remove-override "sensitive")))))))
     (finally
      (tasks/ui click :close-repo-dialog)
      (tasks/unsubscribe_all))))
@@ -146,25 +146,25 @@
       (reset! list_row (into [] (range row-count)))
       (reset! random_row_num (nth @list_row (rand (count @list_row))))
       (tasks/ui selectrowindex :repo-table @random_row_num)
-      (while (and (bash-bool (tasks/has-state? :gpg-check-edit "visible"))
+      (while (and (not (tasks/has-state? :gpg-check-edit "visible"))
                   (< 1 (count @list_row)))
         (reset! list_row (remove #(= @random_row_num %) @list_row))
         (reset! random_row_num (nth @list_row (int (rand (count @list_row)))))
         (tasks/ui selectrowindex :repo-table @random_row_num))
       (sleep 1000)
-      (verify (bool (tasks/has-state? :gpg-check-edit "visible")))
-      (verify (bash-bool (tasks/has-state? :gpg-check-remove "visible")))
+      (verify (tasks/has-state? :gpg-check-edit "visible"))
+      (verify (not (tasks/has-state? :gpg-check-remove "visible")))
       (tasks/ui click :gpg-check-edit)
       (sleep 2000)
-      (verify (bool (tasks/has-state? :gpg-check-remove "visible")))
-      (verify (bash-bool (tasks/has-state? :gpg-check-edit "visible"))))
+      (verify (tasks/has-state? :gpg-check-remove "visible"))
+      (verify (not (tasks/has-state? :gpg-check-edit "visible"))))
     (finally
-     (tasks/ui click :gpg-check-remove)
-     (tasks/ui waittillwindowexist :question-dialog 30)
-     (tasks/ui click :yes)
-     (tasks/checkforerror)
-     (tasks/ui click :close-repo-dialog)
-     (tasks/unsubscribe_all))))
+      (tasks/ui click :gpg-check-remove)
+      (tasks/ui waittillwindowexist :question-dialog 30)
+      (tasks/ui click :yes)
+      (tasks/checkforerror)
+      (tasks/ui click :close-repo-dialog)
+      (tasks/unsubscribe_all))))
 
 (defn ^{BeforeGroups {:groups ["repo"
                                 "blockedByBug-1095938"]
@@ -181,7 +181,7 @@
                            (fn [repo]
                              (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
-                             (if (bool (tasks/has-state? :gpg-check-edit "visible"))
+                             (if (tasks/has-state? :gpg-check-edit "visible")
                                (tasks/ui click :gpg-check-edit)))))
 
 (defn ^{Test {:groups ["repo"
@@ -224,7 +224,7 @@
                            (fn [repo]
                              (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
-                             (if (bool (tasks/has-state? :gpg-check-edit "visible"))
+                             (if (tasks/has-state? :gpg-check-edit "visible")
                                (tasks/ui click :gpg-check-edit))))
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
@@ -233,7 +233,7 @@
                        "blockedByBug-1095938"]
               :value ["assert_overide_persistance"]}}
   verify_override_persistance
-  "Enable all repos and click remove all override and check state"
+  "Checks the persistance of repo override after subscriptions are removed"
   [_]
   (tasks/subscribe_all)
   (tasks/ui click :repositories)
@@ -242,8 +242,8 @@
                            (fn [repo]
                              (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
-                             (verify (bool (tasks/has-state? :gpg-check-remove "visible")))
-                             (verify (bash-bool (tasks/has-state? :gpg-check-edit "visible"))))))
+                             (verify (tasks/has-state? :gpg-check-remove "visible"))
+                             (verify (not (tasks/has-state? :gpg-check-edit "visible"))))))
 
 (defn ^{AfterGroups {:groups ["repo"
                               "blockedByBug-1095938"]
@@ -290,7 +290,8 @@
                        :or {debug false}}]
   (if-not (assert-skip :repo)
     (do
-      (tasks/restart-app :reregister? true)
+      (if (tasks/ui showing? :register-system)
+        (tasks/register-with-creds))
       (tasks/subscribe_all)
       (tasks/ui click :repositories)
       (tasks/ui waittillwindowexist :repositories-dialog 10)
