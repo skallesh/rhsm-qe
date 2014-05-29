@@ -22,6 +22,7 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductCert;
@@ -164,9 +165,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that manual edits to enable repos in redhat.repo are preserved.",
-			groups={"blockedByBug-905546"},
+			groups={"blockedByBug-905546"/*UNCOMMENT FOR RHEL71,"blockedByBug-1098891"*/,"blockedByBug-1101571","blockedByBug-1101584"},
 			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
-			enabled=false)	// with the implementation of RFE Bug 803746, manual edits to the enablement of redhat repos is now forbidden.  This test is being disabled in favor of ManualEditsToEnablementOfRedhatReposIsForbidden_Test
+			enabled=true)	// with the implementation of RFE Bug 803746, manual edits to the enablement of redhat repos is now forbidden.  This test is being disabled in favor of ManualEditsToEnablementOfRedhatReposIsForbidden_Test
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListPreservesManualEditsToEnablementOfRedhatRepos_Test(YumRepo yumRepo){
 		verifyTogglingTheEnablementOfRedhatRepo(yumRepo,true);
@@ -491,8 +492,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@Test(	description="subscription-manager: disable a repo.",
-			enabled=true,
-			groups={})
+			groups={},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposDisable_Test() throws JSONException, Exception {
 		
@@ -512,10 +513,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: manually add more yum repository options to redhat.repo and assert persistence.",
-			enabled=false, 	// with the implementation of RFE Bug 803746, manual edits to add more repository options to the redhat.repos is now forbidden.  This test is being disabled in favor of ManualEditsToEnablementOfRedhatReposIsForbidden_Test and 
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806"})
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806"/*UNCOMMENT FOR RHEL71,"blockedByBug-1098891"*/,"blockedByBug-1101571","blockedByBug-1101584"},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void YumRepoListPreservesAdditionalOptionsToRedhatRepos_Test() throws JSONException, Exception {
+	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEdits_Test() throws JSONException, Exception {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
@@ -575,8 +576,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@Test(	description="subscription-manager: add more yum repository options to redhat.repo and assert persistence using repo-override module.",
-			enabled=true,	// this test replaces the former YumRepoListPreservesAdditionalOptionsToRedhatRepos_Test
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806","blockedByBug-803746","blockedByBug-1086316","blockedByBug-1069230"})
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806","blockedByBug-803746","blockedByBug-1086316","blockedByBug-1069230"},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingRepoOverride_Test() throws JSONException, Exception {
 		
@@ -645,6 +646,48 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(yumRepoAfterUpdate.priority, yumRepo.priority, "Yum repo ["+yumRepo.id+"] has persisted the manually added \"priority\" option and its value even after setting a release and issuing a yum transaction.");
 			// THIS WILL LIKELY NOT BE EQUAL WHEN THE yumRepoAfterUpdate.baseurl POINTS TO RHEL CONTENT SINCE IT WILL CONTAIN THE RELEASE PREFERENCE SUBSTITUTED FOR $releasever	//Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Yum repo ["+yumRepo.id+"] has persisted all of its repository option values even after setting a release and issuing a yum transaction.");
 		}
+	}
+	@Test(	description="subscription-manager: verify that overrides take precedence to manually edited repository options in redhat.repo and assert persistence.",
+			groups={/*UNCOMMENT FOR RHEL71"blockedByBug-1098891",*/"blockedByBug-1101571","blockedByBug-1101584"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEditsButRepoOverridesTakePrecedence_Test() throws JSONException, Exception {
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
+		
+		// choose the first disabled yum repo for this test
+		YumRepo yumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("enabled", false, subscribedYumRepos);
+		if (yumRepo == null) throw new SkipException("Could not find a disabled yum repo available for this test.");
+		
+		// manually enable the yum repo
+		yumRepo.enabled = true;
+		clienttasks.updateYumRepo(clienttasks.redhatRepoFile, yumRepo);
+		// assert that the manually added repository options do not get clobbered by a new yum transaction
+		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin");	// issue a new yum transaction
+		YumRepo yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());	// getCurrentlySubscribedYumRepos() includes a yum transaction: "yum -q repolist --disableplugin=rhnplugin"	(NOT ANYMORE after bug 1008016)
+		Assert.assertNotNull(yumRepoAfterUpdate, "Found yum repo ["+yumRepo.id+"] in '"+clienttasks.redhatRepoFile+"'.");
+		Assert.assertTrue(yumRepoAfterUpdate.enabled, "Yum repo ["+yumRepo.id+"] has persisted the manual enablement.");
+		
+		// use subscription-manager repos to disable the repo
+		clienttasks.repos(null, null, yumRepo.id, null, null, null);
+		// assert that the yum repo was disabled and a repo-override was created that takes precedence over the manually enabled yum repo
+		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin");	// issue a new yum transaction
+		yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());	// getCurrentlySubscribedYumRepos() includes a yum transaction: "yum -q repolist --disableplugin=rhnplugin"	(NOT ANYMORE after bug 1008016)
+		Assert.assertNotNull(yumRepoAfterUpdate, "Found yum repo ["+yumRepo.id+"] in '"+clienttasks.redhatRepoFile+"'.");
+		Assert.assertFalse(yumRepoAfterUpdate.enabled, "Yum repo ["+yumRepo.id+"] has persisted the disablement by subscription-manager.");
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null).getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,yumRepo.id,"enabled","0")),"After a calling subscription-manager repos --enable, the subscription-manager repo-override list includes an override for repo='"+yumRepo.id+"' name='"+"enabled"+"' value='"+"0"+"'.");
+		
+		// now attempt to manually re-enable yum repo
+		clienttasks.updateYumRepo(clienttasks.redhatRepoFile, yumRepo);
+		// assert that the attempt to manually re-enable the yum repo fails since the subscription-manager repo override takes precedence over manual edits.
+		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin");	// issue a new yum transaction
+		yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());	// getCurrentlySubscribedYumRepos() includes a yum transaction: "yum -q repolist --disableplugin=rhnplugin"	(NOT ANYMORE after bug 1008016)
+		Assert.assertNotNull(yumRepoAfterUpdate, "Found yum repo ["+yumRepo.id+"] in '"+clienttasks.redhatRepoFile+"'.");
+		Assert.assertFalse(yumRepoAfterUpdate.enabled, "Yum repo ["+yumRepo.id+"] is still disabled after an attempt to manually enable it (because repo-override should take precedence).");
 	}
 	
 	
