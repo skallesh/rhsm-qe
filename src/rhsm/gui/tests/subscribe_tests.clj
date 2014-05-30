@@ -64,7 +64,8 @@
       (throw e))))
 
 (defn ^{Test {:groups ["subscribe"
-                       "acceptance"]
+                       "acceptance"
+                       "tier1"]
               :dataProvider "subscriptions"
               :priority (int 104)}}
   subscribe_each
@@ -78,6 +79,7 @@
        {:keys [log-warning]} (log-warning))))
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier1"
                        "blockedByBug-924766"]
               :dataProvider "subscribed"
               :priority (int 100)}}
@@ -92,7 +94,8 @@
     (verify (= type reference))))
 
 (defn ^{Test {:groups ["subscribe"
-                       "acceptance"]
+                       "acceptance"
+                       "tier1"]
               :dataProvider "subscribed"
               :priority (int 101)}}
   unsubscribe_each
@@ -106,6 +109,7 @@
         (catch [:type :not-subscribed] _)))
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier3"
                        "blockedByBug-703920"
                        "blockedByBug-869028"]
               :dataProvider "multi-contract"}}
@@ -131,6 +135,7 @@
 
   ;; https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3
 (defn ^{Test {:groups ["subscribe"
+                       "tier3"
                        "blockedByBug-766778"
                        "blockedByBug-723248"
                        "blockedByBug-855257"
@@ -213,6 +218,7 @@
 
 ;; https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3
 (defn ^{Test {:groups ["subscribe"
+                       "tier3"
                        "blockedByBug-723248"
                        "blockedByBug-962905"]
               :dataProvider "multi-entitle"}}
@@ -246,6 +252,7 @@
     (catch [:type :error-getting-subscription] _)))
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier3"
                        "blockedByBug-755861"
                        "blockedByBug-962905"]
               :dataProvider "multi-entitle"}}
@@ -260,48 +267,51 @@
                                   (check_quantity_subscribe nil subscription contract))]
     (verify (not (substring? "Traceback" output)))))
 
-(comment
   ;; TODO: this is not in rhel6.3 branch, finish when that is released
   ;; https://bugzilla.redhat.com/show_bug.cgi?id=801434
-  (defn ^{Test {:groups ["subscribe"
-                         "blockedByBug-801434"
-                         "blockedByBug-707041"]}}
-    check_date_chooser_traceback [_]
-    (try
-      (let [ldtpd-log "/var/log/ldtpd/ldtpd.log"
-            output (get-logging @clientcmd
-                                      ldtp-log
-                                      "date-chooser-tracebacks"
-                                      nil
-                                      (do
-                                        (tasks/ui selecttab :all-available-subscriptions)
-                                        (tasks/ui click :calendar)
-                                        (tasks/checkforerror)))]
-        (verify (not (substring? "Traceback" output))))
-      (finally (tasks/restart-app))))
-
-  (defn ^{Test {:groups ["subscribe"
-                         "blockedByBug-704408"
-                         "blockedByBug-801434"]
-                :dependsOnMethods ["check_date_chooser_traceback"]}}
-    check_blank_date_click
-    "Tests the behavior when the date search field is blank and you click to another area."
-    [_]
-    (try
-      (tasks/ui selecttab :all-available-subscriptions)
-      (tasks/ui settextvalue :date-entry "")
-      ;;try clicking to another tab/area
-      (tasks/ui selecttab :my-subscriptions)
-      (tasks/checkforerror)
-      (tasks/ui selecttab :all-available-subscriptions)
-      ;; try changing the date
-      (tasks/ui click :calendar)
-      (tasks/checkforerror)
-      (tasks/ui click :today)
-      ;; verify that today's date was filled in here...
-      (finally (tasks/restart-app)))) )
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier2"
+                       "blockedByBug-801434"
+                       "blockedByBug-707041"]}}
+  check_date_chooser_traceback [_]
+  (try
+    (let [ldtpd-log "/var/log/ldtpd/ldtpd.log"
+          output (get-logging @clientcmd
+                              ldtpd-log
+                              "date-chooser-tracebacks"
+                              nil
+                              (do
+                                (tasks/ui selecttab :all-available-subscriptions)
+                                (tasks/ui click :calendar)
+                                (tasks/checkforerror)))]
+      (verify (not (substring? "Traceback" output))))
+    (finally (tasks/restart-app))))
+
+(defn ^{Test {:groups ["subscribe"
+                       "tier2"
+                       "blockedByBug-704408"
+                       "blockedByBug-801434"]
+              :dependsOnMethods ["check_date_chooser_traceback"]}}
+  check_blank_date_click
+  "Tests the behavior when the date search field is blank and you click to another area."
+  [_]
+  (try
+    (tasks/ui selecttab :all-available-subscriptions)
+    (tasks/ui settextvalue :date-entry "")
+    ;;try clicking to another tab/area
+    (tasks/ui selecttab :my-subscriptions)
+    (tasks/checkforerror)
+    (tasks/ui selecttab :all-available-subscriptions)
+    ;; try changing the date
+    (tasks/ui click :calendar)
+    (tasks/checkforerror)
+    (tasks/ui click :today)
+    ;; verify that today's date was filled in here...
+    (finally (tasks/restart-app))))
+
+(defn ^{Test {:groups ["subscribe"
+                       "tier2"
                        "blockedByBug-688454"
                        "blockedByBug-704408"]}}
   check_blank_date_search
@@ -318,6 +328,7 @@
     (finally (tasks/restart-app))))
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier3"
                        "blockedByBug-858773"]
               :dataProvider "installed-products"}}
   filter_by_product
@@ -344,6 +355,7 @@
   ))
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier2"
                        "blockedByBug-817901"]}}
   check_no_search_results_message
   "Tests the message when the search returns no results."
@@ -364,6 +376,7 @@
         (verify (not (tasks/ui showing? :no-subscriptions-label)))))))
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier2"
                        "blockedByBug-817901"]}}
   check_please_search_message
   "Tests for the initial message before you search."
@@ -384,6 +397,7 @@
 
 ;;https://tcms.engineering.redhat.com/case/77359/?from_plan=2110
 (defn ^{Test {:groups ["subscribe"
+                       "tier3"
                        "blockedByBug-911386"]
               :dataProvider "subscriptions"}}
   check_service_levels
@@ -400,6 +414,7 @@
 
 (defn ^{Test {:groups ["subscribe"
                        "acceptance"
+                       "tier1"
                        "blockedByBug-874624"
                        "blockedByBug-753057"]
               :dataProvider "subscriptions"}}
@@ -429,6 +444,7 @@
 
 (defn ^{Test {:groups ["subscribe"
                        "acceptance"
+                       "tier1"
                        "blockedByBug-877579"]
               :dataProvider "unlimited-pools"}}
   check_unlimited_quantities
@@ -449,6 +465,7 @@
               (tasks/ui click :cancel-contract-selection)))))
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier2"
                        "blockedByBug-918617"]
               :priority (int 102)}}
   subscribe_check_syslog
@@ -466,6 +483,7 @@
    (catch [:type :error-getting-subscription] _)))
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier2"
                        "blockedByBug-918617"]
               :dependsOnMethods ["subscribe_check_syslog"]
               :priority (int 103)}}
@@ -481,6 +499,7 @@
     (verify (not (blank? output)))))
 
 (defn ^{Test {:group ["subscribe"
+                      "tier2"
                       "blockedByBug-951633"]
               :dependsOnMethods ["subscribe_each"]
               :priority (int 105)}}
@@ -498,6 +517,7 @@
          (verify ( = "Subscribed" (tasks/ui getcellvalue :installed-view index 2))))))))
 
 (defn ^{Test {:group ["subscribe"
+                      "tier2"
                       "blockedByBug-950672"
                       "blockedByBug-988411"]
               :dependsOnMethods ["subscribe_each"]
@@ -513,6 +533,7 @@
        (verify (not (blank? (tasks/ui gettextvalue :providing-subscriptions))))))))
 
 (defn ^{Test {:group ["subscribe"
+                      "tier2"
                       "blockedByBug-909467"
                       "blockedByBug-988411"]
               :dependsOnMethods ["subscribe-each"]
@@ -541,6 +562,7 @@
              (tasks/ui selecttab :my-installed-products))))))))
 
 (defn ^{Test {:group ["subscribe"
+                      "tier2"
                       "blockedByBug-865193"]
               :dataProvider "subscriptions"
               :priority (int 99)}}
@@ -553,6 +575,7 @@
 
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier3"
                        "blockedByBug-962933"]
               :dataProvider "subscriptions"}}
   check_multiplier_logic
@@ -598,6 +621,7 @@
 
 (defn ^{Test {:groups ["subscribe"
                        "acceptance"
+                       "tier1"
                        "blockedByBug-874624"]
               :dataProvider "subscriptions"}}
   check_contract_number
