@@ -150,4 +150,32 @@
     </groups>
   </test>
 
+  <test name="GUI: Stacking">
+    <packages>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
+    </packages>
+    <groups>
+      <run>
+        <include name="tier3"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Repo">
+    <packages>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
+    </packages>
+    <groups>
+      <run>
+        <include name="tier3"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
 </suite>
