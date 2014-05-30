@@ -27,17 +27,17 @@
   (tasks/ui click :license-yes)
   (tasks/ui click :firstboot-forward)
   ;; RHEL5 has a different firstboot order than RHEL6
-  (if (tasks/fbshowing? :firstboot-window "Firewall")
+  (if (tasks/fbshowing? :firewall)
     (do
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (sleep 3000) ;; FIXME find a better way than a hard wait...
-      (verify (tasks/fbshowing? :register-now))))
+      (verify (tasks/fbshowing? :software-updates))))
   (tasks/ui click :register-now)
   (tasks/ui click :firstboot-forward)
-  (assert ( bool (tasks/ui guiexist :firstboot-window window-name))))
+  (assert (bool (tasks/ui guiexist :firstboot-window window-name))))
 
 (defn kill_firstboot []
   (run-command "killall -9 firstboot")
@@ -133,7 +133,8 @@
   (tasks/ui click :firstboot-forward)
   (tasks/checkforerror)
   (tasks/firstboot-register (@config :username) (@config :password))
-  (tasks/verify-conf-proxies "" "" "" ""))
+  (tasks/verify-conf-proxies "" "" "" "")
+  (kill_firstboot))
 
 (defn firstboot_register_invalid_user
   "Register with invalid user credentials at firstboot"
@@ -185,12 +186,13 @@
   (tasks/ui click :firstboot-back)
   (verify (tasks/fbshowing? :firstboot-window window-name))
   (let [output (:stdout (run-command "subscription-manager identity"))]
-    ;; Functionality of back-button is limited to RHEL5. In RHEL6 its
-    ;; behavior is different
-    (verify (substring? "Current identity is" output))))
+    ;; Functionality of back-button is limited to RHEL5.
+    ;; In RHEL6 back-button behavior is different
+    (verify (substring? "system identity: " output))))
 
 ;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
-(defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
+(defn ^{Test {:groups ["firstboot"
+                       "blockedByBug-642660"]}}
   firstboot_skip_register
   "Checks whether firstboot skips register if subscription manger is already registered"
   [_]
@@ -201,21 +203,11 @@
                                       " --username " (@config :username)
                                       " --password " (@config :password)
                                       " --org " (@config :owner-key)))
-  (tasks/start-firstboot)
-  (tasks/ui click :firstboot-forward)
-  (tasks/ui click :license-yes)
-  (tasks/ui click :firstboot-forward)
-  (if (tasks/fbshowing? :firstboot-window "Firewall")
+  (start_firstboot)
+  (if (tasks/fbshowing? :firstboot-window "Set Up Software Updates")
     (do
       (tasks/ui click :firstboot-forward)
-      (tasks/ui click :firstboot-forward)
-      (tasks/ui click :firstboot-forward)
-      (tasks/ui click :firstboot-forward)
-      (sleep 3000) ;; FIXME find a better way than a hard wait...
-      (if (tasks/fbshowing? :firstboot-window "Set Up Software Updates")
-        (do
-          (tasks/ui click :firstboot-forward)
-          (verify (tasks/fbshowing? :firstboot-window "Create User")))))))
+      (verify (tasks/fbshowing? :firstboot-window "Create User")))))
 
 ;; https://tcms.engineering.redhat.com/case/72670/?from_plan=2806
 (defn ^{Test {:groups ["firstboot"]
@@ -238,24 +230,22 @@
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (sleep 3000) ;; FIXME find a better way than a hard wait...
-      (verify (tasks/fbshowing? :register-now)))))
+      (verify (tasks/fbshowing? :software-updates)))))
 
 (defn ^{Test {:groups ["firstboot"
                        "blockedByBug-973317"]}}
   firstboot_back_button_after_register
-  "Verifies that on clicking backbutton after registering from Create User menu should navigte to Choose Service menu"
+  "Verifies that on clicking backbutton after registering from Create User
+   menu should navigte to Choose Service menu"
   [_]
-  (if-not (= "RHEL5" (get-release))
-    (do
-      (reset_firstboot)
-      (tasks/ui click :register-rhsm)
-      (tasks/ui click :firstboot-forward)
-      (tasks/firstboot-register (@config :username) (@config :password))
-      (tasks/ui click :firstboot-forward)
-      (verify (tasks/fbshowing? :firstboot-window "Create User"))
-      (tasks/ui click :firstboot-back)
-      (verify (not (tasks/fbshowing? :firstboot-window window-name))))))
-
+  (reset_firstboot)
+  (tasks/ui click :register-rhsm)
+  (tasks/ui click :firstboot-forward)
+  (tasks/firstboot-register (@config :username) (@config :password))
+  (tasks/ui click :firstboot-forward)
+  (verify (tasks/fbshowing? :firstboot-window "Create User"))
+  (tasks/ui click :firstboot-back)
+  (verify (not (tasks/fbshowing? :firstboot-window window-name))))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
@@ -268,59 +258,5 @@
      (to-array-2d []))])
 
 ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=700601
-
-
-(comment  ;; Trial code for RHEL7
-
-(defn start_firstboot []
-  (tasks/start-firstboot)
-  (tasks/ui click :firstboot-forward)
-  (verify (tasks/fbshowing? :register-now))
-  (tasks/ui click :register-now)
-  (tasks/ui click :firstboot-forward)
-  (assert (bool (tasks/ui guiexist :firstboot-window))))
-
-(defn kill_firstboot []
-  (run-command "killall -9 firstboot")
-  (sleep 5000))
-
-(defn zero-proxy-values []
-  (tasks/set-conf-file-value "proxy_hostname" "")
-  (tasks/set-conf-file-value "proxy_port" "")
-  (tasks/set-conf-file-value "proxy_user" "")
-  (tasks/set-conf-file-value "proxy_password" ""))
-
-(defn reset_firstboot []
-  (kill_firstboot)
-  (run-command "subscription-manager clean")
-  (zero-proxy-values)
-  (start_firstboot))
-
-(defn ^{BeforeClass {:groups ["setup"]}}
-  firstboot_init [_]
-  (try
-    (if (= "RHEL7" (get-release))
-      ;(base/startup nil)
-      (throw (SkipException. (str "Skipping Suite: RHEL7 firstboot-boot tests are skipped"
-                                  " because first-boot window has dynamic compnents"))))
-    (skip-if-bz-open "922806")
-    (skip-if-bz-open "1016643" (= "RHEL7" (get-release)))
-    ;; new rhsm and classic have to be totally clean for this to run
-    (run-command "subscription-manager clean")
-    (let [sysidpath "/etc/sysconfig/rhn/systemid"]
-      (run-command (str "[ -f " sysidpath " ] && rm " sysidpath )))
-    (catch Exception e
-      (reset! (skip-groups :firstboot) true)
-      (throw e))))
-
-(defn ^{AfterClass {:groups ["setup"]
-                    :alwaysRun true}}
-  firstboot_cleanup [_]
-  (assert-valid-testing-arch)
-  (kill_firstboot)
-  (run-command "subscription-manager clean")
-  (zero-proxy-values))
-
-)  ;; This was trial code for RHEL7
 
 (gen-class-testng)
