@@ -38,6 +38,7 @@
           (throw e))))
 
 (defn ^{Test {:groups ["registration"
+                       "tier1"
                        "acceptance"
                        "blockedByBug-995242"]
               :dataProvider "userowners"}}
@@ -83,7 +84,8 @@
           register-button :register-system]
      (verify (and (= thrown-error expected-error) (action exists? register-button))))))
 
-(data-driven register_bad_credentials {Test {:groups ["registration"]}}
+(data-driven register_bad_credentials {Test {:groups ["registration"
+                                                      "tier1"]}}
   [^{Test {:groups ["blockedByBug-718045"]}}
    ["sdf" "sdf" :invalid-credentials]
    ;need to add a case with a space in the middle re: 719378
@@ -94,6 +96,7 @@
    ["sdf" "" :no-password]])
 
 (defn ^{Test {:groups ["registration"
+                       "tier1"
                        "acceptance"]}}
   unregister
   "Simple unregister."
@@ -106,6 +109,7 @@
   (verify (action exists? :register-system)))
 
 (defn ^{Test {:groups ["registration"
+                       "tier2"
                        "blockedByBug-918303"]
               :priority (int 10)}}
   register_check_syslog
@@ -119,6 +123,7 @@
       (verify (not (blank? output)))))
 
 (defn ^{Test {:groups ["registration"
+                       "tier2"
                        "blockedByBug-918303"]
               :dependsOnMethods ["register_check_syslog"]
               :priority (int 20)}}
@@ -134,6 +139,7 @@
       (verify (not (blank? output)))))
 
 (defn ^{Test {:groups ["registration"
+                       "tier1"
                        "blockedByBug-822706"]
               ;:dependsOnMethods ["simple_register"]
               }}
@@ -148,22 +154,24 @@
                (not (tasks/ui showing? :register-system)))))
 
 (defn ^{Test {:groups ["registration"
+                       "tier2"
                        "blockedByBug-878609"]}}
-verify_password_tip
-"Checks to see if the passeword tip no longer contains red.ht"
-[_]
-(if (not (tasks/ui showing? :register-system))
-  (tasks/unregister))
-(tasks/ui click :register-system)
-(tasks/ui waittillguiexist :register-dialog)
-(tasks/ui click :register)
-(try
-  (let [tip (tasks/ui gettextvalue :password-tip)]
-    (verify (not (substring? "red.ht" tip))))
-  (finally
-    (tasks/ui click :register-cancel))))
+  verify_password_tip
+  "Checks to see if the passeword tip no longer contains red.ht"
+  [_]
+  (if (not (tasks/ui showing? :register-system))
+    (tasks/unregister))
+  (tasks/ui click :register-system)
+  (tasks/ui waittillguiexist :register-dialog)
+  (tasks/ui click :register)
+  (try
+    (let [tip (tasks/ui gettextvalue :password-tip)]
+      (verify (not (substring? "red.ht" tip))))
+    (finally
+      (tasks/ui click :register-cancel))))
 
 (defn ^{Test {:groups ["registration"
+                       "tier2"
                        "blockedByBug-920091"
                        "blockedByBug-1039753"
                        "blockedByBug-1037712"
@@ -194,6 +202,7 @@ verify_password_tip
     (verify (not (substring? "Traceback" @cmdout)))))
 
 (defn ^{Test {:groups ["registration"
+                       "tier1"
                        "blockedByBug-891621"]
               :value ["activation-register"]}}
   check_activation_key_register_dialog
