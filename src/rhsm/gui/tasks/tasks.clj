@@ -269,13 +269,18 @@
      ;; since all items exist at all times in firstboot,
      ;;  we must poll the states and see if 'SHOWING' is among them
      ;; "SHOWING" == 24  on RHEL5
-     (or (= 24 (some #{24} (seq (ui getallstates item))))
+     (or
+      (or (= 24 (some #{24} (seq (ui getallstates item))))
+          (some #(= "SHOWING" %)
+                (seq (ui getallstates :firstboot-window "Firewall"))))
          (ui showing? item)))
   ([window_name component_name]
      (or
       (if (some #(re-find (re-pattern (str ".*" component_name ".*")) %)
                 (seq (ui getobjectlist window_name)))
-        (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
+        (or (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
+            (some #(= "VISIBLE" %)
+                  (seq (ui getallstates :firstboot-window "Firewall"))))
         false)
       (ui showing? window_name component_name))))
 
