@@ -43,7 +43,8 @@
       (reset! (skip-groups :repo) true)
       (throw e))))
 
-(defn ^{Test {:groups ["repo"]}}
+(defn ^{Test {:groups ["repo"
+                       "tier1"]}}
   check_repo_visible
   "This test checks whether repository option exists
    when system is unregistered"
@@ -53,7 +54,8 @@
   (tasks/ui click :main-window "System")
   (verify (not (tasks/visible? :repositories))))
 
-(defn ^{Test {:groups ["repo"]}}
+(defn ^{Test {:groups ["repo"
+                       "tier1"]}}
   check_repo_system_menu
   "This tests for repository option in the system menu"
   [_]
@@ -66,7 +68,8 @@
     (finally
       (tasks/ui click :close-repo-dialog))))
 
-(defn ^{Test {:groups ["repo"]}}
+(defn ^{Test {:groups ["repo"
+                       "tier1"]}}
   check_repo_message_unsubscribed
   "This tests for default static message in repository dialog when unsubscribed"
   [_]
@@ -81,6 +84,7 @@
      (tasks/ui click :close-repo-dialog))))
 
 (defn ^{Test {:groups ["repo"
+                       "tier1"
                        "blockedByBug-1095938"]}}
   check_repo_table_populated
   "This tests if repo-table is populated when subscribed"
@@ -98,6 +102,7 @@
      (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["repo"
+                       "tier2"
                        "blockedByBug-1095938"]}}
   check_repo_remove_override_button
   "This tests if repo-override button is enabled when a row is checked"
@@ -131,7 +136,8 @@
      (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["repo"
-                        "blockedByBug-1095938"]}}
+                       "tier2"
+                       "blockedByBug-1095938"]}}
   check_repo_gpgcheck_button
   "This tests gpg-check edit and remove button"
   [_]
@@ -167,7 +173,8 @@
       (tasks/unsubscribe_all))))
 
 (defn ^{BeforeGroups {:groups ["repo"
-                                "blockedByBug-1095938"]
+                               "tier3"
+                               "blockedByBug-1095938"]
                       :value ["assert_remove_all_overides"]}}
   before_enable_repo_remove_all_overrides
   "Modofies all repos by clicking edit gpg-check"
@@ -185,7 +192,8 @@
                                (tasks/ui click :gpg-check-edit)))))
 
 (defn ^{Test {:groups ["repo"
-                        "blockedByBug-1095938"]
+                       "tier3"
+                       "blockedByBug-1095938"]
               :value ["assert_remove_all_overides"]}}
   enable_repo_remove_all_overrides
   "Enable all repos and click remove all override and check state"
@@ -201,7 +209,8 @@
                              (tasks/ui click :yes)
                              (tasks/checkforerror))))
 
-(defn ^{AfterGroups {:groups ["repo"]
+(defn ^{AfterGroups {:groups ["repo"
+                              "tier3"]
                      :value ["assert_remove_all_overides"]
                      :alwaysRun true}}
   after_enable_repo_remove_all_overrides
@@ -210,6 +219,7 @@
   (tasks/unsubscribe_all))
 
 (defn ^{BeforeGroups {:groups ["repo"
+                               "tier3"
                                "blockedByBug-1095938"]
                       :value ["assert_overide_persistance"]}}
   before_verify_override_persistance
@@ -230,6 +240,7 @@
   (tasks/unsubscribe_all))
 
 (defn ^{Test {:groups ["repo"
+                       "tier3"
                        "blockedByBug-1095938"]
               :value ["assert_overide_persistance"]}}
   verify_override_persistance
@@ -246,6 +257,7 @@
                              (verify (not (tasks/has-state? :gpg-check-edit "visible"))))))
 
 (defn ^{AfterGroups {:groups ["repo"
+                              "tier3"
                               "blockedByBug-1095938"]
                      :value ["assert_overide_persistance"]
                      :alwaysRun true}}
@@ -262,6 +274,7 @@
   (tasks/unsubscribe_all))
 
 (defn ^{Test {:groups ["repo"
+                       "tier3"
                        "blockedByBug-1095938"]
               :value ["assert_repo_dialog_fields"]
               :dataProvider "repolist"}}
@@ -273,7 +286,8 @@
   (verify (not (blank? (tasks/ui gettextvalue :repo-name))))
   (verify (not (blank? (tasks/ui gettextvalue :gpg-check-text)))))
 
-(defn ^{AfterGroups {:groups ["repo"]
+(defn ^{AfterGroups {:groups ["repo"
+                              "tier3"]
                      :value ["assert_repo_dialog_fields"]
                      :alwaysRun true}}
   after_check_repo_name_url
