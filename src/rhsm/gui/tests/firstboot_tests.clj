@@ -80,6 +80,7 @@
   (zero-proxy-values))
 
 (defn ^{Test {:groups ["firstboot"
+                       "tier2"
                        "blockedByBug-973269"
                        "blockedByBug-988411"]}}
   firstboot_enable_proxy_auth
@@ -103,6 +104,7 @@
      (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot"
+                       "tier2"
                        "blockedByBug-973269"
                        "blockedByBug-988411"]}}
   firstboot_enable_proxy_noauth
@@ -123,7 +125,8 @@
      (tasks/disableproxy true)
      (kill_firstboot))))
 
-(defn ^{Test {:groups ["firstboot"]}}
+(defn ^{Test {:groups ["firstboot"
+                       "tier2"]}}
   firstboot_disable_proxy
   "Checks whether the proxy and authentication is disabled in rhsm-conf file"
   [_]
@@ -155,6 +158,7 @@
      (verify (tasks/fbshowing? :firstboot-user)))))
 
 (defn ^{Test {:groups ["firstboot"
+                       "tier2"
                        "blockedByBug-642660"
                        "blockedByBug-863572"]}}
   firstboot_check_back_button_state
@@ -173,6 +177,7 @@
     (tasks/firstboot-register (@config :username) (@config :password) :back-button? true)))
 
 (defn ^{Test {:groups ["firstboot"
+                       "tier2"
                        "blockedByBug-872727"
                        "blockedByBug-973317"]
               :dependsOnMethods ["firstboot_check_back_button_state"]}}
@@ -192,6 +197,7 @@
 
 ;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
 (defn ^{Test {:groups ["firstboot"
+                       "tier1"
                        "blockedByBug-642660"]}}
   firstboot_skip_register
   "Checks whether firstboot skips register if subscription manger is already registered"
@@ -210,7 +216,8 @@
       (verify (tasks/fbshowing? :firstboot-window "Create User")))))
 
 ;; https://tcms.engineering.redhat.com/case/72670/?from_plan=2806
-(defn ^{Test {:groups ["firstboot"]
+(defn ^{Test {:groups ["firstboot"
+                       "tier1"]
               :dependsOnMethods ["firstboot_skip_register"]}}
   firstboot_check_register_sm_unregistered
   "Checks whether firstboot navigates to register screen when subscription manager is unregistered"
@@ -233,6 +240,7 @@
       (verify (tasks/fbshowing? :software-updates)))))
 
 (defn ^{Test {:groups ["firstboot"
+                       "tier1"
                        "blockedByBug-973317"]}}
   firstboot_back_button_after_register
   "Verifies that on clicking backbutton after registering from Create User
@@ -247,7 +255,8 @@
   (tasks/ui click :firstboot-back)
   (verify (not (tasks/fbshowing? :firstboot-window window-name))))
 
-(data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
+(data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"
+                                                             "tier1"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
    (if-not (assert-skip :firstboot)
      (do
