@@ -70,7 +70,8 @@
       (reset! (skip-groups :facts) true)
       (throw e))))
 
-(defn ^{Test {:groups ["facts"]
+(defn ^{Test {:groups ["facts"
+                       "tier1"]
               :dataProvider "guifacts"}}
   match_each_fact
   "Tests that each fact in the GUI is showing the expected or known value."
@@ -79,6 +80,7 @@
   (verify (= (@cli-facts fact) value)))
 
 (defn ^{Test {:groups ["facts"
+                       "tier2"
                        "blockedByBug-950146"]}}
   facts_parity
   "Tests that the gui shows the same number of facts as the CLI."
@@ -91,6 +93,7 @@
     (verify (empty? gui-uniq))))
 
 (defn ^{Test {:groups ["facts"
+                       "tier3"
                        "blockedByBug-683550"
                        "blockedByBug-825309"]
               :dataProvider "installed-products"}}
@@ -115,6 +118,7 @@
 ;; (doseq [[p i] (ftest/get_installed_products nil :debug true)] (ftest/check_version_arch nil p i))
 
 (defn ^{Test {:groups ["facts"
+                       "tier2"
                        "blockedByBug-905136"
                        "blockedByBug-869306"]}}
   check_org_id
@@ -134,6 +138,7 @@
     (finally (tasks/ui click :close-facts))))
 
 (defn ^{Test {:groups ["facts"
+                       "tier2"
                        "blockedByBug-909294"
                        "blockedByBug-839772"]}}
   check_available_service_levels
@@ -161,6 +166,7 @@
                (tasks/ui click :close-system-prefs)))))
 
 (defn ^{Test {:groups ["facts"
+                       "tier2"
                        "blockedByBug-909294"
                        "blockedByBug-908954"
                        "blockedByBug-839772"]}}
@@ -192,7 +198,9 @@
              (if (bool (tasks/ui guiexist :system-preferences-dialog))
                (tasks/ui click :close-system-prefs)))))
 
-(defn ^{Test {:groups ["acceptance"]}}
+(defn ^{Test {:groups ["facts"
+                       "tier1"
+                       "acceptance"]}}
   check_releases
   "Tests that all available releases are shown in the GUI"
   [_]
@@ -206,6 +214,7 @@
   (check_available_releases nil))
 
 (defn ^{Test {:groups ["facts"
+                       "tier1"
                        "blockedByBug-829900"]}}
   verify_about_information
   "Asserts that all the information in the about dialog is correct."
@@ -231,7 +240,8 @@
     (finally (if (bool (tasks/ui guiexist :about-dialog))
                (tasks/ui click :close-about-dialog)))))
 
-(defn ^{BeforeGroups {:groups ["facts"]
+(defn ^{BeforeGroups {:groups ["facts"
+                               "tier3"]
                       :value ["facts-product-status"]}}
   before_check_product_status [_]
   (let [output (:stdout
@@ -248,6 +258,7 @@
     (reset! productstatus cli-data)))
 
 (defn ^{Test {:groups ["facts"
+                       "tier3"
                        "facts-product-status"
                        "blockedByBug-964332"]
               :dataProvider "installed-products"
@@ -259,13 +270,15 @@
         cli-value (get @productstatus product)]
     (verify (= gui-value cli-value))))
 
-(defn ^{AfterGroups {:groups ["facts"]
+(defn ^{AfterGroups {:groups ["facts"
+                              "tier3"]
                      :value ["facts-product-status"]
                      :alwaysRun true}}
   after_check_product_status [_]
   (tasks/unsubscribe_all))
 
-(defn ^{Test {:groups ["facts"]
+(defn ^{Test {:groups ["facts"
+                       "tier3"]
               :dependsOnMethods ["check_product_status"]
               :dataProvider "installed-products"
               :priority (int 20)}}
@@ -276,6 +289,7 @@
     (verify (= gui-status "Not Subscribed"))))
 
 (defn ^{Test {:groups ["facts"
+                       "tier1"
                        "blockedByBug-977855"]}}
   check_persistant_autoheal
   "Asserts that the selection made in the autohal checkbox is persistant."
@@ -312,14 +326,16 @@
       (if (bool (tasks/ui guiexist :system-preferences-dialog))
         (tasks/ui click :close-system-prefs)))))
 
-(defn ^{BeforeGroups {:groups ["facts"]
-                     :value ["check_status_message_for_subscriptions"]}}
+(defn ^{BeforeGroups {:groups ["facts"
+                               "tier1"]
+                      :value ["check_status_message_for_subscriptions"]}}
   before_check_status_message
   [_]
   (tasks/unsubscribe_all)
   (tasks/restart-app :reregister? true))
 
 (defn ^{Test {:groups ["facts"
+                       "tier1"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"]
               :value ["check_status_message_for_subscriptions"]
@@ -336,6 +352,7 @@
       (verify (= @installed-products @status-before-subscribe)))))
 
 (defn ^{Test {:groups ["facts"
+                       "tier1"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"]
               :value ["check_status_message_for_subscriptions"]
@@ -359,6 +376,7 @@
       (verify (= @after-subscribe (- @status-before-subscribe @subscribed-products))))))
 
 (defn ^{Test {:groups ["facts"
+                       "tier1"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"]
               :value ["check_status_message_for_subscriptions"]
@@ -392,6 +410,7 @@
 
 (comment
   (defn ^{Test {:groups ["facts"
+                         "tier1"
                          "blockedByBug-1012501"
                          "blockedByBug-1040119"]
                 :value ["check_status_message_for_subscriptions"]
@@ -417,7 +436,8 @@
         (run-command "date -s \"-1 year\"")
         (run-command "date -s \"-1 year\"" :runner @candlepin-runner)))))
 
-(defn ^{AfterGroups {:groups ["facts"]
+(defn ^{AfterGroups {:groups ["facts"
+                              "tier1"]
                      :value ["check_status_message_for_subscriptions"]
                      :alwaysRun true}}
   after_check_status_message
@@ -430,6 +450,7 @@
 
 
 (defn ^{Test {:groups ["facts"
+                       "tier2"
                        "acceptance"]}}
   verify_update_facts
   "Verifies if update facts grabs updated facts value"
