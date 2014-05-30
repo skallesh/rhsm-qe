@@ -50,6 +50,7 @@
   (tasks/restart-app :unregister? true))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-656896"]}}
   check_libglade_warnings
   "Asserts that the libglade-WARNINGs are corrected."
@@ -64,6 +65,7 @@
    (finally (tasks/kill-app))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-909823"]}}
   check_gtype_warnings
   "Asserts that the gtype WARNINGs are corrected."
@@ -77,6 +79,7 @@
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "blockedByBug-706384"]}}
   run_second_instance
   "Asserts that a second instance of rhsm-gui cannot be run."
@@ -92,6 +95,7 @@
     (verify (not (substring? "Traceback" output)))))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "blockedByBug-747014"]}}
   check_help_button
   "Assertst that the help window opens."
@@ -149,6 +153,7 @@
 
 (data-driven
  check_escape_window {Test {:groups ["system"
+                                     "tier2"
                                      "blockedByBug-862099"]}}
  [(if-not (assert-skip :system)
     (do
@@ -162,6 +167,7 @@
 
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-785203"]}}
   check_close_button
   "Checks that the close menu item works."
@@ -175,6 +181,7 @@
     (finally (tasks/restart-app))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-833578"]}}
   check_online_documentation
   "Asserts that the online documentation opens."
@@ -197,6 +204,7 @@
       (run-command "killall -9 firefox"))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-707041"]}}
   date_picker_traceback
   "Asserts that the date chooser does not throw a traceback."
@@ -219,6 +227,7 @@
                (tasks/ui closewindow :date-selection-dialog)))))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "blockedByBug-947485"]}}
   open_with_bad_hostname
   "Verifies that the gui can open with a bad hostname in /etc/rhsm/rhsm.conf."
@@ -237,6 +246,7 @@
        (tasks/set-conf-file-value "hostname" hostname)))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-920091"
                        "blockedByBug-1037712"]}}
   cli_unregister_check_traceback
@@ -253,6 +263,7 @@
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-960465"]}}
     launch_gui_with_invalid_cert
     "Test to verify GUI can be launched with invalid certs"
@@ -268,6 +279,7 @@
       (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "blockedByBug-923873"]}}
   check_status_when_unregistered
   "To verify that status in MyInstalledProducts icon color and product status
@@ -282,6 +294,7 @@
      (verify (= status "Unknown")))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-1086377"
                        "blockedByBug-916666"]
               :priority (int 30)}}
@@ -342,6 +355,7 @@
               (sleep 150000))))))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-1086377"
                        "blockedByBug-916666"]
               :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]
@@ -368,6 +382,7 @@
      )))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-984083"]}}
   check_for_break_charecters_in_popups
   "Test to ceck if there are any break characters in pop-ups"
@@ -387,6 +402,7 @@
      (tasks/restart-app))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-977850"]}}
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
@@ -402,6 +418,7 @@
   (verify (some #(= "VISIBLE" %) (tasks/ui getallstates :preferences))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-977850"]}}
   check_system_preference_dialog
   "Verifies behavior of system preference dialog and its content"
@@ -429,6 +446,7 @@
                  (tasks/ui click :close-system-prefs))))))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "acceptance"
                        "blockedByBug-818282"]}}
   check_ordered_contract_options
@@ -462,6 +480,7 @@
                (tasks/ui click :cancel-contract-selection)))))))))
 
 (defn ^{Test {:group ["system"
+                      "tier2"
                       "blockedByBug-723992"
                       "blockedByBug-1040119"]}}
   check_gui_refresh
@@ -486,7 +505,8 @@
      (tasks/unsubscribe_all)
      (tasks/unregister))))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["assert_subscription_field"]
               :dataProvider "subscribed"}}
   assert_subscription_field
@@ -502,7 +522,8 @@
           cli-value (set (get map product))]
       (verify (< 0 (count (clojure.set/intersection gui-value cli-value)))))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["assert_subscription_field"]
                      :alwaysRun true}}
   after_assert_subscription_field
@@ -510,7 +531,8 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["check_subscription_type_all_available"]
               :dataProvider "all-subscriptions"}}
   check_subscription_type_all_subscriptions
@@ -520,7 +542,8 @@
   (tasks/skip-dropdown :all-subscriptions-view product)
   (verify (not (blank? (tasks/ui gettextvalue :all-available-subscription-type)))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["check_subscription_type_all_available"]
                      :alwaysRun true}}
   after_check_subscription_type_all_available
@@ -528,7 +551,8 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["check_subscription_type_my_subs"]
               :dataProvider "my-subscriptions"}}
   check_subscription_type_my_subscriptions
@@ -538,7 +562,8 @@
   (tasks/skip-dropdown :my-subscriptions-view product)
   (verify (not (blank? (tasks/ui gettextvalue :subscription-type)))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["check_subscription_type_my_subs"]
                      :alwaysRun true}}
   after_check_subscription_type_my_subscription
@@ -547,6 +572,8 @@
   (tasks/unregister))
 
 (defn ^{Test {:groups ["system"
+                       "acceptance"
+                       "tier1"
                        "blockedByBug-1051383"]}}
   check_status_column
   "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
@@ -568,6 +595,7 @@
       (run-command "killall -9 firefox"))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-707041"]}}
   date_picker_traceback
   "Asserts that the date chooser does not throw a traceback."
@@ -590,6 +618,7 @@
                (tasks/ui closewindow :date-selection-dialog)))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-947485"]}}
   open_with_bad_hostname
   "Verifies that the gui can open with a bad hostname in /etc/rhsm/rhsm.conf."
@@ -608,6 +637,7 @@
        (tasks/set-conf-file-value "hostname" hostname)))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-920091"
                        "blockedByBug-1037712"]}}
   cli_unregister_check_traceback
@@ -624,6 +654,7 @@
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-960465"]}}
     launch_gui_with_invalid_cert
     "Test to verify GUI can be launched with invalid certs"
@@ -639,6 +670,7 @@
       (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-923873"]}}
   check_status_when_unregistered
   "To verify that status in MyInstalledProducts icon color and product status
@@ -653,6 +685,7 @@
      (verify (= status "Unknown")))))
 
 (defn ^{Test {:groups ["system"
+                       "tier3"
                        "blockedByBug-916666"]}}
   rhsmcertd_restart_check_timestamp
   "Checks whether the timestamp at which cert check was intiated is
@@ -695,6 +728,7 @@
          (sleep 150000))))))
 
 (defn ^{Test {:groups ["system"
+                       "tier3"
                        "blockedByBug-916666"]
               :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]}}
   rhsmcertd_stop_check_timestamp
@@ -715,6 +749,7 @@
      )))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-984083"]}}
   check_for_break_charecters_in_popups
   "Test to ceck if there are any break characters in pop-ups"
@@ -734,6 +769,7 @@
      (tasks/restart-app))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-977850"]}}
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
@@ -748,6 +784,7 @@
   (verify (tasks/visible? :preferences)))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-977850"]}}
   check_system_preference_dialog
   "Verifies behavior of system preference dialog and its content"
@@ -776,6 +813,7 @@
 
 (defn ^{Test {:groups ["system"
                        "acceptance"
+                       "tier1"
                        "blockedByBug-818282"]}}
   check_ordered_contract_options
   "Checks if contracts in contract selection dialog are ordered based on host type"
@@ -808,6 +846,7 @@
                (tasks/ui click :cancel-contract-selection)))))))))
 
 (defn ^{Test {:group ["system"
+                      "tier2"
                       "blockedByBug-723992"
                       "blockedByBug-1040119"]}}
   check_gui_refresh
@@ -832,7 +871,8 @@
      (tasks/unsubscribe_all)
      (tasks/unregister))))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["assert_subscription_field"]
               :dataProvider "subscribed"}}
   assert_subscription_field
@@ -848,7 +888,8 @@
           cli-value (set (get map product))]
       (verify (< 0 (count (clojure.set/intersection gui-value cli-value)))))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["assert_subscription_field"]
                      :alwaysRun true}}
   after_assert_subscription_field
@@ -856,7 +897,8 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["check_subscription_type_all_available"]
               :dataProvider "all-subscriptions"}}
   check_subscription_type_all_subscriptions
@@ -866,7 +908,8 @@
   (tasks/skip-dropdown :all-subscriptions-view product)
   (verify (not (blank? (tasks/ui gettextvalue :all-available-subscription-type)))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["check_subscription_type_all_available"]
                      :alwaysRun true}}
   after_check_subscription_type_all_available
@@ -874,7 +917,8 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["check_subscription_type_my_subs"]
               :dataProvider "my-subscriptions"}}
   check_subscription_type_my_subscriptions
@@ -884,7 +928,8 @@
   (tasks/skip-dropdown :my-subscriptions-view product)
   (verify (not (blank? (tasks/ui gettextvalue :subscription-type)))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["check_subscription_type_my_subs"]
                      :alwaysRun true}}
   after_check_subscription_type_my_subscription
@@ -893,6 +938,7 @@
   (tasks/unregister))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-1051383"]}}
   check_status_column
   "Checks if there are any status other than 'Subscribed'
@@ -910,6 +956,7 @@
       (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "acceptance"]}}
     launch_gui_from_gnome
     "Launches gui from gnome"
@@ -961,7 +1008,8 @@
 )
 
 (defn ^{Test {:groups ["system"
-                       "acceptance"]}}
+                       "acceptance"
+                       "tier1"]}}
   check_physical_only_pools
   "Identifies physical only pools from JSON and checks
    whether it throws appropriate error message"
