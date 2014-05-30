@@ -76,6 +76,7 @@
       false)))
 
 (defn ^{Test {:groups ["import"
+                       "tier1"
                        "blockedByBug-712980"
                        ;checking this one in the function
                        ;"blockedByBug-860344"
@@ -128,7 +129,8 @@
              :key key
              :entname entname})))
 
-(defn ^{Test {:groups ["import"]
+(defn ^{Test {:groups ["import"
+                       "tier1"]
               :dependsOnMethods ["import_valid_cert"]
               :priority (int 20)}}
   import_unregister
@@ -155,6 +157,7 @@
   (reset! importedcert nil))
 
 (defn ^{Test {:groups ["import"
+                       "tier1"
                        "blockedByBug-691784"
                        "blockedByBug-723363"]
               :dependsOnMethods ["import_valid_cert"]
@@ -204,6 +207,7 @@
      (get-random-file path "")))
 
 (defn ^{Test {:groups ["import"
+                       "tier2"
                        "blockedByBug-702075"]}}
   import_random
   "Asserts that a random file cannot be imported."
@@ -214,6 +218,7 @@
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
+                       "tier2"
                        "blockedByBug-702075"]}}
   import_entitlement
   "Asserts that an entitlement cannot be imported."[_]
@@ -221,6 +226,7 @@
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
+                       "tier2"
                        "blockedByBug-702075"]}}
   import_key
   "Asserts that a product key cannot be imported."
@@ -229,6 +235,7 @@
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
+                       "tier2"
                        "blockedByBug-702075"]}}
 
   import_product
@@ -238,6 +245,7 @@
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
+                       "tier1"
                        "blockedByBug-691788"]
               :dependsOnMethods ["import_random"]}}
   import_and_reopen
@@ -248,6 +256,7 @@
   (verify (bool (tasks/ui guiexist :main-window))))
 
 (defn ^{Test {:groups ["import"
+                       "tier1"
                        "blockedByBug-702075"
                        "blockedByBug-748912"
                        "blockedByBug-877452"]}}
@@ -274,4 +283,4 @@
     (.setupBeforeSuite @importtests)
     (.setupBeforeClass @importtests))
 
-  )
+ )
