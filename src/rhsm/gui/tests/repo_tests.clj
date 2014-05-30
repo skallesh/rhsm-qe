@@ -278,7 +278,8 @@
                      :alwaysRun true}}
   after_check_repo_name_url
   [_]
-  (tasks/ui click :close-repo-dialog)
+  (if (bool (tasks/ui guiexist :repositories-dialog))
+    (tasks/ui click :close-repo-dialog))
   (tasks/unsubscribe_all))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
