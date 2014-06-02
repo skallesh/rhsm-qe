@@ -398,8 +398,13 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationsDoNotTranslateSubStrings_Test(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
-		List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat",/*"RHN","RHN Classic", TRANSLATORS CHOICE see https://bugzilla.redhat.com/show_bug.cgi?id=950099#c7 */"subscription-manager-migration-data","subscription-manager","python-rhsm","consumer_types","consumer_export","proxy_hostname:proxy_port","firstboot");
-		// TODO CONSIDER ADDING THESE TOO List<String> doNotTranslateSubStrings = Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Management", "Red Hat Global Support Services" "Red Hat Customer Portal", "RHN Satellite");
+		List<String> doNotTranslateSubStrings =  new ArrayList<String>();
+		doNotTranslateSubStrings.add("Red Hat");
+		//doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"RHN","RHN Classic"}));	// TRANSLATORS CHOICE see https://bugzilla.redhat.com/show_bug.cgi?id=950099#c7
+		//doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"Red Hat Subscription Manager","Red Hat Subscription Management", "Red Hat Global Support Services" "Red Hat Customer Portal", "RHN Satellite"}));	// TODO CONSIDER ADDING THESE TOO
+		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager-migration-data","subscription-manager","python-rhsm"}));
+		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"consumer_types","consumer_export","proxy_hostname:proxy_port","firstboot"}));
+		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"%(mappingfile)s","%(package)s"}));	// from key: Unable to read mapping file: %(mappingfile)s.\nDo you have the %(package)s package installed?
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();
 		ignoreTheseExceptionalCases.add("View and configure subscription-manager plugins");
