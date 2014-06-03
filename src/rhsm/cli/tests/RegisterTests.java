@@ -646,6 +646,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		       invalidNameStderr = "System name cannot contain most special characters.";	// bugzilla 677405
 		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters\\.";
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) maxCharsStderr = "Name of the unit must be shorter than 250 characters\\.";
+		       maxCharsStderr = "Problem creating unit Consumer";	// Problem creating unit Consumer [id = 8a9087e3462af2aa01466361ec71037f, type = ConsumerType [id=1000, label=system], getName() = 256_characters_6789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456]	// valid after bug https://bugzilla.redhat.com/show_bug.cgi?id=1094492#c1
 		String name;
 		String successfulStdout = "The system has been registered with id: [a-f,0-9,\\-]{36}";	// msg changed by bug 878634
 		       successfulStdout = "The system has been registered with ID: [a-f,0-9,\\-]{36}";
