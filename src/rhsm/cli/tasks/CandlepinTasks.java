@@ -841,7 +841,13 @@ schema generation failed
 	}
 	
 	public static List<String> getServiceLevelsForOrgKey(String authenticator, String password, String url, String orgKey) throws JSONException, Exception {
-		JSONArray jsonLevels = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+orgKey+"/servicelevels"));	
+		return (getServiceLevelsForOrgKey(authenticator,password,url,orgKey,null));
+	}
+	
+	public static List<String> getServiceLevelsForOrgKey(String authenticator, String password, String url, String orgKey, Boolean exempt) throws JSONException, Exception {
+		String exemptOption = "";
+		if (exempt!=null) exemptOption="?exempt="+String.valueOf(exempt);	// valid after Bug 1066088 - [RFE] expose an option to the servicelevels api to return exempt service levels
+		JSONArray jsonLevels = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+orgKey+"/servicelevels"+exemptOption));	
 		List<String> serviceLevels = new ArrayList<String>();
 		for (int i=0; i<jsonLevels.length(); i++) {
 			serviceLevels.add(jsonLevels.getString(i));

@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
+import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
@@ -831,10 +832,16 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// store the initial state of the system
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServiceLevelConsumer", null, null, null, null, (String)null, null, null, null, null, false, null, null, null));
+		String orgKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);	//clienttasks.getCurrentlyRegisteredOwnerKey();
 		String initialServiceLevel = clienttasks.getCurrentServiceLevel();
 		List<EntitlementCert> initialEntitlementCerts = clienttasks.getCurrentEntitlementCerts();
 		List<SubscriptionPool> initialAvailableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-
+		
+		// get the current exempt service levels
+		List<String> exemptServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, orgKey, true);
+		List<String> exemptServiceLevelsInUpperCase = new ArrayList<String>();
+		for (String exemptServiceLevel : exemptServiceLevels) exemptServiceLevelsInUpperCase.add(exemptServiceLevel.toUpperCase());
+		
 		// call the candlepin API
 		// curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/7033f5c0-c451-4d4c-bf88-c5061dc2c521/entitlements/dry-run?service_level=Premium | python -m simplejson/tool
 		JSONArray jsonDryrunResults= new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, String.format("/consumers/%s/entitlements/dry-run%s",consumerId, serviceLevel==null?"":String.format("?service_level=%s",urlEncode(serviceLevel)))));	// urlEncode is needed to handle whitespace in the serviceLevel
@@ -852,7 +859,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			//dryrunSubscriptionPools.add(subscriptionPool);
 			if (serviceLevel==null || serviceLevel.equals("")) {
 				log.info("Pool '"+poolId+"' returned by the dry-run results (without requesting a service-level) has a value of '"+CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level")+"'.");
-			} else if (sm_exemptServiceLevelsInUpperCase.contains(CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level").toUpperCase())) {
+			} else if (exemptServiceLevelsInUpperCase.contains(CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level").toUpperCase())) {
 				log.warning("Pool '"+poolId+"' returned by the dry-run results provides the exempt service-level '"+CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level")+"'.");
 			} else {
 				String support_level = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level");
@@ -885,7 +892,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				newlyGrantedEntitlementCerts.add(entitlementCert);
 				if (serviceLevel==null || serviceLevel.equals("")) {
 					log.info("The service level provided by the entitlement cert granted after autosubscribe (without specifying a service level) is '"+entitlementCert.orderNamespace.supportLevel+"'.");
-				} else if (entitlementCert.orderNamespace.supportLevel!=null && sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
+				} else if (entitlementCert.orderNamespace.supportLevel!=null && exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
 					log.warning("After autosubscribe with service level '"+serviceLevel+"', this autosubscribed entitlement provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
 				} else {
 					//CASE SENSITIVE ASSERTION Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel,"The service level provided by the entitlement cert granted after autosubscribe matches the requested servicelevel.");
