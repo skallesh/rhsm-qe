@@ -189,7 +189,8 @@
                              (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
                              (if (tasks/has-state? :gpg-check-edit "visible")
-                               (tasks/ui click :gpg-check-edit)))))
+                               (tasks/ui click :gpg-check-edit))))
+  (tasks/ui click :close-repo-dialog))
 
 (defn ^{Test {:groups ["repo"
                        "tier3"
@@ -198,6 +199,8 @@
   enable_repo_remove_all_overrides
   "Enable all repos and click remove all override and check state"
   [_]
+  (tasks/ui click :repositories)
+  (tasks/ui waittillwindowexist :repositories-dialog 10)
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
                              (tasks/ui selectrow :repo-table repo)
