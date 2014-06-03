@@ -732,6 +732,44 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="Verify that redhat.repo file is unnecessarily re-written with every yum transaction",
+			groups={"blockedByBug-1035440"/*,"blockedByBug-1090206","blockedByBug-1008016"*/},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyYumTransactionsDoNotCauseUnnessarilyRewritesOfRedHatRepoFile_Test() {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal_(null, null, true, null, null, null);
+		List<Repo> repos = clienttasks.getCurrentlySubscribedRepos();
+		//if (repos.isEmpty()) clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		if (repos.isEmpty()) Assert.fail("Expected subscription-manager registration with autosubscribe to grant access to at least one repository.  If failed, check installed product certs and available subscriptions.");
+		List<String> defaultEnabledRepos = new ArrayList<String>();
+		List<String> defaultDisabledRepos = new ArrayList<String>();
+		for (Repo repo : repos) if (repo.enabled) defaultEnabledRepos.add(repo.repoId); else defaultDisabledRepos.add(repo.repoId);
+		
+		// get the initial modification time for the redhat.repo file
+		String initialModTime = client.runCommandAndWait("stat -c %y "+clienttasks.redhatRepoFile).getStdout().trim();
+		
+		// trigger the subscription-manager yum plugin and assert the modification time remains unchanged
+		clienttasks.yumClean("all");
+		Assert.assertEquals(client.runCommandAndWait("stat -c %y "+clienttasks.redhatRepoFile).getStdout().trim(), initialModTime, "The modification time of '"+clienttasks.redhatRepoFile+"' before and after a yum transaction.");
+		clienttasks.getYumRepolist("all -q");
+		Assert.assertEquals(client.runCommandAndWait("stat -c %y "+clienttasks.redhatRepoFile).getStdout().trim(), initialModTime, "The modification time of '"+clienttasks.redhatRepoFile+"' before and after a yum transaction.");
+		
+		// toggle the enablement of repos which should force an immediate modification to redhat.repo
+		clienttasks.repos(null, defaultDisabledRepos, defaultEnabledRepos, null, null, null);
+		String finalModTime = client.runCommandAndWait("stat -c %y "+clienttasks.redhatRepoFile).getStdout().trim();
+		Assert.assertTrue(!finalModTime.equals(initialModTime), "The modification time of '"+clienttasks.redhatRepoFile+"' before and after repos enablement should be different.");
+		
+		// finally let's trigger the subscription-manager yum plugin and assert the modification time remains unchanged
+		clienttasks.getYumRepolist("all -q");
+		Assert.assertEquals(client.runCommandAndWait("stat -c %y "+clienttasks.redhatRepoFile).getStdout().trim(), finalModTime, "The modification time of '"+clienttasks.redhatRepoFile+"' before and after a yum transaction.");
+		clienttasks.yumClean("all");
+		Assert.assertEquals(client.runCommandAndWait("stat -c %y "+clienttasks.redhatRepoFile).getStdout().trim(), finalModTime, "The modification time of '"+clienttasks.redhatRepoFile+"' before and after a yum transaction.");
+	}
+	
+	
+	
+	
 	
 	// Candidates for an automated Test:
 	// TODO Bug 797243 - manual changes to redhat.repo are too sticky https://github.com/RedHatQE/rhsm-qe/issues/188
