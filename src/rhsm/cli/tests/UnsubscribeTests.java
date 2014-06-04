@@ -10,21 +10,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
-
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BzChecker;
-import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
-import com.redhat.qe.jul.TestRecords;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
+
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
+import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -39,9 +37,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 
-	@Test(description="subscription-manager-cli: unsubscribe consumer from an entitlement using product ID",
+	@Test(	description="subscription-manager-cli: unsubscribe consumer from an entitlement using product ID",
 			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791"},
-			dataProvider="getAllConsumedProductSubscriptionsData")
+			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
+			dataProvider="getSomeConsumedProductSubscriptionsData",
+			enabled=true)
 	@ImplementsNitrateTest(caseId=41688)
 	public void UnsubscribeFromValidProductIDs_Test(ProductSubscription productSubscription){
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
@@ -50,9 +50,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(description="Unsubscribe product entitlement and re-subscribe",
+	@Test(	description="Unsubscribe product entitlement and re-subscribe",
 			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791","blockedByBug-979492"},
-			dataProvider="getAllConsumedProductSubscriptionsData")
+			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
+			dataProvider="getSomeConsumedProductSubscriptionsData",
+			enabled=true)
 	@ImplementsNitrateTest(caseId=41898)
 	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription) throws Exception{
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
@@ -140,7 +142,8 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: subscribe and then unsubscribe from a future subscription pool",
 			groups={"blockedByBug-727970","blockedByBug-958775"},
-			dataProvider="getAllFutureSystemSubscriptionPoolsData",
+			//dataProvider="getAllFutureSystemSubscriptionPoolsData",	// 06/04/2014 takes too long; rarely reveals a bug
+			dataProvider="getSomeFutureSystemSubscriptionPoolsData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeAfterSubscribingToFutureSubscriptionPool_Test(SubscriptionPool pool) throws Exception {

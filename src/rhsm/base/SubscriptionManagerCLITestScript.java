@@ -1461,6 +1461,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
+	@DataProvider(name="getSomeConsumedProductSubscriptionsData")
+	public Object[][] getSomeConsumedProductSubscriptionsDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRandomSubsetOfList(getAllConsumedProductSubscriptionsDataAsListOfLists(),10));
+	}
 	@DataProvider(name="getAllConsumedProductSubscriptionsData")
 	public Object[][] getAllConsumedProductSubscriptionsDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllConsumedProductSubscriptionsDataAsListOfLists());
@@ -2639,6 +2643,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	@DataProvider(name="getAllFutureSystemSubscriptionPoolsData")
 	public Object[][] getAllFutureSystemSubscriptionPoolsDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllFutureSystemSubscriptionPoolsDataAsListOfLists());
+	}
+	@DataProvider(name="getSomeFutureSystemSubscriptionPoolsData")
+	public Object[][] getSomeFutureSystemSubscriptionPoolsDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRandomSubsetOfList(getAllFutureSystemSubscriptionPoolsDataAsListOfLists(),10));
 	}
 	
 	/**
