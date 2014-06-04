@@ -94,15 +94,18 @@
   (when (@config :ssh-timeout)
     (.setEmergencyTimeout @noauth-proxyrunner (Long/valueOf (@config :ssh-timeout))))
   ;; command runner to run ssh commands on the candlepin server
-  ;; *******  This can be used only against Standalone Candlepin and against Stage  *******
-  (comment
-  (reset! candlepin-runner (SSHCommandRunner. (@config :server-hostname)
-                                              (@config :ssh-super-user)
-                                              (@config :ssh-key-private)
-                                              (@config :ssh-key-passphrase)
-                                              nil))
-  (when (@config :ssh-timeout)
-    (.setEmergencyTimeout @candlepin-runner (Long/valueOf (@config :ssh-timeout)))))
+  ;; this is inside a try/catch block as a command runner cannot
+  ;; be created for a stage-candlepin server
+  (try
+    (reset! candlepin-runner (SSHCommandRunner. (@config :server-hostname)
+                                                (@config :ssh-super-user)
+                                                (@config :ssh-key-private)
+                                                (@config :ssh-key-passphrase)
+                                                nil))
+    (when (@config :ssh-timeout)
+      (.setEmergencyTimeout @candlepin-runner (Long/valueOf (@config :ssh-timeout))))
+    (catch Exception e
+      (reset! candlepin-runner nil)))
   ;; command runner to run ssh commands on rhsm client box as non-root user
   (comment
     (reset! clientcmd-testuser (SSHCommandRunner. (@config :client-hostname)
