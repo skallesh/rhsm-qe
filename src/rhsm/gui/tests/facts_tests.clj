@@ -408,33 +408,39 @@
                                                      (tasks/ui gettextvalue :overall-status))))
       (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date))))))
 
-(comment
-  (defn ^{Test {:groups ["facts"
-                         "tier1"
-                         "blockedByBug-1012501"
-                         "blockedByBug-1040119"]
-                :value ["check_status_message_for_subscriptions"]
-                :dependsOnMethods ["check_status_message_future_subscriptions"]
-                :priority (int 103)}}
-    check_status_message_expired_subscriptions
-    "Asserts that status message displayed in main-window is right after expiring
+(defn ^{Test {:groups ["facts"
+                       "tier1"
+                       "blockedByBug-1012501"
+                       "blockedByBug-1040119"]
+              :value ["check_status_message_for_subscriptions"]
+              :dependsOnMethods ["check_status_message_future_subscriptions"]
+              :priority (int 103)}}
+  check_status_message_expired_subscriptions
+  "Asserts that status message displayed in main-window is right after expiring
    attached subscriptions"
-    [_]
-    (try
-      (let
-          [subscribed-products-future (atom {})
-           after-future-subscribe (atom {})]
-        (run-command "date -s \"+1 year\"")
-        (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
-        (tasks/restart-app)
-        (reset! subscribed-products-future (count (filter #(= "Subscribed" %)
-                                                          (tasks/get-table-elements :installed-view 2))))
-        (reset! after-future-subscribe (Integer. (re-find #"\d*"
-                                                          (tasks/ui gettextvalue :overall-status))))
-        (verify (= @after-future-subscribe (- @status-before-subscribe @subscribed-products-future))))
-      (finally
-        (run-command "date -s \"-1 year\"")
-        (run-command "date -s \"-1 year\"" :runner @candlepin-runner)))))
+  [_]
+  (if (nil?  @candlepin-runner)
+    (throw (SkipException.
+            (str "Cannot access combo-box !! Skipping Test 'check_available_releases'.")))
+    (do
+      (try
+        (let
+            [subscribed-products-future (atom {})
+             after-future-subscribe (atom {})]
+          (run-command "date -s \"+1 year\"")
+          (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
+          (tasks/restart-app)
+          (reset! subscribed-products-future
+                  (count (filter #(= "Subscribed" %)
+                                 (tasks/get-table-elements :installed-view 2))))
+          (reset! after-future-subscribe
+                  (Integer. (re-find #"\d*"
+                                     (tasks/ui gettextvalue :overall-status))))
+          (verify (= @after-future-subscribe
+                     (- @status-before-subscribe @subscribed-products-future))))
+        (finally
+          (run-command "date -s \"-1 year\"")
+          (run-command "date -s \"-1 year\"" :runner @candlepin-runner))))))
 
 (defn ^{AfterGroups {:groups ["facts"
                               "tier1"]
