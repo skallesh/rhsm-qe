@@ -1461,9 +1461,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
-	@DataProvider(name="getSomeConsumedProductSubscriptionsData")
-	public Object[][] getSomeConsumedProductSubscriptionsDataAs2dArray() throws JSONException, Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getRandomSubsetOfList(getAllConsumedProductSubscriptionsDataAsListOfLists(),10));
+	@DataProvider(name="getRandomSubsetOfConsumedProductSubscriptionsData")
+	public Object[][] getRandomSubsetOfConsumedProductSubscriptionsDataAs2dArray() throws JSONException, Exception {
+		int subsetSize = 10;	// maximum subset count of data rows to return
+		return TestNGUtils.convertListOfListsTo2dArray(getRandomSubsetOfList(getAllConsumedProductSubscriptionsDataAsListOfLists(),subsetSize));
 	}
 	@DataProvider(name="getAllConsumedProductSubscriptionsData")
 	public Object[][] getAllConsumedProductSubscriptionsDataAs2dArray() throws JSONException, Exception {
@@ -2644,9 +2645,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public Object[][] getAllFutureSystemSubscriptionPoolsDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllFutureSystemSubscriptionPoolsDataAsListOfLists());
 	}
-	@DataProvider(name="getSomeFutureSystemSubscriptionPoolsData")
-	public Object[][] getSomeFutureSystemSubscriptionPoolsDataAs2dArray() throws Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getRandomSubsetOfList(getAllFutureSystemSubscriptionPoolsDataAsListOfLists(),10));
+	@DataProvider(name="getRandomSubsetOfFutureSystemSubscriptionPoolsData")
+	public Object[][] getRandomSubsetOfFutureSystemSubscriptionPoolsDataAs2dArray() throws Exception {
+		int subsetSize = 10;	// maximum subset count of data rows to return
+		return TestNGUtils.convertListOfListsTo2dArray(getRandomSubsetOfList(getAllFutureSystemSubscriptionPoolsDataAsListOfLists(),subsetSize));
 	}
 	
 	/**

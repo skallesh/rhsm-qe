@@ -40,7 +40,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: unsubscribe consumer from an entitlement using product ID",
 			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791"},
 			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
-			dataProvider="getSomeConsumedProductSubscriptionsData",
+			dataProvider="getRandomSubsetOfConsumedProductSubscriptionsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41688)
 	public void UnsubscribeFromValidProductIDs_Test(ProductSubscription productSubscription){
@@ -53,7 +53,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="Unsubscribe product entitlement and re-subscribe",
 			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791","blockedByBug-979492"},
 			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
-			dataProvider="getSomeConsumedProductSubscriptionsData",
+			dataProvider="getRandomSubsetOfConsumedProductSubscriptionsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41898)
 	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription) throws Exception{
@@ -143,7 +143,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: subscribe and then unsubscribe from a future subscription pool",
 			groups={"blockedByBug-727970","blockedByBug-958775"},
 			//dataProvider="getAllFutureSystemSubscriptionPoolsData",	// 06/04/2014 takes too long; rarely reveals a bug
-			dataProvider="getSomeFutureSystemSubscriptionPoolsData",
+			dataProvider="getRandomSubsetOfFutureSystemSubscriptionPoolsData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeAfterSubscribingToFutureSubscriptionPool_Test(SubscriptionPool pool) throws Exception {
