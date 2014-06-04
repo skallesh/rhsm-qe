@@ -204,13 +204,16 @@
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
                              (tasks/ui selectrow :repo-table repo)
+                             (verify (tasks/has-state? :repo-remove-override "enabled"))
                              (tasks/ui click :repo-remove-override)
                              (tasks/ui waittillwindowexist :question-dialog 30)
                              (verify (substring?
                                       repo (tasks/ui gettextvalue
                                                      :question-dialog "Are you sure*")))
                              (tasks/ui click :yes)
-                             (tasks/checkforerror))))
+                             (tasks/checkforerror)
+                             (verify (tasks/has-state? :gpg-check-edit "visible"))
+                             (verify (not (tasks/has-state? :repo-remove-override "enabled"))))))
 
 (defn ^{AfterGroups {:groups ["repo"
                               "tier3"]
