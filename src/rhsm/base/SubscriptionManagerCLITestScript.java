@@ -2931,6 +2931,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 
 	
+	@DataProvider(name="getRandomSubsetOfAllAvailableServiceLevelData")
+	public Object[][] getRandomSubsetOfAllAvailableServiceLevelDataAs2dArray() throws JSONException, Exception {
+		int subsetSize = 3;
+		return TestNGUtils.convertListOfListsTo2dArray(getRandomSubsetOfList(getAllAvailableServiceLevelDataAsListOfLists(),subsetSize));
+	}
 	@DataProvider(name="getAllAvailableServiceLevelData")
 	public Object[][] getAllAvailableServiceLevelDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableServiceLevelDataAsListOfLists());

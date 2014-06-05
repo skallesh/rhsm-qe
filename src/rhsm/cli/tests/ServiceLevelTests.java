@@ -363,7 +363,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid service level; assert the entitlements granted match the requested service level",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-919700"},
-			dataProvider="getAllAvailableServiceLevelData",
+			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
+			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithAvailableServiceLevel_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
@@ -391,7 +392,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid random case SeRviCEleVel; assert the installed product status is independent of the specified service level case.",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-859652","blockedByBug-919700"},
-			dataProvider="getAllAvailableServiceLevelData",
+			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
+			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyRegisterWithServiceLevelIsCaseInsensitive(Object bugzilla, String serviceLevel) {
@@ -462,7 +464,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: subscribe with auto while specifying an valid service level; assert the entitlements granted match the requested service level",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-977321"},
-			dataProvider="getAllAvailableServiceLevelData",
+			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
+			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157229)	// 147971
 	public void AutoSubscribeWithServiceLevel_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
@@ -591,7 +594,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
  
 	@Test(	description="subscription-manager: autosubscribe while specifying an valid service level; assert the installed product status is independent of the specified SerViceLeVEL case.",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-818319","blockedByBug-859652"},
-			dataProvider="getAllAvailableServiceLevelData",
+			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
+			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157227) // 157226 //157225
 	public void VerifyAutoSubscribeWithServiceLevelIsCaseInsensitive_Test(Object bugzilla, String serviceLevel) {
@@ -692,7 +696,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="Using curl, set the default service level for an org and then register using org credentials to verify consumer's service level",
 			groups={},
-			dataProvider="getAllAvailableServiceLevelData",
+			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
+			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SetDefaultServiceLevelForOrgAndRegister_Test(Object bugzilla, String defaultServiceLevel) throws JSONException, Exception {
@@ -773,7 +778,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: service-level --set (with available serviceLevel)",
 			groups={},
-			dataProvider="getAllAvailableServiceLevelData",
+			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
+			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelSetWithAvailableServiceLevel_Test(Object bugzilla, String serviceLevel) {
@@ -787,7 +793,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: service-level --set should accept \"\" to effectively unset",
 			groups={"blockedByBug-835050"},
-			dataProvider="getAllAvailableServiceLevelData",
+			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
+			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsetServiceLevel_Test(Object bugzilla, String serviceLevel) {
@@ -800,7 +807,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: service-level --set (with case insensitivity) is preserved throughtout an identity regeneration",
 			groups={},
-			dataProvider="getAllAvailableServiceLevelData",
+			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
+			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelSetWithAvailableServiceLevelIsPreservedThroughIdentityRegeneration_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
@@ -816,7 +824,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: service-level --unset after setting an available service level",
 			groups={"blockedByBug-829803","blockedByBug-829812"},
-			dataProvider="getAllAvailableServiceLevelData",
+			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
+			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelUnsetAfterSet_Test(Object bugzilla, String serviceLevel) {
