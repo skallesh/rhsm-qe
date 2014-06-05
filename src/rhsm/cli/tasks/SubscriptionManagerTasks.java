@@ -7013,6 +7013,20 @@ public class SubscriptionManagerTasks {
 				String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
 				SSHCommandResult getTracebackCommandResult = sshCommandRunner.runCommandAndWaitWithoutLogging(getTracebackCommand);
 				if (!getTracebackCommandResult.getStdout().isEmpty()) log.warning("Last request from "+rhsmLogFile+":\n"+getTracebackCommandResult.getStdout());
+				
+				
+				// TEMPORARY WORKAROUND FOR BUG
+				// 2014-06-05 02:55:31,401 [DEBUG] subscription-manager @connection.py:450 - Making request: GET /subscription/consumers/9530dd56-f85b-488a-8a15-886ab3c4caf8/compliance
+				// 2014-06-05 02:55:35,062 [DEBUG] subscription-manager @connection.py:473 - Response: status=502
+				// 2014-06-05 02:55:35,063 [ERROR] subscription-manager @connection.py:502 - Response: 502
+				if (getTracebackCommandResult.getStdout().contains("Response: status=502") && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+					String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						throw new SkipException("Encounterd a 502 response from the server and could not complete this test while bug '"+bugId+"' is open.");
+					}
+				}
+				// END OF WORKAROUND
 			}
 		}
 	}
