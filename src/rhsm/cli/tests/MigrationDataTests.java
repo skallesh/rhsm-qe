@@ -853,6 +853,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.startsWith("rhel-x86_64-server-productivity-5-beta")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
+			if (!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel)) {
+				String nonBetaClassicRhnChannel = classicRhnChannel.replace("-beta", "");
+				if (channelsToProductCertFilenamesMap.containsKey(nonBetaClassicRhnChannel)) {
+					Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(nonBetaClassicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file; however, its non-beta equivalent '"+nonBetaClassicRhnChannel+"' is accounted for in subscription-manager-migration-data file.  Assuming sufficiency.");
+					return;
+				}
+			}
+		}
 		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
@@ -1095,12 +1104,19 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			
 			// bugzillas
 			Set<String> bugIds = new HashSet<String>();
+			
+			// Bug 1078527 - channel-cert-mapping for ComputeNode rhel-7 product certs are missing and wrong
 			if (rhnChannel.equals("rhel-x86_64-hpc-node-fastrack-7") ||
 				rhnChannel.equals("rhel-x86_64-hpc-node-fastrack-7-debuginfo") ||
 				rhnChannel.equals("rhel-x86_64-hpc-node-rh-common-7-debuginfo") ||
 				rhnChannel.equals("rhel-x86_64-hpc-node-7-debuginfo")) {
-				// Bug 1078527 - channel-cert-mapping for ComputeNode rhel-7 product certs are missing and wrong
 				bugIds.add("1078527");
+			}
+			
+			// Bug 1105279 - rhn channel rhel-x86_64-server-scalefs-5 maps to a version 5.10 product cert - should be 5.1
+			if (rhnChannel.equals("rhel-x86_64-server-scalefs-5") ||
+				rhnChannel.equals("rhel-x86_64-server-scalefs-5-beta")) {
+				bugIds.add("1105279");
 			}
 			
 			// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
@@ -1882,6 +1898,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				// Bug 840099 - debug info channels for rhel-x86_64-server-5-cf-tools are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840099");	// CLOSED as a dup of bug 818202
 				bugIds.add("818202");
+				// Bug 1105331 - RHN channel to product cert mappings are missing for rhel-x86_64-server-5-cf-tools-1-[beta-]debug channels
+				bugIds.add("1105331");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-mrg-.*")) {	// rhel-x86_64-server-5-mrg-grid-1 rhel-x86_64-server-5-mrg-grid-1-beta rhel-x86_64-server-5-mrg-grid-2 rhel-x86_64-server-5-mrg-grid-execute-1 rhel-x86_64-server-5-mrg-grid-execute-1-beta rhel-x86_64-server-5-mrg-grid-execute-2 etc.
 				// Bug 840102 - channels for rhel-<ARCH>-server-5-mrg-* are not yet mapped to product certs in rcm/rcm-metadata.git 
@@ -2041,6 +2059,21 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-rh-common-7")) {
 				// Bug 1078527 - channel-cert-mapping for ComputeNode rhel-7 product certs are missing and wrong
 				bugIds.add("1078527");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-productivity-5-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-productivity-5-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-xfs-5") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-xfs-5-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-5-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-5-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-5-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-5-shadow-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-rhsclient-5") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-rhsclient-5-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-5-cf-me-2")) {
+				// Bug 1105656 - missing a few RHN Classic channel mappings to product certs
+				bugIds.add("1105656");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
