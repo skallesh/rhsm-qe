@@ -733,7 +733,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that redhat.repo file is unnecessarily re-written with every yum transaction",
-			groups={"blockedByBug-1035440"/*,"blockedByBug-1090206","blockedByBug-1008016"*/},
+			groups={"blockedByBug-1035440"/*,"blockedByBug-1090206","blockedByBug-1008016"*//*UNCOMMENT DURING RHEL71 CYCLE,"blockedByBug-1104731"*/,"blockedByBug-1104777"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyYumTransactionsDoNotCauseUnnessarilyRewritesOfRedHatRepoFile_Test() {
