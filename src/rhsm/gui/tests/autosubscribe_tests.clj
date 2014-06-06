@@ -170,7 +170,10 @@
         ;(sleep 20000)
         (if (bool (tasks/ui guiexist :register-dialog
                             "Please enter the following for this system"))
-          (throw (Exception. "'Enter Activation Key' window should not be displayed")))
+          (do
+            ;(throw (Exception. "'Enter Activation Key' window should not be displayed"))
+            (sleep 2000)
+            (tasks/ui click :register-cancel)))
         (verify (<= (tasks/warn-count) beforesubs))
         (verify (tasks/compliance?))))))
 
@@ -193,6 +196,23 @@
         sla-slected? (tasks/ui showing? :system-preferences-dialog @common-sla)
         _ (tasks/ui click :close-system-prefs)]
     (verify sla-slected?)))
+
+(defn ^{Test {:groups ["autosubscribe"
+                       "tier1"
+                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"]
+              :dependsOnMethods ["simple_autosubscribe"]
+              :priority (int 102)}}
+  assert_msg_after_auto_attach
+  "Asserts the message displayed when auto-attach is clicked after simple autosubscribe."
+  [_]
+  (try (tasks/ui click :auto-attach)
+       (tasks/ui waittillguiexist "Information")
+       (verify (bool (tasks/ui guiexist "Information")))
+       (verify (substring? "products are covered by valid entitlements"
+                           (tasks/ui gettextvalue "Information" "All*")))
+       (finally
+         (if (bool (tasks/ui guiexist "Information"))
+           (tasks/ui click "Information" "OK")))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "tier3"
