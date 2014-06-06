@@ -341,18 +341,13 @@
       ;; Worstcase scenario if service rhsmcertd is stopped we have to
       ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
       (if (= (get-release) "RHEL7")
-        (do
           (if-not (substring? "Active: active (running)"
                               (:stdout (run-command "systemctl status rhsmcertd.service")))
-            (do
-              (run-command "systemctl start rhsmcertd.service")
-              (sleep 150000))))
-        (do
+               (run-command "systemctl start rhsmcertd.service"))
           (if-not (substring? "running"
                               (:stdout (run-command "service rhsmcertd status")))
-            (do
-              (run-command "service rhsmcertd start")
-              (sleep 150000))))))))
+              (run-command "service rhsmcertd start")))
+              (sleep 150000))))
 
 (defn ^{Test {:groups ["system"
                        "tier2"
@@ -685,70 +680,6 @@
      (verify (= status "Unknown")))))
 
 (defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-916666"]}}
-  rhsmcertd_restart_check_timestamp
-  "Checks whether the timestamp at which cert check was intiated is
-   in sync with that displayed in help dialog"
-  [_]
-  (try
-    (run-command "subscription-manager unregister")
-    (run-command "subscription-manager clean")
-    (let
-        [rhsmcertd-log "/var/log/rhsm/rhsmcertd.log"
-         output (get-logging @clientcmd
-                             rhsmcertd-log
-                             "cert-check-timestamp"
-                             "Cert check interval"
-                             (run-command "systemctl restart rhsmcertd.service"))
-         log-timestamp (re-find #"\d+:\d+:\d+" output)
-         ;; The following steps add minutes to the time as this is the default
-         ;; interval in conf file. The step which follows is conversion of time
-         ;; formats this is because the logs have 24hrs time format and the GUI
-         ;; has 12hrs time format. The last step adds a zero if the time
-         ;; is less than 10hrs which makes sting comparison easier
-         interval (trim-newline (:stdout (run-command "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
-         time-to-be-added (/ (read-string (re-find #"\d+" (str interval)))60)
-         new-time (+ time-to-be-added (read-string (first (clojure.string/split log-timestamp #":"))))
-         hours (if (> new-time 12) (- new-time 12) new-time)
-         compare-time (str (if ( < hours 10) (str "0" hours)
-                               hours)(re-find #":\d+:\d+" log-timestamp))]
-      (tasks/ui click :about)
-      (tasks/ui waittillwindowexist :about-dialog 10)
-      (verify ( = compare-time (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check))))
-      (tasks/ui click :close-about-dialog))
-    (finally
-     (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
-     ;; Worstcase scenario if service rhsmcertd is stopped we have to
-     ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
-     (if-not (substring? "Active: active (running)"
-                         (:stdout (run-command "systemctl status rhsmcertd.service")))
-       (do
-         (run-command "systemctl start rhsmcertd.service")
-         (sleep 150000))))))
-
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-916666"]
-              :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]}}
-  rhsmcertd_stop_check_timestamp
-  "Checks wheter the timestamp in about dialog is displayed when rhsmcertd is stopped"
-  [_]
-  (try
-    (run-command "subscription-manager unregister")
-    (run-command "subscription-manager clean")
-    (run-command "systemctl stop rhsmcertd.service")
-    (tasks/ui click :about)
-    (tasks/ui waittillwindowexist :about-dialog 10)
-    (verify (not (tasks/ui showing? :next-system-check)))
-    (finally
-     (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
-     (run-command "systemctl start rhsmcertd.service")
-     ;; No sleep as we can continue without waiting for the service to
-     ;; start as it does not affect the normal functioning of sub-man
-     )))
-
-(defn ^{Test {:groups ["system"
                        "tier2"
                        "blockedByBug-984083"]}}
   check_for_break_charecters_in_popups
@@ -981,31 +912,6 @@
       (finally
         (if (not (bool (tasks/ui guiexist :main-window)))
           (tasks/start-app)))))
-
-(comment
-  (defn ^{BeforeGroups {:groups ["system"
-                                 "acceptance"]
-                        :value ["launch_gui_as_non_root_user"]}}
-    before_launch_gui_non_root
-    [_]
-    )
-
-  (defn ^{Test {:groups ["system"
-                         "acceptance"]
-                :value ["launch_gui_as_non_root_user"]}}
-    launch_gui_non_root
-    "Asserts that GUI can be launched as non-root user"
-    [_]
-    )
-
-  (defn ^{AfterGroups {:groups ["system"
-                                "acceptance"]
-                       :value ["launch_gui_as_non_root_user"]
-                       :alwaysRun true}}
-    after_launch_gui_non_root
-    [_]
-    )
-)
 
 (defn ^{Test {:groups ["system"
                        "acceptance"
