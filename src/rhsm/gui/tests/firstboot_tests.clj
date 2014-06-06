@@ -110,6 +110,10 @@
   firstboot_enable_proxy_noauth
   "Checks whether the proxy is enabled and authentication is disabled in rhsm-conf file"
   [_]
+  (if (= "RHEL5" (get-release))
+    (throw (SkipException.
+            (str "Skipping 'firstboot_enable_proxy_noauth' test on RHEL5 "
+                 "as password fiel in proxy window is not accessible"))))
   (try
     (reset_firstboot)
     (tasks/ui click :register-rhsm)
