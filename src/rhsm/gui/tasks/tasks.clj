@@ -596,6 +596,8 @@
        (do (ui click :firstboot-proxy-config)
            (ui waittillwindowexist :firstboot-proxy-dialog 60)
            (ui check :firstboot-proxy-checkbox)
+           (settext :firstboot-proxy-location
+                    (ui generatekeyevent "<CTRL>a"))
            (settext :firstboot-proxy-location "")
            (ui uncheck :firstboot-proxy-checkbox)
            (ui check :firstboot-auth-checkbox)
