@@ -9,7 +9,8 @@
         [clojure.string :only (split
                                split-lines
                                trim
-                               blank?)]
+                               blank?
+                               upper-case)]
         rhsm.gui.tasks.tools
         matchure
         gnome.ldtp)
@@ -237,9 +238,13 @@
      (do
        (if auto-select-sla
          (do
-           (if (bool (ui guiexist :register-dialog "Confirm Subscriptions")) ;; sla selection is presented
-             (do (when sla (ui click :register-dialog sla))
-                 (ui click :register)))
+           (if (bool (ui guiexist :register-dialog "Confirm Subscriptions"))
+             ;; sla selection is presented
+             (do
+               (sleep 2000)
+               (when sla (ui click :register-dialog sla))
+               (ui click :register)))
+           (sleep 2000)
            (ui click :register))
          ;; else leave sla dialog open
          (when sla (ui click :register-dialog sla)))))
@@ -264,13 +269,18 @@
      ;; since all items exist at all times in firstboot,
      ;;  we must poll the states and see if 'SHOWING' is among them
      ;; "SHOWING" == 24  on RHEL5
-     (or (= 24 (some #{24} (seq (ui getallstates item))))
+     (or
+      (or (= 24 (some #{24} (seq (ui getallstates item))))
+          (some #(= "SHOWING" %)
+                (seq (ui getallstates :firstboot-window "Firewall"))))
          (ui showing? item)))
   ([window_name component_name]
      (or
       (if (some #(re-find (re-pattern (str ".*" component_name ".*")) %)
                 (seq (ui getobjectlist window_name)))
-        (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
+        (or (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
+            (some #(= "VISIBLE" %)
+                  (seq (ui getallstates :firstboot-window "Firewall"))))
         false)
       (ui showing? window_name component_name))))
 
@@ -278,12 +288,29 @@
   "Utility to see if a GUI object has visible state"
   ([item]
      (let [state (ui getallstates item)]
-       (if (= nil (some #(= "visible" %)
-                        state))false true)))
+       (if (and (= nil (some #(= "visible" %) state))
+                (= nil (some #(= "VISIBLE" %) state)))
+         false true)))
   ([window_name component_name]
      (let [state (ui getallstates window_name component_name)]
-       (if (= nil (some #(= "visible" %)
-                        state))false true))))
+       (if (and (= nil (some #(= "visible" %) state))
+                (= nil (some #(= "VISIBLE" %) state)))
+         false true))))
+
+(defn has-state?
+  "Utility to see if a GUI object has visible state"
+  ([item state]
+     (let [gui-state (ui getallstates item)
+           state-upper (upper-case state)]
+       (if (and (= nil (some #(= state %) gui-state))
+                (= nil (some #(= state-upper %) gui-state)))
+         false true)))
+  ([window_name component_name state]
+     (let [gui-state (ui getallstates window_name component_name)
+           state-upper (upper-case state)]
+       (if (and (= nil (some #(= state %) gui-state))
+                (= nil (some #(= state-upper %) gui-state)))
+         false true))))
 
 (defn firstboot-register
   "Subscribes subscription-manager from within firstboot."
@@ -503,7 +530,7 @@
         syntax (fn [item] (str "--pool=" item " "))
         command (str "subscription-manager attach "
                      (clojure.string/join (map syntax (vals (mapify all-prods all-pools)))))]
-        (run-command command)))
+    (:stdout (run-command command))))
 
 (defn unsubscribe_all
   "Unsubscribes from everything available"

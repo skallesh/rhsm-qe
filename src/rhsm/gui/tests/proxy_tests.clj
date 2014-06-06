@@ -39,7 +39,8 @@
             {:keys [unregister-first]} (unregister-first)))
   (verify (not (tasks/ui showing? :register-system))))
 
-(defn ^{Test {:groups ["proxy"]}}
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]}}
   enable_proxy_auth
   "Asserts that the rhsm.conf file is correctly set after setting a proxy with auth."
   [_]
@@ -50,7 +51,8 @@
     (tasks/enableproxy hostname :port port :user username :pass password)
     (tasks/verify-conf-proxies hostname port username password)))
 
-(defn ^{Test {:groups ["proxy"]}}
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]}}
   enable_proxy_noauth
   "Asserts that the rhsm.conf file is correctly set after setting a proxy without auth."
   [_]
@@ -59,15 +61,18 @@
     (tasks/enableproxy hostname :port port)
     (tasks/verify-conf-proxies hostname port "" "")))
 
-(defn ^{Test {:groups ["proxy"]
-              :dependsOnMethods ["enable_proxy_auth" "enable_proxy_noauth"]}}
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]
+              :dependsOnMethods ["enable_proxy_auth"
+                                 "enable_proxy_noauth"]}}
   disable_proxy
   "Asserts that the rhsm.conf file is correctly set after diabling proxies."
   [_]
   (tasks/disableproxy)
   (tasks/verify-conf-proxies "" "" "" ""))
 
-(defn ^{Test {:groups ["proxy"]
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]
               :dependsOnMethods ["enable_proxy_auth"]}}
   proxy_auth_connect
   "Asserts that rhsm can connect after setting a proxy with auth."
@@ -80,7 +85,8 @@
                                (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
 
-(defn ^{Test {:groups ["proxy"]
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]
               :dependsOnMethods ["enable_proxy_noauth"]}}
   proxy_noauth_connect
   "Asserts that rhsm can connect after setting a proxy without auth."
@@ -93,7 +99,8 @@
                                (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
 
-(defn ^{Test {:groups ["proxy"]
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]
               :dependsOnMethods ["disable_proxy"]}}
   disable_proxy_connect
   "Asserts that a proxy is not used after clearing proxy settings."
@@ -121,21 +128,24 @@
        (verify (= expected-message message)))
      (finally (tasks/ui click :close-proxy)))))
 
-(defn ^{Test {:groups ["proxy"]
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]
               :dependsOnMethods ["enable_proxy_auth"]}}
   test_auth_proxy
   "Tests the 'test connection' button when using a proxy with auth."
   [_]
   (test_proxy "Proxy connection succeeded"))
 
-(defn ^{Test {:groups ["proxy"]
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]
               :dependsOnMethods ["enable_proxy_noauth"]}}
   test_noauth_proxy
   "Tests the 'test connection' button when using a proxy without auth."
   [_]
   (test_proxy "Proxy connection succeeded"))
 
-(defn ^{Test {:groups ["proxy"]
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]
               :dependsOnMethods ["disable_proxy"]}}
   test_disabled_proxy
   "Test that the 'test connection' button is disabled when proxy settings are cleared."
@@ -150,6 +160,7 @@
      (finally (tasks/ui click :close-proxy)))))
 
 (defn ^{Test {:groups ["proxy"
+                       "tier1"
                        "blockedByBug-927340"]
               :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_proxy
@@ -163,6 +174,7 @@
   (disable_proxy nil))
 
 (defn ^{Test {:groups ["proxy"
+                       "tier1"
                        "blockedByBug-927340"]
               :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_credentials
@@ -175,7 +187,8 @@
     (verify (not (= message proxy-success))))
   (disable_proxy nil))
 
-(defn ^{Test {:groups ["proxy"]}}
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]}}
   test_bad_proxy
   "Tests the 'test connection' button when using a non-existant proxy."
   [_]
@@ -184,7 +197,8 @@
    (test_proxy "Proxy connection failed")
    (finally (tasks/disableproxy))))
 
-(defn ^{Test {:groups ["proxy"]}}
+(defn ^{Test {:groups ["proxy"
+                       "tier1"]}}
   bad_proxy
   "Tests error message when using a non-existant proxy."
   [_]
@@ -203,7 +217,9 @@
        (tasks/ui click :register-cancel))
      (disable_proxy nil))))
 
-(defn ^{Test {:groups ["proxy" "blockedByBug-729688"]}}
+(defn ^{Test {:groups ["proxy"
+                       "tier2"
+                       "blockedByBug-729688"]}}
   bad_proxy_facts
   "Tests facts-update through a bad proxy."
   [_]
@@ -226,7 +242,9 @@
        (tasks/ui click :close-facts))
      (disable_proxy nil))))
 
-(defn ^{Test {:groups ["proxy" "blockedByBug-806993"]}}
+(defn ^{Test {:groups ["proxy"
+                       "tier1"
+                       "blockedByBug-806993"]}}
   test_proxy_formatting
   "Tests the auto-formatting feature of the proxy location field."
   [_]
@@ -242,6 +260,7 @@
      (disable_proxy nil))))
 
 (defn ^{Test {:groups ["proxy"
+                       "tier2"
                        "blockedByBug-920551"]}}
   test_invalid_proxy_restart
   "Test to check whether traceback is thrown when an invalid proxy is configured and sub-man is restarted"

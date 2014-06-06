@@ -86,6 +86,7 @@
   (tasks/restart-app))
 
 (defn ^{Test {:groups ["autosubscribe"
+                       "tier2"
                        "configureProductCertDirForNoProductsSubscribable"
                        "blockedByBug-743704"]}}
   no_products_subscribable
@@ -120,6 +121,7 @@
           (verify (not (tasks/compliance?)))))))
 
 (defn ^{Test {:groups ["autosubscribe"
+                       "tier2"
                        "configureProductCertDirForNoProductsInstalled"]}}
   no_products_installed
   "Tests autosubscribe when no products are installed."
@@ -132,6 +134,7 @@
   (verify (tasks/compliance?)))
 
 (defn ^{Test {:groups ["autosubscribe"
+                       "tier1"
                        "acceptance"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
                        "blockedByBug-857147"]
@@ -161,12 +164,21 @@
                         pass
                         :skip-autosubscribe false
                         :owner ownername)
-        (tasks/ui waittillwindownotexist :register-dialog 600)
-        (sleep 20000)
+             ;; old code: long wait times were used because
+             ;; autosubscribe used to take a long time
+        ;(tasks/ui waittillwindownotexist :register-dialog 600)
+        ;(sleep 20000)
+        (if (bool (tasks/ui guiexist :register-dialog
+                            "Please enter the following for this system"))
+          (do
+            ;(throw (Exception. "'Enter Activation Key' window should not be displayed"))
+            (sleep 2000)
+            (tasks/ui click :register-cancel)))
         (verify (<= (tasks/warn-count) beforesubs))
         (verify (tasks/compliance?))))))
 
 (defn ^{Test {:groups ["autosubscribe"
+                       "tier1"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
                        "blockedByBug-921245"]
               :dependsOnMethods ["simple_autosubscribe"]
@@ -185,9 +197,25 @@
         _ (tasks/ui click :close-system-prefs)]
     (verify sla-slected?)))
 
-
+(defn ^{Test {:groups ["autosubscribe"
+                       "tier1"
+                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"]
+              :dependsOnMethods ["simple_autosubscribe"]
+              :priority (int 102)}}
+  assert_msg_after_auto_attach
+  "Asserts the message displayed when auto-attach is clicked after simple autosubscribe."
+  [_]
+  (try (tasks/ui click :auto-attach)
+       (tasks/ui waittillguiexist "Information")
+       (verify (bool (tasks/ui guiexist "Information")))
+       (verify (substring? "products are covered by valid entitlements"
+                           (tasks/ui gettextvalue "Information" "All*")))
+       (finally
+         (if (bool (tasks/ui guiexist "Information"))
+           (tasks/ui click "Information" "OK")))))
 
 (defn ^{Test {:groups ["autosubscribe"
+                       "tier3"
                        "blockedByBug-921245"
                        "blockedByBug-977851"]
               :dataProvider "my-installed-software"}}
@@ -237,6 +265,7 @@
           (verify false)))))
 
 (defn ^{Test {:groups ["autosubscribe"
+                       "tier2"
                        "blockedByBug-1009600"
                        "blockedByBug-1011703"]}}
   check_subscription_type_auto_attach
@@ -265,6 +294,7 @@
      (tasks/unregister))))
 
 (defn ^{Test {:groups ["autosubscribe"
+                       "tier2"
                        "blockedByBug-812903"
                        "blockedByBug-1005329"]}}
   autosubscribe_select_product_sla

@@ -113,12 +113,15 @@
       (reset! (skip-groups :stacking) true)
       (throw e))))
 
-(defn ^{BeforeGroups {:groups ["stacking"]
+(defn ^{BeforeGroups {:groups ["stacking"
+                               "tier1"
+                               "tier3"]
                       :value ["stacking-sockets"]}}
   before_sockets_stacking [_]
   (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}"))
 
 (defn ^{Test {:groups ["stacking"
+                       "tier3"
                        "blockedByBug-854380"]
               :value ["stacking-sockets"]}}
   assert_subscriptions_displayed
@@ -149,6 +152,7 @@
    (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["stacking"
+                       "tier3"
                        "blockedByBug-990639"]
               :value ["stacking-sockets"]}}
   check_dates_partially_subscribed
@@ -207,6 +211,7 @@
     (tasks/set-conf-file-value "productCertDir" new-prod-dir))
 
 (defn ^{Test {:groups ["stacking"
+                       "tier3"
                        "blockedByBug-745965"
                        "blockedByBug-1040119"]
               :value ["stacking-sockets"]}}
@@ -259,6 +264,7 @@
       (tasks/restart-app)))))
 
 (defn ^{Test {:groups ["acceptance"
+                       "tier1"
                        "blockedByBug-827173"]
               :value ["stacking-sockets"]}}
   assert_auto_attach
@@ -297,13 +303,16 @@
     (finally
      (tasks/unsubscribe_all))))
 
-(defn ^{AfterGroups {:groups ["stacking"]
+(defn ^{AfterGroups {:groups ["stacking"
+                              "tier1"
+                              "tier3"]
                      :value ["stacking-sockets"]
                      :alwaysRun true}}
   after_sockets_stacking [_]
   (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}"))
 
 (defn ^{Test {:groups ["stacking"
+                       "tier3"
                        "blockedByBug-845600"]}}
   assert_quantity_displayed
   "Asserts if quantity displayed for stacking subscriptions is correct"
@@ -448,7 +457,8 @@
      (set-stacking-environment stacking-parameter "after")
      (tasks/unsubscribe_all))))
 
-(data-driven assert_product_state {Test {:groups ["stacking"]}}
+(data-driven assert_product_state {Test {:groups ["stacking"
+                                                  "tier3"]}}
   [^{Test {:groups ["blockedByBug-845600"]}}
    (if-not (assert-skip :stacking)
      (do

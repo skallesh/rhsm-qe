@@ -50,6 +50,7 @@
   (tasks/restart-app :unregister? true))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-656896"]}}
   check_libglade_warnings
   "Asserts that the libglade-WARNINGs are corrected."
@@ -64,6 +65,7 @@
    (finally (tasks/kill-app))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-909823"]}}
   check_gtype_warnings
   "Asserts that the gtype WARNINGs are corrected."
@@ -77,6 +79,7 @@
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "blockedByBug-706384"]}}
   run_second_instance
   "Asserts that a second instance of rhsm-gui cannot be run."
@@ -92,6 +95,7 @@
     (verify (not (substring? "Traceback" output)))))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "blockedByBug-747014"]}}
   check_help_button
   "Assertst that the help window opens."
@@ -149,6 +153,7 @@
 
 (data-driven
  check_escape_window {Test {:groups ["system"
+                                     "tier2"
                                      "blockedByBug-862099"]}}
  [(if-not (assert-skip :system)
     (do
@@ -162,6 +167,7 @@
 
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-785203"]}}
   check_close_button
   "Checks that the close menu item works."
@@ -175,6 +181,7 @@
     (finally (tasks/restart-app))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-833578"]}}
   check_online_documentation
   "Asserts that the online documentation opens."
@@ -197,6 +204,7 @@
       (run-command "killall -9 firefox"))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-707041"]}}
   date_picker_traceback
   "Asserts that the date chooser does not throw a traceback."
@@ -219,6 +227,7 @@
                (tasks/ui closewindow :date-selection-dialog)))))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "blockedByBug-947485"]}}
   open_with_bad_hostname
   "Verifies that the gui can open with a bad hostname in /etc/rhsm/rhsm.conf."
@@ -237,6 +246,7 @@
        (tasks/set-conf-file-value "hostname" hostname)))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-920091"
                        "blockedByBug-1037712"]}}
   cli_unregister_check_traceback
@@ -253,6 +263,7 @@
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-960465"]}}
     launch_gui_with_invalid_cert
     "Test to verify GUI can be launched with invalid certs"
@@ -268,6 +279,7 @@
       (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "blockedByBug-923873"]}}
   check_status_when_unregistered
   "To verify that status in MyInstalledProducts icon color and product status
@@ -282,6 +294,7 @@
      (verify (= status "Unknown")))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-1086377"
                        "blockedByBug-916666"]
               :priority (int 30)}}
@@ -302,43 +315,42 @@
                                (run-command "systemctl restart rhsmcertd.service")
                                (run-command "service rhsmcertd restart")))
          log-timestamp (re-find #"\d+:\d+:\d+" output)
-           ;; The following steps add minutes to the time as this is the default
-           ;; interval in conf file. The step which follows is conversion of time
-           ;; formats this is because the logs have 24hrs time format and the GUI
-           ;; has 12hrs time format. The last step adds a zero if the time
-           ;; is less than 10hrs which makes sting comparison easier
+         ;; The following steps add minutes to the time as this is the default
+         ;; interval in conf file. The step which follows is conversion of time
+         ;; formats this is because the logs have 24hrs time format and the GUI
+         ;; has 12hrs time format. The last step adds a zero if the time
+         ;; is less than 10hrs which makes sting comparison easier
          interval (trim-newline (:stdout
-                                 (run-command "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
+                                 (run-command
+                                  "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
          time-to-be-added (/ (read-string (re-find #"\d+" (str interval)))60)
          hours-log (first (clojure.string/split log-timestamp #":"))
-           ;; read-string throws exception on strings '08' and '09'
+         ;; read-string throws exception on strings '08' and '09'
          processed-hours-log (if (or (= interval "08") (= interval "09"))
-                               (re-find #"[^0]" hours-log)
-                               hours-log)
-         new-time (+ time-to-be-added (read-string (processed-hours-log)))
+                               (re-find #"[^0]" hours-log) hours-log)
+         new-time (+ time-to-be-added (Integer. (re-find  #"\d+" processed-hours-log)))
          hours (if (> new-time 12) (- new-time 12) new-time)
-         compare-time (str (if ( < hours 10) (str "0" hours)
-                                         hours)(re-find #":\d+:\d+" log-timestamp))]
+         compare-time (str (if ( < hours 10) (str "0" hours) hours)
+                           (re-find #":\d+:\d+" log-timestamp))]
       (tasks/ui click :about)
       (tasks/ui waittillwindowexist :about-dialog 10)
-      (verify ( = compare-time (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check)))))
+      (verify ( = compare-time (re-find #"\d+:\d+:\d+"
+                                        (tasks/ui gettextvalue :next-system-check)))))
     (finally
       (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
       ;; Worstcase scenario if service rhsmcertd is stopped we have to
       ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
       (if (= (get-release) "RHEL7")
-        (if-not (substring? "Active: active (running)"
-                            (:stdout (run-command "systemctl status rhsmcertd.service")))
-          (do
-            (run-command "systemctl start rhsmcertd.service")
-            (sleep 150000)))
-        (if-not (substring? "running"
-                            (:stdout (run-command "service rhsmcertd status")))
-          (do
-            (run-command "service rhsmcertd start")
-            (sleep 150000)))))))
+          (if-not (substring? "Active: active (running)"
+                              (:stdout (run-command "systemctl status rhsmcertd.service")))
+               (run-command "systemctl start rhsmcertd.service"))
+          (if-not (substring? "running"
+                              (:stdout (run-command "service rhsmcertd status")))
+              (run-command "service rhsmcertd start")))
+              (sleep 150000))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-1086377"
                        "blockedByBug-916666"]
               :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]
@@ -349,18 +361,23 @@
   (try
     (run-command "subscription-manager unregister")
     (run-command "subscription-manager clean")
-    (run-command "systemctl stop rhsmcertd.service")
+    (if (= (get-release) "RHEL7")
+      (run-command "systemctl stop rhsmcertd.service")
+      (run-command "service rhsmcertd stop"))
     (tasks/ui click :about)
     (tasks/ui waittillwindowexist :about-dialog 10)
     (verify (not (tasks/ui showing? :next-system-check)))
     (finally
-     (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
-     (run-command "systemctl start rhsmcertd.service")
+      (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
+      (if (= (get-release) "RHEL7")
+        (run-command "systemctl start rhsmcertd.service")
+        (run-command "service rhsmcertd start"))
      ;; No sleep as we can continue without waiting for the service to
      ;; start as it does not affect the normal functioning of sub-man
      )))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-984083"]}}
   check_for_break_charecters_in_popups
   "Test to ceck if there are any break characters in pop-ups"
@@ -380,6 +397,7 @@
      (tasks/restart-app))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-977850"]}}
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
@@ -395,6 +413,7 @@
   (verify (some #(= "VISIBLE" %) (tasks/ui getallstates :preferences))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-977850"]}}
   check_system_preference_dialog
   "Verifies behavior of system preference dialog and its content"
@@ -422,6 +441,7 @@
                  (tasks/ui click :close-system-prefs))))))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "acceptance"
                        "blockedByBug-818282"]}}
   check_ordered_contract_options
@@ -455,6 +475,7 @@
                (tasks/ui click :cancel-contract-selection)))))))))
 
 (defn ^{Test {:group ["system"
+                      "tier2"
                       "blockedByBug-723992"
                       "blockedByBug-1040119"]}}
   check_gui_refresh
@@ -479,7 +500,8 @@
      (tasks/unsubscribe_all)
      (tasks/unregister))))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["assert_subscription_field"]
               :dataProvider "subscribed"}}
   assert_subscription_field
@@ -495,7 +517,8 @@
           cli-value (set (get map product))]
       (verify (< 0 (count (clojure.set/intersection gui-value cli-value)))))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["assert_subscription_field"]
                      :alwaysRun true}}
   after_assert_subscription_field
@@ -503,7 +526,8 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["check_subscription_type_all_available"]
               :dataProvider "all-subscriptions"}}
   check_subscription_type_all_subscriptions
@@ -513,7 +537,8 @@
   (tasks/skip-dropdown :all-subscriptions-view product)
   (verify (not (blank? (tasks/ui gettextvalue :all-available-subscription-type)))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["check_subscription_type_all_available"]
                      :alwaysRun true}}
   after_check_subscription_type_all_available
@@ -521,7 +546,8 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["check_subscription_type_my_subs"]
               :dataProvider "my-subscriptions"}}
   check_subscription_type_my_subscriptions
@@ -531,7 +557,8 @@
   (tasks/skip-dropdown :my-subscriptions-view product)
   (verify (not (blank? (tasks/ui gettextvalue :subscription-type)))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["check_subscription_type_my_subs"]
                      :alwaysRun true}}
   after_check_subscription_type_my_subscription
@@ -540,6 +567,8 @@
   (tasks/unregister))
 
 (defn ^{Test {:groups ["system"
+                       "acceptance"
+                       "tier1"
                        "blockedByBug-1051383"]}}
   check_status_column
   "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
@@ -561,6 +590,7 @@
       (run-command "killall -9 firefox"))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-707041"]}}
   date_picker_traceback
   "Asserts that the date chooser does not throw a traceback."
@@ -583,6 +613,7 @@
                (tasks/ui closewindow :date-selection-dialog)))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-947485"]}}
   open_with_bad_hostname
   "Verifies that the gui can open with a bad hostname in /etc/rhsm/rhsm.conf."
@@ -601,6 +632,7 @@
        (tasks/set-conf-file-value "hostname" hostname)))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-920091"
                        "blockedByBug-1037712"]}}
   cli_unregister_check_traceback
@@ -617,6 +649,7 @@
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-960465"]}}
     launch_gui_with_invalid_cert
     "Test to verify GUI can be launched with invalid certs"
@@ -632,6 +665,7 @@
       (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-923873"]}}
   check_status_when_unregistered
   "To verify that status in MyInstalledProducts icon color and product status
@@ -646,68 +680,7 @@
      (verify (= status "Unknown")))))
 
 (defn ^{Test {:groups ["system"
-                       "blockedByBug-916666"]}}
-  rhsmcertd_restart_check_timestamp
-  "Checks whether the timestamp at which cert check was intiated is
-   in sync with that displayed in help dialog"
-  [_]
-  (try
-    (run-command "subscription-manager unregister")
-    (run-command "subscription-manager clean")
-    (let
-        [rhsmcertd-log "/var/log/rhsm/rhsmcertd.log"
-         output (get-logging @clientcmd
-                             rhsmcertd-log
-                             "cert-check-timestamp"
-                             "Cert check interval"
-                             (run-command "systemctl restart rhsmcertd.service"))
-         log-timestamp (re-find #"\d+:\d+:\d+" output)
-         ;; The following steps add minutes to the time as this is the default
-         ;; interval in conf file. The step which follows is conversion of time
-         ;; formats this is because the logs have 24hrs time format and the GUI
-         ;; has 12hrs time format. The last step adds a zero if the time
-         ;; is less than 10hrs which makes sting comparison easier
-         interval (trim-newline (:stdout (run-command "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
-         time-to-be-added (/ (read-string (re-find #"\d+" (str interval)))60)
-         new-time (+ time-to-be-added (read-string (first (clojure.string/split log-timestamp #":"))))
-         hours (if (> new-time 12) (- new-time 12) new-time)
-         compare-time (str (if ( < hours 10) (str "0" hours)
-                               hours)(re-find #":\d+:\d+" log-timestamp))]
-      (tasks/ui click :about)
-      (tasks/ui waittillwindowexist :about-dialog 10)
-      (verify ( = compare-time (re-find #"\d+:\d+:\d+" (tasks/ui gettextvalue :next-system-check))))
-      (tasks/ui click :close-about-dialog))
-    (finally
-     (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
-     ;; Worstcase scenario if service rhsmcertd is stopped we have to
-     ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
-     (if-not (substring? "Active: active (running)"
-                         (:stdout (run-command "systemctl status rhsmcertd.service")))
-       (do
-         (run-command "systemctl start rhsmcertd.service")
-         (sleep 150000))))))
-
-(defn ^{Test {:groups ["system"
-                       "blockedByBug-916666"]
-              :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]}}
-  rhsmcertd_stop_check_timestamp
-  "Checks wheter the timestamp in about dialog is displayed when rhsmcertd is stopped"
-  [_]
-  (try
-    (run-command "subscription-manager unregister")
-    (run-command "subscription-manager clean")
-    (run-command "systemctl stop rhsmcertd.service")
-    (tasks/ui click :about)
-    (tasks/ui waittillwindowexist :about-dialog 10)
-    (verify (not (tasks/ui showing? :next-system-check)))
-    (finally
-     (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
-     (run-command "systemctl start rhsmcertd.service")
-     ;; No sleep as we can continue without waiting for the service to
-     ;; start as it does not affect the normal functioning of sub-man
-     )))
-
-(defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-984083"]}}
   check_for_break_charecters_in_popups
   "Test to ceck if there are any break characters in pop-ups"
@@ -727,6 +700,7 @@
      (tasks/restart-app))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-977850"]}}
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
@@ -741,6 +715,7 @@
   (verify (tasks/visible? :preferences)))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-977850"]}}
   check_system_preference_dialog
   "Verifies behavior of system preference dialog and its content"
@@ -769,6 +744,7 @@
 
 (defn ^{Test {:groups ["system"
                        "acceptance"
+                       "tier1"
                        "blockedByBug-818282"]}}
   check_ordered_contract_options
   "Checks if contracts in contract selection dialog are ordered based on host type"
@@ -801,6 +777,7 @@
                (tasks/ui click :cancel-contract-selection)))))))))
 
 (defn ^{Test {:group ["system"
+                      "tier2"
                       "blockedByBug-723992"
                       "blockedByBug-1040119"]}}
   check_gui_refresh
@@ -825,7 +802,8 @@
      (tasks/unsubscribe_all)
      (tasks/unregister))))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["assert_subscription_field"]
               :dataProvider "subscribed"}}
   assert_subscription_field
@@ -841,7 +819,8 @@
           cli-value (set (get map product))]
       (verify (< 0 (count (clojure.set/intersection gui-value cli-value)))))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["assert_subscription_field"]
                      :alwaysRun true}}
   after_assert_subscription_field
@@ -849,7 +828,8 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["check_subscription_type_all_available"]
               :dataProvider "all-subscriptions"}}
   check_subscription_type_all_subscriptions
@@ -859,7 +839,8 @@
   (tasks/skip-dropdown :all-subscriptions-view product)
   (verify (not (blank? (tasks/ui gettextvalue :all-available-subscription-type)))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["check_subscription_type_all_available"]
                      :alwaysRun true}}
   after_check_subscription_type_all_available
@@ -867,7 +848,8 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["system"]
+(defn ^{Test {:groups ["system"
+                       "tier3"]
               :value ["check_subscription_type_my_subs"]
               :dataProvider "my-subscriptions"}}
   check_subscription_type_my_subscriptions
@@ -877,7 +859,8 @@
   (tasks/skip-dropdown :my-subscriptions-view product)
   (verify (not (blank? (tasks/ui gettextvalue :subscription-type)))))
 
-(defn ^{AfterGroups {:groups ["system"]
+(defn ^{AfterGroups {:groups ["system"
+                              "tier3"]
                      :value ["check_subscription_type_my_subs"]
                      :alwaysRun true}}
   after_check_subscription_type_my_subscription
@@ -886,6 +869,7 @@
   (tasks/unregister))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-1051383"]}}
   check_status_column
   "Checks if there are any status other than 'Subscribed'
@@ -903,6 +887,7 @@
       (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["system"
+                       "tier1"
                        "acceptance"]}}
     launch_gui_from_gnome
     "Launches gui from gnome"
@@ -929,7 +914,8 @@
           (tasks/start-app)))))
 
 (defn ^{Test {:groups ["system"
-                       "acceptance"]}}
+                       "acceptance"
+                       "tier1"]}}
   check_physical_only_pools
   "Identifies physical only pools from JSON and checks
    whether it throws appropriate error message"
@@ -977,7 +963,6 @@
     (do
       (tasks/restart-app)
       (tasks/register-with-creds)
-      (tasks/subscribe_all)
       (tasks/ui selecttab :my-installed-products)
       (let [subs (into [] (map vector (tasks/get-table-elements
                                        :installed-view
