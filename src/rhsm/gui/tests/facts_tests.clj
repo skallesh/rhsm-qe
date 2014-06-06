@@ -450,9 +450,9 @@
   [_]
   (:stdout (run-command
             "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"))
-  (comment (:stdout (run-command
-                     "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"
-                     :runner @candlepin-runner))))
+  (:stdout (run-command
+                      "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"
+                      :runner @candlepin-runner)))
 
 
 (defn ^{Test {:groups ["facts"
