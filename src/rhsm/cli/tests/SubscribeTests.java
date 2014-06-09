@@ -328,8 +328,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using pool ID",
 			groups={"blockedByBug-584137"},
-			enabled=true,
-			dataProvider="getAvailableSubscriptionPoolsData")
+			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
+			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
+			enabled=true)
 	@ImplementsNitrateTest(caseId=41686)
 	public void SubscribeToValidSubscriptionsByPoolID_Test(SubscriptionPool pool){
 // non-dataProvided test procedure
@@ -341,7 +342,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to each available subscription pool using pool ID",
 			groups={"blockedByBug-584137"},
-			dataProvider="getGoodRegistrationData")
+			dataProvider="getGoodRegistrationData",
+			enabled=false)	// 6/9/2014 - takes way too long to run and has never revealed a bug
 	@ImplementsNitrateTest(caseId=41686)
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, String owner){
 		clienttasks.unregister(null, null, null);
@@ -1138,7 +1140,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 	@Test(	description="subscription-manager: subscribe to future subscription pool",
 			groups={"blockedByBug-979492"},
-			dataProvider="getAllFutureSystemSubscriptionPoolsData",
+			//dataProvider="getAllFutureSystemSubscriptionPoolsData",	// 06/04/2014 takes too long; rarely reveals a bug
+			dataProvider="getRandomSubsetOfFutureSystemSubscriptionPoolsData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToFutureSubscriptionPool_Test(SubscriptionPool pool) throws Exception {
