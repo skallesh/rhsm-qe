@@ -147,6 +147,7 @@
   "Register with invalid user credentials at firstboot"
   [user pass recovery]
   (reset_firstboot)
+   (tasks/disableproxy true)
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
   (let [test-fn (fn [username password expected-error-type]
