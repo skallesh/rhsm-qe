@@ -114,7 +114,6 @@
     (tasks/ui click :repositories)
     (tasks/ui waittillwindowexist :repositories-dialog 30)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
-    (verify (not (tasks/has-state? :repo-remove-override "enabled")))
     (if (= 0 (tasks/ui getrowcount :repo-table))
       (throw (Exception. "Repositories table is not populated"))
       (do
@@ -123,12 +122,13 @@
              list-row (into [] (range row-count))
              random-row-num (nth list-row (rand (count list-row)))]
           (tasks/ui selectrowindex :repo-table random-row-num)
+          (verify (not (tasks/has-state? :repo-remove-override "enabled")))
           (tasks/ui checkrow :repo-table random-row-num)
           (sleep 2000)
           (verify (and (tasks/has-state? :repo-remove-override "enabled")
                        (tasks/has-state? :repo-remove-override "sensitive")))
-          (tasks/ui uncheckrow :repo-table random-row-num)
-          (sleep 1000)
+          (tasks/ui click :repo-remove-override)
+          (sleep 2000)
           (verify (not (and (tasks/has-state? :repo-remove-override "enabled")
                             (tasks/has-state? :repo-remove-override "sensitive")))))))
     (finally
@@ -179,17 +179,16 @@
   before_enable_repo_remove_all_overrides
   "Modofies all repos by clicking edit gpg-check"
   [_]
-  (if (tasks/ui showing? :register-system)
-    (tasks/register-with-creds))
+  (tasks/restart-app :reregister? true)
   (tasks/subscribe_all)
   (tasks/ui click :repositories)
   (tasks/ui waittillwindowexist :repositories-dialog 10)
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
-                             (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
                              (if (tasks/has-state? :gpg-check-edit "visible")
-                               (tasks/ui click :gpg-check-edit))))
+                               (tasks/ui click :gpg-check-edit))
+                             (tasks/ui checkrow :repo repo)))
   (tasks/ui click :close-repo-dialog))
 
 (defn ^{Test {:groups ["repo"
@@ -199,6 +198,8 @@
   enable_repo_remove_all_overrides
   "Enable all repos and click remove all override and check state"
   [_]
+  (if (tasks/ui showing? :register-system)
+    (tasks/register-with-creds))
   (tasks/ui click :repositories)
   (tasks/ui waittillwindowexist :repositories-dialog 10)
   (tasks/do-to-all-rows-in :repo-table 1
@@ -231,8 +232,7 @@
   before_verify_override_persistance
   "Modofies all repos by clicking edit gpg-check"
   [_]
-  (if (tasks/ui showing? :register-system)
-    (tasks/register-with-creds))
+  (tasks/restart-app :reregister? true)
   (tasks/subscribe_all)
   (tasks/ui click :repositories)
   (tasks/ui waittillwindowexist :repositories-dialog 10)
@@ -241,7 +241,8 @@
                              (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
                              (if (tasks/has-state? :gpg-check-edit "visible")
-                               (tasks/ui click :gpg-check-edit))))
+                               (tasks/ui click :gpg-check-edit))
+                             (tasks/ui checkrow :repo-table repo)))
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
 
@@ -252,6 +253,9 @@
   verify_override_persistance
   "Checks the persistance of repo override after subscriptions are removed"
   [_]
+  (if-not (bool (tasks/ui guiexist :main-window))
+    (tasks/start-app))
+  (tasks/ui guiexist :main-window)
   (tasks/subscribe_all)
   (tasks/ui click :repositories)
   (tasks/ui waittillwindowexist :repositories-dialog 10)
