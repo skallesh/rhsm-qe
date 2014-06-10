@@ -255,7 +255,6 @@
   [_]
   (if-not (bool (tasks/ui guiexist :main-window))
     (tasks/start-app))
-  (tasks/ui guiexist :main-window)
   (tasks/subscribe_all)
   (tasks/ui click :repositories)
   (tasks/ui waittillwindowexist :repositories-dialog 10)
