@@ -318,6 +318,10 @@
   "Tests the behavior when the date search is blank and you try to search."
   [_]
   (try
+    (if-not (bool (tasks/ui guiexist :main-window))
+      (tasks/start-app)
+      (if (tasks/ui showing? :register-system)
+        (tasks/register-with-creds)))
     (tasks/ui selecttab :all-available-subscriptions)
     (tasks/ui settextvalue :date-entry "")
     (let [error (try+ (tasks/ui click :search)
@@ -334,6 +338,10 @@
   filter_by_product
   "Tests that the product filter works when searching."
   [_ product]
+  (if-not (bool (tasks/ui guiexist :main-window))
+      (tasks/start-app)
+      (if (tasks/ui showing? :register-system)
+        (tasks/register-with-creds)))
   (allsearch product)
   (let [expected (@productlist product)
         seen (into [] (tasks/get-table-elements

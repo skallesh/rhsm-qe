@@ -207,7 +207,7 @@
      (get-random-file path "")))
 
 (defn ^{Test {:groups ["import"
-                       "tier2"
+                       "tier1"
                        "blockedByBug-702075"]}}
   import_random
   "Asserts that a random file cannot be imported."

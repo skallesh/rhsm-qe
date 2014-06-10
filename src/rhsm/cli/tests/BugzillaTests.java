@@ -100,6 +100,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(4));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null, true, null, null, null);	// [jsefler] I believe facts --update should be called after overriding facts
 		clienttasks.autoheal(null, null, true, null, null, null);
 		for(SubscriptionPool AvailablePools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
 			 if(AvailablePools.productId.equals("awesomeos-x86_64")){
@@ -107,22 +108,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "100000000000002", clienttasks.getCurrentlyInstalledProducts());
-
-			for(ProductSubscription pool:clienttasks.getCurrentlyConsumedProductSubscriptions()){
-				Assert.assertEquals(installedProduct.startDate, pool.startDate);
-			}
+		
+		for(ProductSubscription consumedProductSubscription:clienttasks.getCurrentlyConsumedProductSubscriptions()){
+			//Assert.assertEquals(installedProduct.startDate, consumedProductSubscription.startDate);
+			//  [jsefler] was here...
+			//^ that assertion only passes when all of the available pools were generated on the same day (as is the case for TESTDATA)
+			//^ that assertion fails when a new subscription pool with a different start date that provides product "awesomeos-x86_64" has been added to the org.  This happens with test subscription 'An "Exempt SLA" service level subscription (matches all service levels)'
+			//revised assertion should make sure the start date of the installed product is the oldest product subscription that covers this installed product...
+			Assert.assertTrue(!installedProduct.startDate.after(consumedProductSubscription.startDate), "Comparing Start Date '"+InstalledProduct.formatDateString(installedProduct.startDate)+"' of Installed Product '"+installedProduct.productName+"' to Start Date '"+InstalledProduct.formatDateString(consumedProductSubscription.startDate)+"' of Consumed Subscription '"+consumedProductSubscription.productName+"'.  (Installed Product startDate should be <= Consumed Subscription startDate)");
+		}
 		
 		clienttasks.autoheal(null, true, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, null, true);
 		
 		InstalledProduct installedProductAfterRHSM = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "100000000000002", clienttasks.getCurrentlyInstalledProducts());
 			
-	for(ProductSubscription pool:clienttasks.getCurrentlyConsumedProductSubscriptions()){
-				Assert.assertEquals(installedProductAfterRHSM.startDate, pool.startDate);
-				if(!pool.isActive){
-					Assert.assertEquals(installedProductAfterRHSM.endDate, pool.endDate);
-				}
-			
+		for(ProductSubscription consumedProductSubscription:clienttasks.getCurrentlyConsumedProductSubscriptions()){
+			//Assert.assertEquals(installedProductAfterRHSM.startDate, consumedProductSubscription.startDate);
+			//  [jsefler] was here...
+			//^ that assertion only passes when all of the available pools were generated on the same day (as is the case for TESTDATA)
+			//^ that assertion fails when a new subscription pool with a different start date that provides product "awesomeos-x86_64" has been added to the org.  This happens with test subscription 'An "Exempt SLA" service level subscription (matches all service levels)'
+			//revised assertion should make sure the start date of the installed product is the oldest product subscription that covers this installed product...
+			Assert.assertTrue(!installedProductAfterRHSM.startDate.after(consumedProductSubscription.startDate), "Comparing Start Date '"+InstalledProduct.formatDateString(installedProductAfterRHSM.startDate)+"' of Installed Product '"+installedProductAfterRHSM.productName+"' to Start Date '"+InstalledProduct.formatDateString(consumedProductSubscription.startDate)+"' of Consumed Subscription '"+consumedProductSubscription.productName+"'.  (Installed Product startDate should be <= Consumed Subscription startDate)");
+			if(!consumedProductSubscription.isActive){
+				Assert.assertEquals(installedProductAfterRHSM.endDate, consumedProductSubscription.endDate);
+			}
 		}
 	}
 	
