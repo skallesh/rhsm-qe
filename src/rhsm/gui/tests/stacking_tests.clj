@@ -15,6 +15,7 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [clojure.tools.logging :as log]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
              rhsm.gui.tasks.ui)
@@ -103,12 +104,13 @@
       (run-command (str "rm -rf " stacking-dir)))
     (run-command (str "mkdir " stacking-dir))
     (reset! prod-dir-atom (tasks/conf-file-value "productCertDir"))
-    (let [stackable-pems (tasks/get-stackable-pem-files)
+    (let [stackable-pems (filter string? (tasks/get-stackable-pem-files))
           change-prod-dir (tasks/set-conf-file-value "productCertDir" stacking-dir)
           ret-val (fn [pem-file] (:exitcode
                                  (run-command (str "cp  " @prod-dir-atom "/" pem-file "  " stacking-dir))))
           copy-pem (map ret-val stackable-pems)]
-      copy-pem)
+      (log/info (str (count (filter #(= 0 %) copy-pem))
+                     " products are stackable. Stacking setup complete")))
     (catch Exception e
       (reset! (skip-groups :stacking) true)
       (throw e))))
