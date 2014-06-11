@@ -151,13 +151,14 @@
   </test>
 
   <test name="GUI: Stacking">
-    <packages>
-      <package name="rhsm.gui.tests" />
-      <package name="rhsm.base"></package>
-    </packages>
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/> 
+      <class name="rhsm.gui.tests.stacking_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
     <groups>
       <run>
-        <include name="tier2"/>
+        <include name="acceptance"/>
         <include name="setup" />
         <include name="cleanup" />
       </run>
@@ -165,13 +166,14 @@
   </test>
 
   <test name="GUI: Repo">
-    <packages>
-      <package name="rhsm.gui.tests" />
-      <package name="rhsm.base"></package>
-    </packages>
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/> 
+      <class name="rhsm.gui.tests.repo_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
     <groups>
       <run>
-        <include name="tier2"/>
+        <include name="acceptance"/>
         <include name="setup" />
         <include name="cleanup" />
       </run>
