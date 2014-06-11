@@ -1,6 +1,5 @@
 package rhsm.cli.tests;
 
-import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,17 +14,17 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
-import com.redhat.qe.auto.bugzilla.BzChecker;
-import com.redhat.qe.auto.testng.TestNGUtils;
-import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
 import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
+
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -419,6 +418,17 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// get the actual release listing
 		List<String> actualReleases = clienttasks.getCurrentlyAvailableReleases(null,null,null);
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1108257"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			if (providingTag.equals("rhel-5-client-workstation")) {
+				throw new SkipException("Skipping this test while bug '"+bugId+"' is open. (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");			
+			}
+		}
+		// END OF WORKAROUND
+		
 		// assert that they are equivalent
 		Assert.assertTrue(expectedReleases.containsAll(actualReleases) && actualReleases.containsAll(expectedReleases), "The actual subscription-manager releases list "+actualReleases+" matches the expected consolidated CDN listing "+expectedReleases+" after being granted an entitlement from subscription product: "+rhelSubscriptionPool.productId);
 		Assert.assertTrue(expectedReleases.size()==actualReleases.size(), "The actual subscription-manager releases list "+actualReleases+" does not contain any duplicates.  It should be a unique list.");
@@ -621,6 +631,17 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		
 		// get the actual release listing
 		List<String> actualReleases = clienttasks.getCurrentlyAvailableReleases(proxy, proxy_username, proxy_password);
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1108257"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			if (rhelProductCert.productNamespace.providedTags.contains("rhel-5-client-workstation")) {
+				throw new SkipException("Skipping this test while bug '"+bugId+"' is open. (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");			
+			}
+		}
+		// END OF WORKAROUND
 		
 		// assert that they are equivalent
 		Assert.assertTrue(expectedReleases.containsAll(actualReleases) && actualReleases.containsAll(expectedReleases), "The actual subscription-manager releases list "+actualReleases+" matches the expected consolidated CDN listing "+expectedReleases+" after successfully autosubscribing to installed RHEL product: "+rhelProductCert.productName);
