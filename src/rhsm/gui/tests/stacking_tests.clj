@@ -39,23 +39,16 @@
   "Validates if the subscriptions are stackable by verifying quantity to be greater than 1
    and picks a random subscriptions which can be stacked"
   [subscriptions]
-  (let [quantity-list (distinct
-                       (into []
-                             (map (fn [i] (Integer.
-                                          (re-find #"\d+"
-                                                   (tasks/ui getcellvalue :all-subscriptions-view
-                                                             (tasks/skip-dropdown :all-subscriptions-view i)
-                                                             3)))) subscriptions)))]
-    (case (into [] quantity-list)
-      [] (throw (SkipException. (str "Data unavailable for stacking test")))
-      [1] (throw (SkipException. (str "Data unavailable for stacking test")))
-      (do (reset! sub (rand-nth subscriptions))
-          (while (= "1" (re-find #"\d+"
-                                 (tasks/ui getcellvalue :all-subscriptions-view
-                                           (tasks/skip-dropdown :all-subscriptions-view @sub)
-                                           3)))
-            (reset! sub (rand-nth subscriptions)))))
-    @sub))
+  (reset! sub nil)
+  (while (and (not (= 0 (count subscriptions))) (nil? @sub))
+    (let [rand-sub (rand-nth subscriptions)
+          raw-quantity (tasks/ui getcellvalue :all-subscriptions-view
+                                 (tasks/skip-dropdown :all-subscriptions-view rand-sub) 3)
+          quantity (Integer. (re-find #"\d+" raw-quantity))]
+      (if (< 1 quantity)
+        (reset! sub rand-sub)
+        (remove #(= rand-sub subscriptions)))))
+  @sub)
 
 (defn is-date?
   "Verifies if the the object is a valid date object"
@@ -79,21 +72,6 @@
         b-int (into [] (map #(Integer. (re-find  #"\d+" %)) b))
         equal (map (fn [i j] (> i j)) a-int  b-int)]
     (if (some #(= false %) equal) false true)))
-
-(defn validate-subscriptions
-  "Validates if the subscriptions are stackable by verifying quantity to be greater than 1"
-  [subscriptions]
-  (let [quantity-list (distinct
-                       (into []
-                             (map (fn [i] (Integer.
-                                          (re-find #"\d+"
-                                                   (tasks/ui getcellvalue :all-subscriptions-view
-                                                             (tasks/skip-dropdown :all-subscriptions-view i)
-                                                             3)))) subscriptions)))]
-    (case (into [] quantity-list)
-      [] false
-      [1] false
-      true)))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
