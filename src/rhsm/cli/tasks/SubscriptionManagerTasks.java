@@ -6968,6 +6968,11 @@ public class SubscriptionManagerTasks {
 	 */
 	protected void logRuntimeErrors(SSHCommandResult result) {
 		
+		//	ssh root@sachrhel7.usersys.redhat.com subscription-manager orgs --username=admin --password=changeme
+		//	Stdout: 
+		//	Stderr: undefined method `organizations' for nil:NilClass
+		//	ExitCode: 255
+		
 		//	ssh root@cloud-qe-13.idm.lab.bos.redhat.com subscription-manager unregister
 		//	Stdout: Unable to verify server's identity: timed out
 		//	Stderr:
@@ -7007,7 +7012,9 @@ public class SubscriptionManagerTasks {
 		//	RemoteServerException: Server error attempting a DELETE to /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e returned status 500
 		//debugTesting result = new SSHCommandResult(new Integer(255), "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.", "");
 		if (result.getExitCode().equals(255)) {
-			if (result.getStdout().contains("timed out") ||
+			if (result.getStderr().startsWith("undefined method") ||
+				result.getStdout().contains("timed out") ||
+				result.getStderr().contains("see "+rhsmLogFile+" for more ") ||
 				result.getStdout().contains("see "+rhsmLogFile+" for more ")) {
 				// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
 				String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
