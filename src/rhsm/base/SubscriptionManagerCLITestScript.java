@@ -1275,6 +1275,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// populate a list of all available SubscriptionPools
 		List<SubscriptionPool> pools = all? clienttasks.getCurrentlyAllAvailableSubscriptionPools():clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : pools) {
+//debugTesting if (pool.productId.equals("awesomeos-server"))
 			ll.add(Arrays.asList(new Object[]{pool}));
 			
 			// minimize the number of dataProvided rows (useful during automated testcase development)

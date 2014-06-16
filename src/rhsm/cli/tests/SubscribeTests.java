@@ -380,8 +380,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		subscribeStdout = clienttasks.workaroundForBug906550(subscribeStdout);
 		
 		if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
-//			Assert.assertEquals(subscribeStdout, String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId),	// Bug 812410 - Subscription-manager subscribe CLI feedback 
-//			Assert.assertEquals(subscribeStdout, String.format("Successfully consumed a subscription for: %s",pool.subscriptionName),	// changed by Bug 874804 Subscribe -> Attach
+			//Assert.assertEquals(subscribeStdout, String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId),	// Bug 812410 - Subscription-manager subscribe CLI feedback 
+			//Assert.assertEquals(subscribeStdout, String.format("Successfully consumed a subscription for: %s",pool.subscriptionName),	// changed by Bug 874804 Subscribe -> Attach
 			Assert.assertEquals(subscribeStdout, String.format("Successfully attached a subscription for: %s",pool.subscriptionName),
 				"subscribe command allows multi-entitlement pools to be subscribed to by the same consumer more than once.");
 			BigInteger serial2 = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId);
@@ -467,9 +467,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	protected String certFrequencyString=null;
+	@BeforeGroups(groups={"setup"}, value={"rhsmcertdChangeCertFrequency_Test"})
+	public void beforeRhsmcertdChangeCertFrequency_Test() {
+		if (clienttasks==null) return;
+		if (certFrequencyString==null) certFrequencyString = clienttasks.getConfParameter("certCheckInterval");
+	}
 	@Test(	description="rhsmcertd: change certFrequency",
 			dataProvider="getCertFrequencyData",
-			groups={"blockedByBug-617703","blockedByBug-700952","blockedByBug-708512","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
+			groups={"rhsmcertdChangeCertFrequency_Test","blockedByBug-617703","blockedByBug-700952","blockedByBug-708512","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41692)
 	public void rhsmcertdChangeCertFrequency_Test(int minutes) {
@@ -570,10 +576,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//	Thu Aug  9 19:06:28 2012 [INFO] (Cert Check) Certificates updated.
 
 	}
+	@AfterGroups(groups={"setup"}, value={"rhsmcertdChangeCertFrequency_Test"})
+	public void afterRhsmcertdChangeCertFrequency_Test() {
+		if (certFrequencyString!=null) clienttasks.restart_rhsmcertd(Integer.valueOf(certFrequencyString), null, null);
+	}
 	
 	
 	@Test(	description="rhsmcertd: ensure certificates synchronize",
-			groups={"blockedByBug-617703","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
+			groups={"rhsmcertdEnsureCertificatesSynchronize_Test","blockedByBug-617703","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41694)
 	public void rhsmcertdEnsureCertificatesSynchronize_Test() throws JSONException, Exception{
@@ -596,11 +606,16 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    		"All the entitlement certs have been deleted.");
 		
 	    // restart the rhsmcertd to run every 1 minute and wait for a refresh
+	    beforeRhsmcertdChangeCertFrequency_Test();
 		clienttasks.restart_rhsmcertd(1, null, true);
 		
 		// assert that rhsmcertd has refreshed the entitlement certs back to the original
 	    Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles(), entitlementCertFiles,
 	    		"All the deleted entitlement certs have been re-synchronized by rhsm cert deamon.");
+	}
+	@AfterGroups(groups={"setup"}, value={"rhsmcertdEnsureCertificatesSynchronize_Test"})
+	public void afterRhsmcertdEnsureCertificatesSynchronize_Test() {
+		if (certFrequencyString!=null) clienttasks.restart_rhsmcertd(Integer.valueOf(certFrequencyString), null, null);
 	}
 	
 	
@@ -1487,8 +1502,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// int minutes
-//UNCOMMENT AFTER DEBUGING		ll.add(Arrays.asList(new Object[]{2}));
-		ll.add(Arrays.asList(new Object[]{1}));
+		ll.add(Arrays.asList(new Object[]{2}));
+		// takes too long; one is sufficient ll.add(Arrays.asList(new Object[]{1}));
 		
 		return ll;
 	}

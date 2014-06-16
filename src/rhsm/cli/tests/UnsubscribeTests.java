@@ -116,6 +116,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		// Note: by passing assertCertificatesUpdate=null, we are assuming that the subsequent assertions will execute within 2 min before the next cert update and waitForRegexInRhsmcertdLog 
 		int certFrequency = 2; clienttasks.restart_rhsmcertd(certFrequency, null, null);
 		*/
+		log.info("Assuming that the currently configured value of certCheckInterval='"+clienttasks.getConfParameter("certCheckInterval")+"' will not interfere with this test.");
 		
 		// move the copied entitlement certificate from /tmp to location /etc/pki/entitlement/product
 		// Note: this is malicious activity (user is trying to continue using entitlement certs that have been unsubscribed)
