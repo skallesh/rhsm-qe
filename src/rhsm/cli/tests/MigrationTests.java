@@ -766,6 +766,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// execute rhn-migrate-classic-to-rhsm with options
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
+		clienttasks.logRuntimeErrors(sshCommandResult);
 		
 		// assert that traffic to RHSM went through the proxy (unless testing --no-proxy)
 		proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously

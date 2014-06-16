@@ -6966,7 +6966,31 @@ public class SubscriptionManagerTasks {
 	 * Check the SSHCommandResult for errors.  If an error is detected, log a warning with information to help troubleshoot it. 
 	 * @param result
 	 */
-	protected void logRuntimeErrors(SSHCommandResult result) {
+	public void logRuntimeErrors(SSHCommandResult result) {
+		
+		//	ssh root@jsefler-5server.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --no-auto qa@redhat.com redhatqa testuser1 password admin null null
+		//	Stdout:
+		//	spawn rhn-migrate-classic-to-rhsm --no-auto
+		//	Red Hat username: qa@redhat.com
+		//	Red Hat password:
+		//	Subscription Service username: testuser1
+		//	Subscription Service password:
+		//	Org: admin
+		//	Unable to authenticate to RHN Classic. See /var/log/rhsm/rhsm.log for more details.
+		//	Stderr:
+		//	ExitCode: 1
+		
+		//	ssh root@jsefler-5server.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --no-auto qa@redhat.com redhatqa testuser1 password admin null null
+		//	Stdout:
+		//	spawn rhn-migrate-classic-to-rhsm --no-auto
+		//	Red Hat username: qa@redhat.com
+		//	Red Hat password:
+		//	Subscription Service username: testuser1
+		//	Subscription Service password:
+		//	Org: admin
+		//	Problem encountered determining user roles in RHN Classic. Exiting.
+		//	Stderr:
+		//	ExitCode: 1
 		
 		//	ssh root@sachrhel7.usersys.redhat.com subscription-manager orgs --username=admin --password=changeme
 		//	Stdout: 
@@ -7011,11 +7035,12 @@ public class SubscriptionManagerTasks {
 		//	    handler=handler)
 		//	RemoteServerException: Server error attempting a DELETE to /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e returned status 500
 		//debugTesting result = new SSHCommandResult(new Integer(255), "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.", "");
-		if (result.getExitCode().equals(255)) {
-			if (result.getStderr().startsWith("undefined method") ||
-				result.getStdout().contains("timed out") ||
-				result.getStderr().contains("see "+rhsmLogFile+" for more ") ||
-				result.getStdout().contains("see "+rhsmLogFile+" for more ")) {
+		if (!result.getExitCode().equals(0)) {
+			if (result.getStdout().toLowerCase().contains("problem encountered") ||
+				result.getStderr().toLowerCase().startsWith("undefined method") ||
+				result.getStdout().toLowerCase().contains("timed out") ||
+				result.getStderr().toLowerCase().contains("see "+rhsmLogFile+" for more ") ||
+				result.getStdout().toLowerCase().contains("see "+rhsmLogFile+" for more ")) {
 				// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
 				String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
 				SSHCommandResult getTracebackCommandResult = sshCommandRunner.runCommandAndWaitWithoutLogging(getTracebackCommand);
