@@ -45,9 +45,9 @@
           raw-quantity (tasks/ui getcellvalue :all-subscriptions-view
                                  (tasks/skip-dropdown :all-subscriptions-view rand-sub) 3)
           quantity (Integer. (re-find #"\d+" raw-quantity))]
-      (if (< 1 quantity)
+      (if (> quantity 1)
         (reset! sub rand-sub)
-        (remove #(= rand-sub subscriptions)))))
+        (remove #(= rand-sub %) subscriptions))))
   @sub)
 
 (defn is-date?
@@ -75,6 +75,7 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
+  (log/info "STARTING BEFORE-CALSS")
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/restart-app :reregister? true)
@@ -91,14 +92,28 @@
                      " products are stackable. Stacking setup complete")))
     (catch Exception e
       (reset! (skip-groups :stacking) true)
-      (throw e))))
+      (throw e))
+    (finally (log/info "END OF BEFORE-CALSS"))))
+
+(defn ^{AfterClass {:groups ["cleanup"]
+                     :alwaysRun true}}
+  cleanup [_]
+  (log/info "STARTING AFTER-CLASS")
+  (if (not (empty? @prod-dir-atom))
+    (do
+      (run-command (str "rm -rf " stacking-dir))
+      (tasks/set-conf-file-value "productCertDir" @prod-dir-atom)
+      (tasks/restart-app)))
+  (log/info "END OF AFTER-CLASS"))
 
 (defn ^{BeforeGroups {:groups ["stacking"
                                "tier1"
                                "tier3"]
                       :value ["stacking-sockets"]}}
   before_sockets_stacking [_]
-  (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}"))
+  (log/info "STARTING BEFORE-GROUP")
+  (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
+  (log/info "END OF BEFORE-GROUP"))
 
 (defn ^{Test {:groups ["stacking"
                        "tier3"
@@ -244,7 +259,6 @@
       (tasks/restart-app)))))
 
 (defn ^{Test {:groups ["acceptance"
-                       "tier1"
                        "blockedByBug-827173"]
               :value ["stacking-sockets"]}}
   assert_auto_attach
@@ -289,7 +303,9 @@
                      :value ["stacking-sockets"]
                      :alwaysRun true}}
   after_sockets_stacking [_]
-  (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}"))
+  (log/info "STARTING AFTER-GROUP")
+  (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
+  (log/info "END OF AFTER-GROUP"))
 
 (defn ^{Test {:groups ["stacking"
                        "tier3"
@@ -440,20 +456,13 @@
 (data-driven assert_product_state {Test {:groups ["stacking"
                                                   "tier3"]}}
   [^{Test {:groups ["blockedByBug-845600"]}}
+   (log/info "STARTING DATA-PROVIDER")
    (if-not (assert-skip :stacking)
      (do
        ["ram"]
        ["cores"]
        ["sockets"])
-     (to-array-2d []))])
-
-(defn ^{AfterClass {:groups ["cleanup"]
-                     :alwaysRun true}}
-  cleanup [_]
-  (if (not (empty? @prod-dir-atom))
-    (do
-      (run-command (str "rm -rf " stacking-dir))
-      (tasks/set-conf-file-value "productCertDir" @prod-dir-atom)
-      (tasks/restart-app))))
+     (to-array-2d []))
+   (log/info "END OF DATA-PROVIDER")])
 
 (gen-class-testng)
