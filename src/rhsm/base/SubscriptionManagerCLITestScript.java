@@ -421,7 +421,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// determine the url to the server
 				String url = "https://"+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname")+":"+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port")+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 				
-				for (String consumerCertPath : Arrays.asList(clienttasks.sshCommandRunner.runCommandAndWait("find "+allRegisteredConsumerCertsDir+" -name '*cert.pem'").getStdout().trim().split("\n"))) {
+				//for (String consumerCertPath : Arrays.asList(clienttasks.sshCommandRunner.runCommandAndWait("find "+allRegisteredConsumerCertsDir+" -name '*cert.pem'").getStdout().trim().split("\n"))) {
+				for (String consumerCertPath : Arrays.asList(clienttasks.sshCommandRunner.runCommandAndWait("ls -t1 "+allRegisteredConsumerCertsDir+"/*cert.pem").getStdout().trim().split("\n"))) {	// process consumers in reverse order of their creation
 					if (consumerCertPath.isEmpty()) continue;
 					// extract the uuid from the consumerCertPath
 					String uuid = consumerCertPath.replace(allRegisteredConsumerCertsDir, "").replace("_cert.pem", "").replace("/","");
