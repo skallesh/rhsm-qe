@@ -36,18 +36,22 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
+  (log/info "STARTING BEFORE-CLASS")
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/kill-app)
     (catch Exception e
       (reset! (skip-groups :system) true)
-      (throw e))))
+      (throw e))
+    (finally (log/info "END OF BEFORE-CLASS"))))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   restart_env [_]
+  (log/info "STARTING AFTER-CLASS")
   (assert-valid-testing-arch)
-  (tasks/restart-app :unregister? true))
+  (tasks/restart-app :unregister? true)
+  (log/info "END OF AFTER-CLASS"))
 
 (defn ^{Test {:groups ["system"
                        "tier2"
@@ -155,7 +159,8 @@
  check_escape_window {Test {:groups ["system"
                                      "tier2"
                                      "blockedByBug-862099"]}}
- [(if-not (assert-skip :system)
+ [(log/info "STARTING DATA-PROVIDER")
+  (if-not (assert-skip :system)
     (do
       [:register-dialog "<CTRL>r"]
       [:import-dialog "<CTRL>i"]
@@ -163,7 +168,8 @@
       [:proxy-config-dialog "<CTRL>x"]
       [:question-dialog "<CTRL>u"]
       [:about-dialog "<CTRL>a"])
-    (to-array-2d []))])
+    (to-array-2d []))
+  (log/info "END OF DATA-PROVIDER")])
 
 
 (defn ^{Test {:groups ["system"
@@ -523,8 +529,10 @@
                      :alwaysRun true}}
   after_assert_subscription_field
   [_]
+  (log/info "STARTING AFTER-GROUP")
   (tasks/unsubscribe_all)
-  (tasks/unregister))
+  (tasks/unregister)
+  (log/info "END of AFTER-GROUP"))
 
 (defn ^{Test {:groups ["system"
                        "tier3"]
@@ -543,8 +551,10 @@
                      :alwaysRun true}}
   after_check_subscription_type_all_available
   [_]
+  (log/info "STARTING AFTER-GROUP")
   (tasks/unsubscribe_all)
-  (tasks/unregister))
+  (tasks/unregister)
+  (log/info "END OF AFTER-GROUP"))
 
 (defn ^{Test {:groups ["system"
                        "tier3"]
@@ -563,8 +573,10 @@
                      :alwaysRun true}}
   after_check_subscription_type_my_subscription
   [_]
+  (log/info "STARTING AFTER-GROUP")
   (tasks/unsubscribe_all)
-  (tasks/unregister))
+  (tasks/unregister)
+  (log/info "END OF AFTER-GROUP"))
 
 (defn ^{Test {:groups ["system"
                        "acceptance"
@@ -825,8 +837,10 @@
                      :alwaysRun true}}
   after_assert_subscription_field
   [_]
+  (log/info "STARTING AFTER-GROUP")
   (tasks/unsubscribe_all)
-  (tasks/unregister))
+  (tasks/unregister)
+  (log/info "END OF AFTER-GROUP"))
 
 (defn ^{Test {:groups ["system"
                        "tier3"]
@@ -845,8 +859,10 @@
                      :alwaysRun true}}
   after_check_subscription_type_all_available
   [_]
+  (log/info "STARTING AFTER-GROUP")
   (tasks/unsubscribe_all)
-  (tasks/unregister))
+  (tasks/unregister)
+  (log/info "END OF AFTER-GROUP"))
 
 (defn ^{Test {:groups ["system"
                        "tier3"]
@@ -865,8 +881,10 @@
                      :alwaysRun true}}
   after_check_subscription_type_my_subscription
   [_]
+  (log/info "STARTING AFTER-GROUP")
   (tasks/unsubscribe_all)
-  (tasks/unregister))
+  (tasks/unregister)
+  (log/info "END OF AFTER-GROUP"))
 
 (defn ^{Test {:groups ["system"
                        "tier2"
@@ -958,7 +976,8 @@
 
 (defn ^{DataProvider {:name "subscribed"}}
   installed_products [_ & {:keys [debug]
-                       :or {debug false}}]
+                           :or {debug false}}]
+  (log/info "STARTING DATA-PROVIDER")
   (if-not (assert-skip :system)
     (do
       (tasks/restart-app)
@@ -971,11 +990,13 @@
         (if-not debug
           (to-array-2d subs)
           subs)))
-    (to-array-2d [])))
+    (to-array-2d []))
+  (log/info "END OF DATA-PROVIDER"))
 
 (defn ^{DataProvider {:name "all-subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
+  (log/info "STARTING DATA-PROVIDER")
   (if-not (assert-skip :system)
     (do
       (tasks/restart-app)
@@ -989,11 +1010,13 @@
         (if-not debug
           (to-array-2d subs)
           subs)))
-    (to-array-2d [])))
+    (to-array-2d []))
+  (log/info "END OF DATA-PROVIDER"))
 
 (defn ^{DataProvider {:name "my-subscriptions"}}
   my_subscriptions [_ & {:keys [debug]
                          :or {debug false}}]
+  (log/info "STARTING DATA-PROVIDER")
   (if-not (assert-skip :system)
     (do
       (tasks/restart-app :reregister? true)
@@ -1006,6 +1029,7 @@
         (if-not debug
           (to-array-2d subs)
           subs)))
-    (to-array-2d [])))
+    (to-array-2d []))
+  (log/info "END OF DATA-PROVIDER"))
 
 (gen-class-testng)
