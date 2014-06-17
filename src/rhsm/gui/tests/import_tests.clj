@@ -11,7 +11,8 @@
                                trim)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
-  (:require [rhsm.gui.tasks.tasks :as tasks]
+  (:require [clojure.tools.logging :as log]
+            [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
@@ -36,6 +37,7 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
+  (log/info "STARING BEFORE-CLASS")
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (reset! importtests (ImportTests.))
@@ -46,14 +48,17 @@
     (run-command (str "mkdir " tmpcertpath))
     (catch Exception e
       (reset! (skip-groups :import) true)
-      (throw e))))
+      (throw e))
+    (finally (log/info "END OF BEFORE-CLASS"))))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   cleanup_import [_]
+  (log/info "STARING AFTER-CLASS")
   (assert-valid-testing-arch)
   (.cleanupAfterClass @importtests)
-  (tasks/restart-app))
+  (tasks/restart-app)
+  (log/info "END OF AFTER-CLASS"))
 
 (defn import-cert [certlocation]
   (try
@@ -281,6 +286,4 @@
     (def importedcert (atom nil))
     (reset! importtests (ImportTests.))
     (.setupBeforeSuite @importtests)
-    (.setupBeforeClass @importtests))
-
- )
+    (.setupBeforeClass @importtests)))
