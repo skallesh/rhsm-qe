@@ -9,7 +9,8 @@
         [com.redhat.qe.verify :only (verify)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
-  (:require [rhsm.gui.tasks.tasks :as tasks]
+  (:require [clojure.tools.logging :as log]
+            [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base])
   (:import [org.testng.annotations
             Test
@@ -26,12 +27,14 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
+  (log/info "STARTING BEFORE-CLASS")
   (try+ (if (= "RHEL7" (get-release)) (base/startup nil))
         (tasks/unregister)
         (catch [:type :not-registered] _)
         (catch Exception e
           (reset! (skip-groups :proxy) true)
-          (throw e))))
+          (throw e))
+        (finally (log/info "END OF BEFORE-CLASS"))))
 
 (defn register []
   (try+ (tasks/register (@config :username) (@config :password))
@@ -282,8 +285,10 @@
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   cleanup [_]
+  (log/info "STARTING AFTER-CLASS")
   (assert-valid-testing-arch)
   (disable_proxy nil)
-  (tasks/restart-app))
+  (tasks/restart-app)
+  (log/info "END OF AFTER-CLASS"))
 
 (gen-class-testng)
