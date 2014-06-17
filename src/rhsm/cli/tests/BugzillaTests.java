@@ -2206,10 +2206,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@ImplementsNitrateTest(caseId=50235)
-	@Test(description = "verify rhsm log for Update With No Installed Products", 
-			groups = {"UpdateWithNoInstalledProducts","blockedByBug-746241" }, enabled = true)
+	@Test(	description = "verify rhsm log for Update With No Installed Products", 
+			groups = {"UpdateWithNoInstalledProducts","blockedByBug-746241" },
+			enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException,Exception {
-		Boolean actual = false;
+		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
@@ -2218,12 +2219,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		String InstalledProducts=clienttasks.listInstalledProducts().getStdout();
-		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
-
-		clienttasks.run_rhsmcertd_worker(null);
-		
-		String tailFromMarkedFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null);
+		clienttasks.run_rhsmcertd_worker(null);		
 		restoreProductCerts();
+		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
+		String tailFromMarkedFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null);
 		Assert.assertFalse(doesStringContainMatches(tailFromMarkedFile, "Error"),"'Error' messages in rhsm.log");	// "Error while updating certificates" should NOT be in the rhsm.log
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "Installed product IDs: \\[\\]"), "'Installed product IDs:' list is empty in rhsm.log");
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "certs updated:"),"'certs updated:' in rhsm.log");
@@ -3030,8 +3029,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder", groups = {
-			"VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630","blockedByBug-906550" }, enabled = true)
+	@Test(	description = "subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder",
+			groups = {"VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630","blockedByBug-906550" },
+			enabled = true)
 	public void VerifyUnsubscribeAllForExpiredSubscription()
 			throws JSONException, Exception {
 
@@ -3049,8 +3049,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<ProductSubscription> expiredProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("isActive", Boolean.FALSE, consumedProductSubscriptions);
 		Assert.assertEquals(expiredProductSubscriptions.size(), 1, "Found one expired entitlement (indicated by Active:False) among the list of consumed subscriptions.");
 		SSHCommandResult result = clienttasks.unsubscribe(true,(BigInteger) null, null, null, null);
-
 		String expected = String.format("%d subscriptions removed at the server.\n%d local certificates have been deleted.",activeProductSubscriptions.size(),activeProductSubscriptions.size()+expiredProductSubscriptions.size());
+		if (activeProductSubscriptions.size()+expiredProductSubscriptions.size()==1) expected = expected.replace("local certificates have been", "local certificate has been");
 		Assert.assertEquals(result.getStdout().trim(), expected);
 
 	}
@@ -3088,8 +3088,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify facts update with incorrect proxy url produces traceback.", groups = {
-			"VerifyFactsWithIncorrectProxy_Test", "blockedByBug-744504" }, enabled = true)
+	@Test(	description = "Verify facts update with incorrect proxy url produces traceback.",
+			groups = {"VerifyFactsWithIncorrectProxy_Test", "blockedByBug-744504" },
+			enabled = true)
 	public void VerifyFactsWithIncorrectProxy_Test() throws JSONException,
 	Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -3098,10 +3099,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String basicauthproxyUrl = String.format("%s:%s", "testmachine.com",
 				sm_basicauthproxyPort);
 		basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
-		String facts = clienttasks.facts_(null, true, basicauthproxyUrl, null,
-				null).getStdout();
+		SSHCommandResult factsResult = clienttasks.facts_(null, true, basicauthproxyUrl, null,null);
 		String Expect = clienttasks.msg_NetworkErrorUnableToConnect;
-		Assert.assertEquals(facts.trim(), Expect);
+		Expect = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";	// jsefler 6/17/2014 - the expected error message changed to this value.  Could not find a bugzilla/commit to blame this change.
+		Assert.assertEquals(factsResult.getStdout()+factsResult.getStderr().trim(), Expect);
 	}
 
 	/**
