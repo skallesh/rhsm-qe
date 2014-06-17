@@ -785,3 +785,14 @@
                                               (filter stacking-id? stacking-map))))
        stackable-pems (map (fn [i] (get prod-pem-file-map i)) stackable-prods)]
     stackable-pems))
+
+(defn assert-valid-product-arch
+  "Asserts if the product arch and the system arech are the same"
+  [product]
+  (ui selecttab :my-installed-products)
+  (ui selectrow :installed-view product)
+  (let [sys-arch (.arch @cli-tasks)
+        product-arch (ui gettextvalue :arch)
+        all? (= "ALL" product-arch)]
+    (if (or all? (= sys-arch product-arch))
+      true false)))
