@@ -158,7 +158,7 @@
     </classes>
     <groups>
       <run>
-        <include name="acceptance"/>
+        <include name="tier3"/>
         <include name="setup" />
         <include name="cleanup" />
       </run>
@@ -173,7 +173,7 @@
     </classes>
     <groups>
       <run>
-        <include name="acceptance"/>
+        <include name="tier3"/>
         <include name="setup" />
         <include name="cleanup" />
       </run>
