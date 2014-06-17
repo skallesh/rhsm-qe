@@ -14,7 +14,8 @@
                                trim)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
-  (:require [rhsm.gui.tasks.tasks :as tasks]
+  (:require [clojure.tools.logging :as log]
+            [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
              rhsm.gui.tasks.ui)
@@ -34,6 +35,7 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
+  (log/info "STARTING BEFORE-CLASS")
   (try+
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/restart-app)
@@ -41,7 +43,8 @@
     (catch [:type :not-registered] _)
     (catch Exception e
       (reset! (skip-groups :repo) true)
-      (throw e))))
+      (throw e))
+    (finally (log/info "END OF BEFORE-CLASS"))))
 
 (defn ^{Test {:groups ["repo"
                        "tier1"]}}
@@ -177,13 +180,15 @@
   before_enable_repo_remove_all_overrides
   "Modofies all repos by clicking edit gpg-check"
   [_ repo]
+  (log/info "STARTING BEFORE-GROUP")
   (if (not (bool (tasks/ui guiexist :repositories-dialog)))
     (do (tasks/ui click :repositories)
         (tasks/ui waittillwindowexist :repositories-dialog)))
   (tasks/ui selectrow :repo-table repo)
   (if (tasks/has-state? :gpg-check-edit "visible")
     (tasks/ui click :gpg-check-edit))
-  (tasks/ui checkrow :repo repo))
+  (tasks/ui checkrow :repo repo)
+  (log/info "END OF BEFORE-GROUP"))
 
 (defn ^{Test {:groups ["repo"
                        "tier3"
@@ -214,8 +219,10 @@
                      :alwaysRun true}}
   after_enable_repo_remove_all_overrides
   [_]
+  (log/info "STARTING AFTER-GROUP")
   (tasks/ui click :close-repo-dialog)
-  (tasks/unsubscribe_all))
+  (tasks/unsubscribe_all)
+  (log/info "END OF AFTER-GROUP"))
 
 (defn ^{BeforeGroups {:groups ["repo"
                                "tier3"
@@ -224,6 +231,7 @@
   before_verify_override_persistance
   "Modofies all repos by clicking edit gpg-check"
   [_]
+  (log/info "STARTING BEFORE-GROUP")
   (tasks/restart-app :reregister? true)
   (tasks/subscribe_all)
   (tasks/ui click :repositories)
@@ -236,7 +244,8 @@
                                (tasks/ui click :gpg-check-edit))
                              (tasks/ui checkrow :repo-table repo)))
   (tasks/ui click :close-repo-dialog)
-  (tasks/unsubscribe_all))
+  (tasks/unsubscribe_all)
+  (log/info "END OF BEFORE-GROUP"))
 
 (defn ^{Test {:groups ["repo"
                        "tier3"
@@ -260,6 +269,7 @@
                      :alwaysRun true}}
   after_verify_override_persistance
   [_]
+  (log/info "STARTING AFTER-GROUP")
   (if (not (bool (tasks/ui guiexist :repositories-dialog)))
     (do (tasks/ui click :repositories)
         (tasks/ui waittillwindowexist :repositories-dialog)))
@@ -271,7 +281,8 @@
                              (tasks/ui click :yes)
                              (tasks/checkforerror)))
   (tasks/ui click :close-repo-dialog)
-  (tasks/unsubscribe_all))
+  (tasks/unsubscribe_all)
+  (log/info "END OF AFTER-GROUP"))
 
 (defn ^{Test {:groups ["repo"
                        "tier3"
@@ -293,9 +304,11 @@
                      :alwaysRun true}}
   after_check_repo_name_url
   [_]
+  (log/info "STARING AFTER-GROUP")
   (if (bool (tasks/ui guiexist :repositories-dialog))
     (tasks/ui click :close-repo-dialog))
-  (tasks/unsubscribe_all))
+  (tasks/unsubscribe_all)
+  (log/info "END OF AFTER-GROUP"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
@@ -303,7 +316,8 @@
 
 (defn ^{DataProvider {:name "repolist"}}
   subscribed_repos [_ & {:keys [debug]
-                       :or {debug false}}]
+                         :or {debug false}}]
+  (log/info "STARTING DATA-PROVIDER")
   (try
     (if-not (assert-skip :repo)
       (do
@@ -320,6 +334,7 @@
       (to-array-2d []))
     (finally
       (if (bool (tasks/ui guiexist :repositories-dialog))
-        (tasks/ui click :close-repo-dialog)))))
+        (tasks/ui click :close-repo-dialog))
+      (log/info "END OF DATA-PROVIDER"))))
 
 (gen-class-testng)

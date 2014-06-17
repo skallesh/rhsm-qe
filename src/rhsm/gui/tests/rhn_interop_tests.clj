@@ -5,7 +5,8 @@
         [com.redhat.qe.verify :only (verify)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
-  (:require [rhsm.gui.tasks.tasks :as tasks]
+  (:require [clojure.tools.logging :as log]
+            [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
@@ -25,6 +26,7 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
+  (log/info "STARTING BEFORE-CLASS")
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (if (tasks/ui exists? :main-window "*")
@@ -32,13 +34,16 @@
     (run-command (str "touch " systemid))
     (catch Exception e
       (reset! (skip-groups :interop) true)
-      (throw e))))
+      (throw e))
+    (finally (log/info "END OF BEFORE-CLASS"))))
 
 (defn ^{AfterClass {:groups ["setup"]}}
   cleanup [_]
-    (if-not (tasks/ui exists? :main-window "*")
-      (tasks/start-app))
-    (run-command (str "rm -f " systemid)))
+  (log/info "STARTING AFTER-CLASS")
+  (if-not (tasks/ui exists? :main-window "*")
+    (tasks/start-app))
+  (run-command (str "rm -f " systemid))
+  (log/info "END OF AFTER-CLASS"))
 
 (defn ^{Test {:groups ["interop"
                        "tier1"]}}
