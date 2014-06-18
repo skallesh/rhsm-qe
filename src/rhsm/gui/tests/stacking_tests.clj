@@ -110,11 +110,7 @@
       (tasks/restart-app)))
   (log/info "END OF AFTER-CLASS"))
 
-(defn ^{BeforeGroups {:groups ["stacking"
-                               "acceptance"
-                               "tier1"
-                               "tier2"
-                               "tier3"]
+(defn ^{BeforeGroups {:groups ["setup"]
                       :value ["stacking-sockets"]}}
   before_sockets_stacking [_]
   (log/info "STARTING BEFORE-GROUP")
@@ -123,8 +119,8 @@
 
 (defn ^{Test {:groups ["stacking"
                        "tier3"
-                       "blockedByBug-854380"]
-              :value ["stacking-sockets"]}}
+                       "blockedByBug-854380"
+                       "stacking-sockets"]}}
   assert_subscriptions_displayed
   "Asserts the matching subscriptions are displayed when the system is partially subscribed"
   [_]
@@ -154,8 +150,8 @@
 
 (defn ^{Test {:groups ["stacking"
                        "tier3"
-                       "blockedByBug-990639"]
-              :value ["stacking-sockets"]}}
+                       "blockedByBug-990639"
+                       "stacking-sockets"]}}
   check_dates_partially_subscribed
   "Checks if start and end dates are displayed for partially subscribed poducts"
   [_]
@@ -214,8 +210,8 @@
 (defn ^{Test {:groups ["stacking"
                        "tier3"
                        "blockedByBug-745965"
-                       "blockedByBug-1040119"]
-              :value ["stacking-sockets"]}}
+                       "blockedByBug-1040119"
+                       "stacking-sockets"]}}
   assert_future_cert_status
   "Asserts cert status for future entitilment"
   [_]
@@ -265,8 +261,8 @@
       (tasks/restart-app)))))
 
 (defn ^{Test {:groups ["acceptance"
-                       "blockedByBug-827173"]
-              :value ["stacking-sockets"]}}
+                       "blockedByBug-827173"
+                       "stacking-sockets"]}}
   assert_auto_attach
   "Asserts if autosubscribe is possible when client is partially subscribed"
   [_]
@@ -431,7 +427,7 @@
           quantity-after (int (round-up (float (/ parameter-covered stacking-value))))
           get-quantity (fn [i] (tasks/ui getcellvalue :all-subscriptions-view
                                         (tasks/skip-dropdown :all-subscriptions-view i) 3))
-          quantity (get-quantity rand-sub)
+          quantity (Integer. (re-find #"\d+" (get-quantity rand-sub)))
           provides-product (tasks/get-table-elements :all-available-bundled-products 0)]
       (tasks/skip-dropdown :all-subscriptions-view rand-sub)
       (tasks/ui generatekeyevent (str
@@ -440,7 +436,7 @@
       (tasks/subscribe rand-sub)
       (tasks/ui click :search)
       (sleep 4000)
-      (verify (< quantity (get-quantity rand-sub)))
+      (verify (< quantity (Integer. (re-find #"\d+" (get-quantity rand-sub)))))
       ;; verifiying if the product is partially subscribed
       (verify (= "Partially Subscribed"
                  (tasks/ui getcellvalue :installed-view
