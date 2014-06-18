@@ -30,6 +30,7 @@
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
 (def prod-dir-atom (atom {}))  ; "ProductCertDir" value from conf file
+(def new-list (atom {}))    ; Used to dynamically alter the list of subscriptions
 (def sub (atom {}))            ; used in "random-subscription" func to pic a subscription
 
 (def stacking-dir "/tmp/stacking-dir/")  ; temporary product directory
@@ -40,14 +41,15 @@
    and picks a random subscriptions which can be stacked"
   [subscriptions]
   (reset! sub nil)
-  (while (and (not (= 0 (count subscriptions))) (nil? @sub))
-    (let [rand-sub (rand-nth subscriptions)
+  (reset! new-list subscriptions)
+  (while (and (not (= 0 (count @new-list))) (nil? @sub))
+    (let [rand-sub (rand-nth @new-list)
           raw-quantity (tasks/ui getcellvalue :all-subscriptions-view
                                  (tasks/skip-dropdown :all-subscriptions-view rand-sub) 3)
           quantity (Integer. (re-find #"\d+" raw-quantity))]
       (if (> quantity 1)
         (reset! sub rand-sub)
-        (remove #(= rand-sub %) subscriptions))))
+        (reset! new-list (remove #(= @sub %) @new-list)))))
   @sub)
 
 (defn is-date?
@@ -75,7 +77,7 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (log/info "STARTING BEFORE-CALSS")
+  (log/info "STARTING BEFORE-CLASS")
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/restart-app :reregister? true)
@@ -93,7 +95,7 @@
     (catch Exception e
       (reset! (skip-groups :stacking) true)
       (throw e))
-    (finally (log/info "END OF BEFORE-CALSS"))))
+    (finally (log/info "END OF BEFORE-CLASS"))))
 
 (defn ^{AfterClass {:groups ["cleanup"]
                      :alwaysRun true}}
