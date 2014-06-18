@@ -49,8 +49,10 @@
           quantity (Integer. (re-find #"\d+" raw-quantity))]
       (if (> quantity 1)
         (reset! sub rand-sub)
-        (reset! new-list (remove #(= @sub %) @new-list)))))
-  @sub)
+        (reset! new-list (remove #(= rand-sub %) @new-list)))))
+  (if (nil? @sub)
+    (throw (SkipException.
+            (str "ERROR !! Stackable subscriiptions are not available"))) @sub))
 
 (defn is-date?
   "Verifies if the the object is a valid date object"
@@ -109,7 +111,9 @@
   (log/info "END OF AFTER-CLASS"))
 
 (defn ^{BeforeGroups {:groups ["stacking"
+                               "acceptance"
                                "tier1"
+                               "tier2"
                                "tier3"]
                       :value ["stacking-sockets"]}}
   before_sockets_stacking [_]
@@ -300,7 +304,9 @@
      (tasks/unsubscribe_all))))
 
 (defn ^{AfterGroups {:groups ["stacking"
+                              "acceptance"
                               "tier1"
+                              "tier2"
                               "tier3"]
                      :value ["stacking-sockets"]
                      :alwaysRun true}}
