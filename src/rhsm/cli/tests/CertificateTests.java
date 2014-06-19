@@ -679,14 +679,17 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 		
 		// Step 3: install an old RHEL product cert
-		List<ProductCert> migrationProductCerts = clienttasks.getProductCerts("/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX);
-		ProductCert oldProductCert = null;
-		for (ProductCert productCert : migrationProductCerts) {
-			if (!productCert.productId.equals(originalRhelProductCert.productId)) continue;
-			if (!productCert.productNamespace.arch.equals(originalRhelProductCert.productNamespace.arch)) continue;
-			if (productCert.productNamespace.version.equals(oldProductCertVersion)) {
-				oldProductCert = productCert;
-				break;
+		ProductCert oldProductCert = null;	
+		//List<ProductCert> migrationProductCerts = clienttasks.getProductCerts("/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX);
+		//for (ProductCert productCert : migrationProductCerts) {	//find the old rhel product cert from the migration product certs supplied by the subscription-manager-migration-data
+		for (ProductCert productCert : rhelProductCertsFromRhnDefinition) {	//find the old rhel product cert from a clone of the rhn definition repo data
+			if (productCert.productId.equals(originalRhelProductCert.productId)) {
+				if (productCert.productNamespace.arch.equals(originalRhelProductCert.productNamespace.arch)) {
+					if (productCert.productNamespace.version.equals(oldProductCertVersion)) {
+						oldProductCert = productCert;
+						break;
+					}
+				}
 			}
 		}
 		Assert.assertNotNull(oldProductCert,"Initiating test with this old RHEL product cert: "+oldProductCert);
@@ -824,9 +827,48 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		log.info("Restoring the originally configured product cert directory...");
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", rhsmProductCertDir);
 	}
+	@BeforeGroups(groups="setup", value = {"VerifyBaseRHELProductCertVersionUpdates_Test"})
+	protected void findAllRhelProductCertsFromRhnDefinitions() {
+		// assemble a list of rhnDefinitionsProductCertsDirs that we care about under [rcm/rcm-metadata.git] / product_ids /
+		// Note: we care about all of the productCertsDirs
+		SSHCommandResult result = client.runCommandAndWait("find "+clienttasks.rhnDefinitionsDir+"/product_ids -maxdepth 1 -type d");
+		List<String> rhnDefinitionsProductCertsDirs = new ArrayList<String>();
+		for (String productIdsDir : result.getStdout().split("\\n")) {
+			if (!productIdsDir.equals(clienttasks.rhnDefinitionsDir+"/product_ids")) {
+				// put logic here to exclude specific directories
+				
+				// include only /rhel-X product cert dirs; for example: /rhel-6.5-beta /rhel-6.5 /rhel-6.6-beta /rhel-6.6-eus /rhel-6.6-htb /rhel-6.6
+				// http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/tree/product_ids
+				if (!productIdsDir.contains("/rhel-"+clienttasks.redhatReleaseX+".")) continue;
+				
+				rhnDefinitionsProductCertsDirs.add(productIdsDir);
+			}
+		}
+		Assert.assertTrue(!rhnDefinitionsProductCertsDirs.isEmpty(),"The "+clienttasks.rhnDefinitionsDir+"/product_ids is not empty.");
+		
+		// process all the migration product cert files into ProductCerts and assert they match those from the RHN Definitions
+		
+		// get all of the rhnDefnition product certs
+		rhelProductCertsFromRhnDefinition.clear();
+		for (String rhnDefinitionsProductCertsDir : /*sm_*/rhnDefinitionsProductCertsDirs) {
+			String tmpRhnDefinitionsProductCertsDir = /*clienttasks.rhnDefinitionsDir+*/rhnDefinitionsProductCertsDir;
+			Assert.assertTrue(RemoteFileTasks.testExists(client, tmpRhnDefinitionsProductCertsDir),"The rhn definitions product certs dir '"+rhnDefinitionsProductCertsDir+"' has been locally cloned to '"+tmpRhnDefinitionsProductCertsDir+"'.");
+			rhelProductCertsFromRhnDefinition.addAll(clienttasks.getProductCerts(tmpRhnDefinitionsProductCertsDir));
+		}
+	}
 	protected String rhsmProductCertDir = null;	// original rhsm.productCertDir
 	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir";
-
+	protected List<ProductCert> rhelProductCertsFromRhnDefinition = new ArrayList<ProductCert>();
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
