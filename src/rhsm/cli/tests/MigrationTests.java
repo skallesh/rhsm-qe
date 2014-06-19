@@ -355,7 +355,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// rhn-migrate-classic-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","Tier1Tests","RhnMigrateClassicToRhsm_Test","blockedByBug-966745","blockedByBug-840169","blockedbyBug-878986","blockedByBug-1052297"},
+			groups={"AcceptanceTests","Tier1Tests","RhnMigrateClassicToRhsm_Test","blockedByBug-966745","blockedByBug-840169","blockedbyBug-878986","blockedByBug-1052297","blockedByBug-1111258"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
@@ -702,7 +702,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="With a proxy configured in rhn/up2date, register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","Tier1Tests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015","blockedbyBug-861693","blockedbyBug-878986","blockedbyBug-912776","blockedByBug-1052297"},
+			groups={"AcceptanceTests","Tier1Tests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015","blockedbyBug-861693","blockedbyBug-878986","blockedbyBug-912776","blockedByBug-1052297","blockedByBug-1111258"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmUsingProxyServerData",
 			enabled=true)
@@ -919,7 +919,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a non-default rhsm.productcertdir configured",
-			groups={"RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test","blockedbyBug-878986","blockedByBug-966745"},
+			groups={"RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test","blockedbyBug-878986","blockedByBug-966745","blockedByBug-1111258"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmWithNonDefaultProductCertDirData",	// dataProvider="RhnMigrateClassicToRhsmData",  IS TOO TIME CONSUMING
 			enabled=true)
@@ -1270,7 +1270,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-807477","blockedByBug-1052297"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-807477","blockedByBug-1052297","blockedByBug-1111258"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
