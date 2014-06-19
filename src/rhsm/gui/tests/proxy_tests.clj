@@ -27,14 +27,12 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (log/info "STARTING BEFORE-CLASS")
   (try+ (if (= "RHEL7" (get-release)) (base/startup nil))
         (tasks/unregister)
         (catch [:type :not-registered] _)
         (catch Exception e
           (reset! (skip-groups :proxy) true)
-          (throw e))
-        (finally (log/info "END OF BEFORE-CLASS"))))
+          (throw e))))
 
 (defn register []
   (try+ (tasks/register (@config :username) (@config :password))
@@ -285,10 +283,8 @@
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   cleanup [_]
-  (log/info "STARTING AFTER-CLASS")
   (assert-valid-testing-arch)
   (disable_proxy nil)
-  (tasks/restart-app)
-  (log/info "END OF AFTER-CLASS"))
+  (tasks/restart-app))
 
 (gen-class-testng)

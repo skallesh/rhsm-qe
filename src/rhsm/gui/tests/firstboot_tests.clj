@@ -58,7 +58,6 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
-  (log/info "STARTING BEFORE-CLASS")
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (if (= "5.7" (:version (get-release :true)))
@@ -71,18 +70,15 @@
       (run-command (str "[ -f " sysidpath " ] && rm " sysidpath )))
     (catch Exception e
       (reset! (skip-groups :firstboot) true)
-      (throw e))
-    (finally (log/info "END OF BEFORE-CLASS"))))
+      (throw e))))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   firstboot_cleanup [_]
-  (log/info "STARTING AFTER-CLASS")
   (assert-valid-testing-arch)
   (kill_firstboot)
   (run-command "subscription-manager clean")
-  (zero-proxy-values)
-  (log/info "END of AFTER-CLASS"))
+  (zero-proxy-values))
 
 (defn ^{Test {:groups ["firstboot"
                        "tier2"
@@ -268,15 +264,13 @@
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"
                                                              "tier1"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
-   (log/info "STARTING DATA-PROVIDER")
    (if-not (assert-skip :firstboot)
      (do
        ["sdf" "sdf" :invalid-credentials]
        ["" "" :no-username]
        ["" "password" :no-username]
        ["sdf" "" :no-password])
-     (to-array-2d []))
-   (log/info "END OF DATA-PROVIDER")])
+     (to-array-2d []))])
 
 ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=700601
 

@@ -55,7 +55,6 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (log/info "STARTING BEFORE-CLASS")
   (try
     ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
     ;; this bug crashes everything, so fail the BeforeClass if this is open
@@ -76,19 +75,15 @@
     (catch Exception e
       (log/info "Skipping Test Class: Autosubscribe")
       (reset! (skip-groups :autosubscribe) true)
-      (throw e))
-    (finally
-      (log/info "END OF BEFORE-CLASS"))))
+      (throw e))))
 
 (defn ^{AfterClass {:groups ["cleanup"]
                     :alwaysRun true}}
   cleanup [_]
-  (log/info "STARTING AFTER-CLASS")
   (assert-valid-testing-arch)
   (run-command "subscription-manager unregister")
   (.configureProductCertDirAfterClass @complytests)
-  (tasks/restart-app)
-  (log/info "END OF AFTER-CLASS"))
+  (tasks/restart-app))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "tier2"
@@ -343,7 +338,7 @@
 (defn ^{DataProvider {:name "my-installed-software"}}
    get_installed_software [_ & {:keys [debug]
                                 :or {debug false}}]
-   (log/info "STARTING DATA-PROVIDER")
+   (log/info (str "======= Starting DataProvider: " (resolve 'get_installed_software)))
    (if-not (assert-skip :autosubscribe)
      (do
        (.configureProductCertDirForSomeProductsSubscribable @complytests)
@@ -370,7 +365,7 @@
            (to-array-2d prods)
            prods)))
      (to-array-2d []))
-   (log/info "END OF DATA-PROVIDER"))
+   (log/info (str "======= End of DataProvider: " (resolve 'get_installed_software))))
 
 (gen-class-testng)
 

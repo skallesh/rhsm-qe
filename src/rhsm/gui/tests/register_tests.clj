@@ -30,14 +30,12 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (log/info "STARTING BEFORE-CLASS")
   (try+ (if (= "RHEL7" (get-release)) (base/startup nil))
         (tasks/unregister)
         (catch [:type :not-registered] _)
         (catch Exception e
           (reset! (skip-groups :register) true)
-          (throw e))
-        (finally (log/info "END OF BEFORE-CLASS"))))
+          (throw e))))
 
 (defn ^{Test {:groups ["registration"
                        "tier1"
@@ -89,15 +87,13 @@
 (data-driven register_bad_credentials {Test {:groups ["registration"
                                                       "tier1"]}}
   [^{Test {:groups ["blockedByBug-718045"]}}
-   (log/info "STARTING DATA-PROVIDER")
    ["sdf" "sdf" :invalid-credentials]
    ;need to add a case with a space in the middle re: 719378
    ;^{Test {:groups ["blockedByBug-719378"]}}
    ;["test user" :invalid-credentials]
    ["" "" :no-username]
    ["" "password" :no-username]
-   ["sdf" "" :no-password]
-   (log/info "END OF DATA-PROVIDER")])
+   ["sdf" "" :no-password]])
 
 (defn ^{Test {:groups ["registration"
                        "tier1"
@@ -235,12 +231,10 @@
                      :value ["activation-register"]
                      :alwaysRun true}}
   after_check_activation_key_register_dialog [_]
-  (log/info "STARTING AFTER-GROUP")
   (tasks/set-conf-file-value "hostname" (@config :server-hostname))
   (tasks/set-conf-file-value "port" (@config :server-port))
   (tasks/set-conf-file-value "prefix" (@config :server-prefix))
-  (tasks/restart-app)
-  (log/info "END OF AFTER-GROUP"))
+  (tasks/restart-app))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
@@ -249,7 +243,7 @@
 (defn ^{DataProvider {:name "userowners"}}
   get_userowners [_ & {:keys [debug]
                        :or {debug false}}]
-  (log/info "STARTING DATA-PROVIDER")
+  (log/info (str "======= Starting DataProvider: " (resolve 'get_userowners)))
   (if-not (assert-skip :register)
     (do
       (let [data (vec
@@ -269,7 +263,7 @@
           (to-array-2d data)
           data)))
     (to-array-2d []))
-  (log/info "END OF DATA-PROVIDER"))
+  (log/info (str "======= End of DataProvider: " (resolve 'get_userowners))))
 
 (gen-class-testng)
 

@@ -60,7 +60,6 @@
 
 (defn ^{BeforeClass {:groups ["facts"]}}
   register [_]
-  (log/info "STARTING BEFORE-CLASS")
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/register-with-creds)
@@ -69,8 +68,7 @@
     (reset! installed-certs (map-installed-certs))
     (catch Exception e
       (reset! (skip-groups :facts) true)
-      (throw e))
-    (finally (log/info "END OF BEFORE-CLASS"))))
+      (throw e))))
 
 (defn ^{Test {:groups ["facts"
                        "tier1"]
@@ -246,7 +244,6 @@
                                "tier3"]
                       :value ["facts-product-status"]}}
   before_check_product_status [_]
-  (log/info "STARTING BEFORE-GROUP")
   (let [output (:stdout
                 (run-command "subscription-manager attach --auto"))
         not-blank? (fn [s] (not (blank? s)))
@@ -258,8 +255,7 @@
         list-status (into [] (map grab-value (filter not-nil? (map status raw-cli-data))))
         list-products (into [] (map grab-value (filter not-nil? (map products raw-cli-data))))
         cli-data (zipmap list-products list-status)]
-    (reset! productstatus cli-data))
-  (log/info "END OF BEFORE-GROUP"))
+    (reset! productstatus cli-data)))
 
 (defn ^{Test {:groups ["facts"
                        "tier3"
@@ -279,9 +275,7 @@
                      :value ["facts-product-status"]
                      :alwaysRun true}}
   after_check_product_status [_]
-  (log/info "STARTING AFTER-GROUP")
-  (tasks/unsubscribe_all)
-  (log/info "END OF AFTER-GROUP"))
+  (tasks/unsubscribe_all))
 
 (defn ^{Test {:groups ["facts"
                        "tier3"]
@@ -337,10 +331,8 @@
                       :value ["check_status_message_for_subscriptions"]}}
   before_check_status_message
   [_]
-  (log/info "STARTING BEFORE-GROUP")
   (tasks/unsubscribe_all)
-  (tasks/restart-app :reregister? true)
-  (log/info "END OF BEFORE-GROUP"))
+  (tasks/restart-app :reregister? true))
 
 (defn ^{Test {:groups ["facts"
                        "tier1"
@@ -456,14 +448,12 @@
                      :alwaysRun true}}
   after_check_status_message
   [_]
-  (log/info "STARTING AFTER-GROUP")
   (let
       [string (str "systemctl stop ntpd.service;"
                    " ntpdate clock.redhat.com;"
                    " systemctl start ntpd.service")]
     (:stdout (run-command string))
-    (:stdout (run-command string :runner @candlepin-runner)))
-  (log/info "END OF AFTER-GROUP"))
+    (:stdout (run-command string :runner @candlepin-runner))))
 
 
 (defn ^{Test {:groups ["facts"
@@ -505,19 +495,19 @@
 (defn ^{DataProvider {:name "guifacts"}}
   get_facts [_ & {:keys [debug]
                   :or {debug false}}]
-  (log/info "STARTING DATA-PROVIDER")
+  (log/info (str "======= Starting DataProvider: " (resolve 'get_facts)))
   (if-not (assert-skip :facts)
-    (do
-      (if-not debug
-        (to-array-2d (vec @gui-facts))
-        (vec @gui-facts)))
-    (to-array-2d []))
-  (log/info "END OF DATA-PROVIDER"))
+              (do
+                (if-not debug
+                  (to-array-2d (vec @gui-facts))
+                  (vec @gui-facts)))
+              (to-array-2d []))
+  (log/info (str "======= End of DataProvider: " (resolve 'get_facts))))
 
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
-  (log/info "STARTING DATA-PROVIDER")
+  (log/info (str "======= Starting DataProvider: " (resolve 'get_installed_products)))
   (if-not (assert-skip :facts)
     (do
       (let [prods (tasks/get-table-elements :installed-view 0)
@@ -527,7 +517,7 @@
           (to-array-2d (vec prodlist))
           prodlist)))
     (to-array-2d []))
-  (log/info "END OF DATA-PROVIDER"))
+  (log/info (str "======= End of DataProvider: " (resolve 'get_installed_products))))
 
 (defn printfact []
   (pprint (sort @gui-facts))

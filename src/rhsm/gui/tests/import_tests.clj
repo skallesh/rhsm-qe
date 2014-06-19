@@ -37,7 +37,6 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
-  (log/info "STARING BEFORE-CLASS")
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (reset! importtests (ImportTests.))
@@ -48,17 +47,14 @@
     (run-command (str "mkdir " tmpcertpath))
     (catch Exception e
       (reset! (skip-groups :import) true)
-      (throw e))
-    (finally (log/info "END OF BEFORE-CLASS"))))
+      (throw e))))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   cleanup_import [_]
-  (log/info "STARING AFTER-CLASS")
   (assert-valid-testing-arch)
   (.cleanupAfterClass @importtests)
-  (tasks/restart-app)
-  (log/info "END OF AFTER-CLASS"))
+  (tasks/restart-app))
 
 (defn import-cert [certlocation]
   (try

@@ -26,7 +26,6 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (log/info "STARTING BEFORE-CLASS")
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (if (tasks/ui exists? :main-window "*")
@@ -34,16 +33,13 @@
     (run-command (str "touch " systemid))
     (catch Exception e
       (reset! (skip-groups :interop) true)
-      (throw e))
-    (finally (log/info "END OF BEFORE-CLASS"))))
+      (throw e))))
 
 (defn ^{AfterClass {:groups ["setup"]}}
   cleanup [_]
-  (log/info "STARTING AFTER-CLASS")
   (if-not (tasks/ui exists? :main-window "*")
     (tasks/start-app))
-  (run-command (str "rm -f " systemid))
-  (log/info "END OF AFTER-CLASS"))
+  (run-command (str "rm -f " systemid)))
 
 (defn ^{Test {:groups ["interop"
                        "tier1"]}}
