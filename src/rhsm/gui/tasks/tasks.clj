@@ -751,7 +751,7 @@
                  path "/etc/rhsm/facts/"
                  overwrite? true
                  update? true}}]
-  (let [redirect (if overwrite? ">" ">>")
+  (let [redirect (if overwrite? ">" ">")
         cur-contents (if (and (not overwrite?)
                               (bash-bool (:exitcode (run-command
                                                      (str "test -e " path filename)))))
