@@ -338,7 +338,7 @@
 (defn ^{DataProvider {:name "my-installed-software"}}
    get_installed_software [_ & {:keys [debug]
                                 :or {debug false}}]
-   (log/info (str "======= Starting DataProvider: " (resolve 'get_installed_software)))
+   (log/info (str "======= Starting DataProvider: "))
    (if-not (assert-skip :autosubscribe)
      (do
        (.configureProductCertDirForSomeProductsSubscribable @complytests)
@@ -364,8 +364,7 @@
          (if-not debug
            (to-array-2d prods)
            prods)))
-     (to-array-2d []))
-   (log/info (str "======= End of DataProvider: " (resolve 'get_installed_software))))
+     (to-array-2d [])))
 
 (gen-class-testng)
 

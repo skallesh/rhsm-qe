@@ -495,19 +495,18 @@
 (defn ^{DataProvider {:name "guifacts"}}
   get_facts [_ & {:keys [debug]
                   :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " (resolve 'get_facts)))
+  (log/info (str "======= Starting DataProvider: "))
   (if-not (assert-skip :facts)
               (do
                 (if-not debug
                   (to-array-2d (vec @gui-facts))
                   (vec @gui-facts)))
-              (to-array-2d []))
-  (log/info (str "======= End of DataProvider: " (resolve 'get_facts))))
+              (to-array-2d [])))
 
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " (resolve 'get_installed_products)))
+  (log/info (str "======= Starting DataProvider: "))
   (if-not (assert-skip :facts)
     (do
       (let [prods (tasks/get-table-elements :installed-view 0)
@@ -516,8 +515,7 @@
         (if-not debug
           (to-array-2d (vec prodlist))
           prodlist)))
-    (to-array-2d []))
-  (log/info (str "======= End of DataProvider: " (resolve 'get_installed_products))))
+    (to-array-2d [])))
 
 (defn printfact []
   (pprint (sort @gui-facts))

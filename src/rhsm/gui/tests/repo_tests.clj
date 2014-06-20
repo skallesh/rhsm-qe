@@ -282,7 +282,9 @@
   check_repo_name_url
   "Checks if name and URL are populated for all repositories"
   [_ repo]
-  (tasks/ui click :repositories)
+  (if (not (bool (tasks/ui guiexist :repositories-dialog)))
+    (do (tasks/ui click :repositories)
+        (tasks/ui waittillwindowexist :repositories-dialog)))
   (tasks/ui selectrow :repo-table repo)
   (verify (not (blank? (tasks/ui gettextvalue :base-url))))
   (verify (not (blank? (tasks/ui gettextvalue :repo-name))))
@@ -305,24 +307,19 @@
 (defn ^{DataProvider {:name "repolist"}}
   subscribed_repos [_ & {:keys [debug]
                          :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " (resolve 'subscribed_repos)))
-  (try
-    (if-not (assert-skip :repo)
-      (do
-        ;(tasks/restart-app :reregister? true)
-        ;(tasks/subscribe_all)
-        (tasks/ui click :repositories)
-        (tasks/ui waittillwindowexist :repositories-dialog 10)
-        (let [repos (into [] (map vector (tasks/get-table-elements
-                                          :repo-table
-                                          1)))]
-          (if-not debug
-            (to-array-2d repos)
-            repos)))
-      (to-array-2d []))
-    (finally
-      (if (bool (tasks/ui guiexist :repositories-dialog))
-        (tasks/ui click :close-repo-dialog))
-      (log/info (str "======= End of DataProvider: " (resolve 'subscribed_repos))))))
+  (log/info (str "======= Starting DataProvider: "))
+  (if-not (assert-skip :repo)
+    (do
+                                        ;(tasks/restart-app :reregister? true)
+                                        ;(tasks/subscribe_all)
+      (tasks/ui click :repositories)
+      (tasks/ui waittillwindowexist :repositories-dialog 10)
+      (let [repos (into [] (map vector (tasks/get-table-elements
+                                        :repo-table
+                                        1)))]
+        (if-not debug
+          (to-array-2d repos)
+          repos)))
+    (to-array-2d [])))
 
 (gen-class-testng)

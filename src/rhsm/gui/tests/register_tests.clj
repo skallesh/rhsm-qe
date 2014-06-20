@@ -243,7 +243,7 @@
 (defn ^{DataProvider {:name "userowners"}}
   get_userowners [_ & {:keys [debug]
                        :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " (resolve 'get_userowners)))
+  (log/info (str "======= Starting DataProvider: "))
   (if-not (assert-skip :register)
     (do
       (let [data (vec
@@ -262,8 +262,7 @@
         (if-not debug
           (to-array-2d data)
           data)))
-    (to-array-2d []))
-  (log/info (str "======= End of DataProvider: " (resolve 'get_userowners))))
+    (to-array-2d [])))
 
 (gen-class-testng)
 

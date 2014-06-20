@@ -959,7 +959,7 @@
 (defn ^{DataProvider {:name "subscribed"}}
   installed_products [_ & {:keys [debug]
                            :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " (resolve 'installed_products)))
+  (log/info (str "======= Starting DataProvider: "))
   (if-not (assert-skip :system)
     (do
       (tasks/restart-app)
@@ -972,13 +972,12 @@
         (if-not debug
           (to-array-2d subs)
           subs)))
-    (to-array-2d []))
-  (log/info (str "======= End of DataProvider: " (resolve 'installed_products))))
+    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "all-subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " (resolve 'get_subscriptions)))
+  (log/info (str "======= Starting DataProvider: "))
   (if-not (assert-skip :system)
     (do
       (tasks/restart-app)
@@ -992,13 +991,12 @@
         (if-not debug
           (to-array-2d subs)
           subs)))
-    (to-array-2d []))
-  (log/info (str "======= End of DataProvider: " (resolve 'get_subscriptions))))
+    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "my-subscriptions"}}
   my_subscriptions [_ & {:keys [debug]
                          :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " (resolve 'my_subscriptions)))
+  (log/info (str "======= Starting DataProvider: "))
   (if-not (assert-skip :system)
     (do
       (tasks/restart-app :reregister? true)
@@ -1011,7 +1009,6 @@
         (if-not debug
           (to-array-2d subs)
           subs)))
-    (to-array-2d []))
-  (log/info (str "======= End of DataProvider: " (resolve 'my_subscriptions))))
+    (to-array-2d [])))
 
 (gen-class-testng)
