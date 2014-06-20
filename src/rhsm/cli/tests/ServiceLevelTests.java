@@ -478,7 +478,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		String initialConsumerServiceLevel = clienttasks.getCurrentServiceLevel();
 		
 		// start fresh by returning all entitlements
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();	// may help avoid: Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a99f98146b4fa9d0146b7e4d5d34375] at org.hibernate.UnresolvableObjectException.throwIfNull:64
 		
 		// autosubscribe with a valid service level
 		SSHCommandResult subscribeResult = clienttasks.subscribe(true,serviceLevel,(String)null,(String)null,(String)null,null,null,null,null, null, null);
