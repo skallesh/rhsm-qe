@@ -5263,6 +5263,36 @@ public class SubscriptionManagerTasks {
 		return result;
 	}
 	
+	/**
+	 * Collectively unsubscribe from all of the currently consumed serials (in newest to oldest order).
+	 * This will ultimately issue a single call to unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 (where each serial is listed in reverse order that they were granted). 
+	 * 
+	 * If there are no serials, then unsubscribe --all is called (should effectively do nothing).
+	 * 
+	 * @return SSHCommandResult result from the call to unsubscribe
+	 */
+	public SSHCommandResult unsubscribeFromTheCurrentlyConsumedSerialsCollectively() {
+		log.info("Unsubscribing from all of the currently consumed serials in one collective call (in reverse order that they were granted)...");
+		List<BigInteger> serials = new ArrayList<BigInteger>();
+		
+		// assemble the serials in reverse order that they were granted to avoid...
+		// Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a99f98a46b4fa990146ba9494032318] at org.hibernate.UnresolvableObjectException.throwIfNull:64
+		for (File serialPemFile : getCurrentEntitlementCertFiles("-t")) {
+			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(serialPemFile);
+			serials.add(entitlementCert.serialNumber);
+		}
+		
+		// return unsubscribe --all when no serials are currently consumed
+		if (serials.isEmpty()) return unsubscribe(true,serials,null,null,null); 
+		
+		// unsubscribe from all serials collectively
+		SSHCommandResult result = unsubscribe(false,serials,null,null,null);
+		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
+				"Currently no product subscriptions are consumed.");
+		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0,
+				"This machine has no entitlement certificate files.");
+		return result;
+	}
 	
 	
 	// facts module tasks ************************************************************
