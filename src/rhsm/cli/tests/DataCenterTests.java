@@ -45,7 +45,8 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 	public void VerifyAvailabilityOfDerivedProductSubpools_Test(Object bugzilla, /*Boolean systemIsGuest, Integer systemSockets,*/ SubscriptionPool pool) throws NumberFormatException, JSONException, Exception {
 		
 		// make sure we are unsubscribed from all subscriptions
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		//clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();	// unsubscribe this way to ensure the newest serial is removed first
 		
 		// get some attributes from the subscription pool
 		String poolDerivedProductId = (String)CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "derivedProductId");
@@ -118,7 +119,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		// now subscribe to the derived subpool and we'll assert the entitlement values come from the derived product and not the originating data center subscription
 		
 		// subscribe the guest to the derived product subscription
-		File derivedEntitlementFile = clienttasks.subscribeToSubscriptionPool(derivedPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
+		File derivedEntitlementFile = clienttasks.subscribeToSubscriptionPool(derivedPool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
 		EntitlementCert derivedEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(derivedEntitlementFile); client.runCommandAndWait("rct cat-cert "+derivedEntitlementFile);
 		
 		// assert all of the derived provided products are included in the entitlement
@@ -177,6 +178,8 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(derivedEntitlementCert.orderNamespace.supportType, CandlepinTasks.getPoolDerivedProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "support_type"),		"derivedEntitlementCert.orderNamespace.supportType should match the derivedProductAttribute support_type");
 
 		//		Quantity: 5										Quantity: 5
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl,"/pools/"+pool.poolId));
+		Assert.assertEquals(hostEntitlementCert.orderNamespace.quantity, String.valueOf(jsonPool.getInt("quantity")),																													"hostEntitlementCert.orderNamespace.quantity should match the data center subscription pool's total quantity");
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "983193"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -184,14 +187,12 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 			log.warning("Skipping the assertion of quantity while bug '"+bugId+"' is open.");
 		} else {
 		// END OF WORKAROUND
-		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1") && hostEntitlementCert.orderNamespace.quantity.equals("-1")) {log.warning("The rct cat-cert tool encountered a Quantity of -1 which is fixed in subscription-manager-1.10.3-1.  Skipping assertion.");} else	// Bug 1011961 - rct cat-cert should display "Unlimited" for Quantity instead of "-1";  subscription-manager commit 7554c869608a0276151993d34fee4ddb54185f7a
-		Assert.assertEquals(hostEntitlementCert.orderNamespace.quantity, pool.quantity,																																	"hostEntitlementCert.orderNamespace.quantity should match the data center pool's quantity");
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1") && derivedEntitlementCert.orderNamespace.quantity.equals("-1")) {log.warning("The rct cat-cert tool encountered a Quantity of -1 which is fixed in subscription-manager-1.10.3-1.  Skipping assertion.");} else	// Bug 1011961 - rct cat-cert should display "Unlimited" for Quantity instead of "-1";  subscription-manager commit 7554c869608a0276151993d34fee4ddb54185f7a
 		Assert.assertEquals(derivedEntitlementCert.orderNamespace.quantity, derivedPool.quantity,																														"derivedEntitlementCert.orderNamespace.quantity should match the derivedPool's quantity");
 		}
 		
 		//		Quantity Used: 1								Quantity Used: 1
-		//TODO
+		//TODO for derivedEntitlementCert only
 		
 		//		Socket Limit: 4									Socket Limit: 2
 		Assert.assertEquals(hostEntitlementCert.orderNamespace.socketLimit, CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets"),					"hostEntitlementCert.orderNamespace.socketLimit should match the data center pool's productAttribute sockets");
@@ -249,6 +250,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 	
 	@AfterGroups(value={"VerifyAvailabilityOfDerivedProductSubpools_Test"},groups={"setup"})
 	public void afterVerifyAvailabilityOfDerivedProductSubpools_Test() {
+		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();	// will avoid: Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a99f98a46b4fa990146ba9494032318] at org.hibernate.UnresolvableObjectException.throwIfNull:64
 		clienttasks.unregister(null,null,null);
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
