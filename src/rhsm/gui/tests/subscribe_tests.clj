@@ -32,6 +32,7 @@
 (def subs-contractlist (atom {}))
 (def prod-dir (atom {}))
 (def sys-log "/var/log/rhsm/rhsm.log")
+(def ns-log "rhsm.gui.tests.subscribe_tests")
 
 (defn build-subscription-map
   "Builds the product map and updates the productlist atom"
@@ -675,7 +676,8 @@
 (defn ^{DataProvider {:name "multi-entitle"}}
   get_multi_entitle_subscriptions [_ & {:keys [debug]
                                         :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: "))
+  (log/info (str "======= Starting DataProvider: "
+                 ns-log "get_multi_entitle_subscriptions()"))
   (if-not (assert-skip :subscribe)
     (do
       (tasks/restart-app)
@@ -714,7 +716,7 @@
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: "))
+  (log/info (str "======= Starting DataProvider: " ns-log "get_subscriptions()"))
   (if-not (assert-skip :subscribe)
     (do
       (tasks/restart-app)
@@ -732,7 +734,7 @@
 (defn ^{DataProvider {:name "subscribed"}}
   get_subscribed [_ & {:keys [debug]
                        :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: "))
+  (log/info (str "======= Starting DataProvider: " ns-log "get_subscribed()"))
   (if-not (assert-skip :subscribe)
     (do
       (tasks/restart-app)
@@ -752,7 +754,8 @@
 (defn ^{DataProvider {:name "multi-contract"}}
   get_multi_contract_subscriptions [_ & {:keys [debug]
                                          :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " (resolve 'get_multi_contract_subscriptions)))
+  (log/info (str "======= Starting DataProvider: "
+                 ns-log "get_multi_contract_subscriptions()"))
   (if-not (assert-skip :subscribe)
     (do
       (tasks/restart-app)
@@ -775,7 +778,7 @@
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: "))
+  (log/info (str "======= Starting DataProvider: " ns-log "get_installed_products()"))
   (if-not (assert-skip :subscribe)
     (do
       (tasks/restart-app :reregister? true)
@@ -792,7 +795,7 @@
 (defn ^{DataProvider {:name "unlimited-pools"}}
   get_unlimited_pools [_ & {:keys [debug]
                             :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: "))
+  (log/info (str "======= Starting DataProvider: " ns-log "get_unlimited_pools()"))
   (if-not (assert-skip :subscribe)
     (do
       (run-command "subscription-manager unregister")
