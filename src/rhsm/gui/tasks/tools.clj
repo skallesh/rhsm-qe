@@ -3,6 +3,7 @@
                                            clientcmd
                                            cli-tasks)]
         [slingshot.slingshot :only [throw+ try+]]
+        [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (trim
                                split
                                join)])
@@ -159,3 +160,16 @@
                                    "'.  (https://bugzilla.redhat.com/show_bug.cgi?id="
                                    ~bugid
                                    ")"))))))
+
+(defn safe-delete
+  "Asserts if the flie/folder is present before a forced delete"
+  [path]
+  (let [test-fn (fn [cmd] (bash-bool (:exitcode (run-command (str cmd " " path)))))
+        del-fn (fn [] (run-command (str "rm -rf " path)))]
+    (cond
+     (= path "root") (throw (Exception. "ERROR: Path cannot be root"))
+     (nil? path) (throw (Exception. "ERROR: Path cannot be nil"))
+     (test-fn "test -f") (do (del-fn) (log/info "File EXISTS and deleted"))
+     (test-fn "test -d") (do (del-fn) (log/info "Directory EXISTS and deleted"))
+     :else (log/info "File/Directory DOES NOT exist"))
+    (verify (not (bash-bool (run-command (str "test -e" path)))))))
