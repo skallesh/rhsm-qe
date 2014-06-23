@@ -32,6 +32,7 @@
 (def random_row_num (atom nil)) ;; Used to dynamically select a random row number
 (def list_row (atom []))       ;; Used to hold probable row numbers
 (def no_repos_message "No repositories are available without an attached subscription.")
+(def ns-log "rhsm.gui.tests.repo_tests")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
@@ -43,6 +44,13 @@
     (catch Exception e
       (reset! (skip-groups :repo) true)
       (throw e))))
+
+(defn assert-and-open-repo-dialog
+  "Asserts if repo-dialog is open if not it opens it"
+  []
+   (if (not (bool (tasks/ui guiexist :repositories-dialog)))
+    (do (tasks/ui click :repositories)
+        (tasks/ui waittillwindowexist :repositories-dialog 10))))
 
 (defn ^{Test {:groups ["repo"
                        "tier1"]}}
@@ -62,8 +70,7 @@
   (if (tasks/ui showing? :register-system)
     (tasks/register-with-creds))
   (try
-    (tasks/ui click :repositories)
-    (tasks/ui waittillwindowexist :repositories-dialog 10)
+    (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
     (finally
       (tasks/ui click :close-repo-dialog))))
@@ -76,8 +83,7 @@
   (try
     (if (tasks/ui showing? :register-system)
       (tasks/register-with-creds))
-    (tasks/ui click :repositories)
-    (tasks/ui waittillwindowexist :repositories-dialog 10)
+    (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
     (verify (= no_repos_message (tasks/ui gettextvalue :repo-message)))
     (finally
@@ -93,8 +99,7 @@
     (if (tasks/ui showing? :register-system)
       (tasks/register-with-creds))
     (tasks/subscribe_all)
-    (tasks/ui click :repositories)
-    (tasks/ui waittillwindowexist :repositories-dialog 10)
+    (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
     (verify (not (= 0 (tasks/ui getrowcount :repo-table))))
     (finally
@@ -111,8 +116,7 @@
     (if (tasks/ui showing? :register-system)
       (tasks/register-with-creds))
     (tasks/subscribe_all)
-    (tasks/ui click :repositories)
-    (tasks/ui waittillwindowexist :repositories-dialog 30)
+    (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
     (if (= 0 (tasks/ui getrowcount :repo-table))
       (throw (Exception. "Repositories table is not populated"))
@@ -143,8 +147,7 @@
     (if (tasks/ui showing? :register-system)
       (tasks/register-with-creds))
     (tasks/subscribe_all)
-    (tasks/ui click :repositories)
-    (tasks/ui waittillwindowexist :repositories-dialog 10)
+    (assert-and-open-repo-dialog)
     (let
         [row-count (tasks/ui getrowcount :repo-table)]
       (reset! list_row (into [] (range row-count)))
@@ -178,9 +181,7 @@
   before_enable_repo_remove_all_overrides
   "Modofies all repos by clicking edit gpg-check"
   [_ repo]
-  (if (not (bool (tasks/ui guiexist :repositories-dialog)))
-    (do (tasks/ui click :repositories)
-        (tasks/ui waittillwindowexist :repositories-dialog)))
+  (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
   (if (tasks/has-state? :gpg-check-edit "visible")
     (tasks/ui click :gpg-check-edit))
@@ -194,9 +195,7 @@
   enable_repo_remove_all_overrides
   "Enable all repos and click remove all override and check state"
   [_ repo]
-  (if (not (bool (tasks/ui guiexist :repositories-dialog)))
-    (do (tasks/ui click :repositories)
-        (tasks/ui waittillwindowexist :repositories-dialog)))
+  (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
   (verify (tasks/has-state? :repo-remove-override "enabled"))
   (tasks/ui click :repo-remove-override)
@@ -227,8 +226,7 @@
   [_]
   (tasks/restart-app :reregister? true)
   (tasks/subscribe_all)
-  (tasks/ui click :repositories)
-  (tasks/ui waittillwindowexist :repositories-dialog 10)
+  (assert-and-open-repo-dialog)
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
                              (sleep 1000)
@@ -247,9 +245,7 @@
   verify_override_persistance
   "Checks the persistance of repo override after subscriptions are removed"
   [_ repo]
-  (if (not (bool (tasks/ui guiexist :repositories-dialog)))
-    (do (tasks/ui click :repositories)
-        (tasks/ui waittillwindowexist :repositories-dialog)))
+  (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
   (verify (tasks/has-state? :gpg-check-remove "visible"))
   (verify (not (tasks/has-state? :gpg-check-edit "visible"))))
@@ -261,9 +257,7 @@
                      :alwaysRun true}}
   after_verify_override_persistance
   [_]
-  (if (not (bool (tasks/ui guiexist :repositories-dialog)))
-    (do (tasks/ui click :repositories)
-        (tasks/ui waittillwindowexist :repositories-dialog)))
+  (assert-and-open-repo-dialog)
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
                              (tasks/ui selectrow :repo-table repo)
@@ -282,9 +276,7 @@
   check_repo_name_url
   "Checks if name and URL are populated for all repositories"
   [_ repo]
-  (if (not (bool (tasks/ui guiexist :repositories-dialog)))
-    (do (tasks/ui click :repositories)
-        (tasks/ui waittillwindowexist :repositories-dialog)))
+  (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
   (verify (not (blank? (tasks/ui gettextvalue :base-url))))
   (verify (not (blank? (tasks/ui gettextvalue :repo-name))))
@@ -307,16 +299,15 @@
 (defn ^{DataProvider {:name "repolist"}}
   subscribed_repos [_ & {:keys [debug]
                          :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: "))
+  (log/info (str "======= Starting DataProvider: " ns-log "subscribed_repos()"))
   (if-not (assert-skip :repo)
     (do
-                                        ;(tasks/restart-app :reregister? true)
-                                        ;(tasks/subscribe_all)
+      (tasks/restart-app :reregister? true)
+      (tasks/subscribe_all)
       (tasks/ui click :repositories)
       (tasks/ui waittillwindowexist :repositories-dialog 10)
       (let [repos (into [] (map vector (tasks/get-table-elements
-                                        :repo-table
-                                        1)))]
+                                        :repo-table 1)))]
         (if-not debug
           (to-array-2d repos)
           repos)))
