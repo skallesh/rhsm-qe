@@ -1062,7 +1062,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscription-manager should handle malformed custom facts with grace",
-			groups={"MalformedCustomFacts_Test","blockedByBug-966747"},
+			groups={"MalformedCustomFacts_Test","blockedByBug-966747"/*Uncomment for rhel66,"blockedByBug-1112326"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void MalformedCustomFacts_Test() {
@@ -1110,7 +1110,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscription-manager should handle empty custom facts with grace",
-			groups={"EmptyCustomFacts_Test","blockedByBug-966747"},
+			groups={"EmptyCustomFacts_Test","blockedByBug-966747"/*Uncomment for rhel66,"blockedByBug-1112326"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EmptyCustomFacts_Test() {
