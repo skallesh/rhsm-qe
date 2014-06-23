@@ -32,6 +32,7 @@
 (def productstatus (atom nil))
 (def status-before-subscribe (atom {}))
 (def socket-val (atom nil)) ;; holds system socket value
+(def ns-log "rhsm.gui.tests.facts_tests")
 
 (defn get-cli-facts []
   (let [allfacts (:stdout
@@ -449,11 +450,11 @@
   after_check_status_message
   [_]
   (let
-      [string (str "systemctl stop ntpd.service;"
+      [time-cmd (str "systemctl stop ntpd.service;"
                    " ntpdate clock.redhat.com;"
                    " systemctl start ntpd.service")]
-    (:stdout (run-command string))
-    (:stdout (run-command string :runner @candlepin-runner))))
+    (:stdout (run-command time-cmd))
+    (:stdout (run-command time-cmd :runner @candlepin-runner))))
 
 
 (defn ^{Test {:groups ["facts"
@@ -495,18 +496,18 @@
 (defn ^{DataProvider {:name "guifacts"}}
   get_facts [_ & {:keys [debug]
                   :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: "))
+  (log/info (str "======= Starting DataProvider: " ns-log "get_facts()"))
   (if-not (assert-skip :facts)
-              (do
-                (if-not debug
-                  (to-array-2d (vec @gui-facts))
-                  (vec @gui-facts)))
-              (to-array-2d [])))
+    (do
+      (if-not debug
+        (to-array-2d (vec @gui-facts))
+        (vec @gui-facts)))
+    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: "))
+  (log/info (str "======= Starting DataProvider: " ns-log "get_installed_products()"))
   (if-not (assert-skip :facts)
     (do
       (let [prods (tasks/get-table-elements :installed-view 0)
