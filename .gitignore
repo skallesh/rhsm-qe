@@ -21,6 +21,10 @@ tmp/*
 *.swp
 *.swo
 
+## intellij files
+.idea
+sm.iml
+
 ## for plugin settings like counter-clockwise
 .settings
 
