@@ -83,7 +83,7 @@
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/restart-app :reregister? true)
     (if (bash-bool (:exitcode (run-command (str "test -d " stacking-dir))))
-      (run-command (str "rm -rf " stacking-dir)))
+      (safe-delete stacking-dir))
     (run-command (str "mkdir " stacking-dir))
     (reset! prod-dir-atom (tasks/conf-file-value "productCertDir"))
     (let [stackable-pems (filter string? (tasks/get-stackable-pem-files))
@@ -102,7 +102,7 @@
   cleanup [_]
   (if (not (empty? @prod-dir-atom))
     (do
-      (run-command (str "rm -rf " stacking-dir))
+      (safe-delete stacking-dir)
       (tasks/set-conf-file-value "productCertDir" @prod-dir-atom)
       (tasks/restart-app))))
 
@@ -210,7 +210,7 @@
   (tasks/restart-app :reregister? true)
   (tasks/ui selecttab :all-available-subscriptions)
   (tasks/search :match-installed? true)
-  (let [                                ;getting current date and advancing it by a year
+  (let [;getting current date and advancing it by a year
         date-string (tasks/ui gettextvalue :date-entry)
         date-split (split date-string #"-")
         year (first date-split)
@@ -218,7 +218,7 @@
         day (last date-split)
         new-year (+ (Integer. (re-find  #"\d+" year)) 1)
 
-                                        ;creating new directory with single product
+        ;creating new directory with single product
         new-prod-dir (str "/tmp/single-pem/")
         existing-prod-dir (tasks/conf-file-value "productCertDir")
         subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
@@ -252,7 +252,7 @@
      (finally
        (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
        (tasks/set-conf-file-value "productCertDir" existing-prod-dir)
-       (run-command (str "rm -rf " new-prod-dir))
+       (safe-delete new-prod-dir)
        (tasks/unsubscribe_all)
        (tasks/restart-app)))))
 
