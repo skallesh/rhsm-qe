@@ -751,7 +751,7 @@
                  path "/etc/rhsm/facts/"
                  overwrite? true
                  update? true}}]
-  (let [redirect (if overwrite? ">" ">")
+  (let [redirect ">"
         cur-contents (if (and (not overwrite?)
                               (bash-bool (:exitcode (run-command
                                                      (str "test -e " path filename)))))
@@ -794,5 +794,4 @@
   (let [sys-arch (.arch @cli-tasks)
         product-arch (ui gettextvalue :arch)
         all? (= "ALL" product-arch)]
-    (if (or all? (= sys-arch product-arch))
-      true false)))
+    (or all? (= sys-arch product-arch))))
