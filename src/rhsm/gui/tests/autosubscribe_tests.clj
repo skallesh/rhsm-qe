@@ -34,6 +34,7 @@
 (def nonedir (ComplianceTests/productCertDirForNoProductsinstalled))
 (def one-sla-dir (ComplianceTests/productCertDirForAllProductsSubscribableByOneCommonServiceLevel))
 (def multi-sla-dir (ComplianceTests/productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel))
+(def ns-log "rhsm.gui.tests.autosubscribe_tests")
 
 (def complytests (atom nil))
 (def productmap (atom {}))
@@ -194,7 +195,7 @@
                   (:stdout (run-command "subscription-manager service-level")))))
     (let [_ (tasks/ui click :preferences)
           _ (tasks/ui waittillguiexist :system-preferences-dialog)
-          sla (tasks/ui getcombovalue ::service-level-dropdown)
+          sla (tasks/ui getcombovalue :service-level-dropdown)
           sla-slected? (tasks/ui showing? :system-preferences-dialog @common-sla)
           _ (tasks/ui click :close-system-prefs)]
       (verify (and sla-slected? (= @common-sla sla))))
@@ -338,7 +339,8 @@
 (defn ^{DataProvider {:name "my-installed-software"}}
    get_installed_software [_ & {:keys [debug]
                                 :or {debug false}}]
-   (log/info (str "======= Starting DataProvider: "))
+   (log/info (str "======= Starting DataProvider: "
+                  ns-log "get_installed_software()"))
    (if-not (assert-skip :autosubscribe)
      (do
        (.configureProductCertDirForSomeProductsSubscribable @complytests)
