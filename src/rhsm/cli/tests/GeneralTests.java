@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -587,6 +588,77 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
 	
+	
+	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) ahead of candlepin, verify that a WARNING is logged to rhsm.log",
+			groups={"VerifyPositiveClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyPositiveClockSkewDetection_Test() {
+		clienttasks.unregister(null, null, null);	// do not need to be registered for this test
+		
+		String rhsmLogMarker = System.currentTimeMillis()+" Testing clock skew detection...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
+		log.info("Calling subscription-manager version to trigger communication to the currently configured candlepin server...");
+		clienttasks.version(null, null, null);
+		String rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, null).trim();
+		Assert.assertTrue(!rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection), "Assuming the rhsm client is less than 60 minutes ahead of the candlepin server, WARNING '"+clienttasks.msg_ClockSkewDetection+"' is NOT logged to '"+clienttasks.rhsmLogFile+"'.");
+
+		rhsmLogMarker = System.currentTimeMillis()+" Testing positive clock skew detection...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
+		positiveClockSkewMinutes = new Integer(119); // to catch bug 1090350, test with skew 1 min less than 1 hour skew limit + 1 hour daylight saving	// the clock skew limit is set to 1 hour in src/rhsm/connection.py def drift_check(utc_time_string, hours=1)
+		log.info("Advancing the rhsm client clock ahead by '"+positiveClockSkewMinutes+"' minutes...");
+		client.runCommandAndWait(String.format("date -s +%dminutes", positiveClockSkewMinutes));
+		log.info("Calling subscription-manager version to trigger communication to the currently configured candlepin server...");
+		clienttasks.version(null, null, null);
+		rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, null).trim();
+		Assert.assertTrue(rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection), "Assuming the rhsm client is greater than 60 minutes ahead of the candlepin server, then WARNING '"+clienttasks.msg_ClockSkewDetection+"' is logged to '"+clienttasks.rhsmLogFile+"'.");
+	}
+	@AfterGroups(groups={"setup"}, value={"VerifyPositiveClockSkewDetection_Test"})
+	public void afterPositiveClockSkewDetection_Test() {
+		if (clienttasks!=null) {
+			if (positiveClockSkewMinutes!=null) {
+				client.runCommandAndWait(String.format("date -s -%dminutes", positiveClockSkewMinutes));
+				positiveClockSkewMinutes = null;
+			}
+		}
+	}
+	protected Integer positiveClockSkewMinutes = null;
+	
+	
+	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) behind of candlepin, verify that a WARNING is logged to rhsm.log",
+			groups={"VerifyNegativeClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyNegativeClockSkewDetection_Test() {
+		clienttasks.unregister(null, null, null);	// do not need to be registered for this test
+		
+		String rhsmLogMarker = System.currentTimeMillis()+" Testing clock skew detection...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
+		log.info("Calling subscription-manager version to trigger communication to the currently configured candlepin server...");
+		clienttasks.version(null, null, null);
+		String rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, null).trim();
+		Assert.assertTrue(!rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection), "Assuming the rhsm client is less than 60 minutes behind of the candlepin server, WARNING '"+clienttasks.msg_ClockSkewDetection+"' is NOT logged to '"+clienttasks.rhsmLogFile+"'.");
+
+		rhsmLogMarker = System.currentTimeMillis()+" Testing negative clock skew detection...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
+		negativeClockSkewMinutes = new Integer(119); // to catch bug 1090350, test with skew 1 min less than 1 hour skew limit + 1 hour daylight saving	// the clock skew limit is set to 1 hour in src/rhsm/connection.py def drift_check(utc_time_string, hours=1)
+		log.info("Retarding the rhsm client clock behind by '"+negativeClockSkewMinutes+"' minutes...");
+		client.runCommandAndWait(String.format("date -s -%dminutes", negativeClockSkewMinutes));
+		log.info("Calling subscription-manager version to trigger communication to the currently configured candlepin server...");
+		clienttasks.version(null, null, null);
+		rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, null).trim();
+		Assert.assertTrue(rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection), "Assuming the rhsm client is greater than 60 minutes behind of the candlepin server, then WARNING '"+clienttasks.msg_ClockSkewDetection+"' is logged to '"+clienttasks.rhsmLogFile+"'.");
+	}
+	@AfterGroups(groups={"setup"}, value={"VerifyNegativeClockSkewDetection_Test"})
+	public void afterNegativeClockSkewDetection_Test() {
+		if (clienttasks!=null) {
+			if (negativeClockSkewMinutes!=null) {
+				client.runCommandAndWait(String.format("date -s +%dminutes", negativeClockSkewMinutes));
+				negativeClockSkewMinutes = null;
+			}
+		}
+	}
+	protected Integer negativeClockSkewMinutes = null;
 	
 	// Candidates for an automated Test:
 	// TODO Bug 688469 - subscription-manager <module> --help does not work in localized environment. https://github.com/RedHatQE/rhsm-qe/issues/144
