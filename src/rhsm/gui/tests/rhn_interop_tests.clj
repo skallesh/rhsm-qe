@@ -86,7 +86,7 @@
   check_no_warning
   "Asserts that no warning is shown when the app is started without the presence of a systemid file."
   [_]
-  (run-command (str "rm -f " systemid))
+  (safe-delete systemid)
   (verify (not (systemid-exists?)))
   (tasks/start-app)
   (verify (not (tasks/ui exists? :warning-dialog "*"))))
