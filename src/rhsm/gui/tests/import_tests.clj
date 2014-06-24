@@ -11,7 +11,8 @@
                                trim)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
-  (:require [rhsm.gui.tasks.tasks :as tasks]
+  (:require [clojure.tools.logging :as log]
+            [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
@@ -42,7 +43,7 @@
     (.restartCertFrequencyBeforeClass @importtests)
     (.setupEntitlemenCertsForImportBeforeClass @importtests)
     (run-command "subscripton-manager unregister")
-    (run-command (str "rm -rf " tmpcertpath))
+    (safe-delete tmpcertpath)
     (run-command (str "mkdir " tmpcertpath))
     (catch Exception e
       (reset! (skip-groups :import) true)
@@ -213,7 +214,7 @@
   "Asserts that a random file cannot be imported."
   [_]
   (let [certname "/tmp/randomcert.pem"]
-    (run-command (str "rm -rf " certname))
+    (safe-delete certname)
     (run-command (str "dd if=/dev/urandom of=" certname " bs=1M count=2"))
     (import-bad-cert certname :invalid-cert)))
 
@@ -281,6 +282,4 @@
     (def importedcert (atom nil))
     (reset! importtests (ImportTests.))
     (.setupBeforeSuite @importtests)
-    (.setupBeforeClass @importtests))
-
- )
+    (.setupBeforeClass @importtests)))

@@ -8,7 +8,8 @@
                                     throw+)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
-  (:require [rhsm.gui.tasks.tasks :as tasks]
+  (:require [clojure.tools.logging :as log]
+            [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations

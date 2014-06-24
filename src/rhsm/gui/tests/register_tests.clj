@@ -23,6 +23,7 @@
             DataProvider]))
 
 (def sys-log "/var/log/rhsm/rhsm.log")
+(def ns-log "rhsm.gui.tests.register_tests")
 
 (defn get-userlists [username password]
   (let [owners (ctasks/get-owners username password)]
@@ -243,6 +244,7 @@
 (defn ^{DataProvider {:name "userowners"}}
   get_userowners [_ & {:keys [debug]
                        :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "get_userowners()"))
   (if-not (assert-skip :register)
     (do
       (let [data (vec

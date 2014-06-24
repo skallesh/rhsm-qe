@@ -30,6 +30,7 @@
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
 (def prod-dir-atom (atom {}))  ; "ProductCertDir" value from conf file
+(def new-list (atom {}))    ; Used to dynamically alter the list of subscriptions
 (def sub (atom {}))            ; used in "random-subscription" func to pic a subscription
 
 (def stacking-dir "/tmp/stacking-dir/")  ; temporary product directory
@@ -39,23 +40,19 @@
   "Validates if the subscriptions are stackable by verifying quantity to be greater than 1
    and picks a random subscriptions which can be stacked"
   [subscriptions]
-  (let [quantity-list (distinct
-                       (into []
-                             (map (fn [i] (Integer.
-                                          (re-find #"\d+"
-                                                   (tasks/ui getcellvalue :all-subscriptions-view
-                                                             (tasks/skip-dropdown :all-subscriptions-view i)
-                                                             3)))) subscriptions)))]
-    (case (into [] quantity-list)
-      [] (throw (SkipException. (str "Data unavailable for stacking test")))
-      [1] (throw (SkipException. (str "Data unavailable for stacking test")))
-      (do (reset! sub (rand-nth subscriptions))
-          (while (= "1" (re-find #"\d+"
-                                 (tasks/ui getcellvalue :all-subscriptions-view
-                                           (tasks/skip-dropdown :all-subscriptions-view @sub)
-                                           3)))
-            (reset! sub (rand-nth subscriptions)))))
-    @sub))
+  (reset! sub nil)
+  (reset! new-list subscriptions)
+  (while (and (not (= 0 (count @new-list))) (nil? @sub))
+    (let [rand-sub (rand-nth @new-list)
+          raw-quantity (tasks/ui getcellvalue :all-subscriptions-view
+                                 (tasks/skip-dropdown :all-subscriptions-view rand-sub) 3)
+          quantity (Integer. (re-find #"\d+" raw-quantity))]
+      (if (> quantity 1)
+        (reset! sub rand-sub)
+        (reset! new-list (remove #(= rand-sub %) @new-list)))))
+  (if (nil? @sub)
+    (throw (SkipException.
+            (str "ERROR !! Stackable subscriiptions are not available"))) @sub))
 
 (defn is-date?
   "Verifies if the the object is a valid date object"
@@ -80,28 +77,13 @@
         equal (map (fn [i j] (> i j)) a-int  b-int)]
     (if (some #(= false %) equal) false true)))
 
-(defn validate-subscriptions
-  "Validates if the subscriptions are stackable by verifying quantity to be greater than 1"
-  [subscriptions]
-  (let [quantity-list (distinct
-                       (into []
-                             (map (fn [i] (Integer.
-                                          (re-find #"\d+"
-                                                   (tasks/ui getcellvalue :all-subscriptions-view
-                                                             (tasks/skip-dropdown :all-subscriptions-view i)
-                                                             3)))) subscriptions)))]
-    (case (into [] quantity-list)
-      [] false
-      [1] false
-      true)))
-
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/restart-app :reregister? true)
     (if (bash-bool (:exitcode (run-command (str "test -d " stacking-dir))))
-      (run-command (str "rm -rf " stacking-dir)))
+      (safe-delete stacking-dir))
     (run-command (str "mkdir " stacking-dir))
     (reset! prod-dir-atom (tasks/conf-file-value "productCertDir"))
     (let [stackable-pems (filter string? (tasks/get-stackable-pem-files))
@@ -115,21 +97,23 @@
       (reset! (skip-groups :stacking) true)
       (throw e))))
 
-(defn ^{BeforeGroups {:groups ["stacking"
-                               "tier1"
-                               "tier3"]
-                      :value ["stacking-sockets"]}}
-  before_sockets_stacking [_]
-  (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}"))
+(defn ^{AfterClass {:groups ["cleanup"]
+                     :alwaysRun true}}
+  cleanup [_]
+  (if (not (empty? @prod-dir-atom))
+    (do
+      (safe-delete stacking-dir)
+      (tasks/set-conf-file-value "productCertDir" @prod-dir-atom)
+      (tasks/restart-app))))
 
 (defn ^{Test {:groups ["stacking"
                        "tier3"
-                       "blockedByBug-854380"]
-              :value ["stacking-sockets"]}}
+                       "blockedByBug-854380"]}}
   assert_subscriptions_displayed
   "Asserts the matching subscriptions are displayed when the system is partially subscribed"
   [_]
   (try
+    (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
     (tasks/restart-app :reregister? true)
     (tasks/search :match-installed? true)
     (let [subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
@@ -150,17 +134,18 @@
       (tasks/ui selecttab :all-available-subscriptions)
       (tasks/search :match-installed? true)
       (verify (not (= quantity (get-quantity rand-sub)))))
-  (finally
-   (tasks/unsubscribe_all))))
+    (finally
+      (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
+      (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["stacking"
                        "tier3"
-                       "blockedByBug-990639"]
-              :value ["stacking-sockets"]}}
+                       "blockedByBug-990639"]}}
   check_dates_partially_subscribed
   "Checks if start and end dates are displayed for partially subscribed poducts"
   [_]
   (try
+    (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
     (tasks/restart-app :reregister? true)
     (tasks/search :match-installed? true)
     (let [subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
@@ -186,7 +171,8 @@
                                        (verify (is-date? (tasks/ui getcellvalue
                                                                    :installed-view row-num 4)))))))))
     (finally
-     (tasks/unsubscribe_all))))
+      (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
+      (tasks/unsubscribe_all))))
 
 (defn get_pem_file_for_subscription
   "This fuction returns pem file for the randomly selected product"
@@ -199,7 +185,8 @@
         raw-prods (:stdout (run-command
                             (str "cd " existing-prod-dir
                                  "; for x in `ls`; do rct cat-cert $x | egrep \"Name\" | cut -d: -f 2; done")))
-        prod-list (into [] (map clojure.string/trim (clojure.string/split-lines raw-prods)))
+        prod-list (into [] (remove blank?
+                                   (map clojure.string/trim (clojure.string/split-lines raw-prods))))
         prod-pem-file-map (zipmap prod-list pem-file-list)
         pem-file (get prod-pem-file-map (first rand-prod-list))]
     pem-file))
@@ -215,15 +202,15 @@
 (defn ^{Test {:groups ["stacking"
                        "tier3"
                        "blockedByBug-745965"
-                       "blockedByBug-1040119"]
-              :value ["stacking-sockets"]}}
+                       "blockedByBug-1040119"]}}
   assert_future_cert_status
   "Asserts cert status for future entitilment"
   [_]
+  (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
   (tasks/restart-app :reregister? true)
   (tasks/ui selecttab :all-available-subscriptions)
   (tasks/search :match-installed? true)
-  (let [                                ;getting future date
+  (let [;getting current date and advancing it by a year
         date-string (tasks/ui gettextvalue :date-entry)
         date-split (split date-string #"-")
         year (first date-split)
@@ -231,7 +218,7 @@
         day (last date-split)
         new-year (+ (Integer. (re-find  #"\d+" year)) 1)
 
-                                        ;creating new directory with single product
+        ;creating new directory with single product
         new-prod-dir (str "/tmp/single-pem/")
         existing-prod-dir (tasks/conf-file-value "productCertDir")
         subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
@@ -243,8 +230,11 @@
         rand-prod (tasks/skip-dropdown :all-subscriptions-view rand-sub)
         rand-prod-list (tasks/get-table-elements :all-available-bundled-products 0)
         pem-file (get_pem_file_for_subscription existing-prod-dir rand-prod-list)]
-    create_temp_prod_dir (existing-prod-dir new-prod-dir pem-file)
-    (try+
+    (if (nil? pem-file)
+      (throw (SkipException.
+              (str "ERROR !! no .pem was returned"))))
+    (create_temp_prod_dir existing-prod-dir new-prod-dir pem-file)
+    (try
      (tasks/restart-app)
      (tasks/ui selecttab :all-available-subscriptions)
      (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
@@ -260,19 +250,20 @@
                                 (verify (= "Future Subscription" status))))
      (verify (not (substring? "does not match" (tasks/ui gettextvalue :overall-status))))
      (finally
-      (tasks/set-conf-file-value "productCertDir" existing-prod-dir)
-      (run-command (str "rm -rf " new-prod-dir))
-      (tasks/unsubscribe_all)
-      (tasks/restart-app)))))
+       (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
+       (tasks/set-conf-file-value "productCertDir" existing-prod-dir)
+       (safe-delete new-prod-dir)
+       (tasks/unsubscribe_all)
+       (tasks/restart-app)))))
 
 (defn ^{Test {:groups ["acceptance"
-                       "tier1"
-                       "blockedByBug-827173"]
-              :value ["stacking-sockets"]}}
+                       "blockedByBug-827173"
+                       "stacking-sockets"]}}
   assert_auto_attach
   "Asserts if autosubscribe is possible when client is partially subscribed"
   [_]
   (try
+    (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
     (tasks/restart-app :reregister? true)
     (tasks/search :match-installed? true)
     (let [subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
@@ -303,15 +294,8 @@
           (tasks/restart-app)))
       (verify (= 1 (tasks/ui guiexist :main-window "System is properly subscribed*"))))
     (finally
-     (tasks/unsubscribe_all))))
-
-(defn ^{AfterGroups {:groups ["stacking"
-                              "tier1"
-                              "tier3"]
-                     :value ["stacking-sockets"]
-                     :alwaysRun true}}
-  after_sockets_stacking [_]
-  (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}"))
+      (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
+      (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["stacking"
                        "tier3"
@@ -369,14 +353,26 @@
    (do
      (case stacking-parameter
        ("ram")     (tasks/write-facts "{\"memory.memtotal\": \"10202520\"}")
-       ("cores")   (tasks/write-facts "{\"cpu.core(s)_per_socket\": \"10\"}")
+       ("cores")   (let [output (:stdout
+                                 (run-command
+                                  "subscription-manager facts --list | grep \"virt.is_guest\""))
+                         virt? (or (substring? "True" output)
+                                   (substring? "true" output))]
+                     (tasks/write-facts "{\"cpu.core(s)_per_socket\": \"20\"}")
+                     (if virt? (tasks/write-facts "{\"virt.is_guest\": \"False\"}"
+                                                  :overwrite? false)))
        ("sockets") (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
        (throw (Exception. "Invalid stacking-parameter passed to function"))))
    (= when? "after")
    (do
      (case stacking-parameter
        ("ram")     (tasks/write-facts "{\"memory.memtotal\": \"1020252\"}")
-       ("cores")   (tasks/write-facts "{\"cpu.core(s)_per_socket\": \"1\"}")
+       ("cores")   (let [output (:stdout
+                                 (run-command
+                                  "cat /etc/rhsm/facts/override.facts | grep virt.is_guest"))]
+                     (tasks/write-facts "{\"cpu.core(s)_per_socket\": \"1\"}")
+                     (if-not (empty? output) (tasks/write-facts "{\"virt.is_guest\": \"True\"}"
+                                                              :overwrite? false)))
        ("sockets") (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
        (throw (Exception. "Invalid stacking-parameter passed to function"))))
    :else (throw (Exception. "Invalid when? argument passed to function"))))
@@ -429,32 +425,30 @@
           quantity-after (int (round-up (float (/ parameter-covered stacking-value))))
           get-quantity (fn [i] (tasks/ui getcellvalue :all-subscriptions-view
                                         (tasks/skip-dropdown :all-subscriptions-view i) 3))
-          quantity (get-quantity rand-sub)
-          provides-product (tasks/get-table-elements :all-available-bundled-products 0)]
-      (tasks/skip-dropdown :all-subscriptions-view rand-sub)
-      (tasks/ui generatekeyevent (str
-                                  (repeat-cmd 3 "<right> ")
-                                  "<space> " "1 " "<enter>"))
-      (tasks/subscribe rand-sub)
-      (tasks/ui click :search)
-      (sleep 4000)
-      (verify (< quantity (get-quantity rand-sub)))
-      ;; verifiying if the product is partially subscribed
-      (verify (= "Partially Subscribed"
-                 (tasks/ui getcellvalue :installed-view
-                           (tasks/skip-dropdown :installed-view
-                                                (first(tasks/get-table-elements
-                                                       :all-available-bundled-products 0)))2)))
-      (tasks/skip-dropdown :all-subscriptions-view rand-sub)
-       (tasks/ui generatekeyevent (str
-                                  (repeat-cmd 3 "<right> ")
-                                  "<space> " quantity-after  " <enter>"))
-      ;; verifying if product is fully subscribed
-      (verify (= "Subscribed"
-                 (tasks/ui getcellvalue :installed-view
-                           (tasks/skip-dropdown :installed-view
-                                                (first(tasks/get-table-elements
-                                                       :all-available-bundled-products 0)))2))))
+          quantity (Integer. (re-find #"\d+" (get-quantity rand-sub)))
+          provides-product (first (into [] (tasks/get-table-elements
+                                            :all-available-bundled-products 0)))]
+        (tasks/skip-dropdown :all-subscriptions-view rand-sub)
+        (tasks/ui generatekeyevent (str
+                                    (repeat-cmd 3 "<right> ")
+                                    "<space> " "1 " "<enter>"))
+        (tasks/subscribe rand-sub)
+        (tasks/ui click :search)
+        (sleep 4000)
+        (verify (> quantity (Integer. (re-find #"\d+" (get-quantity rand-sub)))))
+        ;; verifiying if the product is partially subscribed
+        (verify (= "Partially Subscribed"
+                   (tasks/ui getcellvalue :installed-view
+                             (tasks/skip-dropdown :installed-view provides-product) 2)))
+        (tasks/skip-dropdown :all-subscriptions-view rand-sub)
+        (tasks/ui generatekeyevent (str
+                                    (repeat-cmd 3 "<right> ")
+                                    "<space> " quantity-after  " <enter>"))
+        (tasks/subscribe rand-sub)
+        ;; verifying if product is fully subscribed
+        (verify (= "Subscribed"
+                   (tasks/ui getcellvalue :installed-view
+                             (tasks/skip-dropdown :installed-view provides-product) 2))))
     (finally
      (set-stacking-environment stacking-parameter "after")
      (tasks/unsubscribe_all))))
@@ -468,14 +462,5 @@
        ["cores"]
        ["sockets"])
      (to-array-2d []))])
-
-(defn ^{AfterClass {:groups ["cleanup"]
-                     :alwaysRun true}}
-  cleanup [_]
-  (if (not (empty? @prod-dir-atom))
-    (do
-      (run-command (str "rm -rf " stacking-dir))
-      (tasks/set-conf-file-value "productCertDir" @prod-dir-atom)
-      (tasks/restart-app))))
 
 (gen-class-testng)

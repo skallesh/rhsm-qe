@@ -32,6 +32,7 @@
 (def productstatus (atom nil))
 (def status-before-subscribe (atom {}))
 (def socket-val (atom nil)) ;; holds system socket value
+(def ns-log "rhsm.gui.tests.facts_tests")
 
 (defn get-cli-facts []
   (let [allfacts (:stdout
@@ -421,7 +422,7 @@
   [_]
   (if (nil?  @candlepin-runner)
     (throw (SkipException.
-            (str "Cannot access combo-box !! Skipping Test 'check_available_releases'.")))
+            (str "This test will not run on stage as a candelpin-runner cannot be created")))
     (do
       (try
         (let
@@ -439,8 +440,8 @@
           (verify (= @after-future-subscribe
                      (- @status-before-subscribe @subscribed-products-future))))
         (finally
-          (run-command "date -s \"-1 year\"")
-          (run-command "date -s \"-1 year\"" :runner @candlepin-runner))))))
+          (run-command "date -s \"-1 year\"" :runner @candlepin-runner)
+          (run-command "date -s \"-1 year\""))))))
 
 (defn ^{AfterGroups {:groups ["facts"
                               "tier1"]
@@ -448,11 +449,12 @@
                      :alwaysRun true}}
   after_check_status_message
   [_]
-  (:stdout (run-command
-            "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"))
-  (:stdout (run-command
-                      "systemctl stop ntpd.service; ntpdate clock.redhat.com; systemctl start ntpd.service"
-                      :runner @candlepin-runner)))
+  (let
+      [time-cmd (str "systemctl stop ntpd.service;"
+                   " ntpdate clock.redhat.com;"
+                   " systemctl start ntpd.service")]
+    (:stdout (run-command time-cmd))
+    (:stdout (run-command time-cmd :runner @candlepin-runner))))
 
 
 (defn ^{Test {:groups ["facts"
@@ -494,6 +496,7 @@
 (defn ^{DataProvider {:name "guifacts"}}
   get_facts [_ & {:keys [debug]
                   :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "get_facts()"))
   (if-not (assert-skip :facts)
     (do
       (if-not debug
@@ -504,6 +507,7 @@
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "get_installed_products()"))
   (if-not (assert-skip :facts)
     (do
       (let [prods (tasks/get-table-elements :installed-view 0)

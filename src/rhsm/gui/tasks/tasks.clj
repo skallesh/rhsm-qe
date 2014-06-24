@@ -751,7 +751,7 @@
                  path "/etc/rhsm/facts/"
                  overwrite? true
                  update? true}}]
-  (let [redirect (if overwrite? ">" ">>")
+  (let [redirect ">"
         cur-contents (if (and (not overwrite?)
                               (bash-bool (:exitcode (run-command
                                                      (str "test -e " path filename)))))
@@ -785,3 +785,13 @@
                                               (filter stacking-id? stacking-map))))
        stackable-pems (map (fn [i] (get prod-pem-file-map i)) stackable-prods)]
     stackable-pems))
+
+(defn assert-valid-product-arch
+  "Asserts if the product arch and the system arech are the same"
+  [product]
+  (ui selecttab :my-installed-products)
+  (ui selectrow :installed-view product)
+  (let [sys-arch (.arch @cli-tasks)
+        product-arch (ui gettextvalue :arch)
+        all? (= "ALL" product-arch)]
+    (or all? (= sys-arch product-arch))))

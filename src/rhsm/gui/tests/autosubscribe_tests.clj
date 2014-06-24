@@ -34,6 +34,7 @@
 (def nonedir (ComplianceTests/productCertDirForNoProductsinstalled))
 (def one-sla-dir (ComplianceTests/productCertDirForAllProductsSubscribableByOneCommonServiceLevel))
 (def multi-sla-dir (ComplianceTests/productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel))
+(def ns-log "rhsm.gui.tests.autosubscribe_tests")
 
 (def complytests (atom nil))
 (def productmap (atom {}))
@@ -186,16 +187,26 @@
   assert_service_level
   "Asserts that the service level was set system wide after simple autosubscribe."
   [_]
-  (if (nil? @common-sla) (throw (SkipException. "Common SLA is unset!")))
-  (verify
-   (substring? @common-sla
-               (clojure.string/upper-case
-                (:stdout (run-command "subscription-manager service-level")))))
-  (let [_ (tasks/ui click :preferences)
-        _ (tasks/ui waittillguiexist :system-preferences-dialog)
-        sla-slected? (tasks/ui showing? :system-preferences-dialog @common-sla)
-        _ (tasks/ui click :close-system-prefs)]
-    (verify sla-slected?)))
+  (try
+    (if (nil? @common-sla) (throw (SkipException. "Common SLA is unset!")))
+    (verify
+     (substring? @common-sla
+                 (clojure.string/upper-case
+                  (:stdout (run-command "subscription-manager service-level")))))
+    (let [_ (tasks/ui click :preferences)
+          _ (tasks/ui waittillguiexist :system-preferences-dialog)
+          sla (tasks/ui getcombovalue :service-level-dropdown)
+          sla-slected? (tasks/ui showing? :system-preferences-dialog @common-sla)
+          _ (tasks/ui click :close-system-prefs)]
+      (verify (and sla-slected? (= @common-sla sla))))
+    (catch Exception e
+      (if (substring? "Unable to find object name in application map"
+                      (.getMessage e))
+        (throw (SkipException.
+                (str "Cannot access combo-box !! Skipping Test 'check_available_releases'.")))))
+    (finally
+      (if (bool (tasks/ui guiexist :system-preferences-dialog))
+        (tasks/ui click :close-system-prefs)))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "tier1"
@@ -328,6 +339,8 @@
 (defn ^{DataProvider {:name "my-installed-software"}}
    get_installed_software [_ & {:keys [debug]
                                 :or {debug false}}]
+   (log/info (str "======= Starting DataProvider: "
+                  ns-log "get_installed_software()"))
    (if-not (assert-skip :autosubscribe)
      (do
        (.configureProductCertDirForSomeProductsSubscribable @complytests)

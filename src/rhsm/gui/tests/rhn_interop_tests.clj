@@ -5,7 +5,8 @@
         [com.redhat.qe.verify :only (verify)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
-  (:require [rhsm.gui.tasks.tasks :as tasks]
+  (:require [clojure.tools.logging :as log]
+            [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
@@ -36,9 +37,9 @@
 
 (defn ^{AfterClass {:groups ["setup"]}}
   cleanup [_]
-    (if-not (tasks/ui exists? :main-window "*")
-      (tasks/start-app))
-    (run-command (str "rm -f " systemid)))
+  (if-not (tasks/ui exists? :main-window "*")
+    (tasks/start-app))
+  (run-command (str "rm -f " systemid)))
 
 (defn ^{Test {:groups ["interop"
                        "tier1"]}}
@@ -85,7 +86,7 @@
   check_no_warning
   "Asserts that no warning is shown when the app is started without the presence of a systemid file."
   [_]
-  (run-command (str "rm -f " systemid))
+  (safe-delete systemid)
   (verify (not (systemid-exists?)))
   (tasks/start-app)
   (verify (not (tasks/ui exists? :warning-dialog "*"))))

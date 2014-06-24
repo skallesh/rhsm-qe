@@ -14,7 +14,8 @@
                                blank?)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
-  (:require [rhsm.gui.tasks.tasks :as tasks]
+  (:require [clojure.tools.logging :as log]
+            [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
              rhsm.gui.tasks.ui)
@@ -31,6 +32,7 @@
 (def subs-contractlist (atom {}))
 (def prod-dir (atom {}))
 (def sys-log "/var/log/rhsm/rhsm.log")
+(def ns-log "rhsm.gui.tests.subscribe_tests")
 
 (defn build-subscription-map
   "Builds the product map and updates the productlist atom"
@@ -338,23 +340,31 @@
   filter_by_product
   "Tests that the product filter works when searching."
   [_ product]
+  (tasks/ui selecttab :my-installed-products)
   (if-not (bool (tasks/ui guiexist :main-window))
-      (tasks/start-app)
-      (if (tasks/ui showing? :register-system)
-        (tasks/register-with-creds)))
-  (allsearch product)
-  (let [expected (@productlist product)
-        seen (into [] (tasks/get-table-elements
-                       :all-subscriptions-view
-                       0
-                       :skip-dropdowns? true))
-        hasprod? (fn [s] (substring? product s))
-        inmap? (fn [e] (some hasprod? (flatten e)))
-        matches (flatten (filter inmap? @productlist))]
-    (doseq [s seen]
-      (verify (not-nil? (some #{s} matches))))
-    (doseq [e expected]
-      (verify (not-nil? (some #{e} seen))))))
+    (tasks/start-app)
+    (if (tasks/ui showing? :register-system)
+      (tasks/register-with-creds)))
+  (if (tasks/assert-valid-product-arch product)
+    (do
+      (try
+        (allsearch product)
+        (let [expected (@productlist product)
+              seen (into [] (tasks/get-table-elements
+                             :all-subscriptions-view
+                             0
+                             :skip-dropdowns? true))
+              hasprod? (fn [s] (substring? product s))
+              inmap? (fn [e] (some hasprod? (flatten e)))
+              matches (flatten (filter inmap? @productlist))]
+          (doseq [s seen]
+            (verify (not-nil? (some #{s} matches))))
+          (doseq [e expected]
+            (verify (not-nil? (some #{e} seen)))))
+    (finally
+      (if (bool (tasks/ui guiexist :filter-dialog))
+        (tasks/ui click :close-filters))
+      (tasks/search))))))
 
 (comment
   ;; TODO:
@@ -666,6 +676,8 @@
 (defn ^{DataProvider {:name "multi-entitle"}}
   get_multi_entitle_subscriptions [_ & {:keys [debug]
                                         :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: "
+                 ns-log "get_multi_entitle_subscriptions()"))
   (if-not (assert-skip :subscribe)
     (do
       (tasks/restart-app)
@@ -704,6 +716,7 @@
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "get_subscriptions()"))
   (if-not (assert-skip :subscribe)
     (do
       (tasks/restart-app)
@@ -721,6 +734,7 @@
 (defn ^{DataProvider {:name "subscribed"}}
   get_subscribed [_ & {:keys [debug]
                        :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "get_subscribed()"))
   (if-not (assert-skip :subscribe)
     (do
       (tasks/restart-app)
@@ -740,6 +754,8 @@
 (defn ^{DataProvider {:name "multi-contract"}}
   get_multi_contract_subscriptions [_ & {:keys [debug]
                                          :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: "
+                 ns-log "get_multi_contract_subscriptions()"))
   (if-not (assert-skip :subscribe)
     (do
       (tasks/restart-app)
@@ -762,11 +778,10 @@
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "get_installed_products()"))
   (if-not (assert-skip :subscribe)
     (do
-      (run-command "subscription-manager unregister")
-      (tasks/restart-app)
-      (tasks/register-with-creds)
+      (tasks/restart-app :reregister? true)
       (let [prods (into [] (map vector (tasks/get-table-elements
                                         :installed-view
                                         0)))]
@@ -780,6 +795,7 @@
 (defn ^{DataProvider {:name "unlimited-pools"}}
   get_unlimited_pools [_ & {:keys [debug]
                             :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "get_unlimited_pools()"))
   (if-not (assert-skip :subscribe)
     (do
       (run-command "subscription-manager unregister")
