@@ -29,7 +29,6 @@
 (def gui-facts (atom nil))
 (def cli-facts (atom nil))
 (def installed-certs (atom nil))
-(def productstatus (atom nil))
 (def status-before-subscribe (atom {}))
 (def socket-val (atom nil)) ;; holds system socket value
 (def ns-log "rhsm.gui.tests.facts_tests")
@@ -241,54 +240,6 @@
     (finally (if (bool (tasks/ui guiexist :about-dialog))
                (tasks/ui click :close-about-dialog)))))
 
-(defn ^{BeforeGroups {:groups ["facts"
-                               "tier3"]
-                      :value ["facts-product-status"]}}
-  before_check_product_status [_]
-  (let [output (:stdout
-                (run-command "subscription-manager attach --auto"))
-        not-blank? (fn [s] (not (blank? s)))
-        raw-cli-data (filter not-blank? (drop 1 (split-lines output)))
-        status (fn [s] (re-find #"Status.*" s))
-        products (fn [s] (re-find #"Product Name.*" s))
-        grab-value (fn [item] (trim (last (split item #":"))))
-        not-nil? (fn [s] (not (nil? s)))
-        list-status (into [] (map grab-value (filter not-nil? (map status raw-cli-data))))
-        list-products (into [] (map grab-value (filter not-nil? (map products raw-cli-data))))
-        cli-data (zipmap list-products list-status)]
-    (reset! productstatus cli-data)))
-
-(defn ^{Test {:groups ["facts"
-                       "tier3"
-                       "facts-product-status"
-                       "blockedByBug-964332"]
-              :dataProvider "installed-products"
-              :priority (int 10)}}
-  check_product_status
-  "Asserts that all product statuses match the known statuses in the CLI."
-  [_ product row]
-  (let [gui-value (tasks/ui getcellvalue :installed-view row 2)
-        cli-value (get @productstatus product)]
-    (verify (= gui-value cli-value))))
-
-(defn ^{AfterGroups {:groups ["facts"
-                              "tier3"]
-                     :value ["facts-product-status"]
-                     :alwaysRun true}}
-  after_check_product_status [_]
-  (tasks/unsubscribe_all))
-
-(defn ^{Test {:groups ["facts"
-                       "tier3"]
-              :dependsOnMethods ["check_product_status"]
-              :dataProvider "installed-products"
-              :priority (int 20)}}
-  check_product_status_unsubscribe
-  "Checks product status is correct after unsubscribing."
-  [_ product row]
-  (let [gui-status (tasks/ui getcellvalue :installed-view row 2)]
-    (verify (= gui-status "Not Subscribed"))))
-
 (defn ^{Test {:groups ["facts"
                        "tier1"
                        "blockedByBug-977855"]}}
@@ -326,135 +277,6 @@
     (finally
       (if (bool (tasks/ui guiexist :system-preferences-dialog))
         (tasks/ui click :close-system-prefs)))))
-
-(defn ^{BeforeGroups {:groups ["facts"
-                               "tier1"]
-                      :value ["check_status_message_for_subscriptions"]}}
-  before_check_status_message
-  [_]
-  (tasks/unsubscribe_all)
-  (tasks/restart-app :reregister? true))
-
-(defn ^{Test {:groups ["facts"
-                       "tier1"
-                       "blockedByBug-1012501"
-                       "blockedByBug-1040119"]
-              :value ["check_status_message_for_subscriptions"]
-              :priority (int 100)}}
-  check_status_message_before_attaching
-  "Asserts that status message displayed in main-window is right before subscriptions are attached"
-  [_]
-  (try
-    (let
-  	[installed-products (atom {})]
-      (reset! installed-products (tasks/ui getrowcount :installed-view))
-      (reset! status-before-subscribe
-              (Integer. (re-find #"\d*" (tasks/ui gettextvalue :overall-status))))
-      (verify (= @installed-products @status-before-subscribe)))))
-
-(defn ^{Test {:groups ["facts"
-                       "tier1"
-                       "blockedByBug-1012501"
-                       "blockedByBug-1040119"]
-              :value ["check_status_message_for_subscriptions"]
-              :dependsOnMethods ["check_status_message_before_attaching"]
-              :priority (int 101)}}
-  check_status_message_after_attaching
-  "Asserts that status message displayed in main-window is right after attaching subscriptions"
-  [_]
-  (try
-    (let
-  	[subscribed-products (atom {})
-         after-subscribe (atom {})]
-      (tasks/search :match-installed? true)
-      (dotimes [n 3]
-        (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
-                                   (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
-      (reset! subscribed-products (count (filter #(= "Subscribed" %)
-                                                 (tasks/get-table-elements :installed-view 2))))
-      (reset! after-subscribe (Integer. (re-find #"\d*"
-                                                 (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-subscribe (- @status-before-subscribe @subscribed-products))))))
-
-(defn ^{Test {:groups ["facts"
-                       "tier1"
-                       "blockedByBug-1012501"
-                       "blockedByBug-1040119"]
-              :value ["check_status_message_for_subscriptions"]
-              :dependsOnMethods ["check_status_message_after_attaching"]
-              :priority (int 102)}}
-  check_status_message_future_subscriptions
-  "Asserts that status message displayed in main-window is right after attaching future
-   subscriptions"
-  [_]
-  (try
-    (let
-  	[subscribed-products-date (atom {})
-         after-date-products (atom {})
-         present-date (do (tasks/ui selecttab :all-available-subscriptions)
-                          (tasks/ui gettextvalue :date-entry))
-         date-split (split present-date #"-")
-         year (first date-split)
-         month (second date-split)
-         day (last date-split)
-         new-year (+ (Integer. (re-find  #"\d+" year)) 1)]
-      (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
-      (tasks/search :match-installed? true)
-      (dotimes [n 3]
-        (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
-                                   (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
-      (reset! subscribed-products-date (count (filter #(= "Subscribed" %)
-                                                      (tasks/get-table-elements :installed-view 2))))
-      (reset! after-date-products (Integer. (re-find #"\d*"
-                                                     (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date))))))
-
-(defn ^{Test {:groups ["facts"
-                       "tier1"
-                       "blockedByBug-1012501"
-                       "blockedByBug-1040119"]
-              :value ["check_status_message_for_subscriptions"]
-              :dependsOnMethods ["check_status_message_future_subscriptions"]
-              :priority (int 103)}}
-  check_status_message_expired_subscriptions
-  "Asserts that status message displayed in main-window is right after expiring
-   attached subscriptions"
-  [_]
-  (if (nil?  @candlepin-runner)
-    (throw (SkipException.
-            (str "This test will not run on stage as a candelpin-runner cannot be created")))
-    (do
-      (try
-        (let
-            [subscribed-products-future (atom {})
-             after-future-subscribe (atom {})]
-          (run-command "date -s \"+1 year\"")
-          (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
-          (tasks/restart-app)
-          (reset! subscribed-products-future
-                  (count (filter #(= "Subscribed" %)
-                                 (tasks/get-table-elements :installed-view 2))))
-          (reset! after-future-subscribe
-                  (Integer. (re-find #"\d*"
-                                     (tasks/ui gettextvalue :overall-status))))
-          (verify (= @after-future-subscribe
-                     (- @status-before-subscribe @subscribed-products-future))))
-        (finally
-          (run-command "date -s \"-1 year\"" :runner @candlepin-runner)
-          (run-command "date -s \"-1 year\""))))))
-
-(defn ^{AfterGroups {:groups ["facts"
-                              "tier1"]
-                     :value ["check_status_message_for_subscriptions"]
-                     :alwaysRun true}}
-  after_check_status_message
-  [_]
-  (let
-      [time-cmd (str "systemctl stop ntpd.service;"
-                   " ntpdate clock.redhat.com;"
-                   " systemctl start ntpd.service")]
-    (:stdout (run-command time-cmd))
-    (:stdout (run-command time-cmd :runner @candlepin-runner))))
 
 
 (defn ^{Test {:groups ["facts"
@@ -496,7 +318,7 @@
 (defn ^{DataProvider {:name "guifacts"}}
   get_facts [_ & {:keys [debug]
                   :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " ns-log "get_facts()"))
+  (log/info (str "======= Starting DataProvider: " ns-log "/get_facts()"))
   (if-not (assert-skip :facts)
     (do
       (if-not debug
@@ -507,7 +329,7 @@
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " ns-log "get_installed_products()"))
+  (log/info (str "======= Starting DataProvider: " ns-log "/get_installed_products()"))
   (if-not (assert-skip :facts)
     (do
       (let [prods (tasks/get-table-elements :installed-view 0)
