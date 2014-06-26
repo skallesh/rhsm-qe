@@ -931,7 +931,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="migrating a RHEL5 Client - Desktop versus Workstation",
-			groups={"RhnMigrateClassicToRhsm_Test","AcceptanceTests","Tier1Tests","blockedByBug-786257","blockedByBug-853233"},
+			groups={"RhnMigrateClassicToRhsm_Test","AcceptanceTests","Tier1Tests","blockedByBug-786257","blockedByBug-853233","blockedByBug-1111258"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() throws JSONException {
