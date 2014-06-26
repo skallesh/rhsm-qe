@@ -2056,8 +2056,11 @@ schema generation failed
 	}
 	
 	public static String getConsumerComplianceStatus(String authenticator, String password, String url, String consumerId) throws JSONException, Exception {
-
-		return getConsumerCompliance(authenticator,password,url,consumerId).getString("status");
+		JSONObject jsonCompliance = getConsumerCompliance(authenticator,password,url,consumerId);
+		if (!jsonCompliance.has("status")) {
+			log.warning("Failed to get the compliance status of consumerId '"+consumerId+"' from: "+ jsonCompliance);
+		}
+		return jsonCompliance.getString("status");
 	}
 	
 	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
