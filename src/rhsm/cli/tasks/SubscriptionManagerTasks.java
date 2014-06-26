@@ -1275,14 +1275,21 @@ public class SubscriptionManagerTasks {
 									//	6.2
 									//	6Server
 									
-									//	[root@jsefler-6 ~]# curl --stderr /dev/null --insecure --tlsv1 --cert /etc/pki/entitlement/3360706382464344965.pem --key /etc/pki/entitlement/3360706382464344965-key.pem https://cdn.redhat.com/content/dist/rhel/server/6/listing
-									//	<HTML><HEAD>
-									//	<TITLE>Access Denied</TITLE>
-									//	</HEAD><BODY>
-									//	<H1>Access Denied</H1>
+									// process exceptional results...
 									if (result.getStdout().toUpperCase().contains("<HTML>")) {
+										//	[root@jsefler-6 ~]# curl --stderr /dev/null --insecure --tlsv1 --cert /etc/pki/entitlement/3360706382464344965.pem --key /etc/pki/entitlement/3360706382464344965-key.pem https://cdn.redhat.com/content/dist/rhel/server/6/listing
+										//	<HTML><HEAD>
+										//	<TITLE>Access Denied</TITLE>
+										//	</HEAD><BODY>
+										//	<H1>Access Denied</H1>
 										log.warning("curl result: "+result);	// or should this be a failure?
 										Assert.fail("Expected to retrieve a list of available release versions. (Example: 6.1, 6.2, 6Server)");
+									} else if (result.getStdout().trim().startsWith("Unable to locate content")) {
+										//	[root@jsefler-5 ~]# curl --stderr /dev/null --insecure --tlsv1 --cert /etc/pki/entitlement/6653190787244398414.pem --key /etc/pki/entitlement/6653190787244398414-key.pem https://cdn.qa.redhat.com/content/aus/rhel/server/5/listing
+										//	Unable to locate content /content/aus/rhel/server/5/listing
+										log.warning("curl result: "+result);	// or should this be a failure?
+										log.warning("Query failed to get an expected release listing from ContentNamespace: \n"+contentNamespace);
+										log.warning("After setting an older release, a yum repolist of this content set will likely yield: [Errno 14] HTTP Error 404: Not Found");
 									} else {
 										expectedReleaseSet.addAll(Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*")));
 									}

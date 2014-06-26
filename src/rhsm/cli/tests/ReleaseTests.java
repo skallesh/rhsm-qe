@@ -408,8 +408,6 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		SubscriptionPool rhelSubscriptionPool = rhelSubscriptionPools.get(0);	// choose one
 		
 		// subscribe to the RHEL subscription
-//		File rhelEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(rhelSubscriptionPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-//		File rhelEntitlementCertKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(rhelEntitlementCertFile);
 		clienttasks.subscribeToSubscriptionPool(rhelSubscriptionPool);
 		
 		// get the currently expected release listing based on the currently enabled repos
