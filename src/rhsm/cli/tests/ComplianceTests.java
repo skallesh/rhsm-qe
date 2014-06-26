@@ -588,10 +588,21 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyAutoSubscribeAbortsWhenNoProductsAreInstalled_Test() {
 		if (!configureProductCertDirForNoProductsInstalledCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsInstalledCompleted="+configureProductCertDirForNoProductsInstalledCompleted);
 		SSHCommandResult result = clienttasks.subscribe_(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
+
+		// exceptional result...
+		//	ssh root@hp-rx3600-01.rhts.eng.bos.redhat.com subscription-manager subscribe --auto
+		//	Stdout:
+		//	7 local certificates have been deleted.
+		//	No Installed products on system. No need to attach subscriptions.
+		//	Stderr:
+		//	ExitCode: 1
+		
 		//String expectedMsg = autosubscribeCompliantMessage;
 		//Assert.assertTrue(result.getStdout().trim().startsWith(expectedMsg), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+expectedMsg);
 		String expectedMsg = "No Installed products on system. No need to attach subscriptions.";
-		Assert.assertEquals(result.getStdout().trim(),expectedMsg, "When the there are no installed products on the system, an attempt to auto-subscribe should be intercepted.");
+		//Assert.assertEquals(result.getStdout().trim(),expectedMsg, "When the there are no installed products on the system, an attempt to auto-subscribe should be intercepted.");
+		Assert.assertTrue(result.getStdout().trim().endsWith(expectedMsg), "When the there are no installed products on the system, an attempt to auto-subscribe should be intercepted with expected message '"+expectedMsg+"'.");
+		Assert.assertEquals(result.getExitCode(),Integer.valueOf(1), "Expected exitCode when no entitlements are granted.");
 	}
 	
 	
