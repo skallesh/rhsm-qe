@@ -1667,8 +1667,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
 			if (!CandlepinType.hosted.equals(sm_serverType)) {	// exclude this test from running on a hosted server since parallel running tests often consume available quantities affecting the expected results
 				ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
+				ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity)+10),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
 			}
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+10),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with \"multi-entitlement\" product attribute set true."}));
 		}
@@ -1707,8 +1707,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
 			if (!CandlepinType.hosted.equals(sm_serverType)) {	// exclude this test from running on a hosted server since parallel running tests often consume available quantities affecting the expected results
 				ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier + instanceMultiplier),		Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));	// testing with a quantity one increment over the availability
+				ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier + instanceMultiplier*10),		Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));	// testing with a quantity ten increments over the availability
 			}
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier + instanceMultiplier*10),		Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));	// testing with a quantity ten increments over the availability
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with \"instance_multipler\" product attribute set."}));
 		}
