@@ -6134,6 +6134,10 @@ public class SubscriptionManagerTasks {
 	
 	public SSHCommandResult yumDoPackageFromRepo (String installUpdateOrDowngrade, String pkg, String repoLabel, String options) {
 		
+		// extract pkgName=devtoolset-1.1-valgrind-openmpi from pkg=devtoolset-1.1-valgrind-openmpi.i386
+		String pkgName = pkg;
+		if (pkg.lastIndexOf(".")!=-1) pkgName=pkg.substring(0,pkg.lastIndexOf("."));
+		
 		// install or update the package with repoLabel enabled
 		String command = "yum -y "+installUpdateOrDowngrade+" "+pkg;
 		command += " --disableplugin=rhnplugin";	// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
@@ -6452,7 +6456,7 @@ public class SubscriptionManagerTasks {
 
 		// check if the package was obsoleted:
 		// Package cairo-spice-debuginfo is obsoleted by spice-server, trying to install spice-server-0.7.3-2.el6.x86_64 instead
-		String regex="Package "+pkg.split("\\.")[0]+".* is obsoleted by (.+), trying to install .+ instead";
+		String regex="Package "+pkgName+".* is obsoleted by (.+), trying to install .+ instead";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(sshCommandRunner.getStdout());
 		String obsoletedByPkg = null;
@@ -6473,9 +6477,9 @@ public class SubscriptionManagerTasks {
 		//  cman             x86_64     3.0.12.1-19.el6   beaker-HighAvailability            427 k
 		//  cmirror          x86_64     7:2.02.103-5.el7  rhel-rs-for-rhel-7-server-htb-rpms 166 k
 		if (repoLabel==null) {
-			regex=pkg.split("\\.")[0]+"\\n? +(\\w+) +([\\w:\\.-]+) +([\\w-]+)";		
+			regex=pkgName+"\\n? +(\\w+) +([\\w:\\.-]+) +([\\w-]+)";		
 		} else {
-			regex=pkg.split("\\.")[0]+"\\n? +(\\w+) +([\\w:\\.-]+) +("+repoLabel+")";
+			regex=pkgName+"\\n? +(\\w+) +([\\w:\\.-]+) +("+repoLabel+")";
 		}
 		pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		matcher = pattern.matcher(sshCommandRunner.getStdout());
