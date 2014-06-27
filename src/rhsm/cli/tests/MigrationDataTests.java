@@ -2075,6 +2075,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-5-thirdparty-oracle-java-beta") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-client-5-thirdparty-oracle-java") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-client-5-thirdparty-oracle-java-beta") ||
+				rhnAvailableChildChannel.equals("rhel-i386-client-5-thirdparty-oracle-java") ||
+				rhnAvailableChildChannel.equals("rhel-i386-client-5-thirdparty-oracle-java-beta") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-5-cf-me-2")) {
 				// Bug 1105656 - missing a few RHN Classic channel mappings to product certs
 				bugIds.add("1105656");
