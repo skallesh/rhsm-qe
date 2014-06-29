@@ -89,6 +89,7 @@ public class SubscriptionManagerTasks {
 	public String msg_NetworkErrorUnableToConnect	= null;
 	public String msg_NetworkErrorCheckConnection	= null;
 	public String msg_ClockSkewDetection			= null;
+	public String msg_ContainerMode					= null;
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir					= null; // "/etc/pki/product";
@@ -509,6 +510,7 @@ public class SubscriptionManagerTasks {
 		if (isPackageVersion("subscription-manager", ">=", "1.10.9-1"))		msg_NetworkErrorUnableToConnect = "Network error, unable to connect to server. Please see "+rhsmLogFile+" for more information."; // effective after subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
 		msg_NetworkErrorCheckConnection = "Network error. Please check the connection details, or see "+rhsmLogFile+" for more information.";
 		msg_ClockSkewDetection			= "Clock skew detected, please check your system time";
+		msg_ContainerMode				= "subscription-manager is disabled when running inside a container. Please refer to your host system for subscription management.";
 	}
 	
 	public void setupRhnDefinitions(String gitRepository) {
