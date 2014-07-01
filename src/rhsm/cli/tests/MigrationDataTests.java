@@ -725,6 +725,20 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		
 		// SPECIAL CASES.....
 		
+		// (degregor 7/1/2014) internal-only channels (can be skipped in mappings): rhel-x86_64-server-xfs-5 rhel-x86_64-server-xfs-5-beta
+		if (classicRhnChannel.matches("rhel-.+-server-xfs-5(-.+|$)")) {
+			log.warning("(degregor 7/1/2014) internal-only channels (can be skipped in mappings): rhel-x86_64-server-xfs-5 rhel-x86_64-server-xfs-5-beta;  https://bugzilla.redhat.com/show_bug.cgi?id=1105656#c5");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;			
+		}
+		
+		// (degregor 7/1/2014) internal-only channels (can be skipped in mappings): rhel-x86_64-server-5-shadow-debuginfo
+		if (classicRhnChannel.matches("rhel-.+-server-5-shadow(-.+|$)")) {
+			log.warning("(degregor 7/1/2014) internal-only channels (can be skipped in mappings): rhel-x86_64-server-5-shadow-debuginfo;  https://bugzilla.redhat.com/show_bug.cgi?id=1105656#c5");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;			
+		}
+		
 		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-cf-ae-1' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
 		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-cf-ae-1-beta' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
 		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-cf-ae-1-beta-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
@@ -853,6 +867,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		/* commented out in favor of bug https://bugzilla.redhat.com/show_bug.cgi?id=1105656#c5
 		if (classicRhnChannel.startsWith("rhel-x86_64-server-productivity-5-beta")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
 			if (!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel)) {
 				String nonBetaClassicRhnChannel = classicRhnChannel.replace("-beta", "");
@@ -862,6 +877,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
+		*/
 		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
@@ -1884,7 +1900,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-fastrack-6(-.*|$)")) {	// rhel-x86_64-server-ha-fastrack-6-debuginfo
 				// Bug 818202 - Using subscription-manager, some repositories like fastrack are not available as they are in rhn.
-				bugIds.add("818202");
+				bugIds.add("818202");	// CLOSED WONTFIX
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-eucjp-6(-.+|$)")) {	// rhel-x86_64-server-eucjp-6 rhel-x86_64-server-eucjp-6-beta etc.
 				// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
@@ -1892,18 +1908,18 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-fastrack-5(-.*|$)")) {	// rhel-x86_64-server-fastrack-5 rhel-x86_64-server-fastrack-5-debuginfo
 				// Bug 818202 - Using subscription-manager, some repositories like fastrack are not available as they are in rhn.
-				bugIds.add("818202");
+				bugIds.add("818202");	// CLOSED WONTFIX
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-cf-tools-1(-beta)?-debuginfo")) {	// rhel-x86_64-server-5-cf-tools-1-beta-debuginfo, rhel-x86_64-server-5-cf-tools-1-debuginfo
 				// Bug 840099 - debug info channels for rhel-x86_64-server-5-cf-tools are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840099");	// CLOSED as a dup of bug 818202
-				bugIds.add("818202");
+				bugIds.add("818202");	// CLOSED WONTFIX
 				// Bug 1105331 - RHN channel to product cert mappings are missing for rhel-x86_64-server-5-cf-tools-1-[beta-]debug channels
 				bugIds.add("1105331");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-mrg-.*")) {	// rhel-x86_64-server-5-mrg-grid-1 rhel-x86_64-server-5-mrg-grid-1-beta rhel-x86_64-server-5-mrg-grid-2 rhel-x86_64-server-5-mrg-grid-execute-1 rhel-x86_64-server-5-mrg-grid-execute-1-beta rhel-x86_64-server-5-mrg-grid-execute-2 etc.
 				// Bug 840102 - channels for rhel-<ARCH>-server-5-mrg-* are not yet mapped to product certs in rcm/rcm-metadata.git 
-				bugIds.add("840102");
+				bugIds.add("840102");	// CLOSED WONTFIX
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-hpc-5(-.*|$)")) {	// rhel-x86_64-server-hpc-5-beta
 				// Bug 840103 - channel for rhel-x86_64-server-hpc-5-beta is not yet mapped to product cert in rcm/rcm-metadata.git
@@ -1917,28 +1933,28 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
 				bugIds.add("840099");	// CLOSED as a dup of bug 818202
-				bugIds.add("818202");
+				bugIds.add("818202");	// CLOSED WONTFIX
 				bugIds.add("1105656");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-rhsclient-5(-.+|$)")) {	// rhel-x86_64-server-rhsclient-5 rhel-x86_64-server-rhsclient-5-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
 				bugIds.add("840099");	// CLOSED as a dup of bug 818202
-				bugIds.add("818202");
+				bugIds.add("818202");	// CLOSED WONTFIX
 				bugIds.add("1105656");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-xfs-5(-.+|$)")) {	// rhel-x86_64-server-xfs-5 rhel-x86_64-server-xfs-5-beta
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
 				bugIds.add("840099");	// CLOSED as a dup of bug 818202
-				bugIds.add("818202");
+				bugIds.add("818202");	// CLOSED WONTFIX
 				bugIds.add("1105656");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-shadow(-.+|$)")) {	// rhel-x86_64-server-5-shadow-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
 				bugIds.add("840099");	// CLOSED as a dup of bug 818202
-				bugIds.add("818202");
+				bugIds.add("818202");	// CLOSED WONTFIX
 				bugIds.add("1105656");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-eucjp-5(-.+|$)")) {	// rhel-x86_64-server-eucjp-5 rhel-x86_64-server-eucjp-5-beta etc.
@@ -1954,7 +1970,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-rhsclient-6(-.*|$)")) {	// rhel-x86_64-server-rhsclient-6 rhel-x86_64-server-rhsclient-6-debuginfo
 				// Bug 872980 - channels for rhel-<ARCH>-server-rhsclient-6* are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("872980");	// CLOSED DUPLICATE of bug 818202
-				bugIds.add("818202");
+				bugIds.add("818202");	// CLOSED WONTFIX
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-6-ost-folsom(-.*|$)")) {	// rhel-x86_64-server-6-ost-folsom  rhel-x86_64-server-6-ost-folsom-debuginfo
 				// Bug 872983 - channels for rhel-<ARCH>-server-6-ost-folsom* are not yet mapped to product certs in rcm/rcm-metadata.git
@@ -2065,14 +2081,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1078527");
 			}
 			
-			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-productivity-5-beta") ||
-				rhnAvailableChildChannel.equals("rhel-x86_64-server-productivity-5-beta-debuginfo") ||
-				rhnAvailableChildChannel.equals("rhel-x86_64-server-xfs-5") ||
-				rhnAvailableChildChannel.equals("rhel-x86_64-server-xfs-5-beta") ||
+			if (
+//				rhnAvailableChildChannel.equals("rhel-x86_64-server-productivity-5-beta") ||
+//				rhnAvailableChildChannel.equals("rhel-x86_64-server-productivity-5-beta-debuginfo") ||
+//				rhnAvailableChildChannel.equals("rhel-x86_64-server-xfs-5") ||
+//				rhnAvailableChildChannel.equals("rhel-x86_64-server-xfs-5-beta") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-5-beta") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-5-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-5-beta-debuginfo") ||
-				rhnAvailableChildChannel.equals("rhel-x86_64-server-5-shadow-debuginfo") ||
+//				rhnAvailableChildChannel.equals("rhel-x86_64-server-5-shadow-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-rhsclient-5") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-rhsclient-5-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-5-thirdparty-oracle-java") ||
