@@ -1918,24 +1918,28 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
 				bugIds.add("840099");	// CLOSED as a dup of bug 818202
 				bugIds.add("818202");
+				bugIds.add("1105656");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-rhsclient-5(-.+|$)")) {	// rhel-x86_64-server-rhsclient-5 rhel-x86_64-server-rhsclient-5-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
 				bugIds.add("840099");	// CLOSED as a dup of bug 818202
 				bugIds.add("818202");
+				bugIds.add("1105656");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-xfs-5(-.+|$)")) {	// rhel-x86_64-server-xfs-5 rhel-x86_64-server-xfs-5-beta
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
 				bugIds.add("840099");	// CLOSED as a dup of bug 818202
 				bugIds.add("818202");
+				bugIds.add("1105656");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-shadow(-.+|$)")) {	// rhel-x86_64-server-5-shadow-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
 				bugIds.add("840136");	// CLOSED in favor of bug 840099
 				bugIds.add("840099");	// CLOSED as a dup of bug 818202
 				bugIds.add("818202");
+				bugIds.add("1105656");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-eucjp-5(-.+|$)")) {	// rhel-x86_64-server-eucjp-5 rhel-x86_64-server-eucjp-5-beta etc.
 				// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
