@@ -27,7 +27,8 @@
 (def ns-log "rhsm.gui.tests.product_status_tests")
 (def productstatus (atom nil))
 
-(defn ^{BeforeClass {:groups ["product-status"
+(defn ^{BeforeClass {:groups ["setup"
+                              "product-status"
                               "tier3"]}}
   before_check_product_status [_]
   (try
@@ -36,7 +37,7 @@
     (let [output (:stdout
                   (run-command "subscription-manager attach --auto"))
           not-blank? (fn [s] (not (blank? s)))
-    	  raw-cli-data (filter not-blank? (drop 1 (split-lines output)))
+    	    raw-cli-data (filter not-blank? (drop 1 (split-lines output)))
           status (fn [s] (re-find #"Status.*" s))
           products (fn [s] (re-find #"Product Name.*" s))
           grab-value (fn [item] (trim (last (split item #":"))))
