@@ -48,7 +48,7 @@
       (reset! (skip-groups :product_status) true)
       (throw e))))
 
-(defn ^{Test {:groups ["product-status"
+(defn ^{Test {:groups ["product_status"
                        "tier3"
                        "blockedByBug-964332"]
               :dataProvider "installed-products"}}
