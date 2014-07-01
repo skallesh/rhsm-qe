@@ -133,8 +133,7 @@
           (run-command "date -s \"-1 year\"" :runner @candlepin-runner)
           (run-command "date -s \"-1 year\""))))))
 
-(defn ^{AfterClass {:groups ["subscription_status"
-                              "tier1"]
+(defn ^{AfterClass {:groups ["cleanup"]
                      :alwaysRun true}}
   after_check_status_message
   [_]
