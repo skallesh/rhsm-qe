@@ -23,9 +23,7 @@
 
 (def status-before-subscribe (atom {}))
 
-(defn ^{BeforeClass {:groups ["setup"
-                              "subscription_status"
-                              "tier1"]}}
+(defn ^{BeforeClass {:groups ["setup"]}}
   before_check_status_message
   [_]
   (try

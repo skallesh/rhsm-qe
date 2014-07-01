@@ -27,9 +27,7 @@
 (def ns-log "rhsm.gui.tests.product_status_tests")
 (def productstatus (atom nil))
 
-(defn ^{BeforeClass {:groups ["setup"
-                              "product-status"
-                              "tier3"]}}
+(defn ^{BeforeClass {:groups ["setup"]}}
   before_check_product_status [_]
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
