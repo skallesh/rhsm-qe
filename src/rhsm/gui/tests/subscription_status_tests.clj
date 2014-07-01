@@ -141,8 +141,8 @@
   [_]
   (let
       [time-cmd (str "systemctl stop ntpd.service;"
-                   " ntpdate clock.redhat.com;"
-                   " systemctl start ntpd.service")]
+                     " ntpdate clock.redhat.com;"
+                     " systemctl start ntpd.service")]
     (:stdout (run-command time-cmd))
     (:stdout (run-command time-cmd :runner @candlepin-runner))))
 

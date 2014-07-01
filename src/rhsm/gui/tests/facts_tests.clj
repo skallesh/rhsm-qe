@@ -29,7 +29,6 @@
 (def gui-facts (atom nil))
 (def cli-facts (atom nil))
 (def installed-certs (atom nil))
-(def status-before-subscribe (atom {}))
 (def socket-val (atom nil)) ;; holds system socket value
 (def ns-log "rhsm.gui.tests.facts_tests")
 
