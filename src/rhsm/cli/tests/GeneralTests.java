@@ -247,7 +247,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"rpm-python",
 			}));
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.5-1")) expectedRequiresList.remove("python-simplejson");	// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
-			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.11.3-2")) expectedRequiresList.add("python-simplejson");	// Bug 1096676 - missing dependency on json; python-rhsm commit 19b9b55404c5a9bf4eb2828692f8a578a7645da1
+			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.11.3-3")) expectedRequiresList.add("python-simplejson");	// Bug 1096676 - missing dependency on json; python-rhsm commit 19b9b55404c5a9bf4eb2828692f8a578a7645da1
+			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.11.3-4")) expectedRequiresList.add("python-dateutil");	// Bug 1090350 - Clock skew detected when the dates of server and client have no big time drift. commit 4c7fe4009a7902c236ff8f9445a2505bf0eb94e7
 //			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
 //			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
 //			return;
