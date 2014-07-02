@@ -14,7 +14,7 @@
 
   <test name="GUI: Registration">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.register_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -29,7 +29,7 @@
 
   <test name="GUI: Subscribe/Unsubscribe">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	 
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.subscribe_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -45,7 +45,7 @@
   <test name="GUI: Autosubscribe">
     <classes>
       <class name="rhsm.cli.tests.ComplianceTests"/>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>		
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.autosubscribe_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -62,7 +62,7 @@
 
   <test name="GUI: Facts">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/> 
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.facts_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -72,12 +72,12 @@
         <include name="setup" />
         <include name="cleanup" />
       </run>
-    </groups>  
+    </groups>
   </test>
 
   <test name="GUI: Proxy">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.proxy_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -92,7 +92,7 @@
 
   <test name="GUI: Interop">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.rhn_interop_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -107,7 +107,7 @@
 
   <test name="GUI: Firstboot">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.firstboot_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -122,7 +122,7 @@
 
   <test name="GUI: Import">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.import_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -137,7 +137,7 @@
 
   <test name="GUI: System">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>	
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.system_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -152,7 +152,7 @@
 
   <test name="GUI: Stacking">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/> 
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.stacking_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
@@ -167,13 +167,43 @@
 
   <test name="GUI: Repo">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/> 
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.gui.tests.repo_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
         <include name="tier2"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Subscription Status">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.gui.tests.subscription_status_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="tier1"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="GUI: Product Status">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.gui.tests.product_status_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="tier1"/>
         <include name="setup" />
         <include name="cleanup" />
       </run>
