@@ -132,7 +132,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	
 	public String sm_manifestsUrl				= getProperty("sm.manifests.url","");
 	public String sm_testpluginsUrl				= getProperty("sm.testplugins.url","");
-
+	
 	//public String sm_cdnProductBaselineUrl			= getProperty("sm.cdn.productBaselineUrl","");
 	public String sm_rhnDefinitionsGitRepository		= getProperty("sm.rhn.definitionsGitRepository","");
 	public String sm_rhnDefinitionsProductBaselineFile	= getProperty("sm.rhn.definitionsProductBaselineFile","");
@@ -148,6 +148,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected List<String> sm_rpmUpdateUrls						= new ArrayList<String>();
 	protected List<String> sm_repoCaCertUrls					= new ArrayList<String>();
 	protected List<String> sm_haPackages						= new ArrayList<String>();
+	protected List<String> sm_dockerRpmInstallUrls				= new ArrayList<String>();
+	protected List<String> sm_dockerImages						= new ArrayList<String>();
 	protected List<String> sm_yumInstallZStreamUpdatePackages	= new ArrayList<String>();
 	
 //	protected JSONArray systemSubscriptionPoolProductData = null;
@@ -170,6 +172,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		if (!getProperty("sm.rpm.updateurls", "").equals("")) 					sm_rpmUpdateUrls					= Arrays.asList(getProperty("sm.rpm.updateurls", "").trim().split(" *, *"));
 		if (!getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))				sm_repoCaCertUrls					= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 		if (!getProperty("sm.ha.packages", "").equals(""))						sm_haPackages						= Arrays.asList(getProperty("sm.ha.packages", "").trim().split(" *, *"));
+		if (!getProperty("sm.docker.rpm.installurls", "").equals("")) 			sm_dockerRpmInstallUrls				= Arrays.asList(getProperty("sm.docker.rpm.installurls", "").trim().split(" *, *"));
+		if (!getProperty("sm.docker.images", "").equals("")) 					sm_dockerImages						= Arrays.asList(getProperty("sm.docker.images", "").trim().split(" *, *"));
 		if (!getProperty("sm.client.yumInstallZStreamUpdatePackages", "").equals(""))						sm_yumInstallZStreamUpdatePackages						= Arrays.asList(getProperty("sm.client.yumInstallZStreamUpdatePackages", "").trim().split(" *, *")); // default of "" implies update every package
 
 //		if (sm_yumInstallZStreamUpdates) 										sm_yumInstallOptions += " --enablerepo=rhel-zstream";

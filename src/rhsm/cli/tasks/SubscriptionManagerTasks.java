@@ -129,7 +129,7 @@ public class SubscriptionManagerTasks {
 		//ipaddr			= sshCommandRunner.runCommandAndWait("for DEVICE in $(ip addr show | egrep 'state (UP|UNKNOWN)' | cut -f2 -d':' | sed 's/ //'); do ip addr show $DEVICE | egrep 'scope global .*'$DEVICE | cut -d'/' -f1 | sed 's/ *inet *//g'; done;").getStdout().trim();	// state is UNKNOWN on ppc64	// does not know how to choose when you have a physical system with two active ip devices - default and bridge
 		ipaddr			= sshCommandRunner.runCommandAndWait("ip addr show $(ip route | awk '$1 == \"default\" {print $5}' | uniq) | egrep 'inet [[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+.* scope global' | awk '{print $2}' | cut -d'/' -f1").getStdout().trim();
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
-		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release		// rpm -q --qf "%{VERSION}\n" --whatprovides /etc/redhat-release
+		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --queryformat "%{VERSION}\n" --whatprovides system-release		// rpm -q --queryformat "%{VERSION}\n" --whatprovides /etc/redhat-release
 
 		// TODO NOTES: on rhel7 releasever is 7.0, we may need to use info in cat /etc/system-release-cpe or cat /etc/os-release  see: rpm -ql redhat-release-server
 		
@@ -397,6 +397,10 @@ public class SubscriptionManagerTasks {
 	
 	
 	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions) {
+		if (rpmInstallUrls==null) rpmInstallUrls = new ArrayList<String>();
+		if (rpmUpdateUrls==null) rpmUpdateUrls = new ArrayList<String>();
+		if (installOptions==null) installOptions = "";
+		List<String> pkgsInstalled = new ArrayList<String>();
 		
 		// make sure the client's time is accurate
 		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
@@ -404,7 +408,7 @@ public class SubscriptionManagerTasks {
 		} else {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
 		}
-				
+		
 		// yum clean all
 		SSHCommandResult sshCommandResult = yumClean("all");
 		// this if block was written 2010-10-25 but I cannot remember why I did it - 01/26/2013 jsefler
@@ -463,6 +467,7 @@ public class SubscriptionManagerTasks {
 			String rpmPackageVersion = sshCommandRunner.runCommandAndWait("rpm --query --package "+rpmPath).getStdout().trim();
 			String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
 			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
+			pkgsInstalled.add(pkg);
 		}
 		
 		// update new rpms
@@ -492,10 +497,11 @@ public class SubscriptionManagerTasks {
 			String rpmPackageVersion = sshCommandRunner.runCommandAndWait("rpm --query --package "+rpmPath).getStdout().trim();
 			String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
 			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
+			pkgsInstalled.add(pkg);
 		}
 		
 		// remember the versions of the packages installed
-		for (String pkg : Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"})) {
+		for (String pkg : pkgsInstalled) {
 			isPackageVersion(pkg, "==", "0.0");	// this will simply populate the cached Map<String,String> installedPackageVersionMap
 		}
 		
@@ -7171,9 +7177,14 @@ public class SubscriptionManagerTasks {
 		
 		// strip the packageName from installedPackageVersion to reveal the form 1.10.14-7.el7.x86_64
 		installedPackageVersion = installedPackageVersion.replace(packageName+"-", "");
-
-		String s1 = installedPackageVersion;
-		String s2 = version;
+		
+		return isVersion(installedPackageVersion, comparator, version);
+	}
+	public Map<String,String> installedPackageVersionMap = new HashMap<String,String>();	// contains key=python-rhsm, value=python-rhsm-0.98.9-1.el5
+	
+	public Boolean isVersion(String version1, String comparator, String version2) {
+		String s1 = version1;
+		String s2 = version2;
 		
 		// convert version strings into arrays of the form:  a1[] = 1, 10, 14-7, el7, x86_64
 		String[] a1 = s1.split("\\.");
@@ -7211,6 +7222,4 @@ public class SubscriptionManagerTasks {
 		}
 		return false;
 	}
-	public Map<String,String> installedPackageVersionMap = new HashMap<String,String>();	// contains key=python-rhsm, value=python-rhsm-0.98.9-1.el5
-
 }

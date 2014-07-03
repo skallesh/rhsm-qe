@@ -1,42 +1,24 @@
 package rhsm.cli.tests;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONException;
 import org.testng.SkipException;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
-import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
-import com.redhat.qe.auto.testng.TestNGUtils;
-
-import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
-import rhsm.cli.tasks.CandlepinTasks;
-import rhsm.data.CertStatistics;
-import rhsm.data.ConsumerCert;
-import rhsm.data.ContentNamespace;
-import rhsm.data.EntitlementCert;
-import rhsm.data.OrderNamespace;
-import rhsm.data.ProductCert;
-import rhsm.data.ProductNamespace;
-import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
 
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -46,6 +28,12 @@ import com.redhat.qe.tools.SSHCommandResult;
  * DEV Sprint 76 Demo
  *  Subscription Manager Container Mode (dgoodwin)
  *    Video: https://sas.elluminate.com/p.jnlp?psid=2014-06-11.0638.M.D38450C42DA81F82F8E4981A4E1190.vcr&sid=819
+ *    
+ *    
+ * Delivery options for docker package on rhel7
+ *   https://brewweb.devel.redhat.com/packageinfo?packageID=13865
+ *   wget --no-check-certificate -nv -O docker.rpm "http://auto-services.usersys.redhat.com/latestrpm/get_latest_rpm.py?regress=true&arch=x86_64&release=el7&rpmname=docker&version=1.0.0"
+ *   http://download.devel.redhat.com/nightly/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/
  */
 @Test(groups={"DockerTests","Tier3Tests"})
 public class DockerTests extends SubscriptionManagerCLITestScript {
@@ -67,68 +55,6 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from attempting command '"+helpCommand+"' while in container mode.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from attempting command '"+helpCommand+"' while in container mode.");
 	}
-
-	@DataProvider(name="getSubscriptionManagementCommandData")
-	public Object[][] getSubscriptionManagementCommandDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionManagementCommandDataAsListOfLists());
-	}
-	protected List<List<Object>> getSubscriptionManagementCommandDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-		Set<String> commands = new HashSet<String>();
-		
-		for (List<Object> l: HelpTests.getExpectedCommandLineOptionsDataAsListOfLists()) { 
-			//Object bugzilla, String helpCommand, Integer exitCode, String stdoutRegex, List<String> expectedOptions
-			//BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
-			String helpCommand = (String) l.get(1);
-			//Integer exitCode = (Integer) l.get(2);
-			//String stdoutRegex = (String) l.get(3);
-			//List<String> expectedHelpOptions = (List<String>) l.get(4);
-			
-			// only process the commands with modules for which --help is an option
-			if (!helpCommand.contains("--help")) continue;
-				
-			// remove the --help option
-			String command = helpCommand.replace("--help", "");
-			
-			// collapse white space and trim
-			command = command.replaceAll(" +", " ").trim();
-			
-			// skip command "subscription-manager"
-			if (command.equals(clienttasks.command)) continue;
-			
-			// skip command "rhsm-debug"
-			if (command.equals("rhsm-debug")) continue;
-			
-			// skip command "rct"
-			if (command.startsWith("rct")) continue;
-			
-			// skip command "rhsm-icon"
-			if (command.startsWith("rhsm-icon")) continue;
-			
-			// skip command "usr/libexec/rhsmd"
-			if (command.startsWith("/usr/libexec/rhsmd")) continue;
-			
-			// skip command "usr/libexec/rhsmcertd-worker"
-			if (command.startsWith("/usr/libexec/rhsmcertd-worker")) continue;
-			
-			// skip duplicate commands
-			if (commands.contains(command)) continue; else commands.add(command);
-			
-			Set<String> bugIds = new HashSet<String>();
-
-			// Bug 1114132 - when in container mode, subscription-manager-gui (and some other tools) should also be disabled
-			if (command.contains("subscription-manager-gui"))		bugIds.add("1114132");
-			if (command.startsWith("rhn-migrate-classic-to-rhsm"))	bugIds.add("1114132");
-			if (command.startsWith("rhsmcertd"))					bugIds.add("1114132");
-
-			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
-
-			ll.add(Arrays.asList(new Object[]{blockedByBzBug, command}));
-		}
-		
-		return ll;
-	}
-	
 	
 	@AfterGroups(groups={"setup"}, value={"VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test"})
 	public void teardownContainerMode() {
@@ -150,6 +76,10 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(RemoteFileTasks.testExists(client, entitlementHostDir), "After setting up container mode, directory '"+entitlementHostDir+"' should exist.");
 		}
 	}
+	
+	
+	
+	
 	
 	
 	
@@ -229,6 +159,107 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	
+	
+	
+	
+	@Test(	description="install the latest docker package on the host",
+			groups={"debugTest"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void InstallDockerPackageOnHost_Test() {
+		// assert that the host system is rhel7+
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Installation of docker.rpm is only applicable on RHEL7+");
+		if (!clienttasks.arch.equals("x86_64")) throw new SkipException("Installation of docker.rpm is only applicable on arch x86_64");
+		
+		// if provided in the script arguments, install the requested docker packages
+		clienttasks.installSubscriptionManagerRPMs(sm_dockerRpmInstallUrls, null, sm_yumInstallOptions);
+		
+		// assert the docker version is >= 1.0.0-2
+		Assert.assertTrue(clienttasks.isPackageVersion("docker", ">=", "1.0.0-2"), "Expecting docker version to be >= 1.0.0-2 (first RHSM compatible version of docker).");
+		
+		// restart the docker service
+		//RemoteFileTasks.runCommandAndAssert(client,"service docker restart",Integer.valueOf(0),"^Starting docker: +\\[  OK  \\]$",null);
+		RemoteFileTasks.runCommandAndAssert(client, "systemctl restart docker.service && systemctl is-active docker.service", Integer.valueOf(0), "^active$", null);
+	}
+	
+	@Test(	description="verify the specified docker image downloads and will run subscription-manager >= 1.12.4-1",
+			groups={"debugTest"},
+			dependsOnMethods={"InstallDockerPackageOnHost_Test"},
+			dataProvider="getDockerImageData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void PullDockerImage_Test(Object bugzilla, String dockerImage) {
+		// pull the docker image
+		//	[root@jsefler-7 ~]# docker pull docker-registry.usersys.redhat.com/brew/rhel7:latest
+		//	Pulling repository docker-registry.usersys.redhat.com/brew/rhel7
+		//	81ed26a5d836: Download complete 
+		//RemoteFileTasks.runCommandAndAssert(client, "docker pull "+dockerImage, 0,"Download complete",null);
+		RemoteFileTasks.runCommandAndAssert(client, "docker pull "+dockerImage, 0);
+		
+		//	[root@jsefler-7 ~]# docker images
+		//	REPOSITORY                                      TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
+		//	docker-registry.usersys.redhat.com/brew/rhel7   latest              81ed26a5d836        9 days ago          147.1 MB
+		//	[root@jsefler-7 ~]# docker rmi 81ed26a5d836
+		//	Untagged: docker-registry.usersys.redhat.com/brew/rhel7:latest
+		//	Deleted: 81ed26a5d8363e8d0d20c390fb18a5f6d0b5ad9bbc64f678e6ea6334afebbd1b
+		
+		// verify the image will run subscription-manager >= 1.12.4-1
+		//	[root@jsefler-7 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest rpm -q subscription-manager
+		//	subscription-manager-1.12.4-1.el7.x86_64
+		SSHCommandResult versionResult = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" rpm -q subscription-manager", 0);
+		String subscriptionManagerVersionInDockerImage = versionResult.getStdout().trim().replace("subscription-manager"+"-", "");
+		Assert.assertTrue(clienttasks.isVersion(subscriptionManagerVersionInDockerImage, ">=", "1.12.4-1"), "Expecting the version of subscription-manager baked inside image '"+dockerImage+"' to be >= 1.12.4-1 (first docker compatible version of subscription-manager)");
+	}
+	
+	@Test(	description="verify a running container has no yum repolist when the host has no entitlement",
+			groups={"debugTest"},
+			dependsOnMethods={"PullDockerImage_Test"},
+			dataProvider="getDockerImageData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered_Test(Object bugzilla, String dockerImage) {
+		// unregister the host
+		clienttasks.unregister(null, null, null);
+		
+		// verify the host has no redhat.repo content
+		List<YumRepo> yumReposOnHost = clienttasks.getCurrentlySubscribedYumRepos();
+		Assert.assertTrue(yumReposOnHost.isEmpty(),"When the host is unregistered, its list of yum repos in '"+clienttasks.redhatRepoFile+"' is empty.");
+		
+		// verify yum repolist is empty for running docker image
+		//	[root@jsefler-7 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest yum repolist
+		//	Loaded plugins: product-id, subscription-manager
+		//	repolist: 0
+		SSHCommandResult yumRepolistResultOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" yum repolist", 0, "repolist: 0", null);
+	}
+	
+	@Test(	description="verify a running container has yum repolist access to appropriate content from the host's entitlement",
+//			groups={"debugTest"},
+			dependsOnMethods={"VerifyYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered_Test"},
+			dataProvider="getDockerImageData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyYumRepolistOnRunningDockerImageConsumedFromHostEntitlements_Test(Object bugzilla, String dockerImage) {
+		// register the host and autosubscribe
+		
+		// get a list of the entitled yum repos on the host
+		
+		// determine what products are installed on the running docker image
+		
+		// get the product tags installed on the running docker image
+		
+		// get the yum repolist of enabled repos on the running docker image
+		
+		// assert that only the appropriate entitled repos appear in the yum repolist from the running docker image
+
+		// get the yum repolist of disabled repos on the running docker image
+		
+		// assert that only the appropriate entitled repos appear in the yum repolist from the running docker image
+
+	
+	}
+	
+	
 	// Candidates for an automated Test:
 	
 	
@@ -251,6 +282,81 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Data Providers ***********************************************************************
+	@DataProvider(name="getSubscriptionManagementCommandData")
+	public Object[][] getSubscriptionManagementCommandDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionManagementCommandDataAsListOfLists());
+	}
+	protected List<List<Object>> getSubscriptionManagementCommandDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		Set<String> commands = new HashSet<String>();
+		
+		for (List<Object> l: HelpTests.getExpectedCommandLineOptionsDataAsListOfLists()) { 
+			//Object bugzilla, String helpCommand, Integer exitCode, String stdoutRegex, List<String> expectedOptions
+			//BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+			String helpCommand = (String) l.get(1);
+			//Integer exitCode = (Integer) l.get(2);
+			//String stdoutRegex = (String) l.get(3);
+			//List<String> expectedHelpOptions = (List<String>) l.get(4);
+			
+			// only process the commands with modules for which --help is an option
+			if (!helpCommand.contains("--help")) continue;
+				
+			// remove the --help option
+			String command = helpCommand.replace("--help", "");
+			
+			// collapse white space and trim
+			command = command.replaceAll(" +", " ").trim();
+			
+			// skip command "subscription-manager"
+			if (command.equals(clienttasks.command)) continue;
+			
+			// skip command "rhsm-debug"
+			if (command.equals("rhsm-debug")) continue;
+			
+			// skip command "rct"
+			if (command.startsWith("rct")) continue;
+			
+			// skip command "rhsm-icon"
+			if (command.startsWith("rhsm-icon")) continue;
+			
+			// skip command "usr/libexec/rhsmd"
+			if (command.startsWith("/usr/libexec/rhsmd")) continue;
+			
+			// skip command "usr/libexec/rhsmcertd-worker"
+			if (command.startsWith("/usr/libexec/rhsmcertd-worker")) continue;
+			
+			// skip duplicate commands
+			if (commands.contains(command)) continue; else commands.add(command);
+			
+			Set<String> bugIds = new HashSet<String>();
 
+			// Bug 1114132 - when in container mode, subscription-manager-gui (and some other tools) should also be disabled
+			if (command.contains("subscription-manager-gui"))		bugIds.add("1114132");
+			if (command.startsWith("rhn-migrate-classic-to-rhsm"))	bugIds.add("1114132");
+			if (command.startsWith("rhsmcertd"))					bugIds.add("1114132");
+
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+
+			ll.add(Arrays.asList(new Object[]{blockedByBzBug, command}));
+		}
+		
+		return ll;
+	}
 	
+	
+	
+	@DataProvider(name="getDockerImageData")
+	public Object[][] getDockerImageDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getDockerImageDataAsListOfLists());
+	}
+	protected List<List<Object>> getDockerImageDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+
+		// get the names of the docker images to be tested from an input parameter
+		for (String dockerImage : sm_dockerImages) {
+			ll.add(Arrays.asList(new Object[]{null, dockerImage}));
+		}
+		
+		return ll;
+	}
 }
