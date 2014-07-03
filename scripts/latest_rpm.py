@@ -23,7 +23,7 @@ import urllib2
 import re
 import sys
 import pdb
-
+from distutils.version import StrictVersion
 from itertools import groupby
 from BeautifulSoup import BeautifulSoup
 
@@ -48,6 +48,7 @@ def rchop(thestring, ending):
       return newstring
   return thestring
 
+#no longer used
 def sort_by_version(links):
     versions = []
     for item in links: versions.append(str(item['href'].replace('/','')))
@@ -99,10 +100,12 @@ def find_latest_rpm_url(baseurl, arch, rpm_name, version='', release='', regress
     else:
         EREGEX = "\d+\." + release + "/"
     version_links = get_links_matching_regex(VREGEX, version_page)
-    version_links = sort_by_version(version_links)
+    #version_links = sort_by_version(version_links)
+    version_links = [ str(x['href'].replace('/','')) for x in version_links ]
+    version_links.sort(key=StrictVersion)
     version_links.reverse()
-    for i in xrange(len(version_links)):
-        version_append = version_links[i]
+    for v in version_links:
+        version_append = v + '/'
         epoch_page = urllib2.urlopen(baseurl+version_append)
         epoch_links = get_links_matching_regex(EREGEX, epoch_page)
         if epoch_links or not regress:
