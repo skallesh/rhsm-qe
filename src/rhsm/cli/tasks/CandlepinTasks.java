@@ -2064,7 +2064,12 @@ schema generation failed
 	}
 	
 	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
-	
+		
+		// 7/7/2014 TODO TEMPORARY WORKAROUND FOR ERROR: Could not generate DH keypair
+		if (CandlepinType.katello.equals(SubscriptionManagerCLITestScript.sm_serverType)) {
+			return true;
+		}
+		
 		// ask the candlepin server for all of its resources and search for a match to "environments"
 		boolean supportsEnvironments = false;  // assume not
 		JSONArray jsonResources = new JSONArray(getResourceUsingRESTfulAPI(authenticator, password, url, "/"));

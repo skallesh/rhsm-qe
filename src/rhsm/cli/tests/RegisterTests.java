@@ -1129,6 +1129,7 @@ Expected Results:
 	public void AttemptRegisterToEnvironmentWhenCandlepinDoesNotSupportEnvironments_Test() throws JSONException, Exception {
 		// ask the candlepin server if it supports environment
 		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
+		//boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(null,null, getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix")));		// attempt to fix: INFO: I/O exception (javax.net.ssl.SSLException) caught when processing request: java.lang.RuntimeException: Could not generate DH keypair (org.apache.commons.httpclient.HttpMethodDirector.executeWithRetry)
 		
 		// skip this test when candlepin supports environments
 		if (supportsEnvironments) throw new SkipException("Candlepin server '"+sm_serverHostname+"' appears to support environments, therefore this test is not applicable.");
@@ -1190,9 +1191,9 @@ Expected Results:
 		}
 
 		// assert results when candlepin supports environments
-		// TODO These assertions are wrong for rhel7;  01/26/2013 jsefler
-		Assert.assertEquals(result.getStdout().trim(), "Error: Must specify --org to register to an environment.","Registering to an environment requires that the org be specified.");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register with environment option and without org option.");
+		String expectedErrorMsg = String.format("Couldn't find Organization '%s'."+"foo_org");
+		Assert.assertTrue(result.getStdout().trim().endsWith(expectedErrorMsg),"An attempt to register with environment option and without org option (but supplied a unknown org at prompt) should report: "+expectedErrorMsg);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register with environment option and without org option (but supplied a unknown org at prompt).");
 	}
 	
 	
