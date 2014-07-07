@@ -5677,8 +5677,11 @@ public class SubscriptionManagerTasks {
 		//	!rhel-7-public-beta-rpms        Red Hat Enterprise Linux 7 Public Beta (RPMs)          enabled: 9,497
 		//	rhel-7-public-beta-source-rpms  Red Hat Enterprise Linux 7 Public Beta (Source RPMs)   disabled
 		//	repolist: 9,497
-		
-		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
+		return getYumRepolistFromSSHCommandResult(new SSHCommandResult(sshCommandRunner.getExitCode(), sshCommandRunner.getStdout(), sshCommandRunner.getStderr()));
+	}
+	public ArrayList<String> getYumRepolistFromSSHCommandResult(SSHCommandResult yumRepoListResult){
+		ArrayList<String> repoList = new ArrayList<String>();
+		String[] availRepos = yumRepoListResult.getStdout().split("\\n");
 		int repolistStartLn = 0;
 		int repolistEndLn = 0;
 		for(int i=0;i<availRepos.length;i++)
@@ -5712,7 +5715,7 @@ public class SubscriptionManagerTasks {
 		return repoList;
 	}
 	
-
+	
 	/**
 	 * @param options [all|enabled|disabled] [--option=...]
 	 * @return the value reported at the bottom of a call to yum repolist [options] (repolist: value)

@@ -14,6 +14,9 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.ContentNamespace;
+import rhsm.data.EntitlementCert;
+import rhsm.data.ProductCert;
 import rhsm.data.YumRepo;
 
 import com.redhat.qe.Assert;
@@ -234,23 +237,121 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify a running container has yum repolist access to appropriate content from the host's entitlement",
-//			groups={"debugTest"},
+			groups={"debugTest"},
 			dependsOnMethods={"VerifyYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered_Test"},
 			dataProvider="getDockerImageData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyYumRepolistOnRunningDockerImageConsumedFromHostEntitlements_Test(Object bugzilla, String dockerImage) {
 		// register the host and autosubscribe
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null);
 		
 		// get a list of the entitled yum repos on the host
+//		List<YumRepo> yumReposOnHost = clienttasks.getCurrentlySubscribedYumRepos();
+//		Assert.assertTrue(!yumReposOnHost.isEmpty(),"When the host has registered with autosubscribe, we expect to have been granted access to at least one yum repos in '"+clienttasks.redhatRepoFile+"'.");
+		List<String> enabledYumReposOnHost = clienttasks.getYumRepolist("enabled");
+		List<EntitlementCert> entitlementCertsOnHost = clienttasks.getCurrentEntitlementCerts();
+		Assert.assertTrue(!entitlementCertsOnHost.isEmpty(),"When the host has registered with autosubscribe, we expect to have been granted at least one entitlement.");
 		
 		// determine what products are installed on the running docker image
+		String productCertDir = clienttasks.getConfParameter("productcertdir").replaceFirst("/$", "");	// strip of trailing /
+		SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" ls "+productCertDir);
+		//	201407071248:40.755 - FINE: ssh root@jsefler-7.usersys.redhat.com docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest ls /etc/pki/product
+		//	201407071248:41.023 - FINE: Stdout: 69.pem
+		List<ProductCert> productCertsOnRunningDockerImage = new ArrayList<ProductCert>();
+		for (String productCertFileOnRunningDockerImage : lsResultOnRunningDockerImage.getStdout().trim().split("\n")) {
+			productCertFileOnRunningDockerImage = productCertDir+"/"+productCertFileOnRunningDockerImage;
+			SSHCommandResult rctCatCertResultOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" rct cat-cert "+productCertFileOnRunningDockerImage, 0);
+			//	201407071250:40.755 - FINE: ssh root@jsefler-7.usersys.redhat.com docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest rct cat-cert /etc/pki/product/69.pem
+			//	201407071250:43.954 - FINE: Stdout: 
+			//
+			//	+-------------------------------------------+
+			//		Product Certificate
+			//	+-------------------------------------------+
+			//
+			//	Certificate:
+			//		Path: /etc/pki/product/69.pem
+			//		Version: 1.0
+			//		Serial: 12750047592154746969
+			//		Start Date: 2014-01-28 18:37:08+00:00
+			//		End Date: 2034-01-23 18:37:08+00:00
+			//
+			//	Subject:
+			//		CN: Red Hat Product ID [eb3b72ca-acb1-4092-9e67-f2915f6444f4]
+			//
+			//	Issuer:
+			//		C: US
+			//		CN: Red Hat Entitlement Product Authority
+			//		O: Red Hat, Inc.
+			//		OU: Red Hat Network
+			//		ST: North Carolina
+			//		emailAddress: ca-support@redhat.com
+			//
+			//	Product:
+			//		ID: 69
+			//		Name: Red Hat Enterprise Linux Server
+			//		Version: 7.0
+			//		Arch: x86_64
+			//		Tags: rhel-7,rhel-7-server
+			//		Brand Type: 
+			//		Brand Name: 
+			productCertsOnRunningDockerImage.add(ProductCert.parse(rctCatCertResultOnRunningDockerImage.getStdout()).get(0));
+		}
 		
 		// get the product tags installed on the running docker image
+		Set<String> providedTagsOnRunningDockerImage = new HashSet<String>();
+		for (ProductCert productCertOnRunningDockerImage : productCertsOnRunningDockerImage) {
+			if (productCertOnRunningDockerImage.productNamespace.providedTags!=null) {
+				for (String providedTag : productCertOnRunningDockerImage.productNamespace.providedTags.split("\\s*,\\s*")) {
+					providedTagsOnRunningDockerImage.add(providedTag);
+				}
+			}
+		}
+		
+		// get the arch on the running docker image
+		String archOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" uname --machine", 0).getStdout().trim();
+
 		
 		// get the yum repolist of enabled repos on the running docker image
-		
-		// assert that only the appropriate entitled repos appear in the yum repolist from the running docker image
+		SSHCommandResult enabledYumRepolistResultOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" yum repolist enabled", 0, "repolist:", null);
+		List<String> enabledYumReposOnRunningDockerImage = clienttasks.getYumRepolistFromSSHCommandResult(enabledYumRepolistResultOnRunningDockerImage);
+		// assert that only the appropriate entitled content sets appear in the yum repolist on the running docker image
+		for (EntitlementCert entitlementCertOnHost : entitlementCertsOnHost ) {
+			for (ContentNamespace contentNamespaceOnHost : entitlementCertOnHost.contentNamespaces) {
+				
+				// get the content namespace requiredTags
+				Set<String> contentNamespaceRequiredTags = new HashSet<String>();
+				if (contentNamespaceOnHost.requiredTags!=null) {
+					for (String requiredTag : contentNamespaceOnHost.requiredTags.split("\\s*,\\s*")) {
+						if (requiredTag.isEmpty()) continue;
+						contentNamespaceRequiredTags.add(requiredTag);
+					}
+				}
+				// get the content namespace arches
+				Set<String> contentNamespaceArches = new HashSet<String>();
+				if (contentNamespaceOnHost.arches!=null) {
+					for (String arch : contentNamespaceOnHost.arches.split("\\s*,\\s*")) {
+						if (arch.isEmpty()) continue;
+						contentNamespaceArches.add(arch);
+					}
+				}
+				
+				// when the content namespace is not enabled, it will not appear in either the yum repolist of the host or the running docker image
+				if (!contentNamespaceOnHost.enabled) {
+					Assert.assertTrue(!enabledYumReposOnHost.contains(contentNamespaceOnHost.label), "Entitled content namespace '"+contentNamespaceOnHost.label+"' is disabled and should NOT appear on the yum repolist of the host because it is disabled by default.");
+					Assert.assertTrue(!enabledYumReposOnRunningDockerImage.contains(contentNamespaceOnHost.label), "Entitled content namespace '"+contentNamespaceOnHost.label+"' is disabled and should NOT appear on the yum repolist of the running docker container because it is disabled by default.");
+					continue;
+				}
+				
+				// when the content namespace is enabled, it's appearance on the yum repolist of the running docker image depends on the installed product certs on the image.
+				if ((contentNamespaceArches.isEmpty() || contentNamespaceArches.contains(archOnRunningDockerImage)) &&
+					(contentNamespaceRequiredTags.isEmpty() || providedTagsOnRunningDockerImage.containsAll(contentNamespaceRequiredTags))) {
+					Assert.assertTrue(enabledYumReposOnRunningDockerImage.contains(contentNamespaceOnHost.label), "Entitled content namespace '"+contentNamespaceOnHost.label+"' on the host should be enabled in the running docker container because both the docker container arch '"+archOnRunningDockerImage+"' is among the supported content set arches "+contentNamespaceArches+" and the docker container providedTags "+providedTagsOnRunningDockerImage+" provides all the content set required tags "+contentNamespaceRequiredTags+".");
+				} else {
+					Assert.assertTrue(!enabledYumReposOnRunningDockerImage.contains(contentNamespaceOnHost.label), "Entitled content namespace '"+contentNamespaceOnHost.label+"' on the host should NOT be enabled in the running docker container because either the docker container arch '"+archOnRunningDockerImage+"' is not among the supported content set arches "+contentNamespaceArches+" or the docker container providedTags "+providedTagsOnRunningDockerImage+" does not provide all the content set required tags "+contentNamespaceRequiredTags+".");
+				}
+			}
+		}
 
 		// get the yum repolist of disabled repos on the running docker image
 		
