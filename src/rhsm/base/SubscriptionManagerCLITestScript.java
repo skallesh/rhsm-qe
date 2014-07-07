@@ -114,7 +114,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List<File> generatedProductCertFiles = new ArrayList<File>();
 		
 		// can we create an SSHCommandRunner to connect to the candlepin server ?
-		if (!sm_serverHostname.equals("") && !sm_serverType.equals(CandlepinType.hosted)) {
+		if (!sm_serverHostname.equals("") && sm_serverType.equals(CandlepinType.standalone)) {
 			server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
 			if (sm_sshEmergenecyTimeoutMS!=null) server.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 			servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
