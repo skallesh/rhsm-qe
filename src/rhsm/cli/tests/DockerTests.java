@@ -167,7 +167,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="install the latest docker package on the host",
-			groups={"debugTest"},
+			groups={"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void InstallDockerPackageOnHost_Test() {
@@ -187,7 +187,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify the specified docker image downloads and will run subscription-manager >= 1.12.4-1",
-			groups={"debugTest"},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"InstallDockerPackageOnHost_Test"},
 			dataProvider="getDockerImageData",
 			enabled=true)
@@ -216,7 +216,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify a running container has no yum repolist when the host has no entitlement",
-			groups={"debugTest"},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"PullDockerImage_Test"},
 			dataProvider="getDockerImageData",
 			enabled=true)
@@ -237,7 +237,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify a running container has yum repolist access to appropriate content from the host's entitlement",
-			groups={"debugTest"},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"VerifyYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered_Test"},
 			dataProvider="getDockerImageData",
 			enabled=true)
@@ -310,7 +310,6 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		
 		// get the arch on the running docker image
 		String archOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" uname --machine", 0).getStdout().trim();
-
 		
 		// get the yum repolist of enabled repos on the running docker image
 		SSHCommandResult enabledYumRepolistResultOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" yum repolist enabled", 0, "repolist:", null);
@@ -335,6 +334,8 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 						contentNamespaceArches.add(arch);
 					}
 				}
+				if (contentNamespaceArches.contains("x86")) {contentNamespaceArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+
 				
 				// when the content namespace is not enabled, it will not appear in either the yum repolist of the host or the running docker image
 				if (!contentNamespaceOnHost.enabled) {
@@ -352,12 +353,61 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
-
-		// get the yum repolist of disabled repos on the running docker image
 		
-		// assert that only the appropriate entitled repos appear in the yum repolist from the running docker image
-
-	
+		// let's test installing a simple package (zsh)
+		boolean installedPackage = false;
+		if (enabledYumReposOnRunningDockerImage.contains("rhel-6-server-rpms") ||
+			enabledYumReposOnRunningDockerImage.contains("rhel-7-server-rpms")) {
+			RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" yum -y install zsh", 0, "Complete!", null);
+			//	[root@jsefler-7 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest yum -y install zsh
+			//	Loaded plugins: product-id, subscription-manager
+			//	Resolving Dependencies
+			//	--> Running transaction check
+			//	---> Package zsh.x86_64 0:5.0.2-7.el7 will be installed
+			//	--> Finished Dependency Resolution
+			//
+			//	Dependencies Resolved
+			//
+			//	================================================================================
+			//	 Package    Arch          Version               Repository                 Size
+			//	================================================================================
+			//	Installing:
+			//	 zsh        x86_64        5.0.2-7.el7           rhel-7-server-rpms        2.4 M
+			//
+			//	Transaction Summary
+			//	================================================================================
+			//	Install  1 Package
+			//
+			//	Total download size: 2.4 M
+			//	Installed size: 5.6 M
+			//	Downloading packages:
+			//	warning: /var/cache/yum/x86_64/7Server/rhel-7-server-rpms/packages/zsh-5.0.2-7.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID fd431d51: NOKEY
+			//	Public key for zsh-5.0.2-7.el7.x86_64.rpm is not installed
+			//	Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+			//	Importing GPG key 0xFD431D51:
+			//	 Userid     : "Red Hat, Inc. (release key 2) <security@redhat.com>"
+			//	 Fingerprint: 567e 347a d004 4ade 55ba 8a5f 199e 2f91 fd43 1d51
+			//	 Package    : redhat-release-server-7.0-1.el7.x86_64 (@koji-override-0/7.0)
+			//	 From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+			//	Importing GPG key 0x2FA658E0:
+			//	 Userid     : "Red Hat, Inc. (auxiliary key) <security@redhat.com>"
+			//	 Fingerprint: 43a6 e49c 4a38 f4be 9abf 2a53 4568 9c88 2fa6 58e0
+			//	 Package    : redhat-release-server-7.0-1.el7.x86_64 (@koji-override-0/7.0)
+			//	 From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+			//	Running transaction check
+			//	Running transaction test
+			//	Transaction test succeeded
+			//	Running transaction
+			//	  Installing : zsh-5.0.2-7.el7.x86_64                                       1/1 
+			//	  Verifying  : zsh-5.0.2-7.el7.x86_64                                       1/1 
+			//
+			//	Installed:
+			//	  zsh.x86_64 0:5.0.2-7.el7                                                      
+			//
+			//	Complete!
+			installedPackage = true;
+		}
+		if (!installedPackage) log.warning("Skipped attempts to install a package since the rhel-(6|7)-server-rpms repo was not entitled.");
 	}
 	
 	
