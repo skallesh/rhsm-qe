@@ -701,6 +701,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Docker Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="DockerTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Config Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
