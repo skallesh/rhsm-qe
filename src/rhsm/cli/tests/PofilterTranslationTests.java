@@ -56,6 +56,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   Samples for looping through the translation files:
  *     MSGID="shows pools which provide products that are not already covered"; for L in `rpm -ql subscription-manager | grep rhsm.mo`; do echo ""; echo "Verifying translation for '$MSGID' in LANG file '$L'..."; msgunfmt --no-wrap $L | grep -i "$MSGID" -A1; done;
  *     for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do echo ""; echo "# LANG=$L.UTF-8 subscription-manager --help | grep -- --help"; LANG=$L.UTF-8 subscription-manager  --help | grep -- --help; done;
+ *	   for F in $(rpm -ql subscription-manager | grep rhsm.mo); do echo ""; echo "$F"; msgunfmt --no-wrap $F | grep msgid | wc -l; done;
  *
  *   Translation Bug Reporting Process:
  *   	https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nBugReportingProcess
