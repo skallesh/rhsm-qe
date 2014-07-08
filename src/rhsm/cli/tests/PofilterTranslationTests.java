@@ -490,11 +490,12 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 						"\nThis software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n"));
 
 			// unchanged translations to ignore for specific langs
+			// Move de_DE to be just de; Move es_ES to be just es; candlepin commit 51c338274b7194b70b472f15a0deef48d61f7804
 			if (doesStringContainMatches(translationFile.getPath(),"/bn_IN/|/bn_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Validity Applet","Auto-attach"));
 			if (doesStringContainMatches(translationFile.getPath(),"/ta_IN/|/ta_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","Repo Id:              \\t%s","Repo Url:             \\t%s","Auto-attach"));
 			if (doesStringContainMatches(translationFile.getPath(),"/pt_BR/|/pt_BR\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","<b>Status:</b>","Login:","Virtual","_Help","virtual", "Repo Id:              \\t%s", "Arch:                 \\t%s"/* omaciel says "Arquitetura:" is better */, "Pool Id:              \\t%s"/* omaciel says "ID do pool:" is better */, "<b>Base URL:</b>"));
-			if (doesStringContainMatches(translationFile.getPath(),"/de_DE/|/de_DE\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","<b>Name:</b>","Status","<b>Status:</b>","Status:               \\t%s","Status:","<b>Status Details:</b>","Status Details","Status Details:","Status Details Text","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server","Standard","Repository: %s"));
-			if (doesStringContainMatches(translationFile.getPath(),"/es_ES/|/es_ES\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","Serial:","No","%s: error: %s","General:"));
+			if (doesStringContainMatches(translationFile.getPath(),"/de_DE/|/de_DE\\.po$|/de\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","<b>Name:</b>","Status","<b>Status:</b>","Status:               \\t%s","Status:","<b>Status Details:</b>","Status Details","Status Details:","Status Details Text","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","<b>%s version:</b> %s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server","Standard","Repository: %s"));
+			if (doesStringContainMatches(translationFile.getPath(),"/es_ES/|/es_ES\\.po$|/es\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","Serial:","No","%s: error: %s","General:"));
 			if (doesStringContainMatches(translationFile.getPath(),"/te/|/te\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("page 2"));
 			if (doesStringContainMatches(translationFile.getPath(),"/pa/|/pa\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
 			if (doesStringContainMatches(translationFile.getPath(),"/fr/|/fr\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Arches","Architectures","Version","page 2","Standard"));
@@ -689,6 +690,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887431");
 				// Bug 908866 - [kn] pofilter variables/printf test fails for subscription-manager 1.8.X
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/kn/")) bugIds.add("908866");
+				// Bug 1117515 - [ta_IN][zh_CN] bad translation for "%s is already running" causes a traceback
+				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1117515");
+				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("1117515");
 				
 //				// Bug 827113 	Many Translated languages fail the pofilter tabs test
 //				if (pofilterTest.equals("tabs") && !(translationFile.getPath().contains("/pa/")||translationFile.getPath().contains("/mr/")||translationFile.getPath().contains("/de_DE/")||translationFile.getPath().contains("/bn_IN/"))) bugIds.add("825397");
@@ -764,6 +768,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("887431");
 				// Bug 908866 - [kn] pofilter variables/printf test fails for subscription-manager 1.8.X
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/kn/")) bugIds.add("908866");
+				// Bug 1117515 - [ta_IN][zh_CN] bad translation for "%s is already running" causes a traceback
+				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1117515");
+				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("1117515");
 				
 				// Bug 828903 - [bn_IN] failed pofilter options tests for subscription-manager translations 
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/bn_IN/")) bugIds.add("828903");
@@ -817,6 +824,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("928489");
 				// Bug 928487 - [ru] pofilter fails on url tests in subscription-manager 1.8.X
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ru/")) bugIds.add("928487");
+				// Bug 1117521 - [ta_IN][mr] failed urls test for http://wwwredhat.com/legal/privacy_statement.html
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1117521");
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/mr/")) bugIds.add("1117521");
 				
 				// Bug 845304 - translation of the word "[OPTIONS]" has reverted
 				if (pofilterTest.equals("unchanged")) bugIds.add("845304");
@@ -906,6 +916,11 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ml/")) bugIds.add("928000");
 				// Bug 813268 - [ta_IN] unlocalised strings for subscription-manager identity
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("813268");
+				// Bug 1117525 - [gu] need a translation for privacy_statement msgid
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1117525");
+				// Bug 1117535 - [zh_CN][gu] need a translation for "<b>%s version:</b> %s"
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("1117535");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/gu/")) bugIds.add("1117525");
 				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
