@@ -298,6 +298,24 @@ schema generation failed
 		 * # gem install buildr
 		 * # bundle install  (in the proxy dir)
 		 */
+		
+		/*
+		Note: if getting an error on...
+		Stopping tomcat6: [FAILED]
+		...                
+		dropdb: database removal failed: ERROR:  database "candlepin" is being accessed by other users
+		DETAIL:  There are 3 other session(s) using the database.
+		createdb: database creation failed: ERROR:  database "candlepin" already exists
+
+		[root@jsefler-f14-5candlepin candlepin]# service postgresql stop
+		Stopping postgresql service:                               [  OK  ]
+		[root@jsefler-f14-5candlepin candlepin]# service tomcat6 status
+		PID file exists, but process is not running                [WARNING]
+		tomcat6 lockfile exists but process is not running         [FAILED]
+		ps -ef | grep tomcat6  and then kill -9 the pid                                                          
+		[root@jsefler-f14-5candlepin candlepin]# rm /var/run/tomcat6.pid 
+		[root@jsefler-f14-5candlepin candlepin]# export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME=jsefler-f14-5candlepin.usersys.redhat.com && export IMPORTDIR= && cd /root/candlepin && bundle exec buildconf/scripts/deploy
+		*/
 	}
 	
 	public void reportAPI() throws IOException {
