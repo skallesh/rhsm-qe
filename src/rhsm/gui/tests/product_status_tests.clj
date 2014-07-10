@@ -20,11 +20,14 @@
   (:import [org.testng.annotations
             BeforeClass
             AfterClass
+            AfterGroups
             Test
             DataProvider]
            org.testng.SkipException))
 
 (def ns-log "rhsm.gui.tests.product_status_tests")
+(def unreg-status "Keep your system up to date by registering.")
+(def ldtpd-log "/var/log/ldtpd/ldtpd.log")
 (def productstatus (atom nil))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
@@ -69,6 +72,70 @@
   (let [gui-status (tasks/ui getcellvalue :installed-view row 2)]
     (verify (= gui-status "Not Subscribed"))))
 
+(defn ^{Test {:groups ["product_status"
+                       "tier1"
+                       "blockedByBug-923873"]}}
+  check_status_when_unregistered
+  "To verify that status in MyInstalledProducts icon color and product status
+   are appropriately displayed when client is unregistered"
+  [_]
+  (tasks/restart-app :unregister? true)
+  (run-command "subscription-manager clean")
+  (verify (= unreg-status (tasks/ui gettextvalue :overall-status)))
+  (tasks/do-to-all-rows-in
+   :installed-view 2
+   (fn [status]
+     (verify (= status "Unknown")))))
+
+(defn ^{Test {:groups ["product_status"
+                       "tier3"]
+              :value ["assert_subscription_field"]
+              :dataProvider "subscribed"}}
+  assert_subscription_field
+  "Tests whether the subscripton field in installed view is populated when the entitlement
+   is subscribed"
+  [_ product]
+  (if (not (= "Not Subscribed"
+              (tasks/ui getcellvalue :installed-view
+                        (tasks/skip-dropdown :installed-view product) 2)))
+    (let [map (ctasks/build-product-map :all? true)
+          gui-value (set (clojure.string/split-lines
+                          (tasks/ui gettextvalue :providing-subscriptions)))
+          cli-value (set (get map product))]
+      (verify (< 0 (count (clojure.set/intersection gui-value cli-value)))))))
+
+(defn ^{AfterGroups {:groups ["product_status"
+                              "tier3"]
+                     :value ["assert_subscription_field"]
+                     :alwaysRun true}}
+  after_assert_subscription_field
+  [_]
+  (tasks/unsubscribe_all)
+  (tasks/unregister))
+
+(defn ^{Test {:groups ["system"
+                       "acceptance"
+                       "tier1"
+                       "blockedByBug-1051383"]}}
+  check_status_column
+  "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
+   and 'Not Subscribed'"
+  [_]
+  (try
+    (if (not (bool (tasks/ui guiexist :main-window)))
+      (tasks/start-app))
+    (let [output (get-logging @clientcmd
+                              ldtpd-log
+                              "check_online_documentation"
+                              nil
+                              (do
+                                (tasks/ui click :online-documentation)
+                                (sleep 5000)))]
+      (verify (bool (tasks/ui appundertest "Firefox")))
+      (verify (not (substring? "Traceback" output))))
+    (finally
+      (run-command "killall -9 firefox"))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -85,6 +152,25 @@
         (if-not debug
           (to-array-2d (vec prodlist))
           prodlist)))
+    (to-array-2d [])))
+
+(defn ^{DataProvider {:name "subscribed"}}
+  installed_products [_ & {:keys [debug]
+                           :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: "
+                 ns-log "installed_products()"))
+  (if-not (assert-skip :system)
+    (do
+      (tasks/restart-app)
+      (tasks/register-with-creds)
+      (tasks/ui selecttab :my-installed-products)
+      (let [subs (into [] (map vector (tasks/get-table-elements
+                                       :installed-view
+                                       0
+                                       :skip-dropdowns? true)))]
+        (if-not debug
+          (to-array-2d subs)
+          subs)))
     (to-array-2d [])))
 
 (gen-class-testng)

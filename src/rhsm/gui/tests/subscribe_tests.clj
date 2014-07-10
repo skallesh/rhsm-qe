@@ -10,8 +10,7 @@
                                blank?
                                join
                                trim-newline
-                               trim
-                               blank?)]
+                               trim)]
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
@@ -79,21 +78,6 @@
    (catch [:type :error-getting-subscription] _)
    (catch [:type :wrong-consumer-type]
        {:keys [log-warning]} (log-warning))))
-
-(defn ^{Test {:groups ["subscribe"
-                       "tier1"
-                       "blockedByBug-924766"]
-              :dataProvider "subscribed"
-              :priority (int 100)}}
-  check_subscribed_virt_type
-  "Asserts that the virt type is displayed properly for all of 'My Subscriptions'"
-  [_ subscription]
-  (tasks/ui selecttab :my-subscriptions)
-  (tasks/skip-dropdown :my-subscriptions-view subscription)
-  (let [contract (tasks/ui gettextvalue :contract-number)
-        type (tasks/ui gettextvalue :support-type)
-        reference (get (get @contractlist subscription) contract)]
-    (verify (= type reference))))
 
 (defn ^{Test {:groups ["subscribe"
                        "acceptance"
@@ -272,164 +256,13 @@
   ;; TODO: this is not in rhel6.3 branch, finish when that is released
   ;; https://bugzilla.redhat.com/show_bug.cgi?id=801434
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier2"
-                       "blockedByBug-801434"
-                       "blockedByBug-707041"]}}
-  check_date_chooser_traceback [_]
-  (try
-    (let [ldtpd-log "/var/log/ldtpd/ldtpd.log"
-          output (get-logging @clientcmd
-                              ldtpd-log
-                              "date-chooser-tracebacks"
-                              nil
-                              (do
-                                (tasks/ui selecttab :all-available-subscriptions)
-                                (tasks/ui click :calendar)
-                                (tasks/checkforerror)))]
-      (verify (not (substring? "Traceback" output))))
-    (finally (tasks/restart-app))))
-
-(defn ^{Test {:groups ["subscribe"
-                       "tier2"
-                       "blockedByBug-704408"
-                       "blockedByBug-801434"]
-              :dependsOnMethods ["check_date_chooser_traceback"]}}
-  check_blank_date_click
-  "Tests the behavior when the date search field is blank and you click to another area."
-  [_]
-  (try
-    (tasks/ui selecttab :all-available-subscriptions)
-    (tasks/ui settextvalue :date-entry "")
-    ;;try clicking to another tab/area
-    (tasks/ui selecttab :my-subscriptions)
-    (tasks/checkforerror)
-    (tasks/ui selecttab :all-available-subscriptions)
-    ;; try changing the date
-    (tasks/ui click :calendar)
-    (tasks/checkforerror)
-    (tasks/ui click :today)
-    ;; verify that today's date was filled in here...
-    (finally (tasks/restart-app))))
-
-(defn ^{Test {:groups ["subscribe"
-                       "tier2"
-                       "blockedByBug-688454"
-                       "blockedByBug-704408"]}}
-  check_blank_date_search
-  "Tests the behavior when the date search is blank and you try to search."
-  [_]
-  (try
-    (if-not (bool (tasks/ui guiexist :main-window))
-      (tasks/start-app)
-      (if (tasks/ui showing? :register-system)
-        (tasks/register-with-creds)))
-    (tasks/ui selecttab :all-available-subscriptions)
-    (tasks/ui settextvalue :date-entry "")
-    (let [error (try+ (tasks/ui click :search)
-                      (tasks/checkforerror)
-                      (catch Object e (:type e)))]
-      (verify (= :date-error error)))
-    (verify (= "" (tasks/ui gettextvalue :date-entry)))
-    (finally (tasks/restart-app))))
-
-(defn ^{Test {:groups ["subscribe"
-                       "tier3"
-                       "blockedByBug-858773"]
-              :dataProvider "installed-products"}}
-  filter_by_product
-  "Tests that the product filter works when searching."
-  [_ product]
-  (tasks/ui selecttab :my-installed-products)
-  (if-not (bool (tasks/ui guiexist :main-window))
-    (tasks/start-app)
-    (if (tasks/ui showing? :register-system)
-      (tasks/register-with-creds)))
-  (if (tasks/assert-valid-product-arch product)
-    (do
-      (try
-        (allsearch product)
-        (let [expected (@productlist product)
-              seen (into [] (tasks/get-table-elements
-                             :all-subscriptions-view
-                             0
-                             :skip-dropdowns? true))
-              hasprod? (fn [s] (substring? product s))
-              inmap? (fn [e] (some hasprod? (flatten e)))
-              matches (flatten (filter inmap? @productlist))]
-          (doseq [s seen]
-            (verify (not-nil? (some #{s} matches))))
-          (doseq [e expected]
-            (verify (not-nil? (some #{e} seen)))))
-    (finally
-      (if (bool (tasks/ui guiexist :filter-dialog))
-        (tasks/ui click :close-filters))
-      (tasks/search))))))
-
 (comment
   ;; TODO:
 (defn ^{Test {:groups ["subscribe" "blockedByBug-740831"]}}
   check_subscribe_greyout [_]
   ))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier2"
-                       "blockedByBug-817901"]}}
-  check_no_search_results_message
-  "Tests the message when the search returns no results."
-  [_]
-  (tasks/restart-app :reregister? true)
-  (tasks/ui selecttab :all-available-subscriptions)
-  (tasks/search :contain-text "DOESNOTEXIST")
-  (let [label "No subscriptions match current filters."]
-    (if (= "RHEL5" (get-release))
-      (do
-        (verify (tasks/ui showing? :all-available-subscriptions label))
-        (tasks/search)
-        (verify (tasks/ui showing? :all-subscriptions-view)))
-      (do
-        (verify (tasks/ui showing? :no-subscriptions-label))
-        (verify (= label (tasks/ui gettextvalue :no-subscriptions-label)))
-        (tasks/search)
-        (verify (not (tasks/ui showing? :no-subscriptions-label)))))))
-
-(defn ^{Test {:groups ["subscribe"
-                       "tier2"
-                       "blockedByBug-817901"]}}
-  check_please_search_message
-  "Tests for the initial message before you search."
-  [_]
-  (tasks/restart-app :reregister? true)
-  (tasks/ui selecttab :all-available-subscriptions)
-  (let [label "Press Update to search for subscriptions."]
-    (if (= "RHEL5" (get-release))
-      (do
-        (verify (tasks/ui showing? :all-available-subscriptions label))
-        (tasks/search)
-        (verify (tasks/ui showing? :all-subscriptions-view)))
-      (do
-        (verify (tasks/ui showing? :no-subscriptions-label))
-        (verify (= label (tasks/ui gettextvalue :no-subscriptions-label)))
-        (tasks/search)
-        (verify (not (tasks/ui showing? :no-subscriptions-label)))))))
-
 ;;https://tcms.engineering.redhat.com/case/77359/?from_plan=2110
-(defn ^{Test {:groups ["subscribe"
-                       "tier3"
-                       "blockedByBug-911386"]
-              :dataProvider "subscriptions"}}
-  check_service_levels
-  "Asserts that the displayed service levels are correct in the subscriptons view."
-  [_ subscription]
-  (tasks/ui selecttab :all-available-subscriptions)
-  (tasks/skip-dropdown :all-subscriptions-view subscription)
-  (let [guiservice (tasks/ui gettextvalue :all-available-support-level-and-type)
-        rawservice (get @servicelist subscription)
-        service (str (or (:support_level rawservice) "Not Set")
-                     (when (:support_type rawservice)
-                       (str ", " (:support_type rawservice))))]
-    (verify (= guiservice service))))
-
 (defn ^{Test {:groups ["subscribe"
                        "acceptance"
                        "tier1"
@@ -578,19 +411,6 @@
              (verify (substring? (str "Covers architecture " sub-arch " but the system is " machine-arch)
                                  (tasks/ui gettextvalue :status-details)))
              (tasks/ui selecttab :my-installed-products))))))))
-
-(defn ^{Test {:group ["subscribe"
-                      "tier2"
-                      "blockedByBug-865193"]
-              :dataProvider "subscriptions"
-              :priority (int 99)}}
-  check_provides_products
-  "Checks if provide products is populated in all available subscriptions view"
-  [_ subscription]
-  (tasks/skip-dropdown :all-subscriptions-view subscription)
-  (verify ( = (sort (get @subs-contractlist subscription))
-              (sort (tasks/get-table-elements :all-available-bundled-products 0)))))
-
 
 (defn ^{Test {:groups ["subscribe"
                        "tier3"

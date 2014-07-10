@@ -5,7 +5,8 @@
                                            cli-tasks
                                            candlepin-runner)]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.string :only (split)]
+        [clojure.string :only (split
+                               blank?)]
         rhsm.gui.tasks.tools
         clojure.pprint
         gnome.ldtp)
@@ -17,11 +18,35 @@
   (:import [org.testng.annotations
             BeforeClass
             AfterClass
+            AfterGroups
             Test
             DataProvider]
            org.testng.SkipException))
 
 (def status-before-subscribe (atom {}))
+(def productlist (atom {}))
+(def servicelist (atom {}))
+(def contractlist (atom {}))
+(def ns-log "rhsm.gui.tests.subscription_status_tests")
+
+(defn build-subscription-map
+  "Builds the product map and updates the productlist atom"
+  []
+  (reset! productlist (ctasks/build-product-map :all? true))
+  @productlist)
+
+(defn build-contract-map
+  "Builds the contract/virt-type map and updates the cont"
+  []
+  (reset! contractlist (ctasks/build-virt-type-map :all? true))
+  @contractlist)
+
+(defn allsearch
+  ([filter]
+     (tasks/search :match-system? false
+                   :do-not-overlap? false
+                   :contain-text filter))
+  ([] (allsearch nil)))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   before_check_status_message
@@ -32,6 +57,17 @@
     (catch Exception e
       (reset! (skip-groups :subscription_status) true)
       (throw e))))
+
+(defn ^{AfterClass {:groups ["cleanup"]
+                     :alwaysRun true}}
+  after_check_status_message
+  [_]
+  (let
+      [time-cmd (str "systemctl stop ntpd.service;"
+                     " ntpdate clock.redhat.com;"
+                     " systemctl start ntpd.service")]
+    (:stdout (run-command time-cmd))
+    (:stdout (run-command time-cmd :runner @candlepin-runner))))
 
 (defn ^{Test {:groups ["subscription_status"
                        "tier1"
@@ -133,15 +169,80 @@
           (run-command "date -s \"-1 year\"" :runner @candlepin-runner)
           (run-command "date -s \"-1 year\""))))))
 
-(defn ^{AfterClass {:groups ["cleanup"]
+ (defn ^{Test {:groups ["subscription_status"
+                       "tier3"]
+              :value ["check_subscription_type_my_subs"]
+              :dataProvider "my-subscriptions"}}
+  check_subscription_type_my_subscriptions
+  "Checks for subscription type in my subscriptions"
+  [_ product]
+  (tasks/ui selecttab :my-subscriptions)
+  (tasks/skip-dropdown :my-subscriptions-view product)
+  (verify (not (blank? (tasks/ui gettextvalue :subscription-type)))))
+
+(defn ^{AfterGroups {:groups ["subscription_status"
+                              "tier3"]
+                     :value ["check_subscription_type_my_subs"]
                      :alwaysRun true}}
-  after_check_status_message
+  after_check_subscription_type_my_subscription
   [_]
-  (let
-      [time-cmd (str "systemctl stop ntpd.service;"
-                     " ntpdate clock.redhat.com;"
-                     " systemctl start ntpd.service")]
-    (:stdout (run-command time-cmd))
-    (:stdout (run-command time-cmd :runner @candlepin-runner))))
+  (tasks/unsubscribe_all)
+  (tasks/unregister))
+
+(defn ^{Test {:groups ["subscription_status"
+                       "tier1"
+                       "blockedByBug-924766"]
+              :dataProvider "subscribed"}}
+  check_subscribed_virt_type
+  "Asserts that the virt type is displayed properly for all of 'My Subscriptions'"
+  [_ subscription]
+  (tasks/ui selecttab :my-subscriptions)
+  (tasks/skip-dropdown :my-subscriptions-view subscription)
+  (let [contract (tasks/ui gettextvalue :contract-number)
+        type (tasks/ui gettextvalue :support-type)
+        reference (get (get @contractlist subscription) contract)]
+    (verify (= type reference))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;      DATA PROVIDERS      ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn ^{DataProvider {:name "my-subscriptions"}}
+  my_subscriptions [_ & {:keys [debug]
+                         :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "my_subscriptions"))
+  (if-not (assert-skip :system)
+    (do
+      (tasks/restart-app :reregister? true)
+      (tasks/subscribe_all)
+      (tasks/ui selecttab :my-subscriptions)
+      (let [subs (into [] (map vector (tasks/get-table-elements
+                                       :my-subscriptions-view
+                                       0
+                                       :skip-dropdowns? true)))]
+        (if-not debug
+          (to-array-2d subs)
+          subs)))
+    (to-array-2d [])))
+
+(defn ^{DataProvider {:name "subscribed"}}
+  get_subscribed [_ & {:keys [debug]
+                       :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "get_subscribed()"))
+  (if-not (assert-skip :subscribe)
+    (do
+      (tasks/restart-app)
+      (tasks/register-with-creds)
+      (tasks/ui selecttab :my-subscriptions)
+      (tasks/subscribe_all)
+      (tasks/ui selecttab :my-subscriptions)
+      (let [subs (into [] (map vector (tasks/get-table-elements
+                                       :my-subscriptions-view
+                                       0
+                                       :skip-dropdowns? true)))]
+        (if-not debug
+          (to-array-2d subs)
+          subs)))
+    (to-array-2d [])))
 
 (gen-class-testng)
