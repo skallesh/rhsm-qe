@@ -1330,6 +1330,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--destination=DESTINATION");	// https://bugzilla.redhat.com/show_bug.cgi?id=1040338#c2
 		options.add("--no-archive");
 		options.add("--sos");	// added by Bug 1060727 - rhsm-debug duplicates sos data and may collect secrets
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.12.7-1")) options.add("--no-subscriptions");	// added by Bug 1114117 - rhsm-debug takes forever
 		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",command,module);

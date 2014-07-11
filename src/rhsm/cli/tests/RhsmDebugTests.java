@@ -42,7 +42,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister_(null, null, null);
 		
 		// attempt to run rhsm-debug system without being registered
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(null, null, null, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(null, null, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		// assert results
@@ -59,7 +59,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	public void RhsmDebugSystem_Test() {
 		
 		// run the rhsmDebugSystemTest with no options
-		verifyRhsmDebugSystemTestWithOptions(null,null, null);
+		verifyRhsmDebugSystemTestWithOptions(null,null, null, null);
 	}
 	
 	
@@ -69,8 +69,8 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithNoArchive_Test() {
 		
-		// run the rhsmDebugSystemTest with a valid destination
-		verifyRhsmDebugSystemTestWithOptions(null,true, null);
+		// run the rhsmDebugSystemTest with --no-archive
+		verifyRhsmDebugSystemTestWithOptions(null,true, null, null);
 	}
 	
 	
@@ -86,7 +86,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -rf "+destination+" && mkdir -p "+destination);
 
 		// run the rhsmDebugSystemTest with a valid destination
-		verifyRhsmDebugSystemTestWithOptions(destination,null, null);
+		verifyRhsmDebugSystemTestWithOptions(destination,null, null, null);
 	}
 	
 	
@@ -96,8 +96,20 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithSos_Test() {
 		
-		// run the rhsmDebugSystemTest with a valid destination
-		verifyRhsmDebugSystemTestWithOptions(null,null, true);
+		// run the rhsmDebugSystemTest with --sos
+		verifyRhsmDebugSystemTestWithOptions(null,null, true, null);
+	}
+	
+	
+	@Test(	description="after registering and subscribing, call rhsm-debug system with --no-subscriptions option and verify the results",
+			groups={"blockedByBug-1114117"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void RhsmDebugSystemWithNoSubscriptions_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.12.7-1")) throw new SkipException("rhsm-debug system --no-subscriptions is applicable in versions >= subscription-manager-1.12.7-1");
+		
+		// run the rhsmDebugSystemTest with --no-subscriptions
+		verifyRhsmDebugSystemTestWithOptions(null,null, null, true);
 	}
 	
 	
@@ -113,7 +125,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -rf "+destination+" && mkdir -p "+destination);
 
 		// run the rhsmDebugSystemTest with a valid destination
-		verifyRhsmDebugSystemTestWithOptions(destination,true, null);
+		verifyRhsmDebugSystemTestWithOptions(destination,true, null, null);
 	}
 	
 	
@@ -131,7 +143,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		
 		// run rhsm-debug system with a non-existent destination
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		// assert results
@@ -156,7 +168,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		
 		// run rhsm-debug system with a bad destination
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		//	[root@jsefler-7 ~]# rhsm-debug system --destination /tmp/foo
@@ -203,7 +215,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// run the basic rhsm-debug system tests (with non-default rhsm cert directories)
-		verifyRhsmDebugSystemTestWithOptions(null,null, null);
+		verifyRhsmDebugSystemTestWithOptions(null,null, null, null);
 	}
 	@AfterGroups(groups="setup", value="RhsmDebugSystemWithNonDefaultCertDirs1_Test")
 	public void afterRhsmDebugSystemWithNonDefaultCertDirs1() {
@@ -245,7 +257,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("cp "+originalPluginConfDir.replaceFirst("/$", "")+"/* "+rhsmDebugPluginConfDir);
 		
 		// run the basic rhsm-debug system tests (with non-default rhsm cert directories)
-		verifyRhsmDebugSystemTestWithOptions(null,null, null);
+		verifyRhsmDebugSystemTestWithOptions(null,null, null, null);
 	}
 	@AfterGroups(groups="setup", value="RhsmDebugSystemWithNonDefaultCertDirs2_Test")
 	public void afterRhsmDebugSystemWithNonDefaultCertDirs2() {
@@ -304,7 +316,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		return Boolean.valueOf(result.getStdout().trim());
 	}
 	
-	protected void verifyRhsmDebugSystemTestWithOptions(String destination, Boolean noArchive, Boolean sos) {
+	protected void verifyRhsmDebugSystemTestWithOptions(String destination, Boolean noArchive, Boolean sos, Boolean noSubscriptions) {
 		
 		String consumerCertDir = clienttasks.getConfParameter("consumerCertDir");
 		String entitlementCertDir = clienttasks.getConfParameter("entitlementCertDir");
@@ -324,7 +336,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
 
 		// run rhsm-debug system
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, noArchive, sos, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, noArchive, sos, noSubscriptions, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		// assert results
@@ -465,6 +477,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		// END OF WORKAROUND
+		
+		// exclude the "/subscriptions.json" when running the no-subscriptions option...; see https://bugzilla.redhat.com/show_bug.cgi?id=1114117#c11
+		if (noSubscriptions==null) noSubscriptions = false;
+		if (noSubscriptions) expectedFiles.remove("/subscriptions.json");
 		
 		// exclude the remaining debug files when running the sos option...  unless their configuration is found outside /etc/ to avoid double collection by the sosreport tool; see https://bugzilla.redhat.com/show_bug.cgi?id=1060727#c0
 		if (sos==null) sos = false;

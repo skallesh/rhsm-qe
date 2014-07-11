@@ -731,7 +731,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("856236"),	clienttasks.command+" register --activationkey=foo --org=foo --env=foo",	new Integer(255),	"Error: Activation keys do not allow environments to be specified.", ""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --installed --servicelevel=foo",					new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
 		ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe",											new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
-		ll.add(Arrays.asList(new Object[]{null,							clienttasks.rhsmDebugSystemCommand(null, null, null, null, null, null),		new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+		ll.add(Arrays.asList(new Object[]{null,							clienttasks.rhsmDebugSystemCommand(null, null, null, null, null, null, null),		new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) {
 			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" list --no-overlap",									new Integer(255),	"Error: --no-overlap is only applicable with --available", ""}));
 			ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" list --match-installed",								new Integer(255),	"Error: --match-installed is only applicable with --available", ""}));
