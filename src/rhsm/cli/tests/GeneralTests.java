@@ -275,6 +275,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: rpm-python"
 			}));
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.5-1")) expectedRequiresList.remove("manual: python-simplejson");	// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
+			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.11.5.1")) expectedRequiresList.add("manual: python-dateutil");	// Bug 1090350 - Clock skew detected when the dates of server and client have no big time drift. commit b597dae53aacf2d8a307b77b7f38756ce3ee6860
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -353,7 +354,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: yum >= 3.2.19-15"
 			}));
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.9.2-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.9.1-1");		// RHEL6.5
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.12.3-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.12.3");		// RHEL6.6
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.9.2-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.9.1-1");		// RHEL6.5
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.8.12-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.8.13-1");	// RHEL6.4
 
 		}
@@ -481,6 +483,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRpmRequireListForSubscriptionManagerFirstboot_Test() {
 		String pkg = "subscription-manager-firstboot";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
+		if (clienttasks.installedPackageVersionMap.get("subscription-manager-gui")==null) clienttasks.isPackageVersion("subscription-manager-gui","==","0.0");	// will populate clienttasks.installedPackageVersionMap.get("subscription-manager-gui")
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
 		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
 		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
@@ -498,9 +501,6 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"librsvg2",
 					"rhn-setup-gnome"
 			}));
-//			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-//			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
-//			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
