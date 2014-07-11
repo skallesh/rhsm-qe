@@ -129,7 +129,8 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		// assert the registration message (without any current subscriptions)
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin --enableplugin=subscription-manager");
 		String expectedMsgRHSM = "This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.";
-		Assert.assertTrue(result.getStdout().contains(expectedMsgRHSM), "When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin stdout should inform that:\n"+expectedMsgRHSM+"\n");	// Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.	// Bug 901612 was reverted by Bug 1017354 
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.2-1")) Assert.assertTrue(result.getStdout().contains(expectedMsgRHSM), "When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin stdout should inform that:\n"+expectedMsgRHSM+"\n");	// Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.	// Bug 901612 was reverted by Bug 1017354 
+		else Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin stdout should NO LONGER inform that:\n"+expectedMsgRHSM+"\nBugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1058380 was used to remove this usability messaging implemented for https://bugzilla.redhat.com/show_bug.cgi?id=818383");
 		// assert the expired subscriptions message
 		expectedMsgRHSM = "*** WARNING ***\nThe subscription for following product(s) has expired:";
 		for (ProductNamespace productNamespace : expiredEntitlementCert.productNamespaces) expectedMsgRHSM += "\n"+"  - "+productNamespace.name;
@@ -169,7 +170,8 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		// - rebranding RHN Satellite to Red Hat Satellite in client stuff
 		if (clienttasks.isPackageVersion("yum-rhn-plugin", ">=", "2.0")) expectedMsgRHN = "This system is not registered with RHN Classic or Red Hat Satellite.\nYou can use rhn_register to register.\nRed Hat Satellite or RHN Classic support will be disabled.";	// yum-rhn-plugin-2.0.1-4.el7
 		if (Arrays.asList(new String[]{"6.3","5.8","6.2","5.7","6.1"}).contains(clienttasks.redhatReleaseXY)) expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	
-		Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHSM), "When not registered to either RHN nor RHSM, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.2-1")) Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHSM), "When not registered to either RHN nor RHSM, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
+		else Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When not registered to either RHN nor RHSM, the subscription-manager yum plugin should NO LONGER inform that:\n"+expectedMsgRHSM+"\nBugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1058380 was used to remove this usability messaging implemented for https://bugzilla.redhat.com/show_bug.cgi?id=818383");
 		if (isRhnClientToolsInstalled) Assert.assertTrue((/*result.getStdout()+*/result.getStderr()).contains(expectedMsgRHN), "When not registered to either RHN nor RHSM, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
 	
@@ -213,8 +215,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		// - rebranding RHN Proxy to Red Hat Proxy in client stuff
 		// - rebranding RHN Satellite to Red Hat Satellite in client stuff
 		if (clienttasks.isPackageVersion("yum-rhn-plugin", ">=", "2.0")) expectedMsgRHN = "This system is not registered with RHN Classic or Red Hat Satellite.\nYou can use rhn_register to register.\nRed Hat Satellite or RHN Classic support will be disabled.";
-		if (Arrays.asList(new String[]{"6.3","5.8","6.2","5.7","6.1"}).contains(clienttasks.redhatReleaseXY)) expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";	
-		Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHSM), "When registered to RHSM (but not subscribed) but not RHN, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
+		if (Arrays.asList(new String[]{"6.3","5.8","6.2","5.7","6.1"}).contains(clienttasks.redhatReleaseXY)) expectedMsgRHN = "This system is not registered with RHN."+"\n"+"RHN Satellite or RHN Classic support will be disabled.";		
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.2-1")) Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHSM), "When registered to RHSM (but not subscribed) but not RHN, the subscription-manager yum plugin should inform that:\n"+expectedMsgRHSM+"\n");
+		else Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHSM (but not subscribed) but not RHN, the subscription-manager yum plugin should NO LONGER inform that:\n"+expectedMsgRHSM+"\nBugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1058380 was used to remove this usability messaging implemented for https://bugzilla.redhat.com/show_bug.cgi?id=818383");
 		if (isRhnClientToolsInstalled) Assert.assertTrue((/*result.getStdout()+*/result.getStderr()).contains(expectedMsgRHN), "When registered to RHSM (but not subscribed) but not RHN, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
 	
