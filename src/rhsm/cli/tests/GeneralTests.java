@@ -191,33 +191,47 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyYumPluginForSubscriptionManagerEnablement_Test() {
 		SSHCommandResult sshCommandResult;
-		String expectedMsg;
+		String stdoutRegex;
 		
 		// test /etc/yum/pluginconf.d/subscription-manager.conf enabled=1 and enabled=0 (UNREGISTERED)
 		clienttasks.unregister(null, null, null);
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
-		expectedMsg = "This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.";
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "1");
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-//		Assert.assertTrue(sshCommandResult.getStderr().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=1 displays expected stderr message '"+expectedMsg+"'.");
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=1 displays expected stdout message '"+expectedMsg+"'.");
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "0");
+		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
+		stdoutRegex = "Loaded plugins:.* subscription-manager";
+		Assert.assertTrue(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
+		stdoutRegex = "Loaded plugins:.* product-id";
+		Assert.assertTrue(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
+			
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		Assert.assertFalse((sshCommandResult.getStdout()+sshCommandResult.getStderr()).contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=0 displays expected stderr message '"+expectedMsg+"'.");
+		//	Loaded plugins: product-id, refresh-packagekit, security
+		stdoutRegex = "Loaded plugins:.* subscription-manager";
+		Assert.assertFalse(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
+		stdoutRegex = "Loaded plugins:.* product-id";
+		Assert.assertTrue(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
 		
-		// test /etc/yum/pluginconf.d/subscription-manager.conf enabled=1 and enabled=0 (REGISTERED)
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null,false,null,null,null);
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
-		expectedMsg = "This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.";
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-//		Assert.assertTrue(sshCommandResult.getStderr().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=1 displays expected stderr message '"+expectedMsg+"'.");
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=1 displays expected stdout message '"+expectedMsg+"'.");
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "0");
-		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		Assert.assertFalse((sshCommandResult.getStdout()+sshCommandResult.getStderr()).contains(expectedMsg), "Yum repolist with subscription-manager.conf enabled=0 displays expected stderr message '"+expectedMsg+"'.");
+		//	Loaded plugins: product-id, refresh-packagekit, security
+		stdoutRegex = "Loaded plugins:.* subscription-manager";
+		Assert.assertFalse(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
+		stdoutRegex = "Loaded plugins:.* product-id";
+		Assert.assertFalse(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
+		
+		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin --enableplugin=subscription-manager --enableplugin=product-id"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
+		stdoutRegex = "Loaded plugins:.* product-id";
+		Assert.assertTrue(doesStringContainMatches(sshCommandResult.getStdout(), "Loaded plugins:.* subscription-manager"),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 (but--enableplugin=subscription-manager) contains expected stdout regex '"+stdoutRegex+"'.");
+		stdoutRegex = "Loaded plugins:.* product-id";
+		Assert.assertTrue(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=0 (but --enableplugin=product-id) contains expected stdout regex '"+stdoutRegex+"'.");
 	}
 	@AfterGroups(value="VerifyYumPluginForSubscriptionManagerEnablement_Test", alwaysRun=true)
 	protected void afterVerifyYumPluginForSubscriptionManagerEnablement_Test() {
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "1");
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
 	}
 	
 	

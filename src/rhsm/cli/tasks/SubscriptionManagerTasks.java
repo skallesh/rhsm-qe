@@ -65,8 +65,9 @@ public class SubscriptionManagerTasks {
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String rhsmUpdateFile		= "/var/run/rhsm/update";
-	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
-	public final String rhnPluginConfFile	= "/etc/yum/pluginconf.d/rhnplugin.conf";
+	public final String yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
+	public final String yumPluginConfFileForProductId	= "/etc/yum/pluginconf.d/product-id.conf";
+	public final String yumPluginConfFileForRhn	= "/etc/yum/pluginconf.d/rhnplugin.conf";
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String rhnUp2dateFile		= "/etc/sysconfig/rhn/up2date";
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";

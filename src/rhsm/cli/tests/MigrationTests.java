@@ -467,7 +467,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
 			
 			// assert that the rhnplugin is still enabled
-			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhnPluginConfFile, "enabled"),"1","The enabled yum plugin configuration for RHN.");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForRhn, "enabled"),"1","The enabled yum plugin configuration for RHN.");
 			
 			// assert that productid.js is unchanged
 			Assert.assertTrue(productIdRepoMapBeforeMigration.keySet().containsAll(productIdRepoMapAfterMigration.keySet()) && productIdRepoMapAfterMigration.keySet().containsAll(productIdRepoMapBeforeMigration.keySet()),"The '"+clienttasks.productIdJsonFile+"' productIds remain unchanged when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
@@ -494,7 +494,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt requires --force to continue.");
 			
 			// assert that the rhnplugin is still enabled
-			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhnPluginConfFile, "enabled"),"1","The enabled yum plugin configuration for RHN.");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForRhn, "enabled"),"1","The enabled yum plugin configuration for RHN.");
 			
 			// assert that productid.js is unchanged
 			Assert.assertTrue(productIdRepoMapBeforeMigration.keySet().containsAll(productIdRepoMapAfterMigration.keySet()) && productIdRepoMapAfterMigration.keySet().containsAll(productIdRepoMapBeforeMigration.keySet()),"The '"+clienttasks.productIdJsonFile+"' productIds remain unchanged when "+rhnMigrateTool+" requires --force to continue.");
@@ -666,7 +666,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// assert that the rhnplugin has been disabled
-		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhnPluginConfFile, "enabled"),"0","The enabled yum plugin configuration for RHN.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForRhn, "enabled"),"0","The enabled yum plugin configuration for RHN.");
 		
 		// assert that productid.js is updated with productid mappings for all of the rhnChannelsConsumed; coverage for Bug 972883 - rhn-migrate-classic-to-rhsm tool neglects to populate /var/lib/rhsm/productid.js
 		client.runCommandAndWait("cat "+clienttasks.productIdJsonFile);
