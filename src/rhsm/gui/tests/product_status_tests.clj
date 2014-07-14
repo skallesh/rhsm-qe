@@ -54,7 +54,8 @@
 (defn ^{Test {:groups ["product_status"
                        "tier3"
                        "blockedByBug-964332"]
-              :dataProvider "installed-products"}}
+              :dataProvider "installed-products"
+              :priority (int 100)}}
   check_product_status
   "Asserts that all product statuses match the known statuses in the CLI."
   [_ product row]
@@ -65,7 +66,8 @@
 (defn ^{Test {:groups ["product_status"
                        "tier3"]
               :dependsOnMethods ["check_product_status"]
-              :dataProvider "installed-products"}}
+              :dataProvider "installed-products"
+              :priority (int 101)}}
   check_product_status_unsubscribe
   "Checks product status is correct after unsubscribing."
   [_ product row]
@@ -146,6 +148,7 @@
   (log/info (str "======= Starting DataProvider: " ns-log "/get_installed_products()"))
   (if-not (assert-skip :facts)
     (do
+      (tasks/restart-app :reregister? true)
       (let [prods (tasks/get-table-elements :installed-view 0)
             indexes (range 0 (tasks/ui getrowcount :installed-view))
             prodlist (map (fn [item index] [item index]) prods indexes)]
