@@ -52,6 +52,20 @@
     (do (tasks/ui click :repositories)
         (tasks/ui waittillwindowexist :repositories-dialog 10))))
 
+(defn assert-remove-all-overide
+  "Asserts if remove all overide button functionality"
+  [& {:keys [repo]
+      :or {repo nil}}]
+  (tasks/ui click :repo-remove-override)
+  (tasks/ui waittillwindowexist :question-dialog 10)
+  (if-not (nil? repo)
+    (verify (substring?
+             repo (tasks/ui gettextvalue
+                            :question-dialog "Are you sure*"))))
+  (tasks/ui click :yes)
+  (tasks/checkforerror)
+  (verify (bash-bool (tasks/ui guiexist :question-dialog))))
+
 (defn ^{Test {:groups ["repo"
                        "tier1"]}}
   check_repo_visible
@@ -130,7 +144,7 @@
           (tasks/ui checkrow :repo-table random-row-num)
           (sleep 2000)
           (verify (tasks/has-state? :repo-remove-override "enabled"))
-          (tasks/ui click :repo-remove-override)
+          (assert-remove-all-overide)
           (sleep 2000)
           (verify (not (tasks/has-state? :repo-remove-override "enabled"))))))
     (finally
@@ -198,13 +212,7 @@
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
   (verify (tasks/has-state? :repo-remove-override "enabled"))
-  (tasks/ui click :repo-remove-override)
-  (tasks/ui waittillwindowexist :question-dialog 30)
-  (verify (substring?
-           repo (tasks/ui gettextvalue
-                          :question-dialog "Are you sure*")))
-  (tasks/ui click :yes)
-  (tasks/checkforerror)
+  (assert-remove-all-overide :repo repo)
   (verify (tasks/has-state? :gpg-check-edit "visible"))
   (verify (not (tasks/has-state? :repo-remove-override "enabled"))))
 
@@ -302,7 +310,6 @@
   (log/info (str "======= Starting DataProvider: " ns-log "subscribed_repos()"))
   (if-not (assert-skip :repo)
     (do
-      (tasks/restart-app :reregister? true)
       (tasks/subscribe_all)
       (tasks/ui click :repositories)
       (tasks/ui waittillwindowexist :repositories-dialog 10)
