@@ -28,7 +28,6 @@
 
 (def servicelist (atom {}))
 (def productlist (atom {}))
-(def contractlist (atom {}))
 (def subs-contractlist (atom {}))
 (def virt? (atom nil)) ;; Used to hold the virt value of system
 (def ns-log "rhsm.gui.tests.search_status_tests")
@@ -46,12 +45,6 @@
   (reset! productlist (ctasks/build-product-map :all? true))
   @productlist)
 
-(defn build-contract-map
-  "Builds the contract/virt-type map and updates the cont"
-  []
-  (reset! contractlist (ctasks/build-virt-type-map :all? true))
-  @contractlist)
-
 (defn ^{BeforeClass {:groups ["setup"]}}
   clear_env [_]
   (try
@@ -61,9 +54,8 @@
     (tasks/register-with-creds)
     (reset! servicelist (ctasks/build-service-map :all? true))
     (reset! subs-contractlist (ctasks/build-subscription-product-map :all? true))
-    (build-contract-map)
     (catch Exception e
-      (reset! (skip-groups :system) true)
+      (reset! (skip-groups :search_status) true)
       (throw e))))
 
 (defn ^{AfterClass {:groups ["cleanup"]
@@ -192,7 +184,7 @@
                        "tier2"
                        "blockedByBug-801434"
                        "blockedByBug-707041"]}}
-  check_date_chooser_traceback 
+  check_date_chooser_traceback
   "Checks if there is any traceback in the logs after clicking on calendar icon"
   [_]
   (try
@@ -361,9 +353,10 @@
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log "get_subscriptions()"))
-  (if-not (assert-skip :system)
+  (if-not (assert-skip :search_status)
     (do
       (tasks/restart-app)
+      (build-subscription-map)
       (tasks/register-with-creds)
       (tasks/search :match-system? false
                    :do-not-overlap? false)
@@ -380,7 +373,7 @@
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log "get_installed_products()"))
-  (if-not (assert-skip :subscribe)
+  (if-not (assert-skip :search_status)
     (do
       (tasks/restart-app :reregister? true)
       (let [prods (into [] (map vector (tasks/get-table-elements
@@ -397,7 +390,7 @@
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log "get_subscriptions()"))
-  (if-not (assert-skip :subscribe)
+  (if-not (assert-skip :search_status)
     (do
       (tasks/restart-app)
       (clear_env nil)
