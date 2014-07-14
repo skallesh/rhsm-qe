@@ -24,29 +24,14 @@
            org.testng.SkipException))
 
 (def status-before-subscribe (atom {}))
-(def productlist (atom {}))
-(def servicelist (atom {}))
 (def contractlist (atom {}))
 (def ns-log "rhsm.gui.tests.subscription_status_tests")
-
-(defn build-subscription-map
-  "Builds the product map and updates the productlist atom"
-  []
-  (reset! productlist (ctasks/build-product-map :all? true))
-  @productlist)
 
 (defn build-contract-map
   "Builds the contract/virt-type map and updates the cont"
   []
   (reset! contractlist (ctasks/build-virt-type-map :all? true))
   @contractlist)
-
-(defn allsearch
-  ([filter]
-     (tasks/search :match-system? false
-                   :do-not-overlap? false
-                   :contain-text filter))
-  ([] (allsearch nil)))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   before_check_status_message
@@ -72,7 +57,8 @@
 (defn ^{Test {:groups ["subscription_status"
                        "tier1"
                        "blockedByBug-1012501"
-                       "blockedByBug-1040119"]}}
+                       "blockedByBug-1040119"]
+              :priority (int 100)}}
   check_status_message_before_attaching
   "Asserts that status message displayed in main-window is right before subscriptions are attached"
   [_]
@@ -88,7 +74,8 @@
                        "tier1"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"]
-              :dependsOnMethods ["check_status_message_before_attaching"]}}
+              :dependsOnMethods ["check_status_message_before_attaching"]
+              :priority (int 101)}}
   check_status_message_after_attaching
   "Asserts that status message displayed in main-window is right after attaching subscriptions"
   [_]
@@ -110,7 +97,8 @@
                        "tier1"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"]
-              :dependsOnMethods ["check_status_message_after_attaching"]}}
+              :dependsOnMethods ["check_status_message_after_attaching"]
+              :priority (int 102)}}
   check_status_message_future_subscriptions
   "Asserts that status message displayed in main-window is right after attaching future
    subscriptions"
@@ -141,7 +129,8 @@
                        "tier1"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"]
-              :dependsOnMethods ["check_status_message_future_subscriptions"]}}
+              :dependsOnMethods ["check_status_message_future_subscriptions"]
+              :priority (int 103)}}
   check_status_message_expired_subscriptions
   "Asserts that status message displayed in main-window is right after expiring
    attached subscriptions"
@@ -233,6 +222,7 @@
     (do
       (tasks/restart-app)
       (tasks/register-with-creds)
+      (build-contract-map)
       (tasks/ui selecttab :my-subscriptions)
       (tasks/subscribe_all)
       (tasks/ui selecttab :my-subscriptions)
