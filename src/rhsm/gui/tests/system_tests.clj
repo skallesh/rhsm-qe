@@ -277,11 +277,13 @@
                                (run-command "systemctl restart rhsmcertd.service")
                                (run-command "service rhsmcertd restart")))
          log-timestamp (re-find #"\d+:\d+:\d+" output)
-         ;; The following steps add minutes to the time as this is the default
-         ;; interval in conf file. The step which follows is conversion of time
-         ;; formats this is because the logs have 24hrs time format and the GUI
-         ;; has 12hrs time format. The last step adds a zero if the time
-         ;; is less than 10hrs which makes sting comparison easier
+         ;; The following steps adds minutes to the time at which service was restarted.
+         ;; This added time is the default interval in conf file.
+         ;; After which time is converted to 24hrs format.
+         ;; Tis is because the logs have 24hrs time format where as the GUI
+         ;; has 12hrs time format.
+         ;; The last step adds a zero to hours if the time is earlier than
+         ;; 10:00 which makes sting comparison easier.
          interval (trim-newline (:stdout
                                  (run-command
                                   "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
