@@ -222,7 +222,8 @@
                        "tier2"
                        "blockedByBug-702075"]}}
   import_entitlement
-  "Asserts that an entitlement cannot be imported."[_]
+  "Asserts that an entitlement cannot be imported."
+  [_]
   (let [certname (get-random-file "/tmp/sm-importentitlementsdir/" " | grep -v key")]
     (import-bad-cert certname :invalid-cert)))
 
