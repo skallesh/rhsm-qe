@@ -66,6 +66,9 @@
       (require :reload-all '[rhsm.gui.tests.system_tests :as systest])
       (require :reload-all '[rhsm.gui.tests.stacking_tests :as stktest])
       (require :reload-all '[rhsm.gui.tests.repo_tests :as reptest])
+      (require :reload-all '[rhsm.gui.tests.product_status_tests :as pstest])
+      (require :reload-all '[rhsm.gui.tests.subscription_status_tests :as substest])
+      (require :reload-all '[rhsm.gui.tests.search_status_tests :as sstest])
 
       (import '[rhsm.base SubscriptionManagerCLITestScript])
       )

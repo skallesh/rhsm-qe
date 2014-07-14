@@ -23,6 +23,7 @@
                   :proxy (atom false)
                   :register (atom false)
                   :repo (atom false)
+                  :search_status (atom false)
                   :stacking (atom false)
                   :subscribe (atom false)
                   :subscription_status (atom false)

@@ -212,4 +212,18 @@
     </groups>
   </test>
 
+ <test name="GUI: Search Status">
+    <packages>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
+    </packages>
+    <groups>
+      <run>
+        <include name="search_status"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
 </suite>

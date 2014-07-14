@@ -204,29 +204,6 @@
       (run-command "killall -9 firefox"))))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
-                       "blockedByBug-707041"]}}
-  date_picker_traceback
-  "Asserts that the date chooser does not throw a traceback."
-  [_]
-  (try
-    (if-not (bool (tasks/ui guiexist :main-window)) (tasks/restart-app))
-    (try+ (tasks/register-with-creds :re-register? false)
-          (catch [:type :already-registered] _))
-    (tasks/ui selecttab :all-available-subscriptions)
-    (let [output (get-logging @clientcmd
-                                    "/var/log/ldtpd/ldtpd.log"
-                                    "date_picker_traceback"
-                                    "Traceback"
-                                    (tasks/ui click :calendar)
-                                    (verify
-                                     (bool (tasks/ui waittillwindowexist :date-selection-dialog 10)))
-                                    (tasks/ui click :today))]
-      (verify (clojure.string/blank? output)))
-    (finally (if (bool (tasks/ui guiexist :date-selection-dialog))
-               (tasks/ui closewindow :date-selection-dialog)))))
-
-(defn ^{Test {:groups ["system"
                        "tier1"
                        "blockedByBug-947485"]}}
   open_with_bad_hostname
@@ -279,21 +256,6 @@
         (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
 
 (defn ^{Test {:groups ["system"
-                       "tier1"
-                       "blockedByBug-923873"]}}
-  check_status_when_unregistered
-  "To verify that status in MyInstalledProducts icon color and product status
-   are appropriately displayed when client is unregistered"
-  [_]
-  (tasks/restart-app :unregister? true)
-  (run-command "subscription-manager clean")
-  (verify (= unreg-status (tasks/ui gettextvalue :overall-status)))
-  (tasks/do-to-all-rows-in
-   :installed-view 2
-   (fn [status]
-     (verify (= status "Unknown")))))
-
-(defn ^{Test {:groups ["system"
                        "tier2"
                        "blockedByBug-1086377"
                        "blockedByBug-916666"]
@@ -315,11 +277,13 @@
                                (run-command "systemctl restart rhsmcertd.service")
                                (run-command "service rhsmcertd restart")))
          log-timestamp (re-find #"\d+:\d+:\d+" output)
-         ;; The following steps add minutes to the time as this is the default
-         ;; interval in conf file. The step which follows is conversion of time
-         ;; formats this is because the logs have 24hrs time format and the GUI
-         ;; has 12hrs time format. The last step adds a zero if the time
-         ;; is less than 10hrs which makes sting comparison easier
+         ;; The following steps adds minutes to the time at which service was restarted.
+         ;; This added time is the default interval in conf file.
+         ;; After which time is converted to 24hrs format.
+         ;; Tis is because the logs have 24hrs time format where as the GUI
+         ;; has 12hrs time format.
+         ;; The last step adds a zero to hours if the time is earlier than
+         ;; 10:00 which makes sting comparison easier.
          interval (trim-newline (:stdout
                                  (run-command
                                   "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
@@ -440,40 +404,6 @@
                  (tasks/ui check :autoheal-checkbox)
                  (tasks/ui click :close-system-prefs))))))
 
-(defn ^{Test {:groups ["system"
-                       "tier1"
-                       "acceptance"
-                       "blockedByBug-818282"]}}
-  check_ordered_contract_options
-  "Checks if contracts in contract selection dialog are ordered based on host type"
-  [_]
-  (tasks/restart-app :reregister? true)
-  (tasks/ui selecttab :all-available-subscriptions)
-  (tasks/search)
-  (let
-      [sub-map (zipmap (range 0 (tasks/ui getrowcount :all-subscriptions-view))
-                       (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? false))
-       both? (fn [pair] (=  "Both" (try
-                                    (tasks/ui getcellvalue :all-subscriptions-view (key pair) 1)
-                                    (catch Exception e))))
-       row-sub-map (into {} (filter both? sub-map))
-       cli-out (:stdout (run-command "subscription-manager facts --list | grep virt.is_guest"))
-       virt? (= "true" (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
-    (if-not (empty? row-sub-map)
-      (do
-        (doseq [map-entry row-sub-map]
-          (try
-            (tasks/ui selectrowindex :all-subscriptions-view (key map-entry))
-            (tasks/ui click :attach)
-            (tasks/ui waittillguiexist :contract-selection-dialog)
-            (let [type-list (tasks/get-table-elements :contract-selection-table 1)]
-              (if virt?
-                (verify (not (sorted? type-list)))
-                  (verify (sorted? type-list))))
-            (finally
-             (if (bool (tasks/ui guiexist :contract-selection-dialog))
-               (tasks/ui click :cancel-contract-selection)))))))))
-
 (defn ^{Test {:group ["system"
                       "tier2"
                       "blockedByBug-723992"
@@ -501,95 +431,6 @@
      (tasks/unregister))))
 
 (defn ^{Test {:groups ["system"
-                       "tier3"]
-              :value ["assert_subscription_field"]
-              :dataProvider "subscribed"}}
-  assert_subscription_field
-  "Tests whether the subscripton field in installed view is populated when the entitlement
-   is subscribed"
-  [_ product]
-  (if (not (= "Not Subscribed"
-              (tasks/ui getcellvalue :installed-view
-                        (tasks/skip-dropdown :installed-view product) 2)))
-    (let [map (ctasks/build-product-map :all? true)
-          gui-value (set (clojure.string/split-lines
-                          (tasks/ui gettextvalue :providing-subscriptions)))
-          cli-value (set (get map product))]
-      (verify (< 0 (count (clojure.set/intersection gui-value cli-value)))))))
-
-(defn ^{AfterGroups {:groups ["system"
-                              "tier3"]
-                     :value ["assert_subscription_field"]
-                     :alwaysRun true}}
-  after_assert_subscription_field
-  [_]
-  (tasks/unsubscribe_all)
-  (tasks/unregister))
-
-(defn ^{Test {:groups ["system"
-                       "tier3"]
-              :value ["check_subscription_type_all_available"]
-              :dataProvider "all-subscriptions"}}
-  check_subscription_type_all_subscriptions
-  "Checks for subscription type in all available subscriptions"
-  [_ product]
-  (tasks/ui selecttab :all-available-subscriptions)
-  (tasks/skip-dropdown :all-subscriptions-view product)
-  (verify (not (blank? (tasks/ui gettextvalue :all-available-subscription-type)))))
-
-(defn ^{AfterGroups {:groups ["system"
-                              "tier3"]
-                     :value ["check_subscription_type_all_available"]
-                     :alwaysRun true}}
-  after_check_subscription_type_all_available
-  [_]
-  (tasks/unsubscribe_all)
-  (tasks/unregister))
-
-(defn ^{Test {:groups ["system"
-                       "tier3"]
-              :value ["check_subscription_type_my_subs"]
-              :dataProvider "my-subscriptions"}}
-  check_subscription_type_my_subscriptions
-  "Checks for subscription type in my subscriptions"
-  [_ product]
-  (tasks/ui selecttab :my-subscriptions)
-  (tasks/skip-dropdown :my-subscriptions-view product)
-  (verify (not (blank? (tasks/ui gettextvalue :subscription-type)))))
-
-(defn ^{AfterGroups {:groups ["system"
-                              "tier3"]
-                     :value ["check_subscription_type_my_subs"]
-                     :alwaysRun true}}
-  after_check_subscription_type_my_subscription
-  [_]
-  (tasks/unsubscribe_all)
-  (tasks/unregister))
-
-(defn ^{Test {:groups ["system"
-                       "acceptance"
-                       "tier1"
-                       "blockedByBug-1051383"]}}
-  check_status_column
-  "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
-   and 'Not Subscribed'"
-  [_]
-  (try
-    (if (not (bool (tasks/ui guiexist :main-window)))
-      (tasks/start-app))
-    (let [output (get-logging @clientcmd
-                              ldtpd-log
-                              "check_online_documentation"
-                              nil
-                              (do
-                                (tasks/ui click :online-documentation)
-                                (sleep 5000)))]
-      (verify (bool (tasks/ui appundertest "Firefox")))
-      (verify (not (substring? "Traceback" output))))
-    (finally
-      (run-command "killall -9 firefox"))))
-
-(defn ^{Test {:groups ["system"
                        "tier1"
                        "acceptance"]}}
     launch_gui_from_gnome
@@ -615,104 +456,5 @@
       (finally
         (if (not (bool (tasks/ui guiexist :main-window)))
           (tasks/start-app)))))
-
-(defn ^{Test {:groups ["system"
-                       "acceptance"
-                       "tier1"]}}
-  check_physical_only_pools
-  "Identifies physical only pools from JSON and checks
-   whether it throws appropriate error message"
-  [_]
-  (tasks/unsubscribe_all)
-  (tasks/ui selecttab :my-installed-products)
-  (if (tasks/ui showing? :register-system)
-    (tasks/register-with-creds))
-  (try
-    (let [cli-cmd (:stdout
-                   (run-command "subscription-manager facts --list | grep \"virt.is_guest\""))
-          virt (trim (re-find #" .*" cli-cmd))
-          prod-attr-map (ctasks/build-subscription-attr-type-map :all? true)
-          phy-only? (fn [v] (if (not (nil? (re-find #"physical_only" v)))
-                             true false))
-          filter-product (fn [m] (if (not (empty? (filter phy-only? (val m)))) (key m)))
-          subscriptions (into [] (filter string? (map filter-product prod-attr-map)))
-          subscribe (fn [sub] (try
-                          (tasks/subscribe sub)
-                          (catch Exception e
-                            (let [result (substring? "Error getting subscription:" (.getMessage e))]
-                              result))))]
-      (reset! virt? virt)
-      (if (= @virt? "False")
-        (do
-          (tasks/write-facts "{\"virt.is_guest\": \"True\"}")
-          (run-command "subscription-manager facts --update")))
-      (tasks/search :match-system? false :do-not-overlap? false)
-      (verify (not (some false? (map subscribe subscriptions)))))
-    (finally
-      (if (= @virt? "False")
-        (do
-          (tasks/write-facts (str "{\"virt.is_guest\":" \space "\"" @virt? "\"" "}"))
-          (run-command "subscription-manager facts --update")))
-      (tasks/unsubscribe_all))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;      DATA PROVIDERS      ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn ^{DataProvider {:name "subscribed"}}
-  installed_products [_ & {:keys [debug]
-                           :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: "
-                 ns-log "installed_products()"))
-  (if-not (assert-skip :system)
-    (do
-      (tasks/restart-app)
-      (tasks/register-with-creds)
-      (tasks/ui selecttab :my-installed-products)
-      (let [subs (into [] (map vector (tasks/get-table-elements
-                                       :installed-view
-                                       0
-                                       :skip-dropdowns? true)))]
-        (if-not debug
-          (to-array-2d subs)
-          subs)))
-    (to-array-2d [])))
-
-(defn ^{DataProvider {:name "all-subscriptions"}}
-  get_subscriptions [_ & {:keys [debug]
-                          :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " ns-log "get_subscriptions()"))
-  (if-not (assert-skip :system)
-    (do
-      (tasks/restart-app)
-      (tasks/register-with-creds)
-      (tasks/search :match-system? false
-                   :do-not-overlap? false)
-      (let [subs (into [] (map vector (tasks/get-table-elements
-                                       :all-subscriptions-view
-                                       0
-                                       :skip-dropdowns? true)))]
-        (if-not debug
-          (to-array-2d subs)
-          subs)))
-    (to-array-2d [])))
-
-(defn ^{DataProvider {:name "my-subscriptions"}}
-  my_subscriptions [_ & {:keys [debug]
-                         :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " ns-log "my_subscriptions"))
-  (if-not (assert-skip :system)
-    (do
-      (tasks/restart-app :reregister? true)
-      (tasks/subscribe_all)
-      (tasks/ui selecttab :my-subscriptions)
-      (let [subs (into [] (map vector (tasks/get-table-elements
-                                       :my-subscriptions-view
-                                       0
-                                       :skip-dropdowns? true)))]
-        (if-not debug
-          (to-array-2d subs)
-          subs)))
-    (to-array-2d [])))
 
 (gen-class-testng)
