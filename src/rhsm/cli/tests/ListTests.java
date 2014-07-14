@@ -680,7 +680,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subcription manager list all with --match-installed option",
-			groups={"blockedByBug-654501","blockedByBug-1022622"},
+			groups={"blockedByBug-654501","blockedByBug-1022622"/*rhel7*/,"blockedByBug-1114717"/*rhel6*/},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithNoOverlap_Test() throws JSONException, Exception {
@@ -698,6 +698,18 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// randomly attach a subset of available subscriptions
 		List<SubscriptionPool> randomAvailableSubscriptionPools = getRandomSubsetOfList(availableSubscriptionPools, randomGenerator.nextInt(availableSubscriptionPools.size()));
 		List<String> poolIds = new ArrayList<String>(); for (SubscriptionPool subscriptionPool : randomAvailableSubscriptionPools) poolIds.add(subscriptionPool.poolId);
+		if (false) {	// debugTesting will cause test to fail due to bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1022622#c0
+			poolIds.clear();
+			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS Server Basic",availableSubscriptionPools).poolId);
+			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS for All Arch (excpt for x86_64 content)",availableSubscriptionPools).poolId);
+			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS with unlimited virtual guests",availableSubscriptionPools).poolId);
+			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Multi-Attribute Stackable (2 GB, 2 Cores)",availableSubscriptionPools).poolId);
+			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS Server Basic (data center)",availableSubscriptionPools).poolId);
+			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Multi-Attribute Stackable (2 sockets)",availableSubscriptionPools).poolId);
+			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS for systems with no sockets",availableSubscriptionPools).poolId);
+			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS Server Basic (multi-entitlement)",availableSubscriptionPools).poolId);
+			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS Modifier",availableSubscriptionPools).poolId);
+		}
 		clienttasks.subscribe(null, null, poolIds, null, null, "1", null, null, null, null, null);
 		
 		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null,null,null,true,null,null,null,null,null,null,null).getStdout());
@@ -706,7 +718,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		//	  --no-overlap          shows pools which provide products that are not
 		//	                        already covered; only used with --available
 		
-		// loop through the list of available subscription pools without overlap and assert that at least one of pools provided product is not fully subscribed.
+		// loop through the list of available subscription pools without overlap and assert that at least one of pool's provided products is not fully subscribed.
 		for (SubscriptionPool subscriptionPool : availableSubscriptionPoolsWithoutOverlap) {
 			boolean noOverlapFound = false;
 			List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId);
@@ -730,6 +742,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			}
 			Assert.assertTrue(noOverlapFound,"Subscription '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides+" that is reported in the list available with no-overlap provides at least one product that is not fully Subscribed.");
 		}
+		
+		// the remainder of this --no-overlap test has been fixed in subscription-manager-1.12.6-1 and newer; otherwise skip it.
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.6-1")) throw new SkipException("The installed version of subscription-manager does not contain the fix for https://bugzilla.redhat.com/show_bug.cgi?id=1022622#c3");
 		
 		// assert that availableSubscriptionPools that are not filtered out of the availableSubscriptionPoolsWithoutOverlap provide products that are all fully Subscribed
 		availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, false, null, null, null).getStdout());
