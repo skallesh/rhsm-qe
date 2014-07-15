@@ -211,15 +211,18 @@ public class CandlepinTasks {
 			candlepinRedeemTestsPatchFile = candlepinRedeemTestsMasterPatchFile;
 		}
 		//RemoteFileTasks.putFile(sshCommandRunner.getConnection(), candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/proxy/", "0644");
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/", "0644");
+		//RemoteFileTasks.putFile(sshCommandRunner.getConnection(), candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/server/", "0644");
 		// Stdout: patching file src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 		// Stdout: patching file src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/server && patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);
 		
 		// modify the gen-certs file so the candlepin cert is valid for more than one year (make it 20 years)
 		//RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/proxy/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 7300 ");
-		RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 7300 ");
+		//Assert.assertEquals(RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 7300 "),0,"ExitCode from attempt to modify the gen-certs file so the candlepin cert is valid for more than one year (make it 20 years).");
+		Assert.assertEquals(RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/server/bin/gen-certs", "\\-days 365 ", "\\-days 7300 "),0,"ExitCode from attempt to modify the gen-certs file so the candlepin cert is valid for more than one year (make it 20 years).");
 		
 		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "for item in $(for gem in $(gem list | grep -v \"\\*\"); do echo $gem; done | grep -v \"(\" | grep -v \")\"); do echo 'Y' | gem uninstall $item -a; done", Integer.valueOf(0), "Successfully uninstalled", null);	// probably only needs to be run once  // for item in $(for gem in $(gem list | grep -v "\*"); do echo $gem; done | grep -v "(" | grep -v ")"); do echo 'Y' | gem uninstall $item -a; done
@@ -241,12 +244,16 @@ public class CandlepinTasks {
 		}
 		
 		if (redhatReleaseX>=19)	{	// the Fedora 19+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
+			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
+			//path changes caused by commit cddba55bda2cc1b89821a80e6ff23694296f2079 Fix scripts dir for server build.    before candlepin-0.9.22-1
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
 		} else {
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/proxy && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && bundle exec buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
-			// Update 1/21/2011                                    ^^^^^^ TESTDATA is new for master branch                                                            ^^^^^^ IMPORTDIR applies to branches <= BETA
+			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && bundle exec buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
+			//                                                       ^^^^^^ TESTDATA is new for master branch                                                            ^^^^^^^^^ IMPORTDIR applies to branches <= BETA
+			//path changes caused by commit cddba55bda2cc1b89821a80e6ff23694296f2079 Fix scripts dir for server build.    before candlepin-0.9.22-1
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bundle exec bin/deploy", Integer.valueOf(0), "Initialized!", null);	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
 		}
 
 		/* attempt to use live logging
@@ -316,6 +323,20 @@ schema generation failed
 		[root@jsefler-f14-5candlepin candlepin]# rm /var/run/tomcat6.pid 
 		[root@jsefler-f14-5candlepin candlepin]# export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME=jsefler-f14-5candlepin.usersys.redhat.com && export IMPORTDIR= && cd /root/candlepin && bundle exec buildconf/scripts/deploy
 		*/
+		
+		
+		/* Note: If you encounter this NoMethodError during a deploy, then your installed ruby package is probably older than 1.9.  Solution....
+		bin/import_products.rb:3: undefined method `require_relative' for main:Object (NoMethodError)
+		
+		cd ~/candlepin
+		git reset --hard HEAD
+		git pull
+		\curl -sSL https://get.rvm.io | bash -s stable --ruby=1.9.3
+		source /usr/local/rvm/scripts/rvm
+		cd ~/candlepin/server
+		bundle install
+		export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME=jsefler-f14-candlepin.usersys.redhat.com && export IMPORTDIR= && cd /root/candlepin/server && bundle exec bin/deploy
+		 */
 	}
 	
 	public void reportAPI() throws IOException {
