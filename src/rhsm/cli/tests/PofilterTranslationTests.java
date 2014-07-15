@@ -830,6 +830,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 1117521 - [ta_IN][mr] failed urls test for http://wwwredhat.com/legal/privacy_statement.html
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1117521");
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/mr/")) bugIds.add("1117521");
+				// Bug 1117525 - [gu] need a translation for privacy_statement msgid
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/gu/")) bugIds.add("1117525");
 				
 				// Bug 845304 - translation of the word "[OPTIONS]" has reverted
 				if (pofilterTest.equals("unchanged")) bugIds.add("845304");
@@ -920,7 +922,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 813268 - [ta_IN] unlocalised strings for subscription-manager identity
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("813268");
 				// Bug 1117525 - [gu] need a translation for privacy_statement msgid
-				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1117525");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/gu/")) bugIds.add("1117525");
 				// Bug 1117535 - [zh_CN][gu] need a translation for "<b>%s version:</b> %s"
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("1117535");
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/gu/")) bugIds.add("1117525");
