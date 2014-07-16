@@ -1154,7 +1154,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		Map<File,List<Translation>> translationFileMapForCandlepin = new HashMap<File, List<Translation>>();
 		if (server==null) return translationFileMapForCandlepin;
 		
-		SSHCommandResult translationFileListingResult = server.runCommandAndWait("find "+sm_serverInstallDir+"/po -name *.po");
+		//SSHCommandResult translationFileListingResult = server.runCommandAndWait("find "+sm_serverInstallDir+"/po -name *.po");
+		SSHCommandResult translationFileListingResult = server.runCommandAndWait("find "+sm_serverInstallDir+" -name *.po");
 		for (String translationFilePath : translationFileListingResult.getStdout().trim().split("\\n")) {
 			if (translationFilePath.isEmpty()) continue; // skip empty lines
 			
