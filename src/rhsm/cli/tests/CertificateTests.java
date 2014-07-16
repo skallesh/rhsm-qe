@@ -806,8 +806,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	RHEL-6.5.0 		zsh-4.3.10-7.el6
 		// Object blockedByBug, String testPackage, String oldProductCertVersion, String oldRelease, String newerRelease
 		if (clienttasks.redhatReleaseX.equals("5")) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107"}),	"zsh",	"5.8",		"5.8",	"5.9"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107"}),	"zsh",	"5.8 Beta",	"5.8",	"5.9"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107","1119809"}),	"zsh",	"5.8",		"5.8",	"5.9"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107","1119809"}),	"zsh",	"5.8 Beta",	"5.8",	"5.9"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("6")) {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281"}),	"zsh",	"6.3",		"6.3",	"6.4"}));
