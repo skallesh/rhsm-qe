@@ -405,6 +405,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test() {
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
+		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
 		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
 	
@@ -415,6 +416,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsAreSubscribable_Test() {
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
+		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
@@ -426,6 +428,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test() {
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
+		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
 	}
 	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test")
