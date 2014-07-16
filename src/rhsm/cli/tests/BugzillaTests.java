@@ -115,7 +115,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			//^ that assertion only passes when all of the available pools were generated on the same day (as is the case for TESTDATA)
 			//^ that assertion fails when a new subscription pool with a different start date that provides product "awesomeos-x86_64" has been added to the org.  This happens with test subscription 'An "Exempt SLA" service level subscription (matches all service levels)'
 			//revised assertion should make sure the start date of the installed product is the oldest product subscription that covers this installed product...
-			Assert.assertTrue(!installedProduct.startDate.after(consumedProductSubscription.startDate), "Comparing Start Date '"+InstalledProduct.formatDateString(installedProduct.startDate)+"' of Installed Product '"+installedProduct.productName+"' to Start Date '"+InstalledProduct.formatDateString(consumedProductSubscription.startDate)+"' of Consumed Subscription '"+consumedProductSubscription.productName+"'.  (Installed Product startDate should be <= Consumed Subscription startDate)");
+			if (consumedProductSubscription.provides.contains(installedProduct.productName)) {
+				Assert.assertTrue(!installedProduct.startDate.after(consumedProductSubscription.startDate), "Comparing Start Date '"+InstalledProduct.formatDateString(installedProduct.startDate)+"' of Installed Product '"+installedProduct.productName+"' to Start Date '"+InstalledProduct.formatDateString(consumedProductSubscription.startDate)+"' of Consumed Subscription '"+consumedProductSubscription.productName+"'.  (Installed Product startDate should be <= Consumed Subscription startDate)");
+			}
 		}
 		
 		clienttasks.autoheal(null, true, null, null, null, null);
@@ -129,9 +131,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			//^ that assertion only passes when all of the available pools were generated on the same day (as is the case for TESTDATA)
 			//^ that assertion fails when a new subscription pool with a different start date that provides product "awesomeos-x86_64" has been added to the org.  This happens with test subscription 'An "Exempt SLA" service level subscription (matches all service levels)'
 			//revised assertion should make sure the start date of the installed product is the oldest product subscription that covers this installed product...
-			Assert.assertTrue(!installedProductAfterRHSM.startDate.after(consumedProductSubscription.startDate), "Comparing Start Date '"+InstalledProduct.formatDateString(installedProductAfterRHSM.startDate)+"' of Installed Product '"+installedProductAfterRHSM.productName+"' to Start Date '"+InstalledProduct.formatDateString(consumedProductSubscription.startDate)+"' of Consumed Subscription '"+consumedProductSubscription.productName+"'.  (Installed Product startDate should be <= Consumed Subscription startDate)");
-			if(!consumedProductSubscription.isActive){
-				Assert.assertEquals(installedProductAfterRHSM.endDate, consumedProductSubscription.endDate);
+			if (consumedProductSubscription.provides.contains(installedProductAfterRHSM.productName)) {
+				Assert.assertTrue(!installedProductAfterRHSM.startDate.after(consumedProductSubscription.startDate), "Comparing Start Date '"+InstalledProduct.formatDateString(installedProductAfterRHSM.startDate)+"' of Installed Product '"+installedProductAfterRHSM.productName+"' to Start Date '"+InstalledProduct.formatDateString(consumedProductSubscription.startDate)+"' of Consumed Subscription '"+consumedProductSubscription.productName+"'.  (Installed Product startDate should be <= Consumed Subscription startDate)");
+				if(!consumedProductSubscription.isActive){
+					Assert.assertEquals(installedProductAfterRHSM.endDate, consumedProductSubscription.endDate);
+				}
 			}
 		}
 	}
