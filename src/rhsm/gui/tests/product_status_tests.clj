@@ -149,6 +149,7 @@
   (if-not (assert-skip :facts)
     (do
       (tasks/restart-app :reregister? true)
+      (:stdout (run-command "subscription-manager attach --auto"))
       (let [prods (tasks/get-table-elements :installed-view 0)
             indexes (range 0 (tasks/ui getrowcount :installed-view))
             prodlist (map (fn [item index] [item index]) prods indexes)]
