@@ -810,12 +810,12 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107","1119809"}),	"zsh",	"5.8 Beta",	"5.8",	"5.9"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("6")) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281"}),	"zsh",	"6.3",		"6.3",	"6.4"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281"}),	"zsh",	"6.3 Beta",	"6.3",	"6.4"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3",		"6.3",	"6.4"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3 Beta",	"6.3",	"6.4"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("7")) {
-			ll.add(Arrays.asList(new Object[]{null,														"zsh",	"7.0",		"7.0",	"7.1"}));
-			ll.add(Arrays.asList(new Object[]{null,														"zsh",	"7.0FIXME",	"7.0",	"7.1"}));
+			ll.add(Arrays.asList(new Object[]{null,	"zsh",	"7.0",		"7.0",	"7.1"}));
+			ll.add(Arrays.asList(new Object[]{null,	"zsh",	"7.0FIXME",	"7.0",	"7.1"}));
 		} else {
 			ll.add(Arrays.asList(new Object[]{null,	"FIXME: Unhandled Release",	"1.0",	"1.0",	"1.1"}));
 		}
