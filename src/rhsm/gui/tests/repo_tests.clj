@@ -310,6 +310,8 @@
   (log/info (str "======= Starting DataProvider: " ns-log "subscribed_repos()"))
   (if-not (assert-skip :repo)
     (do
+      (if (tasks/ui showing? :register-system)
+        (tasks/register-with-creds))
       (tasks/subscribe_all)
       (tasks/ui click :repositories)
       (tasks/ui waittillwindowexist :repositories-dialog 10)
