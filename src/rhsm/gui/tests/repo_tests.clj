@@ -56,15 +56,17 @@
   "Asserts if remove all overide button functionality"
   [& {:keys [repo]
       :or {repo nil}}]
-  (tasks/ui click :repo-remove-override)
-  (tasks/ui waittillwindowexist :question-dialog 10)
-  (if-not (nil? repo)
-    (verify (substring?
-             repo (tasks/ui gettextvalue
-                            :question-dialog "Are you sure*"))))
-  (tasks/ui click :yes)
-  (tasks/checkforerror)
-  (verify (bash-bool (tasks/ui guiexist :question-dialog))))
+  (if (tasks/has-state? :repo-remove-override "enabled")
+    (do
+      (tasks/ui click :repo-remove-override)
+      (tasks/ui waittillwindowexist :question-dialog 10)
+      (if-not (nil? repo)
+        (verify (substring?
+                 repo (tasks/ui gettextvalue
+                                :question-dialog "Are you sure*"))))
+      (tasks/ui click :yes)
+      (tasks/checkforerror)
+      (verify (bash-bool (tasks/ui guiexist :question-dialog))))))
 
 (defn ^{Test {:groups ["repo"
                        "tier1"]}}
@@ -197,9 +199,11 @@
   [_ repo]
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
-  (if (tasks/has-state? :gpg-check-edit "visible")
-    (tasks/ui click :gpg-check-edit))
-  (tasks/ui checkrow :repo repo))
+  (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
+    (if (tasks/has-state? :gpg-check-edit "visible")
+      (tasks/ui click :gpg-check-edit))
+    (sleep 2000)
+    (tasks/ui checkrow :repo-table row-num 0)))
 
 (defn ^{Test {:groups ["repo"
                        "tier3"
@@ -212,7 +216,7 @@
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
   (verify (tasks/has-state? :repo-remove-override "enabled"))
-  (assert-remove-all-overide :repo repo)
+  (assert-remove-all-overide)
   (verify (tasks/has-state? :gpg-check-edit "visible"))
   (verify (not (tasks/has-state? :repo-remove-override "enabled"))))
 
@@ -239,9 +243,11 @@
                            (fn [repo]
                              (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
-                             (if (tasks/has-state? :gpg-check-edit "visible")
-                               (tasks/ui click :gpg-check-edit))
-                             (tasks/ui checkrow :repo-table repo)))
+                             (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
+                               (if (tasks/has-state? :gpg-check-edit "visible")
+                                 (tasks/ui click :gpg-check-edit))
+                               (sleep 2000)
+                               (tasks/ui checkrow :repo-table row-num 0))))
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
 
@@ -269,10 +275,7 @@
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
                              (tasks/ui selectrow :repo-table repo)
-                             (tasks/ui click :gpg-check-remove)
-                             (tasks/ui waittillwindowexist :question-dialog 30)
-                             (tasks/ui click :yes)
-                             (tasks/checkforerror)))
+                             (assert-remove-all-overide)))
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
 
