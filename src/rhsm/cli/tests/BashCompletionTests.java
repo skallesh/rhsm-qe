@@ -266,6 +266,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1057329 - rhsm-debug system <space> <TAB> <TAB> does not auto complete
 			if (bashCommand.startsWith("rhsm-debug system ")) bugIds.add("1057329");
 			
+			// Bug 1121251 - rhsm-debug system does not bash-complete the new "--no-subscriptions" option
+			if (bashCommand.startsWith("rhsm-debug system -")) bugIds.add("1121251");
+			
 			// Bug 1094869 - on rhel5, bash-completion of rhsm-icon options should show -? instead of -h 
 			if (bashCommand.startsWith("rhsm-icon ") && clienttasks.redhatReleaseX.equals("5")) bugIds.add("1094869");
 			if (bashCommand.startsWith("rhsmcertd ") && clienttasks.redhatReleaseX.equals("5")) bugIds.add("1094869");
