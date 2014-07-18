@@ -744,6 +744,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			return;			
 		}
 		
+		// (degregor 7/18/2014) Please skip all channels that have "-shadow" in the label.
+		if (classicRhnChannel.matches("rhel-.+-shadow(-.+|$)")) {
+			log.warning("(degregor 7/18/2014) \"shadow\" channels are internal-only (can be skipped in channel-to-productCert mappings)");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;			
+		}
+		
 		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-cf-ae-1' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
 		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-cf-ae-1-beta' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
 		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-cf-ae-1-beta-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
