@@ -258,6 +258,9 @@
   (if (tasks/assert-valid-product-arch product)
     (do
       (try
+        (if (nil? (@productlist product))
+          (throw (SkipException.
+            (str "Product: '" product "' does not valid subscription"))))
         (allsearch product)
         (let [expected (@productlist product)
               seen (into [] (tasks/get-table-elements
@@ -320,7 +323,7 @@
 (defn ^{Test {:groups ["search_status"
                        "tier3"
                        "blockedByBug-911386"]
-              :dataProvider "subscriptions"}}
+              :dataProvider "all-subscriptions"}}
   check_service_levels
   "Asserts that the displayed service levels are correct in the subscriptons view."
   [_ subscription]
@@ -336,7 +339,7 @@
 (defn ^{Test {:group ["subscribe"
                       "tier2"
                       "blockedByBug-865193"]
-              :dataProvider "subscriptions"
+              :dataProvider "all-subscriptions"
               :priority (int 99)}}
   check_provides_products
   "Checks if provide products is populated in all available subscriptions view"
@@ -348,26 +351,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      DATA PROVIDERS      ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn ^{DataProvider {:name "all-subscriptions"}}
-  get_subscriptions [_ & {:keys [debug]
-                          :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " ns-log "get_subscriptions()"))
-  (if-not (assert-skip :search_status)
-    (do
-      (tasks/restart-app)
-      (build-subscription-map)
-      (tasks/register-with-creds)
-      (tasks/search :match-system? false
-                   :do-not-overlap? false)
-      (let [subs (into [] (map vector (tasks/get-table-elements
-                                       :all-subscriptions-view
-                                       0
-                                       :skip-dropdowns? true)))]
-        (if-not debug
-          (to-array-2d subs)
-          subs)))
-    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
@@ -386,7 +369,7 @@
           prods)))
     (to-array-2d [])))
 
-(defn ^{DataProvider {:name "subscriptions"}}
+(defn ^{DataProvider {:name "all-subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log "get_subscriptions()"))
@@ -394,6 +377,7 @@
     (do
       (tasks/restart-app)
       (clear_env nil)
+      (build-subscription-map)
       (allsearch)
       (let [subs (into [] (map vector (tasks/get-table-elements
                                        :all-subscriptions-view
