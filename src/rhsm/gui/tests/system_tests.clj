@@ -96,7 +96,8 @@
 
 (defn ^{Test {:groups ["system"
                        "tier1"
-                       "blockedByBug-747014"]}}
+                       "blockedByBug-747014"
+                       "blockedByBug-1120611"]}}
   check_help_button
   "Assertst that the help window opens."
   [_]
