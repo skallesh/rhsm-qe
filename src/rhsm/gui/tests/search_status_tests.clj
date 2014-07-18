@@ -336,7 +336,7 @@
                        (str ", " (:support_type rawservice))))]
     (verify (= guiservice service))))
 
-(defn ^{Test {:group ["subscribe"
+(defn ^{Test {:group ["search_status"
                       "tier2"
                       "blockedByBug-865193"]
               :dataProvider "all-subscriptions"
@@ -347,6 +347,23 @@
   (tasks/skip-dropdown :all-subscriptions-view subscription)
   (verify ( = (sort (get @subs-contractlist subscription))
               (sort (tasks/get-table-elements :all-available-bundled-products 0)))))
+
+(defn ^{Test {:group ["search_status"
+                      "tier3"]
+              :dataProvider "all-subscriptions"}}
+  check_subscription_selected_after_update
+  "Checks if subscription remains selected after update is clicked
+   case 1: If subscription is stackable, it no longer remains selected
+   case 2: If subscription is non-stakable, it remanins selected"
+  [_ subscription]
+  (tasks/skip-dropdown :all-subscriptions-view subscription)
+  (let [sub-type (tasks/ui gettextvalue :all-available-subscription-type)
+        get-sub-name (fn [] (tasks/ui gettextvalue :all-available-subscription))]
+    (tasks/ui click :search)
+    (tasks/checkforerror)
+    (if (= sub-type "Stackable")
+      (verify (empty? (get-sub-name)))
+      (verify (= (get-sub-name) subscription)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      DATA PROVIDERS      ;;
