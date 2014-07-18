@@ -244,8 +244,9 @@
                (sleep 2000)
                (when sla (ui click :register-dialog sla))
                (ui click :register)))
-           (sleep 2000)
-           (ui click :register))
+           (sleep 5000)
+           (if (bool (ui guiexist :register-dialog))
+             (ui click :register)))
          ;; else leave sla dialog open
          (when sla (ui click :register-dialog sla)))))
    (checkforerror)
