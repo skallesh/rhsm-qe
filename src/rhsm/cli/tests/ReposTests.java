@@ -214,7 +214,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options specified multiple times in a single call) to repos in redhat.repo are preserved.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843915","blockedByBug-962520","blockedByBug-1034649"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843915","blockedByBug-962520","blockedByBug-1034649"/*,"blockedByBug-1121272" uncomment for rhel66*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListPreservesSimultaneousEnablementOfRedhatRepos_Test(){
@@ -234,7 +234,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//	Assert.assertNotNull(YumRepo.findFirstInstanceWithMatchingFieldFromList("id", repo.repoId, yumRepos),"Found yum repo id ["+repo.repoId+"] matching current repos --list item: "+repo);
 		//}
 		
-		// assemble lists of the current repoIds to be collectively toggle
+		// assemble lists of the current repoIds to be collectively toggled
 		List<String> enableRepoIds = new ArrayList<String>();
 		List<String> disableRepoIds = new ArrayList<String>();
 		for (Repo repo : originalRepos) {
