@@ -64,7 +64,7 @@
 
 (defn ^{Test {:groups ["product_status"
                        "tier3"]
-              :dependsOnMethods ["check_product_status"]
+              :dependsOnMethods ["check_product_status_subscribed"]
               :dataProvider "installed-products"}}
   check_product_status_unsubscribed
   "Checks product status is correct after unsubscribing."
