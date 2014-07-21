@@ -54,9 +54,8 @@
 (defn ^{Test {:groups ["product_status"
                        "tier3"
                        "blockedByBug-964332"]
-              :dataProvider "installed-products"
-              :priority (int 100)}}
-  check_product_status
+              :dataProvider "subscribed"}}
+  check_product_status_subscribed
   "Asserts that all product statuses match the known statuses in the CLI."
   [_ product row]
   (let [gui-value (tasks/ui getcellvalue :installed-view row 2)
@@ -65,13 +64,13 @@
 
 (defn ^{Test {:groups ["product_status"
                        "tier3"]
-              :dependsOnMethods ["check_product_status"]
-              :dataProvider "installed-products"
-              :priority (int 101)}}
-  check_product_status_unsubscribe
+              :dependsOnMethods ["check_product_status_subscribed"]
+              :dataProvider "installed-products"}}
+  check_product_status_unsubscribed
   "Checks product status is correct after unsubscribing."
-  [_ product row]
-  (let [gui-status (tasks/ui getcellvalue :installed-view row 2)]
+  [_ product]
+  (let [gui-status (tasks/ui getcellvalue :installed-view
+                             (tasks/skip-dropdown :installed-view product) 2)]
     (verify (= gui-status "Not Subscribed"))))
 
 (defn ^{Test {:groups ["product_status"
@@ -92,7 +91,7 @@
 (defn ^{Test {:groups ["product_status"
                        "tier3"]
               :value ["assert_subscription_field"]
-              :dataProvider "subscribed"}}
+              :dataProvider "installed-products"}}
   assert_subscription_field
   "Tests whether the subscripton field in installed view is populated when the entitlement
    is subscribed"
@@ -142,7 +141,7 @@
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn ^{DataProvider {:name "installed-products"}}
+(defn ^{DataProvider {:name "subscribed"}}
   get_installed_products [_ & {:keys [debug]
                                :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log "/get_installed_products()"))
@@ -158,7 +157,7 @@
           prodlist)))
     (to-array-2d [])))
 
-(defn ^{DataProvider {:name "subscribed"}}
+(defn ^{DataProvider {:name "installed-products"}}
   installed_products [_ & {:keys [debug]
                            :or {debug false}}]
   (log/info (str "======= Starting DataProvider: "

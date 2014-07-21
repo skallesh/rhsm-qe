@@ -63,8 +63,9 @@
   "Asserts that status message displayed in main-window is right before subscriptions are attached"
   [_]
   (try
+    (tasks/unsubscribe_all)
     (let
-  	[installed-products (atom {})]
+      [installed-products (atom nil)]
       (reset! installed-products (tasks/ui getrowcount :installed-view))
       (reset! status-before-subscribe
               (Integer. (re-find #"\d*" (tasks/ui gettextvalue :overall-status))))

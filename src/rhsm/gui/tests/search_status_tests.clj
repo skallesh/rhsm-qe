@@ -258,6 +258,9 @@
   (if (tasks/assert-valid-product-arch product)
     (do
       (try
+        (if (nil? (@productlist product))
+          (throw (SkipException.
+            (str "Product: '" product "' does not valid subscription"))))
         (allsearch product)
         (let [expected (@productlist product)
               seen (into [] (tasks/get-table-elements
@@ -320,7 +323,7 @@
 (defn ^{Test {:groups ["search_status"
                        "tier3"
                        "blockedByBug-911386"]
-              :dataProvider "subscriptions"}}
+              :dataProvider "all-subscriptions"}}
   check_service_levels
   "Asserts that the displayed service levels are correct in the subscriptons view."
   [_ subscription]
@@ -333,10 +336,10 @@
                        (str ", " (:support_type rawservice))))]
     (verify (= guiservice service))))
 
-(defn ^{Test {:group ["subscribe"
+(defn ^{Test {:group ["search_status"
                       "tier2"
                       "blockedByBug-865193"]
-              :dataProvider "subscriptions"
+              :dataProvider "all-subscriptions"
               :priority (int 99)}}
   check_provides_products
   "Checks if provide products is populated in all available subscriptions view"
@@ -345,29 +348,26 @@
   (verify ( = (sort (get @subs-contractlist subscription))
               (sort (tasks/get-table-elements :all-available-bundled-products 0)))))
 
+(defn ^{Test {:group ["search_status"
+                      "tier3"]
+              :dataProvider "all-subscriptions"}}
+  check_subscription_selected_after_update
+  "Checks if subscription remains selected after update is clicked
+   case 1: If subscription is stackable, it no longer remains selected
+   case 2: If subscription is non-stakable, it remanins selected"
+  [_ subscription]
+  (tasks/skip-dropdown :all-subscriptions-view subscription)
+  (let [sub-type (tasks/ui gettextvalue :all-available-subscription-type)
+        get-sub-name (fn [] (tasks/ui gettextvalue :all-available-subscription))]
+    (tasks/ui click :search)
+    (tasks/checkforerror)
+    (if (= sub-type "Stackable")
+      (verify (empty? (get-sub-name)))
+      (verify (= (get-sub-name) subscription)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      DATA PROVIDERS      ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn ^{DataProvider {:name "all-subscriptions"}}
-  get_subscriptions [_ & {:keys [debug]
-                          :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " ns-log "get_subscriptions()"))
-  (if-not (assert-skip :search_status)
-    (do
-      (tasks/restart-app)
-      (build-subscription-map)
-      (tasks/register-with-creds)
-      (tasks/search :match-system? false
-                   :do-not-overlap? false)
-      (let [subs (into [] (map vector (tasks/get-table-elements
-                                       :all-subscriptions-view
-                                       0
-                                       :skip-dropdowns? true)))]
-        (if-not debug
-          (to-array-2d subs)
-          subs)))
-    (to-array-2d [])))
 
 (defn ^{DataProvider {:name "installed-products"}}
   get_installed_products [_ & {:keys [debug]
@@ -386,7 +386,7 @@
           prods)))
     (to-array-2d [])))
 
-(defn ^{DataProvider {:name "subscriptions"}}
+(defn ^{DataProvider {:name "all-subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log "get_subscriptions()"))
@@ -394,6 +394,7 @@
     (do
       (tasks/restart-app)
       (clear_env nil)
+      (build-subscription-map)
       (allsearch)
       (let [subs (into [] (map vector (tasks/get-table-elements
                                        :all-subscriptions-view
