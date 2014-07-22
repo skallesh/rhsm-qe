@@ -52,8 +52,16 @@
     (do (tasks/ui click :repositories)
         (tasks/ui waittillwindowexist :repositories-dialog 10))))
 
-(defn assert-remove-all-overide
-  "Asserts if remove all overide button functionality"
+(defn assert-and-subscribe-all
+  "Asserts if the system is already subscribed before subscribe_all"
+  []
+  (let [row-count (tasks/ui getrowcount :installed-view)
+        status (tasks/ui gettextvalue :overall-status)]
+    (if (substring? (str row-count) status)
+      (tasks/subscribe_all))))
+
+(defn assert-and-remove-all-override
+  "Asserts if remove all override button functionality"
   [& {:keys [repo]
       :or {repo nil}}]
   (if (tasks/has-state? :repo-remove-override "enabled")
@@ -137,8 +145,7 @@
     (if (= 0 (tasks/ui getrowcount :repo-table))
       (throw (Exception. "Repositories table is not populated"))
       (do
-        (let
-            [row-count (tasks/ui getrowcount :repo-table)
+        (let [row-count (tasks/ui getrowcount :repo-table)
              list-row (into [] (range row-count))
              random-row-num (nth list-row (rand (count list-row)))]
           (tasks/ui selectrowindex :repo-table random-row-num)
@@ -146,7 +153,7 @@
           (tasks/ui checkrow :repo-table random-row-num)
           (sleep 2000)
           (verify (tasks/has-state? :repo-remove-override "enabled"))
-          (assert-remove-all-overide)
+          (assert-and-remove-all-override)
           (sleep 2000)
           (verify (not (tasks/has-state? :repo-remove-override "enabled"))))))
     (finally
@@ -189,40 +196,29 @@
       (tasks/ui click :close-repo-dialog)
       (tasks/unsubscribe_all))))
 
-(defn ^{BeforeGroups {:groups ["repo"
-                               "tier3"
-                               "blockedByBug-1095938"]
-                      :value ["assert_remove_all_overides"]
-                      :dataProvider "repolist"}}
-  before_enable_repo_remove_all_overrides
-  "Modofies all repos by clicking edit gpg-check"
-  [_ repo]
-  (assert-and-open-repo-dialog)
-  (tasks/ui selectrow :repo-table repo)
-  (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
-    (if (tasks/has-state? :gpg-check-edit "visible")
-      (tasks/ui click :gpg-check-edit))
-    (sleep 2000)
-    (tasks/ui checkrow :repo-table row-num 0)))
-
 (defn ^{Test {:groups ["repo"
                        "tier3"
-                       "blockedByBug-1095938"]
-              :value ["assert_remove_all_overides"]
+                       "blockedByBug-1095938"
+                       "assert_remove_all_overrides"]
               :dataProvider "repolist"}}
   enable_repo_remove_all_overrides
   "Enable all repos and click remove all override and check state"
   [_ repo]
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
+  (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
+   (if (tasks/has-state? :gpg-check-edit "visible")
+     (tasks/ui click :gpg-check-edit))
+    (sleep 2000)
+    (tasks/ui checkrow :repo-table row-num 0))
   (verify (tasks/has-state? :repo-remove-override "enabled"))
-  (assert-remove-all-overide)
+  (assert-and-remove-all-override)
   (verify (tasks/has-state? :gpg-check-edit "visible"))
   (verify (not (tasks/has-state? :repo-remove-override "enabled"))))
 
 (defn ^{AfterGroups {:groups ["repo"
                               "tier3"]
-                     :value ["assert_remove_all_overides"]
+                     :value ["assert_remove_all_overrides"]
                      :alwaysRun true}}
   after_enable_repo_remove_all_overrides
   [_]
@@ -232,7 +228,8 @@
 (defn ^{BeforeGroups {:groups ["repo"
                                "tier3"
                                "blockedByBug-1095938"]
-                      :value ["assert_overide_persistance"]}}
+                      :value ["assert_override_persistance"]
+                      :alwaysRun true}}
   before_verify_override_persistance
   "Modofies all repos by clicking edit gpg-check"
   [_]
@@ -253,8 +250,8 @@
 
 (defn ^{Test {:groups ["repo"
                        "tier3"
-                       "blockedByBug-1095938"]
-              :value ["assert_overide_persistance"]
+                       "blockedByBug-1095938"
+                       "assert_override_persistance"]
               :dataProvider "repolist"}}
   verify_override_persistance
   "Checks the persistance of repo override after subscriptions are removed"
@@ -267,7 +264,7 @@
 (defn ^{AfterGroups {:groups ["repo"
                               "tier3"
                               "blockedByBug-1095938"]
-                     :value ["assert_overide_persistance"]
+                     :value ["assert_override_persistance"]
                      :alwaysRun true}}
   after_verify_override_persistance
   [_]
@@ -275,7 +272,7 @@
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
                              (tasks/ui selectrow :repo-table repo)
-                             (assert-remove-all-overide)))
+                             (assert-and-remove-all-override)))
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
 
@@ -315,8 +312,8 @@
     (do
       (if (tasks/ui showing? :register-system)
         (tasks/register-with-creds))
-      (tasks/subscribe_all)
-      (tasks/ui click :repositories)
+      (assert-and-subscribe-all)
+      (assert-and-open-repo-dialog)
       (tasks/ui waittillwindowexist :repositories-dialog 10)
       (let [repos (into [] (map vector (tasks/get-table-elements
                                         :repo-table 1)))]

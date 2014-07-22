@@ -122,8 +122,8 @@
                (tasks/ui click :cancel-contract-selection)))))))))
 
 (defn ^{Test {:groups ["search_status"
-                       "tier3"]
-              :value ["check_subscription_type_all_available"]
+                       "tier3"
+                       "check_subscription_type_all_available"]
               :dataProvider "all-subscriptions"}}
   check_subscription_type_all_subscriptions
   "Checks for subscription type in all available subscriptions"

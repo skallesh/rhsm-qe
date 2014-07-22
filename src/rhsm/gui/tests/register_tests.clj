@@ -204,8 +204,8 @@
 
 (defn ^{Test {:groups ["registration"
                        "tier1"
-                       "blockedByBug-891621"]
-              :value ["activation-register"]}}
+                       "blockedByBug-891621"
+                       "activation-register"]}}
   check_activation_key_register_dialog
   "checks whether checking activation key option followed by clicking default during
      register proceeds to register dialog and not to activation-key register dialog"
