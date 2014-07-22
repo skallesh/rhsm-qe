@@ -60,8 +60,8 @@
     (if (substring? (str row-count) status)
       (tasks/subscribe_all))))
 
-(defn assert-and-remove-all-overide
-  "Asserts if remove all overide button functionality"
+(defn assert-and-remove-all-override
+  "Asserts if remove all override button functionality"
   [& {:keys [repo]
       :or {repo nil}}]
   (if (tasks/has-state? :repo-remove-override "enabled")
@@ -153,7 +153,7 @@
           (tasks/ui checkrow :repo-table random-row-num)
           (sleep 2000)
           (verify (tasks/has-state? :repo-remove-override "enabled"))
-          (assert-and-remove-all-overide)
+          (assert-and-remove-all-override)
           (sleep 2000)
           (verify (not (tasks/has-state? :repo-remove-override "enabled"))))))
     (finally
@@ -212,7 +212,7 @@
     (sleep 2000)
     (tasks/ui checkrow :repo-table row-num 0))
   (verify (tasks/has-state? :repo-remove-override "enabled"))
-  (assert-and-remove-all-overide)
+  (assert-and-remove-all-override)
   (verify (tasks/has-state? :gpg-check-edit "visible"))
   (verify (not (tasks/has-state? :repo-remove-override "enabled"))))
 
@@ -272,7 +272,7 @@
   (tasks/do-to-all-rows-in :repo-table 1
                            (fn [repo]
                              (tasks/ui selectrow :repo-table repo)
-                             (assert-and-remove-all-overide)))
+                             (assert-and-remove-all-override)))
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
 
