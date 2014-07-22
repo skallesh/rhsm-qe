@@ -160,8 +160,8 @@
           (run-command "date -s \"-1 year\""))))))
 
  (defn ^{Test {:groups ["subscription_status"
-                       "tier3"]
-              :value ["check_subscription_type_my_subs"]
+                        "tier3"
+                        "check_subscription_type_my_subs"]
               :dataProvider "my-subscriptions"}}
   check_subscription_type_my_subscriptions
   "Checks for subscription type in my subscriptions"
