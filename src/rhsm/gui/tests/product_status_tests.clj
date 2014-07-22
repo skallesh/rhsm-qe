@@ -89,8 +89,8 @@
      (verify (= status "Unknown")))))
 
 (defn ^{Test {:groups ["product_status"
-                       "tier3"]
-              :value ["assert_subscription_field"]
+                       "tier3"
+                       "assert_subscription_field"]
               :dataProvider "installed-products"}}
   assert_subscription_field
   "Tests whether the subscripton field in installed view is populated when the entitlement
