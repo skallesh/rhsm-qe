@@ -145,8 +145,7 @@
     (if (= 0 (tasks/ui getrowcount :repo-table))
       (throw (Exception. "Repositories table is not populated"))
       (do
-        (let
-            [row-count (tasks/ui getrowcount :repo-table)
+        (let [row-count (tasks/ui getrowcount :repo-table)
              list-row (into [] (range row-count))
              random-row-num (nth list-row (rand (count list-row)))]
           (tasks/ui selectrowindex :repo-table random-row-num)
@@ -207,9 +206,9 @@
   [_ repo]
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
-  ((let []) [row-num (tasks/ui gettablerowindex :repo-table repo)]
-    (if (tasks/has-state? :gpg-check-edit "visible")
-      (tasks/ui click :gpg-check-edit))
+  (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
+   (if (tasks/has-state? :gpg-check-edit "visible")
+     (tasks/ui click :gpg-check-edit))
     (sleep 2000)
     (tasks/ui checkrow :repo-table row-num 0))
   (verify (tasks/has-state? :repo-remove-override "enabled"))
