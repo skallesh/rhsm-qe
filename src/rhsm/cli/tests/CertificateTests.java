@@ -80,7 +80,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that a base product cert corresponding to the /etc/redhat-release is installed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706518","blockedByBug-844368"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706518","blockedByBug-844368","blockedByBug-1104498"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
 			dependsOnMethods={"VerifyOnlyOneBaseRHELProductCertIsInstalled_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
