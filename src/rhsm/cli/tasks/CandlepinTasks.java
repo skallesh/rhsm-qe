@@ -231,7 +231,14 @@ public class CandlepinTasks {
 		*/
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
-
+		
+		// delete the keystore to avoid...
+		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin
+		//	Unable to verify server's identity: certificate verify failed
+		// manual fix...
+		//  [root@jsefler-f14-candlepin candlepin]# rm -rf /etc/tomcat6/keystore
+		//  [root@jsefler-f14-candlepin candlepin]# service tomcat6 restart
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf /etc/tomcat6/keystore", TestRecords.action());
 		
 		// restart some services
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18

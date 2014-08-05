@@ -2708,12 +2708,6 @@ public class SubscriptionManagerTasks {
 		}
 
 		// assert results for a successful registration exit code
-		// Manual Note: If the following error occurs against a standalone candlepin... rm -rf /etc/tomcat6/keystore
-		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin
-		//	Unable to verify server's identity: certificate verify failed
-		// Then...
-		//  [root@jsefler-f14-candlepin candlepin]# rm -rf /etc/tomcat6/keystore
-		//  [root@jsefler-f14-candlepin candlepin]# service tomcat6 restart
 		if (isPackageVersion("subscription-manager", "<", "1.10")) {
 			if (autosubscribe==null || !autosubscribe)	// https://bugzilla.redhat.com/show_bug.cgi?id=689608
 				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
