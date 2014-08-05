@@ -2708,6 +2708,12 @@ public class SubscriptionManagerTasks {
 		}
 
 		// assert results for a successful registration exit code
+		// Manual Note: If the following error occurs against a standalone candlepin... rm -rf /etc/tomcat6/keystore
+		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin
+		//	Unable to verify server's identity: certificate verify failed
+		// Then...
+		//  [root@jsefler-f14-candlepin candlepin]# rm -rf /etc/tomcat6/keystore
+		//  [root@jsefler-f14-candlepin candlepin]# service tomcat6 restart
 		if (isPackageVersion("subscription-manager", "<", "1.10")) {
 			if (autosubscribe==null || !autosubscribe)	// https://bugzilla.redhat.com/show_bug.cgi?id=689608
 				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
@@ -7134,10 +7140,10 @@ public class SubscriptionManagerTasks {
 	 * @param packageName - "subscription-manager"
 	 * @param comparator - valid values: ">", "<", ">=", "<=", "=="
 	 * @param version - "1.10.14-7"
-	 * @return true or false or null when the packageName is not installed
+	 * @return true or false (null is returned when the packageName is not installed)
 	 * 
 	 * <br>Examples:
-	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >  1.10 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >  1.10 is true
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >= 1.10 is true
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 == 1.10 is true
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <= 1.10 is true
@@ -7145,8 +7151,8 @@ public class SubscriptionManagerTasks {
 	 * <br>
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >  1.10.14 is true
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >= 1.10.14 is true
-	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 == 1.10.14 is false
-	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <= 1.10.14 is false
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 == 1.10.14 is true
+	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <= 1.10.14 is true
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <  1.10.14 is false
 	 * <br>
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 >  1.10.14-1 is true
@@ -7201,7 +7207,11 @@ public class SubscriptionManagerTasks {
 		String s1 = version1;
 		String s2 = version2;
 		
-		// convert version strings into arrays of the form:  a1[] = 1, 10, 14-7, el7, x86_64
+		// convert 14-7 to 14.7
+		s1 = s1.replace("-", ".");
+		s2 = s2.replace("-", ".");
+		
+		// convert version strings (e.g. 1.10.14-7.el7.x86_64) into arrays of the form:  a1[] = 1, 10, 14, 7, el7, x86_64
 		String[] a1 = s1.split("\\.");
 		String[] a2 = s2.split("\\.");
 		
@@ -7209,10 +7219,6 @@ public class SubscriptionManagerTasks {
 		int l1 = s1.split("\\.").length;
 		int l2 = s2.split("\\.").length;
 		for (int i=0; i<Math.min(l1,l2); i++) {
-			
-			// convert 14-7 to 14.7
-			if (a1[i].matches("\\d+-\\d+"))  a1[i] = a1[i].replace("-", ".");
-			if (a2[i].matches("\\d+-\\d+"))  a2[i] = a2[i].replace("-", ".");
 			
 			// convert el7 to 0
 			try {Float.valueOf(a1[i]);} catch (NumberFormatException e) {a1[i]="0";}
