@@ -151,6 +151,14 @@ public class SubscriptionManagerTasks {
 		redhatReleaseXY = matcher.group();
 		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
 		
+		// TODO This is a WORKAROUND to treat an ARM Development Preview as a RHEL7.0 system.  Not sure if this is what we ultimately want.
+		// Product:	ID: 261		Name: Red Hat Enterprise Linux Server for ARM Development Preview	Version: Snapshot	Arch: aarch64	Tags: rhsa-dp-server,rhsa-dp-server-7	Brand Type: 	Brand Name: 
+		if (redhatRelease.startsWith("Red Hat Enterprise Linux Server for ARM Development Preview") && Integer.valueOf(redhatReleaseX)<7) {	// Red Hat Enterprise Linux Server for ARM Development Preview release 1.2
+			log.warning("Detected an ARM Development Preview system.  Automation will effectively assume a RHEL7.0 system.");
+			redhatReleaseXY = "7.0";
+			redhatReleaseX = "7";
+		}
+		
 		// predict sockets on the system   http://libvirt.org/formatdomain.html#elementsCPU
 		/* 5/6/2013: DON'T PREDICT THIS USING lscpu ANY MORE.  IT LEADS TO TOO MANY TEST FAILURES TO TROUBLESHOOT.  INSTEAD, RELY ON FactsTests.MatchingCPUSocketsFact_Test() TO ASSERT BUGZILLA Bug 751205 - cpu_socket(s) facts value occasionally differs from value reported by lscpu (which is correct?)
 		if (Float.valueOf(redhatReleaseXY) < 6.0f) {
