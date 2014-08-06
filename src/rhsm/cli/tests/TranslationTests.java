@@ -222,6 +222,14 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				translationFilePassed=false;
 			}
 		}
+		
+		// Skip on Known Issue: https://bugzilla.redhat.com/show_bug.cgi?id=1093201#c5
+		if (translationFile.getPath().contains("/pa/") && clienttasks.isPackageVersion("subscription-manager","==", "1.11")) {
+			if (!translationFilePassed) {
+				throw new SkipException("Missing translations for Punjabi is a Known Issue for subscription-manager-1.11.");
+			}
+		}
+		
 		Assert.assertTrue(translationFilePassed,"Exactly 1 occurance of all the expected translation msgids ("+translationMsgidSet.size()+") were found in translation file '"+translationFile+"'.");
 	}
 	
