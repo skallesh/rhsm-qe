@@ -2141,6 +2141,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1105656");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-i386-server-productivity-5-beta") ||
+				rhnAvailableChildChannel.equals("rhel-i386-server-productivity-5-beta-debuginfo")) {
+				// Bug 1127794 - subscription-manager-migration-data is missing channel-to-productCert maps for rhel-i386-server-productivity-5-beta channels
+				bugIds.add("1127794");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
