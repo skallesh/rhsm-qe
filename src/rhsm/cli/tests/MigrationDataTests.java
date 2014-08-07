@@ -881,6 +881,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.startsWith("rhel-x86_64-server-6-cf-me-2")) {
+			// Bug 1021664 - Red Hat CloudForms rhel-x86_64-server-6-cf-me-2 channel mappings are missing 
+			log.warning("(degregor 07/29/2014) It turns out that the cf-me-2 for RHEL 6 channels were never actually used.  When CF ME was made available they went straight to cf-me-3.  I've gone and moved the rhel-x86_64-server-6-cf-me-2* channels into the shadow channel family and we can ignore them in the migration data.  https://bugzilla.redhat.com/show_bug.cgi?id=1021664#c3");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
 		/* commented out in favor of bug https://bugzilla.redhat.com/show_bug.cgi?id=1105656#c5
 		if (classicRhnChannel.startsWith("rhel-x86_64-server-productivity-5-beta")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
 			if (!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel)) {
@@ -2147,14 +2153,39 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1127794");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-3-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-3-beta-debuginfo")) {
+				// Bug 1127880 - rhel-x86_64-server-6-cf-me-3-beta channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1127880");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-foreman") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-foreman-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-5") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-5-debuginfo")) {
+				// Bug 1127884 - rhel-x86_64-server-6-ost-(5|foreman) channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1127884");
+			}
+			
+			if (rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-rhs-3") ||
+				rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-rhs-rhsc-3") ||
+				rhnAvailableChildChannel.startsWith("rhel-x86_64-server-6-rhs-nagios-3")) {
+				// Bug 1127900 - rhel-x86_64-server-6-rhs-(3|rhsc-3|nagios) channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1127900");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.5") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.5-debuginfo")) {
+				// Bug 1127903 - rhel-x86_64-server-6-rhevm-3.5 channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1127903");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
 		
 		return ll;
 	}
-	
-	
 }
 
 
