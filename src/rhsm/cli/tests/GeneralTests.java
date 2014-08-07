@@ -606,7 +606,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) ahead of candlepin, verify that a WARNING is logged to rhsm.log",
+	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) ahead of candlepin's clock, verify that a WARNING is logged to rhsm.log",
 			groups={"VerifyPositiveClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -642,7 +642,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	protected Integer positiveClockSkewMinutes = null;
 	
 	
-	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) behind of candlepin, verify that a WARNING is logged to rhsm.log",
+	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) behind candlepin's clock, verify that a WARNING is logged to rhsm.log",
 			groups={"VerifyNegativeClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -664,6 +664,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		log.info("Calling subscription-manager version to trigger communication to the currently configured candlepin server...");
 		clienttasks.version(null, null, null);
 		rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, null).trim();
+		// NOTE:  If the candlepin server was newly deployed within the last 119 minutes, then a "SSLError: certificate verify failed" will be thrown.  Skip the test if this happens.
+		if (!rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection) && rhsmLogResult.contains("SSLError: certificate verify failed")) throw new SkipException("Assuming the candlepin server was recently deployed within the last hour because an SSLError was thrown instead of clock skew detection.");
 		Assert.assertTrue(rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection), "Assuming the rhsm client is greater than 60 minutes behind of the candlepin server, then WARNING '"+clienttasks.msg_ClockSkewDetection+"' is logged to '"+clienttasks.rhsmLogFile+"'.");
 	}
 	@AfterGroups(groups={"setup"}, value={"VerifyNegativeClockSkewDetection_Test"})
