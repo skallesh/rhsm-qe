@@ -37,6 +37,11 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   https://brewweb.devel.redhat.com/packageinfo?packageID=13865
  *   wget --no-check-certificate -nv -O docker.rpm "http://auto-services.usersys.redhat.com/latestrpm/get_latest_rpm.py?regress=true&arch=x86_64&release=el7&rpmname=docker&version=1.0.0"
  *   http://download.devel.redhat.com/nightly/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/
+ *   
+ * Red Hat Docker images
+ *   http://docker-registry.usersys.redhat.com:8080/#redhat
+ *     docker-registry.usersys.redhat.com/brew/rhel7:latest
+ *     docker-registry.usersys.redhat.com/brew/rhel6:latest
  */
 @Test(groups={"DockerTests","Tier3Tests"})
 public class DockerTests extends SubscriptionManagerCLITestScript {
