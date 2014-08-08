@@ -2253,13 +2253,24 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(rhsmUsername, rhsmPassword, sm_serverUrl, "/owners/"+orgKey));
 		String defaultServiceLevel = (jsonOrg.get("defaultServiceLevel").equals(JSONObject.NULL))? "":jsonOrg.getString("defaultServiceLevel");
 		
-		// Note: To avoid redundent prompting for credentials, rhn-migrate-classic-to-rhsm will NOT prompt for rhsm Username/Password/Org when the rhsm server matches subscription\.rhn\.(.+\.)*redhat\.com
+		// Note: To avoid redundant prompting for credentials, rhn-migrate-classic-to-rhsm will NOT prompt for rhsm Username/Password/Org when the rhsm server matches subscription\.rhn\.(.+\.)*redhat\.com
 		// This causes a testing problem when migrating from a satellite server to rhsm hosted - adding a valid --serverurl to the options is a good workaround
 		String rhsmServerUrlOption="";
 		if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
 			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
 				// force a valid --serverurl
 				rhsmServerUrlOption = " --serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;
+			}
+		} else {// we are migrating from rhn hosted...
+			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+				// and we are migrating to rhsm hosted...
+				// hence we will not be prompted for rhsm credentials,
+				// so don't pass them to the rhn-migrate-classic-to-rhsm.tcl script or else you won't get the expected rhn-migrate-classic-to-rhsm exit code because the tcl script will be prematurely exited without getting the actual exit code from rhn-migrate-classic-to-rhsm.
+				if (sm_rhnUsername.equals(rhsmUsername)) {
+					rhsmUsername = null;
+					rhsmPassword = null;
+					rhsmOrg = null;
+				}
 			}
 		}
 		
@@ -2389,13 +2400,24 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			rhsmUsername=sm_rhnUsername; rhsmPassword=sm_rhnPassword; rhsmOrg = null;
 		}
 		
-		// Note: To avoid redundent prompting for credentials, rhn-migrate-classic-to-rhsm will NOT prompt for rhsm Username/Password/Org when the rhsm server matches subscription\.rhn\.(.+\.)*redhat\.com
+		// Note: To avoid redundant prompting for credentials, rhn-migrate-classic-to-rhsm will NOT prompt for rhsm Username/Password/Org when the rhsm server matches subscription\.rhn\.(.+\.)*redhat\.com
 		// This causes a testing problem when migrating from a satellite server to rhsm hosted - adding a valid --serverurl to the options is a good workaround
 		String rhsmServerUrlOption="";
 		if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
 			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
 				// force a valid --serverurl
 				rhsmServerUrlOption = " --serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;
+			}
+		} else {// we are migrating from rhn hosted...
+			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+				// and we are migrating to rhsm hosted...
+				// hence we will not be prompted for rhsm credentials,
+				// so don't pass them to the rhn-migrate-classic-to-rhsm.tcl script or else you won't get the expected rhn-migrate-classic-to-rhsm exit code because the tcl script will be prematurely exited without getting the actual exit code from rhn-migrate-classic-to-rhsm.
+				if (sm_rhnUsername.equals(rhsmUsername)) {
+					rhsmUsername = null;
+					rhsmPassword = null;
+					rhsmOrg = null;
+				}
 			}
 		}
 		
