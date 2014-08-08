@@ -2180,6 +2180,11 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1127903");
 			}
 			
+			if (rhnAvailableChildChannel.startsWith("rhel-ppc-server-hts-5-beta")) {
+				// Bug 1128283 - rhel-ppc-server-hts-5-beta channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1128283");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
