@@ -611,6 +611,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyPositiveClockSkewDetection_Test() {
+		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		clienttasks.unregister(null, null, null);	// do not need to be registered for this test
 		
 		String rhsmLogMarker = System.currentTimeMillis()+" Testing clock skew detection...";
@@ -647,6 +648,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyNegativeClockSkewDetection_Test() {
+		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		clienttasks.unregister(null, null, null);	// do not need to be registered for this test
 		
 		String rhsmLogMarker = System.currentTimeMillis()+" Testing clock skew detection...";
