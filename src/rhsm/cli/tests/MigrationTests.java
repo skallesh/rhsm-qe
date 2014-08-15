@@ -423,6 +423,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the exit code
 		checkForKnownBug881952(sshCommandResult);
+		checkForKnownBug1130637(sshCommandResult);
 		String expectedMsg;
 		if (!getProductCertFilenamesContainingNonUniqueProductIds(expectedMigrationProductCertFilenames).isEmpty()) {
 			log.warning("The RHN Classic channels currently consumed map to multiple product certs that share the same product ID "+getProductCertFilenamesContainingNonUniqueProductIds(expectedMigrationProductCertFilenames)+".  We must abort in this case.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
@@ -830,6 +831,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the exit code
 		checkForKnownBug881952(sshCommandResult);
+		checkForKnownBug1130637(sshCommandResult);
 		String expectedMsg;
 		if (sshCommandResult.getStdout().contains(conflictingProductCertsMsg)) {	// when "You are subscribed to channels that have conflicting product certificates." migration aborts.
 			log.warning("You are subscribed to channels that have conflicting product certificates.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
@@ -2145,6 +2147,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	Stderr:
 		//	ExitCode: 1
 		
+		// TEMPORARY WORKAROUND FOR BUG
 		// detect bug 881952 and skip if not fixed in this release
 		// Bug 881952 	ssl.SSLError: The read operation timed out (during large rhn-migrate-classic-to-rhsm) 
 		String bugId = "881952";
@@ -2169,6 +2172,48 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	The system has been registered with id: 9909bb77-d56e-4784-a16f-d4509fd252ce 
 		//	System 'dhcp193-87.pnq.redhat.com' successfully registered to Red Hat Subscription Management.
 		
+		// END OF WORKAROUND
+	}
+	
+	
+	protected void checkForKnownBug1130637(SSHCommandResult sshCommandResult) {
+		
+		
+		//	201408151456:16.723 - FINE: ssh root@ibm-x3550m3-07.lab.eng.brq.redhat.com rhn-migrate-classic-to-rhsm.tcl -n qa@redhat.com redhatqa null null null null null
+		//	201408151456:25.495 - FINE: Stdout: 
+		//	spawn rhn-migrate-classic-to-rhsm -n
+		//	Red Hat username: qa@redhat.com
+		//	Red Hat password: 
+		//
+		//	Retrieving existing RHN Classic subscription information...
+		//
+		//	+-----------------------------------------------------+
+		//	System is currently subscribed to these RHN Classic Channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-client-6
+		//
+		//	+-----------------------------------------------------+
+		//	Installing product certificates for these RHN Classic channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-client-6
+		//
+		//	Product certificates installed successfully to /etc/pki/product.
+		//	isfile() takes exactly 1 argument (2 given)
+		//	201408151456:25.496 - FINE: Stderr: 
+		//	201408151456:25.496 - FINE: ExitCode: 255
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		// detect bug 1130637 and skip if not fixed in this release
+		// Bug 1130637 - rhn-migrate-classic-to-rhsm fails on RHEL6 Client with "TypeError: isfile() takes exactly 1 argument (2 given)"
+		String tracebackMsg = "isfile() takes exactly 1 argument (2 given)";
+		if (sshCommandResult.getStdout().trim().endsWith(tracebackMsg)) {
+			String bugId = "1130637";
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Encountered unexpected traceback message '"+tracebackMsg+"' from open bug "+bugId+".");
+			}
+		}
 		// END OF WORKAROUND
 	}
 
