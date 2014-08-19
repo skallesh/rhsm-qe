@@ -2185,6 +2185,11 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1128283");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-s390x-server-hts-6-beta")) {
+				// Bug 1131596 - rhel-s390x-server-hts-6-beta channel map is missing from channel-cert-mapping.txt
+				bugIds.add("1131596");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
