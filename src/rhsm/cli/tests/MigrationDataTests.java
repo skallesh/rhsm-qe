@@ -2190,6 +2190,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1131596");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-ppc-server-optional-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc-server-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-hpn-fastrack-6") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-hpn-fastrack-6-debuginfo")) {
+				// Bug 1131629 - some rhel-ppc-server and rhel-ppc64-server channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1131629");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
