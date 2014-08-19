@@ -2422,6 +2422,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
+		// when testing with --serverurl specified, add bug BlockedByBzBug 1131213 to affected rows
+		for (List<Object> l : ll) {
+			if (((String)(l.get(5))).contains("--serverurl")) {	// affected rows contain --serverurl in the String options parameter
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+				bugIds.add("1131213");	// Bug 1131213 - rhn-migrate-classic-to-rhsm throws gaierror: [Errno -2] Name or service not known
+				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				l.set(0, blockedByBzBug);
+			}
+		}
+		
 		return ll;
 	}
 	
@@ -2516,6 +2527,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 					l.set(0, blockedByBzBug);
 				}
+			}
+		}
+		
+		// when testing with --serverurl specified, add bug BlockedByBzBug 1131213 to affected rows
+		for (List<Object> l : ll) {
+			if (((String)(l.get(5))).contains("--serverurl")) {	// affected rows contain --serverurl in the String options parameter
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+				bugIds.add("1131213");	// Bug 1131213 - rhn-migrate-classic-to-rhsm throws gaierror: [Errno -2] Name or service not known
+				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				l.set(0, blockedByBzBug);
 			}
 		}
 		
