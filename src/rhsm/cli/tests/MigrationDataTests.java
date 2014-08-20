@@ -2198,6 +2198,11 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1131629");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.4")) {
+				// Bug 1129948 - RHEV 3.4 channel mappings missing for rhn-migrate-classic-to-rhsm
+				bugIds.add("1129948");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
