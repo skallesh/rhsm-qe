@@ -911,18 +911,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			options.add("--register");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				
+				// 2013-10-11 update... WONTFIX "Unable to open a display"; see https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7
 				// attempt to avoid bug 881095 RuntimeError: could not open display
-				if ((Integer.valueOf(clienttasks.redhatReleaseX)==6 /*&& Float.valueOf(clienttasks.redhatReleaseXY)<6.4*/) || 
-					(Integer.valueOf(clienttasks.redhatReleaseX)==5 /*&& Float.valueOf(clienttasks.redhatReleaseXY)<5.12*/)){
+				if (Integer.valueOf(clienttasks.redhatReleaseX)==5 /*&& Float.valueOf(clienttasks.redhatReleaseXY)<5.12*/){
 					log.warning("Employing WORKAROUND for https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7 by exporting DISPLAY");
-					//commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
 					commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
-				}
-				if ((Integer.valueOf(clienttasks.redhatReleaseX)==7 /*&& Float.valueOf(clienttasks.redhatReleaseXY)<7.1*/)){
-					// 2013-10-11 update... WONTFIX "Unable to open a display"; see https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7
+				} else
+				if (Integer.valueOf(clienttasks.redhatReleaseX)==6 /*&& Float.valueOf(clienttasks.redhatReleaseXY)<6.4*/){
 					log.warning("Employing WORKAROUND for https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7 by exporting DISPLAY");
-					//commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
-					//commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
+					commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
+				} else
+				if (Integer.valueOf(clienttasks.redhatReleaseX)==7 /*&& Float.valueOf(clienttasks.redhatReleaseXY)<7.1*/){
+					log.warning("Employing WORKAROUND for https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7 by exporting DISPLAY");
 					commandHelp = "export DISPLAY=:0 && "+commandHelp;
 				}
 				
