@@ -368,10 +368,11 @@ schema generation failed
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then bundle exec buildr candlepin:apicrawl; fi;", Integer.valueOf(0));	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then bundle exec buildr candlepin:server:apicrawl; fi;", Integer.valueOf(0));	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e server/target/candlepin_methods.json ]; then bundle exec buildr candlepin:server:apicrawl; fi;", Integer.valueOf(0));	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
 		log.info("Following is a report of all the candlepin API urls:");
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());		// 9/18/2012 the path appears to have moved
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
+		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat server/target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
 	}
 	
 	@Deprecated
