@@ -752,8 +752,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			if (!availableSubscriptionPoolsWithoutOverlap.contains(availableSubscriptionPool)) {
 				for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId)) {
 					InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
-					Assert.assertNotNull(installedProduct, "Subscription '"+availableSubscriptionPool.subscriptionName+"' provides="+availableSubscriptionPool.provides+" is excluded from the list available with no-overlap.  It provides product id '"+providedProductId+"' which is installed and should be covered by an active subscription.");
-					Assert.assertEquals(installedProduct.status, "Subscribed", "Subscription '"+availableSubscriptionPool.subscriptionName+"' provides="+availableSubscriptionPool.provides+" is excluded from the list available with no-overlap.  It provides product id '"+providedProductId+"' which is installed and covered by an active subscription.");
+					if (installedProduct!=null) {
+						Assert.assertEquals(installedProduct.status, "Subscribed", "Subscription '"+availableSubscriptionPool.subscriptionName+"' provides="+availableSubscriptionPool.provides+" is excluded from the list available with no-overlap.  It provides product id '"+providedProductId+"' which is installed and covered by an active subscription.");
+					} else {
+						// skip the providedProductId when not installed
+					}
 				}
 			}
 		}
