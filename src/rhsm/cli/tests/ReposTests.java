@@ -443,6 +443,14 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposEnableDisableMultipleInvalidRepo_Test(){
+		//	[root@jsefler-6 ~]# subscription-manager repos --enable=invalid-repo-A --enable=invalid-repo-B --disable=invalid-repo-C --disable=invalid-repo-D
+		//	Error: invalid-repo-A is not a valid repo ID. Use --list option to see valid repos.
+		//	Error: invalid-repo-B is not a valid repo ID. Use --list option to see valid repos.
+		//	Error: invalid-repo-C is not a valid repo ID. Use --list option to see valid repos.
+		//	Error: invalid-repo-D is not a valid repo ID. Use --list option to see valid repos.
+		//	[root@jsefler-6 ~]# echo $?
+		//	1
+		
 		List<String> enableRepos = Arrays.asList(new String[]{"invalid-repo-A","invalid-repo-B"});
 		List<String> disableRepos = Arrays.asList(new String[]{"invalid-repo-C","invalid-repo-D"});
 		List<String> invalidRepos = new ArrayList<String>(); invalidRepos.addAll(enableRepos); invalidRepos.addAll(disableRepos);
@@ -464,6 +472,59 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!result.getStdout().contains(expectedStdoutMsg), "Stdout from an attempt to disable multiple invalid repos does NOT contain expected message (because an invalid repo is effectively always disabled): "+expectedStdoutMsg);		
 		}
 		*/
+	}
+	
+	
+	@Test(	description="subscription-manager: attempt wildcard enable/disable repos",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposEnableDisableWildcardRepos_Test() throws JSONException, Exception{
+		//	[root@jsefler-6 ~]# subscription-manager repos --enable=* --disable=*
+		//	Repo awesomeos is enabled for this system.
+		//	Repo awesomeos-x86_64 is enabled for this system.
+		//	Repo awesomeos-modifier is enabled for this system.
+		//	Repo awesomeos-ppc is enabled for this system.
+		//	Repo never-enabled-content is enabled for this system.
+		//	Repo awesomeos-ppc64 is enabled for this system.
+		//	Repo content-label is enabled for this system.
+		//	Repo content-label-empty-gpg is enabled for this system.
+		//	Repo awesomeos-s390x is enabled for this system.
+		//	Repo content-label-no-gpg is enabled for this system.
+		//	Repo awesomeos-ia64 is enabled for this system.
+		//	Repo awesomeos-i686 is enabled for this system.
+		//	Repo awesomeos-x86_64-i386-content is enabled for this system.
+		//	Repo awesomeos-x86_64-only-content is enabled for this system.
+		//	Repo awesomeos is disabled for this system.
+		//	Repo awesomeos-x86_64 is disabled for this system.
+		//	Repo awesomeos-modifier is disabled for this system.
+		//	Repo awesomeos-ppc is disabled for this system.
+		//	Repo never-enabled-content is disabled for this system.
+		//	Repo awesomeos-ppc64 is disabled for this system.
+		//	Repo content-label is disabled for this system.
+		//	Repo content-label-empty-gpg is disabled for this system.
+		//	Repo awesomeos-s390x is disabled for this system.
+		//	Repo content-label-no-gpg is disabled for this system.
+		//	Repo awesomeos-ia64 is disabled for this system.
+		//	Repo awesomeos-i686 is disabled for this system.
+		//	Repo awesomeos-x86_64-i386-content is disabled for this system.
+		//	Repo awesomeos-x86_64-only-content is disabled for this system.
+		//	[root@jsefler-6 ~]# echo $?
+		//	0
+
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
+
+		SSHCommandResult result = clienttasks.repos_(null, "*", "*", null, null, null);
+		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable all repos (using wildcard *).");
+		String expectedStdoutMsgFormat = "Repo %s is %s for this system.";
+		for (Repo subscribedRepo : subscribedRepos) {
+			String expectedEnableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"enabled");
+			String expectedDisableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"disabled");
+			Assert.assertTrue(result.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable/disable all repos (using wildcard *) contains expected message: "+expectedEnableStdoutMsg);		
+			Assert.assertTrue(result.getStdout().contains(expectedDisableStdoutMsg), "Stdout from an attempt to enable/disable all repos (using wildcard *) contains expected message: "+expectedDisableStdoutMsg);		
+		}
 	}
 	
 	
