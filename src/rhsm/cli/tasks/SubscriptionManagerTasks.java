@@ -4136,12 +4136,11 @@ public class SubscriptionManagerTasks {
 	
 	
 	// repos module tasks ************************************************************
-
+	
 	/**
-	 * @return SSHCommandResult from subscription-manager repos [parameters] without asserting any results
+	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public SSHCommandResult repos_(Boolean list, List<String> enableRepos, List<String> disableRepos, String proxy,String proxyuser,String proxypassword) {
-		
+	public String reposCommand(Boolean list, List<String> enableRepos, List<String> disableRepos, String proxy,String proxyuser,String proxypassword) {
 		// assemble the command
 		String command = this.command;									command += " repos";
 		if (list!=null && list)											command += " --list";
@@ -4150,6 +4149,24 @@ public class SubscriptionManagerTasks {
 		if (proxy!=null)												command += " --proxy="+proxy;
 		if (proxyuser!=null)											command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
+		
+		return command;
+	}
+	
+	/**
+	 * @return SSHCommandResult from subscription-manager repos [parameters] without asserting any results
+	 */
+	public SSHCommandResult repos_(Boolean list, List<String> enableRepos, List<String> disableRepos, String proxy,String proxyuser,String proxypassword) {
+		
+//		// assemble the command
+//		String command = this.command;									command += " repos";
+//		if (list!=null && list)											command += " --list";
+//		if (enableRepos!=null)	for (String enableRepo : enableRepos)	command += " --enable="+enableRepo;
+//		if (disableRepos!=null)	for (String disableRepo : disableRepos)	command += " --disable="+disableRepo;
+//		if (proxy!=null)												command += " --proxy="+proxy;
+//		if (proxyuser!=null)											command += " --proxyuser="+proxyuser;
+//		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
+		String command = reposCommand(list, enableRepos, disableRepos,  proxy, proxyuser, proxypassword);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);

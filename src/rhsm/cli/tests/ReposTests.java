@@ -475,7 +475,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="subscription-manager: attempt wildcard enable/disable repos",
+	@Test(	description="subscription-manager: attempt enable/disable all repos (using wildcard *)",
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -519,11 +519,62 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.repos_(null, "*", "*", null, null, null);
 		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable all repos (using wildcard *).");
 		String expectedStdoutMsgFormat = "Repo %s is %s for this system.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdoutMsgFormat = "Repo '%s' is %s for this system.";
 		for (Repo subscribedRepo : subscribedRepos) {
 			String expectedEnableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"enabled");
 			String expectedDisableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"disabled");
-			Assert.assertTrue(result.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable/disable all repos (using wildcard *) contains expected message: "+expectedEnableStdoutMsg);		
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.12.8-1")) {
+				Assert.assertFalse(result.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable/disable all repos (using wildcard *) contains expected message: "+expectedEnableStdoutMsg);		
+			} else {
+				Assert.assertTrue(result.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable/disable all repos (using wildcard *) contains expected message: "+expectedEnableStdoutMsg);		
+			}
 			Assert.assertTrue(result.getStdout().contains(expectedDisableStdoutMsg), "Stdout from an attempt to enable/disable all repos (using wildcard *) contains expected message: "+expectedDisableStdoutMsg);		
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager: attempt enable/disable/enable/disable repos in an order",
+			groups={"blockedByBug-1115499"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposEnableDisableReposInOrder_Test() throws JSONException, Exception{
+		//	[root@jsefler-6 ~]# subscription-manager repos --enable=awesomeos-ppc64 --enable=awesomeos-x86_64 --disable=awesomeos-x86_64 --disable=awesomeos-ia64 --enable=awesomeos-ia64 --disable=awesomeos-ppc64
+		//	Repo 'awesomeos-ppc64' is disabled for this system.
+		//	Repo 'awesomeos-x86_64' is disabled for this system.
+		//	Repo 'awesomeos-ia64' is enabled for this system.
+
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.8-1")) throw new SkipException("Bugzilla 1115499 was not implemented in this version of subscription-manager.");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		//List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
+		List<Repo> subscribedRepos = getRandomSubsetOfList(clienttasks.getCurrentlySubscribedRepos(),5);
+		
+		String expectedStdoutMsgFormat = "Repo %s is %s for this system.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdoutMsgFormat = "Repo '%s' is %sd for this system.";
+		String command = clienttasks.reposCommand(null, null, null, null, null, null);
+		Map<String,String> repoEnablements = new HashMap<String,String>();
+		List<String> enablements = Arrays.asList("enable","disable");
+		for (Repo subscribedRepo : subscribedRepos) {
+			for (int i=0; i<4; i++) {
+				String enablement = (getRandomListItem(enablements)); // enable or disable
+				command += String.format(" --%s=%s",enablement,subscribedRepo.repoId);
+				repoEnablements.put(subscribedRepo.repoId, enablement);
+			}
+		}
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(command);
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable multiple valid repos.");
+		for (Repo subscribedRepo : subscribedRepos) {
+			String expectedEnableStdoutMsg = String.format(expectedStdoutMsgFormat, subscribedRepo.repoId,repoEnablements.get(subscribedRepo.repoId));
+			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable/disable repos in order contains expected message: "+expectedEnableStdoutMsg);			
+		}
+		List<YumRepo> currentlySubscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		for (Repo subscribedRepo : subscribedRepos) {
+			YumRepo yumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", subscribedRepo.repoId, currentlySubscribedYumRepos);
+			if (repoEnablements.get(subscribedRepo.repoId).equals("enable")) {
+				Assert.assertTrue(yumRepo.enabled, "Enablement of yum repo "+yumRepo.id);
+			} else {
+				Assert.assertFalse(yumRepo.enabled, "Enablement of yum repo "+yumRepo.id);
+			}
 		}
 	}
 	
