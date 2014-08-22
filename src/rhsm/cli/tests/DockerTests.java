@@ -49,18 +49,20 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that when in container mode, attempts to run subscription-manager are blocked",
-			groups={"VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test"/*uncomment after fixed,"blockedbyBug-1114126"*/},
+			groups={"VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test","blockedbyBug-1114126"},
 			dataProvider="getSubscriptionManagementCommandData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test(Object bugzilla, String helpCommand) {
 		
+		// CLOSED WONTFIX exceptions
+		if (helpCommand.contains("subscription-manager-gui")) throw new SkipException("Disabled use of '"+helpCommand+"' in container mode was CLOSED WONTFIX.  See https://bugzilla.redhat.com/show_bug.cgi?id=1114132#c5");
+		if (helpCommand.startsWith("rhn-migrate-classic-to-rhsm")) throw new SkipException("Disabled use of '"+helpCommand+"' in container mode was CLOSED WONTFIX.  See https://bugzilla.redhat.com/show_bug.cgi?id=1114132#c5");
+		if (helpCommand.startsWith("rhsmcertd")) throw new SkipException("Disabled use of '"+helpCommand+"' in container mode was CLOSED WONTFIX.  See https://bugzilla.redhat.com/show_bug.cgi?id=1114132#c5");
+		
 		SSHCommandResult result = client.runCommandAndWait(helpCommand);
-		//TEMPORARY WHILE BUG 1114126 is open
-		//Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ContainerMode, "Stderr from attempting command '"+helpCommand+"' while in container mode.");	
-		//Assert.assertEquals(result.getStdout().trim(), "", "Stdout from attempting command '"+helpCommand+"' while in container mode.");	
-		Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ContainerMode, "Stdout from attempting command '"+helpCommand+"' while in container mode.");	
-		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from attempting command '"+helpCommand+"' while in container mode.");
+		Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ContainerMode, "Stderr from attempting command '"+helpCommand+"' while in container mode.");	
+		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from attempting command '"+helpCommand+"' while in container mode.");	
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from attempting command '"+helpCommand+"' while in container mode.");
 	}
 	
