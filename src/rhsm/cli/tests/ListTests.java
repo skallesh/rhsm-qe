@@ -695,8 +695,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// get the available subscription pools
 		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, false, null, null, null).getStdout());
 		
-		// randomly attach a subset of available subscriptions
-		List<SubscriptionPool> randomAvailableSubscriptionPools = getRandomSubsetOfList(availableSubscriptionPools, randomGenerator.nextInt(availableSubscriptionPools.size()));
+		// randomly attach a positive subset of available subscriptions
+		List<SubscriptionPool> randomAvailableSubscriptionPools = getRandomSubsetOfList(availableSubscriptionPools, randomGenerator.nextInt(availableSubscriptionPools.size()-1)+1);
 		List<String> poolIds = new ArrayList<String>(); for (SubscriptionPool subscriptionPool : randomAvailableSubscriptionPools) poolIds.add(subscriptionPool.poolId);
 		if (false) {	// debugTesting will cause test to fail due to bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1022622#c0
 			poolIds.clear();
