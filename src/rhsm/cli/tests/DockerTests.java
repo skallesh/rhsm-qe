@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
@@ -66,10 +67,12 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from attempting command '"+helpCommand+"' while in container mode.");
 	}
 	
+	@AfterClass(groups={"setup"})	// insurance
 	@AfterGroups(groups={"setup"}, value={"VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test"})
 	public void teardownContainerMode() {
 		if (clienttasks!=null) {
 			client.runCommandAndWait("rm -rf "+rhsmHostDir);
+			client.runCommandAndWait("rm -rf "+entitlementHostDir);	// although it would be okay to leave this behind
 		}
 	}
 	
@@ -127,7 +130,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("cp "+entitlementCertDir+"/* "+entitlementHostDir);
 		client.runCommandAndWait("ls -l "+entitlementHostDir);
 		
-		// clean the consumer
+		// clean the consumer  TODO: FIXME - cleaning the host consumer will orphan all of his entitlements.  This should be properly deleted in an AfterGroup
 		log.info("Deleting the consumer cert (containers don't depend on a consumer)...");
 		clienttasks.removeAllCerts(true, true, false);
 		
@@ -171,7 +174,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
+	// RHEL7 Only ==============================================================================================
 	
 	@Test(	description="install the latest docker package on the host",
 			groups={"AcceptanceTests"},
