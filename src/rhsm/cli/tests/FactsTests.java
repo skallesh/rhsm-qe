@@ -955,7 +955,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		client2tasks.createFactsFileWithOverridingValues(customFactsMap);
 		
 		// register client2 to the existing consumerid and get the facts from client2
-		Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, null, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
+		Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, true, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
 		Map<String,String> client2FactsMap = client2tasks.getFacts();
 
 		// get consumerid's facts from Candlepin again
