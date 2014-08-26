@@ -410,9 +410,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		doNotTranslateSubStrings.add("Red Hat");
 		//doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"RHN","RHN Classic"}));	// TRANSLATORS CHOICE see https://bugzilla.redhat.com/show_bug.cgi?id=950099#c7
 		//doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"Red Hat Subscription Manager","Red Hat Subscription Management", "Red Hat Global Support Services" "Red Hat Customer Portal", "RHN Satellite"}));	// TODO CONSIDER ADDING THESE TOO
-		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager-migration-data","subscription-manager","python-rhsm"}));
+		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager-migration-data","subscription-manager","python-rhsm","rhn-migrate-classic-to-rhsm","firstboot"}));
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"consumer_types","consumer_export","proxy_hostname:proxy_port"}));
-		//doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"firstboot"}));	// CAN BE CONSIDERED AS AN INITIAL STARTUP IN THIS MSG "You will need to use Red Hat Subscription Manager to manually attach subscriptions to this system after completing firstboot."
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"%(mappingfile)s","%(package)s"}));	// from key: Unable to read mapping file: %(mappingfile)s.\nDo you have the %(package)s package installed?
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();
@@ -440,6 +439,14 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 							continue;
 						}
 						*/
+						
+						// tolerate firstboot => Firstboot translations, for example..
+						// msgid='You will need to use Red Hat Subscription Manager to manually attach subscriptions to this system after completing firstboot.'
+						// msgstr='Sie müssen dieses System nach Abschluss von Firstboot mithilfe des Red Hat Subscription Managers manuell mit Subskriptionen verknüpfen.'
+						if (subString.equals("firstboot") && translation.msgstr.contains("Firstboot")) {
+							log.info("Exceptional case: Ignoring punctuation of translated substring \""+subString+"\" in translation: "+translation);
+							continue;
+						}
 						
 						log.warning("Substring \""+subString+"\" should remain untranslated in the "+translationFile+" translation: "+translation);
 						warningsFound = true;
