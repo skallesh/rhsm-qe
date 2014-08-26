@@ -695,6 +695,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 //			return;
 //		}
 		
+		// (degregor 5/4/2012) We intentionally exclude HTB channels from the migration script.  It's not a supported use case.
+		// See Bug 1011992 - High Touch Beta channel mappings should be excluded from channel-cert-mapping.txt https://bugzilla.redhat.com/show_bug.cgi?id=1011992
+		if (productCertsRhnChannel.matches(".+-htb(-.*|$)")) {
+			log.warning("(degregor 5/4/2012) We intentionally exclude HTB channels from the migration script.  It's not a supported use case.");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(productCertsRhnChannel),
+					"CDN Product Certs RHN Channel '"+productCertsRhnChannel+"' is NOT accounted for in the subscription-manager-migration-data file '"+channelCertMappingFilename+"' since it is a High Touch Beta channel.");
+			return;
+		}
+		
 		// assert that the subscription-manager-migration-data file has a mapping for this RHN Channel found in the CDN Product Certs
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(productCertsRhnChannel),
 				"CDN Product Certs RHN Channel '"+productCertsRhnChannel+"' is accounted for in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
@@ -1019,7 +1028,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="Verify that the expected RHN Rhel channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863"},
-			dataProvider="RhnRhelChannelsFromChanneMappingData",
+			dataProvider="RhnRhelChannelsFromChannelMappingData",
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1032,11 +1041,11 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY, "RHN RHEL Channel '"+rhnRhelChannel+"' maps to the following product cert that matches this RHEL dot release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);
 		}
 	}
-	@DataProvider(name="RhnRhelChannelsFromChanneMappingData")
-	public Object[][] getRhnRhelChannelsFromChanneMappingDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getRhnRhelChannelsFromChanneMappingDataAsListOfLists());
+	@DataProvider(name="RhnRhelChannelsFromChannelMappingData")
+	public Object[][] getRhnRhelChannelsFromChannelMappingDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getRhnRhelChannelsFromChannelMappingDataAsListOfLists());
 	}
-	public List<List<Object>> getRhnRhelChannelsFromChanneMappingDataAsListOfLists() throws JSONException {
+	public List<List<Object>> getRhnRhelChannelsFromChannelMappingDataAsListOfLists() throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
 		
@@ -1082,6 +1091,29 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				// skip MRG Realtime
 				//	rhel-x86_64-server-6-mrg-realtime-2
 				if (rhnChannel.contains("-mrg-realtime-")) continue;
+				
+				// skip MRG Grid
+				// rhel-x86_64-hpc-node-6-mrg-grid-2-debuginfo
+				// rhel-x86_64-hpc-node-6-mrg-grid-2
+				// rhel-x86_64-hpc-node-6-mrg-grid-execute-2-debuginfo
+				// rhel-x86_64-hpc-node-6-mrg-grid-execute-2
+				// rhel-x86_64-server-6-mrg-grid-execute-2
+				// rhel-x86_64-server-6-mrg-grid-execute-2-debuginfo
+				if (rhnChannel.contains("-mrg-grid-")) continue;
+				
+				// skip MRG Management
+				// rhel-x86_64-hpc-node-6-mrg-management-2-debuginfo
+				// rhel-x86_64-hpc-node-6-mrg-management-2
+				// rhel-x86_64-server-6-mrg-management-2-debuginfo
+				// rhel-x86_64-server-6-mrg-management-2
+				if (rhnChannel.contains("-mrg-management-")) continue;
+				
+				// skip Red Hat Software Collections
+				// rhel-x86_64-workstation-6-rhscl-1
+				// rhel-x86_64-workstation-6-rhscl-1-debuginfo
+				// rhel-x86_64-server-6-rhscl-1-debuginfo
+				// rhel-x86_64-server-6-rhscl-1
+				if (rhnChannel.contains("-rhscl-")) continue;
 				
 				// skip Red Hat Enterprise Virtualization
 				//	rhel-x86_64-server-6-rhevm-3-beta
@@ -2201,6 +2233,18 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.4")) {
 				// Bug 1129948 - RHEV 3.4 channel mappings missing for rhn-migrate-classic-to-rhsm
 				bugIds.add("1129948");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-sjis-6") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-sjis-6-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-eucjp-6") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-eucjp-6-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-optional-3") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-optional-3-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-bigdata-3") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-bigdata-3-debuginfo")) {
+				// Bug 1133942 - various RHN channel maps to product certs missing in subscription-manager-migration-data
+				bugIds.add("1133942");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
