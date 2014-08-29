@@ -9,8 +9,10 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
@@ -24,12 +26,6 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
-import com.redhat.qe.auto.bugzilla.BzChecker;
-import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
-import com.redhat.qe.auto.testng.TestNGUtils;
-
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -41,6 +37,13 @@ import rhsm.data.ProductCert;
 import rhsm.data.ProductNamespace;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
+
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
+import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -1012,6 +1015,111 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	
+	@Test(	description="subscription-manager: list installed should include product certs in /etc/pki/product-default",  // see description in https://github.com/candlepin/subscription-manager/pull/1009
+			groups={"AcceptanceTests","ListInstalledWithProductDefault_Test","blockedByBug-1123029"},	// corresponding rel-eng RFE 1080012
+			priority=150,
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListInstalledWithProductDefault_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.14-1")) throw new SkipException("The /etc/pki/product-default feature is not implemented in this version of subscription-manager.");
+		
+		// strategy...
+		// copy a random selection of product certs from subscription-manager-migration-data into /etc/pki/product-default
+		// make sure that some of the product certs copied include product ids already installed in /etc/pki/product
+		// assert that list --installed includes all the product certs but those in /etc/pki/product take precedence over /etc/pki/product-default
+		
+		// assert the existance of /etc/pki/product-default
+		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.productCertDefaultDir),"Expecting directory '"+clienttasks.productCertDefaultDir+"' to exist.");
+		
+		// get the original product certs that are currently installed in /etc/pki/product-default
+		originalDefaultProductCerts = clienttasks.getProductCerts(clienttasks.productCertDefaultDir);
+		
+		// get the product certs that are currently installed in /etc/pki/product
+		List<ProductCert> productCerts = clienttasks.getProductCerts(clienttasks.productCertDir);
+				
+		// copy migration-data product certs to /etc/pki/product-default (including productCerts whose product id matches the base RHEL productCert)
+		List<File> migrationProductCertsFiles = clienttasks.getProductCertFiles("/usr/share/rhsm/product/RHEL"+"-"+clienttasks.redhatReleaseX);
+		Set<String> migrationProductIdsCopied = new HashSet<String>();
+		String  migrationProductCertFilesToCopy = "";
+		for (File migrationProductCertFile : migrationProductCertsFiles) {
+			String migrationProductCertProductId = MigrationDataTests.getProductIdFromProductCertFilename(migrationProductCertFile.getPath());
+			// if this migrationProductCertProductId is not installed in /etc/pki/product, copy it to /etc/pki/product-default
+			if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", migrationProductCertProductId, productCerts) != null) {
+				// TOO MUCH LOGGING client.runCommandAndWait("cp -n "+migrationProductCertFile+" "+clienttasks.productCertDefaultDir);
+				migrationProductCertFilesToCopy += migrationProductCertFile+" ";
+				continue;
+			}
+			// if this migrationProductCertProductId has already been copied to /etc/pki/product-default, skip it - do not copy another
+			if (migrationProductIdsCopied.contains(migrationProductCertProductId)) {
+				continue;
+			}
+			// copy this migrationProductCertProductId to /etc/pki/product-default
+			// randomly skip 75% of these copies to reduce logging noise
+			if (getRandomListItem(Arrays.asList(new Integer[]{1,2,3,4})).equals(1)) {
+				// TOO MUCH LOGGING client.runCommandAndWait("cp -n "+migrationProductCertFile+" "+clienttasks.productCertDefaultDir);
+				migrationProductCertFilesToCopy += migrationProductCertFile+" ";
+				migrationProductIdsCopied.add(migrationProductCertProductId);
+			}
+		}
+		if (!migrationProductCertFilesToCopy.isEmpty()) client.runCommandAndWait("cp -n "+migrationProductCertFilesToCopy+" "+clienttasks.productCertDefaultDir);
+		
+		// get the product certs that are currently installed in /etc/pki/product-default
+		List<ProductCert> defaultProductCerts = clienttasks.getProductCerts(clienttasks.productCertDefaultDir);
+		
+		// get the currently InstalledProducts
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		
+		// verify that each of the product certs from...
+		// etc/pki/product are included in the currently InstalledProducts
+		for (ProductCert productCert : productCerts) {
+			List<InstalledProduct> installedProductsMatchingProductCertId = InstalledProduct.findAllInstancesWithMatchingFieldFromList("productId", productCert.productId, installedProducts);
+			Assert.assertEquals(installedProductsMatchingProductCertId.size(), 1, "The list of Installed Products contains exactly 1 entry with a productId='"+productCert.productId+"' from '"+clienttasks.productCertDir+"'.");
+			InstalledProduct installedProductMatchingProductCertId = installedProductsMatchingProductCertId.get(0);
+			Assert.assertEquals(installedProductMatchingProductCertId.productName, productCert.productNamespace.name,"The list of Installed Products includes '"+productCert.productNamespace.name+"' from '"+clienttasks.productCertDir+"'.");
+			Assert.assertEquals(installedProductMatchingProductCertId.version, productCert.productNamespace.version,"The list of Installed Products includes '"+productCert.productNamespace.name+"' version '"+productCert.productNamespace.version+"' from '"+clienttasks.productCertDir+"'.");
+		}
+		// etc/pki/product-default are included in the currently InstalledProducts (unless it's productId is already installed in /etc/pki/product which takes precedence over /etc/pki/product-default).
+		for (ProductCert defaultProductCert : defaultProductCerts) {
+			List<InstalledProduct> installedProductsMatchingProductCertId = InstalledProduct.findAllInstancesWithMatchingFieldFromList("productId", defaultProductCert.productId, installedProducts);
+			Assert.assertEquals(installedProductsMatchingProductCertId.size(), 1, "The list of Installed Products contains exactly 1 entry with a productId='"+defaultProductCert.productId+"' from '"+clienttasks.productCertDefaultDir+"'.");
+			InstalledProduct installedProductMatchingProductCertId = installedProductsMatchingProductCertId.get(0);
+			ProductCert precedentProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", defaultProductCert.productId, productCerts);
+			if (precedentProductCert!=null) {
+				// verify the precedentProductCert overrides the defaultProductCert
+				Assert.assertEquals(installedProductMatchingProductCertId.productName, precedentProductCert.productNamespace.name,"The list of Installed Products includes '"+precedentProductCert.productNamespace.name+"' from '"+clienttasks.productCertDir+"' since it takes precedence over '"+defaultProductCert+"' from '"+clienttasks.productCertDefaultDir+"'.");
+				Assert.assertEquals(installedProductMatchingProductCertId.version, precedentProductCert.productNamespace.version,"The list of Installed Products includes '"+precedentProductCert.productNamespace.name+"' version '"+precedentProductCert.productNamespace.version+"' from '"+clienttasks.productCertDir+"' since it takes precedence over '"+defaultProductCert+"' from '"+clienttasks.productCertDefaultDir+"'.");	
+				Assert.assertEquals(installedProductMatchingProductCertId.arch, precedentProductCert.productNamespace.arch,"The list of Installed Products includes '"+precedentProductCert.productNamespace.name+"' arch '"+precedentProductCert.productNamespace.arch+"' from '"+clienttasks.productCertDir+"' since it takes precedence over '"+defaultProductCert+"' from '"+clienttasks.productCertDefaultDir+"'.");
+			} else {
+				// verify that the defaultProductCert is included in list of Installed Products
+				Assert.assertEquals(installedProductMatchingProductCertId.productName, defaultProductCert.productNamespace.name,"The list of Installed Products includes '"+defaultProductCert.productNamespace.name+"' from '"+clienttasks.productCertDefaultDir+"' since there is no product cert with ID '"+defaultProductCert.productId+"' in '"+clienttasks.productCertDir+"' that takes precedence.");
+				Assert.assertEquals(installedProductMatchingProductCertId.version, defaultProductCert.productNamespace.version,"The list of Installed Products includes '"+defaultProductCert.productNamespace.name+"' version '"+defaultProductCert.productNamespace.version+"' from '"+clienttasks.productCertDefaultDir+"' since there is no product cert with ID '"+defaultProductCert.productId+"' in '"+clienttasks.productCertDir+"' that takes precedence.");
+				Assert.assertEquals(installedProductMatchingProductCertId.arch, defaultProductCert.productNamespace.arch,"The list of Installed Products includes '"+defaultProductCert.productNamespace.name+"' arch '"+defaultProductCert.productNamespace.arch+"' from '"+clienttasks.productCertDefaultDir+"' since there is no product cert with ID '"+defaultProductCert.productId+"' in '"+clienttasks.productCertDir+"' that takes precedence.");
+			}
+		}
+	}
+	@AfterClass(groups={"setup"})	// needed since @AfterGroups will skip when some of the tests within the group are skipped even when alwaysRun=true
+	@AfterGroups(groups={"setup"},value="ListInstalledWithProductDefault_Test",alwaysRun=true /* does not seem to have any effect */)
+	public void afterListInstalledWithProductDefault_Test() throws JSONException, Exception {
+		// remove product certs that were added to /etc/pki/product-default
+		if (originalDefaultProductCerts!=null) {
+			/* TOO MUCH LOGGING
+			for (ProductCert productCert : clienttasks.getProductCerts(clienttasks.productCertDefaultDir)) {
+				if (!originalDefaultProductCerts.contains(productCert)) {
+					client.runCommandAndWait("rm -rf "+productCert.file);
+				}
+			}
+			*/
+			String productCertFilesAsString = "";
+			for (ProductCert productCert : clienttasks.getProductCerts(clienttasks.productCertDefaultDir)) {
+				if (!originalDefaultProductCerts.contains(productCert)) {
+					productCertFilesAsString += productCert.file.getPath() + " ";
+				}
+			}
+			if (!productCertFilesAsString.isEmpty()) client.runCommandAndWait("rm -rf "+productCertFilesAsString);
+		}
+	}
+	protected List<ProductCert> originalDefaultProductCerts = null;
 	
 	
 	

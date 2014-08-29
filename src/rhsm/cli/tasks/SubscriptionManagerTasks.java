@@ -84,6 +84,8 @@ public class SubscriptionManagerTasks {
 	public final String rhsmCertDWorker		= "/usr/libexec/rhsmcertd-worker";
 	public final String rhsmComplianceD		= "/usr/libexec/rhsmd";	// /usr/libexec/rhsm-complianced; RHEL61
 	public final String rhnDefinitionsDir	= "/tmp/"+"rhnDefinitionsDir";
+	public final String productCertDefaultDir		= "/etc/pki/product-default"; // introduced by Bug 1123029 - Use default product certificates when they are present
+
 	
 	// will be initialized by installSubscriptionManagerRPMs()
 	public String msg_ConsumerNotRegistered			= null;
@@ -2018,9 +2020,12 @@ public class SubscriptionManagerTasks {
 	 * @return List of /etc/pki/product/*.pem files sorted using lsOptions
 	 */
 	public List<File> getCurrentProductCertFiles(String lsOptions) {
+		return getProductCertFiles(lsOptions,productCertDir);
+	}
+	public List<File> getProductCertFiles(String lsOptions, String fromProductCertDir) {
 		if (lsOptions==null) lsOptions = "";
 		//sshCommandRunner.runCommandAndWait("find /etc/pki/product/ -name '*.pem'");
-		sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+productCertDir+"/*.pem");
+		sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+fromProductCertDir+"/*.pem");
 		String lsFiles = sshCommandRunner.getStdout().trim();
 		List<File> files = new ArrayList<File>();
 		if (!lsFiles.isEmpty()) {
@@ -2037,7 +2042,9 @@ public class SubscriptionManagerTasks {
 	public List<File> getCurrentProductCertFiles() {
 		return getCurrentProductCertFiles("-v");
 	}
-	
+	public List<File> getProductCertFiles(String fromProductCertDir) {
+		return getProductCertFiles("-v", fromProductCertDir);
+	}
 	
 // replaced by getYumListOfAvailablePackagesFromRepo(...)
 //	/**
@@ -6552,8 +6559,9 @@ public class SubscriptionManagerTasks {
 		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
 		//	201104051839:16.453 - FINE: Stderr: INFO:rhsm-app.repolib:repos updated: 63	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
 		//	201104051839:16.455 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg.split("\\.")[0]+"."+arch+" +"+version+" +(installed|@"+repo+")$",null);
-		
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg.split("\\.")[0]+"."+arch+" +"+version+" +(installed|@"+repo+")$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkgName+"."+arch+" +"+version+" +(installed|@"+repo+")$",null);
+			
 		return result;
 	}
 	
