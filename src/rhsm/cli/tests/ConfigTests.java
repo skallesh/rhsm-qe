@@ -565,6 +565,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getConfigSectionNameDataAsListOfLists(){
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
 			
 		// Object bugzilla,	String section,	String name, String testValue
 //988476ll.add(Arrays.asList(new Object[]{null,							"server",		"ca_cert_dir",			"/tmp/server/ca_cert_dir"}));
