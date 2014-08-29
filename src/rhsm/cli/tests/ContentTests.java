@@ -334,7 +334,15 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.yumRemovePackage(pkg);
 		
 		// also remove any dependencies that were installed with pkg
-		for (String depPkg : getYumDependencyPackagesInstalledFromYumInstallPackageResult(yumInstallPackageResult)) clienttasks.yumRemovePackage(depPkg);
+// FIXME: This will fail if we do not remove the dependent packages in the correct order - suppose dep-pkg1 depends on dep-pkg2 and remove dep-pkg2 first, then dep-pkg1 is already gone
+// for (String depPkg : getYumDependencyPackagesInstalledFromYumInstallPackageResult(yumInstallPackageResult)) clienttasks.yumRemovePackage(depPkg);
+// committing untested FIXME: ...
+		List<String> depPkgsAlreadyRemoved = new ArrayList<String>();
+		for (String depPkg : getYumDependencyPackagesInstalledFromYumInstallPackageResult(yumInstallPackageResult)) {
+			if (!depPkgsAlreadyRemoved.contains(depPkg)) {
+				depPkgsAlreadyRemoved.addAll(getYumDependencyPackagesRemovedFromYumRemovePackageResult(clienttasks.yumRemovePackage(depPkg)));
+			}
+		}
 	}
 	
 	
@@ -1274,6 +1282,71 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (matches.isEmpty()) return new ArrayList<String>();	// return empty list
 			
 		return Arrays.asList(matches.get(0).replaceFirst("Dependency Installed:", "").replaceFirst("Complete!", "").trim().split("\\s*\\n\\s*"));
+	}
+	
+	protected List<String> getYumDependencyPackagesRemovedFromYumRemovePackageResult(SSHCommandResult yumRemovePackageResult) {
+		
+		//	ssh root@hp-xw9300-01.rhts.eng.bos.redhat.com yum -y remove libibverbs-rocee.x86_64 0:1.1.7-1.1.el6_5 --disableplugin=rhnplugin
+		//	Stdout:
+		//	Loaded plugins: product-id, security, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	Setting up Remove Process
+		//	Resolving Dependencies
+		//	--> Running transaction check
+		//	---> Package libibverbs-rocee.x86_64 0:1.1.7-1.1.el6_5 will be erased
+		//	--> Processing Dependency: libibverbs.so.1()(64bit) for package: libmlx4-rocee-1.0.5-1.1.el6_5.x86_64
+		//	--> Processing Dependency: libibverbs.so.1(IBVERBS_1.0)(64bit) for package: libmlx4-rocee-1.0.5-1.1.el6_5.x86_64
+		//	--> Processing Dependency: libibverbs.so.1(IBVERBS_1.1)(64bit) for package: libmlx4-rocee-1.0.5-1.1.el6_5.x86_64
+		//	--> Running transaction check
+		//	---> Package libmlx4-rocee.x86_64 0:1.0.5-1.1.el6_5 will be erased
+		//	--> Finished Dependency Resolution
+		//
+		//	Dependencies Resolved
+		//
+		//	================================================================================
+		//	Package Arch Version Repository Size
+		//	================================================================================
+		//	Removing:
+		//	libibverbs-rocee
+		//	x86_64 1.1.7-1.1.el6_5 @rhel-hpn-for-rhel-6-hpc-node-rpms 100 k
+		//	Removing for dependencies:
+		//	libmlx4-rocee x86_64 1.0.5-1.1.el6_5 @rhel-hpn-for-rhel-6-hpc-node-rpms 50 k
+		//
+		//	Transaction Summary
+		//	================================================================================
+		//	Remove 2 Package(s)
+		//
+		//	Installed size: 150 k
+		//	Downloading Packages:
+		//	Running rpm_check_debug
+		//	Running Transaction Test
+		//	Transaction Test Succeeded
+		//	Running Transaction
+		//
+		//	Erasing : libmlx4-rocee-1.0.5-1.1.el6_5.x86_64 1/2
+		//
+		//	Erasing : libibverbs-rocee-1.1.7-1.1.el6_5.x86_64 2/2
+		//
+		//	Verifying : libmlx4-rocee-1.0.5-1.1.el6_5.x86_64 1/2
+		//
+		//	Verifying : libibverbs-rocee-1.1.7-1.1.el6_5.x86_64 2/2
+		//
+		//	Removed:
+		//	libibverbs-rocee.x86_64 0:1.1.7-1.1.el6_5
+		//
+		//	Dependency Removed:
+		//	libmlx4-rocee.x86_64 0:1.0.5-1.1.el6_5
+		//
+		//	Complete!
+		//	Stderr: No Match for argument: 0:1.1.7-1.1.el6_5
+		//	ExitCode: 0
+		
+		String regex = "Dependency Removed:(\n.*?)+Complete!";
+		List<String> matches = getSubstringMatches(yumRemovePackageResult.getStdout(), regex);
+		if (matches.size()>1) Assert.fail("Unexpectedly encountered more than one match to '"+regex+"' during a former call to yum remove package.");
+		if (matches.isEmpty()) return new ArrayList<String>();	// return empty list
+			
+		return Arrays.asList(matches.get(0).replaceFirst("Dependency Removed:", "").replaceFirst("Complete!", "").trim().split("\\s*\\n\\s*"));
 	}
 	
 	
