@@ -521,6 +521,15 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
+		// current default product cert files - introduced by RFE Bug 1132071 - rhsm-debug system should also collect /etc/pki/product-default/
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.12.14-1")) {
+			if (!sos) {
+				for (File defaultProductCertFile : clienttasks.getProductCertFiles(clienttasks.productCertDefaultDir)) {
+					expectedFiles.add(defaultProductCertFile.getPath());
+				}
+			}
+		}
+		
 		// current ca cert files
 		if (!sos || !caCertDir.startsWith("/etc/")) {
 			for (String expectedFile : client.runCommandAndWait("find "+caCertDir).getStdout().trim().split("\n")) {
@@ -585,6 +594,9 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		tmpListing = tmpListing.replaceFirst(explodeSubDir+"/var/log/?\\n", "");
 		tmpListing = tmpListing.replaceFirst(explodeSubDir+"/var/lib/?\\n", "");
 		tmpListing = tmpListing.replaceFirst(explodeSubDir+"/tmp/?\\n", "");	// needed for RhsmDebugSystemWithNonDefaultCertDirs_Test
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.12.14-1")) {
+			tmpListing = tmpListing.replaceFirst(explodeSubDir+clienttasks.productCertDefaultDir+"/?\\n", "");	// introduced by RFE Bug 1132071 - rhsm-debug system should also collect /etc/pki/product-default/
+		}
 		tmpListing = tmpListing.trim();
 		if (!tmpListing.isEmpty()) Assert.fail("Found the following unexpected files included in the rhsm-debug output file '"+rhsmDebugSystemFile+"' :\n"+tmpListing);
 	}
