@@ -2242,7 +2242,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-optional-3") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-optional-3-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-bigdata-3") ||
-				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-bigdata-3-debuginfo")) {
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-bigdata-3-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-bluegene-6") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-bluegene-6-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-p7ih-6") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-p7ih-6-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-i386-server-sjis-6") ||
+				rhnAvailableChildChannel.equals("rhel-i386-server-sjis-6-debuginfo")) {
 				// Bug 1133942 - various RHN channel maps to product certs missing in subscription-manager-migration-data
 				bugIds.add("1133942");
 			}
