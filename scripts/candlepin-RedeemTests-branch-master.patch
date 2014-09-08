@@ -1,16 +1,16 @@
-diff --git a/proxy/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java b/proxy/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
-index a6acf19..30010a8 100644
---- a/proxy/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
-+++ b/proxy/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
-@@ -23,6 +23,7 @@ import java.util.Set;
- import org.apache.log4j.Logger;
+diff --git a/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java b/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
+index e83de5a..0f1d3f1 100644
+--- a/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
++++ b/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
+@@ -14,6 +14,7 @@
+  */
+ package org.candlepin.service.impl;
+ 
++import org.candlepin.common.exceptions.AcceptedRequestException;
+ import org.candlepin.common.exceptions.ServiceUnavailableException;
  import org.candlepin.config.Config;
  import org.candlepin.config.ConfigProperties;
-+import org.candlepin.exceptions.AcceptedRequestException;
- import org.candlepin.exceptions.ServiceUnavailableException;
- import org.candlepin.model.Consumer;
- import org.candlepin.model.Owner;
-@@ -141,9 +142,41 @@ public class DefaultSubscriptionServiceAdapter implements
+@@ -106,9 +107,41 @@ public class DefaultSubscriptionServiceAdapter implements
      @Override
      public void activateSubscription(Consumer consumer, String email,
          String emailLocale) {
