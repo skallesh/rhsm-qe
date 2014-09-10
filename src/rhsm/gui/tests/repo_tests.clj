@@ -125,7 +125,7 @@
     (tasks/subscribe_all)
     (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
-    (verify (not (= 0 (tasks/ui getrowcount :repo-table))))
+    (verify (not (< 0 (tasks/ui getrowcount :repo-table))))
     (finally
      (tasks/ui click :close-repo-dialog)
      (tasks/unsubscribe_all))))
@@ -142,7 +142,7 @@
     (tasks/subscribe_all)
     (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
-    (if (= 0 (tasks/ui getrowcount :repo-table))
+    (if (< 0 (tasks/ui getrowcount :repo-table))
       (throw (Exception. "Repositories table is not populated"))
       (do
         (let [row-count (tasks/ui getrowcount :repo-table)
@@ -150,7 +150,9 @@
              random-row-num (nth list-row (rand (count list-row)))]
           (tasks/ui selectrowindex :repo-table random-row-num)
           (verify (not (tasks/has-state? :repo-remove-override "enabled")))
-          (tasks/ui checkrow :repo-table random-row-num)
+          (tasks/ui checkrow :repo-table random-row-num 0)
+          (sleep 2000)
+          (tasks/ui checkrow :repo-table random-row-num 1)
           (sleep 2000)
           (verify (tasks/has-state? :repo-remove-override "enabled"))
           (assert-and-remove-all-override)
@@ -159,42 +161,6 @@
     (finally
      (tasks/ui click :close-repo-dialog)
      (tasks/unsubscribe_all))))
-
-(defn ^{Test {:groups ["repo"
-                       "tier2"
-                       "blockedByBug-1095938"]}}
-  check_repo_gpgcheck_button
-  "This tests gpg-check edit and remove button"
-  [_]
-  (try
-    (if (tasks/ui showing? :register-system)
-      (tasks/register-with-creds))
-    (tasks/subscribe_all)
-    (assert-and-open-repo-dialog)
-    (let
-        [row-count (tasks/ui getrowcount :repo-table)]
-      (reset! list_row (into [] (range row-count)))
-      (reset! random_row_num (nth @list_row (rand (count @list_row))))
-      (tasks/ui selectrowindex :repo-table @random_row_num)
-      (while (and (not (tasks/has-state? :gpg-check-edit "visible"))
-                  (< 1 (count @list_row)))
-        (reset! list_row (remove #(= @random_row_num %) @list_row))
-        (reset! random_row_num (nth @list_row (int (rand (count @list_row)))))
-        (tasks/ui selectrowindex :repo-table @random_row_num))
-      (sleep 1000)
-      (verify (tasks/has-state? :gpg-check-edit "visible"))
-      (verify (not (tasks/has-state? :gpg-check-remove "visible")))
-      (tasks/ui click :gpg-check-edit)
-      (sleep 2000)
-      (verify (tasks/has-state? :gpg-check-remove "visible"))
-      (verify (not (tasks/has-state? :gpg-check-edit "visible"))))
-    (finally
-      (tasks/ui click :gpg-check-remove)
-      (tasks/ui waittillwindowexist :question-dialog 30)
-      (tasks/ui click :yes)
-      (tasks/checkforerror)
-      (tasks/ui click :close-repo-dialog)
-      (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["repo"
                        "tier3"
@@ -207,13 +173,12 @@
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
   (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
-   (if (tasks/has-state? :gpg-check-edit "visible")
-     (tasks/ui click :gpg-check-edit))
+    (tasks/ui checkrow :repo-table row-num 1)
     (sleep 2000)
-    (tasks/ui checkrow :repo-table row-num 0))
+    (tasks/ui checkrow :repo-table row-num 0)
+    (sleep 2000))
   (verify (tasks/has-state? :repo-remove-override "enabled"))
   (assert-and-remove-all-override)
-  (verify (tasks/has-state? :gpg-check-edit "visible"))
   (verify (not (tasks/has-state? :repo-remove-override "enabled"))))
 
 (defn ^{AfterGroups {:groups ["repo"
@@ -241,10 +206,11 @@
                              (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
                              (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
-                               (if (tasks/has-state? :gpg-check-edit "visible")
-                                 (tasks/ui click :gpg-check-edit))
-                               (sleep 2000)
-                               (tasks/ui checkrow :repo-table row-num 0))))
+                               (if (not (bool (tasks/ui verifycheckrow :repo-table row-num 1)))
+                                 (do (tasks/ui checkrow :repo-table row-num 1)
+                                     (sleep 2000))
+                                 (do (tasks/ui checkrow :repo-table row-num 0)
+                                     (sleep 2000))))))
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
 
@@ -258,8 +224,8 @@
   [_ repo]
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
-  (verify (tasks/has-state? :gpg-check-remove "visible"))
-  (verify (not (tasks/has-state? :gpg-check-edit "visible"))))
+  (verify (bool (and (tasks/has-state? :repo-remove-override "visible")
+                     (tasks/has-state? :repo-remove-override "enabled")))))
 
 (defn ^{AfterGroups {:groups ["repo"
                               "tier3"
@@ -287,8 +253,7 @@
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
   (verify (not (blank? (tasks/ui gettextvalue :base-url))))
-  (verify (not (blank? (tasks/ui gettextvalue :repo-name))))
-  (verify (not (blank? (tasks/ui gettextvalue :gpg-check-text)))))
+  (verify (not (blank? (tasks/ui gettextvalue :repo-name)))))
 
 (defn ^{AfterGroups {:groups ["repo"
                               "tier3"]
