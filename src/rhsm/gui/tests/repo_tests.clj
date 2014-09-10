@@ -125,7 +125,7 @@
     (tasks/subscribe_all)
     (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
-    (verify (not (< 0 (tasks/ui getrowcount :repo-table))))
+    (verify (< 0 (tasks/ui getrowcount :repo-table)))
     (finally
      (tasks/ui click :close-repo-dialog)
      (tasks/unsubscribe_all))))
@@ -280,8 +280,9 @@
       (assert-and-subscribe-all)
       (assert-and-open-repo-dialog)
       (tasks/ui waittillwindowexist :repositories-dialog 10)
+      (sleep 3000)
       (let [repos (into [] (map vector (tasks/get-table-elements
-                                        :repo-table 1)))]
+                                        :repo-table 2)))]
         (if-not debug
           (to-array-2d repos)
           repos)))
