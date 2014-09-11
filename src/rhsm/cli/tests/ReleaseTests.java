@@ -510,7 +510,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="using a no auth proxy server, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			groups={"blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/,"blockedByBug-1134963"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyReleaseListMatchesCDNUsingNoAuthProxyCommandLineArgs_Test() throws JSONException, Exception {
@@ -519,7 +519,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="using a basic auth proxy server, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			groups={"blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/,"blockedByBug-1134963"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyReleaseListMatchesCDNUsingBasicAuthProxyCommandLineArgs_Test() {
@@ -540,7 +540,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="using a basic auth proxy server set within rhsm.conf, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-822965","blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			groups={"blockedByBug-822965","blockedByBug-844368","blockedByBug-893746"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/,"blockedByBug-1134963"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyReleaseListMatchesCDNUsingBasicAuthProxyViaRhsmConfFile_Test() {
@@ -658,12 +658,12 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 
 		// Object bugzilla, String username, String password, String org
-		ll.add(Arrays.asList(new Object[]{null,	sm_clientUsername, sm_clientPassword, sm_clientOrg}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1134963"}),	sm_clientUsername, sm_clientPassword, sm_clientOrg}));
 
 		// add another row only if the RHN credentials are valid against sm_serverHostname...
 		//if (sm_serverType.equals(CandlepinType.hosted) && !sm_rhnUsername.isEmpty())
 		if (doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com") && doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com") && !sm_rhnUsername.isEmpty())
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"861151","870141"}),	sm_rhnUsername, sm_rhnPassword, null}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"861151","870141","1134963"}),	sm_rhnUsername, sm_rhnPassword, null}));
 
 		return ll;
 	}
