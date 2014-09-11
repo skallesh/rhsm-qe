@@ -501,7 +501,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			// unchanged translations to ignore for specific langs
 			// Move de_DE to be just de; Move es_ES to be just es; candlepin commit 51c338274b7194b70b472f15a0deef48d61f7804
 			if (doesStringContainMatches(translationFile.getPath(),"/bn_IN/|/bn_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Validity Applet","Auto-attach"));
-			if (doesStringContainMatches(translationFile.getPath(),"/ta_IN/|/ta_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","Repo Id:              \\t%s","Repo Url:             \\t%s","Auto-attach"));
+			if (doesStringContainMatches(translationFile.getPath(),"/ta_IN/|/ta_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","Repo Id:              \\t%s","Repo Url:             \\t%s"/*,"Auto-attach" Bug 1140644*/));
 			if (doesStringContainMatches(translationFile.getPath(),"/pt_BR/|/pt_BR\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","<b>Status:</b>","Login:","Virtual","_Help","virtual", "Repo Id:              \\t%s", "Arch:                 \\t%s"/* omaciel says "Arquitetura:" is better */, "Pool Id:              \\t%s"/* omaciel says "ID do pool:" is better */, "<b>Base URL:</b>","_Ok"));
 			if (doesStringContainMatches(translationFile.getPath(),"/de_DE/|/de_DE\\.po$|/de\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","<b>Name:</b>","Status","<b>Status:</b>","Status:               \\t%s","Status:","<b>Status Details:</b>","Status Details","Status Details:","Status Details Text","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","<b>%s version:</b> %s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server","Standard","Repository: %s","_Ok","<b>Support:</b>","<b>Downloads &amp; Upgrades:</b>"));
 			if (doesStringContainMatches(translationFile.getPath(),"/es_ES/|/es_ES\\.po$|/es\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","Serial:","No","%s: error: %s","General:"));
@@ -935,6 +935,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 1117535 - [zh_CN][gu] need a translation for "<b>%s version:</b> %s"
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("1117535");
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/gu/")) bugIds.add("1117525");
+				// Bug 1140644 - [ta_IN] [subscription-manager] Auto-attach button is not localized.
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1140644");
 				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
