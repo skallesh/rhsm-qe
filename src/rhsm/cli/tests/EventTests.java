@@ -131,6 +131,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // fire a register event
 		clienttasks.register(sm_clientUsername,sm_clientPassword,ownerKey,null,null,null,null, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
+		newEventTitles = new String[]{"COMPLIANCE CREATED","COMPLIANCE CREATED","CONSUMER CREATED"};	// COMPLIANCE CREATED events were added to support gutterball
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -182,8 +183,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);	// RHEL59: THIS IS GENERATING EXTRA CONSUMER MODIFIED EVENTS THAT WE DON'T REALLY WANT TO TEST 
 		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null);
 		List<String> newEventTitles = new ArrayList<String>();
+		newEventTitles.add("COMPLIANCE CREATED");	// COMPLIANCE CREATED events were added to support gutterball
 		newEventTitles.add("ENTITLEMENT CREATED");
-
+		newEventTitles.add("COMPLIANCE CREATED");
+		newEventTitles.add("COMPLIANCE CREATED");
+		
 		// TEMPORARY WORKAROUND FOR BUG
 		boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED CURRENTRELEASE
 		String bugId="721136"; // jsefler 07/14/2011 Bug 721136 - the content of the atom feeds has the same value for title and description
@@ -268,6 +272,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         
 		log.info("Now let's refresh the client's entitlements to expose the ENTITLEMENT MODIFIED event...");
 		clienttasks.refresh(null, null, null);
+		newEventTitles.add("COMPLIANCE CREATED");	// COMPLIANCE CREATED events were added to support gutterball
 		newEventTitles.add("ENTITLEMENT MODIFIED");
 		
 		// assert the feed...
@@ -318,6 +323,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // fire an unsubscribe event
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String[] newEventTitles = new String[]{"ENTITLEMENT DELETED"};
+		newEventTitles = new String[]{"COMPLIANCE CREATED","COMPLIANCE CREATED","ENTITLEMENT DELETED"};	// COMPLIANCE CREATED events were added to support gutterball
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -366,6 +372,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		clienttasks.facts(null,true, null, null, null);
 		// FYI: Another way to fire a consumer modified event is to call CandlepinTasks.setAutohealForConsumer(authenticator, password, url, consumerid, autoheal);
 		String[] newEventTitles = new String[]{"CONSUMER MODIFIED"};
+		newEventTitles = new String[]{"COMPLIANCE CREATED","CONSUMER MODIFIED"};	// COMPLIANCE CREATED events were added to support gutterball
 
 		// assert the consumer feed...
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
@@ -393,6 +400,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // fire an unregister event
 		clienttasks.unregister(null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER DELETED"};
+		newEventTitles = new String[]{"CONSUMER DELETED","COMPLIANCE CREATED"};	// COMPLIANCE CREATED events were added to support gutterball
 		
 		// assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
