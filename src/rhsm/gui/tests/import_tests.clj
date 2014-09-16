@@ -160,7 +160,8 @@
 (defn ^{Test {:groups ["import"
                        "tier1"
                        "blockedByBug-691784"
-                       "blockedByBug-723363"]
+                       "blockedByBug-723363"
+                       "blockedByBug-1142400"]
               :dependsOnMethods ["import_valid_cert"]
               :priority (int 30)}}
   import_unsubscribe
