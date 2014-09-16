@@ -50,7 +50,8 @@
   []
    (if (not (bool (tasks/ui guiexist :repositories-dialog)))
     (do (tasks/ui click :repositories)
-        (tasks/ui waittillwindowexist :repositories-dialog 10))))
+        (tasks/ui waittillwindowexist :repositories-dialog 10)
+        (sleep 2000))))
 
 (defn assert-and-subscribe-all
   "Asserts if the system is already subscribed before subscribe_all"
@@ -58,7 +59,8 @@
   (let [row-count (tasks/ui getrowcount :installed-view)
         status (tasks/ui gettextvalue :overall-status)]
     (if (substring? (str row-count) status)
-      (tasks/subscribe_all))))
+      (tasks/subscribe_all)
+      (sleep 2000))))
 
 (defn assert-and-remove-all-override
   "Asserts if remove all override button functionality"
@@ -97,6 +99,7 @@
     (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
     (finally
+      (sleep 2000)
       (tasks/ui click :close-repo-dialog))))
 
 (defn ^{Test {:groups ["repo"
@@ -142,7 +145,7 @@
     (tasks/subscribe_all)
     (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
-    (if (< 0 (tasks/ui getrowcount :repo-table))
+    (if (= 0 (tasks/ui getrowcount :repo-table))
       (throw (Exception. "Repositories table is not populated"))
       (do
         (let [row-count (tasks/ui getrowcount :repo-table)
