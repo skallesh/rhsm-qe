@@ -62,6 +62,8 @@
   check_status_message_before_attaching
   "Asserts that status message displayed in main-window is right before subscriptions are attached"
   [_]
+  (if (tasks/ui showing? :register-system)
+    (tasks/register-with-creds))
   (try
     (tasks/unsubscribe_all)
     (let
