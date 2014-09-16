@@ -268,7 +268,7 @@
                 (tasks/ui waittillwindownotexist :system-preferences-dialog 5)
                 (tasks/ui click :preferences)
                 (tasks/ui waittillwindowexist :system-preferences-dialog 5)
-                 ;(println (str "second - c:" c " b:" b))
+                ;(println (str "second - c:" c " b:" b))
                 (verify (= b (waittillcheck b 5)))
                 (tasks/ui click :close-system-prefs)
                 (tasks/ui waittillwindownotexist :system-preferences-dialog 5))]
