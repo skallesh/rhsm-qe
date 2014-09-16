@@ -289,16 +289,10 @@
   (tasks/ui selecttab :all-available-subscriptions)
   (tasks/search :contain-text "DOESNOTEXIST")
   (let [label "No subscriptions match current filters."]
-    (if (= "RHEL5" (get-release))
-      (do
-        (verify (tasks/ui showing? :all-available-subscriptions label))
-        (tasks/search)
-        (verify (tasks/ui showing? :all-subscriptions-view)))
-      (do
-        (verify (tasks/ui showing? :no-subscriptions-label))
-        (verify (= label (tasks/ui gettextvalue :no-subscriptions-label)))
-        (tasks/search)
-        (verify (not (tasks/ui showing? :no-subscriptions-label)))))))
+    (verify (tasks/ui showing? :all-available-subscriptions label))
+    (tasks/search)
+    (verify (tasks/ui showing? :all-subscriptions-view))
+    (verify (not (= 0 (tasks/ui getrowcount :all-subscriptions-view))))))
 
 (defn ^{Test {:groups ["search_status"
                        "tier2"
@@ -309,16 +303,10 @@
   (tasks/restart-app :reregister? true)
   (tasks/ui selecttab :all-available-subscriptions)
   (let [label "Press Update to search for subscriptions."]
-    (if (= "RHEL5" (get-release))
-      (do
-        (verify (tasks/ui showing? :all-available-subscriptions label))
-        (tasks/search)
-        (verify (tasks/ui showing? :all-subscriptions-view)))
-      (do
-        (verify (tasks/ui showing? :no-subscriptions-label))
-        (verify (= label (tasks/ui gettextvalue :no-subscriptions-label)))
-        (tasks/search)
-        (verify (not (tasks/ui showing? :no-subscriptions-label)))))))
+    (verify (tasks/ui showing? :all-available-subscriptions label))
+    (tasks/search)
+    (verify (tasks/ui showing? :all-subscriptions-view))
+    (verify (not (= 0 (tasks/ui getrowcount :all-subscriptions-view))))))
 
 (defn ^{Test {:groups ["search_status"
                        "tier3"
