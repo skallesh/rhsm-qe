@@ -236,7 +236,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
       {;;these info fields are meant to be used by running gettext on them
        :python-rhsm-version "python-rhsm version*"
        :rhsm-service-version "subscription management service version*"
-       :rhsm-version "Subscription Manager*"
+       :rhsm-version "subscription manager version*"
        :next-system-check "Next System Check-in*"
        :license "License"
        :close-about-dialog "Close"})
