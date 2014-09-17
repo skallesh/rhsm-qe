@@ -62,8 +62,9 @@
     (tasks/ui click :import-certificate)
     (tasks/ui waittillguiexist :import-dialog)
     (if-not (tasks/ui showing? :import-dialog "Location:")
-      (try+ (tasks/ui check :text-entry-toggle)
-            (catch Object e (tasks/ui click :text-entry-toggle))))
+      (do (try+ (tasks/ui check :text-entry-toggle)
+                (catch Object e (tasks/ui click :text-entry-toggle)))
+          (tasks/ui generatekeyevent "/")))
     (tasks/ui generatekeyevent certlocation)
     (tasks/ui click :import-cert)
     (tasks/checkforerror)
@@ -160,7 +161,8 @@
 (defn ^{Test {:groups ["import"
                        "tier1"
                        "blockedByBug-691784"
-                       "blockedByBug-723363"]
+                       "blockedByBug-723363"
+                       "blockedByBug-1142400"]
               :dependsOnMethods ["import_valid_cert"]
               :priority (int 30)}}
   import_unsubscribe
@@ -271,7 +273,7 @@
                       @clientcmd
                       "/var/log/rhsm/rhsm.log"
                       "import_nonexistant"
-                      (import-bad-cert "/this/does/not/exist.pem" :cert-does-not-exist))))))
+                      (import-bad-cert "/this_does_not_exist.pem" :cert-does-not-exist))))))
 
 (gen-class-testng)
 

@@ -28,7 +28,8 @@
   (tasks/ui click :license-yes)
   (tasks/ui click :firstboot-forward)
   ;; RHEL5 has a different firstboot order than RHEL6
-  (if (tasks/fbshowing? :firewall)
+  (if (and (= "RHEL5" (get-release))
+           (tasks/fbshowing? :firewall))
     (do
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
@@ -204,7 +205,8 @@
 ;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
 (defn ^{Test {:groups ["firstboot"
                        "tier1"
-                       "blockedByBug-642660"]}}
+                       "blockedByBug-642660"
+                       "blockedByBug-1142495"]}}
   firstboot_skip_register
   "Checks whether firstboot skips register if subscription manger is already registered"
   [_]
@@ -236,14 +238,21 @@
   (tasks/ui click :firstboot-forward)
   (tasks/ui click :license-yes)
   (tasks/ui click :firstboot-forward)
-  (if (tasks/fbshowing? :firstboot-window "Firewall")
+  (if (and (= "RHEL5" (get-release))
+           (tasks/fbshowing? :firstboot-window "Firewall"))
     (do
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (sleep 3000) ;; FIXME find a better way than a hard wait...
-      (verify (tasks/fbshowing? :software-updates)))))
+      (verify (tasks/fbshowing? :software-updates))))
+  (tasks/ui click :register-now)
+  (tasks/ui click :firstboot-forward)
+  (tasks/ui click :register-rhsm)
+  (tasks/ui click :firstboot-forward)
+  (verify (bool (tasks/ui guiexist :firstboot-window
+                          "Subscription Management Registration"))))
 
 (defn ^{Test {:groups ["firstboot"
                        "tier1"

@@ -243,7 +243,7 @@
                        "tier1"
                        "blockedByBug-977855"]}}
   check_persistant_autoheal
-  "Asserts that the selection made in the autohal checkbox is persistant."
+  "Asserts that the selection made in the autoheal checkbox is persistant."
   [_]
   (try
     (tasks/restart-app)
@@ -260,6 +260,7 @@
           cpa (fn [c b]
                 (tasks/ui click :preferences)
                 (tasks/ui waittillwindowexist :system-preferences-dialog 5)
+                (sleep 2000)
                 (tasks/ui c :autoheal-checkbox)
                 ;(println (str "first - c:" c " b:" b))
                 (verify (= b (waittillcheck b 5)))

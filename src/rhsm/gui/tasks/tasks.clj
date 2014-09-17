@@ -272,18 +272,21 @@
      ;; "SHOWING" == 24  on RHEL5
      (or
       (or (= 24 (some #{24} (seq (ui getallstates item))))
-          (some #(= "SHOWING" %)
-                (seq (ui getallstates :firstboot-window "Firewall"))))
-         (ui showing? item)))
+          (if (= "RHEL5" (get-release))
+            (some #(= "SHOWING" %)
+                  (seq (ui getallstates :firstboot-window "Firewall")))
+            true))
+      (ui showing? item)))
   ([window_name component_name]
-     (or
-      (if (some #(re-find (re-pattern (str ".*" component_name ".*")) %)
-                (seq (ui getobjectlist window_name)))
-        (or (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
-            (some #(= "VISIBLE" %)
-                  (seq (ui getallstates :firstboot-window "Firewall"))))
-        false)
-      (ui showing? window_name component_name))))
+     (or (if (some #(re-find (re-pattern (str ".*" component_name ".*")) %)
+                   (seq (ui getobjectlist window_name)))
+           (or (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
+               (if (= "RHEL5" (get-release))
+                 (some #(= "SHOWING" %)
+                       (seq (ui getallstates :firstboot-window "Firewall")))
+                 true))
+           false)
+         (ui showing? window_name component_name))))
 
 (defn visible?
   "Utility to see if a GUI object has visible state"
@@ -597,9 +600,11 @@
        (do (ui click :firstboot-proxy-config)
            (ui waittillwindowexist :firstboot-proxy-dialog 60)
            (ui check :firstboot-proxy-checkbox)
-           (settext :firstboot-proxy-location
-                    (ui generatekeyevent "<CTRL>a"))
-           (settext :firstboot-proxy-location "")
+           (if (= "RHEL5" (get-release))
+             (do (settext :firstboot-proxy-location
+                          (ui generatekeyevent "<CTRL>a"))
+                 (settext :firstboot-proxy-location ""))
+             (ui settextvalue :firstboot-proxy-location ""))
            (ui uncheck :firstboot-proxy-checkbox)
            (ui check :firstboot-auth-checkbox)
            (settext :firstboot-proxy-user "")

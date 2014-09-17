@@ -28,6 +28,9 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (try+ (if (= "RHEL7" (get-release)) (base/startup nil))
+        (skip-if-bz-open "1142918")
+        (if (not (bool (tasks/ui guiexist :main-window)))
+          (tasks/start-app))
         (tasks/unregister)
         (catch [:type :not-registered] _)
         (catch Exception e

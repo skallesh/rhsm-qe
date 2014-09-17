@@ -97,7 +97,8 @@
 (defn ^{Test {:groups ["system"
                        "tier1"
                        "blockedByBug-747014"
-                       "blockedByBug-1120611"]}}
+                       "blockedByBug-1120611"
+                       "blockedByBug-1142427"]}}
   check_help_button
   "Assertst that the help window opens."
   [_]
@@ -371,11 +372,11 @@
     (tasks/unregister))
   (tasks/ui click :main-window "System")
   (sleep 2000)
-  (verify (not (some #(= "VISIBLE" %) (tasks/ui getallstates :preferences))))
+  (verify (not (some #(= "visible" %) (tasks/ui getallstates :preferences))))
   (tasks/register-with-creds)
   (tasks/ui click :main-window "System")
   (sleep 2000)
-  (verify (some #(= "VISIBLE" %) (tasks/ui getallstates :preferences))))
+  (verify (some #(= "visible" %) (tasks/ui getallstates :preferences))))
 
 (defn ^{Test {:groups ["system"
                        "tier2"
