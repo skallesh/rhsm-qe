@@ -286,6 +286,7 @@
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   cleanup [_]
+  (skip-if-bz-open "1142918")
   (assert-valid-testing-arch)
   (disable_proxy nil)
   (tasks/restart-app))
