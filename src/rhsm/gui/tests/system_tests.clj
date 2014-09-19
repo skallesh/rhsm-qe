@@ -126,13 +126,13 @@
       (let [exec-shortcut (fn [s] (tasks/ui generatekeyevent s))
             count-objects (fn [w] (count (tasks/ui getobjectlist w)))
             beforecount (do (exec-shortcut shortcut)
-                                        ;sleeps are necessary because window doesn't instantly render
+                                  ; sleeps are necessary because window doesn't instantly render
                             (tasks/ui waittillwindowexist window 10)
                             (sleep 3000)
                             (count-objects window))
-                             ;this has to be here due to weird issues in RHEL5
-                             ; where the objectlist was getting cached
-                             ; creating a traceback dumps the cache and this works for a quick fix
+                                  ; this has to be here due to weird issues in RHEL5
+                                  ; where the objectlist was getting cached
+                                  ; creating a traceback dumps the cache and this works for a quick fix
             fuckcache (fn [] (try+ (tasks/ui getchild "blah")
                                   (catch Exception e "")))]
         (comment
