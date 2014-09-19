@@ -89,7 +89,8 @@
     (let [stackable-pems (filter string? (tasks/get-stackable-pem-files))
           change-prod-dir (tasks/set-conf-file-value "productCertDir" stacking-dir)
           ret-val (fn [pem-file] (:exitcode
-                                 (run-command (str "cp  " @prod-dir-atom "/" pem-file "  " stacking-dir))))
+                                 (run-command
+                                  (str "cp  " @prod-dir-atom "/" pem-file "  " stacking-dir))))
           copy-pem (map ret-val stackable-pems)]
       (log/info (str (count (filter #(= 0 %) copy-pem))
                      " products are stackable. Stacking setup complete")))
@@ -116,7 +117,8 @@
     (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
     (tasks/restart-app :reregister? true)
     (tasks/search :match-installed? true)
-    (let [subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
+    (let [subscriptions (into [] (tasks/get-table-elements
+                                  :all-subscriptions-view 0 :skip-dropdown? true))
           sub-type-map (ctasks/build-subscription-attr-type-map)
           socket-subs  (for [s subscriptions
                              :let [x (get sub-type-map s)]
@@ -148,7 +150,8 @@
     (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
     (tasks/restart-app :reregister? true)
     (tasks/search :match-installed? true)
-    (let [subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
+    (let [subscriptions (into [] (tasks/get-table-elements
+                                  :all-subscriptions-view 0 :skip-dropdown? true))
           sub-type-map (ctasks/build-subscription-attr-type-map)
           socket-subs (for [s subscriptions
                             :let [x (get sub-type-map s)]
@@ -221,7 +224,8 @@
         ;creating new directory with single product
         new-prod-dir (str "/tmp/single-pem/")
         existing-prod-dir (tasks/conf-file-value "productCertDir")
-        subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
+        subscriptions (into [] (tasks/get-table-elements
+                                :all-subscriptions-view 0 :skip-dropdown? true))
         sub-type-map (ctasks/build-subscription-attr-type-map)
         socket-subs (for [s subscriptions
                             :let [x (get sub-type-map s)]
@@ -266,7 +270,8 @@
     (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
     (tasks/restart-app :reregister? true)
     (tasks/search :match-installed? true)
-    (let [subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
+    (let [subscriptions (into [] (tasks/get-table-elements
+                                  :all-subscriptions-view 0 :skip-dropdown? true))
           sub-type-map (ctasks/build-subscription-attr-type-map)
           socket-subs (for [s subscriptions
                             :let [x (get sub-type-map s)]
@@ -308,10 +313,14 @@
     (tasks/restart-app :reregister? true)
     (tasks/search :match-installed? true)
     (let [system-ram (Integer. 10)
-          subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
+          subscriptions (into [] (tasks/get-table-elements
+                                  :all-subscriptions-view 0 :skip-dropdown? true))
           sub-type-map (ctasks/build-subscription-attr-type-map)
           ;; get subscriptions dependant on RAM
-          only-ram (fn [i] (and (not (or (some #(= "cores" %) i) (some #(= "sockets" %) i))) (some #(= "ram" %) i)))
+          only-ram (fn [i] (and (not
+                                (or (some #(= "cores" %) i)
+                                    (some #(= "sockets" %) i)))
+                               (some #(= "ram" %) i)))
           ram-subs (for [s subscriptions
                             :let [x (get sub-type-map s)]
                             :when (only-ram x)] s)
@@ -323,8 +332,10 @@
           ;; getting subscriptions with same stacking_id
           subs-stacking-id (into [] (distinct (remove nil? (map filter-func subscriptions))))
           subs-applicable (clojure.set/intersection (into #{} ram-subs) (into #{} subs-stacking-id))
-          quantity-func (fn [i] (Integer. (re-find #"\d" (tasks/ui getcellvalue :all-subscriptions-view
-                                                                  (tasks/skip-dropdown :all-subscriptions-view i) 3))))
+          quantity-func (fn [i] (Integer.
+                                (re-find #"\d"
+                                       (tasks/ui getcellvalue :all-subscriptions-view
+                                                 (tasks/skip-dropdown :all-subscriptions-view i) 3))))
           ;; map of subscriptions having same stacking_id and the RAM that they provide
           subs-applicable-ram (into {} (map (fn [i]  {i (ram-func i) }) subs-applicable))
           ;; calculating the RAM covered by random subscription and uncovered RAM
@@ -339,7 +350,9 @@
       (tasks/skip-dropdown :all-subscriptions-view rand-sub)
       (tasks/ui click :search)
       (sleep 4000)
-      (verify (= nil (some false? (map = (into [] (map quantity-func subs-applicable)) quantity-after)))))
+      (verify (= nil
+                 (some false?
+                       (map = (into [] (map quantity-func subs-applicable)) quantity-after)))))
 
     (finally
      (tasks/write-facts "{\"memory.memtotal\": \"1020252\"}")
@@ -349,6 +362,7 @@
   "This function is used to set stackig environment based on RAMs COREs or SOCKETs"
   [stacking-parameter when?]
   (cond
+   ;; works as a before class
    (= when? "before")
    (do
      (case stacking-parameter
@@ -363,6 +377,7 @@
                                                   :overwrite? false)))
        ("sockets") (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
        (throw (Exception. "Invalid stacking-parameter passed to function"))))
+   ;; works as after class
    (= when? "after")
    (do
      (case stacking-parameter
@@ -382,9 +397,18 @@
   "This is a helper function to provide filter function based on stacking parameter"
   [stacking-parameter]
   (case stacking-parameter
-    ("ram")    (fn [i] (and (not (or (some #(= "cores" %) i) (some #(= "sockets" %) i))) (some #(= "ram" %) i)))
-    ("cores")   (fn [i] (and (not (or (some #(= "sockets" %) i) (some #(= "ram" %) i))) (some #(= "cores" %) i)))
-    ("sockets") (fn [i] (and (not (or (some #(= "cores" %) i) (some #(= "ram" %) i))) (some #(= "sockets" %) i)))))
+    ("ram")    (fn [i] (and
+                       (not (or (some #(= "cores" %) i)
+                                (some #(= "sockets" %) i)))
+                       (some #(= "ram" %) i)))
+    ("cores")   (fn [i] (and
+                        (not (or (some #(= "sockets" %) i)
+                                 (some #(= "ram" %) i)))
+                        (some #(= "cores" %) i)))
+    ("sockets") (fn [i] (and
+                        (not (or (some #(= "cores" %) i)
+                                 (some #(= "ram" %) i)))
+                        (some #(= "sockets" %) i)))))
 
 (defn get-cli-facts
   "This function returns CLI fats for stacking parameters"
@@ -393,9 +417,13 @@
                             (trim (last (split
                                          (trim-newline(:stdout
                                                         (run-command str))) #":")))))
-        ram-value (int (/ (get-value (str "subscription-manager facts --list | grep \"memory.memtotal\""))1000000))
-        sockets-value (get-value (str "subscription-manager facts --list | grep \"cpu.cpu_socket\""))
-        cores-value (* (get-value (str "subscription-manager facts --list | grep \"^cpu.core(s)_per_socket\""))
+        ram-value (int (/(get-value
+                         (str "subscription-manager facts --list | grep \"memory.memtotal\""))
+                         1000000))
+        sockets-value (get-value
+                         (str "subscription-manager facts --list | grep \"cpu.cpu_socket\""))
+        cores-value (* (get-value
+                         (str "subscription-manager facts --list | grep \"^cpu.core(s)_per_socket\""))
                        sockets-value)]
     (case stacking-parameter
       ("ram")     ram-value
@@ -411,7 +439,8 @@
     (set-stacking-environment stacking-parameter "before")
     (tasks/restart-app :reregister? true)
     (tasks/search :match-installed? true)
-    (let [subscriptions (into [] (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdown? true))
+    (let [subscriptions (into [] (tasks/get-table-elements
+                                  :all-subscriptions-view 0 :skip-dropdown? true))
           sub-type-map (ctasks/build-subscription-attr-type-map)
           func (filter-func stacking-parameter)
           subs (into [] (for [s subscriptions
