@@ -48,9 +48,13 @@
   after_check_status_message
   [_]
   (let
-      [time-cmd (str "systemctl stop ntpd.service;"
-                     " ntpdate clock.redhat.com;"
-                     " systemctl start ntpd.service")]
+      [time-cmd (if (= "RHEL7" (get-release))
+                  (str "systemctl stop ntpd.service;"
+                       " ntpdate clock.redhat.com;"
+                       " systemctl start ntpd.service")
+                  (str "service ntpd stop;"
+                       " ntpdate clock.redhat.com;"
+                       " service ntpd start"))]
     (:stdout (run-command time-cmd))
     (:stdout (run-command time-cmd :runner @candlepin-runner))))
 
