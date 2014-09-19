@@ -202,16 +202,15 @@
   (tasks/restart-app :reregister? true)
   (tasks/subscribe_all)
   (assert-and-open-repo-dialog)
-  (tasks/do-to-all-rows-in :repo-table 1
+  (tasks/do-to-all-rows-in :repo-table 2
                            (fn [repo]
                              (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
                              (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
-                               (if (not (bool (tasks/ui verifycheckrow :repo-table row-num 1)))
-                                 (do (tasks/ui checkrow :repo-table row-num 1)
-                                     (sleep 2000))
-                                 (do (tasks/ui checkrow :repo-table row-num 0)
-                                     (sleep 2000))))))
+                               (tasks/ui checkrow :repo-table row-num 1)
+                               (sleep 2000)
+                               (tasks/ui checkrow :repo-table row-num 0)
+                               (sleep 2000))))
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
 
@@ -225,8 +224,9 @@
   [_ repo]
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
-  (verify (bool (and (tasks/has-state? :repo-remove-override "visible")
-                     (tasks/has-state? :repo-remove-override "enabled")))))
+  (sleep 2000)
+  (verify (and (tasks/has-state? :repo-remove-override "visible")
+                      (tasks/has-state? :repo-remove-override "enabled"))))
 
 (defn ^{AfterGroups {:groups ["repo"
                               "tier3"]
@@ -235,7 +235,7 @@
   after_verify_override_persistance
   [_]
   (assert-and-open-repo-dialog)
-  (tasks/do-to-all-rows-in :repo-table 1
+  (tasks/do-to-all-rows-in :repo-table 2
                            (fn [repo]
                              (tasks/ui selectrow :repo-table repo)
                              (assert-and-remove-all-override)))
