@@ -194,10 +194,8 @@
   (tasks/unsubscribe_all))
 
 (defn ^{BeforeGroups {:groups ["repo"
-                               "tier3"
-                               "blockedByBug-1095938"]
-                      :value ["assert_override_persistance"]
-                      :alwaysRun true}}
+                               "tier3"]
+                      :value ["assert_override_persistance"]}}
   before_verify_override_persistance
   "Modofies all repos by clicking edit gpg-check"
   [_]
@@ -231,8 +229,7 @@
                      (tasks/has-state? :repo-remove-override "enabled")))))
 
 (defn ^{AfterGroups {:groups ["repo"
-                              "tier3"
-                              "blockedByBug-1095938"]
+                              "tier3"]
                      :value ["assert_override_persistance"]
                      :alwaysRun true}}
   after_verify_override_persistance
