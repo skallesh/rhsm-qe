@@ -48,13 +48,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.selenium.Base64;
-import com.redhat.qe.jul.TestRecords;
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.RevokedCert;
+
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.selenium.Base64;
+import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -3389,9 +3390,16 @@ schema generation failed
 			log.fine(String.format("%s entries[] is empty", feed.getTitle()));		
 		} else for (int i=0;  i<feed.getEntries().size(); i++) {
 			log.fine(String.format("%s entries[%d].title=%s   description=%s", feed.getTitle(), i, ((SyndEntryImpl) feed.getEntries().get(i)).getTitle(), ((SyndEntryImpl) feed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) feed.getEntries().get(i)).getDescription().getValue()));
+			//log.fine(String.format("%s entries[%d].title=%s   description=%s   updatedDate=%s", feed.getTitle(), i, ((SyndEntryImpl) feed.getEntries().get(i)).getTitle(), ((SyndEntryImpl) feed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) feed.getEntries().get(i)).getDescription().getValue(), ((SyndEntryImpl) feed.getEntries().get(i)).getUpdatedDate()));
+			//log.fine(String.format("%s entries[%d].title=%s   description=%s   updatedDate=%s", feed.getTitle(), i, ((SyndEntryImpl) feed.getEntries().get(i)).getTitle(), ((SyndEntryImpl) feed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) feed.getEntries().get(i)).getDescription().getValue(), formatDateString( ((SyndEntryImpl) feed.getEntries().get(i)).getUpdatedDate())  ));
 		}
 
         return feed;
+	}
+	public static String formatDateString(Date date){
+		String simpleDateFormatOverride = "MMM d yyyy HH:mm:ss.SSS z"; // "yyyy-MM-dd HH:mm:ssZZZ";	// can really be any useful format
+		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormatOverride);
+		return dateFormat.format(date.getTime());
 	}
 		
 	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, List<String> providedProducts, List<Map<String, String>> brandingMaps) throws JSONException{
