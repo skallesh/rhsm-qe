@@ -48,10 +48,11 @@
 (defn assert-and-open-repo-dialog
   "Asserts if repo-dialog is open if not it opens it"
   []
-   (if (not (bool (tasks/ui guiexist :repositories-dialog)))
+  (sleep 3000)
+  (if (not (bool (tasks/ui guiexist :repositories-dialog)))
     (do (tasks/ui click :repositories)
         (tasks/ui waittillwindowexist :repositories-dialog 10)
-        (sleep 2000))))
+        (sleep 4000))))
 
 (defn assert-and-subscribe-all
   "Asserts if the system is already subscribed before subscribe_all"
