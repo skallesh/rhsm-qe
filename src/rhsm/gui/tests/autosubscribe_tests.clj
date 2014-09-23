@@ -196,12 +196,12 @@
     (let [_ (tasks/ui click :preferences)
           _ (tasks/ui waittillguiexist :system-preferences-dialog)
           sla (tasks/ui getcombovalue :service-level-dropdown)
-          sla-slected? (tasks/ui showing? :system-preferences-dialog @common-sla)
+          sla-selected? (tasks/ui showing? :system-preferences-dialog @common-sla)
           _ (tasks/ui click :close-system-prefs)]
-      (if (= sla-slected? "slaselectioncombobox")
+      (if (= sla "slaselectioncombobox")
         (throw (SkipException.
                 (str "Cannot access combo-box !! Skipping Test 'check_available_releases'."))))
-      (verify (and sla-slected? (= @common-sla sla))))
+      (verify (and sla-selected? (= @common-sla sla))))
     (catch Exception e
       (if (substring? "Unable to find object name in application map"
                       (.getMessage e))
