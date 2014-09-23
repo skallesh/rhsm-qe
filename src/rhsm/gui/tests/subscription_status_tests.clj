@@ -70,6 +70,7 @@
     (tasks/register-with-creds))
   (try
     (tasks/unsubscribe_all)
+    (sleep 3000)
     (let
       [installed-products (atom nil)]
       (reset! installed-products (tasks/ui getrowcount :installed-view))
@@ -211,6 +212,7 @@
     (do
       (tasks/restart-app :reregister? true)
       (tasks/subscribe_all)
+      (sleep 3000)
       (tasks/ui selecttab :my-subscriptions)
       (let [subs (into [] (map vector (tasks/get-table-elements
                                        :my-subscriptions-view
@@ -232,6 +234,7 @@
       (build-contract-map)
       (tasks/ui selecttab :my-subscriptions)
       (tasks/subscribe_all)
+      (sleep 3000)
       (tasks/ui selecttab :my-subscriptions)
       (let [subs (into [] (map vector (tasks/get-table-elements
                                        :my-subscriptions-view
