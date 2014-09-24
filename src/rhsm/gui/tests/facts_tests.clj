@@ -153,6 +153,7 @@
       (tasks/ui click :preferences)
       (tasks/ui waittillwindowexist :system-preferences-dialog 10)
       (tasks/ui showlist :service-level-dropdown)
+      (sleep 3000)
       (let [gui-levels (sort (tasks/ui listsubmenus :service-level-dropdown))]
         (verify (= expected-levels gui-levels))
         (verify (not (nil? (some #{"Not Set"} gui-levels))))))

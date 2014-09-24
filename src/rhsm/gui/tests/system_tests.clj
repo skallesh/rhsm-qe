@@ -31,7 +31,9 @@
 (def tmpCAcertpath "/tmp/CA-certs/")
 (def CAcertpath "/etc/rhsm/ca/")
 (def unreg-status "Keep your system up to date by registering.")
+(def rhsmcertd-log "/var/log/rhsm/rhsmcertd.log")
 (def virt? (atom nil)) ;; Used to hold the virt value of system
+(def rhsmcertd-output (atom nil)) ;; Used to hold rhsmcertd log
 (def ns-log "rhsm.gui.tests.system_tests")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
@@ -124,13 +126,13 @@
       (let [exec-shortcut (fn [s] (tasks/ui generatekeyevent s))
             count-objects (fn [w] (count (tasks/ui getobjectlist w)))
             beforecount (do (exec-shortcut shortcut)
-                                        ;sleeps are necessary because window doesn't instantly render
+                                  ; sleeps are necessary because window doesn't instantly render
                             (tasks/ui waittillwindowexist window 10)
                             (sleep 3000)
                             (count-objects window))
-                                        ;this has to be here due to weird issues in RHEL5
-                                        ; where the objectlist was getting cached
-                                        ; creating a traceback dumps the cache and this works for a quick fix
+                                  ; this has to be here due to weird issues in RHEL5
+                                  ; where the objectlist was getting cached
+                                  ; creating a traceback dumps the cache and this works for a quick fix
             fuckcache (fn [] (try+ (tasks/ui getchild "blah")
                                   (catch Exception e "")))]
         (comment
@@ -269,16 +271,17 @@
   (try
     (run-command "subscription-manager unregister")
     (run-command "subscription-manager clean")
-    (let
-        [rhsmcertd-log "/var/log/rhsm/rhsmcertd.log"
-         output (get-logging @clientcmd
-                             rhsmcertd-log
-                             "cert-check-timestamp"
-                             "Cert check interval"
-                             (if (= (get-release) "RHEL7")
-                               (run-command "systemctl restart rhsmcertd.service")
-                               (run-command "service rhsmcertd restart")))
-         log-timestamp (re-find #"\d+:\d+:\d+" output)
+    (reset! rhsmcertd-output (get-logging @clientcmd
+                                          rhsmcertd-log
+                                          "cert-check-timestamp"
+                                          "Cert check interval"
+                                          (if (= (get-release) "RHEL7")
+                                            (run-command "systemctl restart rhsmcertd.service")
+                                            (run-command "service rhsmcertd restart"))))
+    (tasks/restart-app)
+    (tasks/ui click :about)
+    (tasks/ui waittillwindowexist :about-dialog 10)
+    (let [log-timestamp (re-find #"\d+:\d+:\d+" @rhsmcertd-output)
          ;; The following steps adds minutes to the time at which service was restarted.
          ;; This added time is the default interval in conf file.
          ;; After which time is converted to 24hrs format.
@@ -296,12 +299,15 @@
                                (re-find #"[^0]" hours-log) hours-log)
          new-time (+ time-to-be-added (Integer. (re-find  #"\d+" processed-hours-log)))
          hours (if (> new-time 12) (- new-time 12) new-time)
-         compare-time (str (if ( < hours 10) (str "0" hours) hours)
-                           (re-find #":\d+:\d+" log-timestamp))]
-      (tasks/ui click :about)
-      (tasks/ui waittillwindowexist :about-dialog 10)
-      (verify ( = compare-time (re-find #"\d+:\d+:\d+"
-                                        (tasks/ui gettextvalue :next-system-check)))))
+         gui-time (trim (re-find #"\d+:\d+:.*"
+                                 (tasks/ui gettextvalue :next-system-check)))
+         time-of-day (trim (re-find #" \w+" gui-time))
+         edit-time (if (and (= "AM" time-of-day)
+                            (> hours 12)) (- hours 12) hours)
+         compare-time (str (if ( < edit-time 10) (str "0" edit-time) edit-time)
+                           (re-find #":\d+:\d+" log-timestamp))
+         processed-gui-time (re-find #"\d+:\d+:\d+" gui-time)]
+      (verify ( = compare-time processed-gui-time)))
     (finally
       (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
       ;; Worstcase scenario if service rhsmcertd is stopped we have to

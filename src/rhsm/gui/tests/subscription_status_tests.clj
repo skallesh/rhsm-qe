@@ -48,9 +48,13 @@
   after_check_status_message
   [_]
   (let
-      [time-cmd (str "systemctl stop ntpd.service;"
-                     " ntpdate clock.redhat.com;"
-                     " systemctl start ntpd.service")]
+      [time-cmd (if (= "RHEL7" (get-release))
+                  (str "systemctl stop ntpd.service;"
+                       " ntpdate clock.redhat.com;"
+                       " systemctl start ntpd.service")
+                  (str "service ntpd stop;"
+                       " ntpdate clock.redhat.com;"
+                       " service ntpd start"))]
     (:stdout (run-command time-cmd))
     (:stdout (run-command time-cmd :runner @candlepin-runner))))
 
@@ -66,6 +70,7 @@
     (tasks/register-with-creds))
   (try
     (tasks/unsubscribe_all)
+    (sleep 3000)
     (let
       [installed-products (atom nil)]
       (reset! installed-products (tasks/ui getrowcount :installed-view))
@@ -207,6 +212,7 @@
     (do
       (tasks/restart-app :reregister? true)
       (tasks/subscribe_all)
+      (sleep 3000)
       (tasks/ui selecttab :my-subscriptions)
       (let [subs (into [] (map vector (tasks/get-table-elements
                                        :my-subscriptions-view
@@ -228,6 +234,7 @@
       (build-contract-map)
       (tasks/ui selecttab :my-subscriptions)
       (tasks/subscribe_all)
+      (sleep 3000)
       (tasks/ui selecttab :my-subscriptions)
       (let [subs (into [] (map vector (tasks/get-table-elements
                                        :my-subscriptions-view
