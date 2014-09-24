@@ -232,7 +232,27 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				//	    "timeUTC": "2014-01-29T09:04:14Z",
 				//	    "version": "1.4.15-1.el6"
 				//	}
-
+				
+				//	# curl --stderr /dev/null --insecure --request GET https://qe-subman-rhel65.usersys.redhat.com:443/rhsm/status | python -m simplejson/tool
+				//	{
+				//	    "managerCapabilities": [
+				//	        "cores", 
+				//	        "ram", 
+				//	        "instance_multiplier", 
+				//	        "derived_product", 
+				//	        "cert_v3", 
+				//	        "guest_limit", 
+				//	        "vcpu"
+				//	    ], 
+				//	    "release": "Katello", 
+				//	    "result": true, 
+				//	    "rulesSource": "DEFAULT", 
+				//	    "rulesVersion": "5.11", 
+				//	    "standalone": true, 
+				//	    "timeUTC": "2014-09-24T22:03:34Z", 
+				//	    "version": "1.5.0-30.el6sat"
+				//	}
+				
 				//TODO git candlepin version on hosted stage:
 				// curl -s	http://git.corp.redhat.com/cgit/puppet-cfg/modules/candlepin/plain/data/rpm-versions.yaml?h=stage | grep candlepin
 				// candlepin-it-jars: 0.5.26-1
@@ -240,8 +260,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 				log.info("Candlepin server '"+sm_serverHostname+"' is running: release="+servertasks.statusRelease+" version="+servertasks.statusVersion+" standalone="+servertasks.statusStandalone+" timeUTC="+servertasks.statusTimeUTC);
 				Assert.assertEquals(servertasks.statusResult, true,"Candlepin status result");
-				Assert.assertTrue(servertasks.statusRelease.matches("\\d+"), "Candlepin release matches d+");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
-				Assert.assertTrue(servertasks.statusVersion.matches("\\d+\\.\\d+\\.\\d+(.\\d+)?"), "Candlepin version matches d+.d+.d+(.d+)? (Note: optional fourth digits indicate a hot fix)");
+				Assert.assertTrue(servertasks.statusRelease.matches("\\d+|Katello"), "Candlepin release '"+servertasks.statusRelease+"' matches d+|Katello");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
+				Assert.assertTrue(servertasks.statusVersion.matches("\\d+\\.\\d+\\.\\d+(\\.\\d+)?(-.+)?"), "Candlepin version '"+servertasks.statusVersion+"' matches d+\\.d+\\.d+(\\.d+)?(-.+)? (Note: optional fourth digits indicate a hot fix)");
 			}
 		} catch (Exception e) {
 			// Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin

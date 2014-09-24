@@ -458,8 +458,12 @@ public class SubscriptionManagerTasks {
 			
 			// remove the existing package first
 			log.info("Removing existing package "+pkg+"...");
-			sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
+			if (pkg.startsWith("katello-ca-consumer")) {
+				sshCommandRunner.runCommandAndWait("yum -y remove $(rpm -qa | grep katello-ca-consumer) "+installOptions);
+			} else {
+				sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);
+				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
+			}
 		}
 		
 		// install new rpms
@@ -476,10 +480,12 @@ public class SubscriptionManagerTasks {
 			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" "+installOptions).getExitCode(), Integer.valueOf(0), "ExitCode from yum installed local rpm: "+rpmPath);
 			
 			// assert the local rpm is now installed
-			String rpmPackageVersion = sshCommandRunner.runCommandAndWait("rpm --query --package "+rpmPath).getStdout().trim();
-			String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
-			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
-			pkgsInstalled.add(pkg);
+			if (!pkg.startsWith("katello-ca-consumer")) {	// skip assertion of katello-ca-consumer
+				String rpmPackageVersion = sshCommandRunner.runCommandAndWait("rpm --query --package "+rpmPath).getStdout().trim();
+				String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
+				Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
+				pkgsInstalled.add(pkg);
+			}
 		}
 		
 		// update new rpms
