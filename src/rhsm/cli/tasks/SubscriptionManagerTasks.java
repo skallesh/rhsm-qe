@@ -285,6 +285,12 @@ public class SubscriptionManagerTasks {
 
 	public void installZStreamUpdates(String installOptions, List<String> updatePackages) throws IOException {
 		
+		if (redhatReleaseXY.equals("5.10")) {
+			// http://download.devel.redhat.com/rel-eng/repos/ is missing RHEL-5.10-Z/ 
+			log.warning("Skipping the install of ZStream updates on RHEL5.10.  dgregor says: 5.10 isn't EUS, so there wouldn't be an active RHEL-5.10-Z.");
+			return;
+		}
+		
 		// make sure installOptions begins with --disablerepo=* to make sure the updates ONLY come from the rhel-zstream repos we are about to define
 		if (!installOptions.contains("--disablerepo=*")) installOptions = "--disablerepo=* "+installOptions;
 		
@@ -295,6 +301,7 @@ public class SubscriptionManagerTasks {
 	    if (Integer.valueOf(redhatReleaseX)==5 && arch.equals("i686")) archZStream = "i386"; // only i386 arch packages are built in brew for RHEL5
 	    if (Integer.valueOf(redhatReleaseX)==6 && arch.equals("i386")) archZStream = "i686"; // only i686 arch packages are built in brew for RHEL6
 	    String baseurl = "http://download.devel.redhat.com/rel-eng/repos/RHEL-"+redhatReleaseXY+"-Z/"+archZStream;
+	    if (Integer.valueOf(redhatReleaseX)==7) baseurl = baseurl.replace("/RHEL-", "/rhel-").replace("-Z/", "-z/");
 	    try {
 	    	Writer output = new BufferedWriter(new FileWriter(file));
 			
