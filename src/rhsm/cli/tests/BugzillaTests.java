@@ -361,27 +361,36 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"InstalledProductMultipliesAfterSubscription","AcceptanceTests","Tier1Tests","blockedByBug-709412"},
 			enabled=true)
 	public void InstalledProductMultipliesAfterSubscription() throws Exception {
-		client.runCommandAndWait("mkdir /root/generatedCertsFolder");
+// jsefler - moving product certs around is too much work, changing to a different configured rhsm.productCertDir...
+//		client.runCommandAndWait("mkdir /root/generatedCertsFolder");
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
 		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
-		
 		clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, true, null, null, null, null).getStdout();
-		moveProductCertFiles("*");
-		client.runCommandAndWait("cp " + "/usr/share/rhsm/product/RHEL-*/Server*.pem" + " "
-				+ "/root/generatedCertsFolder");
-		client.runCommandAndWait("mv" + "/root/generatedCertsFolder" + " "+ clienttasks.productCertDir);
+//clienttasks.config(null,null,true,new String[]{"rhsm","productcertdir","/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX});
+//		moveProductCertFiles("*");
+//		client.runCommandAndWait("cp " + "/usr/share/rhsm/product/RHEL-*/Server*.pem" + " "
+//				+ "/root/generatedCertsFolder");
+//		client.runCommandAndWait("mv" + "/root/generatedCertsFolder" + " "+ clienttasks.productCertDir);
+		productCertDir = clienttasks.productCertDir;
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", "/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX);
 		List<InstalledProduct> InstalledProducts=clienttasks.getCurrentlyInstalledProducts();
 
-		 List<SubscriptionPool> AvailablePools=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		 List<SubscriptionPool> AvailablePools=clienttasks.getCurrentlyAvailableSubscriptionPools();
 		 for(SubscriptionPool pools:AvailablePools){
 			 clienttasks.subscribe(null, null,pools.poolId, null, null, null, null, null, null, null, null);
 			 List<InstalledProduct> InstalledProductsAfterSubscribing=clienttasks.getCurrentlyInstalledProducts();
 				Assert.assertEquals(InstalledProducts.size(), InstalledProductsAfterSubscribing.size());
-				clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
+//				clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
+				clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		 }
 		}
+	@AfterGroups(groups = { "setup" }, value = {"InstalledProductMultipliesAfterSubscription"})
+	public void afterInstalledProductMultipliesAfterSubscription() throws IOException {
+		if (productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", productCertDir);
+	}
+	String productCertDir=null;
 	
 	
 	/**
@@ -1037,7 +1046,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", 
 			groups = {"AcceptanceTests","Tier1Tests","blockedByBug-889573"},
-			enabled = true)
+			enabled = false)	// FIXME: There is some bad test logic in this testcase and is failing against hosted.  Passing a --serverurl to register module will be persisted to the rhsm.conf, but not the orgs, environments, or service_level modules.
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException,Exception {
 		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
 	String clientUsername="stage_test_12";
@@ -1131,10 +1140,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
 		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
 
+/* jsefler - we should not connect to a hosted candlepin server
 		//server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
 		clienttasks.unregister(null, null, null);
 		log.info("Fetching the generated product certs...");
+*/
 		String logMessage = "remote server status code: 500";
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
@@ -1142,7 +1153,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();	
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
-		String result=clienttasks.listAvailableSubscriptionPools().getStdout();
+//		String result=clienttasks.listAvailableSubscriptionPools().getStdout();
+		String result=clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null).getStdout();
 		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, logMessage).trim().equals(""));
 		Assert.assertNoMatch(result.trim(), clienttasks.msg_NetworkErrorCheckConnection);
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
@@ -4185,7 +4197,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups = { "setup" }, value = {"VerifySubscriptionOf",
 			"VerifySystemCompliantFact","ValidityAfterOversubscribing",
 			"UpdateWithNoInstalledProducts","VerifyStatusCheck",
-			"VerifyStartEndDateOfSubscription","InstalledProductMultipliesAfterSubscription","AutoHealFailForSLA","VerifyautosubscribeIgnoresSocketCount_Test"})
+			"VerifyStartEndDateOfSubscription"/*,"InstalledProductMultipliesAfterSubscription"*/,"AutoHealFailForSLA","VerifyautosubscribeIgnoresSocketCount_Test"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
 		client.runCommandAndWait("mv " + "/root/temp1/*" + " "
@@ -4528,10 +4540,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return json.get(jsonName);
 	}
 	
+	/* Do not set the server and servertasks.  They should already be set by setupBeforeSuite().
+	 * If they are not set (equal to null), then you are probably testing against the stage
+	 * or production server to which we cannot establish an ssh connection
 	@BeforeClass(groups = "setup")
 	public void SetServerTasks() throws Exception {
 	server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 	servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
 	}
+	*/
 
 }
