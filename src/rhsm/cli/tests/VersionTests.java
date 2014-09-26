@@ -149,7 +149,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		
 		// make sure we are registered
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, null, null, null);
 		
 		String expectedType = "Red Hat Subscription Management";	// default	// "subscription management service"; changed by bug 852328
 		// override where needed
