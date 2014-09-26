@@ -80,13 +80,28 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		File hostEntitlementFile = clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
 		EntitlementCert hostEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(hostEntitlementFile); client.runCommandAndWait("rct cat-cert "+hostEntitlementFile);
 		
-		// in general the data center pool will not provide any engineering products
-		Assert.assertTrue(poolProvidedProductIds.isEmpty(), "In general, a data center product subscription will not provide any engineering products (productId= '"+pool.productId+"').  Asserting the providedProducts from the subscription is empty...");		
-		Assert.assertTrue(hostEntitlementCert.productNamespaces.isEmpty(), "In general, a data center product subscription will not provide any engineering products (productId= '"+pool.productId+"').  Asserting the productNamespaces from the granted entitlement are empty...");		
-	
-		// in general the data center pool will not provide any content
-		Assert.assertTrue(hostEntitlementCert.contentNamespaces.isEmpty(), "In general, a data center product subscription will not provide any content sets (productId= '"+pool.productId+"').");		
-
+		// the following general asserts are not true against a production datacenter SKU...
+		if (false) {
+			//	Subscription Name: Red Hat Enterprise Linux for Virtual Datacenters, Premium
+			//	Provides:          Red Hat Enterprise Linux Atomic Host
+			//	SKU:               RH00001
+			//	Contract:          10472273
+			//	Pool ID:           8a99f98146b4fa9d0146b5d3c0005253
+			//	Available:         98
+			//	Suggested:         1
+			//	Service Level:     Premium
+			//	Service Type:      L1-L3
+			//	Subscription Type: Stackable
+			//	Ends:              12/30/2014
+			//	System Type:       Physical
+			
+			// in general the data center pool will not provide any engineering products
+			Assert.assertTrue(poolProvidedProductIds.isEmpty(), "In general, a data center product subscription will not provide any engineering products (productId= '"+pool.productId+"').  Asserting the providedProducts from the subscription is empty...");		
+			Assert.assertTrue(hostEntitlementCert.productNamespaces.isEmpty(), "In general, a data center product subscription will not provide any engineering products (productId= '"+pool.productId+"').  Asserting the productNamespaces from the granted entitlement are empty...");		
+			
+			// in general the data center pool will not provide any content
+			Assert.assertTrue(hostEntitlementCert.contentNamespaces.isEmpty(), "In general, a data center product subscription will not provide any content sets (productId= '"+pool.productId+"').");		
+		}
 		
 		// assert that the derivedProductId is NOT available to the Physical host system
 		List<SubscriptionPool> availablePoolsForDerivedProductId = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", poolDerivedProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
