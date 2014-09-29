@@ -47,6 +47,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  *		https://docspace.corp.redhat.com/docs/DOC-71135 (PRODUCT CERTS)
  *		https://engineering.redhat.com/trac/rcm/wiki/Projects/CDNBaseline
  *
+ *	RHN Migration-Data Mappings
+ *		This document describes the process and policy for when these updates are to be made to the migration data mappings.
+ *		https://mojo.redhat.com/docs/DOC-984684
+ *
+ *	Red Hat Product Certificates
+ *		https://mojo.redhat.com/docs/DOC-103535
+ *
  *	// OLD LOCATION
  *	git clone git://git.app.eng.bos.redhat.com/rcm/rhn-definitions.git
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree
