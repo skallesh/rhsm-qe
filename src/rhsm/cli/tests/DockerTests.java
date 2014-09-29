@@ -28,6 +28,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
+ * 
+ * Getting started with Docker in RHEL7
+ *   https://access.redhat.com/articles/881893
  *
  * DEV Sprint 76 Demo
  *  Subscription Manager Container Mode (dgoodwin)
