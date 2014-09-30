@@ -1049,7 +1049,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="Verify that the expected RHN Rhel channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110"},
 			dataProvider="RhnRhelChannelsFromChannelMappingData",
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
