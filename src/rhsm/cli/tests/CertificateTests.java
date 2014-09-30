@@ -804,6 +804,9 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	RHEL-5.10.0 	zsh-4.2.6-9.el5
 		//	RHEL-6.3.0 		zsh-4.3.10-5.el6
 		//	RHEL-6.5.0 		zsh-4.3.10-7.el6
+		//	RHEL-7.0.0		sudo-1.8.6p7-11.el7
+		//	RHEL-7.1.0		sudo-1.8.6p7-12.el7
+
 		// Object blockedByBug, String testPackage, String oldProductCertVersion, String oldRelease, String newerRelease
 		if (clienttasks.redhatReleaseX.equals("5")) {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107","1119809"}),	"zsh",	"5.8",		"5.8",	"5.9"}));
@@ -813,11 +816,12 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3",		"6.3",	"6.4"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3 Beta",	"6.3",	"6.4"}));
 		}
-		else if (clienttasks.redhatReleaseX.equals("7")) {
-			ll.add(Arrays.asList(new Object[]{null,	"zsh",	"7.0",		"7.0",	"7.1"}));
-			ll.add(Arrays.asList(new Object[]{null,	"zsh",	"7.0FIXME",	"7.0",	"7.1"}));
-		} else {
-			ll.add(Arrays.asList(new Object[]{null,	"FIXME: Unhandled Release",	"1.0",	"1.0",	"1.1"}));
+		else if (clienttasks.redhatReleaseX.equals("7") && !clienttasks.redhatReleaseXY.equals("7.0") && !clienttasks.redhatReleaseXY.equals("7.1")) {	// Note: this test depends on an available Release level of 7.0 and 7.1 in the release listing file which will not be available until the rhel 7.2 test cycle; skipping until we test rhel 7.2
+			ll.add(Arrays.asList(new Object[]{null,	"sudo-FIXME"/*FIXME choose a simple package that has been updated between each release 7.0 to 7.1 to 7.2*/ ,	"7.0",		"7.0",	"7.1"}));
+			//ll.add(Arrays.asList(new Object[]{null,	"sudo",	"7.0 Beta",	"7.0",	"7.1"}));	// There is no 7.0 Beta product cert id 69 that can be updated.  The 7.0 Beta product cert is product id 226 Everything
+		}
+		else if (Integer.valueOf(clienttasks.redhatReleaseX)>7) {
+			ll.add(Arrays.asList(new Object[]{null,	"FIXME: Unhandled Release",	"1.0 Beta",	"1.0",	"1.1"}));
 		}
 		return ll;
 	}
