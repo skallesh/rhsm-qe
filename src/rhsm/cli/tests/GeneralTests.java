@@ -385,7 +385,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: yum >= 3.2.19-15"
 			}));
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.14-6"))	expectedRequiresList.add("manual: python-rhsm >= 1.10.12-2");	// RHEL7.0	// Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.12.3-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.12.3");		// RHEL7.1
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.14-6"))	expectedRequiresList.add("manual: python-rhsm >= 1.10.12-2");	// RHEL7.0	// Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.10.9");		// RHEL7.0
 		}
 		
@@ -598,6 +599,40 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			// empty list
+		}
+		
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
+	}
+	
+	
+	@Test(	description="check the rpm requires list for changes to subscription-manager-plugin-ostree",
+			groups={},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRpmRequireListForSubscriptionManagerPluginOstree_Test() {
+		String pkg = "subscription-manager-plugin-ostree";
+		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
+		
+		List<String> actualRequiresList = new ArrayList<String>();
+		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
+			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
+		}
+		
+		List<String> expectedRequiresList = new ArrayList<String>();
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
+			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
+		}
+		if (clienttasks.redhatReleaseX.equals("7")) {
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"manual: pygobject3-base",
+					"manual: python-iniparse >= 0.4"
+			}));
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
