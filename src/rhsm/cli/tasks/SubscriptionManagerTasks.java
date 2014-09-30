@@ -173,10 +173,13 @@ public class SubscriptionManagerTasks {
 		* INSTEAD, CALL initializeRamCoreSockets() */
 		
 		// copy RHNS-CA-CERT to RHN-ORG-TRUSTED-SSL-CERT on RHEL7 as a workaround for Bug 906875 ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT 
+// FIXME Not convinced that this workaround is needed anymore.  Surrounding by if (false) at the start of the rhel71 test cycle...
+if (false) {
 		if (Integer.valueOf(redhatReleaseX)>=7) {
 			log.info("Invoking the following suggestion to enable this rhel7 system to use rhn-client-tools https://bugzilla.redhat.com/show_bug.cgi?id=906875#c2 ");
 			sshCommandRunner.runCommandAndWait("cp -n /usr/share/rhn/RHNS-CA-CERT /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"); 
 		}
+}
 		
 		// assert some properties for this instance
 		Assert.assertTrue(ipaddr.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"), "Detected ip address '"+ipaddr+"' for client '"+hostname+"' which appears successful.");
