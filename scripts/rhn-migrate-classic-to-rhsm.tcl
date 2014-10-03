@@ -46,20 +46,24 @@ set timeout 180
 # now respond to the interactive prompts from rhn-migrate-classic-to-rhsm ...
 
 if {$rhnUsername != "null"} {
-  set prompt "RHN Username:";			# obsoleted by bug 847380
-  set prompt "Red Hat account:|$prompt";	# obsoleted by bug 912375
-  set prompt "Red Hat username:|$prompt";
+  set prompt "RHN Username:";
+  set prompt "Red Hat account:|$prompt";	# introduced by bug 847380
+  set prompt "Red Hat username:|$prompt";       # introduced by bug 912375
+  set prompt "Legacy username:|$prompt";        # introduced by bug 1123025/1142436
   expect -re $prompt {send "${rhnUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
-  set prompt "Password:";			# obsoleted by bug 912375
-  set prompt "Red Hat password:|$prompt";
+  set prompt "Password:";
+  set prompt "Red Hat password:|$prompt";       # introduced by bug 912375
+  set prompt "Legacy password:|$prompt";        # introduced by bug 1123025/1142436
   expect -re $prompt {send "${rhnPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
 if {$rhsmUsername != "null"} {
-  set prompt "System Engine Username:"; 	# obsoleted by bug 912375
-  set prompt "Subscription Service username:|$prompt";
+  set prompt "System Engine Username:";
+  set prompt "Subscription Service username:|$prompt";	# introduced by bug 912375
+  set prompt "Destination username:|$prompt";		# introduced by bug 1123025/1142436
   expect -re $prompt {send "${rhsmUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
-  set prompt "Password:";			# obsoleted by bug 912375
-  set prompt "Subscription Service password:|$prompt";
+  set prompt "Password:";
+  set prompt "Subscription Service password:|$prompt";	# introduced by bug 912375
+  set prompt "Destination password:|$prompt";		# introduced by bug 1123025/1142436
   expect -re $prompt {send "${rhsmPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
 if {$rhsmOrg != "null"} {

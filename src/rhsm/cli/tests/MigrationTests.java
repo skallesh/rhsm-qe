@@ -361,7 +361,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=130764,130762) // TODO some expected yum repo assertions are not yet automated
 	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnreg_ksUsername, String rhnreg_ksPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String rhnUsername, String rhnPassword, String rhsmUsername, String rhsmPassword, String rhsmOrg, Integer serviceLevelIndex, String serviceLevelExpected) throws JSONException {
-		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		
 		if (false) {	// TODO maybe this should go after the unregister and removeAll commands
 		// make sure our serverUrl is configured to it's original good value
@@ -406,7 +406,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Set<String> expectedMigrationProductCertFilenames = getExpectedMappedProductCertFilenamesCorrespondingToChannels(rhnChannelsConsumed);
 		
 		// screw up the currently configured serverUrl when the input options specify a new one
-		if (options.contains("--serverurl")) {
+		if (options.contains("--serverurl") || options.contains("--destination-url")) {
 			log.info("Configuring a bad server hostname:port/prefix to test that the specified --serverurl can override it...");
 			List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 			listOfSectionNameValues.add(new String[]{"server","hostname","bad-hostname.com"});
@@ -509,6 +509,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (rhnChannelsConsumed.isEmpty()) {
 			log.warning("Modifying expected results when the current RHN Classically registered system is not consuming any RHN channels.");
 			String expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";
+			if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedStdout = "Problem encountered getting the list of subscribed channels.  See /var/log/rhsm/rhsm.log for more details.";	// changed by commit c0f8052ec2b5b7b5c736eb626e381aef0e5327e5
 			Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' when no RHN Classic channels are being consumed: "+expectedStdout);
 			//Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' when no RHN Classic channels are being consumed.");		// the exitCode can be altered by the expect script rhn-migrate-classic-to-rhsm.tcl when the final arg slaIndex is non-null; therefore don't bother asserting exitCode; asserting stdout is sufficient
 			Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered after '"+rhnMigrateTool+"' exits due to: "+expectedStdout);
@@ -529,7 +530,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	migration.migrated_from: rhn_hosted_classic
 		//	migration.migration_date: 2012-07-13T18:51:44.254543
 		Map<String,String> factMap = clienttasks.getFacts();
-		Assert.assertEquals(factMap.get(migrationFromFact), "rhn_hosted_classic", "The migration fact '"+migrationFromFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13")) {
+			Assert.assertEquals(factMap.get(migrationFromFact), rhnHostname+"/XMLRPC", "The migration fact '"+migrationFromFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");			
+		} else {
+			Assert.assertEquals(factMap.get(migrationFromFact), "rhn_hosted_classic", "The migration fact '"+migrationFromFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
+		}
 		Assert.assertEquals(factMap.get(migrationSystemIdFact), rhnSystemId, "The migration fact '"+migrationSystemIdFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		Assert.assertNotNull(factMap.get(migrationDateFact), "The migration fact '"+migrationDateFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		int tol = 180; // tolerance in seconds to assert that the migration_date facts was set within the last few seconds
@@ -541,6 +546,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// assert we are no longer registered to RHN Classic
 		// Two possible results can occur when the rhn-migrate-classic-to-rhsm script attempts to unregister from RHN Classic.  We need to tolerate both cases... 
 		String successfulUnregisterMsg = "System successfully unregistered from RHN Classic.";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13")) successfulUnregisterMsg = "System successfully unregistered from legacy server.";
 		String unsuccessfulUnregisterMsg = "Did not receive a completed unregistration message from RHN Classic for system "+rhnSystemId+"."+"\n"+"Please investigate on the Customer Portal at https://access.redhat.com.";
 		if (sshCommandResult.getStdout().contains(successfulUnregisterMsg)) {
 			// Case 1: number of subscribed channels is low and all communication completes in a timely fashion.  Here is a snippet from stdout:
@@ -580,7 +586,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// assert that when --serverurl is specified, its hostname:port/prefix are preserved into rhsm.conf
-		if (options.contains("--serverurl")) {
+		if (options.contains("--serverurl") || options.contains("--destination-url")) {
 			// comparing to original configuration values because these are the ones I am using in the dataProvider
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname"),originalServerHostname,"The value of the [server]hostname newly configured in "+clienttasks.rhsmConfFile+" was extracted from the --serverurl option specified in rhn-migrated-classic-to-rhsm options '"+options+"'.");
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port"),originalServerPort,"The value of the [server]port newly configured in "+clienttasks.rhsmConfFile+" was extracted from the --serverurl option specified in rhn-migrated-classic-to-rhsm options '"+options+"'.");
@@ -591,6 +597,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.identity(null, null, null, null, null, null, null);
 		Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 		expectedMsg = String.format("System '%s' successfully registered to Red Hat Subscription Management.",	clienttasks.hostname);
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedMsg = String.format("System '%s' successfully registered.",	clienttasks.hostname); // changed by commit fad3de89
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 
 		// assert the the expected service level was set as a preference on the registered consumer
@@ -603,6 +610,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String autosubscribeAttemptedMsg = "Attempting to auto-subscribe to appropriate subscriptions ...";
 		autosubscribeAttemptedMsg = "Attempting to auto-attach to appropriate subscriptions ...";	// changed by bug 876294
 		autosubscribeAttemptedMsg = "Attempting to auto-attach to appropriate subscriptions...";	// changed by subscription-manager commit 1fba5696
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13")) autosubscribeAttemptedMsg = "Installed Product Current Status:";	// commit fad3de89779f2217e788b3564ef5dca7f85914fb removed the "Attempting to auto-attach to appropriate subscriptions..." feedback
 		String autosubscribeFailedMsg = "Unable to auto-subscribe.  Do your existing subscriptions match the products installed on this system?";
 		autosubscribeFailedMsg = "Unable to auto-attach.  Do your existing subscriptions match the products installed on this system?";	// changed by bug 876294
 		if (options.contains("-n")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
@@ -624,7 +632,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			
 			// assert that autosubscribe was attempted
 			Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeAttemptedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeAttemptedMsg);			
-	
+			
 			// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
 			// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
 			// FIXME if a service-level is provided that is not available, then this product may NOT be subscribed
@@ -642,7 +650,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			}
 			
 			// assert that when no --servicelevel is specified, then no service level preference will be set on the registered consumer
-			if (!options.contains("-s ") && !options.contains("--servicelevel") && (serviceLevelExpected==null||serviceLevelExpected.isEmpty())) {
+			if (!options.contains("-s ") && !options.contains("--servicelevel") && !options.contains("--service-level") && (serviceLevelExpected==null||serviceLevelExpected.isEmpty())) {
 				// assert no service level preference was set
 				Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "No servicelevel preference should be set on the consumer when no service level was requested.");
 			}
@@ -709,7 +717,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130763)
 	public void RhnMigrateClassicToRhsmUsingProxyServer_Test(Object bugzilla, String rhnreg_ksUsername, String rhnreg_ksPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String rhnUsername, String rhnPassword, String rhsmUsername, String rhsmPassword, String rhsmOrg, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
-		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		
 		// make sure we are NOT registered to RHSM
 		clienttasks.unregister_(null,null,null);
@@ -748,7 +756,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
 		
 		// assert that traffic to RHN went through the proxy
-		String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+		String ipaddr = clienttasks.ipaddr;	// appears to always match system fact net.interface.eth0.ipv4_address
+		ipaddr = clienttasks.getFactValue("network.ipv4_address");	// works on both a kvm virt guest and an openstack instance
+		String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
 		Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHN.");
 		
 		// subscribe to more RHN Classic channels
@@ -769,7 +779,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
 		
 		// assert that traffic to RHSM went through the proxy (unless testing --no-proxy)
-		proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+		proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
 		int numberOfConnectionAttempts;
 		String conflictingProductCertsMsg = "You are subscribed to channels that have conflicting product certificates.";	// "Unable to continue migration!";
 		if (sshCommandResult.getStdout().contains(conflictingProductCertsMsg)) numberOfConnectionAttempts=3; else numberOfConnectionAttempts=4;
@@ -782,7 +792,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//	1375391532.900    356 10.16.120.123 TCP_MISS/200 3571 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
 			//	1375391533.435    514 10.16.120.123 TCP_MISS/200 1811 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
 			if (proxyLogRegex.equals("TCP_MISS") && !proxyLogResult.trim().isEmpty()) for (String proxyLogEntry : proxyLogResult.trim().split("\n")) {
-				Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", "")), "Running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
+				Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", "")), "Running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' from subscription-manager client ip '"+ipaddr+"'.");
 			}
 			// /var/log/tinyproxy.log
 			//	CONNECT   Aug 01 17:44:56 [10139]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
@@ -791,7 +801,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//	CONNECT   Aug 01 17:44:57 [10136]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
 			Assert.assertEquals(proxyLogResult.split("\n").length, numberOfConnectionAttempts, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy will yield this number of connection attempts through the proxy.");
 		} else {
-			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHSM from the subscription-manager client ip '"+clienttasks.ipaddr+"'.");
+			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHSM from the subscription-manager client ip '"+ipaddr+"'.");
 
 			// /var/log/squid/access.log
 			//	1375391369.882     52 10.16.120.123 TCP_MISS/200 1710 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
@@ -808,8 +818,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//	1375391374.579     51 10.16.120.123 TCP_MISS/200 2110 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
 			//	1375391374.701    106 10.16.120.123 TCP_MISS/200 1518 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
 			if (proxyLogRegex.equals("TCP_MISS") && !proxyLogResult.trim().isEmpty()) {
-				Assert.assertTrue(proxyLogResult.contains(rhnHostname.replaceFirst("https?://", "")) && proxyLogResult.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' and '"+candlepinServerHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
-				for (String proxyLogEntry : proxyLogResult.trim().split("\n")) Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", ""))||proxyLogEntry.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' or '"+candlepinServerHostname+"' from subscription-manager client ip '"+clienttasks.ipaddr+"'.");
+				Assert.assertTrue(proxyLogResult.contains(rhnHostname.replaceFirst("https?://", "")) && proxyLogResult.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' and '"+candlepinServerHostname+"' from subscription-manager client ip '"+ipaddr+"'.");
+				for (String proxyLogEntry : proxyLogResult.trim().split("\n")) Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", ""))||proxyLogEntry.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' or '"+candlepinServerHostname+"' from subscription-manager client ip '"+ipaddr+"'.");
 				Assert.assertEquals(getSubstringMatches(proxyLogResult,rhnHostname.replaceFirst("https?://", "")).size(), numberOfConnectionAttempts, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield exactly this number of connection attempts through the proxy to RHN hostname '"+rhnHostname.replaceFirst("https?://", "")+"'.");
 			}
 			// /var/log/tinyproxy.log
@@ -885,7 +895,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// assert we are no longer registered to RHN Classic
 		// Two possible results can occur when the rhn-migrate-classic-to-rhsm script attempts to unregister from RHN Classic.  We need to tolerate both cases... 
 		String successfulUnregisterMsg = "System successfully unregistered from RHN Classic.";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) successfulUnregisterMsg = "System successfully unregistered from legacy server.";	// changed by commit 1355f8a656271ed57d6e35a2020a47cbf4adefd5
 		String unsuccessfulUnregisterMsg = "Did not receive a completed unregistration message from RHN Classic for system "+rhnSystemId+"."+"\n"+"Please investigate on the Customer Portal at https://access.redhat.com.";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) unsuccessfulUnregisterMsg = "Did not receive a completed unregistration message from legacy server for system "+rhnSystemId+".";	// changed by commit 1355f8a656271ed57d6e35a2020a47cbf4adefd5
 		if (sshCommandResult.getStdout().contains(successfulUnregisterMsg)) {
 			// Case 1: number of subscribed channels is low and all communication completes in a timely fashion.  Here is a snippet from stdout:
 			//		Preparing to unregister system from RHN Classic ...
@@ -893,6 +905,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(sshCommandResult.getStdout().contains(successfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+successfulUnregisterMsg);
 			Assert.assertTrue(!sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+unsuccessfulUnregisterMsg);
 			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			iptablesAcceptPort(candlepinServerPort);	// without this, isRhnSystemIdRegistered(...) fails with Unexpected error: [Errno 111] Connection refused
 			Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
 		} else {
 			// Case 2: number of subscribed channels is high and communication fails in a timely fashion (see bug 881952).  Here is a snippet from stdout:	
@@ -902,6 +915,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			log.warning("Did not detect expected message '"+successfulUnregisterMsg+"' from "+rhnMigrateTool+" stdout.  Nevertheless, the tool should inform us and continue the migration process.");
 			Assert.assertTrue(sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+unsuccessfulUnregisterMsg);
 			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			iptablesAcceptPort(candlepinServerPort);	// without this, isRhnSystemIdRegistered(...) fails with Unexpected error: [Errno 111] Connection refused
 			if (!clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId)) {
 				Assert.assertFalse(false, "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
 			} else {
@@ -913,6 +927,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.identity(null, null, null, null, null, null, null);
 		Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 		expectedMsg = String.format("System '%s' successfully registered to Red Hat Subscription Management.",	clienttasks.hostname);
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedMsg = String.format("System '%s' successfully registered.",	clienttasks.hostname); // changed by commit fad3de89
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		
 		log.info("No need to assert any more details of the migration since they are covered in the non-proxy test.");
@@ -937,7 +952,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() throws JSONException {
-		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 
 		log.info("Red Hat Enterprise Linux Desktop (productId=68) corresponds to the base RHN Channel (rhel-ARCH-client-5) for a 5Client system where ARCH=i386,x86_64.");
 		log.info("Red Hat Enterprise Linux Workstation (productId=71) corresponds to child RHN Channel (rhel-ARCH-client-workstation-5) for a 5Client system where ARCH=i386,x86_64.");	
@@ -1158,7 +1173,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsm_MultipleVersionsOfJBEAP_Test() {
-		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 
 		log.info("JBoss Enterprise Application Platform (productId=183) is currently provided in 3 versions: 4.3.0, 5.0, 6.0");
 		log.info("If RHN Channels providing more than one of these versions is currently being consumed, rhn-migrate-to-rhsm should abort.");
@@ -1223,6 +1238,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// execute rhn-migrate-classic-to-rhsm and assert the results
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername, sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
 		String expectedMsg = "You are subscribed to more than one jbappplatform channel.  This script does not support that configuration.  Exiting.";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedMsg = "You are subscribed to more than one jbappplatform channel.  This script does not support that configuration.";	// changed by commit c0f8052ec2b5b7b5c736eb626e381aef0e5327e5
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" when consuming RHN Channels for multiple versions of JBEAP contains message: "+expectedMsg);	
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" when consuming RHN Channels for multiple versions of JBEAP "+rhnChannelsToAdd);
 		
@@ -1299,6 +1315,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(rhsmServerUrlOption,sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
 		String expectedStdout = "Unable to locate SystemId file. Is this system registered?";
 		expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";	// changed to this value by subscription-manager commit 53c7f0745d1857cd5e1e080e06d577e67e76ecdd for the benefit of unit testing on Fedora
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedStdout = "Problem encountered getting the list of subscribed channels.  See /var/log/rhsm/rhsm.log for more details.";	// changed by commit c0f8052ec2b5b7b5c736eb626e381aef0e5327e5
 		//if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";	// "Red Hat Network Classic is not supported." on RHEL 7
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file.");
@@ -1317,7 +1334,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --no-auto and --service-level",
-			groups={"blockedByBug-850920","blockedByBug-1052297"},
+			groups={"blockedByBug-850920","blockedByBug-1052297","blockedByBug-1149007"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1326,6 +1343,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm("--no-auto --servicelevel=foo", sm_rhnUsername, sm_rhnPassword,null,null,null,null, null);
 		String expectedStdout = "The --servicelevel and --no-auto options cannot be used together.";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedStdout = "The --service-level and --no-auto options cannot be used together.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "Stdout from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "Exit code from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
@@ -1350,6 +1368,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		expectedStdout = "This machine appears to be already registered to Certificate-based RHN.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 847380
 		expectedStdout = "This machine appears to be already registered to Red Hat Subscription Management.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 874760
 		expectedStdout = "This system appears to be already registered to Red Hat Subscription Management.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedStdout = "This system appears to be already registered to Red Hat Subscription Management."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by commit c0f8052ec2b5b7b5c736eb626e381aef0e5327e5
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.2")) expectedStdout = "This system appears to already be registered to Red Hat Subscription Management."+"\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by commit 58ee19c8e5e9f849bf6bed1ba16a6a21fe0d49dc
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' while already registered to RHSM ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(),"", "The expected stderr result from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
 		// Stdout and Stderr asserts are sufficient Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
@@ -1361,7 +1381,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmCertificateVerification_Test() {
-		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		clienttasks.unregister(null, null, null);
 		// Steps: are outlined in https://bugzilla.redhat.com/show_bug.cgi?id=918967#c1 EMBARGOED CVE-2012-6137 subscription-manager (rhn-migrate-classic-to-rhsm): Absent certificate verification
 		
@@ -1435,7 +1455,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithoutDataInstalled_Test() {
-		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		clienttasks.unregister(null, null, null);
 		
 		// move the mapping file (to make it appear that subscription-manager-migration-data is not installed)
@@ -1451,6 +1471,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult;
 		sshCommandResult = executeRhnMigrateClassicToRhsm("--serverurl="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
 		String expectedStdout = "Unable to read mapping file: "+channelCertMappingFilename+"."+"\n"+"Do you have the subscription-manager-migration-data package installed?";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedStdout = "Unable to read mapping file: "+channelCertMappingFilename+"."+"\n"+"Please check that you have the subscription-manager-migration-data package installed.";	// changed by commit c0f8052ec2b5b7b5c736eb626e381aef0e5327e5
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from a call to '"+rhnMigrateTool+"' without subscription-manager-migration-data installed should be: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The expected exitcode from a call to '"+rhnMigrateTool+"' without subscription-manager-migration-data installed.");
 		
@@ -1953,6 +1974,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// If you try to migrate from a non-hosted rhn (such as satellite) to a hosted rhsm system, you will get this... 
 		// Unable to connect to certificate server: Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html.  See /var/log/rhsm/rhsm.log for more details.
 		
+		// several command line options were changed by the sat5to6 work by awood and ggainey in bugs 1142436 1123025
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13")) {
+			if (options!=null) options=options.replace("--serverurl", "--destination-url");
+			if (options!=null) options=options.replace("--redhat-user", "--legacy-user");
+			if (options!=null) options=options.replace("--redhat-password", "--legacy-password");
+			if (options!=null) options=options.replace("--subscription-service-user", "--destination-user");
+			if (options!=null) options=options.replace("--subscription-service-password", "--destination-password");
+			if (options!=null) options=options.replace("--servicelevel", "--service-level");
+			// completely removed option -g, --gui launch the GUI tool to attach subscriptions, instead of auto-attaching
+		}
+		
 		// surround tcl args containing white space with ticks and call the TCL expect script for rhn-migrate-classic-to-rhsm
 		if (options!=null && options.contains(" "))				options			= String.format("'%s'", options);
 		if (options!=null && options.isEmpty())					options			= String.format("\"%s\"", options);
@@ -2375,9 +2407,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (String serviceLevel : getRandomSubsetOfList(rhsmServiceLevels,2)) {
 			String options;
 			options = String.format("--force --servicelevel=%s",serviceLevel); if (serviceLevel.contains(" ")) options = String.format("--force --servicelevel \"%s\"", serviceLevel);
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	serviceLevel}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321","1149007"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	serviceLevel}));	
 			options = String.format("-f -s %s",randomizeCaseOfCharactersInString(serviceLevel)); if (serviceLevel.contains(" ")) options = String.format("-f -s \"%s\"", randomizeCaseOfCharactersInString(serviceLevel));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	serviceLevel}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961","977321","1149007"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	getRandomSubsetOfList(rhnAvailableChildChannels,rhnChildChannelSubSize),	options+rhsmServerUrlOption,	sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	serviceLevel}));
 		}
 		
 		// attempt an unavailable servicelevel, then choose an available one from the index table
@@ -2385,13 +2417,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			int serviceLevelIndex = randomGenerator.nextInt(rhsmServiceLevels.size());
 			String serviceLevel = rhsmServiceLevels.get(serviceLevelIndex);
 			serviceLevelIndex++;	// since the interactive menu of available service-levels to choose from is indexed starting at 1.
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA"+rhsmServerUrlOption,				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	serviceLevelIndex,	serviceLevel}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321","1149007"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA"+rhsmServerUrlOption,				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	serviceLevelIndex,	serviceLevel}));	
 		}
 		
 		// attempt an unavailable servicelevel, then choose no service level
 		if (!rhsmServiceLevels.isEmpty()) {
 			int noServiceLevelIndex = rhsmServiceLevels.size()+1;	// since the last item in the interactive menu of available service-levels is "#. No service level preference"
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA"+rhsmServerUrlOption,				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	noServiceLevelIndex,	""}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","977321","1149007"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA"+rhsmServerUrlOption,				sm_rhnUsername,	sm_rhnPassword,	rhsmUsername,	rhsmPassword,	rhsmOrg,	noServiceLevelIndex,	""}));	
 		}
 		
 		// test --org as a command line option
@@ -2430,6 +2462,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1131213");	// Bug 1131213 - rhn-migrate-classic-to-rhsm throws gaierror: [Errno -2] Name or service not known
 				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 				l.set(0, blockedByBzBug);
+			}
+		}
+		
+		// many options were changed by the RFE Bug 1123025 sat5to6 development, convert all of the options to their new values
+		/* this update is also retrofitted in executeRhnMigrateClassicToRhsm */
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) {
+			for (List<Object> l : ll) {
+				String options = (String)(l.get(5));
+				if (options!=null) {
+					options=options.replace("--serverurl", "--destination-url");
+					options=options.replace("--redhat-user", "--legacy-user");
+					options=options.replace("--redhat-password", "--legacy-password");
+					options=options.replace("--subscription-service-user", "--destination-user");
+					options=options.replace("--subscription-service-password", "--destination-password");
+					options=options.replace("--servicelevel", "--service-level");
+				}
+				l.set(5, options);
 			}
 		}
 		
@@ -2538,6 +2587,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1131213");	// Bug 1131213 - rhn-migrate-classic-to-rhsm throws gaierror: [Errno -2] Name or service not known
 				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 				l.set(0, blockedByBzBug);
+			}
+		}
+		
+		// many options were changed by the RFE Bug 1123025 sat5to6 development, convert all of the options to their new values
+		/* this update is also retrofitted in executeRhnMigrateClassicToRhsm */
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) {
+			for (List<Object> l : ll) {
+				String options = (String)(l.get(5));
+				if (options!=null) {
+					options=options.replace("--serverurl", "--destination-url");
+					options=options.replace("--redhat-user", "--legacy-user");
+					options=options.replace("--redhat-password", "--legacy-password");
+					options=options.replace("--subscription-service-user", "--destination-user");
+					options=options.replace("--subscription-service-password", "--destination-password");
+					options=options.replace("--servicelevel", "--service-level");
+				}
+				l.set(5, options);
 			}
 		}
 		
