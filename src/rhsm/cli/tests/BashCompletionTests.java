@@ -276,6 +276,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1094879 - install-num-migrate-to-rhsm does not bash-complete its options
 			if (bashCommand.startsWith("install-num-migrate-to-rhsm ")) bugIds.add("1094879");
 			
+			// Bug 1149286 - tab-completion for rhn-migrate-classic-to-rhsm is completely wrong after several options were changed
+			if (bashCommand.startsWith("rhn-migrate-classic-to-rhsm ")) bugIds.add("1149286");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			// append a new row to the dataProvider
