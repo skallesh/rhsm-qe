@@ -16,7 +16,7 @@ public class Repo extends AbstractCommandLineData {
 	
 	// abstraction fields
 	public String repoName;
-	public String repoId;
+	public String repoId;	// repoLabel
 	public String repoUrl;
 	public Boolean enabled;
 

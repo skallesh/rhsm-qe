@@ -657,13 +657,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait(" yum repolist enabled");
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String expected_message="This system has no repositories available through subscriptions.";
-		String reposlist=clienttasks.repos(true, (String)null, null, null, null, null).getStdout();
+		String reposlist=clienttasks.repos(true, null, null, (String)null, null, null, null, null).getStdout();
 			Assert.assertEquals(reposlist.trim(), expected_message);
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		reposlist=clienttasks.repos(true, (String)null, null, null, null, null).getStdout();
+		reposlist=clienttasks.repos(true, null, null, (String)null, null, null, null, null).getStdout();
 		Assert.assertEquals(reposlist.trim(), expected_message);
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
 		for(Repo repo : clienttasks.getCurrentlySubscribedRepos()){
@@ -768,7 +768,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
-		String result=clienttasks.repos_(true,(String)null,(String)null, sm_basicauthproxyHostname+":"+sm_basicauthproxyPort, null, null).getStdout();
+		String result=clienttasks.repos_(true,null,null, (String)null, (String)null, sm_basicauthproxyHostname+":"+sm_basicauthproxyPort, null, null).getStdout();
 		String expectedMessage="Network error, unable to connect to server."+"\n"+"Please see /var/log/rhsm/rhsm.log for more information.";
 		Assert.assertNotSame(result.trim(), expectedMessage);
 	}

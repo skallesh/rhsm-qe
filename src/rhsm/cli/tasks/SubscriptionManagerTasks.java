@@ -4179,12 +4179,16 @@ if (false) {
 	// repos module tasks ************************************************************
 	
 	/**
+	 * @param listEnabled TODO
+	 * @param listDisabled TODO
 	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public String reposCommand(Boolean list, List<String> enableRepos, List<String> disableRepos, String proxy,String proxyuser,String proxypassword) {
+	public String reposCommand(Boolean list, Boolean listEnabled, Boolean listDisabled, List<String> enableRepos,List<String> disableRepos,String proxy, String proxyuser, String proxypassword) {
 		// assemble the command
 		String command = this.command;									command += " repos";
 		if (list!=null && list)											command += " --list";
+		if (listEnabled!=null && listEnabled)							command += " --list-enabled";
+		if (listDisabled!=null && listDisabled)							command += " --list-disabled";
 		if (enableRepos!=null)	for (String enableRepo : enableRepos)	command += " --enable="+enableRepo;
 		if (disableRepos!=null)	for (String disableRepo : disableRepos)	command += " --disable="+disableRepo;
 		if (proxy!=null)												command += " --proxy="+proxy;
@@ -4195,9 +4199,11 @@ if (false) {
 	}
 	
 	/**
+	 * @param listEnabled TODO
+	 * @param listDisabled TODO
 	 * @return SSHCommandResult from subscription-manager repos [parameters] without asserting any results
 	 */
-	public SSHCommandResult repos_(Boolean list, List<String> enableRepos, List<String> disableRepos, String proxy,String proxyuser,String proxypassword) {
+	public SSHCommandResult repos_(Boolean list, Boolean listEnabled, Boolean listDisabled, List<String> enableRepos,List<String> disableRepos,String proxy, String proxyuser, String proxypassword) {
 		
 //		// assemble the command
 //		String command = this.command;									command += " repos";
@@ -4207,25 +4213,27 @@ if (false) {
 //		if (proxy!=null)												command += " --proxy="+proxy;
 //		if (proxyuser!=null)											command += " --proxyuser="+proxyuser;
 //		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
-		String command = reposCommand(list, enableRepos, disableRepos,  proxy, proxyuser, proxypassword);
+		String command = reposCommand(list, listEnabled, listDisabled,  enableRepos, disableRepos, proxy, proxyuser, proxypassword);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
 		logRuntimeErrors(sshCommandResult);
 		return sshCommandResult;
 	}
-	public SSHCommandResult repos_(Boolean list, String enableRepo, String disableRepo, String proxy,String proxyuser,String proxypassword) {
+	public SSHCommandResult repos_(Boolean list, Boolean listEnabled, Boolean listDisabled, String enableRepo,String disableRepo,String proxy, String proxyuser, String proxypassword) {
 		List<String> enableRepos = enableRepo==null?null:Arrays.asList(new String[]{enableRepo});
 		List<String> disableRepos = disableRepo==null?null:Arrays.asList(new String[]{disableRepo});
-		return repos_(list, enableRepos, disableRepos, proxy, proxyuser, proxypassword);
+		return repos_(list, listEnabled, listDisabled, enableRepos, disableRepos, proxy, proxyuser, proxypassword);
 	}
 
 	/**
+	 * @param listEnabled TODO
+	 * @param listDisabled TODO
 	 * @return SSHCommandResult from subscription-manager repos [parameters]
 	 */
-	public SSHCommandResult repos(Boolean list, List<String> enableRepos, List<String> disableRepos, String proxy,String proxyuser,String proxypassword) {
+	public SSHCommandResult repos(Boolean list, Boolean listEnabled, Boolean listDisabled, List<String> enableRepos,List<String> disableRepos,String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = repos_(list, enableRepos, disableRepos, proxy,proxyuser,proxypassword);
+		SSHCommandResult sshCommandResult = repos_(list, listEnabled, listDisabled, enableRepos,disableRepos,proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos command indicates a success.");
@@ -4269,10 +4277,10 @@ if (false) {
 		
 		return sshCommandResult;
 	}
-	public SSHCommandResult repos(Boolean list, String enableRepo, String disableRepo, String proxy,String proxyuser,String proxypassword) {
+	public SSHCommandResult repos(Boolean list, Boolean listEnabled, Boolean listDisabled, String enableRepo,String disableRepo,String proxy, String proxyuser, String proxypassword) {
 		List<String> enableRepos = enableRepo==null?null:Arrays.asList(new String[]{enableRepo});
 		List<String> disableRepos = disableRepo==null?null:Arrays.asList(new String[]{disableRepo});
-		return repos(list, enableRepos, disableRepos, proxy, proxyuser, proxypassword);
+		return repos(list, listEnabled, listDisabled, enableRepos, disableRepos, proxy, proxyuser, proxypassword);
 	}
 	
 	
@@ -4284,7 +4292,7 @@ if (false) {
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
-		SSHCommandResult sshCommandResult = repos(true, (String)null, (String)null, null,null,null);
+		SSHCommandResult sshCommandResult = repos(true, null, null, (String)null,(String)null,null, null, null);
 		//Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos --list command indicates a success.");
 		
 		//List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
