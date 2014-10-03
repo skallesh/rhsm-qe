@@ -1016,10 +1016,28 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			options.add("--no-proxy");	// added by Bug 915847 - rhn-migrate-classic-to-rhsm fails when used with a proxy with an internal SAM
 			options.add("--org=ORG");					// added by Bug 877331 - missing --org --environment arguments for migration script
 			options.add("--environment=ENVIRONMENT");	// added by Bug 877331 - missing --org --environment arguments for migration script
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--redhat-user=REDHATUSER");							// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--redhat-password=REDHATPASSWORD");					// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--subscription-service-user=SUBSERVICEUSER");			// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--subscription-service-password=SUBSERVICEPASSWORD");	// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) {
+				// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
+				options.add("--redhat-user=REDHATUSER");
+				options.add("--redhat-password=REDHATPASSWORD");
+				options.add("--subscription-service-user=SUBSERVICEUSER");
+				options.add("--subscription-service-password=SUBSERVICEPASSWORD");
+			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.1")) {
+				options.remove("--redhat-user=REDHATUSER");
+				options.remove("--redhat-password=REDHATPASSWORD");
+				options.remove("--subscription-service-user=SUBSERVICEUSER");
+				options.remove("--subscription-service-password=SUBSERVICEPASSWORD");
+				options.remove("--serverurl=SERVERURL");
+				options.remove("-s SERVICELEVEL, --servicelevel=SERVICELEVEL");
+				options.remove("-g, --gui");
+				options.add("--legacy-user=LEGACY_USER");
+				options.add("--legacy-password=LEGACY_PASSWORD");
+				options.add("--destination-user=DESTINATION_USER");
+				options.add("--destination-password=DESTINATION_PASSWORD");
+				options.add("--destination-url=DESTINATION_URL");
+				options.add("-s SERVICE_LEVEL, --service-level=SERVICE_LEVEL");
+			}
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();
