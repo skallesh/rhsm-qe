@@ -320,7 +320,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
@@ -950,7 +950,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
