@@ -26,6 +26,16 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  * Reference: flowchart https://docspace.corp.redhat.com/docs/DOC-65246
+ * 
+ * How to update candlepin-RedeemTests-branch-master.patch (assumes you are building upon existing patch)...
+ * [root@candlepin server]# cd /root/candlepin/server
+ * [root@candlepin server]# vi src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
+ * [root@candlepin server]# git diff src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java > candlepin-RedeemTests-branch-master.patch
+ * overwrite candlepin-RedeemTests-branch-master.patch in rhsm.git with new version
+ * 
+ * If not using git diff...
+ * [root@candlepin server]# diff -u src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java.orig  src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java > candlepin-RedeemTests-branch-master.patch
+ * [root@candlepin server]# patch --verbose --dry-run -p0 < candlepin-RedeemTests-branch-master.patch
  */
 @Test(groups={"RedeemTests","Tier2Tests"})
 public class RedeemTests extends SubscriptionManagerCLITestScript {
@@ -80,9 +90,9 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		
 		// assert redemption results
 		//Assert.assertEquals(redeemResult.getStdout().trim(), "Standalone candlepin does not support activation.","Standalone candlepin does not support activation.");
-		Assert.assertEquals(redeemResult.getStdout().trim(), "Standalone candlepin does not support redeeming a subscription.","Standalone candlepin does not support redeeming a subscription.");
+		//Assert.assertEquals(redeemResult.getStdout().trim(), "Standalone candlepin does not support redeeming a subscription.","Standalone candlepin does not support redeeming a subscription.");
+		Assert.assertTrue(redeemResult.getStdout().trim().startsWith("Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:"),"Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:");
 		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed against a standalone candlepin server.");
-
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem against an onpremises candlepin server that has been patched for mock testing",
@@ -253,7 +263,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr
-		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription against a standalone candlepin server.",											"0ABCDEF",	new Integer(255),	"Standalone candlepin does not support redeeming a subscription.",	null}));
+		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription against a standalone candlepin server.",											"0ABCDEF",	new Integer(255),	"Standalone candlepin does not support redeeming a subscription for dmi.system.serial_number: {0}",	null}));
 		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription when the system's asset tag has already been used to redeem a subscription.",	"1ABCDEF",	new Integer(0),		null,	"The Dell service tag: {0}, has already been used to activate a subscription"}));
 		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription for which the system's asset tag will not be found for redemption.",				"2ABCDEF",	new Integer(0),		null,	"A subscription was not found for the given Dell service tag: {0}"}));
 		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription for which the system's  service tag is expired.",								"3ABCDEF",	new Integer(0),		null,	"The Dell service tag: {0}, is expired"}));

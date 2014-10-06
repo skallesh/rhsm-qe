@@ -1,5 +1,5 @@
 diff --git a/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java b/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
-index e83de5a..0f1d3f1 100644
+index e83de5a..3640317 100644
 --- a/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 +++ b/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 @@ -14,6 +14,7 @@
@@ -10,48 +10,43 @@ index e83de5a..0f1d3f1 100644
  import org.candlepin.common.exceptions.ServiceUnavailableException;
  import org.candlepin.config.Config;
  import org.candlepin.config.ConfigProperties;
-@@ -106,9 +107,41 @@ public class DefaultSubscriptionServiceAdapter implements
+@@ -106,8 +107,37 @@ public class DefaultSubscriptionServiceAdapter implements
      @Override
      public void activateSubscription(Consumer consumer, String email,
          String emailLocale) {
 -        throw new ServiceUnavailableException(
 -            i18n.tr("Standalone candlepin does not support redeeming a subscription."));
--    }
++        String manufacturer = consumer.getFact("dmi.system.manufacturer");
++        String serialNumber = consumer.getFact("dmi.system.serial_number");
 +
-+        String dellAssetTag = consumer.getFact("dmi.system.serial_number");
-+
-+        if (dellAssetTag.startsWith("1")) {
++        if (!manufacturer.toLowerCase().startsWith("dell")) {
++            throw new ServiceUnavailableException(
++                i18n.tr("Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer: {0}", manufacturer));
++        }
++        if (serialNumber.startsWith("1")) {
 +            throw new AcceptedRequestException(
-+                i18n.tr("The Dell service tag: {0}, has already been used to activate a subscription",
-+                    dellAssetTag));
-+        } else if (dellAssetTag.startsWith("2")) {
++                i18n.tr("The Dell service tag: {0}, has already been used to activate a subscription", serialNumber));
++        } else if (serialNumber.startsWith("2")) {
 +             throw new AcceptedRequestException(
-+                i18n.tr("A subscription was not found for the given Dell service tag: {0}",
-+                    dellAssetTag));
-+        } else if (dellAssetTag.startsWith("3")) {
++                i18n.tr("A subscription was not found for the given Dell service tag: {0}", serialNumber));
++        } else if (serialNumber.startsWith("3")) {
 +            throw new AcceptedRequestException(
-+                i18n.tr("The Dell service tag: {0}, is expired",
-+                    dellAssetTag));
-+        } else if (dellAssetTag.startsWith("4")) {
++                i18n.tr("The Dell service tag: {0}, is expired", serialNumber));
++        } else if (serialNumber.startsWith("4")) {
 +            throw new AcceptedRequestException(
-+                i18n.tr("The system is unable to process the requested subscription activation {0}",
-+                    dellAssetTag));
-+        } else if (dellAssetTag.startsWith("5")) {
++                i18n.tr("The system is unable to process the requested subscription activation {0}", serialNumber));
++        } else if (serialNumber.startsWith("5")) {
 +            throw new AcceptedRequestException(
 +                i18n.tr("Your subscription activation is being processed and should be available soon. " +
 +                    "You will be notified via email once it is available. If you have any questions," +
-+                    " additional information can be found here: https://access.redhat.com/kb/docs/DOC-53864.",
-+                    dellAssetTag));
-+        } else if (dellAssetTag.startsWith("6")) {
++                    " additional information can be found here: https://access.redhat.com/kb/docs/DOC-53864.", serialNumber));
++        } else if (serialNumber.startsWith("6")) {
 +            throw new AcceptedRequestException(
-+                i18n.tr("The system is unable to process the requested subscription activation {0}",
-+                    dellAssetTag));
++                i18n.tr("The system is unable to process the requested subscription activation {0}", serialNumber));
 +        } else {
 +            throw new ServiceUnavailableException(
-+                 i18n.tr("Standalone candlepin does not support redeeming a subscription."));
++                 i18n.tr("Standalone candlepin does not support redeeming a subscription for dmi.system.serial_number: {0}", serialNumber));
 +        }
-+     }
-+ 
+     }
  
      @Override
-     public Subscription createSubscription(Subscription subscription) {
