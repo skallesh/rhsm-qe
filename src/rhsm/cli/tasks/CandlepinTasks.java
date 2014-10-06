@@ -83,7 +83,7 @@ public class CandlepinTasks {
 	public static final String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
 	public static String rubyClientDir	= "/server/client/ruby";	// "/client/ruby"; was valid prior to candlepin commit cddba55bda2cc1b89821a80e6ff23694296f2079
 	public static File candlepinCACertFile = new File("/etc/candlepin/certs/candlepin-ca.crt");
-	public static String generatedProductsDir	= "/generated_certs";	// "/proxy/generated_certs";
+	public static String generatedProductsDir	= "/server/generated_certs";	// "/generated_certs";	// "/proxy/generated_certs";
 	public static HttpClient client;
 	CandlepinType serverType = CandlepinType.hosted;
 	public String branch = "";
