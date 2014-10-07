@@ -133,38 +133,40 @@
                                                      (tasks/ui gettextvalue :overall-status))))
       (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date))))))
 
-(defn ^{Test {:groups ["subscription_status"
-                       "tier1"
-                       "blockedByBug-1012501"
-                       "blockedByBug-1040119"]
-              :dependsOnMethods ["check_status_message_future_subscriptions"]
-              :priority (int 103)}}
-  check_status_message_expired_subscriptions
-  "Asserts that status message displayed in main-window is right after expiring
+;; Commenting out this test as changing dates on the server can have drastic effects
+(comment
+  (defn ^{Test {:groups ["subscription_status"
+                         "tier1"
+                         "blockedByBug-1012501"
+                         "blockedByBug-1040119"]
+                :dependsOnMethods ["check_status_message_future_subscriptions"]
+                :priority (int 103)}}
+    check_status_message_expired_subscriptions
+    "Asserts that status message displayed in main-window is right after expiring
    attached subscriptions"
-  [_]
-  (if (nil?  @candlepin-runner)
-    (throw (SkipException.
-            (str "This test will not run on stage as a candelpin-runner cannot be created")))
-    (do
-      (try
-        (let
-            [subscribed-products-future (atom {})
-             after-future-subscribe (atom {})]
-          (run-command "date -s \"+1 year\"")
-          (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
-          (tasks/restart-app)
-          (reset! subscribed-products-future
-                  (count (filter #(= "Subscribed" %)
-                                 (tasks/get-table-elements :installed-view 2))))
-          (reset! after-future-subscribe
-                  (Integer. (re-find #"\d*"
-                                     (tasks/ui gettextvalue :overall-status))))
-          (verify (= @after-future-subscribe
-                     (- @status-before-subscribe @subscribed-products-future))))
-        (finally
-          (run-command "date -s \"-1 year\"" :runner @candlepin-runner)
-          (run-command "date -s \"-1 year\""))))))
+    [_]
+    (if (nil?  @candlepin-runner)
+      (throw (SkipException.
+              (str "This test will not run on stage as a candelpin-runner cannot be created")))
+      (do
+        (try
+          (let
+              [subscribed-products-future (atom {})
+               after-future-subscribe (atom {})]
+            (run-command "date -s \"+1 year\"")
+            (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
+            (tasks/restart-app)
+            (reset! subscribed-products-future
+                    (count (filter #(= "Subscribed" %)
+                                   (tasks/get-table-elements :installed-view 2))))
+            (reset! after-future-subscribe
+                    (Integer. (re-find #"\d*"
+                                       (tasks/ui gettextvalue :overall-status))))
+            (verify (= @after-future-subscribe
+                       (- @status-before-subscribe @subscribed-products-future))))
+          (finally
+            (run-command "date -s \"-1 year\"" :runner @candlepin-runner)
+            (run-command "date -s \"-1 year\"")))))))
 
  (defn ^{Test {:groups ["subscription_status"
                         "tier3"
