@@ -82,7 +82,7 @@
       (use 'gnome.ldtp))
     (log/info "INITIALIZATION COMPLETE!!")
     "INITIALIZATION COMPLETE!!"
-    )     ;<< here for all of it
+    )      ;<< here for all of it
 
   ;not used
   (require :reload-all '[rhsm.gui.tests.subscription-assistant-tests :as satest])
