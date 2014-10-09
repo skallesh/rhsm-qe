@@ -1282,6 +1282,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",sm_clientUsername,sm_clientPassword,sm_clientOrg,null, null);
 		String expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1-1")) expectedStdout = "Unable to authenticate to legacy server.  See /var/log/rhsm/rhsm.log for more details.";	// changed by commit 20906b8d0a89071529ea41a91356daccb7a4bbf9
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid rhn credentials and valid subscription-manager credentials ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' with invalid credentials.");
 	}
@@ -1317,7 +1318,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "Unable to locate SystemId file. Is this system registered?";
 		expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";	// changed to this value by subscription-manager commit 53c7f0745d1857cd5e1e080e06d577e67e76ecdd for the benefit of unit testing on Fedora
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedStdout = "Problem encountered getting the list of subscribed channels.  See /var/log/rhsm/rhsm.log for more details.";	// changed by commit c0f8052ec2b5b7b5c736eb626e381aef0e5327e5
-		//if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";	// "Red Hat Network Classic is not supported." on RHEL 7
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file.");
 		
@@ -1412,6 +1412,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult;
 		sshCommandResult = executeRhnMigrateClassicToRhsm("--serverurl="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
 		String expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1-1")) expectedStdout = "Unable to authenticate to legacy server.  See /var/log/rhsm/rhsm.log for more details.";	// changed by commit 20906b8d0a89071529ea41a91356daccb7a4bbf9
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from a call to '"+rhnMigrateTool+"' with a man-in-the-middle attacker should be: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The expected exitcode from a call to '"+rhnMigrateTool+"' with a man-in-the-middle attacker.");
 		sshCommandResult = client.runCommandAndWait("tail "+clienttasks.rhsmLogFile);
