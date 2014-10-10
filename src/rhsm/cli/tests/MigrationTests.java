@@ -613,7 +613,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) autosubscribeAttemptedMsg = "Installed Product Current Status:";	// commit fad3de89779f2217e788b3564ef5dca7f85914fb removed the "Attempting to auto-attach to appropriate subscriptions..." feedback
 		String autosubscribeFailedMsg = "Unable to auto-subscribe.  Do your existing subscriptions match the products installed on this system?";
 		autosubscribeFailedMsg = "Unable to auto-attach.  Do your existing subscriptions match the products installed on this system?";	// changed by bug 876294
-		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) autosubscribeFailedMsg = "Unable to find available subscriptions for all your installed products.";	// commit fad3de89779f2217e788b3564ef5dca7f85914fb
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) autosubscribeFailedMsg = "Unable to find available subscriptions for all your installed products.";	// commit fad3de89779f2217e788b3564ef5dca7f85914fb	// matches functionality from bug 864195
 		if (options.contains("-n")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
 
 			// assert that autosubscribe was NOT attempted

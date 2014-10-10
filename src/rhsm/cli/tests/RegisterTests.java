@@ -567,6 +567,17 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		Assert.assertEquals(autosubscribedProducts.size(), installedProducts.size(), "The 'Installed Product Current Status' reported during register --autosubscribe should contain the same number of products as reported by list --installed.");
+		
+		// assert the feedback from RFE Bug 864195 - New String: Add string to output of 'subscription-manager subscribe --auto' if can't cover all products
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.11.1-1")) {
+			String autoAttachFeedbackResultMessage = "Unable to find available subscriptions for all your installed products."; 
+			if (InstalledProduct.findAllInstancesWithMatchingFieldFromList("status", "Subscribed", installedProducts).size() == installedProducts.size()) {
+				Assert.assertTrue(!registerResult.getStdout().contains(autoAttachFeedbackResultMessage), "When the registration with autosubscribe succeeds in making all the installed products compliant, then feedback '"+autoAttachFeedbackResultMessage+"' is NOT reported.");
+			} else {
+				Assert.assertTrue(registerResult.getStdout().trim().endsWith(autoAttachFeedbackResultMessage), "When the registration with autosubscribe fails to make all the installed products compliant, then feedback '"+autoAttachFeedbackResultMessage+"' is the final report.");
+			}
+			
+		}
 	}
 	
 	
