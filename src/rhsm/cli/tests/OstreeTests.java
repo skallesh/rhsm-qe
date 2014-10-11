@@ -223,14 +223,55 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		
 		// TODO run some ostree commands to assert that ostree is happy with the new remote
 		
+/*		
+		-bash-4.2# rpm-ostree status
+		  TIMESTAMP (UTC)         ID             OSNAME               REFSPEC                                                           
+		* 2014-09-23 13:37:34     7ea291ddce     rhel-atomic-host     rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard     
+
+
+
+		
+		-bash-4.2# rpm-ostree upgrade
+		Updating from: rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
+
+		850 metadata, 3623 content objects fetched; 94159 KiB transferred in 827 seconds
+		error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d287c362602b2f9b898' with timestamp 'Thu 28 Aug 2014 03:47:40 PM UTC' is chronologically older than current revision '7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1' with timestamp 'Tue 23 Sep 2014 01:37:34 PM UTC'; use --allow-downgrade to permit
+		-bash-4.2# echo $?
+		1
+		
+				-bash-4.2# rpm-ostree upgrade --check-diff
+Updating from: rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
+
+Requesting /content/preview/rhel/atomic/7/x86_64/ostree/repo/refs/heads/rhel-atomic-host/7/x86_64/standard
+error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d287c362602b2f9b898' with timestamp 'Thu 28 Aug 2014 03:47:40 PM UTC' is chronologically older than current revision '7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1' with timestamp 'Tue 23 Sep 2014 01:37:34 PM UTC'; use --allow-downgrade to permit
+
+*/
 		
 		// randomly choose to unsubscribe and assert...
 		
 		
-		// when removing the entitlement, assert it's corresponding ostree repos are removed
+		// when removing the entitlement, assert its corresponding ostree repos are removed
 		
 		
 		// when removing the entitlement, assert the ostree origin file remains unchanged
+		
+		
+		
+		// when removing the entitlement, assert the ostree origin file remains unchanged
+		
+		
+/*		
+		-bash-4.2# subscription-manager  remove --all
+		1 subscription removed at the server.
+		1 local certificate has been deleted.
+		-bash-4.2# rpm-ostree upgrade --check-diff
+		Updating from: rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
+
+
+		error: No remote 'remote "rhel-atomic-preview-ostree"' found in /etc/ostree/remotes.d
+		-bash-4.2# ls /etc/ostree/remotes.d/
+		-bash-4.2# 
+*/
 	}
 	
 	
