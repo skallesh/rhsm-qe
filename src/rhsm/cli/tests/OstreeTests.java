@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -20,12 +21,14 @@ import org.testng.annotations.Test;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
+import rhsm.data.OstreeRepo;
 import rhsm.data.ProductCert;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -48,7 +51,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  2. Ensure /etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf is enabled
  *  3. Ensure we are on a real Atomic system with ostree and rpm-ostree packages installed.
  *     If not, we can fake an atomic system as follows...
- *  3a. Ensure an ostree repo config file is installed (TODO not sure what package provides it)
+ *  3a. Ensure an ostree repo config file is installed (TODO not sure what package provides it - file /ostree/repo/config is not owned by any package)
  *  
  *  -bash-4.2# cat /ostree/repo/config              <<<< EXAMPLE BEFORE ATOMIC SUB IS ATTACHED
  *  [core]
@@ -68,14 +71,15 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  tls-ca-path = /etc/rhsm/ca/redhat-uep.pem
  *  
  *  3b. Ensure gi_wrapper.py tool is returning a known path to the ostree origin file
+ *      help="Print the path to the current deployed OSTree origin file."
  *  
- *  
- *  -bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --TODO OPTION
+ *  -bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin
  *  /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
- *  
+ *  -bash-4.2# 
  *  -bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
  *  [origin]
  *  refspec=rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
+ *  -bash-4.2# 
  *  
  *  If gi_wrapper.py is not returning a path to the origin because TODO ostree is not installed, then create a faux file like this
  *  -bash-4.2# cat /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py
@@ -130,26 +134,106 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOstreeConfigurationsAreSetAfterSubscribing_Test(Object bugzilla, SubscriptionPool osTreeSubscriptionPool) {
+
+		// get a list of the ostree repos from the ostree repo config file before attaching an ostree subscription
+		List<OstreeRepo> ostreeReposBefore = getCurrentlyConfiguredOstreeRepos();
 		
+		// attach the subscription that provides ostree content
 		File file = clienttasks.subscribeToSubscriptionPool(osTreeSubscriptionPool, sm_clientUsername, sm_clientPassword, sm_serverUrl);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(file);
 		
-		
+		// get a list of the ostree repos from the ostree repo config file after attaching an ostree subscription
+		List<OstreeRepo> ostreeReposAfter = getCurrentlyConfiguredOstreeRepos();
+
+		// assert that ostree repos have been added for each ostree content namespace
 		for (ContentNamespace osTreeContentNamespace : ContentNamespace.findAllInstancesWithMatchingFieldFromList("type", "ostree", entitlementCert.contentNamespaces)) {
 			
 			log.info("Asserting the following ostree contentNamespace is added to ostree config file '"+ostreeRepoConfigFile+"' : "+osTreeContentNamespace);
+			//	-bash-4.2# rct cat-cert /etc/pki/entitlement/6474260223991696217.pem | grep "Type: ostree" -A10 -B1
+			//	Content:
+			//		Type: ostree
+			//		Name: Red Hat Enterprise Linux Atomic Host Preview (Trees)
+			//		Label: rhel-atomic-preview-ostree
+			//		Vendor: Red Hat
+			//		URL: /content/preview/rhel/atomic/7/x86_64/ostree/repo
+			//		GPG: http://
+			//		Enabled: False
+			//		Expires: 86400
+			//		Required Tags: 
+			//		Arches: x86_64
+			//
+			//	-bash-4.2# cat /ostree/repo/config
+			//	[core]
+			//	repo_version=1
+			//	mode=bare
+			
+			//	[remote "rhel-atomic-preview-ostree"]
+			//	url = https://cdn.redhat.com/content/preview/rhel/atomic/7/x86_64/ostree/repo
+			//	gpg-verify = false
+			//	tls-client-cert-path = /etc/pki/entitlement/6474260223991696217.pem
+			//	tls-client-key-path = /etc/pki/entitlement/6474260223991696217-key.pem
+			//	tls-ca-path = /etc/rhsm/ca/redhat-uep.pem
+			
+
+			//	[root@jsefler-os7 ~]# rct cat-cert /etc/pki/entitlement/1174650091385378526.pem | grep -A10 Content:
+			//		Content:
+			//			Type: ostree
+			//			Name: awesomeos-ostree
+			//			Label: awesomeos-ostree
+			//			Vendor: Red Hat
+			//			URL: /path/to/awesomeos-ostree
+			//			GPG: /path/to/awesomeos/gpg/
+			//			Enabled: True
+			//			Expires: 
+			//			Required Tags: 
+			//			Arches: ALL
+			
+			//	[root@jsefler-os7 ~]# cat /ostree/repo/config
+			//	[core]
+			//	repo_version=1
+			//	mode=bare
+			//
+			//	[remote "awesomeos-ostree"]
+			//	url = https://cdn.qa.redhat.com/path/to/awesomeos-ostree
+			//	gpg-verify = true
+			//	tls-client-cert-path = /etc/pki/entitlement/1174650091385378526.pem
+			//	tls-client-key-path = /etc/pki/entitlement/1174650091385378526-key.pem
+			//	tls-ca-path = /etc/rhsm/ca/redhat-uep.pem
+			
+			
+			
+
 		}
 		
-//		// CLOSED WONTFIX exceptions
-//		if (helpCommand.contains("subscription-manager-gui")) throw new SkipException("Disabled use of '"+helpCommand+"' in container mode was CLOSED WONTFIX.  See https://bugzilla.redhat.com/show_bug.cgi?id=1114132#c5");
-//		if (helpCommand.startsWith("rhn-migrate-classic-to-rhsm")) throw new SkipException("Disabled use of '"+helpCommand+"' in container mode was CLOSED WONTFIX.  See https://bugzilla.redhat.com/show_bug.cgi?id=1114132#c5");
-//		if (helpCommand.startsWith("rhsmcertd")) throw new SkipException("Disabled use of '"+helpCommand+"' in container mode was CLOSED WONTFIX.  See https://bugzilla.redhat.com/show_bug.cgi?id=1114132#c5");
-//		
-//		SSHCommandResult result = client.runCommandAndWait(helpCommand);
-//		Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ContainerMode, "Stderr from attempting command '"+helpCommand+"' while in container mode.");	
-//		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from attempting command '"+helpCommand+"' while in container mode.");	
-//		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from attempting command '"+helpCommand+"' while in container mode.");
+		// throw a failure on the subscription if there is more than one ostree repo
+		// if there is more than one ostree repo, then it is undefined which repo remote to set in the ostree origin file
+		
+		
+		
+		
+		// assert that the ostree origin file has been updated to the newly entitled ostree repo remote
+		
+		//	-bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin
+		//	/ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
+		//	-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
+		//	[origin]
+		//	refspec=rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
+
+		
+		
+		// TODO run some ostree commands to assert that ostree is happy with the new remote
+		
+		
+		// randomly choose to unsubscribe and assert...
+		
+		
+		// when removing the entitlement, assert it's corresponding ostree repos are removed
+		
+		
+		// when removing the entitlement, assert the ostree origin file remains unchanged
 	}
+	
+	
 	
 //	@AfterClass(groups={"setup"})	// insurance
 //	@AfterGroups(groups={"setup"}, value={"VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test"})
@@ -163,7 +247,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	@BeforeGroups(groups={"setup"}, value={"VerifyOstreeConfigurationsAreSetAfterSubscribing_Test"})
 	protected void setupOstreeRepoConfigFile() {
 		if (clienttasks!=null) {
-			if (!clienttasks.isPackageInstalled("ostree")) {	//TODO not sure if this is the providing package	// create a fake /ostree/repo/config
+			if (!clienttasks.isPackageInstalled("ostree")) {	// file /ostree/repo/config is not owned by any package	// create a fake /ostree/repo/config
 				if (!RemoteFileTasks.testExists(client, ostreeRepoConfigFile.getPath())) {
 					client.runCommandAndWait("mkdir -p "+ostreeRepoConfigFile.getParent());
 					client.runCommandAndWait("echo -e '[core]\nrepo_version=1\nmode=bare' > "+ostreeRepoConfigFile.getPath());
@@ -182,21 +266,28 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	@BeforeGroups(groups={"setup"}, value={"VerifyOstreeConfigurationsAreSetAfterSubscribing_Test"})
 	protected void setupGiWrapperTool() {
 		if (clienttasks!=null) {
-			if (!clienttasks.isPackageInstalled("ostree")) {	//TODO not sure if this is the providing package	// create a fake /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py
+			if (!clienttasks.isPackageInstalled("ostree")) {	// create a fake /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py
 				// backup gi_wrapper.py
 				if (!RemoteFileTasks.testExists(client, giWrapperFile+".bak")) {
 					client.runCommandAndWait("cp -n "+giWrapperFile+" "+giWrapperFile+".bak");
 				}
 				// create a fake gi_wrapper.py tool that simply prints the path to an ostree origin file
-				client.runCommandAndWait("echo -e '#!/usr/bin/python\n# This fake tool provides the path to the ostree origin file.\nprint \""+ostreeOriginFile+"\"' > "+giWrapperFile);
+				client.runCommandAndWait("echo -e '#!/usr/bin/python\n# Print the path to the current deployed FAKE OSTree origin file.\nprint \""+ostreeOriginFile+"\"' > "+giWrapperFile);
 				
 			}
 		}
 		
-		// FIXME LEFT OFF HERE
 		// get the real location of the ostreeOriginFile and save it
-		// run it and set the output to ostreeOriginFile
-		// assert
+		
+		// -bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin
+		// /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
+		SSHCommandResult gi_wrapperResult = client.runCommandAndWait("python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin");
+		Assert.assertEquals(gi_wrapperResult.getExitCode(), new Integer(0),"Exit Code from running gi_wrapper.py");
+		Assert.assertEquals(gi_wrapperResult.getStderr(),"","Stderr from running gi_wrapper.py");
+		Assert.assertTrue(!gi_wrapperResult.getStdout().trim().isEmpty(),"Stdout from running gi_wrapper.py is not empty");
+		
+		// Path to the current deployed OSTree origin file.
+		ostreeOriginFile = new File(gi_wrapperResult.getStdout().trim());
 	}
 	// TODO might want to implement a setupGiWrapperTool @AfterGroups
 			
@@ -205,7 +296,8 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks!=null) {
 			if (!clienttasks.isPackageInstalled("ostree")) {
 				if (!RemoteFileTasks.testExists(client, ostreeOriginFile.getPath())) {
-					client.runCommandAndWait("echo -e '[origin]\nrefspec=rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard' > "+ostreeOriginFile);
+					client.runCommandAndWait("mkdir -p "+ostreeOriginFile.getParent());
+					client.runCommandAndWait("echo -e '[origin]\nrefspec=fake-rhel-atomic-preview-ostree:fake-rhel-atomic-host/7/x86_64/standard' > "+ostreeOriginFile);
 
 				}
 			}
@@ -214,7 +306,8 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			//	refspec=rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
 			
 		}
-		Assert.assertTrue(RemoteFileTasks.testExists(client, ostreeOriginFile.getPath()), "Expected ostree origin file '"+ostreeOriginFile+"' exists.");
+		// assert the ostreeOriginFile exists
+		Assert.assertTrue(RemoteFileTasks.testExists(client, ostreeOriginFile.getPath()), "Current deployed OSTree origin file '"+ostreeOriginFile+"' exists.");
 
 	}
 
@@ -271,10 +364,6 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			if (ContentNamespace.findFirstInstanceWithMatchingFieldFromList("type", "ostree", entitlementCert.contentNamespaces)!=null) {
 				ll.add(Arrays.asList(new Object[]{null, subscriptionPool}));
 			}
-//			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-//				if (contentNamespace.type.equals("ostree")) {
-//				}
-//			}
 		}
 		
 		// remove all entitlements
@@ -284,6 +373,12 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	
+	
+	protected List<OstreeRepo> getCurrentlyConfiguredOstreeRepos() {
+				
+		return OstreeRepo.parse(client.runCommandAndWait("cat "+ostreeRepoConfigFile).getStdout());
+	}
 	
 
 }
