@@ -1,15 +1,15 @@
 diff --git a/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java b/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
-index e83de5a..3640317 100644
+index 51dd85b..67972dc 100644
 --- a/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 +++ b/server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
-@@ -14,6 +14,7 @@
-  */
+@@ -15,6 +15,7 @@
  package org.candlepin.service.impl;
  
+ import org.candlepin.common.config.Configuration;
 +import org.candlepin.common.exceptions.AcceptedRequestException;
  import org.candlepin.common.exceptions.ServiceUnavailableException;
- import org.candlepin.config.Config;
  import org.candlepin.config.ConfigProperties;
+ import org.candlepin.model.Consumer;
 @@ -106,8 +107,37 @@ public class DefaultSubscriptionServiceAdapter implements
      @Override
      public void activateSubscription(Consumer consumer, String email,
