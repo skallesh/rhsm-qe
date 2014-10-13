@@ -426,12 +426,67 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="Dump the system's hardware info to a tar file and upload it for archival review.")
 	public void dumpHardwareInfoBeforeSuite() throws IOException {
 		if (client!=null) {
-			File remoteFile = new File("/root/hw_info_dump.tar");
-			// [root@jsefler-5 ~]# dmidecode --dump-bin dmi_dump.bin; TMPDIR=`mktemp -d` && mkdir $TMPDIR/proc; cp /proc/cpuinfo $TMPDIR/proc/; cp /proc/sysinfo $TMPDIR/proc/; mkdir -p $TMPDIR/sys/devices/system/cpu; cp -r /sys/devices/system/cpu $TMPDIR/sys/devices/system/; tar -cf hw_info_dump.tar --ignore-failed-read --sparse dmi_dump.bin $TMPDIR  && tar -tvf hw_info_dump.tar && rm -rf $TMPDIR
-			client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin; TMPDIR=`mktemp -d`; mkdir $TMPDIR/proc; cp /proc/cpuinfo $TMPDIR/proc/; cp /proc/sysinfo $TMPDIR/proc/; mkdir -p $TMPDIR/sys/devices/system/cpu; cp -r /sys/devices/system/cpu $TMPDIR/sys/devices/system/; tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin $TMPDIR  && tar -tvf "+remoteFile.getName()+" && rm -rf $TMPDIR");
-			if (!RemoteFileTasks.testExists(client, remoteFile.getPath())) client.runCommandAndWait("touch "+remoteFile.getPath());
-			File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
-			RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
+			// dump hardware info from dmidecode...
+			if (clienttasks.isPackageInstalled("dmidecode")) {
+				File remoteFile = new File("/root/hw_info_dump.tar");
+				// [root@jsefler-5 ~]# dmidecode --dump-bin dmi_dump.bin; TMPDIR=`mktemp -d` && mkdir $TMPDIR/proc; cp /proc/cpuinfo $TMPDIR/proc/; cp /proc/sysinfo $TMPDIR/proc/; mkdir -p $TMPDIR/sys/devices/system/cpu; cp -r /sys/devices/system/cpu $TMPDIR/sys/devices/system/; tar -cf hw_info_dump.tar --ignore-failed-read --sparse dmi_dump.bin $TMPDIR  && tar -tvf hw_info_dump.tar && rm -rf $TMPDIR
+				client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin; TMPDIR=`mktemp -d`; mkdir $TMPDIR/proc; cp /proc/cpuinfo $TMPDIR/proc/; cp /proc/sysinfo $TMPDIR/proc/; mkdir -p $TMPDIR/sys/devices/system/cpu; cp -r /sys/devices/system/cpu $TMPDIR/sys/devices/system/; tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin $TMPDIR  && tar -tvf "+remoteFile.getName()+" && rm -rf $TMPDIR");
+				if (!RemoteFileTasks.testExists(client, remoteFile.getPath())) client.runCommandAndWait("touch "+remoteFile.getPath());
+				File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
+				RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
+			}
+			
+			// dump hardware info from sosreport...
+			if (clienttasks.isPackageInstalled("sos")) {
+				//	[root@jsefler-os7 ~]# sosreport --batch --only-plugins=processor,powerpc  --tmp-dir=/var/tmp
+				//
+				//	sosreport (version 3.2)
+				//
+				//	This command will collect diagnostic and configuration information from
+				//	this Red Hat Enterprise Linux system and installed applications.
+				//
+				//	An archive containing the collected information will be generated in
+				//	/var/tmp and may be provided to a Red Hat support representative.
+				//
+				//	Any information provided to Red Hat will be treated in accordance with
+				//	the published support policies at:
+				//
+				//	  https://access.redhat.com/support/
+				//
+				//	The generated archive may contain data considered sensitive and its
+				//	content should be reviewed by the originating organization before being
+				//	passed to any third party.
+				//
+				//	No changes will be made to system configuration.
+				//
+				//
+				//	 Setting up archive ...
+				//	 Setting up plugins ...
+				//	 Running plugins. Please wait ...
+				//
+				//	  Running 1/2: powerpc...        
+				//	  Running 2/2: processor...        
+				//
+				//	Creating compressed archive...
+				//
+				//	Your sosreport has been generated and saved in:
+				//	  /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz
+				//
+				//	The checksum is: 262a4a74df6c84e9d3dcd556dcd4abf0
+				//
+				//	Please send this file to your support representative.
+				//
+				//	[root@jsefler-os7 ~]# ls -l /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz
+				//	-rw-r--r--. 1 root root 5444 Oct 13 12:19 /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz
+				//	[root@jsefler-os7 ~]# 
+				SSHCommandResult sosResult = client.runCommandAndWait("sosreport --batch --only-plugins=processor,powerpc  --tmp-dir=/var/tmp");
+				File remoteFile = new File(getSubstringMatches(sosResult.getStdout(), "/var/tmp/sosreport-.+\\.tar\\.xz").get(0));	// /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz
+				if (RemoteFileTasks.testExists(client, remoteFile.getPath())) {
+					File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
+					RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
+					localFile.renameTo(new File(localFile.getPath().replaceFirst("-\\d{14}","")));	// strip out -20141013121912
+				}
+			}
 		}
 	}
 	@AfterSuite(groups={"cleanup"},description="attempt to delete any abandoned entitlements granted during the run of this suite")
