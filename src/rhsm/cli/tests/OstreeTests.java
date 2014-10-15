@@ -4,9 +4,7 @@ import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
@@ -18,13 +16,13 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.OstreeRepo;
-import rhsm.data.ProductCert;
+import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
-import rhsm.data.YumRepo;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
@@ -122,14 +120,15 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  
  *  
  */
-@Test(groups={"debugTestX","OstreeTests","Tier3Tests"})
+@Test(groups={"debugTest","OstreeTests","Tier3Tests"})
 public class OstreeTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the ostree config and origin files are and that when in container mode, attempts to run subscription-manager are blocked",
-			groups={"VerifyOstreeConfigurationsAreSetAfterSubscribing_Test","AcceptanceTests"},
-			dataProvider="getOstreeSubscriptions",
+			groups={"subscribeAndUnsubscribeTests","AcceptanceTests"},
+			dataProvider="getOstreeSubscriptionPools",
+			priority=10,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOstreeConfigurationsAreSetAfterSubscribing_Test(Object bugzilla, SubscriptionPool osTreeSubscriptionPool) {
@@ -320,43 +319,44 @@ Requesting /content/preview/rhel/atomic/7/x86_64/ostree/repo/refs/heads/rhel-ato
 error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d287c362602b2f9b898' with timestamp 'Thu 28 Aug 2014 03:47:40 PM UTC' is chronologically older than current revision '7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1' with timestamp 'Tue 23 Sep 2014 01:37:34 PM UTC'; use --allow-downgrade to permit
 
 */
-		
-		// randomly choose to remove the ostree subscription and assert...
-		if (getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}))) {
-			clienttasks.unsubscribe(null, clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file), null, null, null);
-			
-			// when removing the entitlement, assert its corresponding ostree repos are removed
-			for (ContentNamespace osTreeContentNamespace : osTreeContentNamespaces) {
-				OstreeRepo ostreeRepo = OstreeRepo.findFirstInstanceWithMatchingFieldFromList("remote", osTreeContentNamespace.label, getCurrentlyConfiguredOstreeRepos());
-				Assert.assertNull(ostreeRepo, "Should no longer find an OSTree repo configuration for remote '"+osTreeContentNamespace.label+"' in '"+ostreeRepoConfigFile+"' after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
-			}
-			
-			// when removing the entitlement, assert the ostree origin respec remains unchanged
-			Assert.assertEquals(clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec"), ostreeOriginRefspecAfter, "The OSTree origin refspec in '"+ostreeOriginFile+"' should remain unchanged after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
-			
-			
-			// when removing the entitlement, assert that other ostree repos remain configured
-			ostreeReposAfter = getCurrentlyConfiguredOstreeRepos();
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1152734
-			invokeWorkaroundWhileBugIsOpen = true;
-			bugId="1152734"; 
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				log.warning("Skipping the assertion that other remotes in '"+ostreeRepoConfigFile+"' remain unchanged when removing an atomic subscription.");
-			} else
-			// END OF WORKAROUND
-			for (OstreeRepo ostreeRepoBefore : ostreeReposBefore) {
-				if (ContentNamespace.findFirstInstanceWithMatchingFieldFromList("label", ostreeRepoBefore.remote, osTreeContentNamespaces)==null) {
-					OstreeRepo ostreeRepoAfter = OstreeRepo.findFirstInstanceWithMatchingFieldFromList("remote", ostreeRepoBefore.remote, ostreeReposAfter);
-					Assert.assertNotNull(ostreeRepoAfter, "OSTree repo configuration in '"+ostreeRepoConfigFile+"' remote '"+ostreeRepoBefore.remote+"' remains configured after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"' (because it was not among the ostree content sets).");
-					Assert.assertEquals(ostreeRepoAfter.url, ostreeRepoBefore.url,"Remote '"+ostreeRepoBefore.remote+"' url");
-					Assert.assertEquals(ostreeRepoAfter.gpg_verify, ostreeRepoBefore.gpg_verify,"Remote '"+ostreeRepoBefore.remote+"' gpg-verify");
-					Assert.assertEquals(ostreeRepoAfter.tls_client_cert_path, ostreeRepoBefore.tls_client_cert_path,"Remote '"+ostreeRepoBefore.remote+"' tls-client-cert-path");
-					Assert.assertEquals(ostreeRepoAfter.tls_client_key_path, ostreeRepoBefore.tls_client_key_path,"Remote '"+ostreeRepoBefore.remote+"' tls-client-key-path");
-					Assert.assertEquals(ostreeRepoAfter.tls_ca_path, ostreeRepoBefore.tls_ca_path,"Remote '"+ostreeRepoBefore.remote+"' tls-ca-path");
-				}
-			}
-		}
+
+//MOVED TO SUBSEQUENT TEST
+//		// randomly choose to remove the ostree subscription and assert...
+//		if (getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}))) {
+//			clienttasks.unsubscribe(null, clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file), null, null, null);
+//			
+//			// when removing the entitlement, assert its corresponding ostree repos are removed
+//			for (ContentNamespace osTreeContentNamespace : osTreeContentNamespaces) {
+//				OstreeRepo ostreeRepo = OstreeRepo.findFirstInstanceWithMatchingFieldFromList("remote", osTreeContentNamespace.label, getCurrentlyConfiguredOstreeRepos());
+//				Assert.assertNull(ostreeRepo, "Should no longer find an OSTree repo configuration for remote '"+osTreeContentNamespace.label+"' in '"+ostreeRepoConfigFile+"' after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
+//			}
+//			
+//			// when removing the entitlement, assert the ostree origin respec remains unchanged
+//			Assert.assertEquals(clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec"), ostreeOriginRefspecAfter, "The OSTree origin refspec in '"+ostreeOriginFile+"' should remain unchanged after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
+//			
+//			
+//			// when removing the entitlement, assert that other ostree repos remain configured
+//			ostreeReposAfter = getCurrentlyConfiguredOstreeRepos();
+//			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1152734
+//			invokeWorkaroundWhileBugIsOpen = true;
+//			bugId="1152734"; 
+//			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//			if (invokeWorkaroundWhileBugIsOpen) {
+//				log.warning("Skipping the assertion that other remotes in '"+ostreeRepoConfigFile+"' remain unchanged when removing an atomic subscription.");
+//			} else
+//			// END OF WORKAROUND
+//			for (OstreeRepo ostreeRepoBefore : ostreeReposBefore) {
+//				if (ContentNamespace.findFirstInstanceWithMatchingFieldFromList("label", ostreeRepoBefore.remote, osTreeContentNamespaces)==null) {
+//					OstreeRepo ostreeRepoAfter = OstreeRepo.findFirstInstanceWithMatchingFieldFromList("remote", ostreeRepoBefore.remote, ostreeReposAfter);
+//					Assert.assertNotNull(ostreeRepoAfter, "OSTree repo configuration in '"+ostreeRepoConfigFile+"' remote '"+ostreeRepoBefore.remote+"' remains configured after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"' (because it was not among the ostree content sets).");
+//					Assert.assertEquals(ostreeRepoAfter.url, ostreeRepoBefore.url,"Remote '"+ostreeRepoBefore.remote+"' url");
+//					Assert.assertEquals(ostreeRepoAfter.gpg_verify, ostreeRepoBefore.gpg_verify,"Remote '"+ostreeRepoBefore.remote+"' gpg-verify");
+//					Assert.assertEquals(ostreeRepoAfter.tls_client_cert_path, ostreeRepoBefore.tls_client_cert_path,"Remote '"+ostreeRepoBefore.remote+"' tls-client-cert-path");
+//					Assert.assertEquals(ostreeRepoAfter.tls_client_key_path, ostreeRepoBefore.tls_client_key_path,"Remote '"+ostreeRepoBefore.remote+"' tls-client-key-path");
+//					Assert.assertEquals(ostreeRepoAfter.tls_ca_path, ostreeRepoBefore.tls_ca_path,"Remote '"+ostreeRepoBefore.remote+"' tls-ca-path");
+//				}
+//			}
+//		}
 		
 		
 /*		
@@ -372,7 +372,115 @@ error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d28
 		-bash-4.2# 
 */
 	}
+	@DataProvider(name="getOstreeSubscriptionPools")
+	public Object[][] getOstreeSubscriptionPoolsDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getOstreeSubscriptionPoolsDataAsListOfLists());
+	}
+	protected List<List<Object>> getOstreeSubscriptionPoolsDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+
+		// register the host
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, false, null, null, null);
+		
+		// attach each available pool in search of ones that provide content of type="ostree"
+		List <SubscriptionPool> currentlyAvailableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+/*debugTesting*/ if (sm_serverType.equals(CandlepinType.standalone)) currentlyAvailableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools("37091", sm_serverUrl);
+		for (SubscriptionPool subscriptionPool : currentlyAvailableSubscriptionPools) {
+			File serialPemFile = clienttasks.subscribeToSubscriptionPool_(subscriptionPool);
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(serialPemFile);
+			if (ContentNamespace.findFirstInstanceWithMatchingFieldFromList("type", "ostree", entitlementCert.contentNamespaces)!=null) {
+				
+				BlockedByBzBug blockedByBzBug = null;
+				
+				// Bug 1153366 - SKU RH00004 should not provide more than one Atomic product
+				if (subscriptionPool.productId.equals("RH00004")) blockedByBzBug = new BlockedByBzBug("1153366");
+				
+				// Object bugzilla, SubscriptionPool osTreeSubscriptionPool
+				ll.add(Arrays.asList(new Object[]{blockedByBzBug, subscriptionPool}));
+			}
+		}
+		
+		// remove all entitlements
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		
+		return ll;
+	}
 	
+	
+	@Test(	description="Verify that the ostree config and origin files are and that when in container mode, attempts to run subscription-manager are blocked",
+			groups={"subscribeAndUnsubscribeTests","AcceptanceTests"},
+			dataProvider="getOstreeProductSubscriptions",
+			priority=20,
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyOstreeConfigurationsAfterUnsubscribing_Test(Object bugzilla, ProductSubscription osTreeProductSubscription) {
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToProductSubscription(osTreeProductSubscription);
+		List<ContentNamespace> osTreeContentNamespaces = ContentNamespace.findAllInstancesWithMatchingFieldFromList("type", "ostree", entitlementCert.contentNamespaces);
+		
+		// get a list of the ostree repos from the ostree repo config file before removing an ostree subscription
+		List<OstreeRepo> ostreeReposBefore = getCurrentlyConfiguredOstreeRepos();
+		
+		// get the ostree origin refspec before removing an ostree subscription
+		String ostreeOriginRefspecBefore = clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec");
+
+		// remove the ostree subscription and assert...
+		clienttasks.unsubscribe(null, clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file), null, null, null);
+		
+		// get a list of the ostree repos from the ostree repo config file after removing an ostree subscription
+		List<OstreeRepo> ostreeReposAfter = getCurrentlyConfiguredOstreeRepos();
+		
+		// when removing the entitlement, assert its corresponding ostree repos are removed
+		for (ContentNamespace osTreeContentNamespace : osTreeContentNamespaces) {
+			OstreeRepo ostreeRepo = OstreeRepo.findFirstInstanceWithMatchingFieldFromList("remote", osTreeContentNamespace.label, getCurrentlyConfiguredOstreeRepos());
+			Assert.assertNull(ostreeRepo, "After removing subscription '"+osTreeProductSubscription.productName+"', the OSTree repo configuration for remote '"+osTreeContentNamespace.label+"' should be removed from '"+ostreeRepoConfigFile+"'.");
+		}
+		
+		// when removing the entitlement, assert the ostree origin respec remains unchanged
+		Assert.assertEquals(clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec"), ostreeOriginRefspecBefore, "The OSTree origin refspec in '"+ostreeOriginFile+"' should remain unchanged after removing subscription '"+osTreeProductSubscription.productName+"'.");
+		
+		
+		// when removing the entitlement, assert that other ostree repos remain configured
+		ostreeReposAfter = getCurrentlyConfiguredOstreeRepos();
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1152734
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1152734"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping the assertion that other remotes in '"+ostreeRepoConfigFile+"' remain unchanged when removing an atomic subscription.");
+		} else
+		// END OF WORKAROUND
+		for (OstreeRepo ostreeRepoBefore : ostreeReposBefore) {
+			if (ContentNamespace.findFirstInstanceWithMatchingFieldFromList("label", ostreeRepoBefore.remote, osTreeContentNamespaces)==null) {
+				OstreeRepo ostreeRepoAfter = OstreeRepo.findFirstInstanceWithMatchingFieldFromList("remote", ostreeRepoBefore.remote, ostreeReposAfter);
+				Assert.assertNotNull(ostreeRepoAfter, "OSTree repo configuration in '"+ostreeRepoConfigFile+"' remote '"+ostreeRepoBefore.remote+"' remains configured after removing subscription '"+osTreeProductSubscription.productName+"' (because it was not among the ostree content sets).");
+				Assert.assertEquals(ostreeRepoAfter.url, ostreeRepoBefore.url,"Remote '"+ostreeRepoBefore.remote+"' url");
+				Assert.assertEquals(ostreeRepoAfter.gpg_verify, ostreeRepoBefore.gpg_verify,"Remote '"+ostreeRepoBefore.remote+"' gpg-verify");
+				Assert.assertEquals(ostreeRepoAfter.tls_client_cert_path, ostreeRepoBefore.tls_client_cert_path,"Remote '"+ostreeRepoBefore.remote+"' tls-client-cert-path");
+				Assert.assertEquals(ostreeRepoAfter.tls_client_key_path, ostreeRepoBefore.tls_client_key_path,"Remote '"+ostreeRepoBefore.remote+"' tls-client-key-path");
+				Assert.assertEquals(ostreeRepoAfter.tls_ca_path, ostreeRepoBefore.tls_ca_path,"Remote '"+ostreeRepoBefore.remote+"' tls-ca-path");
+			}
+		}
+	}
+	@DataProvider(name="getOstreeProductSubscriptions")
+	public Object[][] getOstreeProductSubscriptionsDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getOstreeProductSubscriptionsDataAsListOfLists());
+	}
+	protected List<List<Object>> getOstreeProductSubscriptionsDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+
+		// system should already be registered and consuming
+		
+		// find consumed entitlements that provide content of type="ostree"
+		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToProductSubscription(productSubscription);
+			if (ContentNamespace.findFirstInstanceWithMatchingFieldFromList("type", "ostree", entitlementCert.contentNamespaces)!=null) {
+				// Object bugzilla, ProductSubscription osTreeProductSubscription
+				ll.add(Arrays.asList(new Object[]{null, productSubscription}));
+			}
+		}
+		
+		return ll;
+	}
 	
 	
 //	@AfterClass(groups={"setup"})	// insurance
@@ -384,7 +492,7 @@ error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d28
 //		}
 //	}
 //	
-	@BeforeGroups(groups={"setup"}, value={"VerifyOstreeConfigurationsAreSetAfterSubscribing_Test"})
+	@BeforeGroups(groups={"setup"}, value={"subscribeAndUnsubscribeTests"})
 	protected void setupOstreeRepoConfigFile() {
 		if (clienttasks!=null) {
 			if (!clienttasks.isPackageInstalled("ostree")) {	// file /ostree/repo/config is not owned by any package	// create a fake /ostree/repo/config
@@ -415,7 +523,7 @@ error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d28
 	}
 	// TODO might want to implement a teardownOstreeRepoConfigFile @AfterGroups
 	
-	@BeforeGroups(groups={"setup"}, value={"VerifyOstreeConfigurationsAreSetAfterSubscribing_Test"})
+	@BeforeGroups(groups={"setup"}, value={"subscribeAndUnsubscribeTests"})
 	protected void setupGiWrapperTool() {
 		if (clienttasks!=null) {
 			if (!clienttasks.isPackageInstalled("ostree")) {	// create a fake /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py
@@ -443,7 +551,7 @@ error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d28
 	}
 	// TODO might want to implement a setupGiWrapperTool @AfterGroups
 			
-	@BeforeGroups(groups={"setup"}, value={"VerifyOstreeConfigurationsAreSetAfterSubscribing_Test"}, dependsOnMethods={"setupGiWrapperTool"})
+	@BeforeGroups(groups={"setup"}, value={"subscribeAndUnsubscribeTests"}, dependsOnMethods={"setupGiWrapperTool"})
 	protected void setupOstreeOriginFile() {
 		if (clienttasks!=null) {
 			if (!clienttasks.isPackageInstalled("ostree")) {
@@ -492,38 +600,6 @@ error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d28
 	protected final File ostreeRepoConfigFile = new File("/ostree/repo/config");
 	protected final File giWrapperFile = new File("/usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py");	// provided by subscription-manager-plugin-ostree
 	protected File ostreeOriginFile = new File("/ostree/deploy/OSNAME/deploy/CHECKSUM.0.origin");
-//	protected final String entitlementHostDir = "/etc/pki/entitlement-host";
-	
-	
-	
-	// Data Providers ***********************************************************************
-	@DataProvider(name="getOstreeSubscriptions")
-	public Object[][] getOstreeSubscriptionsDataAs2dArray() throws JSONException, Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getOstreeSubscriptionsDataAsListOfLists());
-	}
-	protected List<List<Object>> getOstreeSubscriptionsDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-
-		// register the host
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, false, null, null, null);
-		
-		// attach each available pool in search of ones that provide content of type="ostree"
-
-		/*debugTesting*/for (SubscriptionPool subscriptionPool : clienttasks.getCurrentlyAvailableSubscriptionPools("37091", sm_serverUrl)) {
-		//for (SubscriptionPool subscriptionPool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			File serialPemFile = clienttasks.subscribeToSubscriptionPool_(subscriptionPool);
-			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(serialPemFile);
-			if (ContentNamespace.findFirstInstanceWithMatchingFieldFromList("type", "ostree", entitlementCert.contentNamespaces)!=null) {
-				ll.add(Arrays.asList(new Object[]{null, subscriptionPool}));
-			}
-		}
-		
-		// remove all entitlements
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
-		
-		return ll;
-	}
-	
 	
 	
 	
