@@ -165,7 +165,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that manual edits to enable repos in redhat.repo are preserved.",
-			groups={"blockedByBug-905546"/*UNCOMMENT FOR RHEL71,"blockedByBug-1098891"*/,"blockedByBug-1101571","blockedByBug-1101584"},
+			groups={"blockedByBug-905546","blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584"},
 			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
 			enabled=true)	// with the implementation of RFE Bug 803746, manual edits to the enablement of redhat repos is now forbidden.  This test is being disabled in favor of ManualEditsToEnablementOfRedhatReposIsForbidden_Test
 	//@ImplementsNitrateTest(caseId=)
@@ -627,7 +627,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: manually add more yum repository options to redhat.repo and assert persistence.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806"/*UNCOMMENT FOR RHEL71,"blockedByBug-1098891"*/,"blockedByBug-1101571","blockedByBug-1101584"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806","blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEdits_Test() throws JSONException, Exception {
@@ -762,7 +762,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@Test(	description="subscription-manager: verify that overrides take precedence to manually edited repository options in redhat.repo and assert persistence.",
-			groups={/*UNCOMMENT FOR RHEL71"blockedByBug-1098891",*/"blockedByBug-1101571","blockedByBug-1101584"},
+			groups={"blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEditsButRepoOverridesTakePrecedence_Test() throws JSONException, Exception {
