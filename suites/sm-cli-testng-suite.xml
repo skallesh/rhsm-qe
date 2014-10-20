@@ -701,6 +701,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Ostree Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="OstreeTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Docker Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
