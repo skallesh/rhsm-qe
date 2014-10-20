@@ -120,7 +120,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  
  *  
  */
-@Test(groups={"debugTest","OstreeTests","Tier3Tests"})
+@Test(groups={"OstreeTests","Tier3Tests"})
 public class OstreeTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
@@ -483,15 +483,6 @@ error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d28
 	}
 	
 	
-//	@AfterClass(groups={"setup"})	// insurance
-//	@AfterGroups(groups={"setup"}, value={"VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test"})
-//	public void teardownContainerMode() {
-//		if (clienttasks!=null) {
-//			client.runCommandAndWait("rm -rf "+rhsmHostDir);
-//			client.runCommandAndWait("rm -rf "+entitlementHostDir);	// although it would be okay to leave this behind
-//		}
-//	}
-//	
 	@BeforeGroups(groups={"setup"}, value={"subscribeAndUnsubscribeTests"})
 	protected void setupOstreeRepoConfigFile() {
 		if (clienttasks!=null) {

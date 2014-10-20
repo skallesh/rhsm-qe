@@ -426,6 +426,16 @@ if (false) {
 		if (installOptions==null) installOptions = "";
 		List<String> pkgsInstalled = new ArrayList<String>();
 		
+		// skip installation of packages on an Atomuc system
+		//	-bash-4.2# cat /etc/redhat-release 
+		//	Red Hat Atomic Host Preview release 7.0 Beta
+		//	-bash-4.2# rpm -q redhat-release-atomic-host
+		//	redhat-release-atomic-host-7.0-20140925.0.atomic.el7.x86_64
+		if (redhatRelease.startsWith("Red Hat Atomic Host")) {
+			log.warning("Skipping setup procedure installSubscriptionManagerRPMs() on '"+redhatRelease+"'.");
+			return;
+		}
+		
 		// make sure the client's time is accurate
 		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);
