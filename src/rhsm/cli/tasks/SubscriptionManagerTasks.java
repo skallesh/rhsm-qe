@@ -399,6 +399,7 @@ if (false) {
 		if (Float.valueOf(redhatReleaseXY)>=7.0f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data"}));
 		if (Float.valueOf(redhatReleaseXY)>=6.0f) pkgs.add(0,"python-dateutil");	// dependency
 		pkgs.add(0,"expect");	// used for interactive cli prompting
+		pkgs.add(0,"sos");	// used to create an sosreport for debugging hardware
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
