@@ -394,6 +394,7 @@ error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d28
 				
 				// Bug 1153366 - SKU RH00004 should not provide more than one Atomic product
 				if (subscriptionPool.productId.equals("RH00004")) blockedByBzBug = new BlockedByBzBug("1153366");
+				if (subscriptionPool.productId.equals("RH00003")) blockedByBzBug = new BlockedByBzBug("1153366");
 				
 				// Object bugzilla, SubscriptionPool osTreeSubscriptionPool
 				ll.add(Arrays.asList(new Object[]{blockedByBzBug, subscriptionPool}));
