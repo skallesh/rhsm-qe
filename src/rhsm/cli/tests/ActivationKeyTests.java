@@ -69,7 +69,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		FIXME UPDATE: THE CRAPPY WORKAROUND ABOVE APPEARS TO HAVE BEEN FIXED (BY BUG 800323 ?), REVERTING BACK TO ORIGINAL ASSERT... */
 		
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format("Activation key '%s' not found for organization '%s'.",unknownActivationKeyName, org), "Stderr message from an attempt to register with an unknown activation key.");
+		String expectedStderr = String.format("Activation key '%s' not found for organization '%s'.",unknownActivationKeyName, org);
+		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr message from an attempt to register with an unknown activation key '"+unknownActivationKeyName+"' to org '"+org+"'.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255));
 	}
 	
@@ -247,7 +249,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 
 		// add the pool with a random available quantity (?quantity=#) to the activation key
 		int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
-		JSONObject jsonAddedPool = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + poolId +(addQuantity==null?"":"?quantity="+addQuantity), null));
+		JSONObject jsonResult = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + poolId +(addQuantity==null?"":"?quantity="+addQuantity), null));
+		// if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) the POST now returns the jsonActivationKey and formerly returned the jsonPoolAddedToActivationKey	// candlepin commit 82b9af5dc2c63b58447366e680fcf6f156c6049f
 		if (addQuantity==null) {
 			//addQuantity=1;	// this was true before Bug 1023568 - [RFE] bind requests using activation keys that do not specify a quantity should automatically use the quantity needed to achieve compliance
 		}
@@ -256,8 +259,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"))) {
 
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
-			if (jsonAddedPool.has("displayMessage")) {
-				String displayMessage = jsonAddedPool.getString("displayMessage");
+			if (jsonResult.has("displayMessage")) {
+				String displayMessage = jsonResult.getString("displayMessage");
 				//Assert.assertEquals(displayMessage,"Pools requiring a 'person' consumer should not be added to an activation key since a consumer type of 'person' cannot be used with activation keys","Expected the addition of a requires consumer type person pool '"+poolId+"' to activation key named '"+keyName+"' with quantity '"+addQuantity+"' to be blocked.");
 				Assert.assertEquals(displayMessage,"Cannot add pools restricted to consumer type 'person' to activation keys.","Expected the addition of a requires consumer type person pool '"+poolId+"' to activation key named '"+keyName+"' with quantity '"+addQuantity+"' to be blocked.");
 			} else {
@@ -271,8 +274,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId) && addQuantity!=null && addQuantity>1) {
 
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
-			if (jsonAddedPool.has("displayMessage")) {
-				String displayMessage = jsonAddedPool.getString("displayMessage");
+			if (jsonResult.has("displayMessage")) {
+				String displayMessage = jsonResult.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one.","Expected the addition of a non-multi-entitlement pool '"+poolId+"' to activation key named '"+keyName+"' with quantity '"+addQuantity+"' to be blocked.");
 			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to greater than one quantity '"+addQuantity+"'.");
@@ -285,8 +288,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (addQuantity!=null && addQuantity>jsonPool.getInt("quantity") && addQuantity>1) {
 
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
-			if (jsonAddedPool.has("displayMessage")) {
-				String displayMessage = jsonAddedPool.getString("displayMessage");
+			if (jsonResult.has("displayMessage")) {
+				String displayMessage = jsonResult.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"The quantity must not be greater than the total allowed for the pool", "Expected the addition of multi-entitlement pool '"+poolId+"' to activation key named '"+keyName+"' with an excessive quantity '"+addQuantity+"' to be blocked.");
 			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an excessive quantity '"+addQuantity+"'.");
@@ -299,8 +302,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (addQuantity!=null && addQuantity<1) {
 
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
-			if (jsonAddedPool.has("displayMessage")) {
-				String displayMessage = jsonAddedPool.getString("displayMessage");
+			if (jsonResult.has("displayMessage")) {
+				String displayMessage = jsonResult.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"The quantity must be greater than 0", "Expected the addition of pool '"+poolId+"' to activation key named '"+keyName+"' with quantity '"+addQuantity+"' less than one be blocked.");
 			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to insufficient quantity '"+addQuantity+"'.");
@@ -353,6 +356,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, ConsumerType.system)) {
 			String expectedStderr = String.format("Consumers of this type are not allowed to subscribe to the pool with id '%s'.", poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Units of this type are not allowed to attach the pool with ID '%s'.", poolId);
+			if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 			Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "Registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
@@ -377,6 +381,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			//Assert.assertEquals(registerResult.getStderr().trim(), String.format("No entitlements are available from the pool with id '%s'.",poolId), "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");	// expected string changed by bug 876758
 			String expectedStderr = String.format("No subscriptions are available from the pool with id '%s'.",poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("No subscriptions are available from the pool with ID '%s'.",poolId);
+			if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 			Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
@@ -546,7 +551,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				// assert the sshCommandResult here
 				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The expected exit code from the register attempt with activationKey using the wrong org.");
 				//Assert.assertEquals(registerResult.getStdout().trim(), "", "The expected stdout result the register attempt with activationKey using the wrong org.");
-				Assert.assertEquals(registerResult.getStderr().trim(), "Activation key '"+activationKeyName+"' not found for organization '"+differentOrg+"'.", "The expected stderr result from the register attempt with activationKey using the wrong org.");
+				String expectedStderr = "Activation key '"+activationKeyName+"' not found for organization '"+differentOrg+"'.";
+				if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+				Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "The expected stderr result from the register attempt with activationKey '"+activationKeyName+"' using the wrong org '"+differentOrg+"'.");
 				Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 
 			}
@@ -601,6 +608,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		String expectedStderr = String.format("No entitlements are available from the pool with id '%s'.", jsonCurrentPool.getString("id"));
 		expectedStderr = String.format("No subscriptions are available from the pool with id '%s'.", jsonCurrentPool.getString("id"));	// string changed by bug 876758
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("No subscriptions are available from the pool with ID '%s'.", jsonCurrentPool.getString("id"));
+		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");
 		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which non enough entitlements remain should fail.");
 		Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
@@ -661,11 +669,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			if (!poolType.equals("NORMAL")) continue;
 			
 			// add the pool to the activation key
-			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
-			if (jsonPoolAddedToActivationKey.has("displayMessage")) {
-				Assert.fail("Failed to add pool '"+jsonPool.getString("productId")+"' '"+jsonPool.getString("id")+"' to activation key '"+jsonActivationKey.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey.getString("displayMessage"));
+			JSONObject jsonResult = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
+			// if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) the POST now returns the jsonActivationKey and formerly returned the jsonPoolAddedToActivationKey	// candlepin commit 82b9af5dc2c63b58447366e680fcf6f156c6049f
+			if (jsonResult.has("displayMessage")) {
+				Assert.fail("Failed to add pool '"+jsonPool.getString("productId")+"' '"+jsonPool.getString("id")+"' to activation key '"+jsonActivationKey.getString("id")+"'.  DisplayMessage: "+jsonResult.getString("displayMessage"));
 			}
-			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
+			jsonPoolsAddedToActivationKey.put(jsonPool);
 		}
 		if (addQuantity==null) addQuantity=1;
 		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
@@ -742,11 +751,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys",jsonActivationKeyRequest.toString()));
 			
 			// add the pool to the activation key
-			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
-			if (jsonPoolAddedToActivationKey.has("displayMessage")) {
-				Assert.fail("Failed to add pool '"+jsonPool.getString("productId")+"' '"+jsonPool.getString("id")+"' to activation key '"+jsonActivationKey.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey.getString("displayMessage"));
+			JSONObject jsonResult = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
+			// if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) the POST now returns the jsonActivationKey and formerly returned the jsonPoolAddedToActivationKey	// candlepin commit 82b9af5dc2c63b58447366e680fcf6f156c6049f
+			if (jsonResult.has("displayMessage")) {
+				Assert.fail("Failed to add pool '"+jsonPool.getString("productId")+"' '"+jsonPool.getString("id")+"' to activation key '"+jsonActivationKey.getString("id")+"'.  DisplayMessage: "+jsonResult.getString("displayMessage"));
 			}
-			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
+			jsonPoolsAddedToActivationKey.put(jsonPool);
 			activationKeyNames.add(activationKeyName);
 		}
 		if (addQuantity==null) addQuantity=1;
@@ -827,11 +837,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			
 			// add the pool to the activation key
 			String path = "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity);
-			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, path, null));
-			if (jsonPoolAddedToActivationKey.has("displayMessage")) {
-				Assert.fail("Failed to add pool '"+jsonPool.getString("productId")+"' '"+jsonPool.getString("id")+"' to activation key '"+jsonActivationKey.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey.getString("displayMessage"));
+			JSONObject jsonResult = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, path, null));
+			// if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) the POST now returns the jsonActivationKey and formerly returned the jsonPoolAddedToActivationKey	// candlepin commit 82b9af5dc2c63b58447366e680fcf6f156c6049f
+			if (jsonResult.has("displayMessage")) {
+				Assert.fail("Failed to add pool '"+jsonPool.getString("productId")+"' '"+jsonPool.getString("id")+"' to activation key '"+jsonActivationKey.getString("id")+"'.  DisplayMessage: "+jsonResult.getString("displayMessage"));
 			}
-			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
+			jsonPoolsAddedToActivationKey.put(jsonPool);
 			activationKeyNames.add(activationKeyName);
 		}
 		if (addQuantity==null) addQuantity=1;
@@ -1300,7 +1311,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// register with the activation key - should fail because the expired pool was the only one that supported the expiredServiceLevel
 		SSHCommandResult result = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The exit code from the register command indicates we could not register with activation key '"+keyName+"'.");
-		Assert.assertEquals(result.getStderr().trim(), String.format("Service level '%s' is not available to units of organization admin.",expiredServiceLevel));	
+		String expectedStderr = String.format("Service level '%s' is not available to units of organization admin.",expiredServiceLevel);
+		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+		Assert.assertEquals(result.getStderr().trim(), expectedStderr,"Stderr message from an attempt to register with an activation key whose service level '"+expiredServiceLevel+"' is only supported by a pool that has now expired.");	
 	}
 	protected String expiredServiceLevel = null;
 	@BeforeGroups(value={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test"}, groups={"setup"})
@@ -1398,16 +1411,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		// add each of the pools to jsonActivationKey1
 		for (int i=0; i<poolIds.size(); i++) {
-			JSONObject jsonPoolAddedToActivationKey1 = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_client1Username, sm_client1Password, sm_serverUrl, "/activation_keys/" + jsonActivationKey1.getString("id") + "/pools/" + poolIds.get(i)/* + (addQuantity==null?"":"?quantity="+addQuantity)*/, null));
-			if (jsonPoolAddedToActivationKey1.has("displayMessage")) {
-				Assert.fail("Failed to add pool '"+poolIds.get(i)+"' to activation key '"+jsonActivationKey1.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey1.getString("displayMessage"));
+			JSONObject jsonResult1 = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_client1Username, sm_client1Password, sm_serverUrl, "/activation_keys/" + jsonActivationKey1.getString("id") + "/pools/" + poolIds.get(i)/* + (addQuantity==null?"":"?quantity="+addQuantity)*/, null));
+			// if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) the POST now returns the jsonActivationKey and formerly returned the jsonPoolAddedToActivationKey	// candlepin commit 82b9af5dc2c63b58447366e680fcf6f156c6049f
+			if (jsonResult1.has("displayMessage")) {
+				Assert.fail("Failed to add pool '"+poolIds.get(i)+"' to activation key '"+jsonActivationKey1.getString("id")+"'.  DisplayMessage: "+jsonResult1.getString("displayMessage"));
 			}
 		}
 		// add each of the pools to jsonActivationKey2 (in reverse order)
 		for (int i=poolIds.size()-1; i>=0; i--) {
-			JSONObject jsonPoolAddedToActivationKey2 = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_client2Username, sm_client2Password, sm_serverUrl, "/activation_keys/" + jsonActivationKey2.getString("id") + "/pools/" + poolIds.get(i)/* + (addQuantity==null?"":"?quantity="+addQuantity)*/, null));
-			if (jsonPoolAddedToActivationKey2.has("displayMessage")) {
-				Assert.fail("Failed to add pool '"+poolIds.get(i)+"' to activation key '"+jsonActivationKey2.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey2.getString("displayMessage"));
+			JSONObject jsonResult2 = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_client2Username, sm_client2Password, sm_serverUrl, "/activation_keys/" + jsonActivationKey2.getString("id") + "/pools/" + poolIds.get(i)/* + (addQuantity==null?"":"?quantity="+addQuantity)*/, null));
+			// if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) the POST now returns the jsonActivationKey and formerly returned the jsonPoolAddedToActivationKey	// candlepin commit 82b9af5dc2c63b58447366e680fcf6f156c6049f
+			if (jsonResult2.has("displayMessage")) {
+				Assert.fail("Failed to add pool '"+poolIds.get(i)+"' to activation key '"+jsonActivationKey2.getString("id")+"'.  DisplayMessage: "+jsonResult2.getString("displayMessage"));
 			}
 		}
 		
