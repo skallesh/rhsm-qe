@@ -417,7 +417,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to enable an invalid-repo-id.");	// valid in RHEL59
 		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to enable an invalid-repo-id.");
 		//Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo id. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to enable an invalid-repo-id.");	// changed by bug 878634
-		Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo ID. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to enable an invalid-repo-id.");
+		String expectedStdout = String.format("Error: %s is not a valid repo ID. Use --list option to see valid repos.",invalidRepo);
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = String.format("Error: %s is not a valid repository ID. Use --list option to see valid repositories.",invalidRepo);	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to enable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to enable an invalid-repo-id.");
 	}
 	
@@ -433,7 +435,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to disable an invalid-repo-id.");	// valid in RHEL59
 		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to disable an invalid-repo-id.");
 		//Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo id. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to disable an invalid-repo-id.");	// changed by bug 878634
-		Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo ID. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to disable an invalid-repo-id.");
+		String expectedStdout = String.format("Error: %s is not a valid repo ID. Use --list option to see valid repos.",invalidRepo);
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = String.format("Error: %s is not a valid repository ID. Use --list option to see valid repositories.",invalidRepo);	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to disable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
 	}
 	
@@ -458,6 +462,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to disable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
 		String expectedStdoutMsgFormat = "Error: %s is not a valid repo ID. Use --list option to see valid repos.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdoutMsgFormat = "Error: %s is not a valid repository ID. Use --list option to see valid repositories.";	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
 		for (String invalidRepo : invalidRepos) {
 			String expectedStdoutMsg = String.format(expectedStdoutMsgFormat,invalidRepo);
 			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from an attempt to enable/disable multiple invalid repos contains expected message: "+expectedStdoutMsg);		
@@ -520,6 +525,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable all repos (using wildcard *).");
 		String expectedStdoutMsgFormat = "Repo %s is %s for this system.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdoutMsgFormat = "Repo '%s' is %s for this system.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdoutMsgFormat = "Repository '%s' is %s for this system.";	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
 		for (Repo subscribedRepo : subscribedRepos) {
 			String expectedEnableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"enabled");
 			String expectedDisableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"disabled");
@@ -551,6 +557,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		String expectedStdoutMsgFormat = "Repo %s is %s for this system.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdoutMsgFormat = "Repo '%s' is %sd for this system.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdoutMsgFormat = "Repository '%s' is %sd for this system.";	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
 		String command = clienttasks.reposCommand(null, null, null, null, null, null, null, null);
 		Map<String,String> repoEnablements = new HashMap<String,String>();
 		List<String> enablements = Arrays.asList("enable","disable");
@@ -601,6 +608,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			SSHCommandResult result = clienttasks.repos_(false,null,null,repo.repoId,null,null, null, null);
 			String expectedStdout = String.format("Repo %s is enabled for this system.",repo.repoId);
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdout = String.format("Repo '%s' is enabled for this system.",repo.repoId);	// subscription-manager commit b9e7f7abb949bc007f2db02662e2abba76528082
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = String.format("Repository '%s' is enabled for this system.",repo.repoId);	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
 			Assert.assertEquals(result.getStdout().trim(),expectedStdout);
 		}
 	}
@@ -616,11 +624,12 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
 		subscribedRepos = getRandomSubsetOfList(subscribedRepos, 5);	// reduce the runtime of this test by randomly reducing the subscribedRepos tested
 		if (subscribedRepos.isEmpty()) throw new SkipException("There are no entitled repos available for this test.");
-				
+		
 		for(Repo repo:subscribedRepos) {
 			SSHCommandResult result = clienttasks.repos_(false,null,null,null,repo.repoId,null, null, null);
 			String expectedStdout = String.format("Repo %s is disabled for this system.",repo.repoId);
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdout = String.format("Repo '%s' is disabled for this system.",repo.repoId);	// subscription-manager commit b9e7f7abb949bc007f2db02662e2abba76528082
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = String.format("Repository '%s' is disabled for this system.",repo.repoId);	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
 			Assert.assertEquals(result.getStdout().trim(),expectedStdout);
 		}
 	}
