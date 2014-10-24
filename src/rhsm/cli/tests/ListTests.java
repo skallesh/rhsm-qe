@@ -836,7 +836,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		filteredProductSubscriptions = ProductSubscription.parse(listResult.getStdout());
 		Assert.assertTrue(filteredProductSubscriptions.containsAll(expectedProductSubscriptions),"The actual list of --consumed --servicelevel=\""+servicelevel+"\" ProductSubscriptions contains all of the expected ProductSubscriptions (the expected list contains only consumptions with ServiceLevel=\""+servicelevel+"\")");
 		Assert.assertTrue(expectedProductSubscriptions.containsAll(filteredProductSubscriptions),"The expected list of ProductSubscriptions contains all of the actual ProductSubscriptions returned by list --consumed --servicelevel=\""+servicelevel+"\".");
-		if (expectedProductSubscriptions.isEmpty()) Assert.assertEquals(listResult.getStdout().trim(), "No consumed subscription pools to list","Expected message when no consumed subscriptions remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
+		String expectedStderr = "No consumed subscription pools to list";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStderr = "No consumed subscription pools matching the specified criteria were found.";	// commit be815d04d1722dd8fd40a23c0a7847e97e689f89
+		if (expectedProductSubscriptions.isEmpty()) Assert.assertEquals(listResult.getStdout().trim(), expectedStderr,"Expected message when no consumed subscriptions remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
 	}
 	
 	
@@ -1381,7 +1383,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			if (serviceLevel.equals("None")) bugzilla = new BlockedByBzBug(new String[]{"842170","976924"});
 			ll.add(Arrays.asList(new Object[] {bugzilla,	serviceLevel}));
 		}
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"842170","976924"}),	""}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"842170","976924","1156627"}),	""}));
 		ll.add(Arrays.asList(new Object[] {null, "FOO"}));
 
 		
