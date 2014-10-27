@@ -1411,7 +1411,7 @@ if (false) {
 	 */
 	public  List<SubscriptionPool> getAvailableSubscriptionsMatchingInstalledProducts() {
 		
-		return SubscriptionPool.parse(list_(null, true, null, null, null, null, true, null, null, null, null).getStdout()); 
+		return SubscriptionPool.parse(list_(null, true, null, null, null, null, true, null, null, null, null, null).getStdout()); 
 	}
 	
 	/**
@@ -1424,7 +1424,7 @@ if (false) {
 	 * @return list of objects representing the subscription-manager list --avail --ondate
 	 */
 	public List<SubscriptionPool> getAvailableFutureSubscriptionsOndate(String onDateToTest) {
-		return SubscriptionPool.parse(list_(null, true, null, null, null, onDateToTest, null, null, null, null, null).getStdout());
+		return SubscriptionPool.parse(list_(null, true, null, null, null, onDateToTest, null, null, null, null, null, null).getStdout());
 	}
 	
 	/**
@@ -3980,11 +3980,12 @@ if (false) {
 	 * @param ondate TODO
 	 * @param matchInstalled TODO
 	 * @param noOverlap TODO
+	 * @param matches TODO
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;				command += " list";	
@@ -3996,6 +3997,7 @@ if (false) {
 		if (servicelevel!=null)						command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
 		if (matchInstalled!=null && matchInstalled)	command += " --match-installed";
 		if (noOverlap!=null && noOverlap)			command += " --no-overlap";
+		if (matches!=null)							command += " --matches="+String.format(matches.contains(" ")||matches.isEmpty()?"\"%s\"":"%s", matches);	// quote a value containing spaces or is empty
 		if (proxy!=null)							command += " --proxy="+proxy;
 		if (proxyuser!=null)						command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)					command += " --proxypassword="+proxypassword;
@@ -4006,9 +4008,9 @@ if (false) {
 		return sshCommandResult;
 	}
 	
-	public SSHCommandResult list(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult list(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = list_(all, available, consumed, installed, servicelevel, ondate, matchInstalled, noOverlap, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = list_(all, available, consumed, installed, servicelevel, ondate, matchInstalled, noOverlap, matches, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		
@@ -4023,7 +4025,7 @@ if (false) {
 	 */
 	public SSHCommandResult listInstalledProducts() {
 		
-		SSHCommandResult sshCommandResult = list(null,null,null,Boolean.TRUE, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,null,null,Boolean.TRUE, null, null, null, null, null, null, null, null);
 		
 		if (getCurrentProductCertFiles().isEmpty() /*&& getCurrentEntitlementCertFiles().isEmpty() NOT NEEDED AFTER DESIGN CHANGE FROM BUG 736424*/) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed products to list"), "No installed products to list");
@@ -4041,7 +4043,7 @@ if (false) {
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
 
-		SSHCommandResult sshCommandResult = list(null,Boolean.TRUE,null, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null);
 
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
@@ -4058,11 +4060,11 @@ if (false) {
 		String bugId="638266"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null, null, null, null);
+			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null);
 		}
 		// END OF WORKAROUND
 		
-		SSHCommandResult sshCommandResult = list(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null);
 		
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
@@ -4075,7 +4077,7 @@ if (false) {
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
 
-		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
 

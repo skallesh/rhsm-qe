@@ -74,7 +74,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		}
 		* current behavior is asserted here... */
 		// verify that the expired product subscriptions is still listed among the consumed, but inactive
-		List <ProductSubscription> currentlyConsumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null, null, null).getStdout());
+		List <ProductSubscription> currentlyConsumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null, null, null, null).getStdout());
 		for (ProductSubscription expiringProductSubscription : expiringProductSubscriptions) {
 			ProductSubscription expiredProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", expiringProductSubscription.serialNumber, currentlyConsumedProductSubscriptions);
 			Assert.assertNotNull(expiredProductSubscription, "Immediately after the consumed subscription '"+expiringProductSubscription.productName+"' serial '"+expiringProductSubscription.serialNumber+"' expires, it should still be found the list of consumed product subscriptions.");

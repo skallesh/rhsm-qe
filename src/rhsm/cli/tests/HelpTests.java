@@ -601,6 +601,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--ondate=ON_DATE");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=672562
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--no-overlap");		// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--match-installed");	// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.6-1")) options.add("--matches=FILTER_STRING");	// added by Bug 1146125 - [RFE] would like a --contains-text option for subscription-manager list module
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
