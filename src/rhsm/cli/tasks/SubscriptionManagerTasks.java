@@ -7200,6 +7200,7 @@ if (false) {
 				// 2014-06-05 02:55:35,063 [ERROR] subscription-manager @connection.py:502 - Response: 502
 				if (getTracebackCommandResult.getStdout().contains("Response: status=502") && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
 					String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+					// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
 					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						throw new SkipException("Encounterd a 502 response from the server and could not complete this test while bug '"+bugId+"' is open.");
