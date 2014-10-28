@@ -822,13 +822,17 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String matchesString;
 		List<SubscriptionPool> expectedPools,actualSubscriptionPoolMatches;
 		Boolean all = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		
-		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);
+		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+
+		// register if necessary
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 		
 		// get all the available subscription pools
-		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, null, null, null, null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null).getStdout());
 		
 		// randomly choose an available pool
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
@@ -836,54 +840,54 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// Test 1: test exact --matches on Subscription Name:
 		matchesString = randomAvailablePool.subscriptionName;
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
 		// Test 2: test exact --matches on Provides:
 		if (!randomAvailablePool.provides.isEmpty()) {
 			matchesString = getRandomListItem(randomAvailablePool.provides);
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 
 		} else log.warning("Skipping list --available --matches test on a Provides item since the provides list is empty on our random available subscription: "+randomAvailablePool);		
 		
 		// Test 3: test exact --matches on SKU:
 		matchesString = randomAvailablePool.productId;
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
 		// Test 4: test exact --matches on Contract:
 		matchesString = randomAvailablePool.contract;
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
 		// Test 5: test exact --matches on Service Level:
 		if (randomAvailablePool.serviceLevel!=null && !randomAvailablePool.serviceLevel.isEmpty()) {
 			matchesString = randomAvailablePool.serviceLevel;
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		} else log.warning("Skipping list --available --matches test on a Service Level item since it is null on our random available subscription: "+randomAvailablePool);
 		
@@ -891,15 +895,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 6: test exact --matches on Provided ProductId:
 		if (!randomAvailablePool.provides.isEmpty()) {
 			matchesString = getRandomListItem(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, randomAvailablePool.poolId));
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		} else log.warning("Skipping list --available --matches test on a Provides ProductId item since the provides list is empty on our random available subscription: "+randomAvailablePool);		
 
 	}
-	
-	
-	
-	@Test(	description="subscription-manager: subcription manager list --available with wildcard --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: wild card match means * matches zero or mor char and ? matches one char and is case insensitive.",
+	@Test(	description="subscription-manager: subcription manager list --available with wildcard --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
 			groups={"blockedByBug-1146125", "AcceptanceTests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
@@ -909,27 +910,46 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String matchesString;
 		List<SubscriptionPool> expectedPools,actualSubscriptionPoolMatches;
 		Boolean all = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		
-		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 		
 		// get all the available subscription pools
-		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, null, null, null, null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null).getStdout());
 		
 		// randomly choose an available pool
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
+		
+		//	+-------------------------------------------+
+		//	Available Subscriptions
+		//	+-------------------------------------------+
+		//	Subscription Name: Awesome OS OSTree
+		//	Provides:          Awesome OS OStree Bits
+		//	SKU:               awesomeos-ostree
+		//	Contract:          3
+		//	Pool ID:           2c90af8b49435579014943591343172c
+		//	Available:         10
+		//	Suggested:         1
+		//	Service Level:     
+		//	Service Type:      
+		//	Subscription Type: Standard
+		//	Ends:              10/23/2015
+		//	System Type:       Physical
 		
 		
 		// Test 1: test wildcard --matches on Subscription Name:
 		matchesString = randomAvailablePool.subscriptionName;
 		matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// drop first word
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
 		matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// and drop last word
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
@@ -937,12 +957,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (!randomAvailablePool.provides.isEmpty()) {
 			matchesString = getRandomListItem(randomAvailablePool.provides);
 			matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// drop last word
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
 			matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// and drop first word
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 
 		} else log.warning("Skipping list --available --matches test on a Provides item since the provides list is empty on our random available subscription: "+randomAvailablePool);		
@@ -950,24 +970,24 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 3: test wildcard --matches on SKU:
 		matchesString = randomAvailablePool.productId;
 		matchesString = matchesString.replaceFirst("^.","?");	// drop first char
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
 		matchesString = matchesString.replaceFirst(".$","?");	// and drop last char
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
 		// Test 4: test wildcard --matches on Contract:
 		matchesString = randomAvailablePool.contract;
 		matchesString = matchesString.replaceFirst(".$","?");	// drop last char
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
 		matchesString = matchesString.replaceFirst("^.","?");	// and drop first char
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
@@ -976,11 +996,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			matchesString = randomAvailablePool.serviceLevel;
 			matchesString = matchesString.replaceFirst("^.","*");	// drop first char
 			matchesString = matchesString.replaceFirst(".$","?");	// drop last char
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		} else log.warning("Skipping list --available --matches test on a Service Level item since it is null on our random available subscription: "+randomAvailablePool);
 		
@@ -990,7 +1010,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			matchesString = getRandomListItem(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, randomAvailablePool.poolId));
 			int i = randomGenerator.nextInt(matchesString.length());
 			matchesString = matchesString.replaceAll(String.valueOf(matchesString.charAt(i)), "?");
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		} else log.warning("Skipping list --available --matches test on a Provides ProductId item since the provides list is empty on our random available subscription: "+randomAvailablePool);		
 
@@ -998,7 +1018,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	protected void assertActualResultOfListAvailableWithMatches(String matchesString, List<SubscriptionPool> actualSubscriptionPoolsMatches, List<SubscriptionPool> availableSubscriptionPools) throws JSONException, Exception {
 		// translate matchesString into a regexString
 		String regexString = matchesString.toLowerCase().replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"); // escape parentheses
-		regexString = regexString.replaceAll("\\*", ".*");	// splat wildcards match any 0 or more chars
+		regexString = regexString.replaceAll("\\*", ".*");	// splat wildcards match any zero or more chars
 		regexString = regexString.replaceAll("\\?", ".");	// question mark wildcards match any one char
 		
 		// search through the available availableSubscriptionPools for expected matches on the matchesString
@@ -1008,40 +1028,40 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			
 			// Test for match on Subscription Name:
 			if (subscriptionPool.subscriptionName.toLowerCase().matches(regexString)) {
-				log.info("Found a hit on matches '"+matchesString+"' against the subscription '"+subscriptionPool.subscriptionName+"' Subscription Name: "+subscriptionPool.subscriptionName);
+				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Subscription Name: "+subscriptionPool.subscriptionName);
 				if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) expectedSubscriptionPoolMatches.add(subscriptionPool);
 			}
 			
 			// Test for match on Provides:
 			for (String providesName : subscriptionPool.provides) {
 				if (providesName.toLowerCase().matches(regexString)) {
-					log.info("Found a hit on matches '"+matchesString+"' against the subscription '"+subscriptionPool.subscriptionName+"' Provides: "+subscriptionPool.provides);
+					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Provides: "+subscriptionPool.provides);
 					if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) expectedSubscriptionPoolMatches.add(subscriptionPool);
 				}
 			}
 			
 			// Test for match on SKU:
 			if (subscriptionPool.productId.toLowerCase().matches(regexString)) {
-				log.info("Found a hit on matches '"+matchesString+"' against the subscription '"+subscriptionPool.subscriptionName+"' SKU: "+subscriptionPool.productId);
+				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU: "+subscriptionPool.productId);
 				if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) expectedSubscriptionPoolMatches.add(subscriptionPool);
 			}
 			
 			// Test for match on Contract:
 			if (subscriptionPool.contract.toLowerCase().matches(regexString)) {
-				log.info("Found a hit on matches '"+matchesString+"' against the subscription '"+subscriptionPool.subscriptionName+"' Contract: "+subscriptionPool.contract);
+				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Contract: "+subscriptionPool.contract);
 				if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) expectedSubscriptionPoolMatches.add(subscriptionPool);
 			}
 			
 			// Test for match on Service Level:
 			if (subscriptionPool.serviceLevel.toLowerCase().matches(regexString)) {
-				log.info("Found a hit on matches '"+matchesString+"' against the subscription '"+subscriptionPool.subscriptionName+"' Service Level: "+subscriptionPool.serviceLevel);
+				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Service Level: "+subscriptionPool.serviceLevel);
 				if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) expectedSubscriptionPoolMatches.add(subscriptionPool);
 			}
 			
 			// Test for match on Provided ProductId:
 			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
 				if (providedProductId.toLowerCase().matches(regexString)) {
-					log.info("Found a hit on matches '"+matchesString+"' against the subscription '"+subscriptionPool.subscriptionName+"' Provided Product ID: "+providedProductId);
+					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Provided Product ID: "+providedProductId);
 					if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) expectedSubscriptionPoolMatches.add(subscriptionPool);		
 				}
 			}
@@ -1049,7 +1069,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			// Test for match on Derived Provided ProductId:
 			for (String derivedProvidedProductId : CandlepinTasks.getPoolDerivedProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
 				if (derivedProvidedProductId.toLowerCase().matches(regexString)) {
-					log.info("Found a hit on matches '"+matchesString+"' against the subscription '"+subscriptionPool.subscriptionName+"' Derived Provided Product ID: "+derivedProvidedProductId);
+					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Derived Provided Product ID: "+derivedProvidedProductId);
 					if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) expectedSubscriptionPoolMatches.add(subscriptionPool);		
 				}
 			}
@@ -1059,6 +1079,465 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(expectedSubscriptionPoolMatches.containsAll(actualSubscriptionPoolsMatches)&&actualSubscriptionPoolsMatches.containsAll(expectedSubscriptionPoolMatches), "All of the expected available pools with an exact match (ignoring case) on '"+matchesString+"' were returned with the list --available --matches option.");
 
 	}
+	
+	
+	@Test(	description="subscription-manager: subcription manager list --consumed with exact --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: exact match means no wildcards and is case insensitive.",
+			groups={"blockedByBug-1146125"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListConsumedWithExactMatches_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.6-1")) throw new SkipException("The list --matches function was not implemented in this version of subscription-manager.");
+		
+		String matchesString;
+		List<ProductSubscription> actualProductSubscriptionMatches;
+
+		// register if necessary
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+				
+		// attach all the currently available subscriptions
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		
+		// get all the consumed product subscriptions
+		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null).getStdout());
+		
+		// randomly choose one of the consumed Product Subscriptions
+		ProductSubscription randomConsumedProductSubscription = getRandomListItem(consumedProductSubscriptions);
+		
+		//	+-------------------------------------------+
+		//	   Consumed Subscriptions
+		//	+-------------------------------------------+
+		//	Subscription Name: Awesome OS for All Arch (excpt for x86_64 content)
+		//	Provides:          Awesome OS for All Arch (excpt for x86_64 content) Bits
+		//	SKU:               awesomeos-all-no-86_64-cont
+		//	Contract:          3
+		//	Account:           12331131231
+		//	Serial:            2808682313592781316
+		//	Pool ID:           2c90af8b494355790149435902da0ee8
+		//	Active:            True
+		//	Quantity Used:     1
+		//	Service Level:     
+		//	Service Type:      
+		//	Status Details:    
+		//	Subscription Type: Stackable
+		//	Starts:            10/23/2014
+		//	Ends:              10/23/2015
+		//	System Type:       Physical
+		
+		
+		// Test 1: test exact --matches on Subscription Name:
+		matchesString = randomConsumedProductSubscription.productName;
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		// also test case insensitivity
+		matchesString = randomizeCaseOfCharactersInString(matchesString);
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		
+		
+		// Test 2: test exact --matches on Provides:
+		if (!randomConsumedProductSubscription.provides.isEmpty()) {
+			matchesString = getRandomListItem(randomConsumedProductSubscription.provides);
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+			// also test case insensitivity
+			matchesString = randomizeCaseOfCharactersInString(matchesString);
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+
+		} else log.warning("Skipping list --consumed --matches test on a Provides item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
+		
+		// Test 3: test exact --matches on SKU:
+		matchesString = randomConsumedProductSubscription.productId;
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		// also test case insensitivity
+		matchesString = randomizeCaseOfCharactersInString(matchesString);
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		
+		
+		// Test 4: test exact --matches on Contract:
+		matchesString = String.valueOf(randomConsumedProductSubscription.contractNumber);
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		// also test case insensitivity
+		/* not necessary since contractNumber is an Integer
+		matchesString = randomizeCaseOfCharactersInString(matchesString);
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		*/
+		
+		// Test 5: test exact --matches on Service Level:
+		if (randomConsumedProductSubscription.serviceLevel!=null && !randomConsumedProductSubscription.serviceLevel.isEmpty()) {
+			matchesString = randomConsumedProductSubscription.serviceLevel;
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+			// also test case insensitivity
+			matchesString = randomizeCaseOfCharactersInString(matchesString);
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		} else log.warning("Skipping list --consumed --matches test on a Service Level item since it is null on our random consumed subscription: "+randomConsumedProductSubscription);
+		
+		
+		// Test 6: test exact --matches on Provided ProductId:
+		if (!randomConsumedProductSubscription.provides.isEmpty()) {
+			matchesString = getRandomListItem(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, randomConsumedProductSubscription.poolId));
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		} else log.warning("Skipping list --consumed --matches test on a Provides ProductId item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
+
+	}
+	@Test(	description="subscription-manager: subcription manager list --consumed with wildcard --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
+			groups={"blockedByBug-1146125"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListConsumedWithWildcardMatches_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.6-1")) throw new SkipException("The list --matches function was not implemented in this version of subscription-manager.");
+		
+		String matchesString;
+		List<ProductSubscription> actualProductSubscriptionMatches;
+
+		// register if necessary
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+				
+		// attach all the currently available subscriptions
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		
+		// get all the consumed product subscriptions
+		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null).getStdout());
+		
+		// randomly choose one of the consumed Product Subscriptions
+		ProductSubscription randomConsumedProductSubscription = getRandomListItem(consumedProductSubscriptions);
+		
+		//	+-------------------------------------------+
+		//	   Consumed Subscriptions
+		//	+-------------------------------------------+
+		//	Subscription Name: Awesome OS for All Arch (excpt for x86_64 content)
+		//	Provides:          Awesome OS for All Arch (excpt for x86_64 content) Bits
+		//	SKU:               awesomeos-all-no-86_64-cont
+		//	Contract:          3
+		//	Account:           12331131231
+		//	Serial:            2808682313592781316
+		//	Pool ID:           2c90af8b494355790149435902da0ee8
+		//	Active:            True
+		//	Quantity Used:     1
+		//	Service Level:     
+		//	Service Type:      
+		//	Status Details:    
+		//	Subscription Type: Stackable
+		//	Starts:            10/23/2014
+		//	Ends:              10/23/2015
+		//	System Type:       Physical
+		
+		
+		// Test 1: test exact --matches on Subscription Name:
+		matchesString = randomConsumedProductSubscription.productName;
+		matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// drop first word
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		// also test case insensitivity
+		matchesString = randomizeCaseOfCharactersInString(matchesString);
+		matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// and drop last word
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		
+		
+		// Test 2: test exact --matches on Provides:
+		if (!randomConsumedProductSubscription.provides.isEmpty()) {
+			matchesString = getRandomListItem(randomConsumedProductSubscription.provides);
+			matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// drop last word
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+			// also test case insensitivity
+			matchesString = randomizeCaseOfCharactersInString(matchesString);
+			matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// and drop first word
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+
+		} else log.warning("Skipping list --consumed --matches test on a Provides item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
+		
+		// Test 3: test exact --matches on SKU:
+		matchesString = randomConsumedProductSubscription.productId;
+		matchesString = matchesString.replaceFirst("^.","?");	// drop first char
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		// also test case insensitivity
+		matchesString = randomizeCaseOfCharactersInString(matchesString);
+		matchesString = matchesString.replaceFirst(".$","?");	// and drop last char
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		
+		
+		// Test 4: test exact --matches on Contract:
+		matchesString = String.valueOf(randomConsumedProductSubscription.contractNumber);
+		matchesString = matchesString.replaceFirst(".$","?");	// drop last char
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		// also test case insensitivity
+		/* not necessary since contractNumber is an Integer
+		matchesString = randomizeCaseOfCharactersInString(matchesString);
+		matchesString = matchesString.replaceFirst("^.","?");	// and drop first char
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		*/
+		
+		// Test 5: test exact --matches on Service Level:
+		if (randomConsumedProductSubscription.serviceLevel!=null && !randomConsumedProductSubscription.serviceLevel.isEmpty()) {
+			matchesString = randomConsumedProductSubscription.serviceLevel;
+			matchesString = matchesString.replaceFirst("^.","*");	// drop first char
+			matchesString = matchesString.replaceFirst(".$","?");	// drop last char
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+			// also test case insensitivity
+			matchesString = randomizeCaseOfCharactersInString(matchesString);
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		} else log.warning("Skipping list --consumed --matches test on a Service Level item since it is null on our random consumed subscription: "+randomConsumedProductSubscription);
+		
+		
+		// Test 6: test exact --matches on Provided ProductId:
+		if (!randomConsumedProductSubscription.provides.isEmpty()) {
+			matchesString = getRandomListItem(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, randomConsumedProductSubscription.poolId));
+			int i = randomGenerator.nextInt(matchesString.length());
+			matchesString = matchesString.replaceAll(String.valueOf(matchesString.charAt(i)), "?");
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null).getStdout());
+			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
+		} else log.warning("Skipping list --consumed --matches test on a Provides ProductId item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
+
+	}
+	protected void assertActualResultOfListConsumedWithMatches(String matchesString, List<ProductSubscription> actualProductSubscriptionMatches, List<ProductSubscription> consumedProductSubscriptions) throws JSONException, Exception {
+		// translate matchesString into a regexString
+		String regexString = matchesString.toLowerCase().replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"); // escape parentheses
+		regexString = regexString.replaceAll("\\*", ".*");	// splat wildcards match any zero or more chars
+		regexString = regexString.replaceAll("\\?", ".");	// question mark wildcards match any one char
+		
+		// search through the available availableSubscriptionPools for expected matches on the matchesString
+		// NOTE: exact matches means no wildcards and is case insensitive
+		List<ProductSubscription> expectedProductSubscriptionMatches = new ArrayList<ProductSubscription>();
+		for (ProductSubscription consumedProductSubscription : consumedProductSubscriptions) {
+			
+			// Test for match on Subscription Name:
+			if (consumedProductSubscription.productName.toLowerCase().matches(regexString)) {
+				log.info("Found a hit on matches '"+matchesString+"' against the consumed subscription '"+consumedProductSubscription.productName+"' Subscription Name: "+consumedProductSubscription.productName);
+				if (!expectedProductSubscriptionMatches.contains(consumedProductSubscription)) expectedProductSubscriptionMatches.add(consumedProductSubscription);
+			}
+			
+			// Test for match on Provides:
+			for (String providesName : consumedProductSubscription.provides) {
+				if (providesName.toLowerCase().matches(regexString)) {
+					log.info("Found a hit on matches '"+matchesString+"' against the consumed subscription '"+consumedProductSubscription.productName+"' Provides: "+consumedProductSubscription.provides);
+					if (!expectedProductSubscriptionMatches.contains(consumedProductSubscription)) expectedProductSubscriptionMatches.add(consumedProductSubscription);
+				}
+			}
+			
+			// Test for match on SKU:
+			if (consumedProductSubscription.productId.toLowerCase().matches(regexString)) {
+				log.info("Found a hit on matches '"+matchesString+"' against the consumed subscription '"+consumedProductSubscription.productName+"' SKU: "+consumedProductSubscription.productId);
+				if (!expectedProductSubscriptionMatches.contains(consumedProductSubscription)) expectedProductSubscriptionMatches.add(consumedProductSubscription);
+			}
+			
+			// Test for match on Contract:
+			if (String.valueOf(consumedProductSubscription.contractNumber).toLowerCase().matches(regexString)) {
+				log.info("Found a hit on matches '"+matchesString+"' against the consumed subscription '"+consumedProductSubscription.productName+"' Contract: "+consumedProductSubscription.contractNumber);
+				if (!expectedProductSubscriptionMatches.contains(consumedProductSubscription)) expectedProductSubscriptionMatches.add(consumedProductSubscription);
+			}
+			
+			// Test for match on Service Level:
+			if (consumedProductSubscription.serviceLevel.toLowerCase().matches(regexString)) {
+				log.info("Found a hit on matches '"+matchesString+"' against the consumed subscription '"+consumedProductSubscription.productName+"' Service Level: "+consumedProductSubscription.serviceLevel);
+				if (!expectedProductSubscriptionMatches.contains(consumedProductSubscription)) expectedProductSubscriptionMatches.add(consumedProductSubscription);
+			}
+			
+			// Test for match on Provided ProductId:
+			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumedProductSubscription.poolId)) {
+				if (providedProductId.toLowerCase().matches(regexString)) {
+					log.info("Found a hit on matches '"+matchesString+"' against the consumed subscription '"+consumedProductSubscription.productName+"' Provided Product ID: "+providedProductId);
+					if (!expectedProductSubscriptionMatches.contains(consumedProductSubscription)) expectedProductSubscriptionMatches.add(consumedProductSubscription);		
+				}
+			}
+			
+			// Test for match on Derived Provided ProductId:
+			for (String derivedProvidedProductId : CandlepinTasks.getPoolDerivedProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumedProductSubscription.poolId)) {
+				if (derivedProvidedProductId.toLowerCase().matches(regexString)) {
+					log.info("Found a hit on matches '"+matchesString+"' against the consumed subscription '"+consumedProductSubscription.productName+"' Derived Provided Product ID: "+derivedProvidedProductId);
+					if (!expectedProductSubscriptionMatches.contains(consumedProductSubscription)) expectedProductSubscriptionMatches.add(consumedProductSubscription);		
+				}
+			}
+		}
+		
+		// assert that all of the expectedProductSubscriptionMatches is identical to the actualProductSubscriptionMatches
+		Assert.assertTrue(expectedProductSubscriptionMatches.containsAll(actualProductSubscriptionMatches)&&actualProductSubscriptionMatches.containsAll(expectedProductSubscriptionMatches), "All of the expected consumed subscriptions with an exact match (ignoring case) on '"+matchesString+"' were returned with the list --consumed --matches option.");
+
+	}
+	
+	
+	
+	@Test(	description="subscription-manager: subcription manager list --installed with exact --matches on Product Name, Product ID, Version, Arch, Status, Status Details  Note: exact match means no wildcards and is case insensitive.",
+			groups={"blockedByBug-1146125"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListInstalledWithExactMatches_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.6-1")) throw new SkipException("The list --matches function was not implemented in this version of subscription-manager.");
+		
+		String matchesString;
+		List<InstalledProduct> actualInstalledProductMatches;
+
+		// register if necessary
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+				
+		// attach one of all the currently available subscriptions (attaching only one so that some installed products might remain noncompliant)
+		// assemble a list of all the available SubscriptionPool ids
+		List<String> poolIds = new ArrayList<String>();
+		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		for (SubscriptionPool pool : subscriptionPools) poolIds.add(pool.poolId);
+		if (!poolIds.isEmpty()) clienttasks.subscribe(null,null,poolIds, null, null, "1", null, null,null,null,null);
+		
+		// get all the installed products
+		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, null, null, null, null).getStdout());
+		
+		// randomly choose one of the installed products
+		InstalledProduct randomInstalledProduct = getRandomListItem(installedProducts);
+		
+		//	[root@jsefler-os7 ~]# subscription-manager list --installed
+		//	Product Name:   Red Hat Enterprise Linux Server
+		//	Product ID:     69
+		//	Version:        7.0
+		//	Arch:           x86_64
+		//	Status:         Not Subscribed
+		//	Status Details: Not supported by a valid subscription.
+		//	Starts:         
+		//	Ends:   
+		
+		
+		// Test 1: test exact --matches on Product Name:
+		matchesString = randomInstalledProduct.productName;
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
+		// also test case insensitivity
+		matchesString = randomizeCaseOfCharactersInString(matchesString);
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
+		
+		
+		// Test 2: test exact --matches on Product ID:
+		matchesString = randomInstalledProduct.productId;
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
+		// also test case insensitivity
+		matchesString = randomizeCaseOfCharactersInString(matchesString);
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
+		
+// TODO MORE TESTS ON OTHER FIELDS?		
+
+	}
+	@Test(	description="subscription-manager: subcription manager list --installed with wildcard --matches on Product Name, Product ID, Version, Arch, Status, Status Details  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
+			groups={"blockedByBug-1146125"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListInstalledWithWildcardMatches_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.6-1")) throw new SkipException("The list --matches function was not implemented in this version of subscription-manager.");
+		
+		String matchesString;
+		List<InstalledProduct> actualInstalledProductMatches;
+
+		// register if necessary
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+				
+		// attach one of all the currently available subscriptions (attaching only one so that some installed products might remain noncompliant)
+		// assemble a list of all the available SubscriptionPool ids
+		List<String> poolIds = new ArrayList<String>();
+		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		for (SubscriptionPool pool : subscriptionPools) poolIds.add(pool.poolId);
+		if (!poolIds.isEmpty()) clienttasks.subscribe(null,null,poolIds, null, null, "1", null, null,null,null,null);
+		
+		// get all the installed products
+		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, null, null, null, null).getStdout());
+		
+		// randomly choose one of the installed products
+		InstalledProduct randomInstalledProduct = getRandomListItem(installedProducts);
+		
+		//	[root@jsefler-os7 ~]# subscription-manager list --installed
+		//	Product Name:   Red Hat Enterprise Linux Server
+		//	Product ID:     69
+		//	Version:        7.0
+		//	Arch:           x86_64
+		//	Status:         Not Subscribed
+		//	Status Details: Not supported by a valid subscription.
+		//	Starts:         
+		//	Ends:   
+		
+		
+		// Test 1: test wildcard --matches on Product Name:
+		matchesString = randomInstalledProduct.productName;
+		matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// drop first word
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
+		// also test case insensitivity
+		matchesString = randomizeCaseOfCharactersInString(matchesString);
+		matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// and drop last word
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
+		
+		
+		// Test 2: test wildcard --matches on Product ID:
+		matchesString = randomInstalledProduct.productId;
+		int i = randomGenerator.nextInt(matchesString.length());
+		matchesString = matchesString.replaceAll(String.valueOf(matchesString.charAt(i)), "?");
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
+		// also test case insensitivity
+		/* not necessary since productId is an integer
+		matchesString = randomizeCaseOfCharactersInString(matchesString);
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null).getStdout());
+		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
+		*/
+// TODO MORE TESTS ON OTHER FIELDS?		
+
+	}
+	protected void assertActualResultOfListInstalledWithMatches(String matchesString, List<InstalledProduct> actualInstalledProductMatches, List<InstalledProduct> installedProducts) throws JSONException, Exception {
+		// translate matchesString into a regexString
+		String regexString = matchesString.toLowerCase().replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"); // escape parentheses
+		regexString = regexString.replaceAll("\\*", ".*");	// splat wildcards match any zero or more chars
+		regexString = regexString.replaceAll("\\?", ".");	// question mark wildcards match any one char
+		
+		// search through the available availableSubscriptionPools for expected matches on the matchesString
+		// NOTE: exact matches means no wildcards and is case insensitive
+		List<InstalledProduct> expectedInstalledProductMatches = new ArrayList<InstalledProduct>();
+		for (InstalledProduct installedProduct : installedProducts) {
+			
+			// Test for match on Product Name:
+			if (installedProduct.productName.toLowerCase().matches(regexString)) {
+				log.info("Found a hit on matches '"+matchesString+"' against the installed product '"+installedProduct.productName+"' Product Name: "+installedProduct.productName);
+				if (!expectedInstalledProductMatches.contains(installedProduct)) expectedInstalledProductMatches.add(installedProduct);
+			}
+			
+			// Test for match on Product ID:
+			if (installedProduct.productId.toLowerCase().matches(regexString)) {
+				log.info("Found a hit on matches '"+matchesString+"' against the installed product '"+installedProduct.productName+"' Product ID: "+installedProduct.productId);
+				if (!expectedInstalledProductMatches.contains(installedProduct)) expectedInstalledProductMatches.add(installedProduct);
+			}
+			
+//TODO MORE TESTS ON OTHER FIELDS?
+		}
+		
+		// assert that all of the expectedProductSubscriptionMatches is identical to the actualProductSubscriptionMatches
+		Assert.assertTrue(expectedInstalledProductMatches.containsAll(actualInstalledProductMatches)&&actualInstalledProductMatches.containsAll(expectedInstalledProductMatches), "All of the expected installed products with an exact match (ignoring case) on '"+matchesString+"' were returned with the list --installed --matches option.");
+
+	}
+	
 	
 	
 	
