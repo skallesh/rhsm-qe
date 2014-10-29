@@ -1073,6 +1073,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 					if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) expectedSubscriptionPoolMatches.add(subscriptionPool);		
 				}
 			}
+			
+			// TODO May want to open an RFE to also search on these other available subscription fields
+			// See https://bugzilla.redhat.com/show_bug.cgi?id=1146125#c7
+			//	Pool ID:           2c90af8b49435579014943591343172c
+			//	Available:         10
+			//	Suggested:         1
+			//	Service Type:      
+			//	Subscription Type: Standard
+			//	Ends:              10/23/2015
+			//	System Type:       Physical
 		}
 		
 		// assert that all of the expectedSubscriptionPoolMatches is identical to the actualSubscriptionPoolsMatches
@@ -1369,6 +1379,18 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 					if (!expectedProductSubscriptionMatches.contains(consumedProductSubscription)) expectedProductSubscriptionMatches.add(consumedProductSubscription);		
 				}
 			}
+			
+			// TODO May want to open an RFE to also search on these other consumed product fields
+			// See https://bugzilla.redhat.com/show_bug.cgi?id=1146125#c7
+			//	Account:           12331131231
+			//	Serial:            2808682313592781316
+			//	Pool ID:           2c90af8b494355790149435902da0ee8
+			//	Active:            True
+			//	Quantity Used:     1 
+			//	Service Type:      
+			//	Status Details:    
+			//	Subscription Type: Stackable
+			//	System Type:       Physical
 		}
 		
 		// assert that all of the expectedProductSubscriptionMatches is identical to the actualProductSubscriptionMatches
@@ -1378,7 +1400,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	@Test(	description="subscription-manager: subcription manager list --installed with exact --matches on Product Name, Product ID, Version, Arch, Status, Status Details  Note: exact match means no wildcards and is case insensitive.",
+	@Test(	description="subscription-manager: subcription manager list --installed with exact --matches on Product Name, Product ID.  Note: exact match means no wildcards and is case insensitive.",
 			groups={"blockedByBug-1146125"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
@@ -1436,11 +1458,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
 		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null).getStdout());
 		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
-		
-// TODO MORE TESTS ON OTHER FIELDS?		
 
 	}
-	@Test(	description="subscription-manager: subcription manager list --installed with wildcard --matches on Product Name, Product ID, Version, Arch, Status, Status Details  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
+	@Test(	description="subscription-manager: subcription manager list --installed with wildcard --matches on Product Name, Product ID.  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
 			groups={"blockedByBug-1146125"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
@@ -1504,8 +1524,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null).getStdout());
 		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
 		*/
-// TODO MORE TESTS ON OTHER FIELDS?		
-
+		
 	}
 	protected void assertActualResultOfListInstalledWithMatches(String matchesString, List<InstalledProduct> actualInstalledProductMatches, List<InstalledProduct> installedProducts) throws JSONException, Exception {
 		// translate matchesString into a regexString
@@ -1530,7 +1549,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 				if (!expectedInstalledProductMatches.contains(installedProduct)) expectedInstalledProductMatches.add(installedProduct);
 			}
 			
-//TODO MORE TESTS ON OTHER FIELDS?
+			// TODO May want to open an RFE to also search on these other installed product fields
+			// See https://bugzilla.redhat.com/show_bug.cgi?id=1146125#c7
+			//	Version:        7.0
+			//	Arch:           x86_64
+			//	Status:         Not Subscribed
+			//	Status Details: Not supported by a valid subscription.
+			//	Starts:         
+			//	Ends:   
 		}
 		
 		// assert that all of the expectedProductSubscriptionMatches is identical to the actualProductSubscriptionMatches
