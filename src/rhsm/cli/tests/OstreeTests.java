@@ -602,3 +602,179 @@ error: Upgrade target revision 'ae072611b137b6cb3b3fc2e77225c58ff7e8328b2eaf2d28
 	
 
 }
+
+
+/* dress rehearsal notes:
+
+Upgrade the system using the instructions from the getting started guide above, see: http://file.brq.redhat.com/~bexelbie/appinfra-docs/Atomic_OSTree_Get_Started.pdf
+
+-bash-4.2# rpm -q docker ostree
+docker-1.2.0-1.7.el7.x86_64
+ostree-2014.9-3.atomic.el7.x86_64
+
+-bash-4.2# rpm -qa | grep subscr
+subscription-manager-plugin-ostree-1.13.7-1.el7.x86_64
+subscription-manager-1.13.7-1.el7.x86_64
+subscription-manager-plugin-container-1.13.7-1.el7.x86_64
+
+BEFORE REGISTER AND ATTACH
+-bash-4.2# cat /ostree/repo/config 
+[core]
+repo_version=1
+mode=bare
+-bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin
+/ostree/deploy/rhel-atomic-host/deploy/335ae3551939b8de8fd6663ec9db834b1d2150fe7a5b9b1017b74c1070006888.0.origin
+-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/335ae3551939b8de8fd6663ec9db834b1d2150fe7a5b9b1017b74c1070006888.0.origin
+[origin]
+refspec=rhel-atomic-host:rhel-atomic-host/7/x86_64/standard
+unconfigured-state=This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.
+-bash-4.2# atomic status
+  VERSION     ID             OSNAME               REFSPEC                                                 
+* 7.0.1.0     335ae35519     rhel-atomic-host     rhel-atomic-host:rhel-atomic-host/7/x86_64/standard     
+-bash-4.2# 
+
+
+
+AFTER REGISTER AND ATTACH
+-bash-4.2# subscription-manager register --serverurl=subscription.rhn.stage.redhat.com --baseurl=https://cdn.stage.redhat.com --auto-attach
+Username: atomic_beta_6
+Password: 
+The system has been registered with ID: d8f1becc-08d5-40c8-8d4c-4742bf176e04 
+
+Installed Product Current Status:
+Product Name: Red Hat Enterprise Linux Server
+Status:       Subscribed
+
+Product Name: Red Hat Enterprise Linux Atomic Host Beta
+Status:       Subscribed
+
+-bash-4.2# cat /ostree/repo/config 
+[core]
+repo_version=1
+mode=bare
+
+[remote "rhel-atomic-host-ostree"]
+url = https://cdn.stage.redhat.com/content/dist/rhel/atomic/7/7Server/x86_64/ostree/repo
+gpg-verify = false
+tls-client-cert-path = /etc/pki/entitlement/4413554849224567690.pem
+tls-client-key-path = /etc/pki/entitlement/4413554849224567690-key.pem
+tls-ca-path = /etc/rhsm/ca/redhat-uep.pem
+
+[remote "rhel-atomic-host-beta-ostree"]
+url = https://cdn.stage.redhat.com/content/beta/rhel/atomic/7/x86_64/ostree/repo
+gpg-verify = false
+tls-client-cert-path = /etc/pki/entitlement/4413554849224567690.pem
+tls-client-key-path = /etc/pki/entitlement/4413554849224567690-key.pem
+tls-ca-path = /etc/rhsm/ca/redhat-uep.pem
+-bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin
+/ostree/deploy/rhel-atomic-host/deploy/335ae3551939b8de8fd6663ec9db834b1d2150fe7a5b9b1017b74c1070006888.0.origin
+-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/335ae3551939b8de8fd6663ec9db834b1d2150fe7a5b9b1017b74c1070006888.0.origin
+[origin]
+refspec=rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard
+-bash-4.2# 
+-bash-4.2# atomic status
+  VERSION     ID             OSNAME               REFSPEC                                                             
+* 7.0.1.0     335ae35519     rhel-atomic-host     rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard     
+-bash-4.2# 
+
+
+ATTEMPTING TO UPGRADE
+-bash-4.2# atomic status
+  VERSION     ID             OSNAME               REFSPEC                                                             
+* 7.0.1.0     335ae35519     rhel-atomic-host     rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard     
+-bash-4.2# 
+-bash-4.2# 
+-bash-4.2# atomic upgrade
+Updating from: rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard
+
+474 metadata, 2194 content objects fetched; 89393 KiB transferred in 302 seconds
+Copying /etc changes: 11 modified, 4 removed, 35 added
+Transaction complete; bootconfig swap: yes deployment count change: 1
+Changed:
+  docker-storage-setup-0.0.3-1.el7.noarch
+  kernel-3.10.0-123.9.2.el7.x86_64
+Updates prepared for next boot; run "systemctl reboot" to start a reboot
+-bash-4.2# echo $?
+0
+-bash-4.2# atomic status
+  VERSION     ID             OSNAME               REFSPEC                                                             
+  7.0.2       9a0dbc159e     rhel-atomic-host     rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard     
+* 7.0.1.0     335ae35519     rhel-atomic-host     rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard     
+-bash-4.2#
+
+
+-bash-4.2# 
+-bash-4.2# systemctl reboot
+Connection to 10.16.6.54 closed by remote host.
+Connection to 10.16.6.54 closed.
+[jsefler@jseflerT5400 ~]$ ssh -XYC root@10.16.6.54
+root@10.16.6.54's password: 
+Last login: Wed Oct 29 17:06:54 2014
+-bash-4.2# 
+-bash-4.2# 
+-bash-4.2# atomic status
+  VERSION     ID             OSNAME               REFSPEC                                                             
+* 7.0.2       9a0dbc159e     rhel-atomic-host     rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard     
+  7.0.1.0     335ae35519     rhel-atomic-host     rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard  
+
+
+
+
+ROLLBACK
+
+-bash-4.2# atomic status
+  VERSION     ID             OSNAME               REFSPEC                                                             
+* 7.0.2       9a0dbc159e     rhel-atomic-host     rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard     
+  7.0.1.0     335ae35519     rhel-atomic-host     rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard     
+-bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin
+/ostree/deploy/rhel-atomic-host/deploy/9a0dbc159eedc7d3538a84ecedc6d7b6c73489b0f13a2ea043c4646ac9ae443a.0.origin
+-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/9a0dbc159eedc7d3538a84ecedc6d7b6c73489b0f13a2ea043c4646ac9ae443a.0.origin
+[origin]
+refspec=rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard
+-bash-4.2# atomic rollback
+Moving '335ae3551939b8de8fd6663ec9db834b1d2150fe7a5b9b1017b74c1070006888.0' to be first deployment
+Transaction complete; bootconfig swap: yes deployment count change: 0
+Changed:
+  docker-storage-setup-0.0.2-1.el7.noarch
+  kernel-3.10.0-123.8.1.el7.x86_64
+Sucessfully reset deployment order; run "systemctl reboot" to start a reboot
+-bash-4.2# echo $?
+0
+-bash-4.2# systemctl reboot
+Connection to 10.16.6.54 closed by remote host.
+Connection to 10.16.6.54 closed.
+[jsefler@jseflerT5400 ~]$ ssh -XYC root@10.16.6.54
+root@10.16.6.54's password: 
+Last login: Wed Oct 29 17:23:56 2014
+-bash-4.2# atomic status
+  VERSION     ID             OSNAME               REFSPEC                                                             
+* 7.0.1.0     335ae35519     rhel-atomic-host     rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard     
+  7.0.2       9a0dbc159e     rhel-atomic-host     rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard     
+-bash-4.2# 
+
+NOTE: This sample output shows that rhel-atomic-host d45dfe1... will be booted into on the next restart. The version to be booted on
+the next restart is printed first.
+
+
+
+
+UNSUBSCRIBING REMOVES THE REMOTE FROM /etc/ostree/remotes.d
+-bash-4.2# subscription-manager unsubscribe --all
+1 subscription removed at the server.
+1 local certificate has been deleted.
+-bash-4.2# atomic upgrade
+Updating from: rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard
+
+
+error: No remote 'remote "rhel-atomic-host-beta-ostree"' found in /etc/ostree/remotes.d
+-bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin
+/ostree/deploy/rhel-atomic-host/deploy/335ae3551939b8de8fd6663ec9db834b1d2150fe7a5b9b1017b74c1070006888.0.origin
+-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/335ae3551939b8de8fd6663ec9db834b1d2150fe7a5b9b1017b74c1070006888.0.origin
+[origin]
+refspec=rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard
+-bash-4.2# ls /etc/ostree/remotes.d
+-bash-4.2# 
+
+
+
+*/
