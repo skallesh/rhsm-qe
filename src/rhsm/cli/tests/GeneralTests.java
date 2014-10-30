@@ -641,6 +641,40 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="check the rpm requires list for changes to subscription-manager-plugin-container",
+			groups={},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRpmRequireListForSubscriptionManagerPluginContainer_Test() {
+		// initial version subscription-manager-plugin-container-1.13.7-1.el7.x86_64
+		String pkg = "subscription-manager-plugin-container";
+		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
+		
+		List<String> actualRequiresList = new ArrayList<String>();
+		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
+			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
+		}
+		
+		List<String> expectedRequiresList = new ArrayList<String>();
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
+			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
+		}
+		if (clienttasks.redhatReleaseX.equals("7")) {
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					//none
+			}));
+		}
+		
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
+	}
+	
+	
 	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) ahead of candlepin's clock, verify that a WARNING is logged to rhsm.log",
 			groups={"VerifyPositiveClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
 			enabled=true)
