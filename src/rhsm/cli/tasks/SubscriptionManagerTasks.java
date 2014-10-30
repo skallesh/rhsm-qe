@@ -92,6 +92,7 @@ public class SubscriptionManagerTasks {
 	public String msg_NeedListOrUpdateOption		= null;
 	public String msg_NetworkErrorUnableToConnect	= null;
 	public String msg_NetworkErrorCheckConnection	= null;
+	public String msg_RemoteErrorCheckConnection	= null;
 	public String msg_ClockSkewDetection			= null;
 	public String msg_ContainerMode					= null;
 	
@@ -559,6 +560,7 @@ if (false) {
 		msg_NetworkErrorCheckConnection = "Network error. Please check the connection details, or see "+rhsmLogFile+" for more information.";
 		msg_ClockSkewDetection			= "Clock skew detected, please check your system time";
 		msg_ContainerMode				= "subscription-manager is disabled when running inside a container. Please refer to your host system for subscription management.";
+		msg_RemoteErrorCheckConnection	= "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 	}
 	
 	public void setupRhnDefinitions(String gitRepository) {
