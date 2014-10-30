@@ -232,7 +232,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to register a user who has not yet accepted the Red Hat Terms and Conditions",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1089034"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1089034","blockedByBug-1068766"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=48502)
 	public void AttemptRegistrationWithUnacceptedTermsAndConditions_Test() {
@@ -244,9 +244,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		log.info("Attempting to register to a candlepin server using an account that has not yet accepted the Red Hat Terms and Conditions");
-		String stderrRegex = "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc";
+		String stderr = "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc .";
+		stderr += " You may have to log out of and back into the  Customer Portal in order to see the terms.";	// added by Bug 1068766 - (US48790, US51354, US55017) Subscription-manager register leads to unclear message
 		String command = clienttasks.registerCommand(username, password, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
-		RemoteFileTasks.runCommandAndAssert(client, command, new Integer(255), null, stderrRegex);
+		SSHCommandResult result = client.runCommandAndWait(command);
+		Assert.assertEquals(result.getExitCode(), new Integer(255),"Exitcode from attempt to register a user who has not accepted Terms and Conditions.");
+		Assert.assertEquals(result.getStdout().trim(),"","Stdout from attempt to register a user who has not accepted Terms and Conditions.");
+		Assert.assertEquals(result.getStderr().trim(),stderr,"Stderr from attempt to register a user who has not accepted Terms and Conditions.");
 		
 		// assert that a consumer cert and key have NOT been installed
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerKeyFile()), "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with invalid credentials.");
