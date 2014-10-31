@@ -1069,6 +1069,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			}
 			
 			// Test for match on Derived Provided ProductId:
+			// NOTE: list --available --matches is implemented server-side and appears to be searching the derivedProvidedProducts for product id matches.  Although unexpected, this feature has some benefit.
+			// This behavior is in contrast to list --consumed --matches which is implemented client-side and does NOT search the derivedProvidedProducts for match on product id.
+			// 10/31/2014 Verbal scrum discussion with devel decided to keep this behavior.
 			for (String derivedProvidedProductId : CandlepinTasks.getPoolDerivedProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
 				if (derivedProvidedProductId.toLowerCase().matches(regexString)) {
 					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Derived Provided Product ID: "+derivedProvidedProductId);
@@ -1375,14 +1378,17 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			}
 			
 			// Test for match on Derived Provided ProductId:
-			// TODO: I'm not sure if this should be included as part of the --consumed test - seems to be failing when included
-			//       May want to open a bug to include it.  Need to review with dgoodwin and crog to bring parity between list --consumed and --available
+			// NOTE: list --available --matches is implemented server-side and appears to be searching the derivedProvidedProducts for product id matches.  Although unexpected, this feature has some benefit.
+			// This behavior is in contrast to list --consumed --matches which is implemented client-side and does NOT search the derivedProvidedProducts for match on product id.
+			// 10/31/2014 Verbal scrum discussion with devel decided to keep this behavior.
+			/* Not testing for a derivedProvidedProduct ID match against --consumed as a result of discussion above 
 			for (String derivedProvidedProductId : CandlepinTasks.getPoolDerivedProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumedProductSubscription.poolId)) {
 				if (derivedProvidedProductId.toLowerCase().matches(regexString)) {
 					log.info("Found a hit on matches '"+matchesString+"' against the consumed subscription '"+consumedProductSubscription.productName+"' Derived Provided Product ID: "+derivedProvidedProductId);
 					if (!expectedProductSubscriptionMatches.contains(consumedProductSubscription)) expectedProductSubscriptionMatches.add(consumedProductSubscription);		
 				}
 			}
+			*/
 			
 			// TODO May want to open an RFE to also search on these other consumed product fields
 			// See https://bugzilla.redhat.com/show_bug.cgi?id=1146125#c7
