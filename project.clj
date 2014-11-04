@@ -5,7 +5,7 @@
   :main rhsm.runtestng
   :aot [#"^rhsm.gui.tests"] ;regex to find tests that testng will run
   :keep-non-project-classes true
-  :dependencies [[clj-http "0.5.5"]
+  :dependencies [[clj-http "0.9.2"]
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
                  [com.redhat.qe/assertions "1.0.2"]
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
