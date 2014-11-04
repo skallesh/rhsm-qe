@@ -1575,6 +1575,99 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager: subcription manager list --available with --matches='nothing'",
+			groups={"blockedByBug-1146125"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListAvailableWithMatchesNothing_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.6-1")) throw new SkipException("The list --matches function was not implemented in this version of subscription-manager.");
+		
+		String matchesString = "nothing";
+		
+		// register if necessary
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		
+		// test
+		SSHCommandResult result = clienttasks.list(null, true, null, null, null, null, null, null, matchesString, null, null, null);
+		Assert.assertEquals(result.getExitCode(),new Integer(0),	"Exitcode expected from calling list --available --matches with no expected matches.");
+		Assert.assertEquals(result.getStdout().trim(),"No available subscription pools matching the specified criteria were found.",			"Stdout expected from calling list --consumed --matches with no expected matches.");
+		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected from calling list --available --matches with no expected matches.");
+	}
+	
+	
+	@Test(	description="subscription-manager: subcription manager list --consumed with --matches='nothing'",
+			groups={"blockedByBug-1146125"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListConsumedWithMatchesNothing_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.6-1")) throw new SkipException("The list --matches function was not implemented in this version of subscription-manager.");
+		
+		String matchesString = "nothing";
+		
+		// register if necessary
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		}
+		
+		// attach any random pool
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null,null);
+		
+		// test
+		SSHCommandResult result = clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null);
+		Assert.assertEquals(result.getExitCode(),new Integer(0),	"Exitcode expected from calling list --consumed --matches with no expected matches.");
+		Assert.assertEquals(result.getStdout().trim(),"No consumed subscription pools matching the specified criteria were found.",			"Stdout expected from calling list --available --consumed with no expected matches.");
+		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected from calling list --consumed --matches with no expected matches.");
+	}
+	
+	
+	@Test(	description="subscription-manager: subcription manager list --installed with --matches='nothing'",
+			groups={"blockedByBug-1146125"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListInstalledWithMatchesNothing_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.6-1")) throw new SkipException("The list --matches function was not implemented in this version of subscription-manager.");
+		
+		String matchesString = "nothing";
+		
+		SSHCommandResult result = clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null);
+		Assert.assertEquals(result.getExitCode(),new Integer(0),	"Exitcode expected from calling list --installed --matches with no expected matches.");
+		Assert.assertEquals(result.getStdout().trim(),"No installed products matching the specified criteria were found.",			"Stdout expected from calling list --installed --consumed with no expected matches.");
+		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected from calling list --installed --matches with no expected matches.");
+	}
+	
+	
+	@Test(	description="subscription-manager: subcription manager list --available --consumed --installed with --matches='nothing'",
+			groups={"blockedByBug-1146125"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListAvailableConsumedInstalledWithMatchesNothing_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.6-1")) throw new SkipException("The list --matches function was not implemented in this version of subscription-manager.");
+		
+		String matchesString = "nothing";
+		
+		// register if necessary
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		}
+		
+		// attach any random pool
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null,null);
+		
+		// test
+		SSHCommandResult result = clienttasks.list(null, true, true, true, null, null, null, null, matchesString, null, null, null);
+		Assert.assertEquals(result.getExitCode(),new Integer(0),	"Exitcode expected from calling list --installed --available --consumed --matches with no expected matches.");
+		Assert.assertEquals(result.getStdout().trim(),"No installed products matching the specified criteria were found.\nNo available subscription pools matching the specified criteria were found.\nNo consumed subscription pools matching the specified criteria were found.",			"Stdout expected from calling list --installed --available --consumed --matches with no expected matches.");
+		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected from calling list --installed --available --consumed --matches with no expected matches.");
+	}
 	
 	
 	@Test(	description="subscription-manager: subcription manager list consumed should filter by servicelevel when this option is passed.",
