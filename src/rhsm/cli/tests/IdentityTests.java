@@ -75,8 +75,11 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			for (String password : new String[]{null,sm_clientPassword}) {
 				for (Boolean regenerate : new Boolean[]{null,true,false}) {
 					SSHCommandResult identityResult = clienttasks.identity_(username,password,regenerate, null, null, null, null);
-					Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,
-						"One must be registered to have an identity.");
+					if (clienttasks.isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+						Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered,"One must be registered to have an identity.");
+					} else {
+						Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"One must be registered to have an identity.");
+					}
 				}
 			}
 		}
@@ -301,7 +304,11 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// first attempt without --force
 		SSHCommandResult identityResult = clienttasks.identity_("FOO","BAR",Boolean.TRUE, null, null, null, null);
 		Assert.assertNotSame(identityResult.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
-		Assert.assertEquals(identityResult.getStdout().trim(),"--username and --password can only be used with --force");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(identityResult.getStderr().trim(),"--username and --password can only be used with --force");
+		} else {
+			Assert.assertEquals(identityResult.getStdout().trim(),"--username and --password can only be used with --force");
+		}
 		// now attempt with --force
 		identityResult = clienttasks.identity_("FOO","BAR",Boolean.TRUE, Boolean.TRUE, null, null, null);
 		Assert.assertNotSame(identityResult.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
@@ -353,9 +360,11 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedMsg = String.format("Unit %s has been deleted",consumerCert.consumerid);
 		String ignoreStderr = "stty: standard input: Invalid argument";
 		SSHCommandResult result;
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) expectedExitCode=new Integer(70);	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 
 		result = clienttasks.identity_(null,null,null,null,null,null,null);
-		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		
@@ -366,7 +375,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 //		Assert.assertEquals(result.getStderr().trim().replace(ignoreStderr, ""),"",			"Stderr expected after the consumer has been deleted on the server-side (ignoring \""+ignoreStderr+"\").");	// 11/20/2012 RHEL64 subscription-manager-1.1.10-1.el6.x86_64  Not sure why this extra ignoreStderr started showing up.
 		
 		result = clienttasks.refresh_(null, null, null);
-		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		
@@ -384,7 +393,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim()+result.getStderr().trim(),expectedMsg, "Feedback expected after the consumer has been deleted on the server-side.");
 		
 		result = clienttasks.service_level_(null,null,null,null,null,null,null,null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		
@@ -418,7 +427,12 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(client.runCommandAndWait("md5sum "+consumerCertKeyOld).getStdout().replaceAll(consumerCertKeyOld, "").trim(), consumerKey_md5sum.replaceAll(clienttasks.consumerKeyFile(), "").trim(), "After the deleted consumer key is backed up, its md5sum matches that from the original consumer key.");
 		
 		// assert that the system is no longer registered and no entitlements remain
-		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),clienttasks.msg_ConsumerNotRegistered,"The system should no longer be registered after rhsmcertd triggers following a server-side consumer deletion.");
+		result = clienttasks.identity_(null,null,null,null,null,null,null);
+		if (clienttasks.isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getStderr().trim(),clienttasks.msg_ConsumerNotRegistered,"The system should no longer be registered after rhsmcertd triggers following a server-side consumer deletion.");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_ConsumerNotRegistered,"The system should no longer be registered after rhsmcertd triggers following a server-side consumer deletion.");
+		}
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCertFiles().isEmpty(),"The system should no longer have any entitlements after rhsmcertd triggers following a server-side consumer deletion.");
 		
 		// add asserts for Bug 1026501 - deleting consumer will move splice identity cert
