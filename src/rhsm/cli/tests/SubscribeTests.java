@@ -991,7 +991,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// for debugging purposes, list what is currently available so we can see the available quantity before we attempt to attach
-		clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null);
+		clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null);
 		
 		// subscribe with quantity
 		SSHCommandResult sshCommandResult = clienttasks.subscribe_(null,null,pool.poolId,null,null,quantity,null,null,null, null, null);

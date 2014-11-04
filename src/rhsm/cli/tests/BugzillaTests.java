@@ -1159,7 +1159,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 //		String result=clienttasks.listAvailableSubscriptionPools().getStdout();
-		String result=clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null).getStdout();
+		String result=clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null).getStdout();
 		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, logMessage).trim().equals(""));
 		Assert.assertNoMatch(result.trim(), clienttasks.msg_NetworkErrorCheckConnection);
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
@@ -2528,7 +2528,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		Assert.assertNotNull(availList);
 		clienttasks.unregister(null, null, null);
 		availList = clienttasks.list_(true, true, null, null, null, null, null,
-				null, null, null, null, null).getStdout();
+				null, null, null, null, null, null).getStdout();
 		String expected = "This system is not yet registered. Try 'subscription-manager register --help' for more information.";
 		Assert.assertEquals(availList.trim(), expected);
 		ConsumerCert consumercert = clienttasks.getCurrentConsumerCert();
@@ -2689,7 +2689,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 						+ " > /tmp/stdout; mv /tmp/stdout -f "
 						+ clienttasks.consumerCertFile(), 0);
 		String result = clienttasks.list_(null, true, null, null, null, null,
-				null, null, null, null, null, null).getStdout();
+				null, null, null, null, null, null, null).getStdout();
 		Assert.assertEquals(result.trim(),
 				clienttasks.msg_ConsumerNotRegistered);
 		client.runCommandAndWait("mv -f /etc/pki/consumer/cert.pem.save /etc/pki/consumer/cert.pem");
@@ -2981,7 +2981,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 						+ " > /tmp/stdout; mv /tmp/stdout -f "
 						+ certs.get(randomGenerator.nextInt(certs.size())), 0);
 		String consumed = clienttasks.list_(null, null, true, null, null, null,
-				null, null, null, null, null, null).getStderr();
+				null, null, null, null, null, null, null).getStderr();
 		Assert.assertEquals(consumed.trim(), "Error loading certificate");
 
 	}
@@ -4334,14 +4334,14 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 	public List<SubscriptionPool> getAvailableFutureSubscriptionsOndate(
 			String onDateToTest) {
 		return SubscriptionPool.parse(clienttasks.list_(null, true, null, null,
-				null, onDateToTest, null, null, null, null, null, null).getStdout());
+				null, onDateToTest, null, null, null, null, null, null, null).getStdout());
 	}
 
 	protected List<String> listFutureSubscription_OnDate(Boolean available,
 			String ondate) {
 		List<String> PoolId = new ArrayList<String>();
 		SSHCommandResult result = clienttasks.list_(true, true, null, null,
-				null, ondate, null, null, null, null, null, null);
+				null, ondate, null, null, null, null, null, null, null);
 		List<SubscriptionPool> Pool = SubscriptionPool
 				.parse(result.getStdout());
 		for (SubscriptionPool availablePool : Pool) {
