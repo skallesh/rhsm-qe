@@ -333,7 +333,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> subscriptionPools = getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(), 3);	// 3 is sufficient
 		for (SubscriptionPool subscriptionPool : subscriptionPools) poolIds.add(subscriptionPool.poolId);
 		if (poolIds.isEmpty()) throw new SkipException("Cannot test rhsm-debug when no subscription pools are available."); 
-		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null);
 
 		// run rhsm-debug system
 		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, noArchive, sos, noSubscriptions, null, null, null);

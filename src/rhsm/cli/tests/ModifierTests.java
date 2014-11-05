@@ -86,7 +86,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 //		}
 		List<String> modifiedPoolIds = new ArrayList<String>();
 		for (SubscriptionPool pool : poolsModified) modifiedPoolIds.add(pool.poolId);
-		clienttasks.subscribe(null, null, modifiedPoolIds, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, modifiedPoolIds, null, null, null, null, null, null, null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(modifierPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
 		if (areAllRequiredTagsProvided) {
 			Assert.assertTrue(clienttasks.getYumRepolist("all").contains(label),

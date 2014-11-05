@@ -630,7 +630,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			SubscriptionPool futurePool = (SubscriptionPool) futureSystemSubscriptionPoolsData[randomGenerator.nextInt(futureSystemSubscriptionPoolsData.length)][0];
 			
 			// subscribe to the future subscription pool
-			SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,futurePool.poolId,null,null,null,null,null,null,null, null);
+			SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,futurePool.poolId,null,null,null,null,null,null,null, null, null);
 	
 			// assert that the granted entitlement cert begins in the future
 			Calendar now = new GregorianCalendar();	now.setTimeInMillis(System.currentTimeMillis());
@@ -689,7 +689,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		//clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();	// FAILS ON LARGE CONTENT SET SUBSCRIPTIONS
 		// assemble a list of all the available SubscriptionPool ids
 		for (SubscriptionPool pool :  clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			SSHCommandResult result = clienttasks.subscribe_(null,null, pool.poolId, null, null, null, null, null, null, null, null);	// do not check for success since the large content set subscriptions will expectedly fail
+			SSHCommandResult result = clienttasks.subscribe_(null,null, pool.poolId, null, null, null, null, null, null, null, null, null);	// do not check for success since the large content set subscriptions will expectedly fail
 			if (result.getExitCode().equals(new Integer(0))) break; // we only really need one for our tests
 		}
 		

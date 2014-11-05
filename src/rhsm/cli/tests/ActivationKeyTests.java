@@ -586,7 +586,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		ConsumerType consumerType = requires_consumer_type==null?null:ConsumerType.valueOf(requires_consumer_type);
 		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
 		SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", jsonPool.getString("id"), clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-		clienttasks.subscribe(null, null, jsonPool.getString("id"), null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, jsonPool.getString("id"), null, null, null, null, null, null, null, null, null);
 
 		// remember the consuming consumerId
 		// String consumer1Id = clienttasks.getCurrentConsumerId();

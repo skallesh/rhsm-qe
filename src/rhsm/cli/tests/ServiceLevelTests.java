@@ -317,7 +317,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			// when the system is already valid (all of the currently installe products are subscribed), then auto-subscribe will do nothing and the service level will remain
 			if (clienttasks.getFactValue("system.entitlements_valid").equalsIgnoreCase("valid")) {
 				// verify that auto-subscribe will throw a blocker message and the current service level will remain
-				SSHCommandResult result = clienttasks.subscribe_(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null);
+				SSHCommandResult result = clienttasks.subscribe_(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
 				String expectedStdout = "All installed products are covered by valid entitlements. No need to update subscriptions at this time.";
 				Assert.assertTrue(result.getStdout().trim().startsWith(expectedStdout), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+expectedStdout);
 				Assert.assertEquals(clienttasks.getCurrentServiceLevel(), currentServiceLevel, "When the system is already compliant, an attempt to auto-subscribe with a servicelevel should NOT alter the current service level: "+currentServiceLevel);
@@ -325,7 +325,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			}
 			
 			// auto-subscribe and assert that the requested service level is persisted
-			clienttasks.subscribe_(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null);
+			clienttasks.subscribe_(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null, null);
 			currentServiceLevel = clienttasks.getCurrentServiceLevel();
 			Assert.assertEquals(currentServiceLevel, serviceLevel, "When the system is auto subscribed with the service level option, the service level should be persisted as the new preference.");
 		}
@@ -450,7 +450,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
 		// subscribe with auto specifying an unavailable service level
-		SSHCommandResult result = clienttasks.subscribe_(true,"FOO",(String)null,null,null,null,null,null,null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(true,"FOO",(String)null,null,null,null,null,null,null, null, null, null);
 		String expectedStdout = "Cannot set a service level for a consumer that is not available to its organization.";
 		expectedStdout = String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg);	// valid before bug fix 864508
 		expectedStdout = String.format("Service level '%s' is not available to consumers of organization %s.","FOO",sm_clientOrg);	// valid before bug fix 864508
@@ -482,7 +482,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();	// may help avoid: Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a99f98146b4fa9d0146b7e4d5d34375] at org.hibernate.UnresolvableObjectException.throwIfNull:64
 		
 		// autosubscribe with a valid service level
-		SSHCommandResult subscribeResult = clienttasks.subscribe(true,serviceLevel,(String)null,(String)null,(String)null,null,null,null,null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(true,serviceLevel,(String)null,(String)null,(String)null,null,null,null,null, null, null, null);
 		
 		// get the current consumer object and assert that the serviceLevel persisted
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+clienttasks.getCurrentConsumerId()));
@@ -552,7 +552,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 		
 		// autosubscribe again without specifying a service level
-		clienttasks.subscribe(true,null,(String)null,(String)null,(String)null,null,null,null,null, null, null);
+		clienttasks.subscribe(true,null,(String)null,(String)null,(String)null,null,null,null,null, null, null, null);
 		
 		// get the current consumer object and assert that the serviceLevel persisted even though the subscribe did NOT specify a service level
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "The call to subscribe with auto (without specifying a servicelevel) did not alter current servicelevel.");
@@ -620,14 +620,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	
 		// autosubscribe specifying a valid service level and get the installed product status
-		List<InstalledProduct> installedProductsAfterAutosubscribingWithServiceLevel= InstalledProduct.parse(clienttasks.subscribe(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null).getStdout());
+		List<InstalledProduct> installedProductsAfterAutosubscribingWithServiceLevel= InstalledProduct.parse(clienttasks.subscribe(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null, null).getStdout());
 		
 		// unsubscribe from all entitlements
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// autosubscribe specifying a mixed case service level and get the installed product status
 		String mixedCaseServiceLevel = randomizeCaseOfCharactersInString(serviceLevel);
-		List<InstalledProduct> installedProductsAfterAutosubscribingWithMixedCaseServiceLevel= InstalledProduct.parse(clienttasks.subscribe(true, mixedCaseServiceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null).getStdout());
+		List<InstalledProduct> installedProductsAfterAutosubscribingWithMixedCaseServiceLevel= InstalledProduct.parse(clienttasks.subscribe(true, mixedCaseServiceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null, null).getStdout());
 
 		// assert that the two lists are identical (independent of the serviceLevel case specified during autosubscribe)
 		Assert.assertEquals(installedProductsAfterAutosubscribingWithMixedCaseServiceLevel.size(), clienttasks.getCurrentProductCertFiles().size(), "The subscribe output displayed the same number of installed product status's as the number of installed product certs.");

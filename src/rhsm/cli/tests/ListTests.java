@@ -351,7 +351,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// subscribe to a randomly available pool
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null);
+		clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null, null);
 		
 		// verify the list of consumed subscriptions reports the pool.poolId
 		List<ProductSubscription> consumedProductSubscriptionsFromPool = ProductSubscription.findAllInstancesWithMatchingFieldFromList("poolId", pool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
@@ -713,7 +713,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS Server Basic (multi-entitlement)",availableSubscriptionPools).poolId);
 			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS Modifier",availableSubscriptionPools).poolId);
 		}
-		clienttasks.subscribe(null, null, poolIds, null, null, "1", null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, "1", null, null, null, null, null, null);
 		
 		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null,null,null,true,null,null,null,null,null,null,null, null, null).getStdout());
 		List<SubscriptionPool> availableSubscriptionPoolsWithoutOverlap = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, true, null, null, null, null, null).getStdout());
@@ -1431,7 +1431,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<String> poolIds = new ArrayList<String>();
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : subscriptionPools) poolIds.add(pool.poolId);
-		if (!poolIds.isEmpty()) clienttasks.subscribe(null,null,poolIds, null, null, "1", null, null,null,null,null);
+		if (!poolIds.isEmpty()) clienttasks.subscribe(null,null,poolIds, null, null, "1", null, null,null,null,null, null);
 		
 		// get all the installed products
 		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, null, null, null, null, null).getStdout());
@@ -1491,7 +1491,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<String> poolIds = new ArrayList<String>();
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : subscriptionPools) poolIds.add(pool.poolId);
-		if (!poolIds.isEmpty()) clienttasks.subscribe(null,null,poolIds, null, null, "1", null, null,null,null,null);
+		if (!poolIds.isEmpty()) clienttasks.subscribe(null,null,poolIds, null, null, "1", null, null,null,null,null, null);
 		
 		// get all the installed products
 		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, null, null, null, null, null).getStdout());
@@ -1616,7 +1616,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null,null);
+		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null,null, null);
 		
 		// test
 		SSHCommandResult result = clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null);
@@ -1660,7 +1660,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null,null);
+		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null,null, null);
 		
 		// test
 		SSHCommandResult result = clienttasks.list(null, true, true, true, null, null, null, null, matchesString, null, null, null, null);

@@ -53,7 +53,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		clienttasks.autoheal(null, null, true, null, null, null);
 		
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
-			clienttasks.subscribe(null, null, pool.poolId, null, null, "1", null, null, null, null, null);
+			clienttasks.subscribe(null, null, pool.poolId, null, null, "1", null, null, null, null, null, null);
 		}
 //DELETEME
 //		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
@@ -175,7 +175,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
 		
-		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 		
 		for(InstalledProduct installed : getRamBasedProducts()){
 			Assert.assertEquals(installed.status.trim(), "Subscribed", "Status of installed product '"+installed.productName+"'.");
@@ -244,7 +244,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
-			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		}
 		
 //DELETEME
@@ -312,7 +312,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		
 		for(SubscriptionPool pool :getRamBasedSubscriptions()){
 			if(pool.subscriptionName.contains("8GB")){
-				clienttasks.subscribe(null, null, pool.poolId, null, null, "1", null, null, null, null, null);
+				clienttasks.subscribe(null, null, pool.poolId, null, null, "1", null, null, null, null, null, null);
 				for (String productName : pool.provides) {
 					for (InstalledProduct installed : InstalledProduct.findAllInstancesWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts())) {
 						if(ramvalue<=4){

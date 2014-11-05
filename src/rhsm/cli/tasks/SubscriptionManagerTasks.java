@@ -3977,6 +3977,27 @@ if (false) {
 	
 	// list module tasks ************************************************************
 	
+	public String listCommand(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;				command += " list";	
+		if (all!=null && all)						command += " --all";
+		if (available!=null && available)			command += " --available";
+		if (consumed!=null && consumed)				command += " --consumed";
+		if (installed!=null && installed)			command += " --installed";
+		if (ondate!=null)							command += " --ondate="+ondate;
+		if (servicelevel!=null)						command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
+		if (matchInstalled!=null && matchInstalled)	command += " --match-installed";
+		if (noOverlap!=null && noOverlap)			command += " --no-overlap";
+		if (matches!=null)							command += " --matches="+String.format(matches.contains(" ")||matches.isEmpty()?"\"%s\"":"%s", matches);	// quote a value containing spaces or is empty
+		if (poolOnly!=null && poolOnly)				command += " --pool-only";
+		if (proxy!=null)							command += " --proxy="+proxy;
+		if (proxyuser!=null)						command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)					command += " --proxypassword="+proxypassword;
+		
+		return command;
+	}
+	
 	/**
 	 * list without asserting results
 	 * @param all TODO
@@ -3995,21 +4016,22 @@ if (false) {
 	 */
 	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the command
-		String command = this.command;				command += " list";	
-		if (all!=null && all)						command += " --all";
-		if (available!=null && available)			command += " --available";
-		if (consumed!=null && consumed)				command += " --consumed";
-		if (installed!=null && installed)			command += " --installed";
-		if (ondate!=null)							command += " --ondate="+ondate;
-		if (servicelevel!=null)						command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
-		if (matchInstalled!=null && matchInstalled)	command += " --match-installed";
-		if (noOverlap!=null && noOverlap)			command += " --no-overlap";
-		if (matches!=null)							command += " --matches="+String.format(matches.contains(" ")||matches.isEmpty()?"\"%s\"":"%s", matches);	// quote a value containing spaces or is empty
-		if (poolOnly!=null && poolOnly)				command += " --pool-only";
-		if (proxy!=null)							command += " --proxy="+proxy;
-		if (proxyuser!=null)						command += " --proxyuser="+proxyuser;
-		if (proxypassword!=null)					command += " --proxypassword="+proxypassword;
+//		// assemble the command
+//		String command = this.command;				command += " list";	
+//		if (all!=null && all)						command += " --all";
+//		if (available!=null && available)			command += " --available";
+//		if (consumed!=null && consumed)				command += " --consumed";
+//		if (installed!=null && installed)			command += " --installed";
+//		if (ondate!=null)							command += " --ondate="+ondate;
+//		if (servicelevel!=null)						command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
+//		if (matchInstalled!=null && matchInstalled)	command += " --match-installed";
+//		if (noOverlap!=null && noOverlap)			command += " --no-overlap";
+//		if (matches!=null)							command += " --matches="+String.format(matches.contains(" ")||matches.isEmpty()?"\"%s\"":"%s", matches);	// quote a value containing spaces or is empty
+//		if (poolOnly!=null && poolOnly)				command += " --pool-only";
+//		if (proxy!=null)							command += " --proxy="+proxy;
+//		if (proxyuser!=null)						command += " --proxyuser="+proxyuser;
+//		if (proxypassword!=null)					command += " --proxypassword="+proxypassword;
+		String command = listCommand(all, available, consumed, installed, servicelevel, ondate, matchInstalled, noOverlap, matches, poolOnly, proxy, proxyuser, proxypassword);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -4491,8 +4513,9 @@ if (false) {
 	/**
 	 * subscribe WITHOUT asserting results
 	 * @param servicelevel TODO
+	 * @param file TODO
 	 */
-	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;									command += " subscribe";
@@ -4504,6 +4527,7 @@ if (false) {
 		if (quantity!=null)												command += " --quantity="+quantity;
 		if (email!=null)												command += " --email="+email;
 		if (locale!=null)												command += " --locale="+locale;
+		if (file!=null)													command += " --file="+file;
 		if (proxy!=null)												command += " --proxy="+proxy;
 		if (proxyuser!=null)											command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
@@ -4530,14 +4554,15 @@ if (false) {
 	/**
 	 * subscribe WITHOUT asserting results.
 	 * @param servicelevel TODO
+	 * @param file TODO
 	 */
-	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> poolIds	= poolId==null?null:Arrays.asList(new String[]{poolId});
 		List<String> productIds	= productId==null?null:Arrays.asList(new String[]{productId});
 		List<String> regtokens	= regtoken==null?null:Arrays.asList(new String[]{regtoken});
 
-		return subscribe_(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
+		return subscribe_(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword);
 	}
 
 
@@ -4545,10 +4570,11 @@ if (false) {
 	/**
 	 * subscribe and assert all results are successful
 	 * @param servicelevel TODO
+	 * @param file TODO
 	 */
-	public SSHCommandResult subscribe(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = subscribe_(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = subscribe_(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword);
 		auto = auto==null? false:auto;	// the non-null default value for auto is false
 
 		// assert results...
@@ -4598,7 +4624,7 @@ if (false) {
 			Assert.assertTrue(sshCommandResult.getStdout().contains("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
 		else {
 			//Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports 'Success'.");
-			if (poolIds.size()==1) {
+			if (file!=null || poolIds.size()==1) {
 				Assert.assertTrue(workaroundForBug906550(sshCommandResult.getStdout()).startsWith("Success"), "The subscribe stdout reports a 'Success'fully attached subscription.");
 			} else {
 				Assert.assertTrue(workaroundForBug906550(sshCommandResult.getStdout()).contains("Success"), "The subscribe stdout reports at least one 'Success'fully attached subscription.");			
@@ -4617,14 +4643,15 @@ if (false) {
 	/**
 	 * subscribe and assert all results are successful
 	 * @param servicelevel TODO
+	 * @param file TODO
 	 */
-	public SSHCommandResult subscribe(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 
 		List<String> poolIds	= poolId==null?null:Arrays.asList(new String[]{poolId});
 		List<String> productIds	= productId==null?null:Arrays.asList(new String[]{productId});
 		List<String> regtokens	= regtoken==null?null:Arrays.asList(new String[]{regtoken});
 
-		return subscribe(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
+		return subscribe(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword);
 	}
 	
 	
@@ -4659,7 +4686,7 @@ if (false) {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, quantity, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, quantity, null, null, null, null, null, null);
 
 		// is this pool multi-entitleable?
 		/* This information is now in the SubscriptionPool itself
@@ -4918,7 +4945,7 @@ if (false) {
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, quantity, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, quantity, null, null, null, null, null, null);
 
 		// get the serial of the entitlement that was granted from this pool
 		//BigInteger serialNumber = CandlepinTasks.getOwnersNewestEntitlementSerialCorrespondingToSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,getCurrentlyRegisteredOwnerKey(),pool.poolId);
@@ -5017,7 +5044,7 @@ if (false) {
 		for (SubscriptionPool pool : poolsBeforeSubscribe) {
 			poolIds.add(pool.poolId);
 		}
-		if (!poolIds.isEmpty()) subscribe(null,null, poolIds, null, null, null, null, null, null, null, null);
+		if (!poolIds.isEmpty()) subscribe(null,null, poolIds, null, null, null, null, null, null, null, null, null);
 		
 		// assert results when assumingRegisterType="system"
 		if (currentlyRegisteredType==null || currentlyRegisteredType.equals(ConsumerType.system)) {
@@ -5066,7 +5093,7 @@ if (false) {
 		List<SubscriptionPool> subscriptionPools = getCurrentlyAllAvailableSubscriptionPools();
 		for (SubscriptionPool pool : subscriptionPools) poolIds.add(pool.poolId);
 
-		if (!poolIds.isEmpty()) subscribe(null,null,poolIds, null, null, null, null, null,null,null,null);
+		if (!poolIds.isEmpty()) subscribe(null,null,poolIds, null, null, null, null, null,null,null,null, null);
 		
 		// assert
 		assertNoAvailableSubscriptionPoolsToList(true,"Asserting that no available subscription pools remain after simultaneously subscribing to all available.");

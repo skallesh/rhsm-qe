@@ -143,7 +143,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 //if (!pool.productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting productId="+pool.productId);
 		
 		// subscribe to the future SubscriptionPool
-		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null, null);
 		// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
 		// Pool is restricted to physical systems: '8a9086d3443c043501443c052aec1298'.
 		if (subscribeResult.getStdout().startsWith("Pool is restricted")) {
@@ -832,7 +832,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 
 		// testing the subscribe case...
-		clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		log.info("Immediately after attaching a subscription, we will now assert that all of the content repos from the currently attached entitlements are currently present in the redhat.repo without having triggered a yum transaction...");
 		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
 		
@@ -842,7 +842,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
 		
 		// testing the autosubscribe case...
-		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null, null);
 		log.info("Immediately after autoattaching subscription(s), we will now assert that all of the content repos from the currently attached entitlements are currently present in the redhat.repo without having triggered a yum transaction...");
 		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
 		

@@ -181,7 +181,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-4", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-unlimited", pools);
 		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);	// RHEL59: THIS IS GENERATING EXTRA CONSUMER MODIFIED EVENTS THAT WE DON'T REALLY WANT TO TEST 
-		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null);
 		List<String> newEventTitles = new ArrayList<String>();
 		newEventTitles.add("COMPLIANCE CREATED");	// COMPLIANCE CREATED events were added to support gutterball
 		newEventTitles.add("ENTITLEMENT CREATED");
@@ -588,7 +588,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.candlepin,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null);
 		//String consumerKey = result.getStdout().split(" ")[0];
 		
 		// get the owner and consumer feeds before we test the firing of a new event

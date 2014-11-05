@@ -138,7 +138,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			// regardless of sockets (this effectively satisfies the "either-or" behavior when a virtual system
 			// consumes from the instance based pool - the quantity consumed decrements by one)
 
-			clienttasks.subscribe(false,null,pool.poolId,null,null,"1",null,null,null,null,null);
+			clienttasks.subscribe(false,null,pool.poolId,null,null,"1",null,null,null,null,null, null);
 			
 			// assert the installed provided products are compliant
 			currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -157,10 +157,10 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				// issue a sacrificial autosubscribe call to get most of the entitlements attached.  If it times out, the post_auto_attach hooks will not get called
-				clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null);
+				clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null, null);
 			}
 			// END OF WORKAROUND
-			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
+			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null);
 			
 			// assert the quantity of consumption
 			if (!providedProductIdsActuallyInstalled.isEmpty()) {
@@ -193,7 +193,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			// start by attempting to subscribe in quantities that are NOT evenly divisible by the instance_multiplier
 			int quantityAttached=0;
 			for (int quantityAttempted=0; quantityAttempted<=poolInstanceMultiplier+1; quantityAttempted++) {
-				SSHCommandResult sshCommandResult = clienttasks.subscribe_(false,null,pool.poolId,null,null,String.valueOf(quantityAttempted),null,null,null,null,null);
+				SSHCommandResult sshCommandResult = clienttasks.subscribe_(false,null,pool.poolId,null,null,String.valueOf(quantityAttempted),null,null,null,null,null, null);
 				if (quantityAttempted==0) {
 					Assert.assertEquals(sshCommandResult.getStdout().trim(), "Error: Quantity must be a positive integer.", "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
 					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
@@ -245,7 +245,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
 			*/
 			// instead let's attempt auto-subscribing which should complete the stack
-			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
+			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null);
 			
 			// assert the total quantity of consumption
 			if (!providedProductIdsActuallyInstalled.isEmpty()) {
@@ -321,7 +321,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				// consume an entitlement from the subPool so that we can test Bug 1000444
 				SubscriptionPool subSubscriptionPool = availableInstanceBasedSubscriptionPools.get(0);
 				//clienttasks.subscribeToSubscriptionPool(subSubscriptionPool);
-				clienttasks.subscribe_(false,null,subSubscriptionPool.poolId,null,null,"1",null,null,null,null,null);
+				clienttasks.subscribe_(false,null,subSubscriptionPool.poolId,null,null,"1",null,null,null,null,null, null);
 				ProductSubscription subProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", subSubscriptionPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
 				// assert Bug 1000444 - Instance based subscription on the guest gets merged with other subscription when a future instance based subscription is added on the host
 				Assert.assertTrue(subProductSubscription.provides.containsAll(productSubscription.provides)&&productSubscription.provides.containsAll(subProductSubscription.provides), "The list of provided products from the consumed subpool "+subProductSubscription.provides+" should be the same as the provided products from the consumed hostpool "+productSubscription.provides+".");

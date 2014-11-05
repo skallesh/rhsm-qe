@@ -363,7 +363,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// valid prior to bug 1034396	Assert.assertEquals(listResultAfterUnsubscribe.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached (but should still have overrides cached in the consumer).");
 		Assert.assertEquals(listResultAfterUnsubscribe.getStdout(), listResultBeforeUnsubscribe.getStdout(), "Stdout from repo-override --list without any subscriptions attached should be identical to the list when subscriptions were attached.");
 		Assert.assertTrue(clienttasks.getCurrentlySubscribedYumRepos().isEmpty(), "The YumRepos in '"+clienttasks.redhatRepoFile+"' should be empty after unsubscribing from each serial.");
-		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null);
 		
 		// ...and verify the YumRepos read from the redhat.repo file persists the overrides
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, false/*because after unsubscribe/resubscribe the current yum repos come from a new entitlement and therefore cannot be equal to the originalYumRepo value for sslclientcert and sslclientkey*/);
@@ -443,7 +443,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// valid prior to bug 1034396	Assert.assertEquals(listResultAfterUnsubscribe.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached (but should still have overrides cached in the consumer).");
 		Assert.assertEquals(listResultAfterUnsubscribe.getStdout(), listResultBeforeUnsubscribe.getStdout(), "Stdout from repo-override --list without any subscriptions attached should be identical to the list when subscriptions were attached.");
 		Assert.assertTrue(clienttasks.getCurrentlySubscribedYumRepos().isEmpty(), "The YumRepos in '"+clienttasks.redhatRepoFile+"' should be empty after unsubscribing from each serial.");
-		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null);
 		
 		// ...and verify the YumRepos read from the redhat.repo file persists the overrides
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, false/*because after unsubscribe/resubscribe the current yum repos come from a new entitlement and therefore cannot be equal to the originalYumRepo value for sslclientcert and sslclientkey*/);

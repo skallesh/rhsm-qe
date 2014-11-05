@@ -154,7 +154,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// subscribe to the future SubscriptionPool
-		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null, null);
 		// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
 		// Pool is restricted to physical systems: '8a9086d3443c043501443c052aec1298'.
 		if (subscribeResult.getStdout().startsWith("Pool is restricted")) {
@@ -297,7 +297,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		// subscribe to all of the available pools
 		List<String> poolIds = new ArrayList<String>();
 		for (SubscriptionPool pool : pools) poolIds.add(pool.poolId);
-		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null);
 		
 		// prepare a list of currently consumed serials that we can use to collectively unsubscribe from
 		List<BigInteger> serials = new ArrayList<BigInteger>();
@@ -325,7 +325,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		for (BigInteger serial : serials) revokedSerials.add(serial);
 		
 		// re-subscribe to all the available pools again
-		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null);
 		
 		// re-prepare a list of currently consumed serials that we can use to collectively unsubscribe from
 		// include the revokedSerials by interleaving them into the currently consumed serials
@@ -450,8 +450,8 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			List<String> client2poolIds = new ArrayList<String>();
 			for (SubscriptionPool pool : /*getRandomList(*/client1pools/*)*/) client1poolIds.add(pool.poolId);
 			for (SubscriptionPool pool : /*getRandomList(*/client2pools/*)*/) client2poolIds.add(0,pool.poolId);
-			client1tasks.subscribe_(null, null, client1poolIds, null, null, null, null, null, null, null, null);
-			client2tasks.subscribe_(null, null, client2poolIds, null, null, null, null, null, null, null, null);
+			client1tasks.subscribe_(null, null, client1poolIds, null, null, null, null, null, null, null, null, null);
+			client2tasks.subscribe_(null, null, client2poolIds, null, null, null, null, null, null, null, null, null);
 			
 			// unsubscribe from all subscriptions on each client simultaneously
 			log.info("Simultaneously attempting to unsubscribe all on '"+client1tasks.hostname+"' and '"+client2tasks.hostname+"'...");

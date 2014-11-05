@@ -86,7 +86,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			String brandNameStatBeforeSubscribing = getCurrentBrandNameFileStat();
 			String prettyNameBeforeSubscribing = getCurrentPrettyName();
 			log.info("Currently, the flexible brand name prior to subscribing to pool '"+pool.subscriptionName+"' is '"+brandNameBeforeSubscribing+"'.");
-			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 			Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeSubscribing,brandNameStatBeforeSubscribing,prettyNameBeforeSubscribing,"subscribing to pool '"+pool.subscriptionName+"'");
 			if (verifiedSystemsExpectedBrandedNameAfterEvent==null) {
 				// unentitle the system to clear the undefined case of multiple installed OS products

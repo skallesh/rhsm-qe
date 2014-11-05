@@ -206,7 +206,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		//^ replaced with the following to save logging/assertion time
-		SSHCommandResult result = clienttasks.subscribe_(null, null, pool.poolId, null, null, quantity, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(null, null, pool.poolId, null, null, quantity, null, null, null, null, null, null);
 		if (result.getStderr().startsWith("Too many content sets")) throw new SkipException("This test is only designed for system.certificate_version=1.0 compatible subscriptions.");
 		//if (result.getStdout().startsWith("Pool is restricted to")) throw new SkipException("This test is not designed for this subscription pool: "+pool);	// Pool is restricted to physical systems: '8a9087e3443db08f01443db1847a142a'.
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);

@@ -69,7 +69,7 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 				
 				if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
 					flag=true;
-					SSHCommandResult result=clienttasks.subscribe(null, null, availList.poolId, null, null, "5", null, null, null, null, null);
+					SSHCommandResult result=clienttasks.subscribe(null, null, availList.poolId, null, null, "5", null, null, null, null, null, null);
 					String expectedMessage="Successfully attached a subscription for: "+availList.subscriptionName;
 					Assert.assertEquals(result.getStdout().trim(), expectedMessage);
 					Assert.assertEquals(result.getExitCode(),  Integer.valueOf(0));
@@ -100,7 +100,7 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 			String socket=clienttasks.getFactValue("cpu.cpu_socket(s)");
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 						if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
-							clienttasks.subscribe(null, null, availList.poolId, null, null, socket, null, null, null, null, null);
+							clienttasks.subscribe(null, null, availList.poolId, null, null, socket, null, null, null, null, null, null);
 					
 			}
 		
@@ -114,7 +114,7 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	}if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 			if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
-				clienttasks.subscribe(null, null, availList.poolId, null, null, null, null, null, null, null, null);
+				clienttasks.subscribe(null, null, availList.poolId, null, null, null, null, null, null, null, null, null);
 		
 }
 
@@ -150,7 +150,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			clienttasks.facts(null, true, null, null, null);
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 						if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
-							clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null);
+							clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null, null);
 					
 			}
 		
@@ -208,7 +208,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
 			clienttasks.facts(null, true, null, null, null);
-			clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				if(installed.productName.contains("Instance Server")){
 					Assert.assertEquals(installed.status.trim(), "Subscribed");
@@ -229,7 +229,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 				clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
 				clienttasks.facts(null, true, null, null, null);
-				clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+				clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				if(installed.productName.contains("Instance Server")){
 					Assert.assertEquals(installed.status.trim(), "Subscribed");
@@ -265,7 +265,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 						if(availList.subscriptionName.contains("Instance Based")){
 							poolId= availList.poolId;
-							clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null);
+							clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null, null);
 					
 			}
 		
@@ -278,7 +278,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 					Assert.assertEquals(installed.statusDetails, messageDetails);
 				}
 			}
-			clienttasks.subscribe(null, null, poolId, null, null, "2", null, null, null, null, null);
+			clienttasks.subscribe(null, null, poolId, null, null, "2", null, null, null, null, null, null);
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				if(installed.productId.contains("Instance Server")){
 					Assert.assertEquals(installed.status.trim(), "Subscribed");
@@ -292,7 +292,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 		clienttasks.facts(null, true, null, null, null);
 		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 					if(availList.subscriptionName.contains("Instance Based")){
-						clienttasks.subscribe(null, null, availList.poolId, null, null, "1", null, null, null, null, null);
+						clienttasks.subscribe(null, null, availList.poolId, null, null, "1", null, null, null, null, null, null);
 				
 		}
 	

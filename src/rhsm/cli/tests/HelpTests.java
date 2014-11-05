@@ -704,6 +704,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--quantity=QUANTITY");
 		options.add("--auto");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=680399
 		options.add("--servicelevel=SERVICE_LEVEL");
+		if (clienttasks.isPackageVersion("subscription-manager",">=", /*FIXME "1.13.8-1"*/ "1.13.7-1")) options.add("--file=FILE");	// added by Bug 1159974 // commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2
 		//options("--regtoken=REGTOKEN");	// https://bugzilla.redhat.com/show_bug.cgi?id=670823
 		//options("--email=EMAIL");			// https://bugzilla.redhat.com/show_bug.cgi?id=670823
 		//options("--locale=LOCALE");		// https://bugzilla.redhat.com/show_bug.cgi?id=670823
@@ -729,6 +730,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--quantity=QUANTITY");
 		options.add("--auto");
 		options.add("--servicelevel=SERVICE_LEVEL");
+		if (clienttasks.isPackageVersion("subscription-manager",">=", /*FIXME "1.13.8-1"*/ "1.13.7-1")) options.add("--file=FILE");	// added by Bug 1159974 // commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
@@ -1044,6 +1046,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				options.add("--destination-password=DESTINATION_PASSWORD");
 				options.add("--destination-url=DESTINATION_URL");
 				options.add("-s SERVICE_LEVEL, --service-level=SERVICE_LEVEL");
+			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=",/*FIXME "1.13.8"*/"1.13.7")) { // commit e53f0369b621902b75f2dbe047d97dc9ba3cc1c0  revert for bug 1157761
+				options.remove("-s SERVICE_LEVEL, --service-level=SERVICE_LEVEL");
+				options.add("-s SERVICE_LEVEL, --servicelevel=SERVICE_LEVEL");
 			}
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {

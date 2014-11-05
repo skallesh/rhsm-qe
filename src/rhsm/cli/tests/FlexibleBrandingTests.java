@@ -69,7 +69,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 
-		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
 		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
@@ -96,7 +96,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 
 		
-		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
 		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
@@ -123,7 +123,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
 		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 
@@ -131,7 +131,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.trim(), productname.trim());
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
 		Assert.assertEquals(result.trim(), productname.trim());
-		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 		result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
 		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
@@ -158,7 +158,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 
-		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
 		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		client.runCommandAndWaitWithoutLogging("find "+clienttasks.entitlementCertDir+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
@@ -190,7 +190,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 
-		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
 		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		client.runCommandAndWait("mkdir /root/importedcertDir");
@@ -358,7 +358,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 
 		for (int i=1; i <= 2; i++) {	// Repeated RHSMCERTD Updates
 			RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-			clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 			List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
 			String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 			String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
@@ -391,7 +391,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("system.certificate_version", String.valueOf(1));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
 		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();

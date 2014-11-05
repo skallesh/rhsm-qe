@@ -70,7 +70,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		String pool=getGuestlimitPool(String.valueOf(guestLimit));
 
 		installProductCert(providedProductId.get(randomGenerator.nextInt(providedProductId.size())));
-		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		//Assert the system compliance 
 		Assert.assertEquals(compliance, factValueForSystemCompliance);
@@ -111,7 +111,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 
 		String pool=getGuestlimitPool(String.valueOf(guestLimit-1));
 		installProductCert(providedProductId.get(randomGenerator.nextInt(providedProductId.size())));
-		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		//Assert the system compliance 
 		Assert.assertEquals(compliance, factValueForSystemPartialCompliance);
@@ -150,7 +150,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId, jsonData);
 		String pool=getGuestlimitPool("-1");
 		installProductCert(providedProductId.get(randomGenerator.nextInt(providedProductId.size())));
-		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		//Assert the system compliance 
 		Assert.assertEquals(compliance, factValueForSystemCompliance);
@@ -193,7 +193,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		String pool=getGuestlimitPool(String.valueOf(guestLimit));
 
 		installProductCert(providedProductId.get(randomGenerator.nextInt(providedProductId.size())));
-		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		//Assert the system compliance 
 		Assert.assertEquals(compliance, factValueForSystemCompliance);

@@ -65,7 +65,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 
 			// subscribe to the pool
 			// client1tasks.subscribeToSubscriptionPool(testPool);	// do not do this anymore because it could attach a quantity greater than 1 as a result of new feature bug 1008647
-			client1tasks.subscribe(null, null, testPool.poolId,null,null,"1",null,null,null,null,null);
+			client1tasks.subscribe(null, null, testPool.poolId,null,null,"1",null,null,null,null,null, null);
 			testPool.quantity = String.valueOf(Integer.valueOf(testPool.quantity)-1);	// decrement this pool's quantity since we just consumed one
 		}
 		
@@ -90,7 +90,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		String expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",testPool.poolId); // expected string changed by bug 876758
 		expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",testPool.poolId);
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",testPool.poolId);
-		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),expectedStdout);
+		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null).getStdout().trim(),expectedStdout);
 		// assert the consumed quantity again
 		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),

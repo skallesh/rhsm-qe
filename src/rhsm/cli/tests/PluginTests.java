@@ -442,7 +442,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 
 		// subscribe to a random pool (to generate calls to pre/post hooks)
-		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null);
+		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null, null);
 		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
@@ -553,7 +553,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		
 		// autosubscribe
-		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null);
 		
 		// get the tail of the marked rhsm.log file
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
@@ -688,7 +688,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// Subscribe to the High Availability subscription SKU
-		clienttasks.subscribe(null,null,haPool.poolId, null,null,null,null,null,null,null,null);
+		clienttasks.subscribe(null,null,haPool.poolId, null,null,null,null,null,null,null,null, null);
 
 		// mark the rhsm.log file
 		logMarker = System.currentTimeMillis()+" Testing verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test...";
@@ -810,7 +810,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		String quantity = null;
 		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
-		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null);
+		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null, null);
 		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file

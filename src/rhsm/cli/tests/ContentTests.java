@@ -419,7 +419,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 		// check for excessive blank lines after subscribing to each pool
 	    for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-    		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null, null);
+    		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null, null, null);
     		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError		
 		}
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
@@ -573,7 +573,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "None", "When the system.certificate_version fact is null, its fact value is reported as 'None'.");
 		//entitlementCertFile = clienttasks.subscribeToProductId(skuTo185ContentSetProduct);
 		//entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
 		Assert.assertEquals(entitlementCert.version,"1.0","When the system.certificate_version fact is null, the version of the entitlement certificate granted by candlepin is '1.0'.");
@@ -591,7 +591,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "1.0", "When the system.certificate_version fact is 1.0, its fact value is reported as '1.0'.");
 		//entitlementCertFile = clienttasks.subscribeToProductId(skuTo185ContentSetProduct);
 		//entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
 		Assert.assertEquals(entitlementCert.version,"1.0","When the system.certificate_version fact is 1.0, the version of the entitlement certificate granted by candlepin is '1.0'.");
@@ -608,7 +608,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(Float.valueOf(systemCertificateVersionFactValue)>=3.0, "The actual default system.certificate_version fact '"+systemCertificateVersionFactValue+"' is >= 3.0.");
 		//entitlementCertFile = clienttasks.subscribeToProductId(skuTo185ContentSetProduct);
 		//entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
 		Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");
@@ -715,7 +715,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			clienttasks.facts(null, true, null, null, null);
 			
 			// subscribe to all the arch-based content set pools
-			clienttasks.subscribe(false, null, archBasedSubscriptionPoolIds, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe(false, null, archBasedSubscriptionPoolIds, null, null, null, null, null, null, null, null, null);
 			
 			// iterate over all of the granted entitlements
 			for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
@@ -1210,7 +1210,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "None", "When the system.certificate_version fact is null, its fact value is reported as 'None'.");
-		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format(tooManyContentSetsMsgFormat, pool.subscriptionName), "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
@@ -1221,7 +1221,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "1.0", "When the system.certificate_version fact is 1.0, its fact value is reported as '1.0'.");
-		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format(tooManyContentSetsMsgFormat, pool.subscriptionName), "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
@@ -1231,7 +1231,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.deleteFactsFileWithOverridingValues();
 		systemCertificateVersionFactValue = clienttasks.getFactValue("system.certificate_version");
 		Assert.assertTrue(Float.valueOf(systemCertificateVersionFactValue)>=3.0, "The actual default system.certificate_version fact '"+systemCertificateVersionFactValue+"' is >= 3.0.");
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
 		Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");
