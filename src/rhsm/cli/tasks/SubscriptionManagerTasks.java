@@ -4698,6 +4698,24 @@ if (false) {
 			Assert.fail(e.getMessage());
 		}
 		*/
+		
+		// get the pool's product "arch" attribute that this subscription pool supports
+		String poolProductAttributeArch = "";
+		List<String> poolProductAttributeArches = new ArrayList<String>();
+		if (authenticator!=null && password!=null && serverUrl!=null) {
+			try {
+				poolProductAttributeArch = CandlepinTasks.getPoolProductAttributeValue(authenticator, password, serverUrl, pool.poolId, "arch");
+				if (poolProductAttributeArch!=null && !poolProductAttributeArch.trim().isEmpty()) {				
+					poolProductAttributeArches.addAll(Arrays.asList(poolProductAttributeArch.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+					if (poolProductAttributeArches.contains("x86")) poolProductAttributeArches.addAll(Arrays.asList("i386","i486","i586","i686"));  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+					//if (productSupportedArches.contains("ALL")) productSupportedArches.add(arch);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				Assert.fail(e.getMessage());
+			}
+		}
+		
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed too (unless it is multi-entitleable)
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
@@ -4715,6 +4733,9 @@ if (false) {
 		} else if (pool.subscriptionType!=null && (!pool.subscriptionType.equals("Stackable") && !pool.subscriptionType.equals("Multi-Entitleable") && !pool.subscriptionType.equals("Instance Based")) ) {	// see https://bugzilla.redhat.com/show_bug.cgi?id=1029968#c2
 			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
 					"When the pool is not multi-entitleable (not Stackable && not Multi-Entitleable && not Instance Based), the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
+		} else if (!poolProductAttributeArches.isEmpty() && !poolProductAttributeArches.contains("ALL") && !poolProductAttributeArches.contains(arch)) {
+			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
+					"When the pools product attribute arch '"+poolProductAttributeArch+"' does not support this system arch '"+arch+"', the remaining available subscription pools should never contain the just subscribed to pool: "+pool);
 		} else {
 			Assert.assertTrue(afterSubscriptionPools.contains(pool),
 					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool+" (if this fails, then we likely attached the final entitlements from the pool)");	// TODO fix the assertions for "if this fails"

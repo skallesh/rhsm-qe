@@ -362,6 +362,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=130764,130762) // TODO some expected yum repo assertions are not yet automated
 	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnreg_ksUsername, String rhnreg_ksPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String rhnUsername, String rhnPassword, String rhsmUsername, String rhsmPassword, String rhsmOrg, Integer serviceLevelIndex, String serviceLevelExpected) throws JSONException {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("ppc64le")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
 		
 		if (false) {	// TODO maybe this should go after the unregister and removeAll commands
 		// make sure our serverUrl is configured to it's original good value
@@ -719,6 +720,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId=130763)
 	public void RhnMigrateClassicToRhsmUsingProxyServer_Test(Object bugzilla, String rhnreg_ksUsername, String rhnreg_ksPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String rhnUsername, String rhnPassword, String rhsmUsername, String rhsmPassword, String rhsmOrg, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("ppc64le")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
 		
 		// make sure we are NOT registered to RHSM
 		clienttasks.unregister_(null,null,null);
@@ -954,7 +956,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() throws JSONException {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
-
+		
 		log.info("Red Hat Enterprise Linux Desktop (productId=68) corresponds to the base RHN Channel (rhel-ARCH-client-5) for a 5Client system where ARCH=i386,x86_64.");
 		log.info("Red Hat Enterprise Linux Workstation (productId=71) corresponds to child RHN Channel (rhel-ARCH-client-workstation-5) for a 5Client system where ARCH=i386,x86_64.");	
 		log.info("After migrating from RHN Classic to RHSM, these two product certs should not be installed at the same time; Workstation shoul prevail.");
@@ -1294,7 +1296,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
 	    removeProxyServerConfigurations();	// cleanup from prior tests
-	    
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("ppc64le")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
+		
 // DELETEME
 //		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
 //		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;

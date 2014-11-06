@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -18,6 +19,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
@@ -356,7 +358,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-968364"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyIssuerOfConsumerProductAndEntitlementCerts_Test() {
+	public void VerifyIssuerOfConsumerProductAndEntitlementCerts_Test() throws JSONException, Exception {
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
@@ -380,7 +382,17 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 			if (pools.isEmpty()) {
 				log.warning("Cound not find any available pool.");
-				Assert.fail("Expected at least one available pool.  Maybe all subscriptions available to '"+sm_clientUsername+"' are being utilized.");
+				// TEMPORARY WORKAROUND
+				if (clienttasks.arch.equals("ppc64le")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1156638"; // Bug 1156638 - "Red Hat Enterprise Linux for IBM POWER" subscriptions need to provide content for arch "ppc64le"
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						throw new SkipException("Skipping the remainder of this test on arch '"+clienttasks.arch+"' while blocking bug '"+bugId+"' is open.");
+					}
+				}
+				// END OF WORKAROUND
+				Assert.fail("Expected at least one available pool.  Maybe all subscriptions available to '"+sm_clientUsername+"' are being utilized.  Maybe all the available pools for this consumer's organization '"+clienttasks.getCurrentlyRegisteredOwnerKey()+"' do not support this systems arch '"+clienttasks.arch+"'.");
 			}
 			SubscriptionPool pool = getRandomListItem(pools);	// randomly pick a pool
 			clienttasks.subscribeToSubscriptionPool(pool);

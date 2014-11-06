@@ -448,6 +448,17 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test() {
 		
+		// TEMPORARY WORKAROUND
+		if (clienttasks.arch.equals("ppc64le")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1156638"; // Bug 1156638 - "Red Hat Enterprise Linux for IBM POWER" subscriptions need to provide content for arch "ppc64le"
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test on arch '"+clienttasks.arch+"' while blocking bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
+		
 		// successive blank lines in redhat.repo must not exceed N
 		int N=2; String regex = "(\\n\\s*){"+(N+2)+",}"; 	//  (\n\s*){4,}
 		String redhatRepoFileContents = null;
@@ -888,10 +899,21 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Verify that all there is at least one available RHEL subscription and that yum content is available for the installed RHEL product cert",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"AcceptanceTests","Tier1Tests"/*,blockedByBug-1156638"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyRhelSubscriptionContentIsAvailable_Test() throws JSONException, Exception {
+		
+		// TEMPORARY WORKAROUND
+		if (clienttasks.arch.equals("ppc64le")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1156638"; // Bug 1156638 - "Red Hat Enterprise Linux for IBM POWER" subscriptions need to provide content for arch "ppc64le"
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test on arch '"+clienttasks.arch+"' while blocking bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
 		
 		// get the currently installed RHEL product cert
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
