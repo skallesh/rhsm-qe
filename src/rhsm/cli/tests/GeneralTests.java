@@ -43,9 +43,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
 		clienttasks.unregister(null, null, null);
 		
-		if (clienttasks.isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			RemoteFileTasks.runCommandAndAssert(client,command,1,null,"^"+clienttasks.msg_ConsumerNotRegistered);			
-		} else if (clienttasks.isPackageVersion("subscription-manager", ">=","0.98.4-1")) {					// post commit 6241cd1495b9feac2ed123f60405061b03815721 bug 749332
+		} else if (clienttasks.isPackageVersion("subscription-manager",">=","0.98.4-1")) {					// post commit 6241cd1495b9feac2ed123f60405061b03815721 bug 749332
 			RemoteFileTasks.runCommandAndAssert(client,command,255,"^"+clienttasks.msg_ConsumerNotRegistered,null);
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);
@@ -822,7 +822,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null,null,null);
 		
 		
-		if (clienttasks.isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --product=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --regtoken=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --pool=FOO",								new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));

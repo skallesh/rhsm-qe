@@ -1421,7 +1421,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void SubscribeWithFileOfPoolIds_Test() throws JSONException, Exception {
-		if (clienttasks.isPackageVersion("subscription-manager", "<", /*FIXME "1.13.8-1"*/ "1.13.7-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
 		
 		Boolean all = false;	//getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));

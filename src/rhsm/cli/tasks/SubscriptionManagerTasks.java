@@ -3950,7 +3950,7 @@ if (false) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals(unregisterSuccessMsg), "Stdout from an attempt to unregister contains successful message '"+unregisterSuccessMsg+"'.");
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "Exit code from an attempt to unregister");
 		} else if (sshCommandResult.getExitCode()==1) {
-			if (isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) {	// commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			if (isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 				Assert.assertTrue(sshCommandResult.getStderr().startsWith("This system is currently not registered."), "The unregister command was not necessary.  Stderr indicates it was already unregistered.");
 			} else {
 				Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is currently not registered."), "The unregister command was not necessary.  Stdout indicates it was already unregistered.");

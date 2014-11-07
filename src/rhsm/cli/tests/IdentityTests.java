@@ -75,7 +75,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			for (String password : new String[]{null,sm_clientPassword}) {
 				for (Boolean regenerate : new Boolean[]{null,true,false}) {
 					SSHCommandResult identityResult = clienttasks.identity_(username,password,regenerate, null, null, null, null);
-					if (clienttasks.isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+					if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 						Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered,"One must be registered to have an identity.");
 					} else {
 						Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"One must be registered to have an identity.");
@@ -304,7 +304,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// first attempt without --force
 		SSHCommandResult identityResult = clienttasks.identity_("FOO","BAR",Boolean.TRUE, null, null, null, null);
 		Assert.assertNotSame(identityResult.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
-		if (clienttasks.isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(identityResult.getStderr().trim(),"--username and --password can only be used with --force");
 		} else {
 			Assert.assertEquals(identityResult.getStdout().trim(),"--username and --password can only be used with --force");
@@ -361,7 +361,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		String ignoreStderr = "stty: standard input: Invalid argument";
 		SSHCommandResult result;
 		Integer expectedExitCode = new Integer(255);
-		if (clienttasks.isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) expectedExitCode=new Integer(70);	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode=new Integer(70);	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 
 		result = clienttasks.identity_(null,null,null,null,null,null,null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
@@ -428,7 +428,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the system is no longer registered and no entitlements remain
 		result = clienttasks.identity_(null,null,null,null,null,null,null);
-		if (clienttasks.isPackageVersion("subscription-manager", ">=",/*FIXME "1.13.8-1"*/"1.13.7-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStderr().trim(),clienttasks.msg_ConsumerNotRegistered,"The system should no longer be registered after rhsmcertd triggers following a server-side consumer deletion.");
 		} else {
 			Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_ConsumerNotRegistered,"The system should no longer be registered after rhsmcertd triggers following a server-side consumer deletion.");
