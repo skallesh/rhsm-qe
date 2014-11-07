@@ -61,16 +61,34 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result;
 		
 		result = clienttasks.release_(null, null, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from calling release without being registered");
-		Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Stdout from release without being registered");
-
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from calling release without being registered");
+			Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "Stderr from release without being registered");
+			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from release without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from calling release without being registered");
+			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Stdout from release without being registered");
+		}
+		
 		result = clienttasks.release_(null, true, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from calling release --list without being registered");
-		Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Stdout from release without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from calling release --list without being registered");
+			Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "Stderr from release without being registered");
+			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from release without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from calling release --list without being registered");
+			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Stdout from release without being registered");
+		}
 
 		result = clienttasks.release_(null, null, "FOO", null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from calling release --set without being registered");
-		Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Stdout from release without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from calling release --set without being registered");
+			Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "Stderr from release without being registered");
+			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from release without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from calling release --set without being registered");
+			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Stdout from release without being registered");
+		}
 	}
 	
 	
