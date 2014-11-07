@@ -496,9 +496,15 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	public void AttemptAnEntitlementImportWithoutOptions_Test() {
 
 		SSHCommandResult result = clienttasks.importCertificate_((String)null);
-		Assert.assertEquals(result.getExitCode(), new Integer(255),"exitCode from attempt to import without specifying a certificate");
-		Assert.assertEquals(result.getStdout().trim(), "Error: This command requires that you specify a certificate with --certificate.","stdout from import without options");
-		Assert.assertEquals(result.getStderr().trim(), "","stderr from import without options");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), new Integer(64)/*EX_USAGE*/,"exitCode from attempt to import without specifying a certificate");
+			Assert.assertEquals(result.getStderr().trim(), "Error: This command requires that you specify a certificate with --certificate.","stderr from import without options");
+			Assert.assertEquals(result.getStdout().trim(), "","stdout from import without options");
+		} else {
+			Assert.assertEquals(result.getExitCode(), new Integer(255),"exitCode from attempt to import without specifying a certificate");
+			Assert.assertEquals(result.getStdout().trim(), "Error: This command requires that you specify a certificate with --certificate.","stdout from import without options");
+			Assert.assertEquals(result.getStderr().trim(), "","stderr from import without options");
+		}
 	}
 	
 	
