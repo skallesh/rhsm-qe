@@ -287,7 +287,11 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult configResult = clienttasks.config_(null,true,null,new String[]{section, name, value});
 
 		// assert results...
-		Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to remove a non-existing-section from the config.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(78)/*EX_CONFIG*/, "The exit code from a negative test attempt to remove a non-existing-section from the config.");
+		} else {
+			Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to remove a non-existing-section from the config.");
+		}
 		//Assert.assertEquals(configResult.getStderr().trim(), String.format("No section: '%s'",section), "Stderr message");
 		Assert.assertEquals(configResult.getStderr().trim(), String.format("Error: Section %s and name %s does not exist.",section,name), "Stderr message");	
 		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
@@ -306,7 +310,11 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult configResult = clienttasks.config_(null,true,null,new String[]{section, name, value});
 		
 		// assert results...
-		Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to remove a non-existing-section from the config.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(78)/*EX_CONFIG*/, "The exit code from a negative test attempt to remove a non-existing-section from the config.");
+		} else {
+			Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to remove a non-existing-section from the config.");
+		}
 		Assert.assertEquals(configResult.getStderr().trim(), String.format("Error: Section %s and name %s does not exist.",section,name));
 		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
 		
@@ -327,7 +335,11 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult configResult = clienttasks.config_(list,remove,set,section_name_value);
 
 		// assert results...
-		Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to combine list with set/remove options.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(64)/*EX_USAGE*/, "The exit code from a negative test attempt to combine list with set/remove options.");
+		} else {
+			Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to combine list with set/remove options.");
+		}
 		Assert.assertEquals(configResult.getStderr().trim(), "Error: --list should not be used with any other options for setting or removing configurations.", "Stderr message");
 		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
 	}
