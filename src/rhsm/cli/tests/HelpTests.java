@@ -170,6 +170,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
 	
+	@Test(	description="rhsm.conf: man page",
+			groups={"blockedByBug-990183"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ManPageExistanceForRhsmConf_Test() {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.13.6-1")) throw new SkipException("RFE 990183 for an rhsm.conf man page was not implemented until subscription-manager version 1.13.6-1.");
+		String cliCommand = "rhsm.conf";
+		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+cliCommand,0);
+		RemoteFileTasks.runCommandAndAssert(client,"whatis "+cliCommand,0,"^"+cliCommand+" ",null);	// run "mandb" if the result is Stderr: subscription-manager: nothing appropriate.
+		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
+	}
 	
 	@Test(	description="subscription-manager-gui --help with no X-Display",
 			groups={"blockedByBug-976689"/*,"blockedByBug-881095" ALSO INCLUDED IN ExpectedCommandLineOptionsData */},
