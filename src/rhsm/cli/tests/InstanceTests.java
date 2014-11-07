@@ -195,9 +195,15 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			for (int quantityAttempted=0; quantityAttempted<=poolInstanceMultiplier+1; quantityAttempted++) {
 				SSHCommandResult sshCommandResult = clienttasks.subscribe_(false,null,pool.poolId,null,null,String.valueOf(quantityAttempted),null,null,null,null,null, null);
 				if (quantityAttempted==0) {
-					Assert.assertEquals(sshCommandResult.getStdout().trim(), "Error: Quantity must be a positive integer.", "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
-					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
-					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
+					if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+						Assert.assertEquals(sshCommandResult.getStderr().trim(), "Error: Quantity must be a positive integer.", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
+						Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
+						Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(64)/*EX_USAGE*/, "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
+					} else {
+						Assert.assertEquals(sshCommandResult.getStdout().trim(), "Error: Quantity must be a positive integer.", "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
+						Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
+						Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
+					}
 				} else if (quantityAttempted%poolInstanceMultiplier!=0) {
 					Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Subscription '%s' must be attached using a quantity evenly divisible by %s",pool.subscriptionName,poolInstanceMultiplier), "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");	// expected stdout message changed by Bug 1033365 - request to improve unfriendly message: Quantity '1' is not a multiple of instance multiplier '2'
 					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
