@@ -54,7 +54,11 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		// Assert that because we have run clean, rhsm no longer has an identity and therefore requires us to register to run commands 
 		log.info("After running clean, assert that the identity is unknown thereby requiring that we be registered...");
 		SSHCommandResult result = clienttasks.identity_(null,null,null, null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_ConsumerNotRegistered, "Consumer identity has been removed after clean, therefore we must register to restore our identity.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "Consumer identity has been removed after clean, therefore we must register to restore our identity.");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Consumer identity has been removed after clean, therefore we must register to restore our identity.");
+		}
 	}
 	
 	
