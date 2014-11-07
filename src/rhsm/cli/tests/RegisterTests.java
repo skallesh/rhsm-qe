@@ -1366,8 +1366,9 @@ Expected Results:
 		Assert.assertContainsNoMatch(sshCommandResult.getStderr().trim(), "Traceback.*","Stderr after register with --serverurl="+serverurl+" and other options should not contain a Traceback.");
 		
 		// negative testcase assertions........
-		if (expectedExitCode.equals(new Integer(255))) {
-			// assert that the current config remains unchanged when the expectedExitCode is 255
+		//if (expectedExitCode.equals(new Integer(255))) {
+		if (!expectedExitCode.equals(new Integer(0))) {
+			// assert that the current config remains unchanged when the expected registration result is a failure
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname should remain unchanged when attempting to register with an invalid serverurl.");
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),	portBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] port should remain unchanged when attempting to register with an invalid serverurl.");
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), prefixBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix should remain unchanged when attempting to register with an invalid serverurl.");

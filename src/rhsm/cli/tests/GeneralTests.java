@@ -823,6 +823,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			// python os.EX_CODES used by devel are listed here http://docs.thefoundry.co.uk/nuke/63/pythonreference/os-module.html  EX_USAGE=64  EX_DATAERR=65  EX_UNAVAILABLE=69  EX_SOFTWARE=70
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --product=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --regtoken=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --pool=FOO",								new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
