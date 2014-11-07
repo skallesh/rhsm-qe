@@ -1553,108 +1553,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public Object[][] getSubscribeWithQuantityDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeWithQuantityDataAsListOfLists());
 	}
-// DELETEME; Streamlined below to include an instance-based pool
-//	protected List<List<Object>>getSubscribeWithQuantityDataAsListOfLists() throws JSONException, Exception {
-//		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-//		
-//		// register
-//		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionQuantityConsumer", null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-//		
-////		// find a random testpool with a positive quantity
-////		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-////		SubscriptionPool testPool;
-////		int i = 1000;	// avoid an infinite loop
-////		do {
-////			testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-////		} while (!testPool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(testPool.quantity)<2 && /*avoid an infinite loop*/i-->0);
-//
-//		
-//		// find pools with a positive quantity that have a productAttribute set for "multi-entitlement"
-//		SubscriptionPool poolWithMultiEntitlementNull = null;
-//		SubscriptionPool poolWithMultiEntitlementYes = null;
-//		SubscriptionPool poolWithMultiEntitlementNo = null;
-//		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-//			if (!pool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(pool.quantity)<2) continue;	// skip pools that don't have enough quantity left to consume
-//			
-//			Boolean isMultiEntitlementPool = null;	// indicates that the pool's product does NOT have the "multi-entitlement" attribute
-//			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+pool.poolId));	
-//			JSONArray jsonProductAttributes = jsonPool.getJSONArray("productAttributes");
-//			// loop through the productAttributes of this pool looking for the "multi-entitlement" attribute
-//			for (int j = 0; j < jsonProductAttributes.length(); j++) {
-//				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
-//				String productAttributeName = jsonProductAttribute.getString("name");
-//				if (productAttributeName.equals("multi-entitlement")) {
-//					//multi_entitlement = jsonProductAttribute.getBoolean("value");
-//					isMultiEntitlementPool = jsonProductAttribute.getString("value").equalsIgnoreCase("yes") || jsonProductAttribute.getString("value").equals("1");
-//					break;
-//				}
-//			}
-//			
-//			if (isMultiEntitlementPool == null) {
-//				poolWithMultiEntitlementNull = pool;
-//			} else if (isMultiEntitlementPool) {
-//				poolWithMultiEntitlementYes = pool;
-//			} else {
-//				poolWithMultiEntitlementNo = pool;
-//			}
-//		}
-//		SubscriptionPool pool;
-//		
-//		
-//		// Object meta, String poolId, String quantity, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-//		String expectedStdout;
-//		pool= poolWithMultiEntitlementYes;
-//		if (pool!=null) {
-//			ll.add(Arrays.asList(new Object[] {null,							pool,	"Two",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
-//			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"-1",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
-//			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"0",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
-////			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));	// Bug 812410 - Subscription-manager subscribe CLI feedback 
-////			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));	// changed by Bug 874804 Subscribe -> Attach
-//			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
-////			ll.add(Arrays.asList(new Object[] {null,							pool,	"2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));	// Bug 812410 - Subscription-manager subscribe CLI feedback 
-////			ll.add(Arrays.asList(new Object[] {null,							pool,	"2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));	// changed by Bug 874804 Subscribe -> Attach
-//			ll.add(Arrays.asList(new Object[] {null,							pool,	"2",												Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
-////			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("746262"),	pool,	"+2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));	// Bug 812410 - Subscription-manager subscribe CLI feedback 
-////			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("746262"),	pool,	"+2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));	// changed by Bug 874804 Subscribe -> Attach
-//			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("746262"),	pool,	"+2",												Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
-////			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));	// Bug 812410 - Subscription-manager subscribe CLI feedback 
-////			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));	// changed by Bug 874804 Subscribe -> Attach
-//			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
-//			expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",pool.poolId);	// expected string changed by bug 876758
-//			expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId);
-//			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
-//			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
-//			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
-//		} else {
-//			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to yes."}));
-//		}
-//		
-//		pool= poolWithMultiEntitlementNo;
-//		if (pool!=null) {
-////			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));	// Bug 812410 - Subscription-manager subscribe CLI feedback 
-////			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));	// changed by Bug 874804 Subscribe -> Attach
-//			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
-//			expectedStdout = String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId);
-//			if (!clienttasks.workaroundForBug876764(sm_serverType))  expectedStdout = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
-//			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
-//		} else {
-//			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to no."}));
-//		}
-//		
-//		pool= poolWithMultiEntitlementNull;
-//		if (pool!=null) {
-////			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));	// Bug 812410 - Subscription-manager subscribe CLI feedback 
-////			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));	// changed by Bug 874804 Subscribe -> Attach
-//			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
-//			expectedStdout = String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId);
-//			if (!clienttasks.workaroundForBug876764(sm_serverType))  expectedStdout = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
-//			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
-//		} else {
-//			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool without a \"multi-entitlement\" product attribute."}));
-//		}
-//		
-//		return ll;
-//	}
 	protected List<List<Object>>getSubscribeWithQuantityDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
@@ -1685,9 +1583,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			pool = multiEntitlementPool;
 			
 			// Object meta, String poolId, String quantity, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688"}),				pool,	"Two",						Integer.valueOf(64)/*EX_USAGE*/,	null,"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688","722554"}),	pool,	"-1",						Integer.valueOf(64)/*EX_USAGE*/,	null,"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688","722554"}),	pool,	"0",						Integer.valueOf(64)/*EX_USAGE*/,	null,"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/}));
+			} else {
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"Two",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"-1",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"0",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
+			}
 			//ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));	// Bug 812410 - Subscription-manager subscribe CLI feedback 
 			//ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));	// changed by Bug 874804 Subscribe -> Attach
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
@@ -1734,9 +1638,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			if (isSystemVirtual) instanceMultiplier=1;	// a virtual system should be able to attach an instance-based subscription in increments of quantity=1 (this satisfies the Either-Or requirement)
 			
 			// Object meta, String poolId, String quantity, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688"}),				pool,	"Two",																									Integer.valueOf(64)/*EX_USAGE*/,	null,"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688","722554"}),	pool,	"-1",																									Integer.valueOf(64)/*EX_USAGE*/,	null,"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688","722554"}),	pool,	"0",																									Integer.valueOf(64)/*EX_USAGE*/,	null,"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/}));
+			} else {
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"Two",																															Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"-1",																															Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"0",																															Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
+			}
 			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(1*instanceMultiplier),																							Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(2*instanceMultiplier),																							Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("746262"),	pool,	"+"+String.valueOf(2*instanceMultiplier),																						Integer.valueOf(0),		"^"+String.format("Successfully attached a subscription for: %s",pool.subscriptionName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)"))+"$",	null}));
