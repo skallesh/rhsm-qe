@@ -117,9 +117,15 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.autoheal_(null, null, null, null, null, null);
 		
 		// assert that the default results are equivalent to the show results
-		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from auto-heal without being registered.");
-		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from auto-attach without being registered.");
-		Assert.assertEquals(result.getExitCode(),Integer.valueOf(255), "ExitCode from auto-attach without being registered.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getStderr().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stderr from auto-heal without being registered.");
+			Assert.assertEquals(result.getStdout().trim(),"", "Stdout from auto-attach without being registered.");
+			Assert.assertEquals(result.getExitCode(),Integer.valueOf(1), "ExitCode from auto-attach without being registered.");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from auto-heal without being registered.");
+			Assert.assertEquals(result.getStderr().trim(),"", "Stderr from auto-attach without being registered.");
+			Assert.assertEquals(result.getExitCode(),Integer.valueOf(255), "ExitCode from auto-attach without being registered.");
+		}
 	}
 	
 	
