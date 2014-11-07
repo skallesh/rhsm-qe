@@ -2689,8 +2689,11 @@ if (false) {
 			this.currentlyRegisteredOrg = org;
 			this.currentlyRegisteredType = type;	
 		} else
-		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && (force==null || !force)) {
-			// This system is already registered. Use --force to override
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && (force==null || !force) && isPackageVersion("subscription-manager","<","1.13.8-1")) {	// pre commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			// stdout= This system is already registered. Use --force to override
+		} else
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(64)/*EX_USAGE*/) && (force==null || !force) && isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			// stdout= This system is already registered. Use --force to override
 		} else
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && (environment!=null)) {
 			// Server does not support environments.
@@ -2743,9 +2746,15 @@ if (false) {
 	
 		// assert results when already registered
 		if ((force==null || !force) && alreadyRegistered) {
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The exit code from the register command indicates we are already registered.");
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), "This system is already registered. Use --force to override");	
-			Assert.assertEquals(sshCommandResult.getStderr().trim(), "");	
+			if (isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(64), "The exit code from the register command indicates we are already registered.");
+				Assert.assertEquals(sshCommandResult.getStderr().trim(), "This system is already registered. Use --force to override");	
+				Assert.assertEquals(sshCommandResult.getStdout().trim(), "");	
+			} else {
+				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The exit code from the register command indicates we are already registered.");
+				Assert.assertEquals(sshCommandResult.getStdout().trim(), "This system is already registered. Use --force to override");	
+				Assert.assertEquals(sshCommandResult.getStderr().trim(), "");	
+			}
 			return sshCommandResult;
 		}
 
