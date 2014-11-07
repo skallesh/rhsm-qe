@@ -282,6 +282,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1149286 - tab-completion for rhn-migrate-classic-to-rhsm is completely wrong after several options were changed
 			if (bashCommand.startsWith("rhn-migrate-classic-to-rhsm ")) bugIds.add("1149286");
 			
+			// Bug 1161694 - incorrect bash completion for new subscription-manager list option "--pool-only"
+			if (bashCommand.startsWith("subscription-manager list ")) bugIds.add("1161694");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			// append a new row to the dataProvider
