@@ -15,6 +15,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerBaseTestScript;
@@ -52,11 +53,16 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null, null);
 		
 		// assert redemption results
-		//Assert.assertEquals(redeemResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Redeem should require that the system be registered.");
-		//Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(1),"Exit code from redeem when executed against a standalone candlepin server.");
-		// results changed after bug fix 749332
-		Assert.assertEquals(redeemResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Redeem should require that the system be registered.");
-		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed against a standalone candlepin server.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(redeemResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered,"Redeem should require that the system be registered.");
+			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(1),"Exit code from redeem when executed against a standalone candlepin server.");
+		} else {
+			//Assert.assertEquals(redeemResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Redeem should require that the system be registered.");
+			//Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(1),"Exit code from redeem when executed against a standalone candlepin server.");
+			// results changed after bug fix 749332
+			Assert.assertEquals(redeemResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Redeem should require that the system be registered.");
+			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed against a standalone candlepin server.");
+		}
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem without --email option",
@@ -69,11 +75,17 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null, null);
 		
 		// assert redemption results
-		//Assert.assertEquals(redeemResult.getStdout().trim(), "email and email_locale are required for notification","Redeem should require that the email option be specified.");
-		Assert.assertEquals(redeemResult.getStderr().trim(), "");
-		//Assert.assertEquals(redeemResult.getStdout().trim(), "email is required for notification","Redeem should require that the email option be specified.");
-		Assert.assertEquals(redeemResult.getStdout().trim(), "Error: This command requires that you specify an email address with --email.","Redeem should require that the email option be specified.");
-		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed without an email option.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(redeemResult.getStdout().trim(), "");
+			Assert.assertEquals(redeemResult.getStderr().trim(), "Error: This command requires that you specify an email address with --email.","Redeem should require that the email option be specified.");
+			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(64)/*EX_USAGE*/,"Exit code from redeem when executed without an email option.");
+		} else {
+			//Assert.assertEquals(redeemResult.getStdout().trim(), "email and email_locale are required for notification","Redeem should require that the email option be specified.");
+			Assert.assertEquals(redeemResult.getStderr().trim(), "");
+			//Assert.assertEquals(redeemResult.getStdout().trim(), "email is required for notification","Redeem should require that the email option be specified.");
+			Assert.assertEquals(redeemResult.getStdout().trim(), "Error: This command requires that you specify an email address with --email.","Redeem should require that the email option be specified.");
+			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed without an email option.");
+		}
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem with --email option (against a standalone candlepin server)",
@@ -89,10 +101,15 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
 		
 		// assert redemption results
-		//Assert.assertEquals(redeemResult.getStdout().trim(), "Standalone candlepin does not support activation.","Standalone candlepin does not support activation.");
-		//Assert.assertEquals(redeemResult.getStdout().trim(), "Standalone candlepin does not support redeeming a subscription.","Standalone candlepin does not support redeeming a subscription.");
-		Assert.assertTrue(redeemResult.getStdout().trim().startsWith("Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:"),"Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:");
-		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed against a standalone candlepin server.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertTrue(redeemResult.getStdout().trim().startsWith("Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:"),"Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:");
+			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE*/,"Exit code from redeem when executed against a standalone candlepin server.");
+		} else {
+			//Assert.assertEquals(redeemResult.getStdout().trim(), "Standalone candlepin does not support activation.","Standalone candlepin does not support activation.");
+			//Assert.assertEquals(redeemResult.getStdout().trim(), "Standalone candlepin does not support redeeming a subscription.","Standalone candlepin does not support redeeming a subscription.");
+			Assert.assertTrue(redeemResult.getStdout().trim().startsWith("Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:"),"Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:");
+			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed against a standalone candlepin server.");
+		}
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem against an onpremises candlepin server that has been patched for mock testing",
@@ -263,7 +280,11 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr
-		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription against a standalone candlepin server.",											"0ABCDEF",	new Integer(255),	"Standalone candlepin does not support redeeming a subscription for dmi.system.serial_number: {0}",	null}));
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("1119688"),	"This mocked redeem test attempts to redeem a subscription against a standalone candlepin server.",			"0ABCDEF",	new Integer(70)/*EX_SOFTWARE*/,	"Standalone candlepin does not support redeeming a subscription for dmi.system.serial_number: {0}", null}));
+		} else {
+			ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription against a standalone candlepin server.",										"0ABCDEF",	new Integer(255),				"Standalone candlepin does not support redeeming a subscription for dmi.system.serial_number: {0}",	null}));	
+		}
 		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription when the system's asset tag has already been used to redeem a subscription.",	"1ABCDEF",	new Integer(0),		null,	"The Dell service tag: {0}, has already been used to activate a subscription"}));
 		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription for which the system's asset tag will not be found for redemption.",				"2ABCDEF",	new Integer(0),		null,	"A subscription was not found for the given Dell service tag: {0}"}));
 		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription for which the system's  service tag is expired.",								"3ABCDEF",	new Integer(0),		null,	"The Dell service tag: {0}, is expired"}));
