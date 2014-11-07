@@ -255,7 +255,16 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			Assert.fail("Encountered an unexpected value for systemEntitlementsValid '"+systemEntitlementsValid+"'.");
 		}
 		Assert.assertTrue(statusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"'.");
-
+		// assert the exit code of 1 or 0 based on a "valid" compliance
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
+			// exit code of 0 indicates valid compliance, otherwise exit code is 1
+			if (systemEntitlementsValid.equals("valid")) {
+				Assert.assertEquals(statusResult.getExitCode(), new Integer(0), "When the system's overall status is valid, an exit code of 0 should be returned.");
+			} else {
+				Assert.assertEquals(statusResult.getExitCode(), new Integer(1), "When the system's overall status is NOT valid, an exit code of 1 should be returned.");				
+			}
+		}
+		
 		// assert the individual installed product status details
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			
@@ -371,9 +380,15 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		String onDateYesterday = yyyy_MM_dd_DateFormat.format(yesterday.getTime());
 		SSHCommandResult statusResultYesterday = clienttasks.status_(onDateYesterday,null,null, null);
 		
-		Assert.assertEquals(statusResultYesterday.getStdout().trim(), "Past dates are not allowed", "Stdout from call to status ondate yesterday.");
-		Assert.assertEquals(statusResultYesterday.getStderr().trim(), "", "Stderr from call to status ondate yesterday.");
-		Assert.assertEquals(statusResultYesterday.getExitCode(), Integer.valueOf(1), "ExitCode from call to status ondate yesterday.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(statusResultYesterday.getStderr().trim(), "Past dates are not allowed", "Stderr from call to status ondate yesterday.");
+			Assert.assertEquals(statusResultYesterday.getStdout().trim(), "", "Stdout from call to status ondate yesterday.");
+			Assert.assertEquals(statusResultYesterday.getExitCode(), Integer.valueOf(64)/*EX_USAGE*/, "ExitCode from call to status ondate yesterday.");
+		} else {
+			Assert.assertEquals(statusResultYesterday.getStdout().trim(), "Past dates are not allowed", "Stdout from call to status ondate yesterday.");
+			Assert.assertEquals(statusResultYesterday.getStderr().trim(), "", "Stderr from call to status ondate yesterday.");
+			Assert.assertEquals(statusResultYesterday.getExitCode(), Integer.valueOf(1), "ExitCode from call to status ondate yesterday.");
+		}
 	}
 	
 	@Test(	description="run subscription-manager status ondate (invalid)",
@@ -389,9 +404,15 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String today = yyyy_MM_dd_DateFormat.format(Calendar.getInstance().getTime());
 		
-		Assert.assertEquals(statusResultYesterday.getStdout().trim(), String.format("Date entered is invalid. Date should be in YYYY-MM-DD format (example: %s )",today), "Stdout from call to status ondate invalid.");
-		Assert.assertEquals(statusResultYesterday.getStderr().trim(), "", "Stderr from call to status ondate invalid.");
-		Assert.assertEquals(statusResultYesterday.getExitCode(), Integer.valueOf(1), "ExitCode from call to status ondate invalid.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(statusResultYesterday.getStderr().trim(), String.format("Date entered is invalid. Date should be in YYYY-MM-DD format (example: %s )",today), "Stderr from call to status ondate invalid.");
+			Assert.assertEquals(statusResultYesterday.getStdout().trim(), "", "Stdout from call to status ondate invalid.");
+			Assert.assertEquals(statusResultYesterday.getExitCode(), Integer.valueOf(65)/*EX_DATAERR*/, "ExitCode from call to status ondate invalid.");
+		} else {
+			Assert.assertEquals(statusResultYesterday.getStdout().trim(), String.format("Date entered is invalid. Date should be in YYYY-MM-DD format (example: %s )",today), "Stdout from call to status ondate invalid.");
+			Assert.assertEquals(statusResultYesterday.getStderr().trim(), "", "Stderr from call to status ondate invalid.");
+			Assert.assertEquals(statusResultYesterday.getExitCode(), Integer.valueOf(1), "ExitCode from call to status ondate invalid.");
+		}
 	}
 	
 	// Candidates for an automated Test:

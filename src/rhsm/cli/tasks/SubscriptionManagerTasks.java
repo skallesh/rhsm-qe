@@ -4168,8 +4168,12 @@ if (false) {
 		SSHCommandResult sshCommandResult = status_(ondate, proxy, proxyuser, proxypassword);
 		
 		// assert results for a successful call to plugins
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the status command indicates a success.");
-		Assert.assertEquals(sshCommandResult.getStderr(), "", "Stderr from the status command indicates a success.");
+		if (isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
+			// exit code of 0 indicates valid compliance, otherwise exit code is 1
+			Assert.assertTrue(sshCommandResult.getExitCode().equals(0)||sshCommandResult.getExitCode().equals(1), "Expecting an exit code of 0 to indicate a valid compliance, otherwise an exit code of 1 is expected.");
+		} else
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the status command indicates a successful call to get the system's status.");
+		Assert.assertEquals(sshCommandResult.getStderr(), "", "Stderr from the status command indicates a successful call to get the system's status.");
 		
 		// assert the banner
 		String bannerRegex;
