@@ -943,6 +943,59 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: repos --list-disabled should give feedback when there are no disabled repos",
+			groups={"blockedByBug-1151925"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposListDisabledReportsNoMatchesFoundWhenNoThereAreNoDisabledRepos_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.4-1")) throw new SkipException("The repos --list-disabled function was not implemented until version subscription-manager-1.13.4-1");
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
+		
+		// use a wildcard to enable all the repos
+		clienttasks.repos(null, null, null, "*", null, null, null, null);
+				
+		// get the list of currently disabled repos (list should be empty)
+		SSHCommandResult sshCommandResult = clienttasks.repos(null, false, true, (String)null,(String)null,null, null, null);
+		List<Repo> listDisabledRepos = Repo.parse(sshCommandResult.getStdout());
+		Assert.assertTrue(listDisabledRepos.isEmpty(),"After using a wildcard to enable all repos, the repos --list-disabled should be empty.");
+		
+		// assert the feedback when no repos are enabled
+		String expectedStdout = "There were no available repositories matching the specified criteria.";
+		Assert.assertEquals(sshCommandResult.getStdout().trim(),expectedStdout,"After using a wildcard to enable all repos, the repos --list-disabled should report feedback indicating no matches.");
+	}
+	
+	
+	@Test(	description="subscription-manager: repos --list-enabled should give feedback when there are no enabled repos",
+			groups={"blockedByBug-1151925"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposListEnabledReportsNoMatchesFoundWhenNoThereAreNoEnabledRepos_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.4-1")) throw new SkipException("The repos --list-enabled function was not implemented until version subscription-manager-1.13.4-1");
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
+		
+		// use a wildcard to disable all the repos
+		clienttasks.repos(null, null, null, null, "*", null, null, null);
+				
+		// get the list of currently disabled repos (list should be empty)
+		SSHCommandResult sshCommandResult = clienttasks.repos(null, true, false, (String)null,(String)null,null, null, null);
+		List<Repo> listDisabledRepos = Repo.parse(sshCommandResult.getStdout());
+		Assert.assertTrue(listDisabledRepos.isEmpty(),"After using a wildcard to disable all repos, the repos --list-enabled should be empty.");
+		
+		// assert the feedback when no repos are disabled
+		String expectedStdout = "There were no available repositories matching the specified criteria.";
+		Assert.assertEquals(sshCommandResult.getStdout().trim(),expectedStdout,"After using a wildcard to disable all repos, the repos --list-enabled should report feedback indicating no matches.");
+	}
+	
 	
 	
 	

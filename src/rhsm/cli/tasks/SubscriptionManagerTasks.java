@@ -4308,6 +4308,7 @@ if (false) {
 		
 		// assert the enable feedback
 		if (enableRepos!=null) for (String enableRepo : enableRepos) {
+			if (enableRepo.contains("*")) {log.info("Skipping assertion of feedback when enabling a repo with a wildcard.");continue;} 
 			String expectedStdout = String.format("Repo %s is enabled for this system.",enableRepo);
 			if (isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdout = String.format("Repo '%s' is enabled for this system.",enableRepo);
 			if (isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = String.format("Repository '%s' is enabled for this system.",enableRepo);	// 1122530: Improved grammar and abbreviation usage.	// commit add5a9b746f9f2af147a7e4622b897a46b5ef132
@@ -4316,6 +4317,7 @@ if (false) {
 		
 		// assert the disable feedback
 		if (disableRepos!=null) for (String disableRepo : disableRepos) {
+			if (disableRepo.contains("*")) {log.info("Skipping assertion of feedback when disabling a repo with a wildcard.");continue;} 
 			String expectedStdout = String.format("Repo %s is disabled for this system.",disableRepo);
 			if (isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdout = String.format("Repo '%s' is disabled for this system.",disableRepo);
 			if (isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = String.format("Repository '%s' is disabled for this system.",disableRepo);	// 1122530: Improved grammar and abbreviation usage.	// commit add5a9b746f9f2af147a7e4622b897a46b5ef132
