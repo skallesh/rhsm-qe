@@ -151,7 +151,8 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsNoMatch(sshCommandResult.getStderr().trim(), "Traceback.*","Stderr after register with --serverurl="+serverurl+" and other options should not contain a Traceback.");
 		
 		// negative testcase assertions........
-		if (expectedExitCode.equals(new Integer(255))) {
+		//if (expectedExitCode.equals(new Integer(255))) {
+		if (!expectedExitCode.equals(new Integer(0))) {
 			// assert that the current config remains unchanged when the expectedExitCode is 255
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname should remain unchanged when attempting to register with an invalid serverurl.");
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),	portBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] port should remain unchanged when attempting to register with an invalid serverurl.");
@@ -196,7 +197,11 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		
 		// calling environments without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, false, null, null, null);
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.9-1")) {	// subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE*/, "Exitcode from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
+		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1")) {	// subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
