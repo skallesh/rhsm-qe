@@ -61,7 +61,9 @@ public class RolesTests extends SubscriptionManagerCLITestScript {
 				break;
 			case READ_ONLY:
 				sshCommandResult = clienttasks.register_(username, password, orgKey, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that user '"+username+"' with role '"+roleName+"' to org '"+orgKey+"' can NOT register with access '"+access+"'.");
+				Integer expectedExitCode = new Integer(255);
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "The exit code indicates that user '"+username+"' with role '"+roleName+"' to org '"+orgKey+"' can NOT register with access '"+access+"'.");
 				//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User "+username+" cannot access organization/owner "+orgKey);	// before string translation files were committed
 				//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User "+username+" cannot access organization "+orgKey);
 				//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User '"+username+"' cannot access organization '"+orgKey+"'.");	// server response 403 Forbidden
