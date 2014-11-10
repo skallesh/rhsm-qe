@@ -125,7 +125,9 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.release_(null,true,null,null,null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "", "stdout from release release --list without any entitlements");
 		Assert.assertEquals(result.getStderr().trim(), "No release versions available, please check subscriptions.", "stderr from release --list without any entitlements");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "exitCode from release --list without any entitlements");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(78);	// EX_CONFIG	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "exitCode from release --list without any entitlements");
 
 	}
 	
@@ -144,7 +146,9 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.release_(null, null, unavailableRelease, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "", "stdout from release release --set with an unavailable value");
 		Assert.assertEquals(result.getStderr().trim(), String.format("No releases match '%s'.  Consult 'release --list' for a full listing.", unavailableRelease), "stderr from release --set with an unavailable value");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "exitCode from release --set with an unavailable value");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(65);	// EX_DATAERR	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "exitCode from release --set with an unavailable value");
 	}
 	
 	
