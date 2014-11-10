@@ -122,7 +122,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			
 			//Assert.assertEquals(registerResult.getStderr().trim(), String.format("%s cannot register to any organizations.", username), "Error message when READ_ONLY user attempts to register.");	// Bug 903298 - String Update: "Register to" -> "Register with"
 			Assert.assertEquals(registerResult.getStderr().trim(), String.format("%s cannot register with any organizations.", username), "Error message when READ_ONLY user attempts to register.");
-			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE*/, "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
+			} else {
+				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
+			}
 			return;
 		}
 		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(0), "The exit code indicates that the register attempt was a success.");
@@ -1238,7 +1242,8 @@ Expected Results:
 		Assert.assertContainsNoMatch(sshCommandResult.getStderr().trim(), "Traceback.*","Stderr after register with --baseurl="+baseurl+" and other options should not contain a Traceback.");
 	
 		// negative testcase assertions........
-		if (expectedExitCode.equals(new Integer(255))) {
+		//if (expectedExitCode.equals(new Integer(255))) {
+		if (Integer.valueOf(expectedExitCode)>1) {
 			// assert that the current config remains unchanged when the expectedExitCode is 255
 			//Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm","baseurl"), baseurlBeforeTest, "The rhsm configuration for baseurl should remain unchanged when attempting to register with an invalid baseurl.");
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "baseurl"), baseurlBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [rhsm] baseurl should remain unchanged when attempting to register with an invalid baseurl.");
@@ -1330,6 +1335,22 @@ Expected Results:
 			ll.add(Arrays.asList(new Object[] {	null,													"http://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
 		}
 		
+		// for all rows, change the expected exitCode when testing post subscription-manager-1.13.8-1
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			for (List<Object> l : ll) {
+				// Object bugzilla, String baseurl, String baseurlConfigured, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+				Integer expectedExitCode = (Integer) l.get(3);
+				if (expectedExitCode.equals(255)) {
+					BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1119688");	// Bug 1119688 - [RFE] subscription-manager better usability for scripts
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+					l.set(3, new Integer(70));	// EX_SOFTWARE
+				}
+			}
+		}
+		
 		return ll;
 	}
 	
@@ -1367,7 +1388,7 @@ Expected Results:
 		
 		// negative testcase assertions........
 		//if (expectedExitCode.equals(new Integer(255))) {
-		if (!expectedExitCode.equals(new Integer(0))) {
+		if (Integer.valueOf(expectedExitCode)>1) {
 			// assert that the current config remains unchanged when the expected registration result is a failure
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname should remain unchanged when attempting to register with an invalid serverurl.");
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),	portBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] port should remain unchanged when attempting to register with an invalid serverurl.");

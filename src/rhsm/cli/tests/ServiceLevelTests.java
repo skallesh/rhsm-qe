@@ -889,7 +889,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// negative testcase assertions........
 		//if (expectedExitCode.equals(new Integer(255))) {
-		if (!expectedExitCode.equals(new Integer(0))) {
+		if (Integer.valueOf(expectedExitCode)>1) {
 			// assert that the current config remains unchanged when the expectedExitCode is 255
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname should remain unchanged when attempting to register with an invalid serverurl.");
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),	portBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] port should remain unchanged when attempting to register with an invalid serverurl.");
