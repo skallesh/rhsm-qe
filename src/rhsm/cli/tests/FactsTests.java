@@ -88,8 +88,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info("Assert that one must be registered to update the facts...");
 		for (Boolean list : new Boolean[]{true,false}) {			
 			SSHCommandResult result = clienttasks.facts_(list, true, null, null, null);
-			Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_ConsumerNotRegistered,
-				"One must be registered to update the facts.");
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(result.getStderr().trim(),clienttasks.msg_ConsumerNotRegistered, "stderr indicates that one must be registered to update the facts.");
+			} else {
+				Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_ConsumerNotRegistered, "stdout indicates that one must be registered to update the facts.");
+			}
 		}
 	}
 	
