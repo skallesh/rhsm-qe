@@ -945,7 +945,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
-		// String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
+		// Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
 		
 		// registration test for a user who is invalid
 		ll.add(Arrays.asList(new Object[]{null, "en_US.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, uErrMsg}));
@@ -1088,6 +1088,20 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		      print "%s:%s" % (line[0], line[1])
 		    print "\t%s" % entry.msgid
 		 */
+		
+		// for all rows, change the expected exitCode when testing post subscription-manager-1.13.8-1
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			for (List<Object> l : ll) {
+				// Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+				bugIds.add("1119688");	// Bug 1119688 - [RFE] subscription-manager better usability for scripts
+				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				l.set(0, blockedByBzBug);
+				l.set(4, new Integer(70));	// EX_SOFTWARE
+			}
+		}
+		
 		return ll;
 	}
 
