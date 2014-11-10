@@ -21,6 +21,7 @@ import rhsm.data.Org;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -75,9 +76,11 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult = clienttasks.orgs_(username, password, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The expected exit code from the orgs attempt.");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "The expected stdout result from orgs.");
-		Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), servertasks.invalidCredentialsRegexMsg(), "The expected stderr result from orgs.");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE // post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "The expected exit code from orgs with invalid credentials.");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "The expected stdout result from orgs with invalid credentials.");
+		Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), servertasks.invalidCredentialsRegexMsg(), "The expected stderr result from orgs with invalid credentials.");
 	}
 	
 	
@@ -227,13 +230,15 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		
 		// calling orgs without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword, null, false, null, null, null);
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		/* changed by subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
 		*/
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
 		
 		// calling orgs with insecure should now pass
 		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, true, null, null, null);
@@ -451,7 +456,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 		String x = String.valueOf(getRandInt());
-		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
+		if (clienttasks.isPackageInstalled("expect")) {
 			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
 			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	new Integer(0),		sm_clientUsername+" Organizations",				null}));
 			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(255),	uErrMsg,										null}));
@@ -470,6 +475,22 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(255),	null,																		uErrMsg}));
 			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				new Integer(0),		"(Username: ){3}.*\\n.*"+sm_clientUsername+" Organizations",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
 		}
+		
+		// for all rows with expectedExitCode=255, change the expected exitCode when testing post subscription-manager-1.13.8-1
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			for (List<Object> l : ll) {
+				// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+				if (((Integer)l.get(5)).equals(255)) {
+					BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1119688");	// Bug 1119688 - [RFE] subscription-manager better usability for scripts
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+					l.set(5, new Integer(70));	// EX_SOFTWARE
+				}
+			}
+		}
+		
 		return ll;
 	}
 
