@@ -1515,7 +1515,6 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		String basicauthproxyUrl = String.format("%s:%s", sm_basicauthproxyHostname,sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", sm_noauthproxyHostname,sm_noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
-//		String nErrMsg = "Network error, unable to connect to server. Please see "+clienttasks.rhsmLogFile+" for more information.";
 		String uErrMsg = servertasks.invalidCredentialsMsg(); //"Invalid username or password";
 		String oErrMsg = /*"Organization/Owner bad-org does not exist."*/"Organization bad-org does not exist.";
 		if (sm_serverType.equals(CandlepinType.katello))	oErrMsg = "Couldn't find organization 'bad-org'";
@@ -1524,25 +1523,41 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 		// basic auth proxy test data...
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258","838242"}),	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null}));
-//debugTesting if(true) return ll;
 		ll.add(Arrays.asList(new Object[]{	null,													sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	"bad-proxy",			sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null}));
 		ll.add(Arrays.asList(new Object[]{	null,													sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl+"0",	sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		"bad-username",					sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		"bad-password",				Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		"bad-username",					"bad-password",				Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		null,							null,						Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		"bad-username",					sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		"bad-password",				Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		"bad-username",					"bad-password",				Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		null,							null,						Integer.valueOf(255),	nErrMsg,	null}));
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258","838242"}),	"bad-username",		sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg}));
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258","838242"}),	sm_clientUsername,	"bad-password",		sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg}));
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258","838242"}),	sm_clientUsername,	sm_clientPassword,	"bad-org",		basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		oErrMsg}));
 
 		// no auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(0),		null,		null}));
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			"ignored-username",			"ignored-password",		Integer.valueOf(0),		null,		null}));
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(0),		null,		null}));
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			"ignored-username",			"ignored-password",		Integer.valueOf(0),		null,		null}));
 		ll.add(Arrays.asList(new Object[]{	null,													sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl+"0",		null,						null,					Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							"bad-username",		sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							sm_clientUsername,	"bad-password",		sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							sm_clientUsername,	sm_clientPassword,	"bad-org",		noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		oErrMsg}));
-
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258"}),				"bad-username",		sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258"}),				sm_clientUsername,	"bad-password",		sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258"}),				sm_clientUsername,	sm_clientPassword,	"bad-org",		noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		oErrMsg}));
+		
+		
+		// for all exitCode=255 rows, change the expected exitCode to EX_SOFTWARE 70 when testing post subscription-manager-1.13.8-1
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			for (List<Object> l : ll) {
+				// Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr
+				if (((Integer)l.get(7)).equals(255)) {	// expected exitCode
+					// Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
+					BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1119688");	// Bug 1119688 - [RFE] subscription-manager better usability for scripts
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+					l.set(7, new Integer(70));	// EX_SOFTWARE	// expected exitCode
+				}
+			}
+		}
+		
 		return ll;
 	}
 
