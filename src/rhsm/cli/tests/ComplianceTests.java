@@ -862,7 +862,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected void verifyListInstalledIsCachedWhenServerGoesOffline() {
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		clienttasks.config(null, null, true, new String[]{"server","hostname","offline-"+serverHostname});
-		Assert.assertEquals(clienttasks.identity_(null, null, null, null, null, null, null).getExitCode(), Integer.valueOf(255), "Identity fails when system is offline");
+		Integer expectedIdentityExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"))  expectedIdentityExitCode = new Integer(70);	//EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(clienttasks.identity_(null, null, null, null, null, null, null).getExitCode(), expectedIdentityExitCode, "Identity fails when system is offline");
 		List<InstalledProduct> installedProductsCached = clienttasks.getCurrentlyInstalledProducts();
 		for (InstalledProduct installedProduct : installedProductsCached) {
 			Assert.assertTrue(!installedProduct.status.equalsIgnoreCase("Unknown"),"Installed product '"+installedProduct.productName+"' status '"+installedProduct.status+"' should NOT be Unknown when server is offline.");
