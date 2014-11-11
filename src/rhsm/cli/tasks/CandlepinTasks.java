@@ -43,6 +43,7 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,10 +51,12 @@ import org.testng.SkipException;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
+import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.RevokedCert;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -474,33 +477,6 @@ schema generation failed
 	static public String getResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
 		GetMethod get = new GetMethod(url+path);
 		
-//		// WORKAROUND WHEN EXECUTING TESTS AGAINST THE IT STAGE ENVIRONMENT CANDLEPIN
-//		// RELATED BUGZILLA: https://bugzilla.redhat.com/show_bug.cgi?id=684350 - jsefler 03/29/2011
-//		if (server.equals("subscription.rhn.stage.redhat.com")) {
-//			/* THIS WORKAROUND CAME FROM Brenton AND IS TEMPRARY AGAINST STAGE ENV.
-//			 * stage:
-//			 *  curl -k -u stage_test_6:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/entitlements/8a99f9812eddbd5c012f0343c0576c99
-//			 * webqa:
-//			 *  curl -k -u foo:bar --request GET http://rubyvip.web.qa.ext.phx1.redhat.com/clonepin/candlepin/status
-//			 */
-//			server = "rubyvip.web.stage.ext.phx2.redhat.com";
-//			port = "80";
-//			prefix = "/clonepin/candlepin";
-//			get = new GetMethod("http://"+server+":"+port+prefix+path);
-//		}
-//		if (server.equals("katello-test-f15-1.usersys.redhat.com")) {
-//			/* THIS WORKAROUND CAME FROM jweiss AGAINST KATELLO.
-//			 * stage:
-//			 *  curl -k -u stage_test_6:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/entitlements/8a99f9812eddbd5c012f0343c0576c99
-//			 * webqa:
-//			 *  curl -k -u foo:bar --request GET http://rubyvip.web.qa.ext.phx1.redhat.com/clonepin/candlepin/status
-//			 */
-//			port = "8443";
-//			prefix = "/candlepin";
-//			get = new GetMethod("https://"+server+":"+port+prefix+path);
-//		}
-//		// END OF WORKAROUND
-		
 		// log the curl alternative to HTTP request
 		// Example: curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19 | python -mjson.tool
 		String user		= (authenticator==null || authenticator.isEmpty())? "":"--user "+authenticator+":"+password+" ";
@@ -508,9 +484,9 @@ schema generation failed
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
 		
 		String jsonString = getHTTPResponseAsString(client, get, authenticator, password);
-		// TODO: if jsonString is not truely JSON, then the server failed,  we should check for a 502
 		if (!jsonString.startsWith("{")) {
-			log.warning("Expected the server's response to be valid json.  This was the server's response:\n"+jsonString);
+			log.warning("Expected the server to respond with valid JSON data.  Actual response:\n"+jsonString);
+			// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
 			//	<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 			//	<html><head>
 			//	<title>502 Proxy Error</title>
@@ -523,6 +499,21 @@ schema generation failed
 			//	<hr>
 			//	<address>Apache Server at subscription.rhn.stage.redhat.com Port 443</address>
 			//	</body></html>
+			if (jsonString.contains("502 Proxy Error") && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+				String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+				// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Re-attempting one more time to get a valid JSON response from the server...");
+					jsonString = getHTTPResponseAsString(client, get, authenticator, password);
+					if (!jsonString.startsWith("{") && jsonString.contains("502 Proxy Error")) {	// we still get a 502 Proxy Error
+						throw new SkipException("Encounterd a 502 response from the server and could not complete this test while bug '"+bugId+"' is open.");
+					} else {
+						log.fine("Workaround succeeded.");
+					}
+				}
+			}
+			// END OF WORKAROUND
 		}
 		return jsonString;
 	}
