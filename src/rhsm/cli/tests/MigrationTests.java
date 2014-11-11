@@ -2608,6 +2608,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
+		// when testing with --serverurl/--destination-url specified, add bug BlockedByBzBug 1157761 to affected rows
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) {
+			for (List<Object> l : ll) {
+				if (((String)(l.get(5))).contains("--serverurl")) {	// affected rows contain --serverurl in the String options parameter
+					BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1157761");	// Bug 1157761 - broken --destination-url option in rhn-migrate-rhn-classic-to-rhsm
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+				}
+			}
+		}
+		
 		// many options were changed by the RFE Bug 1123025 sat5to6 development, convert all of the options to their new values
 		/* this update is also retrofitted in executeRhnMigrateClassicToRhsm */
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) {
