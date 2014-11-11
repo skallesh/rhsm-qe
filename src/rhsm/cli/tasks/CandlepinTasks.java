@@ -506,8 +506,25 @@ schema generation failed
 		String user		= (authenticator==null || authenticator.isEmpty())? "":"--user "+authenticator+":"+password+" ";
 		String request	= "--request "+get.getName()+" ";
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
-
-		return getHTTPResponseAsString(client, get, authenticator, password);
+		
+		String jsonString = getHTTPResponseAsString(client, get, authenticator, password);
+		// TODO: if jsonString is not truely JSON, then the server failed,  we should check for a 502
+		if (!jsonString.startsWith("{")) {
+			log.warning("Expected the server's response to be valid json.  This was the server's response:\n"+jsonString);
+			//	<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+			//	<html><head>
+			//	<title>502 Proxy Error</title>
+			//	</head><body>
+			//	<h1>Proxy Error</h1>
+			//	<p>The proxy server received an invalid
+			//	response from an upstream server.<br />
+			//	The proxy server could not handle the request <em><a href="/subscription/pools/8a99f9814931ea74014933dec232064a">GET&nbsp;/subscription/pools/8a99f9814931ea74014933dec232064a</a></em>.<p>
+			//	Reason: <strong>Error reading from remote server</strong></p></p>
+			//	<hr>
+			//	<address>Apache Server at subscription.rhn.stage.redhat.com Port 443</address>
+			//	</body></html>
+		}
+		return jsonString;
 	}
 	
 	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
