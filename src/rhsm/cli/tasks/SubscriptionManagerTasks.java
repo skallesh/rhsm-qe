@@ -4526,14 +4526,11 @@ if (false) {
 	
 
 	// subscribe module tasks ************************************************************
-
+	
 	/**
-	 * subscribe WITHOUT asserting results
-	 * @param servicelevel TODO
-	 * @param file TODO
+	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
-		
+	public String subscribeCommand(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 		// assemble the command
 		String command = this.command;									command += " subscribe";
 		if (auto!=null && auto)											command += " --auto";
@@ -4548,6 +4545,19 @@ if (false) {
 		if (proxy!=null)												command += " --proxy="+proxy;
 		if (proxyuser!=null)											command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
+		
+		return command;
+	}
+	
+	/**
+	 * subscribe WITHOUT asserting results
+	 * @param servicelevel TODO
+	 * @param file TODO
+	 */
+	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
+		
+		// assemble the command
+		String command = subscribeCommand(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);

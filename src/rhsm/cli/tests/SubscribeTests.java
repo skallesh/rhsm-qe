@@ -1435,16 +1435,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// call list with --pool-only to get a random list of available poolids
 		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null);
 		String tmpFile = "/tmp/poolIds.txt";
-		RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile, 0);
+		//RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile, 0);
+		RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile+" && echo abc123 >> "+tmpFile, 0);
 		SSHCommandResult poolOnlyListResult = client.runCommandAndWait("cat "+tmpFile);
 		
 		// convert the result to a list
 		List<String> poolIdsFromFile = new ArrayList<String>();
-		if (!poolOnlyListResult.getStdout().trim().isEmpty()) poolIdsFromFile = Arrays.asList(poolOnlyListResult.getStdout().trim().split("\n"));
+		if (!poolOnlyListResult.getStdout().trim().isEmpty()) poolIdsFromFile.addAll(Arrays.asList(poolOnlyListResult.getStdout().trim().split("\n")));
+		poolIdsFromFile.remove("abc123");
 		
 		// subscribe with the --file option
-		clienttasks.subscribe(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null);
-		
+		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null);
+		String expectedRejection = String.format("Pool with id %s could not be found.", "abc123");
+		Assert.assertTrue(subscribeWithFileResult.getStdout().trim().endsWith(expectedRejection), "The stdout result from subscribe with a file of poolIds ends with '"+expectedRejection+"'.");
+
 		// assert that all of the currently attached pools equal the poolIdsFromFile
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		List<String> poolIdsAttached = new ArrayList<String>();
@@ -1455,6 +1459,48 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(poolIdsAttached.size(), poolIdsFromFile.size(),"The number of poolIds currently attached matches the number of pool ids read from the file '"+tmpFile+"'.");
 	}
 	
+	
+	@Test(	description="subscription-manager: subscribe with --file=- which indicates that the pools will be read from stdin",
+			groups={"blockedByBug-1159974"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithFileOfPoolIdsFromStdin_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
+		
+		Boolean all = false;	//getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		
+		// call list with --pool-only to get a random list of available poolids
+		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null);
+		String tmpFile = "/tmp/poolIds.txt";
+		RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile, 0);
+		SSHCommandResult poolOnlyListResult = client.runCommandAndWait("cat "+tmpFile);
+		
+//		// convert the result to a list
+//		List<String> poolIdsFromFile = new ArrayList<String>();
+//		if (!poolOnlyListResult.getStdout().trim().isEmpty()) poolIdsFromFile = Arrays.asList(poolOnlyListResult.getStdout().trim().split("\n"));
+		
+		// subscribe with the --file option (to get our expected results)
+		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null);
+		
+		// return the subscriptions...
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		
+		// now let's run the same poolOnlyListCommand and pipe the results to subscription-manager attach --file - (the hyphen indicates stdin)
+		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, "-", null, null, null);
+		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait(poolOnlyListCommand+" | "+stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
+				
+		// assert the two subscribe results are identical
+		Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(), subscribeWithFileResult.getExitCode(), "Exit Code comparison between the expected result of subscribing with a file of poolIds and subscribing with the poolIds piped to stdin.");
+		Assert.assertEquals(stdinFileSubscribeCommandResult.getStdout(), subscribeWithFileResult.getStdout(), "Stdout comparison between the expected result of subscribing with a file of poolIds and subscribing with the poolIds piped from stdin.");
+		Assert.assertEquals(stdinFileSubscribeCommandResult.getStderr(), subscribeWithFileResult.getStderr(), "Stderr comparison between the expected result of subscribing with a file of poolIds and subscribing with the poolIds piped from stdin.");
+	}
 	
 	
 	
