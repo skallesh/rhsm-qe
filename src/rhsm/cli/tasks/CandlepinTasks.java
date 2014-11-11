@@ -484,7 +484,7 @@ schema generation failed
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
 		
 		String jsonString = getHTTPResponseAsString(client, get, authenticator, password);
-		if (!jsonString.startsWith("{")) {
+		if (!jsonString.startsWith("[") && !jsonString.startsWith("{")) {
 			log.warning("Expected the server to respond with valid JSON data.  Actual response:\n"+jsonString);
 			// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
 			//	<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
@@ -506,7 +506,7 @@ schema generation failed
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Re-attempting one more time to get a valid JSON response from the server...");
 					jsonString = getHTTPResponseAsString(client, get, authenticator, password);
-					if (!jsonString.startsWith("{") && jsonString.contains("502 Proxy Error")) {	// we still get a 502 Proxy Error
+					if (!jsonString.startsWith("[") && !jsonString.startsWith("{") && jsonString.contains("502 Proxy Error")) {	// we still get a 502 Proxy Error
 						throw new SkipException("Encounterd a 502 response from the server and could not complete this test while bug '"+bugId+"' is open.");
 					} else {
 						log.fine("Workaround succeeded.");
