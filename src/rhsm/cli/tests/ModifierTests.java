@@ -86,7 +86,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 //			clienttasks.subscribeToSubscriptionPool(providingPool);
 //		}
 		List<String> modifiedPoolIds = new ArrayList<String>();
-		if (poolsModified.isEmpty()) throw new SkipException("Cannot complete this test because it appears that there are no modifiable pools available to this consumer's organization that can be modified by the modifier pool '"+modifierPool.subscriptionName+"'.");
+		if (poolsModified.isEmpty()) throw new SkipException("Cannot complete this test because it appears that there are no modifiable pools (e.g. EUS extended update subscription) available to this consumer's organization that can be modified by the modifier pool '"+modifierPool.subscriptionName+"'.");
 		for (SubscriptionPool pool : poolsModified) modifiedPoolIds.add(pool.poolId);
 		clienttasks.subscribe(null, null, modifiedPoolIds, null, null, null, null, null, null, null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(modifierPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
