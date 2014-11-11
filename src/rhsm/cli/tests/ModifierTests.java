@@ -58,7 +58,8 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 				"Before beginning our test, yum repolist all excludes label (repo id) '"+label+"'.");
 
 		log.info("Now subscribe to the modifier pool and assert that the label (repo id) '"+label+"' is still not available.");
-		clienttasks.subscribeToSubscriptionPool(modifierPool);
+		//clienttasks.subscribeToSubscriptionPool(modifierPool);	// fails on systems that have no available pools, replacing with the next call that passed credentials
+		clienttasks.subscribeToSubscriptionPool(modifierPool, sm_clientUsername, sm_clientPassword, sm_serverUrl);	// FIXME, this call assumes that  sm_clientUsername, sm_clientPassword is the currently registered consumer.  TODO I should query clienttasks to get the currently registered credentials
 		Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
 				"After subscribing to modifier pool for productId '"+modifierPool.productId+"', yum repolist all does not include (repo id) '"+label+"' because at least one of the providing product subscription(s) being modified is not yet subscribed to.");
 
@@ -85,6 +86,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 //			clienttasks.subscribeToSubscriptionPool(providingPool);
 //		}
 		List<String> modifiedPoolIds = new ArrayList<String>();
+		if (poolsModified.isEmpty()) throw new SkipException("Cannot complete this test because it appears that there are no modifiable pools available to this consumer's organization that can be modified by the modifier pool '"+modifierPool.subscriptionName+"'.");
 		for (SubscriptionPool pool : poolsModified) modifiedPoolIds.add(pool.poolId);
 		clienttasks.subscribe(null, null, modifiedPoolIds, null, null, null, null, null, null, null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(modifierPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
