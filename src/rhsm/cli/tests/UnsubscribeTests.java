@@ -196,7 +196,12 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// now remove the consumer cert to simulate an unregister
 		clienttasks.removeAllCerts(true,false, false);
-		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),clienttasks.msg_ConsumerNotRegistered);
+		SSHCommandResult identityResult = clienttasks.identity_(null,null,null,null,null,null,null);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) { // post commit 5697e3af094be921ade01e19e1dfe7b548fb7d5b bug 1119688
+			Assert.assertEquals(identityResult.getStderr().trim(),clienttasks.msg_ConsumerNotRegistered, "stderr");
+		} else {
+			Assert.assertEquals(identityResult.getStdout().trim(),clienttasks.msg_ConsumerNotRegistered, "stdout");
+		}
 		
 		// now unsubscribe from the serial number (while not registered)
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "We should be consuming an entitlement (even while not registered)");
@@ -215,7 +220,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		BigInteger serial = BigInteger.valueOf(-123);
 		result = clienttasks.unsubscribe_(null, serial, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "Asserting exit code when attempting to unsubscribe from an invalid serial number.");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(64);	// EX_USAGE // post commit 5697e3af094be921ade01e19e1dfe7b548fb7d5b bug 1119688
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from an invalid serial number.");
 		//Assert.assertEquals(result.getStderr().trim(), "Error: '-123' is not a valid serial number");
 		//Assert.assertEquals(result.getStdout().trim(), "");
 		// stderr moved to stdout by Bug 867766 - [RFE] unsubscribe from multiple entitlement certificates using serial numbers 
@@ -224,7 +231,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		List<BigInteger> serials = Arrays.asList(new BigInteger[]{BigInteger.valueOf(123),BigInteger.valueOf(-456),BigInteger.valueOf(789)});
 		result = clienttasks.unsubscribe_(null, serials, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "Asserting exit code when attempting to unsubscribe from an invalid serial number.");
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from an invalid serial number.");
 		Assert.assertEquals(result.getStdout().trim(), String.format("Error: '%s' is not a valid serial number",serials.get(1)));
 		Assert.assertEquals(result.getStderr().trim(), "");
 	}
