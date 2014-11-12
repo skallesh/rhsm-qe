@@ -215,21 +215,37 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
-		// Object bugzilla, String username, String password, String owner, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
-		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername,					String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername+getRandInt(),		sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername+getRandInt(),		String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		// THIS TEST ROW IS DEPRECATED BY INTERACTIVE PROMPTING FOR REGISTRATION ORG IN RHEL7+ ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"You must specify an organization/owner for new consumers."*/"You must specify an organization for new consumers."}));
-		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername,					sm_clientPassword,				"foobar",						null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foobar"+" does not exist."*/"Organization "+"foobar"+" does not exist."}));
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),						sm_clientUsername,					sm_clientPassword,				"\"foo bar\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foo bar"+" does not exist."*/"Organization "+"foo bar"+" does not exist."}));
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"734114","906000","919584"}),	sm_clientUsername,					sm_clientPassword,				"\"富 酒吧\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"富 酒吧"+" does not exist."*/"Organization "+"富 酒吧"+" does not exist."}));
-
-		// force a successful registration, and then...
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"616065","669395"}),	sm_clientUsername,					sm_clientPassword,				sm_clientOrg,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"The system has been registered with ID: [a-f,0-9,\\-]{36}",					null}));
-
-		// ... try to register again even though the system is already registered
-		ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
-
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			// Object bugzilla, String username, String password, String owner, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688"}),								sm_clientUsername,					String.valueOf(getRandInt()),	null,				null,	null,	null,	null,		Boolean.TRUE,	null,	Integer.valueOf(70)/*EX_SOFTWARE*/,	null,	uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688"}),								sm_clientUsername+getRandInt(),		sm_clientPassword,				null,				null,	null,	null,	null,		Boolean.TRUE,	null,	Integer.valueOf(70)/*EX_SOFTWARE*/,	null,	uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688"}),								sm_clientUsername+getRandInt(),		String.valueOf(getRandInt()),	null,				null,	null,	null,	null,		Boolean.TRUE,	null,	Integer.valueOf(70)/*EX_SOFTWARE*/,	null,	uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688"}),								sm_clientUsername,					sm_clientPassword,				"foobar",			null,	null,	null,	null,		Boolean.TRUE,	null,	Integer.valueOf(70)/*EX_SOFTWARE*/,	null,	/*"Organization/Owner "+"foobar"+" does not exist."*/"Organization "+"foobar"+" does not exist."}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688","616065","734114"}),			sm_clientUsername,					sm_clientPassword,				"\"foo bar\"",		null,	null,	null,	null,		Boolean.TRUE,	null,	Integer.valueOf(70)/*EX_SOFTWARE*/,	null,	/*"Organization/Owner "+"foo bar"+" does not exist."*/"Organization "+"foo bar"+" does not exist."}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688","734114","906000","919584"}),	sm_clientUsername,					sm_clientPassword,				"\"富 酒吧\"",		null,	null,	null,	null,		Boolean.TRUE,	null,	Integer.valueOf(70)/*EX_SOFTWARE*/,	null,	/*"Organization/Owner "+"富 酒吧"+" does not exist."*/"Organization "+"富 酒吧"+" does not exist."}));
+	
+			// force a successful registration, and then...
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688","616065","669395"}),			sm_clientUsername,					sm_clientPassword,				sm_clientOrg,		null,	null,	null,	null,		Boolean.TRUE,	null,	Integer.valueOf(0),					"The system has been registered with ID: [a-f,0-9,\\-]{36}",	null}));
+	
+			// ... try to register again even though the system is already registered
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688"}),								sm_clientUsername,					sm_clientPassword,				null,				null,	null,	null,	null,		Boolean.FALSE,	null,	Integer.valueOf(64)/*EX_USAGE*/,	null,	"This system is already registered. Use --force to override"}));
+		} else {
+			// Object bugzilla, String username, String password, String owner, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
+			ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername,					String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername+getRandInt(),		sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername+getRandInt(),		String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
+			// THIS TEST ROW IS DEPRECATED BY INTERACTIVE PROMPTING FOR REGISTRATION ORG IN RHEL7+ ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"You must specify an organization/owner for new consumers."*/"You must specify an organization for new consumers."}));
+			ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername,					sm_clientPassword,				"foobar",						null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foobar"+" does not exist."*/"Organization "+"foobar"+" does not exist."}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),						sm_clientUsername,					sm_clientPassword,				"\"foo bar\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foo bar"+" does not exist."*/"Organization "+"foo bar"+" does not exist."}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"734114","906000","919584"}),	sm_clientUsername,					sm_clientPassword,				"\"富 酒吧\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"富 酒吧"+" does not exist."*/"Organization "+"富 酒吧"+" does not exist."}));
+	
+			// force a successful registration, and then...
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"616065","669395"}),	sm_clientUsername,					sm_clientPassword,				sm_clientOrg,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"The system has been registered with ID: [a-f,0-9,\\-]{36}",					null}));
+	
+			// ... try to register again even though the system is already registered
+			ll.add(Arrays.asList(new Object[] {null,												sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
+		}
+		
 		return ll;
 	}
 	
@@ -610,7 +626,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// attempt to register again and assert that you are warned that the system is already registered
 		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, (String)null, null, null, null, null, false, null, null, null);
-		Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is already registered."),"Expecting: This system is already registered.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertTrue(sshCommandResult.getStderr().startsWith("This system is already registered."),"Expecting stderr indication: This system is already registered.");
+		} else {
+			Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is already registered."),"Expecting stdout indication: This system is already registered.");
+		}
 		
 		// register with force
 		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
@@ -1157,7 +1177,9 @@ Expected Results:
 		
 		// assert results
 		Assert.assertEquals(result.getStderr().trim(), "Error: Server does not support environments.","Attempt to register to an environment on a server that does not support environments should be blocked.");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register to environment when the candlepin server does NOT support environments.");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(69);	// EX_UNAVAILABLE	// post commit 5697e3af094be921ade01e19e1dfe7b548fb7d5b bug 1119688
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Exit code from register to environment when the candlepin server does NOT support environments.");
 	}
 	
 	
@@ -1177,8 +1199,10 @@ Expected Results:
 		// skip this test when candlepin does not support environments
 		if (!supportsEnvironments) {
 			// but before we skip, we can verify that environments are unsupported by this server
+			Integer expectedExitCode = new Integer(255);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(69);	// EX_UNAVAILABLE	// post commit 5697e3af094be921ade01e19e1dfe7b548fb7d5b bug 1119688
 			Assert.assertEquals(result.getStderr().trim(), "Error: Server does not support environments.","Attempt to register to an environment on a server that does not support environments should be blocked.");
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register to environment when the candlepin server does NOT support environments.");
+			Assert.assertEquals(result.getExitCode(), expectedExitCode,"Exit code from register to environment when the candlepin server does NOT support environments.");
 			throw new SkipException("Candlepin server '"+sm_serverHostname+"' does not support environments, therefore this test is not applicable.");
 		}
 
@@ -1203,9 +1227,11 @@ Expected Results:
 		// skip this test when candlepin does not support environments
 		if (!supportsEnvironments) {
 			// but before we skip, we can verify that environments are unsupported by this server
+			Integer expectedExitCode = new Integer(255);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(69);	// EX_UNAVAILABLE	// post commit 5697e3af094be921ade01e19e1dfe7b548fb7d5b bug 1119688
 			String expectedErrorMsg = "Error: Server does not support environments.";
 			Assert.assertTrue(result.getStdout().trim().endsWith(expectedErrorMsg),"An attempt to register to an environment on a server that does not support environments report: "+expectedErrorMsg);
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from an attempt to register to an environment on a server that does not support environments.");
+			Assert.assertEquals(result.getExitCode(), expectedExitCode,"Exit code from an attempt to register to an environment on a server that does not support environments.");
 			throw new SkipException("Candlepin server '"+sm_serverHostname+"' does not support environments, therefore this test is not applicable.");
 		}
 
@@ -1456,13 +1482,15 @@ Expected Results:
 		
 		// calling register without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,false,null,null,null,null,null,null);
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		/* changed by subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		*/
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		
 		// calling register with insecure should now pass
 		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,true,null,null,null,null,null,null);
