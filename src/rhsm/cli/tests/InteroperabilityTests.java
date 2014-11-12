@@ -353,6 +353,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 				clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "sslCACert", satCaCertPath);	// sslCACert[comment]=The CA cert used to verify the ssl server
 			}
 		}
+		
+		// make sure the rhnplugin conf is enabled
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForRhn, "enabled","1");
 	}
 	
 	
