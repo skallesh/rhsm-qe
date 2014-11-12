@@ -700,9 +700,17 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			
 			// subscribe without asserting results (not necessary)
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(futureSystemSubscriptionPool);
-			List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+			// unfortunately this situation may occur (which will result in a null entitlementCertFile
+			// WARNING: Pool is restricted to physical systems: '2c90af8c49a0ab3d0149a0af28d409f8'.
+			// WARNING: CandlepinTasks could not getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId '2c90af8c49a0ab3d0149a0af28d409f8'. This pool has probably not been subscribed to by authenticator 'testuser1'. (rhsm.cli.tasks.CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId)
+			if (entitlementCertFile==null) {
+				log.warning("Encountered a problem trying to attach future subscription '"+futureSystemSubscriptionPool.subscriptionName+"'.  Look for two preceeding WARNING messages.  Skipping assertion of installed product status.");
+				continue;
+				// FIXME need to account for this in the assertions that follow this block especially if this failed futureSystemSubscriptionPool is the only one that provides one of the installed products.
+			}
 			
 			// assert that the Status of the installed product is "Future Subscription"
+			List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 //			for (ProductCert productCert : clienttasks.getCurrentProductCertsProvidedBySubscriptionPool(futureSystemSubscriptionPool)) {	// TODO not efficient; testing fix on next line
 			for (ProductCert productCert : clienttasks.getProductCertsProvidedBySubscriptionPool(currentProductCerts,futureSystemSubscriptionPool)) {
 				InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
@@ -714,6 +722,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// simply assert that we actually did subscribe every installed product to a future subscription pool
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			Assert.assertEquals(installedProduct.status, "Future Subscription", "Status of every installed product should be a Future Subscription after subscribing all installed products to a future pool.  This Installed Product: "+installedProduct);
+			// If this fails, search the log for a WARNING from the FIXME above
 		}
 		
 		// finally assert that the overall system is non-compliant
