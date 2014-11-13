@@ -63,20 +63,35 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// with credentials
 		result = clienttasks.service_level_(null, null, null, null, sm_clientUsername, sm_clientPassword, /*sm_clientOrg*/null, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level (implies --show) without being registered");
-		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from service-level (implies --show) without being registered");
+			Assert.assertEquals(result.getStderr().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stderr from service-level --show without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), new Integer(255), "ExitCode from service-level (implies --show) without being registered");
+			//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
+		}
 		if (sm_clientOrg!=null) {
 			result = clienttasks.service_level_(null, null, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null);
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level (implies --show) without being registered");
-			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --show without being registered");
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(result.getExitCode(), Integer.valueOf(64)/*EX_USAGE*/, "ExitCode from service-level (implies --show) without being registered");
+				Assert.assertEquals(result.getStderr().trim(),"Error: --org is only supported with the --list option", "Stderr from service-level --show without being registered");
+			} else {
+				Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level (implies --show) without being registered");
+				Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --show without being registered");
+			}
 		}
 		
 		// without credentials
 		result = clienttasks.service_level_(null, null, null, null, null, null, null, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level (implies --show) without being registered");
-		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from service-level (implies --show) without being registered");
+			Assert.assertEquals(result.getStderr().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stderr from service-level --show without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), new Integer(255), "ExitCode from service-level (implies --show) without being registered");
+			//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
+		}
 	}
 	
 	
@@ -93,20 +108,35 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// with credentials
 		result = clienttasks.service_level_(true, null, null, null, sm_clientUsername, sm_clientPassword, /*sm_clientOrg*/null, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
-		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from service-level --show without being registered");
+			Assert.assertEquals(result.getStderr().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stderr from service-level --show without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
+			//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
+		}
 		if (sm_clientOrg!=null) {
 			result = clienttasks.service_level_(null, null, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null);
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
-			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --show without being registered");
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(result.getExitCode(), Integer.valueOf(64)/*EX_USAGE*/, "ExitCode from service-level --show without being registered");
+				Assert.assertEquals(result.getStderr().trim(),"Error: --org is only supported with the --list option", "Stderr from service-level --show without being registered");
+			} else {
+				Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
+				Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --show without being registered");
+			}
 		}
 		
 		// without credentials
 		result = clienttasks.service_level_(true, null, null, null, null, null, null, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
-		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from service-level --show without being registered");
+			Assert.assertEquals(result.getStderr().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stderr from service-level --show without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
+			//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
+		}
 	}
 	
 	
@@ -120,8 +150,13 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		SSHCommandResult result = clienttasks.service_level_(null, true, null, null, null, null, null, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"Error: you must register or specify --username and --password to list service levels", "Stdout from service-level --list without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(64)/*EX_USAGE*/, "ExitCode from service-level --list without being registered");
+			Assert.assertEquals(result.getStderr().trim(),"Error: you must register or specify --username and --password to list service levels", "Stderr from service-level --list without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"Error: you must register or specify --username and --password to list service levels", "Stdout from service-level --list without being registered");
+		}
 	}
 	
 	
@@ -138,20 +173,35 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// with credentials
 		result = clienttasks.service_level_(null, null, "FOO", null, sm_clientUsername, sm_clientPassword, /*sm_clientOrg*/null, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set without being registered");
-		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --set without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --set without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from service-level --set without being registered");
+			Assert.assertEquals(result.getStderr().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stderr from service-level --set without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), new Integer(255), "ExitCode from service-level --set without being registered");
+			//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --set without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --set without being registered");
+		}
 		if (sm_clientOrg!=null) {
 			result = clienttasks.service_level_(null, null, "FOO", null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null);
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set without being registered");
-			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --set without being registered");
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(result.getExitCode(), Integer.valueOf(64)/*EX_USAGE*/, "ExitCode from service-level --set without being registered");
+				Assert.assertEquals(result.getStderr().trim(),"Error: --org is only supported with the --list option", "Stderr from service-level --set without being registered");
+			} else {
+				Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set without being registered");
+				Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --set without being registered");
+			}
 		}
 		
 		// without credentials
 		result = clienttasks.service_level_(null, null, "FOO", null, null, null, null, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set without being registered");
-		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --set without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --set without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from service-level --set without being registered");
+			Assert.assertEquals(result.getStderr().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stderr from service-level --set without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), new Integer(255), "ExitCode from service-level --set without being registered");
+			//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --set without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --set without being registered");
+		}
 	}
 	
 	
@@ -168,20 +218,35 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// with credentials
 		result = clienttasks.service_level_(null, null, null, true, sm_clientUsername, sm_clientPassword, /*sm_clientOrg*/null, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --unset without being registered");
-		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --unset without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --unset without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from service-level --unset without being registered");
+			Assert.assertEquals(result.getStderr().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stderr from service-level --unset without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), new Integer(255), "ExitCode from service-level --unset without being registered");
+			//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --unset without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --unset without being registered");
+		}
 		if (sm_clientOrg!=null) {
 			result = clienttasks.service_level_(null, null, null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null);
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --unset without being registered");
-			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --unset without being registered");
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(result.getExitCode(), Integer.valueOf(64)/*EX_USAGE*/, "ExitCode from service-level --unset without being registered");
+				Assert.assertEquals(result.getStderr().trim(),"Error: --org is only supported with the --list option", "Stderr from service-level --unset without being registered");
+			} else {
+				Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --unset without being registered");
+				Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --unset without being registered");
+			}
 		}
 		
 		// without credentials
 		result = clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --unset without being registered");
-		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --unset without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --unset without being registered");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from service-level --unset without being registered");
+			Assert.assertEquals(result.getStderr().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stderr from service-level --unset without being registered");
+		} else {
+			Assert.assertEquals(result.getExitCode(), new Integer(255), "ExitCode from service-level --unset without being registered");
+			//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --unset without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --unset without being registered");
+		}
 	}
 	
 	
@@ -196,7 +261,9 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// test while unregistered
 		clienttasks.unregister(null, null, null);
 		result = clienttasks.service_level_(null, true, null, null, sm_clientUsername, sm_clientPassword+x, sm_clientOrg, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid credentials");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from service-level --list with invalid credentials");
 		//if (sm_serverOld) {Assert.assertEquals(result.getStdout().trim(), "Error: you must register or specify --org."); throw new SkipException("service-level --list with invalid credentials against an old candlepin server is not supported.");}
 		if (sm_serverOld) {Assert.assertEquals(result.getStderr().trim(), "ERROR: The service-level command is not supported by the server."); throw new SkipException("Skipping this test since service-level is gracefully not supported when configured against an old candlepin server.");}
 		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(), "Stderr from service-level --list with invalid credentials");
@@ -205,7 +272,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// test while registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null, null, null, null);
 		result = clienttasks.service_level_(null, true, null, null, sm_clientUsername, sm_clientPassword+x, sm_clientOrg, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid credentials");
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from service-level --list with invalid credentials");
 		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(), "Stderr from service-level --list with invalid credentials");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 	}
@@ -223,14 +290,16 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		result = clienttasks.service_level_(null, true, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null, null, null);
 		if (sm_serverOld) {Assert.assertEquals(result.getStderr().trim(), "ERROR: The service-level command is not supported by the server."); throw new SkipException("Skipping this test since service-level is gracefully not supported when configured against an old candlepin server.");}
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from service-level --list with invalid org");
 		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found.",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 
 		// test while registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null, null, null, null);
 		result = clienttasks.service_level_(null, true, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from service-level --list with invalid org");
 		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found.",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 	}
@@ -349,7 +418,9 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		msg = String.format("Service level %s is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);	// valid before bug fix 864508 - Service level {0} is not available to consumers....
 		msg = String.format("Service level '%s' is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) msg = String.format("Service level '%s' is not available to units of organization %s.",unavailableServiceLevel,sm_clientOrg);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255));
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
 		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(msg), "Stdout message contains: "+msg);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr message from an attempt to register with autosubscribe and an unavailable servicelevel.");
 
@@ -455,8 +526,9 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		expectedStdout = String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg);	// valid before bug fix 864508
 		expectedStdout = String.format("Service level '%s' is not available to consumers of organization %s.","FOO",sm_clientOrg);	// valid before bug fix 864508
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("Service level '%s' is not available to units of organization %s.","FOO",sm_clientOrg);
-
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from an attempt to subscribe with auto and an unavailable service level.");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Exit code from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to subscribe with auto and an unavailable service level.");
 	}
@@ -749,7 +821,9 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		expectedStderr = String.format("Service level '%s' is not available to consumers of organization %s.",unavailableSericeLevel,org);
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Service level '%s' is not available to units of organization %s.",unavailableSericeLevel,org);
 		
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set with unavailable serviceLevel");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from service-level --set with unavailable serviceLevel");
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from service-level --set with unavailable serviceLevel");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --set with unavailable serviceLevel");
 	}
@@ -771,7 +845,9 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		expectedStderr = String.format("Service level '%s' is not available to consumers of organization admin.",exemptServiceLevel);
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Service level '%s' is not available to units of organization admin.",exemptServiceLevel);
 
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set with exempt serviceLevel");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from service-level --set with exempt serviceLevel");
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from service-level --set with exempt serviceLevel");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --set with exempt serviceLevel");
 	}
@@ -933,13 +1009,15 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// calling service level list without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.service_level_(null,true,null,null,sm_clientUsername,sm_clientPassword, sm_clientOrg, null, false, null, null, null);
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		/* changed by subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
 		*/
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "Exitcode from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
 	
 		// calling service level list with insecure should now pass
 		sshCommandResult = clienttasks.service_level(null,true,null,null,sm_clientUsername,sm_clientPassword, sm_clientOrg, null, true, null, null, null);
