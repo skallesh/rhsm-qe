@@ -132,7 +132,9 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 		// User testuser1 has already registered a personal consumer
 		//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), String.format("User %s has already registered a personal consumer", username),"stderr after attempt to register same person from a second different client:");
 		Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), String.format("User '%s' has already registered a personal consumer", username),"stderr after attempt to register same person from a second different client:");
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255),"exitCode after attempt to register same person from a second different client");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"exitCode after attempt to register same person from a second different client");
 
 	}
 	
