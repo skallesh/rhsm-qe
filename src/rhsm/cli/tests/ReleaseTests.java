@@ -191,7 +191,9 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		
 		// attempt to unset by setting an empty string...
 		SSHCommandResult result = clienttasks.release_(null, null, "", null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode when attempting to unset the release with \"\".");
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(65);	// EX_DATAERR	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode when attempting to unset the release with \"\".");
 		Assert.assertEquals(result.getStderr().trim(), "No releases match ''.  Consult 'release --list' for a full listing.", "Stderr when attempting to unset the release with \"\".");
 		Assert.assertEquals(result.getStdout(), "", "Stdout when attempting to unset the release with \"\".");
 		Assert.assertEquals(clienttasks.getCurrentRelease(), release, "The release value should still be set after a failed attempt to unset it with \"\".");
