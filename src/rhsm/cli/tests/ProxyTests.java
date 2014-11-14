@@ -1609,7 +1609,22 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),							sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,		"ignored-username",			"ignored-password",			"bad-proxy",			sm_noauthproxyPort+"0",	"bad-username",				"bad-password",			Integer.valueOf(0),		null,		null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
 		ll.add(Arrays.asList(new Object[]{	null,													sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	"bad-proxy",		null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	sm_noauthproxyLog,		null}));
 
-
+		// for all exitCode=255 rows, change the expected exitCode to EX_SOFTWARE 70 when testing post subscription-manager-1.13.8-1
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			for (List<Object> l : ll) {
+				// Object blockedByBug, String username, String password, Sring org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern
+				if (((Integer)l.get(11)).equals(255)) {	// expected exitCode
+					// Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
+					BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1119688");	// Bug 1119688 - [RFE] subscription-manager better usability for scripts
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+					l.set(11, new Integer(70));	// EX_SOFTWARE	// expected exitCode
+				}
+			}
+		}
+		
 		return ll;
 	}
 	protected List<List<Object>> getValidRegisterAttemptsUsingProxyServerDataAsListOfLists() {
