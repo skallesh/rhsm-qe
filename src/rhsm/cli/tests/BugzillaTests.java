@@ -364,13 +364,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"InstalledProductMultipliesAfterSubscription","AcceptanceTests","Tier1Tests","blockedByBug-709412"},
 			enabled=true)
 	public void InstalledProductMultipliesAfterSubscription() throws Exception {
+		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
 // jsefler - moving product certs around is too much work, changing to a different configured rhsm.productCertDir...
 //		client.runCommandAndWait("mkdir /root/generatedCertsFolder");
+/* jsefler - test with the script's input automation properties, not hardcoded credentials 
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
-		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
 		clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, true, null, null, null, null).getStdout();
+*/
+		clienttasks.register(sm_clientUsername, sm_clientPassword,null, null, null, null, null, null, null, null,(String) null, sm_serverUrl, null, null, true, null, null, null, null);
 //clienttasks.config(null,null,true,new String[]{"rhsm","productcertdir","/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX});
 //		moveProductCertFiles("*");
 //		client.runCommandAndWait("cp " + "/usr/share/rhsm/product/RHEL-*/Server*.pem" + " "
@@ -1144,7 +1147,6 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 			enabled = true)
 		public void Verify500ErrorOnStage() throws JSONException,Exception {
 		if(!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
-
 /* jsefler - we should not connect to a hosted candlepin server
 		//server=new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
@@ -1152,10 +1154,13 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		log.info("Fetching the generated product certs...");
 */
 		String logMessage = "remote server status code: 500";
+/* jsefler - test with the script's input automation properties, not hardcoded credentials 
 		String serverurl="subscription.rhn.stage.redhat.com:443/subscription";
 		String clientUsername="stage_test_12";
 		clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
-				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();	
+				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();
+*/	
+		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (String) null, sm_serverUrl, null, null, null, null, null, null, null);
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 //		String result=clienttasks.listAvailableSubscriptionPools().getStdout();
