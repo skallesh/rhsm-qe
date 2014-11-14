@@ -852,23 +852,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@Test(	description="verify changes to the rhsm.conf / [rhsm]pluginDir configuration",
-			groups={},
-			priority=1000, enabled=false)	// TODO
-	//@ImplementsNitrateTest(caseId=)
-	public void verifyRhsmPluginDirConfiguration_Test() {
-		
-
-	}
 	
-	@Test(	description="verify changes to the rhsm.conf / [rhsm]pluginConfDir configuration",
-			groups={},
-			priority=1000, enabled=false)	// TODO
-	//@ImplementsNitrateTest(caseId=)
-	public void verifyRhsmPluginConfDirConfiguration_Test() {
-		
-
-	}
 	
 	
 	// Candidates for an automated Test:
@@ -886,44 +870,26 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@BeforeClass(groups={"setup"})
-	protected void removeAllPluginsBeforeClass() {
+	protected void rememberOriginalPluginDirConfigurationsBeforeClass() {
 		if (clienttasks==null) return;
-		// get the plugin configuration directories
-		pluginDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "pluginDir");
-		pluginConfDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "pluginConfDir");
-		Assert.assertNotNull(pluginDir, "Expecting rhsm.conf to contain a configuration for [rhsm]pluginDir");
-		Assert.assertNotNull(pluginConfDir, "Expecting rhsm.conf to contain a configuration for [rhsm]pluginConfDir");
-		
-		// remove the currently configured plugins
-		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+pluginDir+"/*", Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+pluginConfDir+"/*", Integer.valueOf(0));
+		// get the original plugin configuration directories
+		if (originalPluginDir==null) originalPluginDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "pluginDir");
+		if (originalPluginConfDir==null) originalPluginConfDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "pluginConfDir");
+		Assert.assertNotNull(originalPluginDir, "Expecting rhsm.conf to contain a configuration for [rhsm]pluginDir");
+		Assert.assertNotNull(originalPluginDir, "Expecting rhsm.conf to contain a configuration for [rhsm]pluginConfDir");
 	}
-		
-	@BeforeGroups(groups={"setup"}, value="DisabledPluginTests")
-	protected void fetchAndDisableAllPluginsBeforeGroups() {
+	
+	@BeforeClass(groups={"setup"},dependsOnMethods={"rememberOriginalPluginDirConfigurationsBeforeClass"})
+	protected void configureTestPluginDirsBeforeClass() {
 		if (clienttasks==null) return;
-		SSHCommandResult result;
 		
-		// fetch the test-plugins files
-		if (sm_testpluginsUrl.isEmpty()) return; 
-		log.info("Fetching test plugins from "+sm_testpluginsUrl+" for use by this test class...");
-		RemoteFileTasks.runCommandAndAssert(client, "cd "+pluginDir+" && wget --quiet --recursive --no-host-directories --cut-dirs=2 --no-parent --accept .py "+sm_testpluginsUrl, Integer.valueOf(0)/*,null,"Downloaded: \\d+ files"*/);
-		RemoteFileTasks.runCommandAndAssert(client, "cd "+pluginConfDir+" && wget --quiet --recursive --no-host-directories --cut-dirs=2 --no-parent --accept .conf "+sm_testpluginsUrl, Integer.valueOf(0)/*,null,"Downloaded: \\d+ files"*/);
+		// create test plugin directory configurations 
+		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+testPluginDir+" && mkdir "+testPluginDir, new Integer(0));
+		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+testPluginConfDir+" && mkdir "+testPluginConfDir, new Integer(0));
 		
-		// create plugin objects for simplicity
-		result = RemoteFileTasks.runCommandAndAssert(client, "find "+pluginConfDir+" -name *.conf", 0);
-		for (String pluginConfPathname : result.getStdout().trim().split("\\s*\\n\\s*")) {
-			if (pluginConfPathname.isEmpty()) continue;
-			File examplePluginConfFile = new File(pluginConfDir+"/"+new File(pluginConfPathname).getName());
-			File examplePluginFile = new File(pluginDir+"/"+examplePluginConfFile.getName().split("\\.")[0]+".py");
-			installedPlugins.add(new Plugin(examplePluginConfFile,examplePluginFile));
-		}
-				
-		// disable all of the plugin configurations
-		for (Plugin installedPlugin : installedPlugins) {
-			clienttasks.updateConfFileParameter(installedPlugin.configFile.getPath(), "enabled", "0");
-		}
-
+		// set the plugin configuration directories for this test class
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "pluginDir", testPluginDir);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "pluginConfDir", testPluginConfDir);
 	}
 	
 	@BeforeClass(groups="setup")
@@ -955,11 +921,48 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
+	@BeforeGroups(groups={"setup"}, value="DisabledPluginTests")
+	protected void fetchAndDisableAllPluginsBeforeGroups() {
+		if (clienttasks==null) return;
+		SSHCommandResult result;
+		
+		// fetch the test-plugins files
+		if (sm_testpluginsUrl.isEmpty()) return; 
+		log.info("Fetching test plugins from "+sm_testpluginsUrl+" for use by this test class...");
+		RemoteFileTasks.runCommandAndAssert(client, "cd "+testPluginDir+" && wget --quiet --recursive --no-host-directories --cut-dirs=2 --no-parent --accept .py "+sm_testpluginsUrl, Integer.valueOf(0)/*,null,"Downloaded: \\d+ files"*/);
+		RemoteFileTasks.runCommandAndAssert(client, "cd "+testPluginConfDir+" && wget --quiet --recursive --no-host-directories --cut-dirs=2 --no-parent --accept .conf "+sm_testpluginsUrl, Integer.valueOf(0)/*,null,"Downloaded: \\d+ files"*/);
+		
+		// create plugin objects for simplicity
+		result = RemoteFileTasks.runCommandAndAssert(client, "find "+testPluginConfDir+" -name *.conf", 0);
+		for (String pluginConfPathname : result.getStdout().trim().split("\\s*\\n\\s*")) {
+			if (pluginConfPathname.isEmpty()) continue;
+			File examplePluginConfFile = new File(testPluginConfDir+"/"+new File(pluginConfPathname).getName());
+			File examplePluginFile = new File(testPluginDir+"/"+examplePluginConfFile.getName().split("\\.")[0]+".py");
+			installedPlugins.add(new Plugin(examplePluginConfFile,examplePluginFile));
+		}
+				
+		// disable all of the plugin configurations
+		for (Plugin installedPlugin : installedPlugins) {
+			clienttasks.updateConfFileParameter(installedPlugin.configFile.getPath(), "enabled", "0");
+		}
+
+	}
+	
+	@AfterClass(groups={"setup"})
+	protected void restoreOriginalPluginDirConfigurationsAfterClass() {
+		if (clienttasks==null) return;
+		// set the original plugin directory configurations
+		if (originalPluginDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "pluginDir", originalPluginDir);
+		if (originalPluginConfDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "pluginConfDir", originalPluginConfDir);
+	}
+	
 	// Protected methods ***********************************************************************
 
 	protected final String backupProductIdJsonFile	= "/tmp/sm-productIdJsonFile";
-	protected String pluginDir = null;
-	protected String pluginConfDir = null;
+	protected String originalPluginDir = null;	// read from /etc/rhm/rhsm.conf	=>	/usr/share/rhsm-plugins
+	protected String originalPluginConfDir = null;	// read from /etc/rhm/rhsm.conf	=>	/etc/rhsm/pluginconf.d
+	protected final String testPluginDir = "/tmp/sm-test-plugins";
+	protected final String testPluginConfDir = "/tmp/sm-test-pluginconf.d";
 	protected List<Plugin> installedPlugins = new ArrayList<Plugin>();
 	protected List<String> slots = new ArrayList<String>();
 	
