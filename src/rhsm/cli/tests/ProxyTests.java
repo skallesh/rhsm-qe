@@ -526,11 +526,13 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, false, null, null, null);
 		
-		// alter the expected feedback when there is no subscribed RHEL product
-		if (!exitCode.equals(new Integer(255))) {
+		// alter the expected feedback for negative tests when there is no subscribed RHEL product
+		//if (!exitCode.equals(new Integer(255))) {
+		if (exitCode.equals(new Integer(0))) {
 			if (!clienttasks.isRhelProductCertSubscribed()) {
 				log.warning("Altering the expected feedback from release --list when there is no RHEL product installed with status Subscribed");
 				exitCode = new Integer(255);
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) exitCode = new Integer(78);	// EX_CONFIG	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 				stdout = "";
 				stderr = "No release versions available, please check subscriptions.";
 			}
@@ -555,10 +557,12 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, false, null, null, null);
 	
 		// alter the expected feedback when there is no subscribed RHEL product
-		if (!exitCode.equals(new Integer(255))) {
+		//if (!exitCode.equals(new Integer(255))) {
+		if (exitCode.equals(new Integer(0))) {
 			if (!clienttasks.isRhelProductCertSubscribed()) {
 				log.warning("Altering the expected feedback from release --list when there is no RHEL product installed with status Subscribed");
 				exitCode = new Integer(255);
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) exitCode = new Integer(78);	// EX_CONFIG	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 				stdout = "";
 				stderr = "No release versions available, please check subscriptions.";
 			}
@@ -664,6 +668,16 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// NOTE: Because the status module should return a cached status report when connectivity has been interrupted, this call should always pass
 		SSHCommandResult attemptResult = clienttasks.status/*_*/(null, proxy, proxyuser, proxypassword);
+		// NOTE: Due RFE Bug 1119688, the exit code will no longer indicate a PASS every time.
+		if (exitCode.equals(new Integer(0))) {
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
+				// exit code of 0 indicates valid compliance, otherwise exit code is 1
+				if (!clienttasks.getFactValue("system.entitlements_valid").equals("valid")) {
+					log.warning("Altering the expected from status attempts using a proxy server to 1 due to RFE Bug 1119688 change in exit code when the system's overall status is NOT valid.");
+					exitCode = new Integer(1);
+				}
+			}
+		}
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -693,6 +707,16 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		// attempt the moduleTask with the proxy options
 		// NOTE: Because the status module should return a cached status report when connectivity has been interrupted, this call should always pass
 		SSHCommandResult attemptResult = clienttasks.status/*_*/(null, proxy, proxyuser, proxypassword);
+		// NOTE: Due RFE Bug 1119688, the exit code will no longer indicate a PASS every time.
+		if (exitCode.equals(new Integer(0))) {
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
+				// exit code of 0 indicates valid compliance, otherwise exit code is 1
+				if (!clienttasks.getFactValue("system.entitlements_valid").equals("valid")) {
+					log.warning("Altering the expected from status attempts using a proxy server to 1 due to RFE Bug 1119688 change in exit code when the system's overall status is NOT valid.");
+					exitCode = new Integer(1);
+				}
+			}
+		}
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -1298,9 +1322,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result= client.runCommandAndWait(command, timeoutMS);
 		
 		// assert results
+		Integer expectedExitCode = new Integer(255);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE // post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(result.getStdout().trim(), nErrMsg, "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
 	}
 	
 	
