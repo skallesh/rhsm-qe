@@ -370,8 +370,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
-		Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
-		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
+			Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
+			Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
+		}
 //		Assert.assertEquals(result.getStderr().trim().replace(ignoreStderr, ""),"",			"Stderr expected after the consumer has been deleted on the server-side (ignoring \""+ignoreStderr+"\").");	// 11/20/2012 RHEL64 subscription-manager-1.1.10-1.el6.x86_64  Not sure why this extra ignoreStderr started showing up.
 		
 		result = clienttasks.refresh_(null, null, null);
@@ -381,14 +386,14 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		result = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
-		//Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
+		//Assert.assertEquals(result.getStdout().trim(),expectedMsg,"Stdout expected after the consumer has been deleted on the server-side.");
 		//Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim()+result.getStderr().trim(),expectedMsg, "Feedback expected after the consumer has been deleted on the server-side.");
 		
 		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.list_(null, null, true, null, null, null, null, null, null, null, null, null, null).getStdout());
 		result = clienttasks.unsubscribe_(null, consumedProductSubscriptions.get(0).serialNumber, null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
-		//Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
+		//Assert.assertEquals(result.getStdout().trim(),expectedMsg,"Stdout expected after the consumer has been deleted on the server-side.");
 		//Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim()+result.getStderr().trim(),expectedMsg, "Feedback expected after the consumer has been deleted on the server-side.");
 		
@@ -412,8 +417,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		result = clienttasks.unregister_(null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
-		Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
-		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
+			Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
+			Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
+		}
 		
 		// restart rhsmcertd
 		clienttasks.restart_rhsmcertd(null, null, false);	// assertCertificatesUpdate=false since the consumer has been deleted server side and the cert updates should fail
