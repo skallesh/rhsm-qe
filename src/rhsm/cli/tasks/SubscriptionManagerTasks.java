@@ -7200,6 +7200,12 @@ if (false) {
 	 * @param result
 	 */
 	public void logRuntimeErrors(SSHCommandResult result) {
+		String issue;
+		
+		//	ssh root@ibm-p8-01-lp6.rhts.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9814931ea74014933dec2b60673
+		//	Stdout:
+		//	Stderr: Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
+		//	ExitCode: 70
 		
 		//	ssh root@jsefler-5server.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --no-auto qa@redhat.com redhatqa testuser1 password admin null null
 		//	Stdout:
@@ -7269,8 +7275,9 @@ if (false) {
 		//	RemoteServerException: Server error attempting a DELETE to /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e returned status 500
 		//debugTesting result = new SSHCommandResult(new Integer(255), "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.", "");
 		if (!result.getExitCode().equals(0)) {
-			if (result.getStdout().toLowerCase().contains("problem encountered") ||
+			if (result.getStderr().toLowerCase().startsWith("runtime error") ||
 				result.getStderr().toLowerCase().startsWith("undefined method") ||
+				result.getStdout().toLowerCase().contains("problem encountered") ||
 				result.getStdout().toLowerCase().contains("timed out") ||
 				result.getStderr().toLowerCase().contains("see "+rhsmLogFile+" for more ") ||
 				result.getStdout().toLowerCase().contains("see "+rhsmLogFile+" for more ")) {
@@ -7281,15 +7288,68 @@ if (false) {
 				
 				
 				// TEMPORARY WORKAROUND FOR BUG
-				// 2014-06-05 02:55:31,401 [DEBUG] subscription-manager @connection.py:450 - Making request: GET /subscription/consumers/9530dd56-f85b-488a-8a15-886ab3c4caf8/compliance
-				// 2014-06-05 02:55:35,062 [DEBUG] subscription-manager @connection.py:473 - Response: status=502
-				// 2014-06-05 02:55:35,063 [ERROR] subscription-manager @connection.py:502 - Response: 502
-				if (getTracebackCommandResult.getStdout().contains("Response: status=502") && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+				//	2014-06-05 02:55:31,401 [DEBUG] subscription-manager @connection.py:450 - Making request: GET /subscription/consumers/9530dd56-f85b-488a-8a15-886ab3c4caf8/compliance
+				//	2014-06-05 02:55:35,062 [DEBUG] subscription-manager @connection.py:473 - Response: status=502
+				//	2014-06-05 02:55:35,063 [ERROR] subscription-manager @connection.py:502 - Response: 502
+				issue = "Response: status=502";
+				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
 					String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
 					// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
 					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
-						throw new SkipException("Encounterd a 502 response from the server and could not complete this test while bug '"+bugId+"' is open.");
+						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					}
+				}
+				// END OF WORKAROUND
+				
+				
+				// TEMPORARY WORKAROUND FOR BUG
+				//	2014-11-16 05:22:14,215 [DEBUG] subscription-manager @connection.py:466 - Making request: POST /subscription/consumers/a21f1acf-ddd7-420a-8903-d75e9ba45e1f/entitlements?pool=8a99f981498757d40149a5a9b04f4b00
+				//	2014-11-16 05:23:14,628 [ERROR] subscription-manager @managercli.py:157 - Unable to attach: timed out
+				//	2014-11-16 05:23:14,628 [ERROR] subscription-manager @managercli.py:158 - timed out
+				//	Traceback (most recent call last):
+				//	File "/usr/share/rhsm/subscription_manager/managercli.py", line 1462, in _do_command
+				//	ents = self.cp.bindByEntitlementPool(self.identity.uuid, pool, self.options.quantity)
+				//	File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 974, in bindByEntitlementPool
+				//	return self.conn.request_post(method)
+				//	File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 573, in request_post
+				//	return self._request("POST", method, params)
+				//	File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 480, in _request
+				//	response = conn.getresponse()
+				//	File "/usr/lib64/python2.7/httplib.py", line 1045, in getresponse
+				//	response.begin()
+				//	File "/usr/lib64/python2.7/httplib.py", line 409, in begin
+				//	version, status, reason = self._read_status()
+				//	File "/usr/lib64/python2.7/httplib.py", line 365, in _read_status
+				//	line = self.fp.readline(_MAXLINE + 1)
+				//	File "/usr/lib64/python2.7/socket.py", line 476, in readline
+				//	data = self._sock.recv(self._rbufsize)
+				//	File "/usr/lib64/python2.7/site-packages/M2Crypto/SSL/Connection.py", line 228, in read
+				//	return self._read_bio(size)
+				//	File "/usr/lib64/python2.7/site-packages/M2Crypto/SSL/Connection.py", line 213, in _read_bio
+				//	return m2.ssl_read(self.ssl, size, self._timeout)
+				//	SSLTimeoutError: timed out
+				issue = "SSLTimeoutError: timed out";
+				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+					String bugId = "1165239"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165239 - subscription-manager encounters frequent SSLTimeoutErrors from stage IT-Candlepin
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					}
+				}
+				// END OF WORKAROUND
+				
+				
+				// TEMPORARY WORKAROUND FOR BUG
+				//	2014-11-18 13:31:35,122 [DEBUG] subscription-manager @connection.py:466 - Making request: DELETE /subscription/consumers/b7b49c97-f25a-43b7-9820-e7cc76bccbc3/entitlements
+				//	2014-11-18 13:32:34,127 [DEBUG] subscription-manager @connection.py:489 - Response: status=500
+				//	2014-11-18 13:32:34,127 [ERROR] subscription-manager @managercli.py:1625 - Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
+				issue = "Runtime Error Lock wait timeout exceeded";
+				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+					String bugId = "1165295"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165295 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded" from stage IT-Candlepin
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 					}
 				}
 				// END OF WORKAROUND
