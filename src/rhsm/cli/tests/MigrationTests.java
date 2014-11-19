@@ -1348,6 +1348,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm("--no-auto --servicelevel=foo", sm_rhnUsername, sm_rhnPassword,null,null,null,null, null);
 		String expectedStdout = "The --servicelevel and --no-auto options cannot be used together.";
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedStdout = "The --service-level and --no-auto options cannot be used together.";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.8-1")) expectedStdout = "The --servicelevel and --no-auto options cannot be used together.";	// post subscription-manager commit e53f0369b621902b75f2dbe047d97dc9ba3cc1c0
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "Stdout from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "Exit code from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
@@ -1989,6 +1990,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (options!=null) options=options.replace("--servicelevel", "--service-level");
 			// completely removed option -g, --gui launch the GUI tool to attach subscriptions, instead of auto-attaching
 		}
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.8-1")) {	// post subscription-manager commit e53f0369b621902b75f2dbe047d97dc9ba3cc1c0
+			if (options!=null) options=options.replace("--service-level", "--servicelevel");	// 1157761: revert to "--servicelevel"
+		}
 		
 		// surround tcl args containing white space with ticks and call the TCL expect script for rhn-migrate-classic-to-rhsm
 		if (options!=null && options.contains(" "))				options			= String.format("'%s'", options);
@@ -2496,6 +2500,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					options=options.replace("--subscription-service-password", "--destination-password");
 					options=options.replace("--servicelevel", "--service-level");
 				}
+				if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.8-1")) {	// post subscription-manager commit e53f0369b621902b75f2dbe047d97dc9ba3cc1c0
+					if (options!=null) options=options.replace("--service-level", "--servicelevel");	// 1157761: revert to "--servicelevel"
+				}
 				l.set(5, options);
 			}
 		}
@@ -2633,6 +2640,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					options=options.replace("--subscription-service-user", "--destination-user");
 					options=options.replace("--subscription-service-password", "--destination-password");
 					options=options.replace("--servicelevel", "--service-level");
+					if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.8-1")) {	// post subscription-manager commit e53f0369b621902b75f2dbe047d97dc9ba3cc1c0
+						if (options!=null) options=options.replace("--service-level", "--servicelevel");	// 1157761: revert to "--servicelevel"
+					}
 				}
 				l.set(5, options);
 			}
