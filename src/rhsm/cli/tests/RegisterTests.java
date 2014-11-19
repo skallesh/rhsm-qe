@@ -760,7 +760,22 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("672233"),	name,	Integer.valueOf(0),		successfulStdout,	null}));
 		name = "256_characters_6789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456";
 										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"672233","1065369","1094492","1101552"}),	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
-
+		
+		// for all rows, change the expected exitCode when testing post subscription-manager-1.13.8-1
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			for (List<Object> l : ll) {
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+				Integer expectedExitCode = (Integer) l.get(2);
+				if (expectedExitCode.equals(255)) {
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1119688");	// Bug 1119688 - [RFE] subscription-manager better usability for scripts
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+					l.set(2, new Integer(70));	// EX_SOFTWARE
+				}
+			}
+		}
+		
 		return ll;
 	}
 	
@@ -831,7 +846,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				String expectedStderrRegex = "No such consumer type: "+type;
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderrRegex = "No such unit type: "+type;
 				expectedStderrRegex = String.format("Unit type '%s' could not be found.",type);	// changed to this by bug 876758 comment 5; https://bugzilla.redhat.com/show_bug.cgi?id=876758#c5
-				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	Integer.valueOf(255),	null,	expectedStderrRegex}));			
+				Integer expectedExitCode = new Integer(255);
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258
+				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	expectedExitCode,	null,	expectedStderrRegex}));			
 	
 			}
 		}
@@ -1160,6 +1177,25 @@ Expected Results:
 			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
 			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(Username: ){3}The system has been registered with ID: [a-f,0-9,\\-]{36}",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));		
 		}
+		
+		// for all rows with failing expectedExitCode, move expectedStdoutRegex to expectedStderrRegex when testing post subscription-manager-1.13.9-1
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258
+			for (List<Object> l : ll) {
+				// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOwner, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+				Integer expectedExitCode = (Integer) l.get(6);
+				String expectedStdoutRegex = (String) l.get(7);
+				String expectedStderrRegex = (String) l.get(8);
+				if (expectedExitCode.equals(255)) {
+					l.set(6, new Integer(70));	// EX_SOFTWARE
+					/* do not swap since expect stdout will include the stderr from subscription-manager
+					if (expectedStdoutRegex!=null && expectedStderrRegex==null) {
+						l.set(7, expectedStderrRegex);
+						l.set(8, expectedStdoutRegex);
+					}
+					*/
+				}
+			}
+		}
 		return ll;
 	}
 	
@@ -1413,7 +1449,7 @@ Expected Results:
 	}
 	@Test(	description="subscription-manager-cli: register with --serverurl",
 			dataProvider="getServerurl_TestData",
-			groups={"RegisterWithServerurl_Test","AcceptanceTests","Tier1Tests"},
+			groups={"debugTest","RegisterWithServerurl_Test","AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithServerurl_Test(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
@@ -1503,13 +1539,17 @@ Expected Results:
 		sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,false,null,null,null,null,null,null);
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-		/* changed by subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-		*/
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1")) {	// post commit 3366b1c734fd27faf48313adf60cf051836af115
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		} else {
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		}
 		
 		// calling register with insecure should now pass
 		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,true,null,null,null,null,null,null);
