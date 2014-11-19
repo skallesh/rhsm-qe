@@ -1449,7 +1449,7 @@ Expected Results:
 	}
 	@Test(	description="subscription-manager-cli: register with --serverurl",
 			dataProvider="getServerurl_TestData",
-			groups={"debugTest","RegisterWithServerurl_Test","AcceptanceTests","Tier1Tests"},
+			groups={"RegisterWithServerurl_Test","AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithServerurl_Test(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {

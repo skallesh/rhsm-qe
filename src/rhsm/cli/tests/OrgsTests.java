@@ -232,13 +232,17 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword, null, false, null, null, null);
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-		/* changed by subscription-manager commit 3366b1c734fd27faf48313adf60cf051836af115
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
-		*/
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: certificate verify failed", "Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
+		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1")) {	// post commit 3366b1c734fd27faf48313adf60cf051836af115
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
+		} else {
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
+		}
 		
 		// calling orgs with insecure should now pass
 		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, true, null, null, null);
