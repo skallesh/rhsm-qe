@@ -325,13 +325,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		sleep(endingMinutesFromNow*60*1000);
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
-		String result=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null).getStderr();			
+		SSHCommandResult registerResult=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);			
 		System.out.println(EndingDate);
 		String expected_message="Unable to attach pool with ID '"+expiringPoolId+"'.: Subscriptions for "+randomAvailableProductId+" expired on: "+EndingDate+".";
 		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expected_message =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
-		Assert.assertEquals(result.trim(), expected_message);
-		result=clienttasks.identity_(null, null, null, null, null, null, null).getStdout();
-		Assert.assertEquals(result.trim(), clienttasks.msg_ConsumerNotRegistered);
+		Assert.assertEquals(registerResult.getStderr().trim(), expected_message);
+		SSHCommandResult identityResult=clienttasks.identity_(null, null, null, null, null, null, null);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered,"stderr");	
+		} else {
+			Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"stdout");	
+		}
 	}
 	
 
@@ -619,17 +623,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "server","port".toLowerCase(), "8443" });
 		listOfSectionNameValues.add(new String[] { "server","prefix", "/footestprefix" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-		String RemoteError=clienttasks.register_(sm_clientUsername, sm_clientPassword,
+		SSHCommandResult registerResult=clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null).getStdout();
+				(String) null, null, null, null, true, null, null, null, null);
 		String Expected_Message=clienttasks.msg_NetworkErrorCheckConnection;
 // [jsefler 10/30/2014] This test is currently encountering a 404 instead of a 500;  TODO change this testcase to force a 500 error
 // Error during registration: Server error attempting a GET to /footestprefix/ returned status 404
 Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		listOfSectionNameValues.add(new String[] { "server","prefix", prefixValueBeforeExecution.trim() });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-		Assert.assertEquals(RemoteError.trim(), Expected_Message);
-		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(registerResult.getStderr().trim(), Expected_Message,"stderr");	
+		} else {
+			Assert.assertEquals(registerResult.getStdout().trim(), Expected_Message,"stdout");	
+		}
 	}
 	
 	/**
@@ -1095,27 +1102,35 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		String consumerName="tester";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		String result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
-		Assert.assertContainsMatch(result, "name: "+clienttasks.hostname);
+		SSHCommandResult result=clienttasks.identity(null, null, null, null, null, null, null);
+		Assert.assertContainsMatch(result.getStdout(), "name: "+clienttasks.hostname);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, consumerName, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
+		result=clienttasks.identity(null, null, null, null, null, null, null);
 		String expected="name: "+consumerName;
-		Assert.assertContainsMatch(result, expected);
+		Assert.assertContainsMatch(result.getStdout(), expected);
 		String consumerId=clienttasks.getCurrentConsumerId();
 		clienttasks.clean(null, null, null);
 		consumerName="consumer";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, consumerName, consumerId, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		result=clienttasks.identity(null, null, null, null, null, null, null).getStdout();
-		Assert.assertContainsMatch(result, expected);
+		result=clienttasks.identity(null, null, null, null, null, null, null);
+		Assert.assertContainsMatch(result.getStdout(), expected);
 		clienttasks.clean(null, null, null);
 		result=clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, "", consumerId, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null).getStdout();
-		Assert.assertEquals(result.trim(), "Error: system name can not be empty.");
+				(String) null, null, null, null, true, null, null, null, null);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258
+			Assert.assertEquals(result.getStderr().trim(), "Error: system name can not be empty.","stderr");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), "Error: system name can not be empty.","stdout");
+		}
 		result=clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, "", null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null).getStdout();
-		Assert.assertEquals(result.trim(), "Error: system name can not be empty.");
+				(String) null, null, null, null, true, null, null, null, null);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258
+			Assert.assertEquals(result.getStderr().trim(), "Error: system name can not be empty.","stderr");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), "Error: system name can not be empty.","stdout");
+		}
 	}
 	
 	/**
@@ -1241,13 +1256,15 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerID=clienttasks.getCurrentConsumerId();
 		clienttasks.unregister(null, null, null);
-		String result=clienttasks.register_(sm_clientUsername, sm_clientPassword,
+		SSHCommandResult registerResult=clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, consumerID, null, null, null,
-				jsonActivationKey.get("name").toString(), null, null, null, null, null, null, null, null).getStdout();
+				jsonActivationKey.get("name").toString(), null, null, null, null, null, null, null, null);
 		String expected="Error: Activation keys do not require user credentials.";
-		Assert.assertEquals(result.trim(), expected);
-		
-		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(registerResult.getStderr().trim(), expected, "stderr");	
+		} else {
+			Assert.assertEquals(registerResult.getStdout().trim(), expected, "stdout");	
+		}
 	}
 	
 	/**
@@ -1274,6 +1291,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	// TODO correct the pasted description
 	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", 
 			groups = { "ServerURLInRHSMFile","blockedByBug-916353"}, enabled = true)
 		public void ServerURLInRHSMFile() throws JSONException,Exception {
@@ -1294,6 +1312,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	// TODO correct the pasted description
 	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", 
 			groups = {"DipslayServicelevelWhenRegisteredToDifferentServer","blockedByBug-916362"}, enabled = true)
 		public void DipslayServicelevelWhenRegisteredToDifferentServer() {
@@ -1303,14 +1322,19 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		String result=clienttasks.service_level_(null, null, null, null, null, null, null,defaultHostname+":"+defaultPort+defaultPrefix , null, null, null, null).getStdout();
+		SSHCommandResult result=clienttasks.service_level_(null, null, null, null, null, null, null,defaultHostname+":"+defaultPort+defaultPrefix , null, null, null, null);
 		String expectedResult = "You are already registered to a different system";
 		if (/*bug 916362 is CLOSED NOTABUG is */true) {
 			log.warning("Altering the original expected result '"+expectedResult+"' since Bug 916362 has been CLOSED NOTABUG.");
 			log.warning("For more explanation see https://bugzilla.redhat.com/show_bug.cgi?id=916362#c3");
 			expectedResult = "Unable to verify server's identity: tlsv1 alert unknown ca";
 		}
-		Assert.assertEquals(result.trim(), expectedResult);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(result.getStderr().trim(), expectedResult,"stderr");	
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), expectedResult,"stdout");	
+		}
+
 	}
 	
 	/**
@@ -2422,7 +2446,11 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 				jsonActivationKey.get("name").toString(), null, null, null,
 				true, null, null, null, null);
 		String expected_msg = "Error: Activation keys cannot be used with --auto-attach.";
-		Assert.assertEquals(result.getStdout().trim(), expected_msg);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(result.getStderr().trim(), expected_msg,"stderr");	
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), expected_msg,"stdout");	
+		}
 	}
 
 	/**
@@ -2532,10 +2560,14 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 				.getStdout();
 		Assert.assertNotNull(availList);
 		clienttasks.unregister(null, null, null);
-		availList = clienttasks.list_(true, true, null, null, null, null, null,
-				null, null, null, null, null, null).getStdout();
+		SSHCommandResult listResult = clienttasks.list_(true, true, null, null, null, null, null,
+				null, null, null, null, null, null);
 		String expected = "This system is not yet registered. Try 'subscription-manager register --help' for more information.";
-		Assert.assertEquals(availList.trim(), expected);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258
+			Assert.assertEquals(listResult.getStderr().trim(), expected,"stderr");
+		} else {
+			Assert.assertEquals(listResult.getStdout().trim(), expected,"stdout");
+		}
 		ConsumerCert consumercert = clienttasks.getCurrentConsumerCert();
 		Assert.assertNull(consumercert);
 	}
@@ -2693,10 +2725,13 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 						+ clienttasks.consumerCertFile()
 						+ " > /tmp/stdout; mv /tmp/stdout -f "
 						+ clienttasks.consumerCertFile(), 0);
-		String result = clienttasks.list_(null, true, null, null, null, null,
-				null, null, null, null, null, null, null).getStdout();
-		Assert.assertEquals(result.trim(),
-				clienttasks.msg_ConsumerNotRegistered);
+		SSHCommandResult result = clienttasks.list_(null, true, null, null, null, null,
+				null, null, null, null, null, null, null);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258
+			Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered,"stderr");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"stdout");
+		}
 		client.runCommandAndWait("mv -f /etc/pki/consumer/cert.pem.save /etc/pki/consumer/cert.pem");
 
 	}
@@ -3097,15 +3132,16 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		String FilePath = myEmptyCaCertFile;
 		String command = "touch " + FilePath;
 		client.runCommandAndWait(command);
-		String result = clienttasks.register_(sm_clientUsername,
+		SSHCommandResult result = clienttasks.register_(sm_clientUsername,
 				sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 				null, null, (String) null, null, null, null, null, null, null,
-				null, null).getStdout();
+				null, null);
 		String Expected = "Bad CA certificate: " + FilePath;
-		Assert.assertEquals(result.trim(), Expected);
-		
-		
-
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(result.getStderr().trim(), Expected,"stderr");	
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), Expected,"stdout");	
+		}
 	}
 	
 	
@@ -3318,8 +3354,13 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 				null, null);
 		String expectedMsg = String
 				.format("Error: system name can not be empty.");
-		Assert.assertEquals(result.getExitCode(), new Integer(255));
-		Assert.assertEquals(result.getStdout().trim(), expectedMsg);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258
+			Assert.assertEquals(result.getStderr().trim(), expectedMsg,"stderr");
+			Assert.assertEquals(result.getExitCode(), new Integer(64));
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), expectedMsg,"stdout");
+			Assert.assertEquals(result.getExitCode(), new Integer(255));
+		}
 		consumerCert = clienttasks.getCurrentConsumerCert();
 		Assert.assertNotNull(consumerCert.name);
 
@@ -3380,8 +3421,11 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		result = clienttasks.service_level_(null, false, null, null,
 				sm_clientUsername, sm_clientPassword, "MyOrg", null, null,
 				null, null, null);
-		Assert.assertEquals(result.getStdout().trim(),
-				"Error: --org is only supported with the --list option");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(result.getStderr().trim(), "Error: --org is only supported with the --list option","stderr");	
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), "Error: --org is only supported with the --list option","stdout");	
+		}
 	}
 
 	/**
@@ -4198,8 +4242,8 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 /* this effectively runs BeforeClass since BugzillaTests is tagged to the entire class; this is not what we wanted
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
 */
-	@AfterGroups(groups = {"setup"}, value = {"VerifyRHSMCertdLogging"/*,"AutohealForExpired"*/})
-	@AfterClass(groups = "setup")	// called after class for insurance
+//debugTest	@AfterGroups(groups = {"setup"}, value = {"VerifyRHSMCertdLogging"/*,"AutohealForExpired"*/})
+//debugTest	@AfterClass(groups = "setup")	// called after class for insurance
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null) return;
 		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
