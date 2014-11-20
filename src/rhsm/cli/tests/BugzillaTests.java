@@ -4242,8 +4242,8 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 /* this effectively runs BeforeClass since BugzillaTests is tagged to the entire class; this is not what we wanted
 	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
 */
-//debugTest	@AfterGroups(groups = {"setup"}, value = {"VerifyRHSMCertdLogging"/*,"AutohealForExpired"*/})
-//debugTest	@AfterClass(groups = "setup")	// called after class for insurance
+	@AfterGroups(groups = {"setup"}, value = {"VerifyRHSMCertdLogging"/*,"AutohealForExpired"*/})
+	@AfterClass(groups = "setup")	// called after class for insurance
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null) return;
 		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
