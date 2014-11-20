@@ -2698,14 +2698,17 @@ if (false) {
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && (environment!=null)) {
 			// Server does not support environments.
 		} else
-		if (sshCommandResult.getExitCode().equals(Integer.valueOf(69)) ||	// EX_UNAVAILABLE	Unable to reach the server
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(64)) ||	// EX_USAGE			Error: Activation keys cannot be used with --auto-attach.
+			sshCommandResult.getExitCode().equals(Integer.valueOf(69)) ||	// EX_UNAVAILABLE	Unable to reach the server
 			sshCommandResult.getExitCode().equals(Integer.valueOf(70)) ||	// EX_SOFTWARE		Error parsing serverurl:
-			sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {	// EX-CODES			http://docs.thefoundry.co.uk/nuke/63/pythonreference/os-module.html
+			sshCommandResult.getExitCode().equals(Integer.valueOf(255))){	// EX-CODES			http://docs.thefoundry.co.uk/nuke/63/pythonreference/os-module.html
 			// Traceback/Error
+			/* The current system consumer actually remains unchanged when these errors are encountered by the register attempt, stop nullifying the currentlyRegistered consumer.  TODO not confident that this is always true
 			this.currentlyRegisteredUsername = null;
 			this.currentlyRegisteredPassword = null;
 			this.currentlyRegisteredOrg = null;
-			this.currentlyRegisteredType = null;	
+			this.currentlyRegisteredType = null;
+			*/
 		} else {
 			Assert.fail("Encountered an unknown exitCode '"+sshCommandResult.getExitCode()+"' during a attempt to register.");
 		}
