@@ -205,7 +205,15 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-871152", "blockedByBug-912460", "blockedByBug-1003017", "blockedByBug-1020474", "blockedByBug-1057532", "blockedByBug-1093201", "blockedByBug-1118020"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1057532",
+					"blockedByBug-871152",	// Zanata 1.1.X NOT 100%
+					"blockedByBug-912460",	// Zanata 1.8.X NOT 100%
+					"blockedByBug-1003017",	// Zanata 1.9.X NOT 100%
+					"blockedByBug-1020474",	// Zanata 1.10.X NOT 100%
+					//"blockedByBug-1093201" // Zanata 1.11.X NOT 100%		// see Skip on Known Issue
+					//"blockedByBug-1118020" // Zanata 1.12.X NOT 100%		// see Skip on Known Issue
+					"blockedByBug-1166333" /*Zanata 1.13.X NOT 100%*/
+					},
 			dataProvider="getTranslationFileData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -227,6 +235,13 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		if (translationFile.getPath().contains("/pa/") && clienttasks.isPackageVersion("subscription-manager","==", "1.11")) {
 			if (!translationFilePassed) {
 				throw new SkipException("Missing translations for Punjabi is a Known Issue for subscription-manager-1.11.");
+			}
+		}
+		
+		// Skip on Known Issue: https://bugzilla.redhat.com/show_bug.cgi?id=1118020#c3
+		if (translationFile.getPath().contains("/pa/") && clienttasks.isPackageVersion("subscription-manager","==", "1.12")) {
+			if (!translationFilePassed) {
+				throw new SkipException("Missing translations for Punjabi is a Known Issue for subscription-manager-1.12.");
 			}
 		}
 		
