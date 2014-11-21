@@ -3092,7 +3092,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		serverurl="";																					ll.add(Arrays.asList(new Object[] {	null,	serverurl,	/* last set */ ll.get(ll.size()-1).get(2),	ll.get(ll.size()-1).get(3),	ll.get(ll.size()-1).get(4),	new Integer(0),	null,	null}));	
 	
 		// negative tests
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),									serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
 			serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688"}),											serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:"+defaultPort+defaultPrefix}));
 			serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688"}),											serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:900"+defaultPrefix}));

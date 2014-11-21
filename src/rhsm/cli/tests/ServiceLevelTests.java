@@ -529,7 +529,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		expectedStdout = String.format("Service level '%s' is not available to consumers of organization %s.","FOO",sm_clientOrg);	// valid before bug fix 864508
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("Service level '%s' is not available to units of organization %s.","FOO",sm_clientOrg);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Exit code from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt to subscribe with auto and an unavailable service level.");
@@ -1014,7 +1014,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: certificate verify failed", "Stderr from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the service-level list command when configuration rhsm.ca_cert_dir has been falsified.");
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1")) {	// post commit 3366b1c734fd27faf48313adf60cf051836af115

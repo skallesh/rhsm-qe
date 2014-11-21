@@ -370,7 +370,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
 			Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		} else {
@@ -417,7 +417,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		result = clienttasks.unregister_(null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
 			Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		} else {

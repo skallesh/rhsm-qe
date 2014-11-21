@@ -331,7 +331,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expected_message =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		Assert.assertEquals(registerResult.getStderr().trim(), expected_message);
 		SSHCommandResult identityResult=clienttasks.identity_(null, null, null, null, null, null, null);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered,"stderr");	
 		} else {
 			Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"stdout");	
@@ -632,7 +632,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		listOfSectionNameValues.add(new String[] { "server","prefix", prefixValueBeforeExecution.trim() });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(registerResult.getStderr().trim(), Expected_Message,"stderr");	
 		} else {
 			Assert.assertEquals(registerResult.getStdout().trim(), Expected_Message,"stdout");	
@@ -1260,7 +1260,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 				sm_clientOrg, null, null, null, consumerID, null, null, null,
 				jsonActivationKey.get("name").toString(), null, null, null, null, null, null, null, null);
 		String expected="Error: Activation keys do not require user credentials.";
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(registerResult.getStderr().trim(), expected, "stderr");	
 		} else {
 			Assert.assertEquals(registerResult.getStdout().trim(), expected, "stdout");	
@@ -1329,7 +1329,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 			log.warning("For more explanation see https://bugzilla.redhat.com/show_bug.cgi?id=916362#c3");
 			expectedResult = "Unable to verify server's identity: tlsv1 alert unknown ca";
 		}
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStderr().trim(), expectedResult,"stderr");	
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), expectedResult,"stdout");	
@@ -2446,7 +2446,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 				jsonActivationKey.get("name").toString(), null, null, null,
 				true, null, null, null, null);
 		String expected_msg = "Error: Activation keys cannot be used with --auto-attach.";
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStderr().trim(), expected_msg,"stderr");	
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), expected_msg,"stdout");	
@@ -3137,7 +3137,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 				null, null, (String) null, null, null, null, null, null, null,
 				null, null);
 		String Expected = "Bad CA certificate: " + FilePath;
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStderr().trim(), Expected,"stderr");	
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), Expected,"stdout");	
@@ -3421,7 +3421,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		result = clienttasks.service_level_(null, false, null, null,
 				sm_clientUsername, sm_clientPassword, "MyOrg", null, null,
 				null, null, null);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStderr().trim(), "Error: --org is only supported with the --list option","stderr");	
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), "Error: --org is only supported with the --list option","stdout");	

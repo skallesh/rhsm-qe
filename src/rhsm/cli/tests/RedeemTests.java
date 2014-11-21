@@ -101,7 +101,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
 		
 		// assert redemption results
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertTrue(redeemResult.getStderr().trim().startsWith("Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:"),"stderr indicates: Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:");
 			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE*/,"Exit code from redeem when executed against a standalone candlepin server.");
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
@@ -283,7 +283,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("1119688"),	"This mocked redeem test attempts to redeem a subscription against a standalone candlepin server.",			"0ABCDEF",	new Integer(70)/*EX_SOFTWARE*/,	null, "Standalone candlepin does not support redeeming a subscription for dmi.system.serial_number: {0}"}));
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("1119688"),	"This mocked redeem test attempts to redeem a subscription against a standalone candlepin server.",			"0ABCDEF",	new Integer(70)/*EX_SOFTWARE*/,	"Standalone candlepin does not support redeeming a subscription for dmi.system.serial_number: {0}", null}));

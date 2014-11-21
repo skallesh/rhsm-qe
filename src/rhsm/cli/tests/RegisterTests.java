@@ -1375,7 +1375,7 @@ Expected Results:
 		ll.add(Arrays.asList(new Object[] {	null,													"",											ll.get(ll.size()-1).get(2)/* last set */,	new Integer(0),		null,			null}));	
 	
 		// negative tests
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496","878634"}),				"https://hostname:/prefix",					null,			new Integer(70),	"Error parsing baseurl:",	"Server URL port should be numeric"}));
 			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496","878634","842845",}),		"https://hostname:PORT/prefix",				null,			new Integer(70),	"Error parsing baseurl:",	"Server URL port should be numeric"}));
 			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						"https:/hostname",							null,			new Integer(70),	"Error parsing baseurl:",	"Server URL has an invalid scheme. http:// and https:// are supported"}));
@@ -1540,7 +1540,7 @@ Expected Results:
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"/*FIXME TO BE "1.13.9-1"*/)) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1")) {	// post commit 3366b1c734fd27faf48313adf60cf051836af115
