@@ -7254,6 +7254,11 @@ if (false) {
 		//	Stderr:
 		//	ExitCode: 255
 		
+		//	ssh root@intel-canoepass-12.lab.bos.redhat.com subscription-manager subscribe --pool=8a99f981498757d40149a5a9b04f4b00
+		//	Stdout:
+		//	Stderr: The proxy server received an invalid response from an upstream server
+		//	ExitCode: 70
+		
 		//	2014-04-08 16:41:56,930 [INFO] subscription-manager @managercli.py:299 - Server Versions: {'candlepin': 'Unknown', 'server-type': 'Red Hat Subscription Management'}
 		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:418 - Loaded CA certificates from /etc/rhsm/ca/: candlepin-stage.pem, redhat-uep.pem
 		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:450 - Making request: DELETE /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e
@@ -7278,12 +7283,14 @@ if (false) {
 		//	RemoteServerException: Server error attempting a DELETE to /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e returned status 500
 		//debugTesting result = new SSHCommandResult(new Integer(255), "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.", "");
 		if (!result.getExitCode().equals(0)) {
-			if (result.getStderr().toLowerCase().startsWith("runtime error") ||
-				result.getStderr().toLowerCase().startsWith("undefined method") ||
-				result.getStdout().toLowerCase().contains("problem encountered") ||
-				result.getStdout().toLowerCase().contains("timed out") ||
-				result.getStderr().toLowerCase().contains("see "+rhsmLogFile+" for more ") ||
-				result.getStdout().toLowerCase().contains("see "+rhsmLogFile+" for more ")) {
+			if ((result.getStdout()+result.getStderr()).toLowerCase().contains("Runtime Error".toLowerCase()) ||
+				(result.getStdout()+result.getStderr()).toLowerCase().contains("undefined method".toLowerCase()) ||
+				(result.getStdout()+result.getStderr()).toLowerCase().contains("The proxy server received an invalid response from an upstream server".toLowerCase()) ||
+				(result.getStdout()+result.getStderr()).toLowerCase().contains("Problem encountered".toLowerCase()) ||
+				(result.getStdout()+result.getStderr()).toLowerCase().contains("Remote server error".toLowerCase()) ||
+				(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to verify server's identity".toLowerCase()) ||
+				(result.getStdout()+result.getStderr()).toLowerCase().contains("timed out".toLowerCase()) ||
+				(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase())) {
 				// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
 				String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
 				SSHCommandResult getTracebackCommandResult = sshCommandRunner.runCommandAndWaitWithoutLogging(getTracebackCommand);
