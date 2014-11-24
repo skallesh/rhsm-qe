@@ -7349,7 +7349,21 @@ if (false) {
 				//	2014-11-18 13:32:34,127 [ERROR] subscription-manager @managercli.py:1625 - Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
 				issue = "Runtime Error Lock wait timeout exceeded";
 				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+					String bugId = "1084782"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1084782 - Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					}
+				}
+				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
 					String bugId = "1165295"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165295 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded" from stage IT-Candlepin
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					}
+				}
+				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+					String bugId = "1161736"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1161736 - subscription-manager doesn't behave in a consistent way
 					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
