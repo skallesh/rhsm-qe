@@ -944,7 +944,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				if (Integer.valueOf(clienttasks.redhatReleaseX)==7 /*&& Float.valueOf(clienttasks.redhatReleaseXY)<7.1*/){
 					log.warning("Employing WORKAROUND for https://bugzilla.redhat.com/show_bug.cgi?id=881095#c7 by exporting DISPLAY");
 					//commandHelp = "export DISPLAY=:0 && "+commandHelp;	// worked on RHEL70
-					commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
+					//commandHelp = "export DISPLAY=localhost:10.0 && "+commandHelp;
+					commandHelp = "export DISPLAY=localhost:2 && "+commandHelp;
 				}
 				
 				List <String> usages = new ArrayList<String>();
