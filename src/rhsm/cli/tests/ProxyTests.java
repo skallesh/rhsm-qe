@@ -1729,7 +1729,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
 			// only include dataProvided rows where username, password, and org are valid
 			if (!(l.get(1).equals(sm_clientUsername) && l.get(2).equals(sm_clientPassword) && l.get(3)==sm_clientOrg)) continue;
-			if (l.get(8)==nErrMsg) l.set(0,new BlockedByBzBug("838264"));
+//			if (l.get(8)==nErrMsg) l.set(0,new BlockedByBzBug("838264"));
+			if (l.get(8)/*stdout*/==nErrMsg || l.get(9)/*stderr*/==nErrMsg) l.set(0,new BlockedByBzBug("838264"));
 
 			ll.add(l);
 		}
@@ -1740,7 +1741,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 			// only include dataProvided rows where username, password, and org are valid
 			if (!(l.get(1).equals(sm_clientUsername) && l.get(2).equals(sm_clientPassword) && l.get(3)==sm_clientOrg)) continue;
-			if (l.get(12)==nErrMsg) l.set(0,new BlockedByBzBug("838264"));
+//			if (l.get(12)==nErrMsg) l.set(0,new BlockedByBzBug("838264"));
+			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) l.set(0,new BlockedByBzBug("838264"));
 			
 			ll.add(l);
 		}
@@ -1972,7 +1974,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {			
 			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
 			// Note: The version module should always succeed, yet report subscription management server: Unknown when connection fails to the server
-			if (l.get(8)==nErrMsg) {
+//			if (l.get(8)==nErrMsg) {
+			if (l.get(8)/*stdout*/==nErrMsg || l.get(9)/*stderr*/==nErrMsg) {
 				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	Integer.valueOf(0)/*exitCode*/,"subscription management server: Unknown"/*stdout*/,""/*stderr*/}));
 			} else {
 				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	Integer.valueOf(0)/*exitCode*/,"subscription management server: "+servertasks.statusVersion/*stdout*/,""/*stderr*/}));
@@ -1990,7 +1993,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
 			// Note: The version module should always succeed, yet report subscription management server: Unknown when connection fails to the server
-			if (l.get(12)==nErrMsg) {
+//			if (l.get(12)/*stdout*/==nErrMsg) {
+			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) {
 				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,"subscription management server: Unknown"/*stdout*/,""/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
 			} else {
 				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,"subscription management server: "+servertasks.statusVersion/*stdout*/,""/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
@@ -2145,7 +2149,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getFactsAttemptsUsingProxyServerDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			if (l.get(8)!=null) {
+//			if (l.get(8)!=null) {
+			if (l.get(8)/*stdout*/==nErrMsg || l.get(9)/*stderr*/==nErrMsg) {
 //				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	null,	"Error updating system data, see /var/log/rhsm/rhsm.log for more details."}));
 				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	null,	"Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details."}));
 			} else {
@@ -2162,7 +2167,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getFactsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			if (l.get(12)!=null) {
+//			if (l.get(12)!=null) {
+			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) {
 //				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	null,	"Error updating system data, see /var/log/rhsm/rhsm.log for more details.",	l.get(14),	l.get(15),	l.get(16)}));
 				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	null,	"Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.",	l.get(14),	l.get(15),	l.get(16)}));
 			} else {
