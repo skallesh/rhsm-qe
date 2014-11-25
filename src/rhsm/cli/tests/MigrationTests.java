@@ -1284,9 +1284,34 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",sm_clientUsername,sm_clientPassword,sm_clientOrg,null, null);
 		String expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";
-		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1-1")) expectedStdout = "Unable to authenticate to legacy server.  See /var/log/rhsm/rhsm.log for more details.";	// changed by commit 20906b8d0a89071529ea41a91356daccb7a4bbf9
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1-1")) expectedStdout = "Unable to authenticate to legacy server.  See "+clienttasks.rhsmLogFile+" for more details.";	// changed by commit 20906b8d0a89071529ea41a91356daccb7a4bbf9
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid rhn credentials and valid subscription-manager credentials ended with: "+expectedStdout);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' with invalid credentials.");
+		//Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' with invalid credentials.");	// I think the exitCode of 1 is getting masked by the rhn-migrate-classic-to-rhsm.tcl script, adding other assertions below...
+		String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+clienttasks.rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+clienttasks.rhsmLogFile+"; fi;";
+		SSHCommandResult getTracebackCommandResult = client.runCommandAndWaitWithoutLogging(getTracebackCommand);
+		//	201411251612:59.244 - WARNING: Last request from /var/log/rhsm/rhsm.log:
+		//	2014-11-25 16:12:10,083 [DEBUG] rhn-migrate-classic-to-rhsm @connection.py:466 - Making request: GET /candlepin/users/testuser1/owners
+		//	2014-11-25 16:12:10,107 [DEBUG] rhn-migrate-classic-to-rhsm @connection.py:489 - Response: status=200
+		//	2014-11-25 16:12:12,326 [ERROR] rhn-migrate-classic-to-rhsm @migrate.py:332 - <Fault 2950: 'redstone.xmlrpc.XmlRpcFault: Either the password or username is incorrect.'>
+		//	Traceback (most recent call last):
+		//	  File "/usr/share/rhsm/subscription_manager/migrate/migrate.py", line 329, in connect_to_rhn
+		//	    session_key = rpc_session.auth.login(credentials.username, credentials.password)
+		//	  File "/usr/lib/python2.7/site-packages/rhn/rpclib.py", line 652, in __call__
+		//	    return self._send(self._name, args)
+		//	  File "/usr/lib/python2.7/site-packages/rhn/rpclib.py", line 384, in _request
+		//	    self._handler, request, verbose=self._verbose)
+		//	  File "/usr/lib/python2.7/site-packages/rhn/transports.py", line 188, in request
+		//	    return self._process_response(fd, connection)
+		//	  File "/usr/lib/python2.7/site-packages/rhn/transports.py", line 216, in _process_response
+		//	    return self.parse_response(fd)
+		//	  File "/usr/lib/python2.7/site-packages/rhn/transports.py", line 240, in parse_response
+		//	    return u.close()
+		//	  File "/usr/lib64/python2.7/xmlrpclib.py", line 793, in close
+		//	    raise Fault(**self._stack[0])
+		//	  Fault: <Fault 2950: 'redstone.xmlrpc.XmlRpcFault: Either the password or username is incorrect.'>
+		log.warning("Last request from "+clienttasks.rhsmLogFile+":\n"+getTracebackCommandResult.getStdout());
+		String expectedFault = "Either the password or username is incorrect.";
+		Assert.assertTrue(getTracebackCommandResult.getStdout().contains(expectedFault), "The '"+rhnMigrateTool+"' did not complete with expected fault '"+expectedFault+"' written to "+clienttasks.rhsmLogFile+".");
 	}
 	
 	
