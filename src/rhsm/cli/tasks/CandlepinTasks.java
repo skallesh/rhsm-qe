@@ -484,6 +484,8 @@ schema generation failed
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
 		
 		String jsonString = getHTTPResponseAsString(client, get, authenticator, password);
+		
+		// check for a JSON response from the server
 		if (!jsonString.startsWith("[") && !jsonString.startsWith("{")) {
 			log.warning("Expected the server to respond with valid JSON data.  Actual response:\n"+jsonString);
 			// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
@@ -514,6 +516,37 @@ schema generation failed
 				}
 			}
 			// END OF WORKAROUND
+		}
+		
+		// check JSON response for "errors" from the server
+		JSONObject jsonReponse = new JSONObject(jsonString);
+		if (jsonReponse.has("errors")) {	// implemented in https://bugzilla.redhat.com/show_bug.cgi?id=1113741#c20
+			log.warning("Expected the server to respond without errors.  Actual JSON response:\n"+jsonString);
+			//	201411251747:40.809 - FINER: Running HTTP request: GET on https://subscription.rhn.stage.redhat.com/subscription/pools/8a99f98146b4fa9d0146b5d3bd725180 with credentials for 'stage_auto_testuser' on server 'subscription.rhn.stage.redhat.com'... (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+			//	201411251747:40.810 - FINER: HTTP Request Headers:  (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+			//	201411251747:41.647 - FINER: HTTP server returned: 502 (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+			//	201411251747:41.648 - FINER: HTTP server returned content: {"errors": ["The proxy server received an invalid response from an upstream server"]} (rhsm.cli.tasks.CandlepinTasks.getHTTPResponseAsString)
+			JSONArray jsonErrors = jsonReponse.getJSONArray("errors");
+			String invalidServerResponseMessage = "The proxy server received an invalid response from an upstream server";
+			for (int l = 0; l < jsonErrors.length(); l++) {
+				// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+				if (jsonErrors.getString(l).equals(invalidServerResponseMessage)) {
+					String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+					// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						log.warning("Re-attempting one more time to get a valid JSON response from the server...");
+						jsonString = getHTTPResponseAsString(client, get, authenticator, password);
+						if (jsonString.startsWith("{\"errors\":") && jsonString.contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
+							throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
+						} else {
+							log.fine("Workaround succeeded.");
+						}
+					}
+				}
+				// END OF WORKAROUND
+			}
+			
 		}
 		return jsonString;
 	}
@@ -613,7 +646,7 @@ schema generation failed
 		// When testing against a Stage or Production server where we are not granted enough authority to make HTTP Requests,
 		// our tests will fail.  This block of code is a short cut to simply skip those test. - jsefler 11/15/2010 
 		if (m.getStatusText().equalsIgnoreCase("Unauthorized")) {
-			throw new SkipException("Not authorized make HTTP request to '"+m.getURI()+"' with credentials: username='"+username+"' password='"+password+"'");
+			throw new SkipException("Not authorized to get HTTP response from '"+m.getURI()+"' with credentials: username='"+username+"' password='"+password+"'");
 		}
 		
 		return response;
