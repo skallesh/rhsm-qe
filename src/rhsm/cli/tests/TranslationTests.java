@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -414,6 +415,63 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="verify that candlepin translation msgstr does NOT contain unescaped single quotes in the msgid",
+			groups={},
+			dataProvider="getTranslationFileDataForVerifyCandlepinTranslationsDoNotContainUnescapedSingleQuotes_Test",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyCandlepinTranslationsDoNotContainUnescapedSingleQuotes_Test(Object bugzilla, File translationFile) {
+		boolean warningsFound = false;
+		//for (File translationFile: translationFileMapForCandlepin.keySet()) {	// use dataProvider="getTranslationFileData",
+			for (Translation translation: translationFileMapForCandlepin.get(translationFile)) {
+				
+				// TEMPORARY WORKAROUND FOR BUG:
+				if (translation.msgid.trim().equals("Cannot add pools that are restricted to unit type 'person' to activation keys.") ||
+					translation.msgid.trim().equals("A unit type of 'person' cannot be used with activation keys") ||
+					translation.msgid.trim().equals("Unit type with id '") ||
+					translation.msgid.trim().equals("The activation key name ''{0}'' must be alphanumeric or include the characters '-' or '_'") ||
+					translation.msgid.trim().equals("couldn't read rules file") ||
+					translation.msgid.trim().equals("couldn't generate statistics") ||
+					translation.msgid.trim().equals("the order parameter must be either 'ascending' or 'descending'")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1167856"; // Bug 1167856 - candlepin msgids with unescaped single quotes will not print the single quotes
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						log.warning("Skipping test for unescaped single quotes on this translation while bug '"+bugId+"' is open.  Translation: "+translation);
+						continue;
+					}
+				}
+				// END OF WORKAROUND
+				
+				if (doesStringContainMatches(translation.msgstr,"(^|[^'])'([^']|$)")) {	// this regex is used to find solo single quotes in the translated msgstr
+					log.warning("Found a translation containing an unescaped single quote in the "+translationFile+" translation: "+translation);
+					warningsFound = true;
+				}
+			}
+		//}
+		Assert.assertTrue(!warningsFound,"No candlepin translations found containing unescaped single quotes.");
+	}
+	@DataProvider(name="getTranslationFileDataForVerifyCandlepinTranslationsDoNotContainUnescapedSingleQuotes_Test")
+	public Object[][] getTranslationFileDataForVerifyCandlepinTranslationsDoNotContainUnescapedSingleQuotes_Test_TestAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getTranslationFileDataForVerifyCandlepinTranslationsDoNotContainUnescapedSingleQuotes_Test_TestAsListOfLists());
+	}
+	protected List<List<Object>> getTranslationFileDataForVerifyCandlepinTranslationsDoNotContainUnescapedSingleQuotes_Test_TestAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (translationFileMapForCandlepin==null) return ll;
+		for (File translationFile : translationFileMapForCandlepin.keySet()) {
+			Set<String> bugIds = new HashSet<String>();
+			
+			// Bug 1167490 - [fr_FR] translations for candlepin are not properly escaping apostrophe / single quotes
+			if (translationFile.getPath().contains("/fr.po")) bugIds.add("1167490");
+			if (translationFile.getPath().contains("/it.po")) bugIds.add("1167490");
+			
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
+		}
+		return ll;
+	}
+	
+	
 	@Test(	description="verify that Red Hat product names (e.g. 'Red Hat','RHN') remain untranslated",
 			groups={},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_Test",
@@ -591,8 +649,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass (groups="setup")
 	public void buildTranslationFileMapForSubscriptionManagerBeforeClass() {
 		translationFileMapForSubscriptionManager = buildTranslationFileMapForSubscriptionManager();
+		translationFileMapForCandlepin = buildTranslationFileMapForCandlepin();
 	}
 	Map<File,List<Translation>> translationFileMapForSubscriptionManager = null;
+	Map<File,List<Translation>> translationFileMapForCandlepin = null;
 
 //	@BeforeClass (groups="setup")
 //	public void buildTranslationFileMapForCandlepinBeforeClass() {
