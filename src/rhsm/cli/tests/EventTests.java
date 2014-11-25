@@ -145,13 +145,16 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// assert the consumer feed...
-		assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, null, newEventTitles);
+		//assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, null, newEventTitles);
+		assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, null, newEventTitles,new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles,new HashSet<String>(){{add("COMPLIANCE CREATED");}});
        
 		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
+		//assertTheNewFeed(oldFeed, newEventTitles);
+		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles,new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 	}
 	
 	
@@ -183,10 +186,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);	// RHEL59: THIS IS GENERATING EXTRA CONSUMER MODIFIED EVENTS THAT WE DON'T REALLY WANT TO TEST 
 		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null);
 		List<String> newEventTitles = new ArrayList<String>();
-		newEventTitles.add("COMPLIANCE CREATED");	// COMPLIANCE CREATED events were added to support gutterball
+		//newEventTitles.add("COMPLIANCE CREATED");	// COMPLIANCE CREATED events were added to support gutterball
 		newEventTitles.add("ENTITLEMENT CREATED");
-		newEventTitles.add("COMPLIANCE CREATED");
-		newEventTitles.add("COMPLIANCE CREATED");
+		//newEventTitles.add("COMPLIANCE CREATED");
+		//newEventTitles.add("COMPLIANCE CREATED");
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED CURRENTRELEASE
@@ -199,7 +202,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the consumer feed...
         //assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles.toArray(new String[]{}));	// worked prior to RHEL59
-        assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");}});	// TODO Using the IgnoringEventTitles is a workaround bug 838123#c2
+        assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");add("COMPLIANCE CREATED");}});	// TODO Using the IgnoringEventTitles is a workaround bug 838123#c2
                
         // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit 
         String virt_limit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit");
@@ -209,11 +212,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the owner feed...
 		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles.toArray(new String[]{}));	// worked prior to RHEL59
-		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");}});	// TODO Using the IgnoringEventTitles is a workaround bug 838123#c2
+		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");add("COMPLIANCE CREATED");}});	// TODO Using the IgnoringEventTitles is a workaround bug 838123#c2
   
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, newEventTitles.toArray(new String[]{}));	// worked prior to RHEL59
-		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");}});
+		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");add("COMPLIANCE CREATED");}});
 	}
 	
 	
@@ -283,8 +286,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// assert the consumer feed...
         newEventTitles.remove("POOL MODIFIED");
-        assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
-
+        //assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+        assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("COMPLIANCE CREATED");}});
+        
 		// TEMPORARY WORKAROUND FOR BUG	
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		Calendar now = Calendar.getInstance();
@@ -335,7 +339,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// END OF WORKAROUND
 
 		// assert the consumer feed...
-        assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+        //assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+        assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 
         // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit 
         String virt_limit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit");
@@ -344,10 +349,12 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 
 		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
+		//assertTheNewFeed(oldFeed, newEventTitles);
+		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 	}
 	
 	
@@ -400,7 +407,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // fire an unregister event
 		clienttasks.unregister(null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER DELETED"};
-		newEventTitles = new String[]{"CONSUMER DELETED","COMPLIANCE CREATED"};	// COMPLIANCE CREATED events were added to support gutterball
+		newEventTitles = new String[]{"COMPLIANCE CREATED","CONSUMER DELETED"};	// COMPLIANCE CREATED events were added to support gutterball
 		
 		// assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
