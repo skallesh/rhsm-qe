@@ -425,6 +425,12 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		//for (File translationFile: translationFileMapForCandlepin.keySet()) {	// use dataProvider="getTranslationFileData",
 			for (Translation translation: translationFileMapForCandlepin.get(translationFile)) {
 				
+				// Note: from ngoswami@redhat.com regarding use of apostrophes in the /as.po translations
+				//		> Yes, the single quote (') is correct and these are expected characters
+				//		> in the translated string.  It is a phonetic requirement to depict a
+				//		> nasal pronunciation. If Zanata is unable to render it, I shall add
+				//		> preceding single quote as suggested by you.
+				
 				// TEMPORARY WORKAROUND FOR BUG:
 				if (translation.msgid.trim().equals("Cannot add pools that are restricted to unit type 'person' to activation keys.") ||
 					translation.msgid.trim().equals("A unit type of 'person' cannot be used with activation keys") ||
