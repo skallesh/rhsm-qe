@@ -7254,6 +7254,7 @@ if (false) {
 		//	Stdout: Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.
 		//	Stderr:
 		//	ExitCode: 255
+		//  ^^^^^^^^^^^^^ Indicative of a 502 Proxy Error
 		
 		//	ssh root@intel-canoepass-12.lab.bos.redhat.com subscription-manager subscribe --pool=8a99f981498757d40149a5a9b04f4b00
 		//	Stdout:
@@ -7298,6 +7299,50 @@ if (false) {
 			
 			
 			// TEMPORARY WORKAROUND FOR BUG
+			//	201411121258:42.413 - FINE: ssh root@ibm-p8-kvm-04-guest-01.rhts.eng.bos.redhat.com subscription-manager register --username=stage_auto_testuser --password=**** --baseurl=myhost.example.com/ --force (com.redhat.qe.tools.SSHCommandRunner.run)
+			//	201411121258:53.631 - FINE: Stdout: 
+			//	The system with UUID 44d314cd-23e4-43e3-a256-a74828d6377f has been unregistered
+			//	The system has been registered with ID: 2017fa81-1b82-46da-84db-4b789118c6a9 
+			//	Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.
+			//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+			//	201411121258:53.632 - FINE: Stderr:  (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+			//	201411121258:53.632 - FINE: ExitCode: 70 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+			//	201411121258:53.632 - FINE: ssh root@ibm-p8-kvm-04-guest-01.rhts.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi; (com.redhat.qe.tools.SSHCommandRunner.run)
+			//	201411121258:53.837 - WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2014-11-12 12:58:53,331 [DEBUG] rhsmd @connection.py:466 - Making request: GET /subscription/consumers/2017fa81-1b82-46da-84db-4b789118c6a9/compliance
+			//	2014-11-12 12:58:53,802 [DEBUG] rhsmd @connection.py:489 - Response: status=401
+			//	2014-11-12 12:58:54,770 [DEBUG] subscription-manager @connection.py:489 - Response: status=502
+			//	2014-11-12 12:58:54,770 [ERROR] subscription-manager @connection.py:518 - Response: 502
+			//	2014-11-12 12:58:54,771 [ERROR] subscription-manager @connection.py:519 - JSON parsing error: No JSON object could be decoded
+			//	2014-11-12 12:58:54,771 [ERROR] subscription-manager @managercli.py:157 - exception caught in subscription-manager
+			//	2014-11-12 12:58:54,771 [ERROR] subscription-manager @managercli.py:158 - Server error attempting a GET to /subscription/ returned status 502
+			//	Traceback (most recent call last):
+			//	  File "/usr/sbin/subscription-manager", line 82, in <module>
+			//	    sys.exit(abs(main() or 0))
+			//	  File "/usr/sbin/subscription-manager", line 73, in main
+			//	    return managercli.ManagerCLI().main()
+			//	  File "/usr/share/rhsm/subscription_manager/managercli.py", line 2530, in main
+			//	    return CLI.main(self)
+			//	  File "/usr/share/rhsm/subscription_manager/cli.py", line 160, in main
+			//	    return cmd.main()
+			//	  File "/usr/share/rhsm/subscription_manager/managercli.py", line 478, in main
+			//	    return_code = self._do_command()
+			//	  File "/usr/share/rhsm/subscription_manager/managercli.py", line 1092, in _do_command
+			//	    profile_mgr.update_check(self.cp, consumer['uuid'], True)
+			//	  File "/usr/share/rhsm/subscription_manager/cache.py", line 348, in update_check
+			//	    if not uep.supports_resource(PACKAGES_RESOURCE):
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 716, in supports_resource
+			//	    self._load_supported_resources()
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 703, in _load_supported_resources
+			//	    resources_list = self.conn.request_get("/")
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 570, in request_get
+			//	    return self._request("GET", method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 498, in _request
+			//	    self.validateResponse(result, request_type, handler)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 546, in validateResponse
+			//	    handler=handler)
+			//	RemoteServerException: Server error attempting a GET to /subscription/ returned status 502
+			
 			//	2014-11-12 19:10:09,319 [DEBUG] subscription-manager @connection.py:466 - Making request: GET /subscription/consumers/2031a746-d558-4dbe-9edb-4bded14b6a92/certificates/serials
 			//	2014-11-12 19:10:09,820 [DEBUG] subscription-manager @connection.py:489 - Response: status=502
 			//	2014-11-12 19:10:09,820 [ERROR] subscription-manager @connection.py:518 - Response: 502
