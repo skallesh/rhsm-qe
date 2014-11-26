@@ -519,35 +519,67 @@ schema generation failed
 		}
 		
 		// check JSON response for "errors" from the server
-		JSONObject jsonReponse = new JSONObject(jsonString);
-		if (jsonReponse.has("errors")) {	// implemented in https://bugzilla.redhat.com/show_bug.cgi?id=1113741#c20
-			log.warning("Expected the server to respond without errors.  Actual JSON response:\n"+jsonString);
-			//	201411251747:40.809 - FINER: Running HTTP request: GET on https://subscription.rhn.stage.redhat.com/subscription/pools/8a99f98146b4fa9d0146b5d3bd725180 with credentials for 'stage_auto_testuser' on server 'subscription.rhn.stage.redhat.com'... (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
-			//	201411251747:40.810 - FINER: HTTP Request Headers:  (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
-			//	201411251747:41.647 - FINER: HTTP server returned: 502 (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
-			//	201411251747:41.648 - FINER: HTTP server returned content: {"errors": ["The proxy server received an invalid response from an upstream server"]} (rhsm.cli.tasks.CandlepinTasks.getHTTPResponseAsString)
-			JSONArray jsonErrors = jsonReponse.getJSONArray("errors");
-			String invalidServerResponseMessage = "The proxy server received an invalid response from an upstream server";
-			for (int l = 0; l < jsonErrors.length(); l++) {
-				// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
-				if (jsonErrors.getString(l).equals(invalidServerResponseMessage)) {
-					String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
-					// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-					if (invokeWorkaroundWhileBugIsOpen) {
-						log.warning("Re-attempting one more time to get a valid JSON response from the server...");
-						jsonString = getHTTPResponseAsString(client, get, authenticator, password);
-						if (jsonString.startsWith("{\"errors\":") && jsonString.contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
-							throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
-						} else {
-							log.fine("Workaround succeeded.");
+//		THIS BLOCK OF IMPLEMENTATION IS BAD BECAUSE SOME RESPONSES ARE NOT JSON OBJECTS... FOR EXAMPLE:
+//		201411260426:20.519 - INFO: SSH alternative to HTTP request: curl --stderr /dev/null --insecure --user stage_2013_model_test:redhat --request GET https://subscription.rhn.stage.redhat.com/subscription/owners/7298896/servicelevels | python -m simplejson/tool (rhsm.cli.tasks.CandlepinTasks.getResourceUsingRESTfulAPI)
+//		201411260426:27.000 - SEVERE: Test Failed: ServiceLevelShowAvailable_Test (com.redhat.qe.auto.testng.TestNGListener.onTestFailure)
+//		org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+//		[jsefler@jseflerT5400 rhsm-qe]$ curl --stderr /dev/null --insecure --user stage_test_48:redhat --request GET https://subscription.rhn.stage.redhat.com/subscription/owners/7298842/servicelevels | python -m simplejson/tool
+//		[
+//		    "None"
+//		]
+//		JSONObject jsonReponse = new JSONObject(jsonString);
+//		if (jsonReponse.has("errors")) {	// implemented in https://bugzilla.redhat.com/show_bug.cgi?id=1113741#c20
+//			log.warning("Expected the server to respond without errors.  Actual JSON response:\n"+jsonString);
+//			//	201411251747:40.809 - FINER: Running HTTP request: GET on https://subscription.rhn.stage.redhat.com/subscription/pools/8a99f98146b4fa9d0146b5d3bd725180 with credentials for 'stage_auto_testuser' on server 'subscription.rhn.stage.redhat.com'... (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+//			//	201411251747:40.810 - FINER: HTTP Request Headers:  (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+//			//	201411251747:41.647 - FINER: HTTP server returned: 502 (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+//			//	201411251747:41.648 - FINER: HTTP server returned content: {"errors": ["The proxy server received an invalid response from an upstream server"]} (rhsm.cli.tasks.CandlepinTasks.getHTTPResponseAsString)
+//			JSONArray jsonErrors = jsonReponse.getJSONArray("errors");
+//			String invalidServerResponseMessage = "The proxy server received an invalid response from an upstream server";
+//			for (int l = 0; l < jsonErrors.length(); l++) {
+//				// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+//				if (jsonErrors.getString(l).equals(invalidServerResponseMessage)) {
+//					String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+//					// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
+//					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//					if (invokeWorkaroundWhileBugIsOpen) {
+//						log.warning("Re-attempting one more time to get a valid JSON response from the server...");
+//						jsonString = getHTTPResponseAsString(client, get, authenticator, password);
+//						if (jsonString.startsWith("{\"errors\":") && jsonString.contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
+//							throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
+//						} else {
+//							log.fine("Workaround succeeded.");
+//						}
+//					}
+//				}
+//				// END OF WORKAROUND
+//			}
+//			
+//		}
+		if (jsonString.startsWith("{\"errors\":")) {	// implemented in https://bugzilla.redhat.com/show_bug.cgi?id=1113741#c20
+				log.warning("Expected the server to respond without errors.  Actual JSON response:\n"+jsonString);	// {"errors": ["The proxy server received an invalid response from an upstream server"]}
+				//	201411251747:40.809 - FINER: Running HTTP request: GET on https://subscription.rhn.stage.redhat.com/subscription/pools/8a99f98146b4fa9d0146b5d3bd725180 with credentials for 'stage_auto_testuser' on server 'subscription.rhn.stage.redhat.com'... (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+				//	201411251747:40.810 - FINER: HTTP Request Headers:  (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+				//	201411251747:41.647 - FINER: HTTP server returned: 502 (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+				//	201411251747:41.648 - FINER: HTTP server returned content: {"errors": ["The proxy server received an invalid response from an upstream server"]} (rhsm.cli.tasks.CandlepinTasks.getHTTPResponseAsString)
+				String invalidServerResponseMessage = "The proxy server received an invalid response from an upstream server";
+					// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+					if (jsonString.contains(invalidServerResponseMessage)) {
+						String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+						try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+						if (invokeWorkaroundWhileBugIsOpen) {
+							log.warning("Re-attempting one more time to get a valid response from the server...");
+							jsonString = getHTTPResponseAsString(client, get, authenticator, password);
+							if (jsonString.startsWith("{\"errors\":") && jsonString.contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
+								throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
+							} else {
+								log.fine("Workaround succeeded.");
+							}
 						}
 					}
-				}
-				// END OF WORKAROUND
+					// END OF WORKAROUND
+				
 			}
-			
-		}
 		return jsonString;
 	}
 	

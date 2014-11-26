@@ -7204,6 +7204,7 @@ if (false) {
 	 */
 	public void logRuntimeErrors(SSHCommandResult result) {
 		String issue;
+		if (result.getExitCode().equals(0)) return;	// not an error
 		
 		//	ssh root@ibm-p8-01-lp6.rhts.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9814931ea74014933dec2b60673
 		//	Stdout:
@@ -7281,103 +7282,146 @@ if (false) {
 		//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 530, in validateResponse
 		//	    handler=handler)
 		//	RemoteServerException: Server error attempting a DELETE to /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e returned status 500
-		//debugTesting result = new SSHCommandResult(new Integer(255), "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.", "");
-		if (!result.getExitCode().equals(0)) {
-			if ((result.getStdout()+result.getStderr()).toLowerCase().contains("Runtime Error".toLowerCase()) ||
-				(result.getStdout()+result.getStderr()).toLowerCase().contains("undefined method".toLowerCase()) ||
-				(result.getStdout()+result.getStderr()).toLowerCase().contains("The proxy server received an invalid response from an upstream server".toLowerCase()) ||
-				(result.getStdout()+result.getStderr()).toLowerCase().contains("Problem encountered".toLowerCase()) ||
-				(result.getStdout()+result.getStderr()).toLowerCase().contains("Remote server error".toLowerCase()) ||
-				(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to verify server's identity".toLowerCase()) ||
-				(result.getStdout()+result.getStderr()).toLowerCase().contains("timed out".toLowerCase()) ||
-				(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase())) {
-				// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
-				String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
-				SSHCommandResult getTracebackCommandResult = sshCommandRunner.runCommandAndWaitWithoutLogging(getTracebackCommand);
-				if (!getTracebackCommandResult.getStdout().isEmpty()) log.warning("Last request from "+rhsmLogFile+":\n"+getTracebackCommandResult.getStdout());
-				
-				
-				// TEMPORARY WORKAROUND FOR BUG
-				//	2014-06-05 02:55:31,401 [DEBUG] subscription-manager @connection.py:450 - Making request: GET /subscription/consumers/9530dd56-f85b-488a-8a15-886ab3c4caf8/compliance
-				//	2014-06-05 02:55:35,062 [DEBUG] subscription-manager @connection.py:473 - Response: status=502
-				//	2014-06-05 02:55:35,063 [ERROR] subscription-manager @connection.py:502 - Response: 502
-				issue = "Response: status=502";
-				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
-					String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
-					// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-					if (invokeWorkaroundWhileBugIsOpen) {
-						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
-					}
+		
+		if ((result.getStdout()+result.getStderr()).toLowerCase().contains("Runtime Error".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("undefined method".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("The proxy server received an invalid response from an upstream server".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("Problem encountered".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("Remote server error".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to verify server's identity".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("timed out".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase())) {
+			// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
+			SSHCommandResult getTracebackCommandResult = sshCommandRunner.runCommandAndWaitWithoutLogging(getTracebackCommand);
+			if (!getTracebackCommandResult.getStdout().isEmpty()) log.warning("Last request from "+rhsmLogFile+":\n"+getTracebackCommandResult.getStdout());
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2014-11-12 19:10:09,319 [DEBUG] subscription-manager @connection.py:466 - Making request: GET /subscription/consumers/2031a746-d558-4dbe-9edb-4bded14b6a92/certificates/serials
+			//	2014-11-12 19:10:09,820 [DEBUG] subscription-manager @connection.py:489 - Response: status=502
+			//	2014-11-12 19:10:09,820 [ERROR] subscription-manager @connection.py:518 - Response: 502
+			//	2014-11-12 19:10:09,820 [ERROR] subscription-manager @connection.py:519 - JSON parsing error: No JSON object could be decoded
+			//	2014-11-12 19:10:09,821 [ERROR] subscription-manager @managercli.py:157 - Unable to attach: Server error attempting a GET to /subscription/consumers/2031a746-d558-4dbe-9edb-4bded14b6a92/certificates/serials returned status 502
+			//	2014-11-12 19:10:09,821 [ERROR] subscription-manager @managercli.py:158 - Server error attempting a GET to /subscription/consumers/2031a746-d558-4dbe-9edb-4bded14b6a92/certificates/serials returned status 502
+			//	Traceback (most recent call last):
+			//	  File "/usr/share/rhsm/subscription_manager/managercli.py", line 1509, in _do_command
+			//	    report = self.entcertlib.update()
+			//	  File "/usr/share/rhsm/subscription_manager/certlib.py", line 31, in update
+			//	    self.report = self.locker.run(self._do_update)
+			//	  File "/usr/share/rhsm/subscription_manager/certlib.py", line 17, in run
+			//	    return action()
+			//	  File "/usr/share/rhsm/subscription_manager/entcertlib.py", line 43, in _do_update
+			//	    return action.perform()
+			//	  File "/usr/share/rhsm/subscription_manager/entcertlib.py", line 119, in perform
+			//	    expected = self._get_expected_serials()
+			//	  File "/usr/share/rhsm/subscription_manager/entcertlib.py", line 254, in _get_expected_serials
+			//	    exp = self.get_certificate_serials_list()
+			//	  File "/usr/share/rhsm/subscription_manager/entcertlib.py", line 234, in get_certificate_serials_list
+			//	    reply = self.uep.getCertificateSerials(identity.uuid)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 965, in getCertificateSerials
+			//	    return self.conn.request_get(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 570, in request_get
+			//	    return self._request("GET", method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 498, in _request
+			//	    self.validateResponse(result, request_type, handler)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 546, in validateResponse
+			//	    handler=handler)
+			//	RemoteServerException: Server error attempting a GET to /subscription/consumers/2031a746-d558-4dbe-9edb-4bded14b6a92/certificates/serials returned status 502
+			
+			//	2014-11-26 10:03:18,366 [DEBUG] subscription-manager @connection.py:466 - Making request: GET /subscription/consumers/69dfafe4-04b4-44aa-8173-06c215632710
+			//	2014-11-26 10:03:25,766 [DEBUG] subscription-manager @connection.py:489 - Response: status=502
+			//	2014-11-26 10:03:25,767 [ERROR] subscription-manager @managercli.py:874 - The proxy server received an invalid response from an upstream server
+			//	Traceback (most recent call last):
+			//	  File "/usr/share/rhsm/subscription_manager/managercli.py", line 868, in _do_command
+			//	    self.show_service_level()
+			//	  File "/usr/share/rhsm/subscription_manager/managercli.py", line 892, in show_service_level
+			//	    consumer = self.cp.getConsumer(self.identity.uuid)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 869, in getConsumer
+			//	    return self.conn.request_get(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 570, in request_get
+			//	    return self._request("GET", method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 498, in _request
+			//	    self.validateResponse(result, request_type, handler)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 540, in validateResponse
+			//	    raise RestlibException(response['status'], error_msg)
+			//	RestlibException: The proxy server received an invalid response from an upstream server
+			issue = "Response: status=502";
+			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+				String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+				// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
-				// END OF WORKAROUND
-				
-				
-				// TEMPORARY WORKAROUND FOR BUG
-				//	2014-11-16 05:22:14,215 [DEBUG] subscription-manager @connection.py:466 - Making request: POST /subscription/consumers/a21f1acf-ddd7-420a-8903-d75e9ba45e1f/entitlements?pool=8a99f981498757d40149a5a9b04f4b00
-				//	2014-11-16 05:23:14,628 [ERROR] subscription-manager @managercli.py:157 - Unable to attach: timed out
-				//	2014-11-16 05:23:14,628 [ERROR] subscription-manager @managercli.py:158 - timed out
-				//	Traceback (most recent call last):
-				//	File "/usr/share/rhsm/subscription_manager/managercli.py", line 1462, in _do_command
-				//	ents = self.cp.bindByEntitlementPool(self.identity.uuid, pool, self.options.quantity)
-				//	File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 974, in bindByEntitlementPool
-				//	return self.conn.request_post(method)
-				//	File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 573, in request_post
-				//	return self._request("POST", method, params)
-				//	File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 480, in _request
-				//	response = conn.getresponse()
-				//	File "/usr/lib64/python2.7/httplib.py", line 1045, in getresponse
-				//	response.begin()
-				//	File "/usr/lib64/python2.7/httplib.py", line 409, in begin
-				//	version, status, reason = self._read_status()
-				//	File "/usr/lib64/python2.7/httplib.py", line 365, in _read_status
-				//	line = self.fp.readline(_MAXLINE + 1)
-				//	File "/usr/lib64/python2.7/socket.py", line 476, in readline
-				//	data = self._sock.recv(self._rbufsize)
-				//	File "/usr/lib64/python2.7/site-packages/M2Crypto/SSL/Connection.py", line 228, in read
-				//	return self._read_bio(size)
-				//	File "/usr/lib64/python2.7/site-packages/M2Crypto/SSL/Connection.py", line 213, in _read_bio
-				//	return m2.ssl_read(self.ssl, size, self._timeout)
-				//	SSLTimeoutError: timed out
-				issue = "SSLTimeoutError: timed out";
-				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
-					String bugId = "1165239"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165239 - subscription-manager encounters frequent SSLTimeoutErrors from stage IT-Candlepin
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-					if (invokeWorkaroundWhileBugIsOpen) {
-						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
-					}
-				}
-				// END OF WORKAROUND
-				
-				
-				// TEMPORARY WORKAROUND FOR BUG
-				//	2014-11-18 13:31:35,122 [DEBUG] subscription-manager @connection.py:466 - Making request: DELETE /subscription/consumers/b7b49c97-f25a-43b7-9820-e7cc76bccbc3/entitlements
-				//	2014-11-18 13:32:34,127 [DEBUG] subscription-manager @connection.py:489 - Response: status=500
-				//	2014-11-18 13:32:34,127 [ERROR] subscription-manager @managercli.py:1625 - Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
-				issue = "Runtime Error Lock wait timeout exceeded";
-				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
-					String bugId = "1084782"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1084782 - Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-					if (invokeWorkaroundWhileBugIsOpen) {
-						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
-					}
-				}
-				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
-					String bugId = "1165295"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165295 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded" from stage IT-Candlepin
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-					if (invokeWorkaroundWhileBugIsOpen) {
-						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
-					}
-				}
-				if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
-					String bugId = "1161736"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1161736 - subscription-manager doesn't behave in a consistent way
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-					if (invokeWorkaroundWhileBugIsOpen) {
-						throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
-					}
-				}
-				// END OF WORKAROUND
 			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2014-11-16 05:22:14,215 [DEBUG] subscription-manager @connection.py:466 - Making request: POST /subscription/consumers/a21f1acf-ddd7-420a-8903-d75e9ba45e1f/entitlements?pool=8a99f981498757d40149a5a9b04f4b00
+			//	2014-11-16 05:23:14,628 [ERROR] subscription-manager @managercli.py:157 - Unable to attach: timed out
+			//	2014-11-16 05:23:14,628 [ERROR] subscription-manager @managercli.py:158 - timed out
+			//	Traceback (most recent call last):
+			//	File "/usr/share/rhsm/subscription_manager/managercli.py", line 1462, in _do_command
+			//	ents = self.cp.bindByEntitlementPool(self.identity.uuid, pool, self.options.quantity)
+			//	File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 974, in bindByEntitlementPool
+			//	return self.conn.request_post(method)
+			//	File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 573, in request_post
+			//	return self._request("POST", method, params)
+			//	File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 480, in _request
+			//	response = conn.getresponse()
+			//	File "/usr/lib64/python2.7/httplib.py", line 1045, in getresponse
+			//	response.begin()
+			//	File "/usr/lib64/python2.7/httplib.py", line 409, in begin
+			//	version, status, reason = self._read_status()
+			//	File "/usr/lib64/python2.7/httplib.py", line 365, in _read_status
+			//	line = self.fp.readline(_MAXLINE + 1)
+			//	File "/usr/lib64/python2.7/socket.py", line 476, in readline
+			//	data = self._sock.recv(self._rbufsize)
+			//	File "/usr/lib64/python2.7/site-packages/M2Crypto/SSL/Connection.py", line 228, in read
+			//	return self._read_bio(size)
+			//	File "/usr/lib64/python2.7/site-packages/M2Crypto/SSL/Connection.py", line 213, in _read_bio
+			//	return m2.ssl_read(self.ssl, size, self._timeout)
+			//	SSLTimeoutError: timed out
+			issue = "SSLTimeoutError: timed out";
+			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+				String bugId = "1165239"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165239 - subscription-manager encounters frequent SSLTimeoutErrors from stage IT-Candlepin
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2014-11-18 13:31:35,122 [DEBUG] subscription-manager @connection.py:466 - Making request: DELETE /subscription/consumers/b7b49c97-f25a-43b7-9820-e7cc76bccbc3/entitlements
+			//	2014-11-18 13:32:34,127 [DEBUG] subscription-manager @connection.py:489 - Response: status=500
+			//	2014-11-18 13:32:34,127 [ERROR] subscription-manager @managercli.py:1625 - Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
+			issue = "Runtime Error Lock wait timeout exceeded";
+			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+				String bugId = "1084782"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1084782 - Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+				String bugId = "1165295"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165295 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded" from stage IT-Candlepin
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+				String bugId = "1161736"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1161736 - subscription-manager doesn't behave in a consistent way
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
 		}
 	}
 	
