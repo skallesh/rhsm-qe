@@ -93,7 +93,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *      
  *   Translators:
  *   
-			as		[ngoswami@redhat.com]	(Nilamdyuti Goswami)
+			as		[ngoswami@redhat.com]	(Nilamdyuti Goswami) is no longer a translator; is now as a "Technical Writer".
 			bn-IN	[runab@redhat.com]		(Runa Bhattacharjee)
 					[sray@redhat.com]		(Saibal Ray)
 			de_DE	[hpeters@redhat.com]	(Hedda Peters)
