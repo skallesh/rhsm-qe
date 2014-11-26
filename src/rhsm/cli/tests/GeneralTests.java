@@ -757,6 +757,23 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 	protected Integer negativeClockSkewMinutes = null;
 	
+	
+	@Test(	description="check the rpm query list for subscription-manager-migration and verify it does NOT list sat5to6",
+			groups={"blockedByBug-1145833"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRpmListForSubscriptionManagerMigrationExcludesSat5to6_Test() {
+		// initial version subscription-manager-plugin-container-1.13.7-1.el7.x86_64
+		String pkg = "subscription-manager-migration";
+		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
+		String rpmCommand = "rpm --query --list "+pkg;
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
+		String sat5to6 = "sat5to6";
+		//sat5to6 = pkg;	// debugTesting
+		Assert.assertTrue(!sshCommandResult.getStdout().contains(sat5to6), "The rpm query list for package '"+pkg+"' excludes the '"+sat5to6+"' tool.");
+	}
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 688469 - subscription-manager <module> --help does not work in localized environment. https://github.com/RedHatQE/rhsm-qe/issues/144
 	// TODO Bug 684941 - Deleting a product with a subscription gives ugly error https://github.com/RedHatQE/rhsm-qe/issues/145
