@@ -82,7 +82,32 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	
-	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify End date and start date of the subscription is appropriate one when you attach a future subscription and then  heal after 1 min",
+			groups={"VerifyImportedCertgetsDeletedByRepoCommand","blockedByBug-1160150"},
+			enabled=true)
+	public void VerifyImportedCertgetsDeletedByRepoCommand() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);	// disable
+		SubscriptionPool pool = getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),1).get(0);
+		File importEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_clientUsername, sm_clientPassword,sm_serverUrl);
+		 File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
+		 File importCertificateFile = new File(importCertificatesDir1+File.separator+importEntitlementCertFile.getName());
+		 client.runCommandAndWait("mkdir -p "+importCertificatesDir1);
+		 client.runCommandAndWait("cat "+importEntitlementCertFile+" "+importEntitlementKeyFile+" > "+importCertificateFile);
+		 String path =importCertificateFile.getPath();
+		 clienttasks.clean(null, null, null);
+		 clienttasks.importCertificate(path);
+		 clienttasks.repos_(true, null, null,(String)null, null, null, null, null);
+		 
+		 
+	}
 	
 	
 	/**
@@ -94,8 +119,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"VerifyStartEndDateOfSubscription","blockedByBug-994853"},
 			enabled=true)
 	public void VerifyStartEndDateOfSubscription() throws Exception {
-//		moveProductCertFiles("*");
-//		client.runCommandAndWait("cp /root/temp1/100000000000002.pem "+clienttasks.productCertDir);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -112,12 +135,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "100000000000002", clienttasks.getCurrentlyInstalledProducts());
 		
 		for(ProductSubscription consumedProductSubscription:clienttasks.getCurrentlyConsumedProductSubscriptions()){
-			//Assert.assertEquals(installedProduct.startDate, consumedProductSubscription.startDate);
-			//  [jsefler] was here...
-			//^ that assertion only passes when all of the available pools were generated on the same day (as is the case for TESTDATA)
-			//^ that assertion fails when a new subscription pool with a different start date that provides product "awesomeos-x86_64" has been added to the org.  This happens with test subscription 'An "Exempt SLA" service level subscription (matches all service levels)'
-			//revised assertion should make sure the start date of the installed product is the oldest product subscription that covers this installed product...
-			if (consumedProductSubscription.provides.contains(installedProduct.productName)) {
+				if (consumedProductSubscription.provides.contains(installedProduct.productName)) {
 				Assert.assertTrue(!installedProduct.startDate.after(consumedProductSubscription.startDate), "Comparing Start Date '"+InstalledProduct.formatDateString(installedProduct.startDate)+"' of Installed Product '"+installedProduct.productName+"' to Start Date '"+InstalledProduct.formatDateString(consumedProductSubscription.startDate)+"' of Consumed Subscription '"+consumedProductSubscription.productName+"'.  (Installed Product startDate should be <= Consumed Subscription startDate)");
 			}
 		}
@@ -944,42 +962,16 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 			enabled=true)
 	@ImplementsNitrateTest(caseId=55355)
 	public void CRLTest() {
-/* unnecessary
-		clienttasks.deleteFactsFileWithOverridingValues();
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"autoAttachInterval".toLowerCase(), "1440" });
-		clienttasks.config(null, null, true, listOfSectionNameValues);
-*/
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg ,null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
-/* unnecessary
-		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
-		server.runCommandAndWait("rm -rf "+servertasks.candlepinCRLFile);
-*/
 		List<SubscriptionPool> availPools = clienttasks.getCurrentlyAvailableSubscriptionPools(); 
 		File entitlementCertFile=clienttasks.subscribeToSubscriptionPool(availPools.get(randomGenerator.nextInt(availPools.size())),sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-/* simplify by getting the serialNumber from the entitlementCertFile
-			clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-*/
+
 		BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile);
-/* don't need a loop here to unsubscribe --all, just unsubscribe the serialNumber
-			for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-				System.out.println(consumed.serialNumber);
-				clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
-			}
-*/
+
 		clienttasks.unsubscribe(null,serialNumber, null, null, null);
-		
-		// verify that the currently revoked certs on the server include the serialNumber that we just unsubscribed
-/* we can eliminate this loop since the revocation list will likely have more than one revoked cert 
-			for(RevokedCert revokedCerts:servertasks.getCurrentlyRevokedCerts()){
-				Assert.assertEquals(revokedCerts.serialNumber, entitlementCert.serialNumber);
-			}
-*/
-		sleep(2/*min*/*60*1000); // give the server time to update; schedule is set in /etc/candlepin/candlepin.conf pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
+			sleep(2/*min*/*60*1000); // give the server time to update; schedule is set in /etc/candlepin/candlepin.conf pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
 		RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber", serialNumber, servertasks.getCurrentlyRevokedCerts());
 		Assert.assertNotNull(revokedCert, "Found expected Revoked Cert on the server's Certificate Revocation List (CRL) after unsubscribing from serial '"+serialNumber+"'.");
 		log.info("Verified revoked certificate: "+revokedCert);
@@ -2149,25 +2141,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 			groups = { "AddingVirtualPoolToActivationKey","blockedByBug-755677"}, enabled = true)
 	public void AddingVirtualPoolToActivationKey() throws JSONException,Exception {
 		Integer addQuantity=1;
-/* unnecessary
-		int count =0;
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[] { "rhsmcertd",
-				"autoAttachInterval".toLowerCase(), "1440" });
-		clienttasks.config(null, null, true, listOfSectionNameValues);
-		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, null);
-*/
-/* there's a faster way to do this...
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId();
-		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(
-				sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,
-				false);
-	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-	clienttasks.getCurrentlyAllAvailableSubscriptionPools();
-*/
+
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, false, null, null, null));
 		
 	ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
@@ -2211,11 +2185,6 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +poolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		
 		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, false, null, null, null);
-/* this loop fails to assert anything if the currentlyConsumedProductSubscriptions are empty; following is a better assertion...
-		for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
-		Assert.assertEquals(consumed.poolId, poolId);
-		}
-*/
 		List <ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(consumedProductSubscriptions.size()==1 && consumedProductSubscriptions.get(0).poolId.equals(poolId),"Registering with an activationKey named '"+name+"' should grant a single entitlement from subscription pool id '"+poolId+"'.");
 		
