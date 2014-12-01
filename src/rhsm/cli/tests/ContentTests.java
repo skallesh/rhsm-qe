@@ -34,6 +34,7 @@ import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
+import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
@@ -857,6 +858,58 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribe(true,(BigInteger)null,null,null,null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl));
 		
+		// adjust the expectedContentNamespaces for modified product ids that are not installed
+		//List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		for (String providedProductId : providedProductIds) {
+			
+			// get the product
+			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
+			// get the provided product contents
+			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
+			for (int j = 0; j < jsonProductContents.length(); j++) {
+				JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
+				JSONObject jsonContent = jsonProductContent.getJSONObject("content");
+				
+				// get modifiedProductIds for each of the productContents
+				JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
+				for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
+					String modifiedProductId = (String) jsonModifiedProductIds.get(k);
+					String contentLabel = jsonContent.getString("label");
+					
+// TODO: I do not believe this should check the installed products or all the current subscriptions' providedProductIds for this modifiedProductId
+//					// if modifiedProductId is not installed, then the modifier jsonContent should NOT be among the expectedContentNamespaceSet
+//					if (InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", modifiedProductId, installedProductCerts)==null) {
+//						ContentNamespace contentNamespace = ContentNamespace.findFirstInstanceWithMatchingFieldFromList("label", jsonContent.getString("label"), new ArrayList<ContentNamespace>(expectedContentNamespaceSet));
+//						if (contentNamespace!=null) { 
+//							log.warning("ContentNamespace label '"+contentNamespace.label+"' modifies product id '"+modifiedProductId+"' which is NOT installed and should therefore not be among the entitled content namespaces no matter what its arch ("+contentNamespace.arches+") may be.");
+//							unexpectedContentNamespaceSet.add(contentNamespace);
+//							expectedContentNamespaceSet.remove(contentNamespace);
+//						}
+//					}
+// DONE: Implemented the second thought by the following test block
+					
+					// if modifiedProductId is not provided by the currently consumed subscriptions, then the modifier jsonContent should NOT be among the expectedContentNamespaceSet
+					Set<String> providedProductIdsByCurrentlyConsumedProductSubscriptions = new HashSet<String>();
+					for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+						for (String providedProductIdByCurrentlyConsumedProductSubscription : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
+							providedProductIdsByCurrentlyConsumedProductSubscriptions.add(providedProductIdByCurrentlyConsumedProductSubscription);
+						}
+					}
+					if (!providedProductIdsByCurrentlyConsumedProductSubscriptions.contains(modifiedProductId)) {
+						ContentNamespace contentNamespace = ContentNamespace.findFirstInstanceWithMatchingFieldFromList("label", jsonContent.getString("label"), new ArrayList<ContentNamespace>(expectedContentNamespaceSet));
+						if (contentNamespace!=null) { 
+							log.warning("ContentNamespace label '"+contentNamespace.label+"' modifies product id '"+modifiedProductId+"' which is NOT provided by the currently consumed subscriptions and should therefore not be among the entitled content namespaces no matter what its arch ("+contentNamespace.arches+") may be.");
+							unexpectedContentNamespaceSet.add(contentNamespace);
+							expectedContentNamespaceSet.remove(contentNamespace);
+							break;	// to the next contentNamespace/jsonProductContent/jsonContent
+						}
+					}
+					
+				}
+			}
+		}
+		
 		// entitlement asserts
 		List<String> actualEntitledContentLabels = new ArrayList<String>();
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) actualEntitledContentLabels.add(contentNamespace.label);
@@ -866,7 +919,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		for (ContentNamespace contentNamespace : unexpectedContentNamespaceSet) {
 			Assert.assertTrue(!actualEntitledContentLabels.contains(contentNamespace.label), "As expected, contentNamespace label '"+contentNamespace.label+"' defined for arches '"+contentNamespace.arches+"' requiredTags '"+contentNamespace.requiredTags+"' is NOT included in the entitlement after subscribing to '"+pool.subscriptionName+"' on a '"+clienttasks.arch+"' system.");
 		}
-				
+		
 		// adjust the expectedContentNamespaces for requiredTags that are not provided by the installed productCerts' providedTags before checking the YumRepos
 		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
 		for (ContentNamespace contentNamespace : new HashSet<ContentNamespace>(expectedContentNamespaceSet)) {
