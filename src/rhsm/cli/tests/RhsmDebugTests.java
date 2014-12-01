@@ -342,6 +342,22 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		// assert results
+		String invalidServerResponseMessage = "The proxy server received an invalid response from an upstream server";
+		// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+		if (result.getStderr().contains(invalidServerResponseMessage)) {
+			String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Re-attempting one more time to get a valid response from the server...");
+				result = client.runCommandAndWait(rhsmDebugSystemCommand);
+				if (result.getStderr().contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
+					throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
+				} else {
+					log.fine("Workaround succeeded.");
+				}
+			}
+		}
+		// END OF WORKAROUND
 		Assert.assertEquals(result.getExitCode(), new Integer(0), "The exit code from an attempt to run '"+rhsmDebugSystemCommand+"'.");
 		Assert.assertEquals(result.getStderr().trim(), "", "The stderr from an attempt to run '"+rhsmDebugSystemCommand+"'.");
 		
