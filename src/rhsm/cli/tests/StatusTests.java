@@ -256,7 +256,8 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertTrue(statusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"'.");
 		// assert the exit code of 1 or 0 based on a "valid" compliance
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
+//		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {		// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
 			// exit code of 0 indicates valid compliance, otherwise exit code is 1
 			if (systemEntitlementsValid.equals("valid")) {
 				Assert.assertEquals(statusResult.getExitCode(), new Integer(0), "When the system's overall status is valid, an exit code of 0 should be returned.");
