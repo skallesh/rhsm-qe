@@ -7467,6 +7467,44 @@ if (false) {
 				}
 			}
 			// END OF WORKAROUND
+			
+			
+			// TODO
+			// TEMPORARY WORKAROUND FOR BUG
+			//	201411291639:35.361 - FINE: ssh root@cloud-qe-22.idmqe.lab.eng.bos.redhat.com subscription-manager unsubscribe --serial=8305861300287544370 (com.redhat.qe.tools.SSHCommandRunner.run)
+			//	201411291639:41.734 - FINE: Stdout: 
+			//	Serial numbers unsuccessfully removed at the server:
+			//	   The proxy server received an invalid response from an upstream server
+			//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+			//	201411291639:41.735 - FINE: Stderr:  (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+			//	201411291639:41.735 - FINE: ExitCode: 1 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+			//	201411291639:41.735 - FINE: ssh root@cloud-qe-22.idmqe.lab.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi; (com.redhat.qe.tools.SSHCommandRunner.run)
+			//	201411291639:41.924 - WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2014-11-29 16:39:42,297 [DEBUG] subscription-manager @connection.py:466 - Making request: GET /subscription/consumers/5de32c6a-7a46-4769-a69f-ea7c4f7a8db2/compliance
+			//	2014-11-29 16:39:42,799 [DEBUG] subscription-manager @connection.py:489 - Response: status=200
+			//	2014-11-29 16:39:42,799 [DEBUG] subscription-manager @cache.py:249 - Started thread to write cache: /var/lib/rhsm/cache/entitlement_status.json
+			//	2014-11-29 16:39:42,800 [DEBUG] subscription-manager @cert_sorter.py:193 - valid entitled products: []
+			//	2014-11-29 16:39:42,800 [DEBUG] subscription-manager @cert_sorter.py:194 - expired entitled products: []
+			//	2014-11-29 16:39:42,800 [DEBUG] subscription-manager @cert_sorter.py:195 - partially entitled products: []
+			//	2014-11-29 16:39:42,800 [DEBUG] subscription-manager @cert_sorter.py:196 - unentitled products: ['71']
+			//	2014-11-29 16:39:42,800 [DEBUG] subscription-manager @cert_sorter.py:197 - future products: []
+			//	2014-11-29 16:39:42,801 [DEBUG] subscription-manager @cert_sorter.py:198 - partial stacks: []
+			//	2014-11-29 16:39:42,801 [DEBUG] subscription-manager @cert_sorter.py:199 - entitlements valid until: None
+			//	2014-11-29 16:39:42,913 [INFO] rhsmd @rhsmd:273 - rhsmd started
+			//	2014-11-29 16:39:42,915 [INFO] rhsmd @rhsmd:182 - D-Bus interface com.redhat.SubscriptionManager.EntitlementStatus.update_status called with status = 1
+			//	2014-11-29 16:39:42,951 [DEBUG] rhsmd @identity.py:131 - Loading consumer info from identity certificates.
+			//	2014-11-29 16:39:42,954 [INFO] rhsmd @rhsmd:149 - D-Bus signal com.redhat.SubscriptionManager.EntitlementStatus.entitlement_status_changed emitted
+			//	2014-11-29 16:39:42,969 [DEBUG] subscription-manager @dbus_interface.py:60 - Failed to update rhsmd
+			//	2014-11-29 16:39:42,969 [ERROR] subscription-manager @dbus_interface.py:61 - org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
+			//	Traceback (most recent call last):
+			//	  File "/usr/share/rhsm/subscription_manager/dbus_interface.py", line 57, in _update
+			//	    self.validity_iface.emit_status(ignore_reply=self.has_main_loop)
+			//	  File "/usr/lib64/python2.7/site-packages/dbus/proxies.py", line 145, in __call__
+			//	    **keywords)
+			//	  File "/usr/lib64/python2.7/site-packages/dbus/connection.py", line 651, in call_blocking
+			//	    message, timeout)
+			//	DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
+
 		}
 	}
 	
