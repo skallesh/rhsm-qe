@@ -978,7 +978,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.autoheal(null, null, true, null, null, null);
 		
 		// verify that NO yum content is available since no entitlements have been granted
-		Assert.assertEquals(clienttasks.getYumRepolistPackageCount("enabled"),new Integer(0),"Expecting no enabled repo content available because no RHEL subscription has been attached.");
+		Integer yumRepolistPackageCount = clienttasks.getYumRepolistPackageCount("enabled");
+		if (yumRepolistPackageCount>0) clienttasks.list_(null, null, true, null, null, null, null, null, null, null, null, null, null);	// added only for debugging a failure
+		Assert.assertEquals(yumRepolistPackageCount,new Integer(0),"Expecting no available packages (actual='"+yumRepolistPackageCount+"') because no RHEL subscription have been explicitly attached.");
 		
 		// loop through the available pools looking for those that provide content for this rhelProductCert
 		boolean rhelYumContentIsAvailable = true;
@@ -990,7 +992,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				EntitlementCert rhelEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool, sm_clientUsername, sm_clientPassword, sm_serverUrl));
 				
 				// verify that rhel yum content is available
-				Integer yumRepolistPackageCount = clienttasks.getYumRepolistPackageCount("enabled");
+				yumRepolistPackageCount = clienttasks.getYumRepolistPackageCount("enabled");
 				if (yumRepolistPackageCount>0) {
 					Assert.assertTrue(yumRepolistPackageCount>0,"Expecting many available packages (actual='"+yumRepolistPackageCount+"') of enabled repo content because RHEL subscription '"+pool.subscriptionName+"' SKU '"+pool.productId+"' was just attached.");
 				} else {
