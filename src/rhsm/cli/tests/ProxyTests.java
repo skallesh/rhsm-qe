@@ -1870,10 +1870,12 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getEnvironmentsAttemptsUsingProxyServerDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where org is valid
-			//FIXME? if (l.get(3).equals(sm_clientOrg)) ll.add(l); continue;
 			
-			//	ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),	sm_clientUsername,	sm_clientPassword,	"bad-org",		basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		oErrMsg}));
+			if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(9))||l.get(9)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1"/*FIXME TO "1.13.10-1"*/)) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+				l.set(7, Integer.valueOf(69));	// exitCode EX_UNAVAILABLE
+				l.set(8,"");
+				l.set(9,"Error: Server does not support environments.");
+			} else 
 		//	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
 			if (!sm_serverType.equals("katello") && (!l.get(1).equals(sm_clientUsername) || !l.get(2).equals(sm_clientPassword) || !l.get(3).equals(sm_clientOrg))) {
 				// subscription-manager environments --username=testuser1 --password=password --org=bad-org
@@ -1897,10 +1899,12 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getEnvironmentsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where org is valid
-			//FIXME? if (l.get(3).equals(sm_clientOrg)) ll.add(l); continue;
 			
-			// ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),	sm_clientUsername,	sm_clientPassword,	"bad-org",		null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		oErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
+			if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(13))||l.get(13)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1"/*FIXME TO "1.13.10-1"*/)) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+				l.set(11, Integer.valueOf(69));	// exitCode EX_UNAVAILABLE
+				l.set(12,"");
+				l.set(13,"Error: Server does not support environments.");
+			} else 
 		//	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
 			if (!sm_serverType.equals("katello") && (!l.get(1).equals(sm_clientUsername) || !l.get(2).equals(sm_clientPassword) || !l.get(3).equals(sm_clientOrg))) {
 				// subscription-manager environments --username=testuser1 --password=password --org=bad-org --proxy=auto-services.usersys.redhat.com:3128 --proxyuser=redhat --proxypassword=redhat
