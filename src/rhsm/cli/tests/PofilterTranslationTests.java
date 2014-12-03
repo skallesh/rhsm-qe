@@ -58,6 +58,11 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *     for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do echo ""; echo "# LANG=$L.UTF-8 subscription-manager --help | grep -- --help"; LANG=$L.UTF-8 subscription-manager  --help | grep -- --help; done;
  *	   for F in $(rpm -ql subscription-manager | grep rhsm.mo); do echo ""; echo "$F"; msgunfmt --no-wrap $F | grep msgid | wc -l; done;
  *
+ *   Passing LANG through curl:
+ *   	Use a hyphenated lang like  de-DE  it-IT  pt-BR  zh-CN
+ *   	[root@jsefler-os7 ~]# curl -k -u admin:admin --stderr /dev/null --header "Accept-Language: pt-BR" --request GET https://jsefler-os-candlepin.usersys.redhat.com:8443/candlepin/products/foo
+ *   	{"displayMessage":"Product com UUID 'foo'  não foram encontrados.","requestUuid":"8ae81ad0-059e-46c7-9088-5db8425faef0"}
+ *   
  *   Translation Bug Reporting Process:
  *   	https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nBugReportingProcess
  *   
