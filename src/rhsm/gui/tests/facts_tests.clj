@@ -292,6 +292,7 @@
       (tasks/register-with-creds))
     (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
     (tasks/ui click :view-system-facts)
+    (sleep 3000)
     (tasks/ui click :update-facts)
     (let [old-val (reset! socket-val
                           (get @gui-facts "cpu.cpu_socket(s)"))
