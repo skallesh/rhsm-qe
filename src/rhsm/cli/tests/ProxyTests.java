@@ -1324,9 +1324,14 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		// assert results
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE // post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-		Assert.assertEquals(result.getStdout().trim(), nErrMsg, "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			Assert.assertEquals(result.getStderr().trim(), nErrMsg, "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), nErrMsg, "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+		}
 	}
 	
 	
