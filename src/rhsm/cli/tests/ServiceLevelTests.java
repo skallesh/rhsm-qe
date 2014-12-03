@@ -422,8 +422,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
-			Assert.assertTrue(sshCommandResult.getStderr().trim().contains(msg), "Stderr message contains: "+msg);
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout message from an attempt to register with autosubscribe and an unavailable servicelevel.");
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), msg, "Stderr message from an attempt to register with autosubscribe and an unavailable servicelevel.");
 		} else {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().contains(msg), "Stdout message contains: "+msg);
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr message from an attempt to register with autosubscribe and an unavailable servicelevel.");
