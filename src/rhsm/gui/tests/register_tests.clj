@@ -176,7 +176,8 @@
                        "blockedByBug-920091"
                        "blockedByBug-1039753"
                        "blockedByBug-1037712"
-                       "blockedByBug-1034429"]}}
+                       "blockedByBug-1034429"
+                       "blockedByBug-1170324"]}}
   check_traceback_unregister
   "checks for traceback if any during unregister with GUI open"
   [_]
