@@ -53,7 +53,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  2. Ensure /etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf is enabled
  *  3. Ensure we are on a real Atomic system with ostree and rpm-ostree packages installed.
  *     If not, we can fake an atomic system as follows...
- *  3a. Ensure an ostree repo config file is installed (TODO not sure what package provides it - file /ostree/repo/config is not owned by any package)
+ *  3a. Ensure an ostree repo config file is installed (file /ostree/repo/config is not owned by any package)
  *  
  *  -bash-4.2# cat /ostree/repo/config              <<<< EXAMPLE BEFORE ATOMIC SUB IS ATTACHED
  *  [core]
@@ -71,6 +71,8 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  tls-client-cert-path = /etc/pki/entitlement/6474260223991696217.pem
  *  tls-client-key-path = /etc/pki/entitlement/6474260223991696217-key.pem
  *  tls-ca-path = /etc/rhsm/ca/redhat-uep.pem
+ *  
+ *  3a UPDATE: Bug 1152734 was used to move the /ostree/repo/config contents to /etc/ostree/remotes.d/redhat.conf file
  *  
  *  3b. Ensure gi_wrapper.py tool is returning a known path to the ostree origin file
  *      help="Print the path to the current deployed OSTree origin file."
@@ -298,9 +300,10 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 //MOVED BACK
 			clienttasks.unsubscribe(null, clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file), null, null, null);
 			
-			// when removing the entitlement, assert its corresponding ostree repos are removed
+			// after removing the entitlement, assert its corresponding ostree repos are removed
+			ostreeReposAfter = getCurrentlyConfiguredOstreeRepos();
 			for (ContentNamespace osTreeContentNamespace : osTreeContentNamespaces) {
-				OstreeRepo ostreeRepo = OstreeRepo.findFirstInstanceWithMatchingFieldFromList("remote", osTreeContentNamespace.label, getCurrentlyConfiguredOstreeRepos());
+				OstreeRepo ostreeRepo = OstreeRepo.findFirstInstanceWithMatchingFieldFromList("remote", osTreeContentNamespace.label, ostreeReposAfter);
 				Assert.assertNull(ostreeRepo, "Should no longer find an OSTree repo configuration for remote '"+osTreeContentNamespace.label+"' in '"+ostreeRepoConfigFile+"' after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
 			}
 			
@@ -309,7 +312,6 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			
 			
 			// when removing the entitlement, assert that other ostree repos remain configured
-			ostreeReposAfter = getCurrentlyConfiguredOstreeRepos();
 			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1152734
 			invokeWorkaroundWhileBugIsOpen = true;
 			bugId="1152734"; 
@@ -472,31 +474,40 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	@BeforeGroups(groups={"setup"}, value={"subscribeAndUnsubscribeTests"})
 	protected void setupOstreeRepoConfigFile() {
 		if (clienttasks!=null) {
-			if (!clienttasks.isPackageInstalled("ostree")) {	// file /ostree/repo/config is not owned by any package	// create a fake /ostree/repo/config
+			if (!clienttasks.isPackageInstalled("ostree")) {	// the ostree repo config is not owned by any package, create a fake one
 				if (!RemoteFileTasks.testExists(client, ostreeRepoConfigFile.getPath())) {
+					// create the parent directory
 					client.runCommandAndWait("mkdir -p "+ostreeRepoConfigFile.getParent());
-					//client.runCommandAndWait("echo -e '[core]\nrepo_version=1\nmode=bare' > "+ostreeRepoConfigFile.getPath());
-					client.runCommandAndWait("echo -e '[core]\nrepo_version=1\nmode=bare\n\n[remote \"REMOTE\"]\nurl=file:///install/ostree\ngpg-verify=false' > "+ostreeRepoConfigFile.getPath());
+					
+					if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9.1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
+						// no need to create a conf file, subscription-manager-ostree-plugin will create it 
+						
+						// [root@jsefler-os7 ~]# cat /etc/ostree/remotes.d/redhat.conf
+						// cat: /etc/ostree/remotes.d/redhat.conf: No such file or directory
+
+					} else {
+						//client.runCommandAndWait("echo -e '[core]\nrepo_version=1\nmode=bare' > "+ostreeRepoConfigFile.getPath());
+						client.runCommandAndWait("echo -e '[core]\nrepo_version=1\nmode=bare\n\n[remote \"REMOTE\"]\nurl=file:///install/ostree\ngpg-verify=false' > "+ostreeRepoConfigFile.getPath());
+						//	-bash-4.2# cat /ostree/repo/config
+						//	[core]
+						//	repo_version=1
+						//	mode=bare
+						
+						// AFTER INSTALLING A NEW ISO...
+						//	-bash-4.2# cat /ostree/repo/config 
+						//	[core]
+						//	repo_version=1
+						//	mode=bare
+						//
+						//	[remote "rhel-atomic-host"]
+						//	url=file:///install/ostree
+						//	gpg-verify=false
+						
+						Assert.assertTrue(RemoteFileTasks.testExists(client, ostreeRepoConfigFile.getPath()), "Expected ostree config file '"+ostreeRepoConfigFile+"' exists.");
+					}
 				}
 			}
-			//	-bash-4.2# cat /ostree/repo/config
-			//	[core]
-			//	repo_version=1
-			//	mode=bare
-			
-			// AFTER INSTALLING A NEW ISO...
-			//	-bash-4.2# cat /ostree/repo/config 
-			//	[core]
-			//	repo_version=1
-			//	mode=bare
-			//
-			//	[remote "rhel-atomic-host"]
-			//	url=file:///install/ostree
-			//	gpg-verify=false
-
-			
 		}
-		Assert.assertTrue(RemoteFileTasks.testExists(client, ostreeRepoConfigFile.getPath()), "Expected ostree config file '"+ostreeRepoConfigFile+"' exists.");
 	}
 	// TODO might want to implement a teardownOstreeRepoConfigFile @AfterGroups
 	
@@ -535,7 +546,6 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 				if (!RemoteFileTasks.testExists(client, ostreeOriginFile.getPath())) {
 					client.runCommandAndWait("mkdir -p "+ostreeOriginFile.getParent());
 					client.runCommandAndWait("echo -e '[origin]\nrefspec=REMOTE:OSNAME/7/x86_64/standard' > "+ostreeOriginFile);
-
 				}
 			}
 			//	-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
@@ -565,16 +575,25 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	// Configuration methods ***********************************************************************
 	@BeforeClass(groups={"setup"})
 	public void checkPackageVersionBeforeClass() {
+		
+		ostreeRepoConfigFile = new File("/ostree/repo/config");
 		if (clienttasks!=null) {
+			// skip test class when subscription-manager-plugin-ostree is not installed
 			if (!clienttasks.isPackageInstalled("subscription-manager-plugin-ostree")) {
 				throw new SkipException("Subscription Management compatibility with ostree requires subscription-manager-plugin-ostree.");
+			}
+			// where is the ostree repo config file located that will be managed by subscription-manager
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9.1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
+				ostreeRepoConfigFile = new File("/etc/ostree/remotes.d/redhat.conf");
+			} else {
+				ostreeRepoConfigFile = new File("/ostree/repo/config");
 			}
 		}
 	}
 	
 	
 	// Protected methods ***********************************************************************
-	protected final File ostreeRepoConfigFile = new File("/ostree/repo/config");
+	protected File ostreeRepoConfigFile = null;
 	protected final File giWrapperFile = new File("/usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py");	// provided by subscription-manager-plugin-ostree
 	protected File ostreeOriginFile = new File("/ostree/deploy/OSNAME/deploy/CHECKSUM.0.origin");
 	protected final File ostreeContentPluginFile = new File("/etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf");
