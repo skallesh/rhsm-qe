@@ -39,6 +39,7 @@
   create_certs [_]
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
+    (tasks/start-app)
     (reset! importtests (ImportTests.))
     (.restartCertFrequencyBeforeClass @importtests)
     (.setupEntitlemenCertsForImportBeforeClass @importtests)
@@ -64,7 +65,7 @@
     (if-not (tasks/ui showing? :import-dialog "Location:")
       (do (try+ (tasks/ui check :text-entry-toggle)
                 (catch Object e (tasks/ui click :text-entry-toggle)))
-          (tasks/ui generatekeyevent "/")))
+          (tasks/ui generatekeyevent "/")))  ; can use <ALT>s to open search
     (tasks/ui generatekeyevent certlocation)
     (tasks/ui click :import-cert)
     (tasks/checkforerror)
