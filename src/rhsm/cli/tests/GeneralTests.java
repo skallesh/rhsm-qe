@@ -290,7 +290,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to subscription-manager",
-			groups={"blockedbyBug-801280","blockedByBug-1006748","blockedByBug-800744","blockedByBug-1080531"},
+			groups={"blockedbyBug-801280","blockedByBug-1006748","blockedByBug-800744","blockedByBug-1080531","blockedByBug-850331"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForSubscriptionManager_Test() {
@@ -368,9 +368,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"post: systemd",	//"post: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
-					"preun: systemd",	//"preun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
-					"postun: systemd",	//"postun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887
+					"post: systemd",	//"post: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
+					"preun: systemd",	//"preun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
+					"postun: systemd",	//"postun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
 					"config: config(subscription-manager) = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"config: config(subscription-manager) = 1.10.14-7.el7
 					"post,interp: /bin/sh",
 					"preun,interp: /bin/sh",
