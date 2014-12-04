@@ -324,8 +324,7 @@
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"
                                                              "tier1"]}}
   [^{Test {:groups ["blockedByBug-703491"]}}
-   (if-not (or (assert-skip :firstboot)
-               (= "RHEL7" (get-release)))
+   (if-not (assert-skip :firstboot)
      (do
        ["sdf" "sdf" :invalid-credentials]
        ["" "" :no-username]
