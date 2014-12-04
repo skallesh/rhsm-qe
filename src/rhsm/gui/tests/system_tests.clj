@@ -230,7 +230,8 @@
 (defn ^{Test {:groups ["system"
                        "tier2"
                        "blockedByBug-920091"
-                       "blockedByBug-1037712"]}}
+                       "blockedByBug-1037712"
+                       "blockedByBug-1170324"]}}
   cli_unregister_check_traceback
   "Verifies whether it causes traceback when GUI is running and sub-man is unregistered through CLI"
   [_]
