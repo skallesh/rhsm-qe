@@ -38,6 +38,7 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
   (try
+    (skip-if-bz-open "1170761")
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/start-app)
     (reset! importtests (ImportTests.))

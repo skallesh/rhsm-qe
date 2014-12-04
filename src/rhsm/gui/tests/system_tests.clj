@@ -158,7 +158,8 @@
 (data-driven
  check_escape_window {Test {:groups ["system"
                                      "tier2"
-                                     "blockedByBug-862099"]}}
+                                     "blockedByBug-862099"
+                                     "blockedByBug-1170761"]}}
  [(if-not (assert-skip :system)
     (do
       [:register-dialog "<CTRL>r"]
