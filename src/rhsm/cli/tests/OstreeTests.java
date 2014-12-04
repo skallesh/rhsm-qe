@@ -142,20 +142,35 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		
 		// get a list of the ostree repos from the ostree repo config file before attaching an ostree subscription
-		List<OstreeRepo> ostreeReposBefore = getCurrentlyConfiguredOstreeRepos();
+		List<OstreeRepo> ostreeReposBefore = getCurrentlyConfiguredOstreeRepos(ostreeRepoConfigFile);
 		
 		// get the ostree origin refspec before attaching an ostree subscription
 		String ostreeOriginRefspecBefore = clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec");
+		
+		// also setup an old /ostree/repo/config file to test the migration clean up scenario described in https://bugzilla.redhat.com/show_bug.cgi?id=1152734#c5 
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9.1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
+			if (!clienttasks.isPackageInstalled("ostree")) {
+				client.runCommandAndWait("mkdir -p "+oldOstreeRepoConfigFile.getParent());
+				client.runCommandAndWait("echo -e '[core]\nrepo_version=1\nmode=bare\n\n[remote \"REMOTE\"]\nurl=file:///install/ostree\ngpg-verify=false' > "+oldOstreeRepoConfigFile.getPath());
+			}
+		}
 		
 		// attach the subscription that provides ostree content
 		File file = clienttasks.subscribeToSubscriptionPool(osTreeSubscriptionPool, sm_clientUsername, sm_clientPassword, sm_serverUrl);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(file);
 		
 		// get a list of the ostree repos from the ostree repo config file after attaching an ostree subscription
-		List<OstreeRepo> ostreeReposAfter = getCurrentlyConfiguredOstreeRepos();
+		List<OstreeRepo> ostreeReposAfter = getCurrentlyConfiguredOstreeRepos(ostreeRepoConfigFile);
 		
 		// get the ostree origin refspec after attaching an ostree subscription
 		String ostreeOriginRefspecAfter = clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec");
+		
+		// also assert the clean up of remotes from the old /ostree/repo/config file 
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9.1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
+			if (RemoteFileTasks.testExists(client, oldOstreeRepoConfigFile.getPath())) {
+				Assert.assertTrue(getCurrentlyConfiguredOstreeRepos(oldOstreeRepoConfigFile).isEmpty(),"Subscription-manager should have cleaned out the old remotes from '"+oldOstreeRepoConfigFile+"'.");
+			}
+		}
 		
 		// assert that ostree repos have been added for each ostree content namespace
 		List<ContentNamespace> osTreeContentNamespaces = ContentNamespace.findAllInstancesWithMatchingFieldFromList("type", "ostree", entitlementCert.contentNamespaces);
@@ -301,7 +316,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			clienttasks.unsubscribe(null, clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file), null, null, null);
 			
 			// after removing the entitlement, assert its corresponding ostree repos are removed
-			ostreeReposAfter = getCurrentlyConfiguredOstreeRepos();
+			ostreeReposAfter = getCurrentlyConfiguredOstreeRepos(ostreeRepoConfigFile);
 			for (ContentNamespace osTreeContentNamespace : osTreeContentNamespaces) {
 				OstreeRepo ostreeRepo = OstreeRepo.findFirstInstanceWithMatchingFieldFromList("remote", osTreeContentNamespace.label, ostreeReposAfter);
 				Assert.assertNull(ostreeRepo, "Should no longer find an OSTree repo configuration for remote '"+osTreeContentNamespace.label+"' in '"+ostreeRepoConfigFile+"' after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
@@ -484,7 +499,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 						
 						// [root@jsefler-os7 ~]# cat /etc/ostree/remotes.d/redhat.conf
 						// cat: /etc/ostree/remotes.d/redhat.conf: No such file or directory
-
+						
 					} else {
 						//client.runCommandAndWait("echo -e '[core]\nrepo_version=1\nmode=bare' > "+ostreeRepoConfigFile.getPath());
 						client.runCommandAndWait("echo -e '[core]\nrepo_version=1\nmode=bare\n\n[remote \"REMOTE\"]\nurl=file:///install/ostree\ngpg-verify=false' > "+ostreeRepoConfigFile.getPath());
@@ -575,8 +590,6 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	// Configuration methods ***********************************************************************
 	@BeforeClass(groups={"setup"})
 	public void checkPackageVersionBeforeClass() {
-		
-		ostreeRepoConfigFile = new File("/ostree/repo/config");
 		if (clienttasks!=null) {
 			// skip test class when subscription-manager-plugin-ostree is not installed
 			if (!clienttasks.isPackageInstalled("subscription-manager-plugin-ostree")) {
@@ -586,22 +599,23 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9.1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
 				ostreeRepoConfigFile = new File("/etc/ostree/remotes.d/redhat.conf");
 			} else {
-				ostreeRepoConfigFile = new File("/ostree/repo/config");
+				ostreeRepoConfigFile = oldOstreeRepoConfigFile;
 			}
 		}
 	}
 	
 	
 	// Protected methods ***********************************************************************
+	protected final File oldOstreeRepoConfigFile = new File("/ostree/repo/config");
 	protected File ostreeRepoConfigFile = null;
 	protected final File giWrapperFile = new File("/usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py");	// provided by subscription-manager-plugin-ostree
 	protected File ostreeOriginFile = new File("/ostree/deploy/OSNAME/deploy/CHECKSUM.0.origin");
 	protected final File ostreeContentPluginFile = new File("/etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf");
 	
 	
-	protected List<OstreeRepo> getCurrentlyConfiguredOstreeRepos() {
+	protected List<OstreeRepo> getCurrentlyConfiguredOstreeRepos(File fromConfigFile) {
 				
-		return OstreeRepo.parse(client.runCommandAndWait("cat "+ostreeRepoConfigFile).getStdout());
+		return OstreeRepo.parse(client.runCommandAndWait("cat "+fromConfigFile).getStdout());
 	}
 	
 
