@@ -14,6 +14,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
 import rhsm.base.CandlepinType;
@@ -130,8 +131,8 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 		clientOrg 		= clienttasks.getOrgs(sm_clientUsername,sm_clientPassword).get(0).orgKey;	// use the first org
 	}
-	@Test(	description="subscription-manager: service-level --list with --serverurl",
-			dataProvider="getServerurl_TestData",
+	@Test(	description="subscription-manager: environments with --serverurl",
+			dataProvider="getEnvironmentsWithServerurl_TestData",
 			groups={"EnvironmentsWithServerurl_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -145,10 +146,10 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,clientOrg,serverurl, null, null, null, null);
 		
 		// assert the sshCommandResult here
-		if (expectedExitCode!=null)	Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --serverurl="+serverurl+" and other options:");
-		if (expectedStdoutRegex!=null)	Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --serverurl="+serverurl+" and other options:");
-		if (expectedStderrMatch!=null)	Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrMatch,"Stderr after register with --serverurl="+serverurl+" and other options:");
-		Assert.assertContainsNoMatch(sshCommandResult.getStderr().trim(), "Traceback.*","Stderr after register with --serverurl="+serverurl+" and other options should not contain a Traceback.");
+		if (expectedExitCode!=null)	Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after calling environments with --serverurl="+serverurl+" and other options:");
+		if (expectedStdoutRegex!=null)	Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after calling environments with --serverurl="+serverurl+" and other options:");
+		if (expectedStderrMatch!=null)	Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrMatch,"Stderr after calling environments with --serverurl="+serverurl+" and other options:");
+		Assert.assertContainsNoMatch(sshCommandResult.getStderr().trim(), "Traceback.*","Stderr after calling environments with --serverurl="+serverurl+" and other options should not contain a Traceback.");
 		
 		// negative testcase assertions........
 		//if (expectedExitCode.equals(new Integer(255))) {
@@ -172,6 +173,32 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		if (server_port!=null)		clienttasks.config(null,null,true,new String[]{"server","port",server_port});
 		if (server_prefix!=null)	clienttasks.config(null,null,true,new String[]{"server","prefix",server_prefix});
 	}
+	@DataProvider(name="getEnvironmentsWithServerurl_TestData")
+	public Object[][] getEnvironmentsWithServerurl_TestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getEnvironmentsWithServerurl_TestDataAsListOfLists());
+	}
+	protected List<List<Object>> getEnvironmentsWithServerurl_TestDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String eErrMsg = "Error: Server does not support environments.";
+		
+		for (List<Object> l : getServerurl_TestDataAsListOfLists()) {
+			Integer expectedExitCode = (Integer) l.get(5);
+			
+			// Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdout, String expectedStderr
+			// positive tests
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10
+				if (expectedExitCode.equals(0) && !CandlepinType.katello.equals(sm_serverType)) {
+					l.set(5, new Integer(69));	// EX_UNAVAILABLE	// expectedExitCode
+					l.set(6, "");		// expectedStdout
+					l.set(7, eErrMsg);	// expectedStderr
+				}
+			}
+			
+			ll.add(l);
+		}
+		
+		return ll;
+	}
 	
 	
 	
@@ -186,6 +213,10 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnvironmentsWithInsecure_Test() {
+		if (!CandlepinType.katello.equals(sm_serverType) && clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10
+			throw new SkipException("This test is not applicable against a non-katello server which does not support environments.");
+		}
+		
 		SSHCommandResult sshCommandResult;
 		
 		// calling environments without insecure should pass
@@ -462,29 +493,52 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		//String stdoutMsg = "ERROR: Server does not support environments.";
-		String stdoutMsg = "Error: Server does not support environments.";
+		String eErrMsg = "Error: Server does not support environments.";
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 		String x = String.valueOf(getRandInt());
-		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
-			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	new Integer(0),		stdoutMsg,			null}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(0),		stdoutMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(255),	uErrMsg,			null}));
-			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				new Integer(0),		stdoutMsg,			null}));
-			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(0),		stdoutMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(255),	uErrMsg,			null}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				new Integer(0),		stdoutMsg,			null}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(0),		stdoutMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(255),	uErrMsg,			null}));
-			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				new Integer(0),		"(\nUsername: ){3}"+sm_clientUsername+"(\nPassword: ){3}"+"\n"+stdoutMsg,	null}));
-		} else {
-			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	new Integer(0),		stdoutMsg,			null}));	
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(0),		stdoutMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(255),	null,				uErrMsg}));
-			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				new Integer(0),		stdoutMsg,			null}));
-			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(0),		stdoutMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(255),	null,				uErrMsg}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				new Integer(0),		stdoutMsg,			null}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(0),		stdoutMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(255),	null,				uErrMsg}));
-			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				new Integer(0),		"(Username: ){3}"+stdoutMsg,	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
 		
+		// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10
+			if (clienttasks.isPackageInstalled("expect")) {	// is expect installed?
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	new Integer(69)/*EX_UNAVAILABLE*/,		eErrMsg,			null}));	
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(69)/*EX_UNAVAILABLE*/,		eErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				new Integer(69)/*EX_UNAVAILABLE*/,		eErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(69)/*EX_UNAVAILABLE*/,		eErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				new Integer(69)/*EX_UNAVAILABLE*/,		eErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(69)/*EX_UNAVAILABLE*/,		eErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				new Integer(69)/*EX_UNAVAILABLE*/,		"(\nUsername: ){3}"+sm_clientUsername+"(\nPassword: ){3}"+"\n"+eErrMsg,	null}));
+			} else {
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	new Integer(69)/*EX_UNAVAILABLE*/,		null,				eErrMsg}));	
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(69)/*EX_UNAVAILABLE*/,		null,				eErrMsg}));
+				ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				new Integer(69)/*EX_UNAVAILABLE*/,		null,				eErrMsg}));
+				ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(69)/*EX_UNAVAILABLE*/,		null,				eErrMsg}));
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				new Integer(69)/*EX_UNAVAILABLE*/,		null,				eErrMsg}));
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(69)/*EX_UNAVAILABLE*/,		null,				eErrMsg}));
+				ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				new Integer(69)/*EX_UNAVAILABLE*/,		"(Username: ){3}",	"(Warning: Password input may be echoed.\nPassword: \n){3}"+eErrMsg}));
+			}
+		} else {
+			if (clienttasks.isPackageInstalled("expect")) {	// is expect installed?
+				// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	new Integer(0),		eErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(0),		eErrMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(255),	uErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				new Integer(0),		eErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(0),		eErrMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(255),	uErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				new Integer(0),		eErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(0),		eErrMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(255),	uErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				new Integer(0),		"(\nUsername: ){3}"+sm_clientUsername+"(\nPassword: ){3}"+"\n"+eErrMsg,	null}));
+			} else {
+				// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	new Integer(0),		eErrMsg,			null}));	
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(0),		eErrMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(255),	null,				uErrMsg}));
+				ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				new Integer(0),		eErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(0),		eErrMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(255),	null,				uErrMsg}));
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				new Integer(0),		eErrMsg,			null}));
+				ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(0),		eErrMsg,			null}));	//ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(255),	null,				uErrMsg}));
+				ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				new Integer(0),		"(Username: ){3}"+eErrMsg,	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
+			}
 		}
+
+		
 		return ll;
 	}
 
