@@ -7205,12 +7205,92 @@ if (false) {
 	 */
 	public void logRuntimeErrors(SSHCommandResult result) {
 		String issue;
-		if (result.getExitCode().equals(0)) return;	// no reason to suspect an error
 		
-		//	ssh root@ibm-p8-01-lp6.rhts.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9814931ea74014933dec2b60673
+		//	ssh root@mgmt6.rhq.lab.eng.bos.redhat.com rhn-migrate-classic-to-rhsm.tcl '--force --servicelevel=STANDARD --destination-url=https://subscription.rhn.stage.redhat.com:443/subscription' admin nimda stage_auto_testuser redhat null null null
 		//	Stdout:
-		//	Stderr: Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
-		//	ExitCode: 70
+		//	spawn rhn-migrate-classic-to-rhsm --force --servicelevel=STANDARD --destination-url=https://subscription.rhn.stage.redhat.com:443/subscription
+		//	Legacy username: admin
+		//	Legacy password:
+		//	Destination username: stage_auto_testuser
+		//	Destination password:
+		//
+		//	Retrieving existing legacy subscription information...
+		//
+		//	+-----------------------------------------------------+
+		//	System is currently subscribed to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-workstation-7
+		//	rhel-x86_64-workstation-7-debuginfo
+		//	rhel-x86_64-workstation-fastrack-7
+		//	rhel-x86_64-workstation-fastrack-7-debuginfo
+		//	rhel-x86_64-workstation-optional-7
+		//	rhel-x86_64-workstation-optional-7-debuginfo
+		//	rhel-x86_64-workstation-optional-fastrack-7
+		//	rhel-x86_64-workstation-optional-fastrack-7-debuginfo
+		//	rhel-x86_64-workstation-rh-common-7
+		//	rhel-x86_64-workstation-rh-common-7-debuginfo
+		//	rhel-x86_64-workstation-supplementary-7
+		//	rhel-x86_64-workstation-supplementary-7-debuginfo
+		//
+		//	+-----------------------------------------------------+
+		//	Installing product certificates for these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-workstation-7
+		//	rhel-x86_64-workstation-7-debuginfo
+		//	rhel-x86_64-workstation-fastrack-7
+		//	rhel-x86_64-workstation-fastrack-7-debuginfo
+		//	rhel-x86_64-workstation-optional-7
+		//	rhel-x86_64-workstation-optional-7-debuginfo
+		//	rhel-x86_64-workstation-optional-fastrack-7
+		//	rhel-x86_64-workstation-optional-fastrack-7-debuginfo
+		//	rhel-x86_64-workstation-rh-common-7
+		//	rhel-x86_64-workstation-rh-common-7-debuginfo
+		//	rhel-x86_64-workstation-supplementary-7
+		//	rhel-x86_64-workstation-supplementary-7-debuginfo
+		//
+		//	Product certificates installed successfully to /etc/pki/product.
+		//
+		//	Preparing to unregister system from legacy server...
+		//	System successfully unregistered from legacy server.
+		//
+		//	Attempting to register system to destination server...
+		//	The system has been registered with ID: 2a236432-7d0f-490d-b2c4-10a6a16a6c01
+		//	The proxy server received an invalid response from an upstream server
+		//	System 'mgmt6.rhq.lab.eng.bos.redhat.com' successfully registered.
+		//
+		//	Stderr:
+		//	ExitCode: 0	
+		
+		//	ssh root@cloud-qe-20.idmqe.lab.eng.bos.redhat.com rhn-migrate-classic-to-rhsm.tcl '--legacy-user=admin --legacy-password=nimda --destination-url=https://subscription.rhn.stage.redhat.com:443/subscription' null null stage_auto_testuser redhat null null null
+		//	Stdout:
+		//	spawn rhn-migrate-classic-to-rhsm --legacy-user=admin --legacy-password=nimda --destination-url=https://subscription.rhn.stage.redhat.com:443/subscription
+		//	Destination username: stage_auto_testuser
+		//	Destination password:
+		//
+		//	Retrieving existing legacy subscription information...
+		//
+		//	+-----------------------------------------------------+
+		//	System is currently subscribed to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-hpc-node-7
+		//
+		//	+-----------------------------------------------------+
+		//	Installing product certificates for these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-hpc-node-7
+		//
+		//	Product certificates installed successfully to /etc/pki/product.
+		//
+		//	Preparing to unregister system from legacy server...
+		//	System successfully unregistered from legacy server.
+		//
+		//	Attempting to register system to destination server...
+		//	The system has been registered with ID: ee64af7a-076c-479a-b378-2ad4439c58aa
+		//	Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
+		//	System 'cloud-qe-20.idmqe.lab.eng.bos.redhat.com' successfully registered.
+		//
+		//	Stderr:
+		//	ExitCode: 0
 		
 		//	ssh root@jsefler-5server.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --no-auto qa@redhat.com redhatqa testuser1 password admin null null
 		//	Stdout:
@@ -7235,6 +7315,25 @@ if (false) {
 		//	Problem encountered determining user roles in RHN Classic. Exiting.
 		//	Stderr:
 		//	ExitCode: 1
+		
+		// As shown above, rhn-migrate-classic-to-rhsm.tcl causes some problems since stderr gets stuffed into stdout and the exitCode may be zero
+		// Let's tweak SSHCommandResult result for results that come from an expect script...
+		if (result.getStdout().trim().startsWith("spawn")) {
+			if (result.getStderr().trim().isEmpty()) {
+				// create a new SSHCommandResult result with a fake exitCode and the actual stdout stuffed into stderr
+				result = new SSHCommandResult(new Integer(-1), result.getStdout(), result.getStdout());
+			}
+		}
+		
+		
+		
+		
+		if (result.getExitCode().equals(0)) return;	// no reason to suspect an error
+		
+		//	ssh root@ibm-p8-01-lp6.rhts.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9814931ea74014933dec2b60673
+		//	Stdout:
+		//	Stderr: Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
+		//	ExitCode: 70
 		
 		//	ssh root@sachrhel7.usersys.redhat.com subscription-manager orgs --username=admin --password=changeme
 		//	Stdout: 
