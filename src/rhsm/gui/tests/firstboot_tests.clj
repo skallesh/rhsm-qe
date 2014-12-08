@@ -23,23 +23,30 @@
 (def window-name "Choose Service")
 
 (defn start_firstboot []
-  (tasks/start-firstboot)
-  (tasks/ui click :firstboot-forward)
-  (tasks/ui click :license-yes)
-  (tasks/ui click :firstboot-forward)
-  ;; RHEL5 has a different firstboot order than RHEL6
-  (if (and (= "RHEL5" (get-release))
-           (tasks/fbshowing? :firewall))
+  (if (= "RHEL7" (get-release))
+    (do (tasks/kill-app)
+        (tasks/start-app)
+        (if-not (tasks/ui showing? :register-system)
+          (tasks/unregister))
+        (tasks/start-firstboot))
     (do
+      (tasks/start-firstboot)
       (tasks/ui click :firstboot-forward)
+      (tasks/ui click :license-yes)
       (tasks/ui click :firstboot-forward)
+      ;; RHEL5 has a different firstboot order than RHEL6
+      (if (and (= "RHEL5" (get-release))
+               (tasks/fbshowing? :firewall))
+        (do
+          (tasks/ui click :firstboot-forward)
+          (tasks/ui click :firstboot-forward)
+          (tasks/ui click :firstboot-forward)
+          (tasks/ui click :firstboot-forward)
+          (sleep 3000) ;; FIXME find a better way than a hard wait...
+          (verify (tasks/fbshowing? :software-updates))))
+      (tasks/ui click :register-now)
       (tasks/ui click :firstboot-forward)
-      (tasks/ui click :firstboot-forward)
-      (sleep 3000) ;; FIXME find a better way than a hard wait...
-      (verify (tasks/fbshowing? :software-updates))))
-  (tasks/ui click :register-now)
-  (tasks/ui click :firstboot-forward)
-  (assert (bool (tasks/ui guiexist :firstboot-window window-name))))
+      (assert (bool (tasks/ui guiexist :firstboot-window window-name))))))
 
 (defn kill_firstboot []
   (run-command "killall -9 firstboot")
@@ -62,7 +69,8 @@
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (if (= "5.7" (:version (get-release :true)))
-      (throw (SkipException. (str "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))))
+      (throw (SkipException.
+              (str "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))))
     (skip-if-bz-open "922806")
     (skip-if-bz-open "1016643" (= "RHEL7" (get-release)))
     ;; new rhsm and classic have to be totally clean for this to run
@@ -82,28 +90,56 @@
   (zero-proxy-values))
 
 (defn ^{Test {:groups ["firstboot"
+                       "tier1"
+                       "blockedByBug-1020542"
+                       "blockedByBug-1020672"
+                       "blockedByBug-1031176"
+                       "blockedByBug-1153634"
+                       "blockedByBug-1157404"
+                       "blockedByBug-1159936"]}}
+  firstboot_rhel7
+  "Since firstboot in RHEL7 is minimalistic and discrepancies wont be fixed, this
+   test performs a happy-path test to assert general working of firstboot screens"
+  [_]
+  (verify (tasks/fbshowing? :firstboot-window
+                            "Subscription Management Registration"))
+  ;(tasks/ui click :register-now)    unable to access this radio button
+  (tasks/ui click :firstboot-forward)
+  (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+  (tasks/ui click :firstboot-window "proxy_button")
+  (tasks/ui waittillguiexist :firstboot-proxy-dialog 2)
+  (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+  (tasks/ui click :firstboot-proxy-dialog "Test Connection Button")
+  (tasks/ui waittillguinotexist :firstboot-proxy-dialog 2)
+  (tasks/firstboot-register (@config :username) (@config :password))
+  (tasks/ui click :firstboot-forward)
+  (sleep 2000)
+  (verify (not (bool (tasks/ui guiexist :firstboot-window)))))
+
+(defn ^{Test {:groups ["firstboot"
                        "tier2"
                        "blockedByBug-973269"
                        "blockedByBug-988411"]}}
   firstboot_enable_proxy_auth
   "Checks whether the proxy and authentication is enabled in rhsm-conf file"
   [_]
-  (try
-    (reset_firstboot)
-    (tasks/ui click :register-rhsm)
-    (let [hostname (@config :basicauth-proxy-hostname)
-          port (@config :basicauth-proxy-port)
-          username (@config :basicauth-proxy-username)
-          password (@config :basicauth-proxy-password)]
-      (tasks/enableproxy hostname :port port :user username :pass password :firstboot? true)
-      (tasks/ui click :firstboot-forward)
-      (tasks/checkforerror)
-      (tasks/firstboot-register (@config :username) (@config :password))
-      (tasks/verify-conf-proxies hostname port username password))
-    (finally
-     (reset_firstboot)
-     (tasks/disableproxy true)
-     (kill_firstboot))))
+  (if-not (= "RHEL7" (get-release))
+    (try
+      (reset_firstboot)
+      (tasks/ui click :register-rhsm)
+      (let [hostname (@config :basicauth-proxy-hostname)
+            port (@config :basicauth-proxy-port)
+            username (@config :basicauth-proxy-username)
+            password (@config :basicauth-proxy-password)]
+        (tasks/enableproxy hostname :port port :user username :pass password :firstboot? true)
+        (tasks/ui click :firstboot-forward)
+        (tasks/checkforerror)
+        (tasks/firstboot-register (@config :username) (@config :password))
+        (tasks/verify-conf-proxies hostname port username password))
+      (finally
+        (reset_firstboot)
+        (tasks/disableproxy true)
+        (kill_firstboot)))))
 
 (defn ^{Test {:groups ["firstboot"
                        "tier2"
@@ -112,57 +148,62 @@
   firstboot_enable_proxy_noauth
   "Checks whether the proxy is enabled and authentication is disabled in rhsm-conf file"
   [_]
-  (if (= "RHEL5" (get-release))
-    (throw (SkipException.
-            (str "Skipping 'firstboot_enable_proxy_noauth' test on RHEL5 "
-                 "as password fiel in proxy window is not accessible"))))
-  (try
-    (reset_firstboot)
-    (tasks/ui click :register-rhsm)
-    (let [hostname (@config :noauth-proxy-hostname)
-          port (@config :noauth-proxy-port)]
-      (tasks/enableproxy hostname :port port :firstboot? true)
-      (tasks/ui click :firstboot-forward)
-      (tasks/checkforerror)
-      (tasks/firstboot-register (@config :username) (@config :password))
-      (tasks/verify-conf-proxies hostname port "" ""))
-    (finally
-     (reset_firstboot)
-     (tasks/disableproxy true)
-     (kill_firstboot))))
+  (if-not (= "RHEL7" (get-release))
+    (if (= "RHEL5" (get-release))
+      (throw (SkipException.
+              (str "Skipping 'firstboot_enable_proxy_noauth' test on RHEL5 "
+                   "as password fiel in proxy window is not accessible"))))
+    (try
+      (reset_firstboot)
+      (tasks/ui click :register-rhsm)
+      (let [hostname (@config :noauth-proxy-hostname)
+            port (@config :noauth-proxy-port)]
+        (tasks/enableproxy hostname :port port :firstboot? true)
+        (tasks/ui click :firstboot-forward)
+        (tasks/checkforerror)
+        (tasks/firstboot-register (@config :username) (@config :password))
+        (tasks/verify-conf-proxies hostname port "" ""))
+      (finally
+        (reset_firstboot)
+        (tasks/disableproxy true)
+        (kill_firstboot)))))
 
 (defn ^{Test {:groups ["firstboot"
                        "tier2"]}}
   firstboot_disable_proxy
   "Checks whether the proxy and authentication is disabled in rhsm-conf file"
   [_]
-  (reset_firstboot)
-  (tasks/ui click :register-rhsm)
-  (tasks/disableproxy true)
-  (tasks/ui click :firstboot-forward)
-  (tasks/checkforerror)
-  (tasks/firstboot-register (@config :username) (@config :password))
-  (tasks/verify-conf-proxies "" "" "" "")
-  (kill_firstboot))
+  (if-not (= "RHEL7" (get-release))
+    (do
+      (reset_firstboot)
+      (tasks/ui click :register-rhsm)
+      (tasks/disableproxy true)
+      (tasks/ui click :firstboot-forward)
+      (tasks/checkforerror)
+      (tasks/firstboot-register (@config :username) (@config :password))
+      (tasks/verify-conf-proxies "" "" "" "")
+      (kill_firstboot))))
 
 (defn firstboot_register_invalid_user
   "Register with invalid user credentials at firstboot"
   [user pass recovery]
-  (reset_firstboot)
-   (tasks/disableproxy true)
-  (tasks/ui click :register-rhsm)
-  (tasks/ui click :firstboot-forward)
-  (let [test-fn (fn [username password expected-error-type]
-                  (try+
-                   (tasks/firstboot-register username password)
-                   (catch [:type expected-error-type]
-                       {:keys [type]}
-                     type)))]
-    (let [thrown-error (apply test-fn [user pass recovery])
-          expected-error recovery]
-     (verify (= thrown-error expected-error))
-     ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
-     (verify (tasks/fbshowing? :firstboot-user)))))
+  (if-not (= "RHEL7" (get-release))
+    (do
+      (reset_firstboot)
+      (tasks/disableproxy true)
+      (tasks/ui click :register-rhsm)
+      (tasks/ui click :firstboot-forward)
+      (let [test-fn (fn [username password expected-error-type]
+                      (try+
+                       (tasks/firstboot-register username password)
+                       (catch [:type expected-error-type]
+                           {:keys [type]}
+                         type)))]
+        (let [thrown-error (apply test-fn [user pass recovery])
+              expected-error recovery]
+          (verify (= thrown-error expected-error))
+          ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
+          (verify (tasks/fbshowing? :firstboot-user)))))))
 
 (defn ^{Test {:groups ["firstboot"
                        "tier2"
@@ -173,15 +214,17 @@
    regestering (when progress-bar is displayed) to to a server. This check is performed
    only in RHEL5 for RHEL6 and above this would be a part of firstboot-register"
   [_]
-  (reset_firstboot)
-  (tasks/ui click :register-rhsm)
-  (tasks/ui click :firstboot-forward)
-  (if (= "RHEL5" (get-release))
+  (if-not (= "RHEL7" (get-release))
     (do
-      (tasks/firstboot-register (@config :username) (@config :password))
-      (verify (not (bool (tasks/ui hasstate :firstboot-back "Sensitive"))))
-      (verify (not (bool (tasks/ui hasstate :firstboot-forward "Sensitive")))))
-    (tasks/firstboot-register (@config :username) (@config :password) :back-button? true)))
+      (reset_firstboot)
+      (tasks/ui click :register-rhsm)
+      (tasks/ui click :firstboot-forward)
+      (if (= "RHEL5" (get-release))
+        (do
+          (tasks/firstboot-register (@config :username) (@config :password))
+          (verify (not (bool (tasks/ui hasstate :firstboot-back "Sensitive"))))
+          (verify (not (bool (tasks/ui hasstate :firstboot-forward "Sensitive")))))
+        (tasks/firstboot-register (@config :username) (@config :password) :back-button? true)))))
 
 (defn ^{Test {:groups ["firstboot"
                        "tier2"
@@ -191,16 +234,18 @@
   firstboot_check_back_button
   "Checks the functionality of the back button during firstboot"
   [_]
-  (reset_firstboot)
-  (tasks/ui click :register-rhsm)
-  (tasks/ui click :firstboot-forward)
-  (tasks/firstboot-register (@config :username) (@config :password))
-  (tasks/ui click :firstboot-back)
-  (verify (tasks/fbshowing? :firstboot-window window-name))
-  (let [output (:stdout (run-command "subscription-manager identity"))]
-    ;; Functionality of back-button is limited to RHEL5.
-    ;; In RHEL6 back-button behavior is different
-    (verify (substring? "system identity: " output))))
+  (if-not (= "RHEL7" (get-release))
+    (do
+      (reset_firstboot)
+      (tasks/ui click :register-rhsm)
+      (tasks/ui click :firstboot-forward)
+      (tasks/firstboot-register (@config :username) (@config :password))
+      (tasks/ui click :firstboot-back)
+      (verify (tasks/fbshowing? :firstboot-window window-name))
+      (let [output (:stdout (run-command "subscription-manager identity"))]
+        ;; Functionality of back-button is limited to RHEL5.
+        ;; In RHEL6 back-button behavior is different
+        (verify (substring? "system identity: " output))))))
 
 ;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
 (defn ^{Test {:groups ["firstboot"
@@ -210,18 +255,20 @@
   firstboot_skip_register
   "Checks whether firstboot skips register if subscription manger is already registered"
   [_]
-  (kill_firstboot)
-  (run-command "subscription-manager unregister")
-  (run-command "subscritption-manager clean")
-  (run-command (str "subscription-manager register"
-                                      " --username " (@config :username)
-                                      " --password " (@config :password)
-                                      " --org " (@config :owner-key)))
-  (start_firstboot)
-  (if (tasks/fbshowing? :firstboot-window "Set Up Software Updates")
+  (if-not (= "RHEL7" (get-release))
     (do
-      (tasks/ui click :firstboot-forward)
-      (verify (tasks/fbshowing? :firstboot-window "Create User")))))
+      (kill_firstboot)
+      (run-command "subscription-manager unregister")
+      (run-command "subscritption-manager clean")
+      (run-command (str "subscription-manager register"
+                        " --username " (@config :username)
+                        " --password " (@config :password)
+                        " --org " (@config :owner-key)))
+      (start_firstboot)
+      (if (tasks/fbshowing? :firstboot-window "Set Up Software Updates")
+        (do
+          (tasks/ui click :firstboot-forward)
+          (verify (tasks/fbshowing? :firstboot-window "Create User")))))))
 
 ;; https://tcms.engineering.redhat.com/case/72670/?from_plan=2806
 (defn ^{Test {:groups ["firstboot"
@@ -230,29 +277,31 @@
   firstboot_check_register_sm_unregistered
   "Checks whether firstboot navigates to register screen when subscription manager is unregistered"
   [_]
-  (run-command "subscription-manager unregister")
-  (kill_firstboot)
-  (run-command "subscription-manager clean")
-  (zero-proxy-values)
-  (tasks/start-firstboot)
-  (tasks/ui click :firstboot-forward)
-  (tasks/ui click :license-yes)
-  (tasks/ui click :firstboot-forward)
-  (if (and (= "RHEL5" (get-release))
-           (tasks/fbshowing? :firstboot-window "Firewall"))
+  (if-not (= "RHEL7" (get-release))
     (do
+      (run-command "subscription-manager unregister")
+      (kill_firstboot)
+      (run-command "subscription-manager clean")
+      (zero-proxy-values)
+      (tasks/start-firstboot)
       (tasks/ui click :firstboot-forward)
+      (tasks/ui click :license-yes)
       (tasks/ui click :firstboot-forward)
+      (if (and (= "RHEL5" (get-release))
+               (tasks/fbshowing? :firstboot-window "Firewall"))
+        (do
+          (tasks/ui click :firstboot-forward)
+          (tasks/ui click :firstboot-forward)
+          (tasks/ui click :firstboot-forward)
+          (tasks/ui click :firstboot-forward)
+          (sleep 3000) ;; FIXME find a better way than a hard wait...
+          (verify (tasks/fbshowing? :software-updates))))
+      (tasks/ui click :register-now)
       (tasks/ui click :firstboot-forward)
+      (tasks/ui click :register-rhsm)
       (tasks/ui click :firstboot-forward)
-      (sleep 3000) ;; FIXME find a better way than a hard wait...
-      (verify (tasks/fbshowing? :software-updates))))
-  (tasks/ui click :register-now)
-  (tasks/ui click :firstboot-forward)
-  (tasks/ui click :register-rhsm)
-  (tasks/ui click :firstboot-forward)
-  (verify (bool (tasks/ui guiexist :firstboot-window
-                          "Subscription Management Registration"))))
+      (verify (bool (tasks/ui guiexist :firstboot-window
+                              "Subscription Management Registration"))))))
 
 (defn ^{Test {:groups ["firstboot"
                        "tier1"
@@ -261,14 +310,16 @@
   "Verifies that on clicking backbutton after registering from Create User
    menu should navigte to Choose Service menu"
   [_]
-  (reset_firstboot)
-  (tasks/ui click :register-rhsm)
-  (tasks/ui click :firstboot-forward)
-  (tasks/firstboot-register (@config :username) (@config :password))
-  (tasks/ui click :firstboot-forward)
-  (verify (tasks/fbshowing? :firstboot-window "Create User"))
-  (tasks/ui click :firstboot-back)
-  (verify (not (tasks/fbshowing? :firstboot-window window-name))))
+  (if-not (= "RHEL7" (get-release))
+    (do
+      (reset_firstboot)
+      (tasks/ui click :register-rhsm)
+      (tasks/ui click :firstboot-forward)
+      (tasks/firstboot-register (@config :username) (@config :password))
+      (tasks/ui click :firstboot-forward)
+      (verify (tasks/fbshowing? :firstboot-window "Create User"))
+      (tasks/ui click :firstboot-back)
+      (verify (not (tasks/fbshowing? :firstboot-window window-name))))))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"
                                                              "tier1"]}}
