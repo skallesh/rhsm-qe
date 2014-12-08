@@ -70,7 +70,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// assert the subscription pool with the matching productId is available
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// clienttasks.getCurrentlyAvailableSubscriptionPools() is tested at the conclusion of this test
-		if (pool==null) {	// when pool is null, the most likely error is that all of the available subscriptions from the pools are being consumed, let's check...
+		// special case...
+		if (pool==null) {	// when pool is null, another likely cause is that all of the available subscriptions from the pools are being consumed, let's check...
 			for (String poolId: CandlepinTasks.getPoolIdsForProductId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), productId)) {
 				int quantity = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "quantity");
 				int consumed = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "consumed");
@@ -218,6 +219,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					// decide what the status should be...  "Subscribed" or "Partially Subscribed" (SPECIAL CASE WHEN poolProductSocketsAttribute=0  or "null" SHOULD YIELD Subscribed)
 					String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
 					String poolProductVcpuAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "vcpu");	// introduced by 885785 [RFE] Subscription Manager should alert a user if subscription vcpu limits are lower than system vcpu allocation
+					String poolProductArchAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "arch");
+					List<String> poolProductArches = new ArrayList<String>();
+					if (poolProductArchAttribute!=null) {
+						poolProductArches.addAll(Arrays.asList(poolProductArchAttribute.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+						if (poolProductArches.contains("x86")) {poolProductArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+						if (poolProductArches.contains("ALL")) poolProductArches.add(clienttasks.arch);
+					}
+					
 					// treat a non-numeric poolProductSocketsAttribute as if it was null
 					// if the sockets attribute is not numeric (e.g. "null"),  then this subscription should be available to this client
 					try {Integer.valueOf(poolProductSocketsAttribute);}
@@ -241,6 +250,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing this virtual system to a pool for ProductId '"+productId+"' (covers '"+poolProductVcpuAttribute+"' vcpu), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's vcpu value ("+clienttasks.vcpu+") is greater than what a single subscription from a non-multi-entitlement pool covers.");
 					} else if (pool.subscriptionType!=null && (pool.subscriptionType.equals("Standard") || pool.subscriptionType.equals("Stackable only with other subscriptions"))/*ADDED AFTER IMPLEMENTATION OF BUG 1008647 AND 1029968*/ && systemIsGuest/*ADDED AFTER IMPLEMENTATION OF BUG 885785*/ && poolProductVcpuAttribute!=null && Integer.valueOf(poolProductVcpuAttribute)<Integer.valueOf(clienttasks.vcpu) && Integer.valueOf(poolProductVcpuAttribute)>0) {
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing this virtual system to a pool for ProductId '"+productId+"' (covers '"+poolProductVcpuAttribute+"' vcpu), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's vcpu value ("+clienttasks.vcpu+") is greater than what a single subscription from a non-multi-entitlement pool covers.");
+					} else if (!poolProductArches.contains(clienttasks.arch)) {
+						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing this system with arch '"+clienttasks.arch+"' to a pool for ProductId '"+productId+"' (that supports '"+poolProductArchAttribute+"' arch), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed with a reason stating that the system's arch is not supported by this subscription.");
+						// Example Status Details:    Supports architecture x86_64,ppc64,ia64,ppc,x86,s390,s390x but the system is ppc64le.
+						String reason = String.format("Supports architecture %s but the system is %s.", poolProductArchAttribute, clienttasks.arch);
+						Assert.assertTrue(installedProduct.statusDetails.contains(reason), "Installed Product '"+installedProduct.productName+"' Status Details includes '"+reason+"'.");
 					} else {
 						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to a pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the system's sockets/vcpu needs were met.");
 					}
