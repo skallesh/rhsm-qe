@@ -8,7 +8,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
- 
+
 /**
  * This class provide various static methods that relax X509 certificate and
  * hostname verification while using the SSL over the HTTP protocol.

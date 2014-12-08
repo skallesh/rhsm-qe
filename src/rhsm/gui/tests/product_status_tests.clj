@@ -38,9 +38,9 @@
     (let [output (:stdout
                   (run-command "subscription-manager attach --auto"))
           not-blank? (fn [s] (not (blank? s)))
-    	    raw-cli-data (filter not-blank? (drop 1 (split-lines output)))
-          status (fn [s] (re-find #"Status.*" s))
-          products (fn [s] (re-find #"Product Name.*" s))
+          raw-cli-data (filter not-blank? (drop 1 (split-lines output)))
+          status (fn [s] (re-find #"^Status.*" s))
+          products (fn [s] (re-find #"^Product Name.*" s))
           grab-value (fn [item] (trim (last (split item #":"))))
           not-nil? (fn [s] (not (nil? s)))
           list-status (into [] (map grab-value (filter not-nil? (map status raw-cli-data))))
@@ -142,9 +142,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ^{DataProvider {:name "subscribed"}}
-  get_installed_products [_ & {:keys [debug]
+  subscribed_products [_ & {:keys [debug]
                                :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " ns-log "/get_installed_products()"))
+  (log/info (str "======= Starting DataProvider: " ns-log "/subscribed_products()"))
   (if-not (assert-skip :facts)
     (do
       (tasks/restart-app :reregister? true)
@@ -161,7 +161,7 @@
   installed_products [_ & {:keys [debug]
                            :or {debug false}}]
   (log/info (str "======= Starting DataProvider: "
-                 ns-log "installed_products()"))
+                 ns-log "/installed_products()"))
   (if-not (assert-skip :system)
     (do
       (tasks/restart-app)
