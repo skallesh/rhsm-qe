@@ -1122,6 +1122,7 @@ if (false) {
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
 		
 		// assert results...
+		logRuntimeErrors(sshCommandResult);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from command '"+command+"' indicates a success.");
 
 		return sshCommandResult;
@@ -7204,7 +7205,7 @@ if (false) {
 	 */
 	public void logRuntimeErrors(SSHCommandResult result) {
 		String issue;
-		if (result.getExitCode().equals(0)) return;	// not an error
+		if (result.getExitCode().equals(0)) return;	// no reason to suspect an error
 		
 		//	ssh root@ibm-p8-01-lp6.rhts.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9814931ea74014933dec2b60673
 		//	Stdout:
