@@ -105,6 +105,8 @@
   "Assertst that the help window opens."
   [_]
   (try
+    (if-not (bool (tasks/ui guiexist :main-window))
+      (tasks/start-app))
     (tasks/ui click :getting-started)
     (tasks/ui waittillwindowexist :help-dialog 10)
     (verify (bool (tasks/ui guiexist :help-dialog)))
