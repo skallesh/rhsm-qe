@@ -1619,8 +1619,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 
 	/**
-	 * @param matchSystemSoftware TODO
-	 * @return List of [String productId, JSONArray bundledProductDataAsJSONArray]
+	 * @param matchSystemHardware - make sure that atLeastOneProvidedProductSatisfiesArch
+	 * @param matchSystemSoftware - makes sure that atLeastOneProvidedProductIsInstalled
+	 * @return
+	 * @throws Exception
 	 */
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystemHardware, boolean matchSystemSoftware) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;

@@ -251,6 +251,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					} else if (pool.subscriptionType!=null && (pool.subscriptionType.equals("Standard") || pool.subscriptionType.equals("Stackable only with other subscriptions"))/*ADDED AFTER IMPLEMENTATION OF BUG 1008647 AND 1029968*/ && systemIsGuest/*ADDED AFTER IMPLEMENTATION OF BUG 885785*/ && poolProductVcpuAttribute!=null && Integer.valueOf(poolProductVcpuAttribute)<Integer.valueOf(clienttasks.vcpu) && Integer.valueOf(poolProductVcpuAttribute)>0) {
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing this virtual system to a pool for ProductId '"+productId+"' (covers '"+poolProductVcpuAttribute+"' vcpu), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's vcpu value ("+clienttasks.vcpu+") is greater than what a single subscription from a non-multi-entitlement pool covers.");
 					} else if (!poolProductArches.contains(clienttasks.arch)) {
+						log.warning("This case is indicative that a pool refresh may be needed for this owner.");
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing this system with arch '"+clienttasks.arch+"' to a pool for ProductId '"+productId+"' (that supports '"+poolProductArchAttribute+"' arch), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed with a reason stating that the system's arch is not supported by this subscription.");
 						// Example Status Details:    Supports architecture x86_64,ppc64,ia64,ppc,x86,s390,s390x but the system is ppc64le.
 						String reason = String.format("Supports architecture %s but the system is %s.", poolProductArchAttribute, clienttasks.arch);
@@ -647,7 +648,24 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (List<Object> subscriptionPoolProductDatum : subscriptionPoolProductData) {
 			String productId = (String)subscriptionPoolProductDatum.get(0);
 			SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availableSubscriptionPools);
-			if (subscriptionPool==null) {	// when pool is null, the most likely error is that all of the available subscriptions from the pools are being consumed, let's check...
+// THIS CASE WAS SOLVED BY REFRESHING THE POOLS AVAILABLE TO THIS OWNER
+//			// special case...
+//			if (subscriptionPool==null) {	// when pool is null, a likely reason is that the subscription pools arch does not support this system's arch, let's check...
+//				for (String poolId: CandlepinTasks.getPoolIdsForProductId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), productId)) {
+//					String poolProductAttributeArchValue= (String) CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "arch");
+//					if (poolProductAttributeArchValue!=null) {
+//						List<String> poolProductAttributesArches = new ArrayList<String>();
+//							poolProductAttributesArches.addAll(Arrays.asList(poolProductAttributeArchValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+//						if (poolProductAttributesArches.contains("x86")) {poolProductAttributesArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+//						if (poolProductAttributesArches.contains("ALL")) poolProductAttributesArches.add(clienttasks.arch);
+//						if (!poolProductAttributesArches.contains(clienttasks.arch)) {
+//							throw new SkipException("Pool product '"+productId+"' supports arches '"+poolProductAttributeArchValue+"'.  This system's arch is '"+clienttasks.arch+"', hence this matching hardware test for list available is not applicable on this system.");
+//						}
+//					}
+//				}	
+//			}
+			// special case...
+			if (subscriptionPool==null) {	// when pool is null, another likely cause is that all of the available subscriptions from the pools are being consumed, let's check...
 				for (String poolId: CandlepinTasks.getPoolIdsForProductId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), productId)) {
 					int quantity = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "quantity");
 					int consumed = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "consumed");
@@ -655,7 +673,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 						log.warning("It appears that the total quantity '"+quantity+"' of subscriptions from poolId '"+poolId+"' for product '"+productId+"' are being consumed.");
 					}
 				}	
-			}			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+productId+"' to be available to registered user '"+sm_clientUsername+"'.");
+			}
+			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+productId+"' to be available to registered user '"+sm_clientUsername+"'. (Look for warnings above to explain a failure. A pool refresh may also fix a failure.)");
 		}
 		for (SubscriptionPool availableSubscriptionPool : availableSubscriptionPools) {
 			

@@ -87,21 +87,22 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// implicitly registered in dataProvider; no need to register with force; saves time
 		//clienttasks.register(clientusername, clientpassword, null, null, null, null, true, null, null, null);
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
-		// special case...
-		if (pool==null) {	// when pool is null, a likely reason is that the subscription pools arch does not support this system's arch, let's check...
-			for (String poolId: CandlepinTasks.getPoolIdsForProductId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), productId)) {
-				String poolProductAttributeArchValue= (String) CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "arch");
-				if (poolProductAttributeArchValue!=null) {
-					List<String> poolProductAttributesArches = new ArrayList<String>();
-						poolProductAttributesArches.addAll(Arrays.asList(poolProductAttributeArchValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
-					if (poolProductAttributesArches.contains("x86")) {poolProductAttributesArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
-					if (poolProductAttributesArches.contains("ALL")) poolProductAttributesArches.add(clienttasks.arch);
-					if (!poolProductAttributesArches.contains(clienttasks.arch)) {
-						throw new SkipException("Pool product '"+productId+"' supports arches '"+poolProductAttributeArchValue+"'.  This system's arch is '"+clienttasks.arch+"', hence this matching hardware test for list available is not applicable on this system.");
-					}
-				}
-			}	
-		}
+// THIS CASE WAS SOLVED BY REFRESHING THE POOLS AVAILABLE TO THIS OWNER
+//		// special case...
+//		if (pool==null) {	// when pool is null, a likely reason is that the subscription pools arch does not support this system's arch, let's check...
+//			for (String poolId: CandlepinTasks.getPoolIdsForProductId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), productId)) {
+//				String poolProductAttributeArchValue= (String) CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "arch");
+//				if (poolProductAttributeArchValue!=null) {
+//					List<String> poolProductAttributesArches = new ArrayList<String>();
+//						poolProductAttributesArches.addAll(Arrays.asList(poolProductAttributeArchValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+//					if (poolProductAttributesArches.contains("x86")) {poolProductAttributesArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+//					if (poolProductAttributesArches.contains("ALL")) poolProductAttributesArches.add(clienttasks.arch);
+//					if (!poolProductAttributesArches.contains(clienttasks.arch)) {
+//						throw new SkipException("Pool product '"+productId+"' supports arches '"+poolProductAttributeArchValue+"'.  This system's arch is '"+clienttasks.arch+"', hence this matching hardware test for list available is not applicable on this system.");
+//					}
+//				}
+//			}	
+//		}
 		// special case...
 		if (pool==null) {	// when pool is null, another likely cause is that all of the available subscriptions from the pools are being consumed, let's check...
 			for (String poolId: CandlepinTasks.getPoolIdsForProductId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), productId)) {
@@ -112,7 +113,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 				}
 			}	
 		}
-		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is listed as available for subscribing.");
+		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is listed as available for subscribing.  (Look for warnings above to explain a failure. A pool refresh may also fix a failure.)");
 	}
 	
 	
