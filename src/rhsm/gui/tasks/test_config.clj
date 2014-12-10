@@ -118,5 +118,6 @@
   ;; instantiate CandlepinTasks
   (reset! candlepin-tasks (CandlepinTasks.))
   ;; turn off SSL Checking so rest API works
-  (SSLUtilities/trustAllHostnames)
-  (SSLUtilities/trustAllHttpsCertificates))
+  ;(SSLUtilities/trustAllHostnames)
+  ;(SSLUtilities/trustAllHttpsCertificates)
+  )

@@ -5,6 +5,9 @@
             [clojure.tools.logging :as log])
   (:refer-clojure :exclude (get)))
 
+;sticking this here, global opts for http calls
+(def rest-opts {:insecure? true})
+
 (defmacro with-logs [body & forms]
   `(do (if-let [b# ~body]
          (log/info (str "About to make REST call with body: \n" (with-out-str (pprint/pprint b#)))))
@@ -16,28 +19,37 @@
   "Gets the url, and decodes JSON in the response body, returning a
   clojure datastructure."
   [url user pw & [req]]
-  (-> (httpclient/get url (merge req {:basic-auth [user pw]
-                                      :accept :json})) :body json/read-json))
+  (-> (httpclient/get url (merge rest-opts
+                                req
+                                {:basic-auth [user pw]
+                                 :accept :json}))
+     :body json/read-json))
 
 (defn put
   "Performs a PUT to the url, decodes the JSON in the response body"
   [url user pw body & [req]]
-  (httpclient/put url (merge req {:body (json/json-str body)
-                                  :basic-auth [user pw]
-                                  :accept :json
-                                  :content-type :json})))
+  (httpclient/put url (merge rest-opts
+                             req
+                             {:body (json/json-str body)
+                              :basic-auth [user pw]
+                              :accept :json
+                              :content-type :json})))
 
 (defn post
   "Encodes datastructure in body to JSON, posts to url, using user and pw. "
   [url user pw body & [req]]
-  (-> (httpclient/post url (merge req {:body (json/json-str body)
-                                       :basic-auth [user pw]
-                                       :accept :json
-                                       :content-type :json}))
+  (-> (httpclient/post url (merge rest-opts
+                                 req
+                                 {:body (json/json-str body)
+                                  :basic-auth [user pw]
+                                  :accept :json
+                                  :content-type :json}))
       :body json/read-json))
 
 (defn delete [url user pw & [req]]
-  (-> (httpclient/delete url (merge req {:basic-auth [user pw]
-                                         :accept :json
-                                         :content-type :json}))
+  (-> (httpclient/delete url (merge rest-opts
+                                   req
+                                   {:basic-auth [user pw]
+                                    :accept :json
+                                    :content-type :json}))
       :body))
