@@ -285,27 +285,32 @@
   check_subscription_type_auto_attach
   "Asserts if type column is present in register dialog"
   [_]
-  (try
-    (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel @complytests)
-    (tasks/restart-app)
-    (verify (dirsetup? multi-sla-dir))
-    (tasks/register-with-creds)
-    (tasks/ui click :auto-attach)
-    (sleep 8000)
-    (tasks/ui waittillwindowexist :register-dialog 80)
-    (tasks/ui click :register-dialog (clojure.string/capitalize(first @sla-list)))
-    (tasks/ui click :register)
-    (verify (tasks/ui showing? :register-dialog "Confirm Subscriptions"))
-    (let [values (into [] (tasks/get-table-elements :auto-attach-subscriptions-table 1))
-          phy-virt? (fn [val]
-                      (not (or (= (.toLowerCase val) "virtual")
-                                 (= (.toLowerCase val) "physical"))))
-          error-list (filter phy-virt? values)]
-      (verify (= 0 (count error-list))))
-    (finally
-     (if (bool(tasks/ui guiexist :register-dialog))
-       (tasks/ui click :register-cancel))
-     (tasks/unregister))))
+  (if-not (= "RHEL7" (get-release))
+    (do
+      (try
+        (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
+         @complytests)
+        (tasks/restart-app)
+        (verify (dirsetup? multi-sla-dir))
+        (tasks/register-with-creds)
+        (tasks/ui click :auto-attach)
+        (sleep 8000)
+        (tasks/ui waittillwindowexist :register-dialog 80)
+        (tasks/ui click :register-dialog (clojure.string/capitalize(first @sla-list)))
+        (tasks/ui click :register)
+        (verify (tasks/ui showing? :register-dialog "Confirm Subscriptions"))
+        (let [values (into [] (tasks/get-table-elements :auto-attach-subscriptions-table 1))
+              phy-virt? (fn [val]
+                          (not (or (= (.toLowerCase val) "virtual")
+                                   (= (.toLowerCase val) "physical"))))
+              error-list (filter phy-virt? values)]
+          (verify (= 0 (count error-list))))
+        (finally
+          (if (bool(tasks/ui guiexist :register-dialog))
+            (tasks/ui click :register-cancel))
+          (tasks/unregister))))
+    (throw (SkipException.
+           (str "Skipping 'check_subscription_type_auto_attach' test on RHEL7. Cannot access radio-butons through ldtp !!!!")))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "tier2"
@@ -314,25 +319,30 @@
   autosubscribe_select_product_sla
   "Asserts if autosubscribe works with selecting product sla"
   [_]
-  (try
-    (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel @complytests)
-    (tasks/restart-app)
-    (verify (dirsetup? multi-sla-dir))
-    (tasks/register-with-creds)
-    (tasks/ui click :auto-attach)
-    (sleep 10000)
-    (tasks/ui waittillwindowexist :register-dialog 80)
-    (tasks/ui click :register-dialog (clojure.string/capitalize(first @sla-list)))
-    (tasks/ui click :register)
-    (if (tasks/ui showing? :register-dialog "Confirm Subscriptions")
-      (do
-        (sleep 3000)
+  (if-not (= "RHEL7" (get-release))
+    (do
+      (try
+        (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
+         @complytests)
+        (tasks/restart-app)
+        (verify (dirsetup? multi-sla-dir))
+        (tasks/register-with-creds)
+        (tasks/ui click :auto-attach)
+        (sleep 10000)
+        (tasks/ui waittillwindowexist :register-dialog 80)
+        (tasks/ui click :register-dialog (clojure.string/capitalize(first @sla-list)))
         (tasks/ui click :register)
-        (tasks/ui waittillwindownotexist :register-dialog 80)))
-    (verify (substring? "System is properly subscribed" (tasks/ui gettextvalue :overall-status)))
-    (finally
-     (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
-     (tasks/unregister))))
+        (if (tasks/ui showing? :register-dialog "Confirm Subscriptions")
+          (do
+            (sleep 3000)
+            (tasks/ui click :register)
+            (tasks/ui waittillwindownotexist :register-dialog 80)))
+        (verify (substring? "System is properly subscribed" (tasks/ui gettextvalue :overall-status)))
+        (finally
+          (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
+          (tasks/unregister))))
+   (throw (SkipException.
+           (str "Skipping 'autosubscribe_select_product_sla' test on RHEL7. Cannot access radio-butons through ldtp !!!!")))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
