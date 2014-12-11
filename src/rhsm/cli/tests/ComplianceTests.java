@@ -318,6 +318,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		clienttasks.listInstalledProducts();
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"When a system has products installed for which only SOME are covered by available subscription pools, the system should NOT become compliant (see value for fact '"+factNameForSystemCompliance+"') even after having subscribed to every available subscription pool.");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
+			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(1), "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
+		}
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when some installed products are subscribable",
@@ -396,6 +399,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
+			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
+		}
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable (or an appropriate warning period status if an entitlement is within its warning period status)",
@@ -456,6 +462,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"When a system has products installed for which NONE are covered by available subscription pools, the system should NOT become compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
+			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(1), "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
+		}
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when no installed products are subscribable",
@@ -532,6 +541,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		clienttasks.listInstalledProducts();
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"Even after subscribing to all the available subscription pools, a system with no products installed should remain compliant (see value for fact '"+factNameForSystemCompliance+"').");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
+			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
+		}
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed (and a warning period status when at least one entitlement cert is within its warning period)",
@@ -655,6 +667,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// now assert compliance
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"By definition, being registered to RHN Classic implies the system IS compliant no matter what products are installed (see value for fact '"+factNameForSystemCompliance+"').");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
+			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
+		}
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when registered to RHN Classic",
