@@ -171,7 +171,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                      :authentication-checkbox
                                      :password-text
                                      :username-text])
-              {:close-proxy "Close Button"
+              {:close-proxy "Ok Button"
+               :cancel-proxy "Cancel Button"
                :test-connection "Test Connection Button"
                :connection-status "connectionStatusLabel"
                :proxy-location "Proxy Location Text"}))
