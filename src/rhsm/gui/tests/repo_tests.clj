@@ -205,7 +205,7 @@
   (assert-and-open-repo-dialog)
   (tasks/do-to-all-rows-in :repo-table 2
                            (fn [repo]
-                             (sleep 1000)
+                             (sleep 2000)
                              (tasks/ui selectrow :repo-table repo)
                              (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
                                (tasks/ui checkrow :repo-table row-num 1)
@@ -238,6 +238,7 @@
   (assert-and-open-repo-dialog)
   (tasks/do-to-all-rows-in :repo-table 2
                            (fn [repo]
+                             (sleep 1000)
                              (tasks/ui selectrow :repo-table repo)
                              (assert-and-remove-all-override)))
   (tasks/ui click :close-repo-dialog)
