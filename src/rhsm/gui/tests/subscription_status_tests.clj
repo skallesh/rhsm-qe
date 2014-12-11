@@ -111,27 +111,33 @@
   "Asserts that status message displayed in main-window is right after attaching future
    subscriptions"
   [_]
-  (try
-    (let
-  	[subscribed-products-date (atom {})
-         after-date-products (atom {})
-         present-date (do (tasks/ui selecttab :all-available-subscriptions)
-                          (tasks/ui gettextvalue :date-entry))
-         date-split (split present-date #"-")
-         year (first date-split)
-         month (second date-split)
-         day (last date-split)
-         new-year (+ (Integer. (re-find  #"\d+" year)) 1)]
-      (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
-      (tasks/search :match-installed? true)
-      (dotimes [n 3]
-        (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
-                                   (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
-      (reset! subscribed-products-date (count (filter #(= "Subscribed" %)
-                                                      (tasks/get-table-elements :installed-view 2))))
-      (reset! after-date-products (Integer. (re-find #"\d*"
-                                                     (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date))))))
+  (if-not (= "RHEL7" (get-release))
+    (do
+      (try
+        (let
+            [subscribed-products-date (atom {})
+             after-date-products (atom {})
+             present-date (do (tasks/ui selecttab :all-available-subscriptions)
+                              (tasks/ui gettextvalue :date-entry))
+             date-split (split present-date #"-")
+             year (first date-split)
+             month (second date-split)
+             day (last date-split)
+             new-year (+ (Integer. (re-find  #"\d+" year)) 1)]
+          (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
+          (tasks/search :match-installed? true)
+          (dotimes [n 3]
+            (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
+                                       (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
+          (reset! subscribed-products-date (count
+                                            (filter #(= "Subscribed" %)
+                                                    (tasks/get-table-elements :installed-view 2))))
+          (reset! after-date-products (Integer. (re-find #"\d*"
+                                                         (tasks/ui gettextvalue :overall-status))))
+          (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date))))))
+    (throw
+     (SkipException.
+      (str "Cannot generate keyevents in RHEL7 !! Skipping Test 'check_status_message_future_subscriptions'.")))))
 
 ;; Commenting out this test as changing dates on the server can have drastic effects
 (comment
