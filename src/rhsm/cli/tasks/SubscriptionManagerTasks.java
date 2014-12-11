@@ -2792,6 +2792,7 @@ if (false) {
 			if (isPackageVersion("subscription-manager", ">=", "1.13.4-1")) {	// bug 1122001 bug 1145835	// commit 6f82c03f05804dcc28eb66d8126453f73c250488
 				// applicable to register with autosubscribe|activationkey - is no longer applicable to consumerid after bugs 1122001 bug 1145835
 				if ((autosubscribe!=null && Boolean.valueOf(autosubscribe)) || (activationkeys!=null && !activationkeys.isEmpty())) {
+					// TODO subscription-manager commit afd16e96d89ff38f74c60fd23613b67e27da17c5 for 1132981: Fixed exit code when registering system with no products installed is causing the following assert to fail.  Need resolution for comment https://bugzilla.redhat.com/show_bug.cgi?id=1132981#c10 
 					Assert.assertTrue(sshCommandResult.getStdout().contains(msg),
 							"register with autosubscribe|activationkey should list \""+msg+"\".");
 				} else {
