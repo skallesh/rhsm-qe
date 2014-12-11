@@ -187,6 +187,7 @@
       (tasks/ui showlist :release-dropdown)
       (sleep 2000)
       (let [gui-releases (into [] (sort (tasks/ui listsubmenus :release-dropdown)))]
+        (sleep 1000)
         (verify (bash-bool (compare expected-releases gui-releases)))
         (verify (not (nil? (some #{"Not Set"} gui-releases))))))
     (catch Exception e
@@ -200,7 +201,8 @@
 
 (defn ^{Test {:groups ["facts"
                        "tier1"
-                       "acceptance"]}}
+                       "acceptance"]
+              :dependsOnMethods ["check_available_releases"]}}
   check_releases
   "Tests that all available releases are shown in the GUI"
   [_]
