@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -18,15 +19,16 @@ import org.testng.SkipException;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BzChecker;
-import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.RevokedCert;
 import rhsm.data.SubscriptionPool;
+
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
@@ -328,23 +330,39 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		//DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
 		String updateSubscriptionPoolEndDateSql = "";
 		String updateSubscriptionPoolStartDateSql = "";
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+		
 		if (endDate!=null) {
 			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
 			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+formatter.format(endDate.getTime())+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+//			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate=? where id=(select subscriptionid from cp_pool_source_sub where pool_id=?);";
 		}
 		if (startDate!=null) {
 			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
 			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+formatter.format(startDate.getTime())+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+//			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate=? where id=(select subscriptionid from cp_pool_source_sub where pool_id=?);";
 		}
 		
 		Statement sql = dbConnection.createStatement();
 		if (endDate!=null) {
 			log.fine("Executing SQL: "+updateSubscriptionPoolEndDateSql);
+//			java.sql.PreparedStatement psql = dbConnection.prepareStatement(updateSubscriptionPoolEndDateSql);
+//			psql.setDate(1, new java.sql.Date(endDate.getTimeInMillis()), endDate);
+//			psql.setString(2, pool.poolId);
+			
 			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolEndDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolEndDateSql);
+//			Assert.assertEquals(psql.executeUpdate(), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolEndDateSql);
 		}
 		if (startDate!=null) {
 			log.fine("Executing SQL: "+updateSubscriptionPoolStartDateSql);
+//			java.sql.PreparedStatement psql = dbConnection.prepareStatement(updateSubscriptionPoolStartDateSql);
+//			psql.setDate(1, new java.sql.Date(startDate.getTimeInMillis()), startDate);
+//			psql.setString(2, pool.poolId);
+			
 			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolStartDateSql);
+//			Assert.assertEquals(psql.executeUpdate(), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolStartDateSql);
 		}
 		sql.close();
 		
@@ -371,11 +389,13 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			dbConnection1 = DriverManager.getConnection(url, sm_dbUsername, sm_dbPassword);
 			sql = dbConnection1.createStatement();
 			String getSubscriptionPoolEndDateSql = String.format("select %s from cp_subscription where id=(select subscriptionid from cp_pool where id='%s');", field, pool.poolId);		// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
-			getSubscriptionPoolEndDateSql = String.format("select %s from cp_subscription where id=(select subscriptionid from cp_pool_source_sub where pool_id='%s');", field, pool.poolId);
+			       getSubscriptionPoolEndDateSql = String.format("select %s from cp_subscription where id=(select subscriptionid from cp_pool_source_sub where pool_id='%s');", field, pool.poolId);
 			sql.execute(getSubscriptionPoolEndDateSql);
 			ResultSet resultSet = sql.getResultSet();
 			if (resultSet.next()) {
-				log.fine(String.format("The %s in database is = %s", field, resultSet.getDate(1)));
+				java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+				log.fine(String.format("The new %s in the database is = %s", field, formatter.format(resultSet.getDate(1))));
+				log.fine(String.format("The calendar value used to set the new %s was = %s", field, formatter.format(cal.getTime())));
 				Assert.assertEquals(resultSet.getDate(1), cal.getTime(),"The '"+field+"' in the database is what we expect.");
 			} else {
 				Assert.fail("Did not retrieve any value for '"+field+"' from the database for pool: "+pool);
