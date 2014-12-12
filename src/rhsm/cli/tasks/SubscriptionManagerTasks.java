@@ -156,8 +156,11 @@ public class SubscriptionManagerTasks {
 		
 		// TODO This is a WORKAROUND to treat an ARM Development Preview as a RHEL7.0 system.  Not sure if this is what we ultimately want.
 		// Product:	ID: 261		Name: Red Hat Enterprise Linux Server for ARM Development Preview	Version: Snapshot	Arch: aarch64	Tags: rhsa-dp-server,rhsa-dp-server-7	Brand Type: 	Brand Name: 
-		if (redhatRelease.startsWith("Red Hat Enterprise Linux Server for ARM Development Preview") && Integer.valueOf(redhatReleaseX)<7) {	// Red Hat Enterprise Linux Server for ARM Development Preview release 1.2
-			log.warning("Detected an ARM Development Preview system.  Automation will effectively assume a RHEL7.0 system.");
+		// [root@apm-mustang-ev3-04 ~]# cat /etc/redhat-release 
+		// Red Hat Enterprise Linux Server for ARM Development Preview
+		// Red Hat Enterprise Linux Server for ARM (Development Preview release 1.6)
+		if (redhatRelease.startsWith("Red Hat Enterprise Linux Server for ARM") && Integer.valueOf(redhatReleaseX)<7) {	// Red Hat Enterprise Linux Server for ARM Development Preview release 1.2
+			log.warning("Detected an Red Hat Enterprise Linux Server for ARM system.  Automation will effectively assume a RHEL7.0 system.");
 			redhatReleaseXY = "7.0";
 			redhatReleaseX = "7";
 		}
@@ -430,7 +433,7 @@ if (false) {
 		if (installOptions==null) installOptions = "";
 		List<String> pkgsInstalled = new ArrayList<String>();
 		
-		// skip installation of packages on an Atomuc system
+		// skip installation of packages on an Atomic system
 		//	-bash-4.2# cat /etc/redhat-release 
 		//	Red Hat Atomic Host Preview release 7.0 Beta
 		//	-bash-4.2# rpm -q redhat-release-atomic-host
