@@ -43,7 +43,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(description="unregister should not make unauthorized requests",
-			groups={"blockedByBug-997935"},
+			groups={"AcceptanceTests","blockedByBug-997935","blockedByBug-1158578"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnregisterShouldNotThrowUnauthorizedRequests_Test() {
@@ -60,7 +60,11 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 		//	[root@jsefler-7 ~]# grep -A1 "Making request" /var/log/rhsm/rhsm.log
 		//	2013-11-04 18:38:43,279 [DEBUG] subscription-manager @connection.py:442 - Making request: DELETE /candlepin/consumers/2f90f0ff-fca5-4425-8f84-6d3d951ac4a7
 		//	2013-11-04 18:38:43,504 [DEBUG] subscription-manager @connection.py:465 - Response: status=204, requestUuid=c68cecf5-3972-494a-b3d1-17d8d044d9b8
-
+		
+		//	[root@jsefler-os7 ~]# grep -A1 "Making request" /var/log/rhsm/rhsm.log
+		//	2014-12-15 13:18:07,585 [DEBUG] rhsmd @connection.py:466 - Making request: GET /subscription/consumers/None/compliance
+		//	2014-12-15 13:18:07,887 [DEBUG] rhsmd @connection.py:489 - Response: status=401
+		
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Response").trim();
 		String unexpectedLogMessage = "Response status: 401";
 		if (clienttasks.isPackageVersion("python-rhsm", ">", "1.10.3-1")) unexpectedLogMessage = "Response: status=401";	// changed by python-rhsm commit ce3727f73c5ac6f77db5e52027443ec456a5d733 Log the new requestUuid from candlepin if it is present in the response.
@@ -68,6 +72,10 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 		String expectedLogMessage = "Response status: 204";
 		if (clienttasks.isPackageVersion("python-rhsm", ">", "1.10.3-1")) expectedLogMessage = "Response: status=204";	// changed by python-rhsm commit ce3727f73c5ac6f77db5e52027443ec456a5d733 Log the new requestUuid from candlepin if it is present in the response.
 		Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' should encounter expected log message '"+expectedLogMessage+"' after unregister (indicative of a successful DELETE request).");
+
+		unexpectedLogMessage = "Traceback";
+		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, unexpectedLogMessage).trim();
+		Assert.assertFalse(logTail.contains(unexpectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' should not encounter unexpected log message '"+unexpectedLogMessage+"' after unregister.");
 	}
 	
 	
