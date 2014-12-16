@@ -111,7 +111,7 @@
   "Asserts that status message displayed in main-window is right after attaching future
    subscriptions"
   [_]
-  (if-not (= "RHEL7" (get-release))
+  (if (= "RHEL7" (get-release))
     (throw
      (SkipException.
       (str "Cannot generate keyevents in RHEL7 !!
