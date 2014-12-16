@@ -957,6 +957,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyRhelSubscriptionContentIsAvailable_Test() throws JSONException, Exception {
 		
+		// TODO Move this workaround to the end of this test
 		// TEMPORARY WORKAROUND
 		if (clienttasks.arch.equals("ppc64le")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -990,6 +991,27 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				
 				// subscribe
 				EntitlementCert rhelEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool, sm_clientUsername, sm_clientPassword, sm_serverUrl));
+				
+				// TEMPORARY WORKAROUND FOR BUG: 1174966 - No repositories enabled after subscribing aarch64 ARM Development Preview using subscription-manager
+				//	Product:
+				//		ID: 261
+				//		Name: Red Hat Enterprise Linux Server for ARM Development Preview
+				//		Version: Snapshot
+				//		Arch: aarch64
+				//		Tags: rhsa-dp-server,rhsa-dp-server-7
+				//		Brand Type: 
+				//		Brand Name: 
+				if (rhelProductCert.productId.equals("261") && clienttasks.arch.equals("aarch64")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1174966"; 
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						String enablerepo = "rhel-server-for-arm-development-preview-rpms";
+						log.info("Explicitly enabling repo '"+enablerepo+"' to gain access to ARM content.");
+						clienttasks.repos(null, null, null, enablerepo, null, null, null, null);
+					}
+				}
+				// END OF WORKAROUND
 				
 				// verify that rhel yum content is available
 				yumRepolistPackageCount = clienttasks.getYumRepolistPackageCount("enabled");
