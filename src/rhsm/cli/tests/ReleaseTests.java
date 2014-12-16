@@ -422,6 +422,21 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			providingTag = "rhel-"+clienttasks.redhatReleaseX+"-.*";	// use a regex for rhel-7
 			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
 		}
+		// special case (rhel for ARM)
+		if (rhelProductCerts.isEmpty() && clienttasks.arch.equals("aarch64")) {
+			
+			//	Product:
+			//		ID: 261
+			//		Name: Red Hat Enterprise Linux Server for ARM Development Preview
+			//		Version: Snapshot
+			//		Arch: aarch64
+			//		Tags: rhsa-dp-server,rhsa-dp-server-7
+			//		Brand Type: 
+			//		Brand Name: 
+			
+			providingTag = "rhsa-.*";
+			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
+		}
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
 		ProductCert rhelProductCert = rhelProductCerts.get(0);
 		
