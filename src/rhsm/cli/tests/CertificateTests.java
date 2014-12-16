@@ -56,7 +56,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that no more than one RHEL product cert is ever installed.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-854879"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-854879","blockedByBug-904193"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOnlyOneBaseRHELProductCertIsInstalled_Test() {
@@ -68,8 +68,13 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				rhelProductCertsInstalled.add(productCert);
 			}
 		}
+		// handle RHEL 7
 		if (rhelProductCertsInstalled.isEmpty() && clienttasks.redhatReleaseX.equals("7")) {
 			rhelProductCertsInstalled = clienttasks.getCurrentProductCerts("rhel-7-.*");
+		}
+		// handle Red Hat Enterprise Linux Server for ARM
+		if (rhelProductCertsInstalled.isEmpty() && clienttasks.arch.equals("aarch64")) {
+			rhelProductCertsInstalled = clienttasks.getCurrentProductCerts("rhsa-.*");
 		}
 		if (rhelProductCertsInstalled.size()>1) {
 			log.warning("Found multiple installed RHEL product certs:");
@@ -82,7 +87,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that a base product cert corresponding to the /etc/redhat-release is installed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706518","blockedByBug-844368","blockedByBug-1104498"/*,"blockedByBug-904193" Uncomment when we get to RHEL7*/},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706518","blockedByBug-844368","blockedByBug-1104498","blockedByBug-904193"},
 			dependsOnMethods={"VerifyOnlyOneBaseRHELProductCertIsInstalled_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
