@@ -287,7 +287,8 @@
   [_]
   (if (= "RHEL7" (get-release))
     (throw (SkipException.
-           (str "Skipping 'check_subscription_type_auto_attach' test on RHEL7. Cannot access radio-butons through ldtp !!!!"))))
+            (str "Skipping 'check_subscription_type_auto_attach' test on RHEL7.
+                  Cannot access radio-butons through ldtp !!!!"))))
   (try
     (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
      @complytests)
@@ -318,9 +319,10 @@
   autosubscribe_select_product_sla
   "Asserts if autosubscribe works with selecting product sla"
   [_]
-  (if-not (= "RHEL7" (get-release))
+  (if (= "RHEL7" (get-release))
     (throw (SkipException.
-           (str "Skipping 'autosubscribe_select_product_sla' test on RHEL7. Cannot access radio-butons through ldtp !!!!"))))
+            (str "Skipping 'autosubscribe_select_product_sla' test on RHEL7.
+                  Cannot access radio-butons through ldtp !!!!"))))
   (try
     (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
      @complytests)
