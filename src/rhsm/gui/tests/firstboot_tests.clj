@@ -152,7 +152,7 @@
   firstboot_enable_proxy_noauth
   "Checks whether the proxy is enabled and authentication is disabled in rhsm-conf file"
   [_]
-  (if-not (= "RHEL7" (get-release))
+  (if (= "RHEL7" (get-release))
     (throw (SkipException.
               (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (if (= "RHEL5" (get-release))
@@ -179,7 +179,7 @@
   firstboot_disable_proxy
   "Checks whether the proxy and authentication is disabled in rhsm-conf file"
   [_]
-  (if-not (= "RHEL7" (get-release))
+  (if (= "RHEL7" (get-release))
     (throw (SkipException.
               (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (reset_firstboot)
@@ -194,7 +194,7 @@
 (defn firstboot_register_invalid_user
   "Register with invalid user credentials at firstboot"
   [user pass recovery]
-  (if-not (= "RHEL7" (get-release))
+  (if (= "RHEL7" (get-release))
     (throw (SkipException.
               (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (reset_firstboot)
@@ -222,7 +222,7 @@
    regestering (when progress-bar is displayed) to to a server. This check is performed
    only in RHEL5 for RHEL6 and above this would be a part of firstboot-register"
   [_]
-  (if-not (= "RHEL7" (get-release))
+  (if (= "RHEL7" (get-release))
     (throw (SkipException.
               (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (reset_firstboot)
@@ -243,7 +243,7 @@
   firstboot_check_back_button
   "Checks the functionality of the back button during firstboot"
   [_]
-  (if-not (= "RHEL7" (get-release))
+  (if (= "RHEL7" (get-release))
     (throw (SkipException.
               (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (reset_firstboot)
@@ -265,7 +265,7 @@
   firstboot_skip_register
   "Checks whether firstboot skips register if subscription manger is already registered"
   [_]
-  (if-not (= "RHEL7" (get-release))
+  (if (= "RHEL7" (get-release))
     (throw (SkipException.
               (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (kill_firstboot)
@@ -288,7 +288,7 @@
   firstboot_check_register_sm_unregistered
   "Checks whether firstboot navigates to register screen when subscription manager is unregistered"
   [_]
-  (if-not (= "RHEL7" (get-release))
+  (if (= "RHEL7" (get-release))
     (throw (SkipException.
               (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (run-command "subscription-manager unregister")
@@ -322,7 +322,7 @@
   "Verifies that on clicking backbutton after registering from Create User
    menu should navigte to Choose Service menu"
   [_]
-  (if-not (= "RHEL7" (get-release))
+  (if (= "RHEL7" (get-release))
     (throw (SkipException.
               (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (reset_firstboot)
