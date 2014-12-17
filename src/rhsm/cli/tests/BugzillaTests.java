@@ -82,12 +82,33 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(	description="verify End date and start date of the subscription is appropriate one when you attach a future subscription and then  heal after 1 min",
+	@Test(	description="verify subscription-manager attach --file <file> ,with file being empty attaches subscription for installed product",
+			groups={"VerifyAttachingEmptyFile","blockedByBug-1175291"},
+			enabled=true)
+	public void VerifyAttachingEmptyFile() throws Exception {
+		String pool = null;
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);	// disable
+		client.runCommandAndWait("touch "+ pool);
+		client.runCommandAndWait("cat "+ pool);
+		String result=clienttasks.subscribe_(null,(String)null,(String)null,(String)null, null, null, null, null, pool, null, null, null).getStdout();
+		 Assert.assertNull(result); // Will update once the fix is in
+	 }
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify  Subscription-manager repos --list is deleting certificate imported on system",
 			groups={"VerifyImportedCertgetsDeletedByRepoCommand","blockedByBug-1160150"},
 			enabled=true)
 	public void VerifyImportedCertgetsDeletedByRepoCommand() throws Exception {
@@ -104,9 +125,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 String path =importCertificateFile.getPath();
 		 clienttasks.clean(null, null, null);
 		 clienttasks.importCertificate(path);
-		 clienttasks.repos_(true, null, null,(String)null, null, null, null, null);
-		 
-		 
+		 String Result=clienttasks.repos_(true, null, null,(String)null, null, null, null, null).getStderr();
+		 String expected_message = "1 local certificate has been deleted.";
+		 Assert.assertContainsNoMatch(Result.trim(), expected_message);
+	 
 	}
 	
 	
