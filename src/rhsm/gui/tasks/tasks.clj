@@ -461,6 +461,8 @@
     (do
       (unsubscribe s)
       (ui selecttab :all-available-subscriptions)
+      (ui click :search)
+      (wait-for-progress-bar)
       (throw+ {:type :contract-selection-not-available
                  :name s
                  :msg (str s " does not have multiple contracts.")}))))
