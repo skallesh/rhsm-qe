@@ -1493,6 +1493,32 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager: subscribe with --file whose contents are empty.  No pools should be attached.",
+			groups={"blockedByBug-1175291"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithFileOfEmptyPoolIds_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
+		
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		
+		// create an empty file of pool ids
+		String tmpFile = "/tmp/emptyFile.txt";
+		RemoteFileTasks.runCommandAndAssert(client, "rm -f "+tmpFile+" && touch "+tmpFile, 0);
+		
+		// subscribe with the --file option
+		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe_(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null);
+		Assert.assertTrue(subscribeWithFileResult.getStdout().trim().isEmpty(), "The stdout result from subscribe with an empty file of poolIds is empty.");
+		Assert.assertEquals(subscribeWithFileResult.getExitCode(), new Integer(1), "The exitCode from subscribe with an empty file of poolIds.");
+		
+		// assert that no subscriptions have been consumed
+		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No subscriptions should be attached after attempting to attach an empty file of pool ids.");
+	}
+	
+	
 	@Test(	description="subscription-manager: subscribe with --file=- which indicates that the pools will be read from stdin",
 			groups={"blockedByBug-1159974"},
 			enabled=true)
