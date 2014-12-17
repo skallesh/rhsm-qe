@@ -58,21 +58,6 @@
   (.cleanupAfterClass @importtests)
   (tasks/restart-app))
 
-(defn import-cert [certlocation]
-  (try
-    (tasks/restart-app)
-    (tasks/ui click :import-certificate)
-    (tasks/ui waittillguiexist :import-dialog)
-    (if-not (tasks/ui showing? :import-dialog "Location:")
-      (do (try+ (tasks/ui check :text-entry-toggle)
-                (catch Object e (tasks/ui click :text-entry-toggle)))
-          (tasks/ui generatekeyevent "/")))  ; can use <ALT>s to open search
-    (tasks/ui generatekeyevent certlocation)
-    (tasks/ui click :import-cert)
-    (tasks/checkforerror)
-    (catch Exception e
-      (throw e))))
-
 (defn- cert-version-one? []
   (let [version (System/getProperty "sm.client.certificateVersion")]
     (if (and version (re-find #"^1\." version))
@@ -109,7 +94,7 @@
                    2 (trim
                       (:stdout (run-command command))))
                   (trim (:stdout (run-command command))))]
-    (import-cert certlocation)
+    (tasks/import-cert certlocation)
     (verify (bool (tasks/ui guiexist
                             :information-dialog
                             "Certificate import was successful.")))
@@ -193,7 +178,7 @@
                        expected-error]
   (let [test-fn (fn []
                   (try+
-                   (import-cert certname)
+                   (tasks/import-cert certname)
                    (catch Object e
                      (:type e))))]
     (let [thrown-error (test-fn)]

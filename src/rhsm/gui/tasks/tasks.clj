@@ -801,3 +801,19 @@
         product-arch (ui gettextvalue :arch)
         all? (= "ALL" product-arch)]
     (or all? (= sys-arch product-arch))))
+
+(defn import-cert [certlocation]
+  "Imports certs when cert-name is provided"
+  (try
+    (restart-app)
+    (ui click :import-certificate)
+    (ui waittillguiexist :import-dialog)
+    (if-not (ui showing? :import-dialog "Location:")
+      (do (try+ (ui check :text-entry-toggle)
+                (catch Object e (ui click :text-entry-toggle)))
+          (ui generatekeyevent "/")))  ; can use <ALT>s to open search
+    (ui generatekeyevent certlocation)
+    (ui click :import-cert)
+    (checkforerror)
+    (catch Exception e
+      (throw e))))
