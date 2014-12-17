@@ -21,6 +21,7 @@
             Test
             DataProvider
             AfterClass]
+           org.testng.SkipException
            [rhsm.cli.tests ImportTests]
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
@@ -39,7 +40,11 @@
   create_certs [_]
   (try
     (skip-if-bz-open "1170761")
-    (if (= "RHEL7" (get-release)) (base/startup nil))
+    (if (= "RHEL7" (get-release))
+      (do (base/startup nil)
+          (throw (SkipException.
+                  (str "Cannot generate keyevents in RHEL7 !!
+	                Skipping Test Suite 'Import Tests'.")))))
     (tasks/start-app)
     (reset! importtests (ImportTests.))
     (.restartCertFrequencyBeforeClass @importtests)
