@@ -200,9 +200,10 @@
   before_verify_override_persistance
   "Modofies all repos by clicking edit gpg-check"
   [_]
+  (log/info (str "======= Starting BeforeGroup: " ns-log
+                 " before_verify_override_persistance"))
   (tasks/restart-app :reregister? true)
   (tasks/subscribe_all)
-  (sleep 2000)
   (assert-and-open-repo-dialog)
   (tasks/do-to-all-rows-in :repo-table 2
                            (fn [repo]
@@ -228,7 +229,7 @@
   (tasks/ui selectrow :repo-table repo)
   (sleep 2000)
   (verify (and (tasks/has-state? :repo-remove-override "visible")
-                      (tasks/has-state? :repo-remove-override "enabled"))))
+               (tasks/has-state? :repo-remove-override "enabled"))))
 
 (defn ^{AfterGroups {:groups ["repo"
                               "tier3"]
@@ -236,6 +237,8 @@
                      :alwaysRun true}}
   after_verify_override_persistance
   [_]
+  (log/info (str "======= Starting AfterGroup: " ns-log
+                 " after_verify_override_persistance"))
   (assert-and-open-repo-dialog)
   (tasks/do-to-all-rows-in :repo-table 2
                            (fn [repo]
@@ -275,9 +278,10 @@
 (defn ^{DataProvider {:name "repolist"}}
   subscribed_repos [_ & {:keys [debug]
                          :or {debug false}}]
-  (log/info (str "======= Starting DataProvider: " ns-log "subscribed_repos()"))
+  (log/info (str "======= Starting DataProvider: " ns-log " subscribed_repos()"))
   (if-not (assert-skip :repo)
     (do
+      (tasks/restart-app)
       (if (tasks/ui showing? :register-system)
         (tasks/register-with-creds))
       (assert-and-subscribe-all)
