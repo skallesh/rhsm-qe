@@ -202,6 +202,7 @@
   [_]
   (tasks/restart-app :reregister? true)
   (tasks/subscribe_all)
+  (sleep 2000)
   (assert-and-open-repo-dialog)
   (tasks/do-to-all-rows-in :repo-table 2
                            (fn [repo]
