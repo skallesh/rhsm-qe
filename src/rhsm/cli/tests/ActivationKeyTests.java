@@ -163,8 +163,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// assert that the creation was NOT successful (contains a displayMessage)
 		if (jsonActivationKey.has("displayMessage")) {
 			String displayMessage = jsonActivationKey.getString("displayMessage");
-			//Assert.assertEquals(displayMessage, "Activation key names must be alphanumeric or the characters '-' or '_'. ["+badName+"]","Expected the creation of this activation key named '"+badName+"' to fail.");
-			Assert.assertEquals(displayMessage, "The activation key name '"+badName+"' must be alphanumeric or include the characters - or _","Expected the creation of this activation key named '"+badName+"' to fail.");
+			String expectedMessage = "The activation key name '"+badName+"' must be alphanumeric or include the characters - or _";
+			if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*TODO NEED TO VERIFY VERSION*/)) {	// commit f51d8f98869f5ab6f519b665f97653f8608a6ca6	// Bug 1167856 - candlepin msgids with unescaped single quotes will not print the single quotes
+				expectedMessage = "The activation key name '"+badName+"' must be alphanumeric or include the characters '-' or '_'";
+			}
+			Assert.assertEquals(displayMessage, expectedMessage, "Expected the creation of this activation key named '"+badName+"' to fail.");
 		} else {
 			log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an invalid name '"+badName+"'.");
 			Assert.assertFalse (badName.equals(jsonActivationKey.getString("name")),"The following activation key should not have been created with badName '"+badName+"': "+jsonActivationKey);
