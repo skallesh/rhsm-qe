@@ -83,7 +83,7 @@
     (if (= "RHEL7" (get-release))
       (do (base/startup nil)
           (throw (SkipException.
-                  (str "Skipping 'assert_future_cert_status' as RHEL7 cannot generate keyevent")))))
+                  (str "Skipping Test Suite 'Stacking Tests' as RHEL7 cannot generate keyevent")))))
     (tasks/restart-app :reregister? true)
     (if (bash-bool (:exitcode (run-command (str "test -d " stacking-dir))))
       (safe-delete stacking-dir))
@@ -104,9 +104,6 @@
 (defn ^{AfterClass {:groups ["cleanup"]
                      :alwaysRun true}}
   cleanup [_]
-  (if (= "RHEL7" (get-release))
-    (throw (SkipException.
-            (str "Skipping 'assert_future_cert_status' as RHEL7 cannot generate keyevent"))))
   (if (not (empty? @prod-dir-atom))
     (do
       (safe-delete stacking-dir)
