@@ -83,7 +83,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :update-certificates
                                     :view-system-facts
                                     :repositories
-                                    :status-details])
+                                    :status-details-text])
                     {:date-entry "date-entry"
                      :register-system "Register System"
                      :redeem "Redeem a Subscription"
