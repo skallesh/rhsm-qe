@@ -59,10 +59,6 @@
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   cleanup_import [_]
-  (if-not (= "RHEL7" (get-release))
-    (throw (SkipException.
-      (str "Cannot generate keyevents in RHEL7 !!
-            Skipping Test Suite 'Import Tests'."))))
   (assert-valid-testing-arch)
   (.cleanupAfterClass @importtests)
   (tasks/restart-app))
