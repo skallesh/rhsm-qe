@@ -113,6 +113,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"VerifyAttachingEmptyFile","blockedByBug-1175291"},
 			enabled=true)
 	public void VerifyAttachingEmptyFile() throws Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");
 		String pool = "/tmp/empty_file";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
