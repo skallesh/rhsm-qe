@@ -212,12 +212,14 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :firstboot-system-name "consumer_name"
        :firstboot-owner-table "tbl0"})
     (define-elements (windows :firstboot-proxy-dialog)
-      {:firstboot-proxy-checkbox "I would like to connect*"
+      {:firstboot-proxy-checkbox "Proxy Checkbox"
        :firstboot-proxy-location "Proxy Location:"
-       :firstboot-auth-checkbox "Use Authentication with HTTP Proxy"
+       :firstboot-auth-checkbox "Authentication Checkbox"
        :firstboot-proxy-user "Proxy Username"
        :firstboot-proxy-pass "Proxy Password"
-       :firstboot-proxy-close "Close"})
+       :firstboot-proxy-close "Ok Button"
+       :firstboot-proxy-cancel "Cancel Button"
+       :firstboot-proxy-test "Test Connection Button"})
     (define-elements (windows :import-dialog)
       {:text-entry-toggle "Type a file name"
        :import-cert "Import"
