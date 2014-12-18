@@ -89,7 +89,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify rhsm-debug --no-archive --destination <destination Loc> throws [Errno 18] Invalid cross-device link",
-			groups={"VerifyrhsmDebugWithNoArchive"},
+			groups={"VerifyrhsmDebugWithNoArchive","blockedByBug-1175284"},
 			enabled=true)
 	public void VerifyrhsmDebugWithNoArchive() throws Exception {
 		String path = "/home/rhsmDebug/";
@@ -97,13 +97,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		String result=clienttasks.rhsmDebugSystemCommand(path, true, null, null, null, null, null);
+		SSHCommandResult result = client.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(path, true, null, null, null, null, null));
 		String Expected_message="[Errno 18] Invalid cross-device link";
-		Assert.assertEquals(result, Expected_message);
-		
-		
-		
-		
+		Assert.assertNoMatch(result.getStderr(), Expected_message);
+		Assert.assertContainsMatch(result.getStdout(), "Wrote: "+path+"rhsm-debug-system");
+	
 	}
 	
 	/**
