@@ -88,11 +88,34 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@Test(	description="verify rhsm-debug --no-archive --destination <destination Loc> throws [Errno 18] Invalid cross-device link",
+			groups={"VerifyrhsmDebugWithNoArchive"},
+			enabled=true)
+	public void VerifyrhsmDebugWithNoArchive() throws Exception {
+		String path = "/home/rhsmDebug/";
+		client.runCommandAndWait("mkdir "+ path);
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, true, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		String result=clienttasks.rhsmDebugSystemCommand(path, true, null, null, null, null, null);
+		String Expected_message="[Errno 18] Invalid cross-device link";
+		Assert.assertEquals(result, Expected_message);
+		
+		
+		
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
 	@Test(	description="verify subscription-manager attach --file <file> ,with file being empty attaches subscription for installed product",
 			groups={"VerifyAttachingEmptyFile","blockedByBug-1175291"},
 			enabled=true)
 	public void VerifyAttachingEmptyFile() throws Exception {
-		String pool = null;
+		String pool = "/tmp/empty_file";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -125,10 +148,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 String path =importCertificateFile.getPath();
 		 clienttasks.clean(null, null, null);
 		 clienttasks.importCertificate(path);
-		 String Result=clienttasks.repos_(true, null, null,(String)null, null, null, null, null).getStderr();
-		 String expected_message = "1 local certificate has been deleted.";
-		 Assert.assertContainsNoMatch(Result.trim(), expected_message);
-	 
+		 int Ceritificate_count=clienttasks.getCurrentEntitlementCertFiles().size();
+		 SSHCommandResult Result=clienttasks.repos_(true, null, null,(String)null, null, null, null, null);
+		 String expected_message = Ceritificate_count+" local certificate has been deleted.";
+		 Assert.assertContainsNoMatch(Result.getStderr().trim(), expected_message);
+		 Assert.assertEquals(Result.getExitCode(), new Integer(0));
+		 Assert.assertContainsMatch(Result.getStdout().trim(), "Available Repositories in /etc/yum.repos.d/redhat.repo");
 	}
 	
 	
@@ -935,7 +960,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds,null).toString();
-		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions",requestBody));
+		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions",requestBody));
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 		String poolid=CandlepinTasks.getPoolIdFromProductNameAndContractNumber(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "admin", name, contractNumber.toString());
@@ -1046,16 +1071,6 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 		Assert.assertFalse(consumedSusbscription.isEmpty());
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
-/* this is not the right way to assert the revokedCerts contain the entitlementCert.serialNumber; re-implementing below...
-		clienttasks.autoheal(null, true, null, null, null, null);
-		clienttasks.restart_rhsmcertd(null, null, null);
-		List <RevokedCert> revokedCerts=servertasks.getCurrentlyRevokedCerts();
-		Assert.assertTrue(revokedCerts.contains(entitlementCert.serialNumber));
-*/
-		// sleep long enough for the CertificateRevocationListTask on the server to update
-		//	[root@jsefler-f14-candlepin candlepin]# grep CertificateRevocationListTask.schedule /etc/candlepin/candlepin.conf 
-		//	pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
-		//	pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
 		sleep(2/*min*/*60*1000);
 		
 		// verify the entitlement serial has been added to the CRL on the server
