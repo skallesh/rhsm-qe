@@ -349,7 +349,7 @@
                        "tier2"
                        "blockedByBug-918617"]
               :priority (int 102)}}
-  subscribe_check_syslog
+  subscribe_unsubscribe_check_syslog
   "Asserts that subscribe events are logged in the syslog."
   [_]
   (allsearch)
@@ -361,16 +361,8 @@
                              nil
                              (tasks/subscribe subscription))]
      (verify (not (blank? output))))
-   (catch [:type :error-getting-subscription] _)))
-
-(defn ^{Test {:groups ["subscribe"
-                       "tier2"
-                       "blockedByBug-918617"]
-              :dependsOnMethods ["subscribe_check_syslog"]
-              :priority (int 103)}}
-  unsubscribe_check_syslog
-  "Asserts that unsubscribe events are logged in the syslog."
-  [_]
+   (catch [:type :error-getting-subscription] _))
+  ;; unsubscribe check syslog
   (let [subscription (rand-nth (tasks/get-table-elements :my-subscriptions-view 0))
         output (get-logging @clientcmd
                                   sys-log
@@ -378,6 +370,25 @@
                                   nil
                                   (tasks/unsubscribe subscription))]
     (verify (not (blank? output)))))
+
+;; included the below test as a part of above test
+;; as they had to be run one after the other
+
+(comment (defn ^{Test {:groups ["subscribe"
+                                "tier2"
+                                "blockedByBug-918617"]
+                       :dependsOnMethods ["subscribe_check_syslog"]
+                       :priority (int 103)}}
+           unsubscribe_check_syslog
+           "Asserts that unsubscribe events are logged in the syslog."
+           [_]
+           (let [subscription (rand-nth (tasks/get-table-elements :my-subscriptions-view 0))
+                 output (get-logging @clientcmd
+                                     sys-log
+                                     "unsubscribe_check_syslog"
+                                     nil
+                                     (tasks/unsubscribe subscription))]
+             (verify (not (blank? output))))))
 
 (defn ^{Test {:group ["subscribe"
                       "tier2"
@@ -671,9 +682,6 @@
             all-unlimited (filter unlimited? all)
             itemize (fn [p] (vector (:productName p) (:contractNumber p)))
             pools (into [] (map itemize all-unlimited))]
-        (if (empty? pools)
-          (throw (SkipException.
-                  (str "Skipping test !!!! No UNLIMITED subscriptions found"))))
         (allsearch)
         (if-not debug
           (to-array-2d pools)
