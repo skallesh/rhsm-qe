@@ -119,7 +119,7 @@
 
 (defn ^{Test {:groups ["firstboot"
                        "tier1"]
-              :dependsOnMethods [firstboot_rhel7_register]}}
+              :dependsOnMethods ["firstboot_rhel7_register"]}}
   firstboot_rhel7_proxy_auth
   "firstboot register with proxy auth test for RHEL7"
   [_]
@@ -151,7 +151,7 @@
 
 (defn ^{Test {:groups ["firstboot"
                        "tier1"]
-              :dependsOnMethods [firstboot_rhel7_register]}}
+              :dependsOnMethods ["firstboot_rhel7_register"]}}
   firstboot_rhel7_proxy_noauth
   "firstboot register with proxy noauth test for RHEL7"
   [_]
