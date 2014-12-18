@@ -24,11 +24,14 @@
 
 (defn start_firstboot []
   (if (= "RHEL7" (get-release))
-    (do (tasks/kill-app)
-        (tasks/start-app)
+    (do (tasks/restart-app)
         (if-not (tasks/ui showing? :register-system)
           (tasks/unregister))
-        (tasks/start-firstboot))
+        (tasks/start-firstboot)
+        (verify (tasks/fbshowing? :firstboot-window
+                                  "Subscription Management Registration"))
+        ;; (tasks/ui click :register-now)    unable to access this radio button
+        (tasks/ui click :firstboot-forward))
     (do
       (tasks/start-firstboot)
       (tasks/ui click :firstboot-forward)
@@ -97,26 +100,89 @@
                        "blockedByBug-1153634"
                        "blockedByBug-1157404"
                        "blockedByBug-1159936"]}}
-  firstboot_rhel7
-  "Since firstboot in RHEL7 is minimalistic and discrepancies wont be fixed, this
+  firstboot_rhel7_register
+  "since firstboot in RHEL7 is minimalistic and discrepancies wont be fixed, this
    test performs a happy-path test to assert general working of firstboot screens"
   [_]
   (if (= "RHEL7" (get-release))
     (do
-      (verify (tasks/fbshowing? :firstboot-window
-                                "Subscription Management Registration"))
-                                ;(tasks/ui click :register-now)    unable to access this radio button
-      (tasks/ui click :firstboot-forward)
+      (reset_firstboot)
       (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-      (tasks/ui click :firstboot-window "proxy_button")
-      (tasks/ui waittillguiexist :firstboot-proxy-dialog 2)
-      (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
-      (tasks/ui click :firstboot-proxy-dialog "Test Connection Button")
-      (tasks/ui waittillguinotexist :firstboot-proxy-dialog 2)
       (tasks/firstboot-register (@config :username) (@config :password))
       (tasks/ui click :firstboot-forward)
       (sleep 2000)
-      (verify (not (bool (tasks/ui guiexist :firstboot-window)))))))
+      (verify (not (bool (tasks/ui guiexist :firstboot-window))))
+      (verify (not (tasks/ui showing? :register-system))))
+    (throw (SkipException.
+            (str "This is not RHEL7 !!!
+                  Skipping firstboot_rhel7_register test.")))))
+
+(defn ^{Test {:groups ["firstboot"
+                       "tier1"]
+              :dependsOnMethods [firstboot_rhel7_register]}}
+  firstboot_rhel7_proxy_auth
+  "firstboot register with proxy auth test for RHEL7"
+  [_]
+  (if (= "RHEL7" (get-release))
+    (do
+      (try
+        (reset_firstboot)
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog 10)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+        (let [hostname (@config :basicauth-proxy-hostname)
+              port (@config :basicauth-proxy-port)
+              username (@config :basicauth-proxy-username)
+              password (@config :basicauth-proxy-password)]
+          (tasks/enableproxy hostname :port port :user username :pass password :firstboot? true))
+        (tasks/firstboot-register (@config :username) (@config :password))
+        (tasks/ui click :firstboot-forward)
+        (sleep 2000)
+        (verify (not (bool (tasks/ui guiexist :firstboot-window))))
+        (verify (not (tasks/ui showing? :register-system)))
+        (finally
+          (reset_firstboot)
+          (tasks/disableproxy true)
+          (kill_firstboot))))
+    (throw (SkipException.
+            (str "This is not RHEL7 !!!
+                  Skipping firstboot_rhel7_proxy_auth test.")))))
+
+(defn ^{Test {:groups ["firstboot"
+                       "tier1"]
+              :dependsOnMethods [firstboot_rhel7_register]}}
+  firstboot_rhel7_proxy_noauth
+  "firstboot register with proxy noauth test for RHEL7"
+  [_]
+  (if (= "RHEL7" (get-release))
+    (do
+      (try
+        (reset_firstboot)
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog 10)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+        (let [hostname (@config :noauth-proxy-hostname)
+              port (@config :noauth-proxy-port)
+                                        ;username (@config :basicauth-proxy-username)
+                                        ;password (@config :basicauth-proxy-password)
+              ]
+          (tasks/enableproxy hostname :port port
+                                        ;:user username :pass password
+                             :firstboot? true))
+        (tasks/firstboot-register (@config :username) (@config :password))
+        (tasks/ui click :firstboot-forward)
+        (sleep 2000)
+        (verify (not (bool (tasks/ui guiexist :firstboot-window))))
+        (verify (not (tasks/ui showing? :register-system)))
+        (finally
+          (reset_firstboot)
+          (tasks/disableproxy true)
+          (kill_firstboot))))
+    (throw (SkipException.
+            (str "This is not RHEL7 !!!
+                  Skipping firstboot_rhel7_proxy_noauth test.")))))
 
 (defn ^{Test {:groups ["firstboot"
                        "tier2"
