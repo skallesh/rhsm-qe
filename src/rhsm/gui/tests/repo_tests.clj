@@ -52,7 +52,11 @@
   (if (not (bool (tasks/ui guiexist :repositories-dialog)))
     (do (tasks/ui click :repositories)
         (tasks/ui waittillwindowexist :repositories-dialog 10)
-        (sleep 4000))))
+        (sleep 4000))
+    (do
+      (tasks/ui click :close-repo-dialog)
+      (tasks/ui waittillwindownotexist :repositories-dialog 10)
+      (assert-and-open-repo-dialog))))
 
 (defn assert-and-subscribe-all
   "Asserts if the system is already subscribed before subscribe_all"
