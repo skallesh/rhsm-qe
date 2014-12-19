@@ -521,7 +521,7 @@
       (tasks/ui waittillwindowexist :contract-selection-dialog 5)
       (if (bool (tasks/ui guiexist :contract-selection-dialog))
         (verify (= contracts
-                   (sort (tasks/get-table-elemensyslogts :contract-selection-table 0))))
+                   (sort (tasks/get-table-elements :contract-selection-table 0))))
         (do
           (tasks/unsubscribe subscription)
           (tasks/ui selecttab :all-available-subscriptions)
