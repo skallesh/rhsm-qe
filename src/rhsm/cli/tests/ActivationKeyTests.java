@@ -164,7 +164,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (jsonActivationKey.has("displayMessage")) {
 			String displayMessage = jsonActivationKey.getString("displayMessage");
 			String expectedMessage = "The activation key name '"+badName+"' must be alphanumeric or include the characters - or _";
-			if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*TODO NEED TO VERIFY VERSION*/)) {	// commit f51d8f98869f5ab6f519b665f97653f8608a6ca6	// Bug 1167856 - candlepin msgids with unescaped single quotes will not print the single quotes
+			if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit f51d8f98869f5ab6f519b665f97653f8608a6ca6	// Bug 1167856 - candlepin msgids with unescaped single quotes will not print the single quotes
 				expectedMessage = "The activation key name '"+badName+"' must be alphanumeric or include the characters '-' or '_'";
 			}
 			Assert.assertEquals(displayMessage, expectedMessage, "Expected the creation of this activation key named '"+badName+"' to fail.");
@@ -291,16 +291,24 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// handle the case when the quantity is excessive
 		if (addQuantity!=null && addQuantity>jsonPool.getInt("quantity") && addQuantity>1) {
-
-			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
-			if (jsonResult.has("displayMessage")) {
-				String displayMessage = jsonResult.getString("displayMessage");
-				Assert.assertEquals(displayMessage,"The quantity must not be greater than the total allowed for the pool", "Expected the addition of multi-entitlement pool '"+poolId+"' to activation key named '"+keyName+"' with an excessive quantity '"+addQuantity+"' to be blocked.");
+			String expectedDisplayMessage = "The quantity must not be greater than the total allowed for the pool";
+			
+			if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit 3cdb39430c86de141405e815a2a428ad64b1c220	// Removed rules for activation key creation. Relaxation of activation key rules at register time means the keys can have many more differing pools at create time
+				// new relaxed behavior
+				log.warning("Prior to candlepin commit 3cdb39430c86de141405e815a2a428ad64b1c220, this test asserted that candlepin attempts to create an activation key that attached a pool quantity exceeding its total pool size would be blocked.  This is now relaxed.  QE believes that this will cause usability issues.");
+				Assert.assertFalse(jsonResult.has("displayMessage"), "After candlepin-common-1.0.17-1, attempts to create an activation key that attached a pool quantity exceeding its total pool size are permitted.  QE believes that this will cause usability issues.");
 			} else {
-				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an excessive quantity '"+addQuantity+"'.");
-				Assert.assertFalse (keyName.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with an excessive quantity '"+addQuantity+"': "+jsonActivationKey);
+			
+				// assert that adding the pool to the key was NOT successful (contains a displayMessage)
+				if (jsonResult.has("displayMessage")) {
+					String displayMessage = jsonResult.getString("displayMessage");
+					Assert.assertEquals(displayMessage,expectedDisplayMessage, "Expected the addition of multi-entitlement pool '"+poolId+"' to activation key named '"+keyName+"' with an excessive quantity '"+addQuantity+"' to be blocked.");
+				} else {
+					log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an excessive quantity '"+addQuantity+"'.");
+					Assert.assertFalse (keyName.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with an excessive quantity '"+addQuantity+"': "+jsonActivationKey);
+				}
+				return null;
 			}
-			return null;
 		}
 		
 		// handle the case when the quantity is insufficient (less than one)
