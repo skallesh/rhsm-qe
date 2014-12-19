@@ -148,7 +148,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		String ostreeOriginRefspecBefore = clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec");
 		
 		// also setup an old /ostree/repo/config file to test the migration clean up scenario described in https://bugzilla.redhat.com/show_bug.cgi?id=1152734#c5 
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9.1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
 			if (!clienttasks.isPackageInstalled("ostree")) {
 				client.runCommandAndWait("mkdir -p "+oldOstreeRepoConfigFile.getParent());
 				client.runCommandAndWait("echo -e '[core]\nrepo_version=1\nmode=bare\n\n[remote \"REMOTE\"]\nurl=file:///install/ostree\ngpg-verify=false' > "+oldOstreeRepoConfigFile.getPath());
@@ -166,7 +166,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		String ostreeOriginRefspecAfter = clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec");
 		
 		// also assert the clean up of remotes from the old /ostree/repo/config file 
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9.1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
 			if (RemoteFileTasks.testExists(client, oldOstreeRepoConfigFile.getPath())) {
 				Assert.assertTrue(getCurrentlyConfiguredOstreeRepos(oldOstreeRepoConfigFile).isEmpty(),"Subscription-manager should have cleaned out the old remotes from '"+oldOstreeRepoConfigFile+"'.");
 			}
@@ -494,7 +494,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 					// create the parent directory
 					client.runCommandAndWait("mkdir -p "+ostreeRepoConfigFile.getParent());
 					
-					if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9.1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
+					if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
 						// no need to create a conf file, subscription-manager-ostree-plugin will create it 
 						
 						// [root@jsefler-os7 ~]# cat /etc/ostree/remotes.d/redhat.conf
@@ -596,7 +596,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 				throw new SkipException("Subscription Management compatibility with ostree requires subscription-manager-plugin-ostree.");
 			}
 			// where is the ostree repo config file located that will be managed by subscription-manager
-			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9.1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
 				ostreeRepoConfigFile = new File("/etc/ostree/remotes.d/redhat.conf");
 			} else {
 				ostreeRepoConfigFile = oldOstreeRepoConfigFile;
