@@ -1233,6 +1233,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1105279");
 			}
 			
+			// Bug 1176260 - the RHN RHEL Channels 'rhel-<ARCH>-<VARIANT>-7-thirdparty-oracle-java-beta' map to a '7.0' version cert; should be '7.1 Beta'
+			if (rhnChannel.equals("rhel-x86_64-client-7-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
+				bugIds.add("1176260");
+			}
+			
 			// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnChannel}));
