@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
@@ -19,6 +20,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
 import rhsm.base.CandlepinType;
@@ -982,7 +984,19 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribe(null,null,pool.poolId,null,null,null, null, null, null, null, null, null);
-
+		
+		// TEMPORARY WORKAROUND FOR BUG 1176219 - subscription-manager repos --list with bad proxy options is silently using cache
+		String bugId = "1176219"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		if (nErrMsg.equals(stderr)) {
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Deleting cache '"+clienttasks.rhsmCacheDir+"', and will assert a slightly different stderr while bug '"+bugId+"' is open.");
+				stderr = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
+				client.runCommandAndWait("rm -rf "+clienttasks.rhsmCacheDir+"/*");
+			}
+		}
+		// END OF WORKAROUND
+		
 		SSHCommandResult attemptResult = clienttasks.repos_(true,null,null,(List<String>)null, (List<String>)null, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" --list using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" --list using a proxy server.");
@@ -1012,6 +1026,18 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
 		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
+		
+		// TEMPORARY WORKAROUND FOR BUG 1176219 - subscription-manager repos --list with bad proxy options is silently using cache
+		String bugId = "1176219"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		if (nErrMsg.equals(stderr)) {
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Deleting cache '"+clienttasks.rhsmCacheDir+"', and will assert a slightly different stderr while bug '"+bugId+"' is open.");
+				stderr = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
+				client.runCommandAndWait("rm -rf "+clienttasks.rhsmCacheDir+"/*");
+			}
+		}
+		// END OF WORKAROUND
 		
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.repos_(true,null,null,(List<String>)null, (List<String>)null, proxy, proxyuser, proxypassword);

@@ -72,7 +72,8 @@ public class SubscriptionManagerTasks {
 	public final String rhnUp2dateFile		= "/etc/sysconfig/rhn/up2date";
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
 	public final String productIdJsonFile	= "/var/lib/rhsm/productid.js";	// maps a product id to the repository from which it came; managed by subscription-manager's ProductDatabase python class
-	public final String rhsmCacheRepoOverridesFile	= "/var/lib/rhsm/cache/content_overrides.json";
+	public final String rhsmCacheDir		= "/var/lib/rhsm/cache";
+	public final String rhsmCacheRepoOverridesFile	= rhsmCacheDir+"/content_overrides.json";
 	public final String certVersionFactsFilename	= "automation_forced_certificate_version.facts";
 	public final String overrideFactsFilename		= "automation_override.facts";
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
