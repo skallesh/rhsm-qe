@@ -92,14 +92,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups={"VerifyrhsmDebugWithNoArchive","blockedByBug-1175284"},
 			enabled=true)
 	public void VerifyrhsmDebugWithNoArchive() throws Exception {
-		String path = "/home/rhsmDebug/";
+		String path = "/tmp/rhsmDebug/";
 		client.runCommandAndWait("mkdir "+ path);
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(path, true, null, null, null, null, null));
-		String Expected_message="[Errno 18] Invalid cross-device link";
-		Assert.assertNoMatch(result.getStderr(), Expected_message);
 		Assert.assertContainsMatch(result.getStdout(), "Wrote: "+path+"rhsm-debug-system");
 	
 	}
@@ -147,10 +145,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 String path =importCertificateFile.getPath();
 		 clienttasks.clean(null, null, null);
 		 clienttasks.importCertificate(path);
-		 int Ceritificate_count=clienttasks.getCurrentEntitlementCertFiles().size();
+		 int Ceritificate_countBeforeRepoCommand=clienttasks.getCurrentEntitlementCertFiles().size();
 		 SSHCommandResult Result=clienttasks.repos_(true, null, null,(String)null, null, null, null, null);
-		 String expected_message = Ceritificate_count+" local certificate has been deleted.";
-		 Assert.assertContainsNoMatch(Result.getStderr().trim(), expected_message);
+		 int Ceritificate_countAfterRepoCommand=clienttasks.getCurrentEntitlementCertFiles().size();
+		 Assert.assertEquals(Ceritificate_countBeforeRepoCommand, Ceritificate_countAfterRepoCommand);
 		 Assert.assertEquals(Result.getExitCode(), new Integer(0));
 		 Assert.assertContainsMatch(Result.getStdout().trim(), "Available Repositories in /etc/yum.repos.d/redhat.repo");
 	}
