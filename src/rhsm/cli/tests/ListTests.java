@@ -818,7 +818,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		filteredSubscriptionPools = SubscriptionPool.parse(listResult.getStdout());
 		Assert.assertTrue(filteredSubscriptionPools.containsAll(expectedSubscriptionPools),"The actual list of --all --available --servicelevel=\""+servicelevel+"\" SubscriptionPools contains all of the expected SubscriptionPools (the expected list contains only pools with ServiceLevel=\""+servicelevel+"\")");
 		Assert.assertTrue(expectedSubscriptionPools.containsAll(filteredSubscriptionPools),"The expected list of SubscriptionPools contains all of the actual SubscriptionPools returned by list --all --available --servicelevel=\""+servicelevel+"\".");
-		if (expectedSubscriptionPools.isEmpty()) Assert.assertEquals(listResult.getStdout().trim(), "No available subscription pools to list","Expected message when no subscription remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
+		if (expectedSubscriptionPools.isEmpty()) {
+			String expectedStdout = "No available subscription pools to list";
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No available subscription pools were found matching the service level \"%s\".",servicelevel);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
+			Assert.assertEquals(listResult.getStdout().trim(), expectedStdout, "Expected message when no subscription remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
+		}
 				
 		// list all available (without service level)
 		listResult = clienttasks.list_(false,true,null,null,null,null,null,null,null, null, null, null, null);
@@ -835,7 +839,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		filteredSubscriptionPools = SubscriptionPool.parse(listResult.getStdout());
 		Assert.assertTrue(filteredSubscriptionPools.containsAll(expectedSubscriptionPools),"The actual list of --available --servicelevel=\""+servicelevel+"\" SubscriptionPools contains all of the expected SubscriptionPools (the expected list contains only pools with ServiceLevel=\""+servicelevel+"\")");
 		Assert.assertTrue(expectedSubscriptionPools.containsAll(filteredSubscriptionPools),"The expected list of SubscriptionPools contains all of the actual SubscriptionPools returned by list --available --servicelevel=\""+servicelevel+"\".");
-		if (expectedSubscriptionPools.isEmpty()) Assert.assertEquals(listResult.getStdout().trim(), "No available subscription pools to list","Expected message when no subscription remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
+		if (expectedSubscriptionPools.isEmpty()) {
+			String expectedStdout = "No available subscription pools to list";
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No available subscription pools were found matching the service level \"%s\".",servicelevel);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
+			Assert.assertEquals(listResult.getStdout().trim(), expectedStdout, "Expected message when no subscription remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
+		}
 	}
 	
 	
@@ -1620,9 +1628,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// test
 		SSHCommandResult result = clienttasks.list(null, true, null, null, null, null, null, null, matchesString, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(),new Integer(0),	"Exitcode expected from calling list --available --matches with no expected matches.");
-		Assert.assertEquals(result.getStdout().trim(),"No available subscription pools matching the specified criteria were found.",			"Stdout expected from calling list --consumed --matches with no expected matches.");
-		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected from calling list --available --matches with no expected matches.");
+		String expectedStdout = "No available subscription pools matching the specified criteria were found.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No available subscription pools were found matching the expression \"%s\".",matchesString);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
+		Assert.assertEquals(result.getExitCode(),new Integer(0),		"Exitcode expected from calling list --available --matches with no expected matches.");
+		Assert.assertEquals(result.getStdout().trim(),expectedStdout,	"Stdout expected from calling list --consumed --matches with no expected matches.");
+		Assert.assertEquals(result.getStderr().trim(),"",				"Stderr expected from calling list --available --matches with no expected matches.");
 	}
 	
 	
@@ -1648,9 +1658,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// test
 		SSHCommandResult result = clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(),new Integer(0),	"Exitcode expected from calling list --consumed --matches with no expected matches.");
-		Assert.assertEquals(result.getStdout().trim(),"No consumed subscription pools matching the specified criteria were found.",			"Stdout expected from calling list --available --consumed with no expected matches.");
-		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected from calling list --consumed --matches with no expected matches.");
+		String expectedStdout = "No consumed subscription pools matching the specified criteria were found.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No consumed subscription pools were found matching the expression \"%s\".",matchesString);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
+		Assert.assertEquals(result.getExitCode(),new Integer(0),		"Exitcode expected from calling list --consumed --matches with no expected matches.");
+		Assert.assertEquals(result.getStdout().trim(),expectedStdout,	"Stdout expected from calling list --available --consumed with no expected matches.");
+		Assert.assertEquals(result.getStderr().trim(),"",				"Stderr expected from calling list --consumed --matches with no expected matches.");
 	}
 	
 	
@@ -1664,9 +1676,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String matchesString = "nothing";
 		
 		SSHCommandResult result = clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(),new Integer(0),	"Exitcode expected from calling list --installed --matches with no expected matches.");
-		Assert.assertEquals(result.getStdout().trim(),"No installed products matching the specified criteria were found.",			"Stdout expected from calling list --installed --consumed with no expected matches.");
-		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected from calling list --installed --matches with no expected matches.");
+		String expectedStdout = "No installed products matching the specified criteria were found.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No installed products were found matching the expression \"%s\".",matchesString);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
+		Assert.assertEquals(result.getExitCode(),new Integer(0),		"Exitcode expected from calling list --installed --matches with no expected matches.");
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout,	"Stdout expected from calling list --installed --consumed with no expected matches.");
+		Assert.assertEquals(result.getStderr().trim(),"",				"Stderr expected from calling list --installed --matches with no expected matches.");
 	}
 	
 	
@@ -1692,9 +1706,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// test
 		SSHCommandResult result = clienttasks.list(null, true, true, true, null, null, null, null, matchesString, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(),new Integer(0),	"Exitcode expected from calling list --installed --available --consumed --matches with no expected matches.");
-		Assert.assertEquals(result.getStdout().trim(),"No installed products matching the specified criteria were found.\nNo available subscription pools matching the specified criteria were found.\nNo consumed subscription pools matching the specified criteria were found.",			"Stdout expected from calling list --installed --available --consumed --matches with no expected matches.");
-		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected from calling list --installed --available --consumed --matches with no expected matches.");
+		String expectedStdout = "No installed products matching the specified criteria were found.\nNo available subscription pools matching the specified criteria were found.\nNo consumed subscription pools matching the specified criteria were found.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No installed products were found matching the expression \"%s\".\nNo available subscription pools were found matching the expression \"%s\".\nNo consumed subscription pools were found matching the expression \"%s\".",matchesString,matchesString,matchesString);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
+		Assert.assertEquals(result.getExitCode(),new Integer(0),		"Exitcode expected from calling list --installed --available --consumed --matches with no expected matches.");
+		Assert.assertEquals(result.getStdout().trim(),expectedStdout,	"Stdout expected from calling list --installed --available --consumed --matches with no expected matches.");
+		Assert.assertEquals(result.getStderr().trim(),"",				"Stderr expected from calling list --installed --available --consumed --matches with no expected matches.");
 	}
 	
 	
@@ -1762,9 +1778,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		filteredProductSubscriptions = ProductSubscription.parse(listResult.getStdout());
 		Assert.assertTrue(filteredProductSubscriptions.containsAll(expectedProductSubscriptions),"The actual list of --consumed --servicelevel=\""+servicelevel+"\" ProductSubscriptions contains all of the expected ProductSubscriptions (the expected list contains only consumptions with ServiceLevel=\""+servicelevel+"\")");
 		Assert.assertTrue(expectedProductSubscriptions.containsAll(filteredProductSubscriptions),"The expected list of ProductSubscriptions contains all of the actual ProductSubscriptions returned by list --consumed --servicelevel=\""+servicelevel+"\".");
-		String expectedStderr = "No consumed subscription pools to list";
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStderr = "No consumed subscription pools matching the specified criteria were found.";	// commit be815d04d1722dd8fd40a23c0a7847e97e689f89
-		if (expectedProductSubscriptions.isEmpty()) Assert.assertEquals(listResult.getStdout().trim(), expectedStderr,"Expected message when no consumed subscriptions remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
+		String expectedStdout = "No consumed subscription pools to list";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = "No consumed subscription pools matching the specified criteria were found.";	// commit be815d04d1722dd8fd40a23c0a7847e97e689f89
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No consumed subscription pools were found matching the service level \"%s\".",servicelevel);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
+		if (expectedProductSubscriptions.isEmpty()) Assert.assertEquals(listResult.getStdout().trim(), expectedStdout,"Expected stdout message when no consumed subscriptions remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
 	}
 	
 	
