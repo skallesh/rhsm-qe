@@ -603,8 +603,9 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	public void checkPackageVersionBeforeClass() {
 		if (clienttasks!=null) {
 			// skip test class when subscription-manager-plugin-ostree is not installed
-			if (!clienttasks.isPackageInstalled("subscription-manager-plugin-ostree")) {
-				throw new SkipException("Subscription Management compatibility with ostree requires subscription-manager-plugin-ostree.");
+			String pkg = "subscription-manager-plugin-ostree";
+			if (!clienttasks.isPackageInstalled(pkg)) {
+				throw new SkipException("Subscription Management compatibility with ostree requires package '"+pkg+"'.");
 			}
 			// where is the ostree repo config file located that will be managed by subscription-manager
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
