@@ -111,6 +111,9 @@
       (tasks/firstboot-register (@config :username) (@config :password))
       (tasks/ui click :firstboot-forward)
       (sleep 2000)
+      (if (bool (tasks/ui guiexist :firstboot-window))
+        (do (tasks/ui click :firstboot-forward)
+            (sleep 2000)))
       (verify (not (bool (tasks/ui guiexist :firstboot-window))))
       (verify (not (tasks/ui showing? :register-system))))
     (throw (SkipException.
