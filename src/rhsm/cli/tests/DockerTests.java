@@ -208,6 +208,10 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void PullDockerImage_Test(Object bugzilla, String dockerImage) {
+		// TODO: Once registry.access.redhat.com is protected by certificates, this test will require a valid entitlement for containerimages.
+		// unregister the host
+		clienttasks.unregister(null, null, null);
+		
 		// pull the docker image
 		//	[root@jsefler-7 ~]# docker pull docker-registry.usersys.redhat.com/brew/rhel7:latest
 		//	Pulling repository docker-registry.usersys.redhat.com/brew/rhel7
@@ -436,6 +440,12 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks!=null) {
 			if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.2-1")) {
 				throw new SkipException("Subscription Management compatibility with docker requires subscription-manager-1.12.2-1 or higher.");
+			}
+			
+			// skip test class when subscription-manager-plugin-container is not installed
+			String pkg = "subscription-manager-plugin-container";
+			if (!clienttasks.isPackageInstalled(pkg)) {
+				throw new SkipException("Subscription Management compatibility with docker requires package '"+pkg+"'.");
 			}
 		}
 	}
