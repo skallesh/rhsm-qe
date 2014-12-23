@@ -35,7 +35,10 @@ import com.redhat.qe.tools.SSHCommandResult;
  * DEV Sprint 76 Demo
  *  Subscription Manager Container Mode (dgoodwin)
  *    Video: https://sas.elluminate.com/p.jnlp?psid=2014-06-11.0638.M.D38450C42DA81F82F8E4981A4E1190.vcr&sid=819
- *    
+ *  
+ * DEV Sprint 82 Demo
+ *  Subscription Manager ContainerContentPlugin (dgoodwin)
+ *    Video: https://sas.elluminate.com/p.jnlp?psid=2014-10-22.0645.M.AEBE7425F4036682CD070CAC3BC449.vcr&sid=819
  *    
  * Delivery options for docker package on rhel7
  *   https://brewweb.devel.redhat.com/packageinfo?packageID=13865
@@ -46,6 +49,8 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   http://docker-registry.usersys.redhat.com:8080/#redhat
  *     docker-registry.usersys.redhat.com/brew/rhel7:latest
  *     docker-registry.usersys.redhat.com/brew/rhel6:latest
+ *     
+ *     
  */
 @Test(groups={"DockerTests","Tier3Tests"})
 public class DockerTests extends SubscriptionManagerCLITestScript {
@@ -536,3 +541,65 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 }
+
+
+// STATUS
+//On 12/22/2014 05:22 PM, John Sefler wrote:
+//	> Devan,
+//	> I spent some time today trying to catch up on docker/entitlement
+//	> testing....
+//	> I re-watched the Sprint 82 demo where you presented comma separated
+//	> registry_hostnames=registry.access.redhat.com,cdn.redhat.com and that
+//	> the entitlement certs would get copied into corresponding
+//	> /etc/docker/certs.d/ subdirectories
+//	>
+//	> What I don't understand is what to expect when attempting to docker
+//	> pull registry.access.redhat.com/rhel7:latest
+//	>
+//	> This pull seems to work regardless of subscription-manager
+//	> entitlements.  I expected to be blocked in some way until I attached
+//	> an atomic subscription, but I do not get blocked.  Sub-man seems to be
+//	> ignored upon docker pull.  Don't know what to do here.
+//
+//	Nothing has changed on the appinfra side, the cert protection of docker
+//	images has still not been deployed in prod, and we've still never seen
+//	it work in stage. They're fighting with it a bit here and there, there
+//	are problems with golang and ssl, still no idea what will happen with
+//	this. So the docker stuff is just a best guess at what should be
+//	required for this to work, but we still don't know.
+//
+//	>
+//	> I'm also unsure how the fields from a containerimage content set are
+//	> supposed to be used/tested.
+//
+//	At this point the only behavior that should trigger that I am aware of
+//	is that the cert containing that content should get copied into the
+//	relevant directories. After that the cert is presented for auth when
+//	docker does it's thing (theoretically) and then something checks that
+//	the content path is in the cert.
+//
+//	Sadly I don't know how much can be done with this just yet, and I'm
+//	worried things might need to get redone. I'm also not sure how motivated
+//	they are to get this deployed.
+//
+//	>
+//	> [root@jsefler-os7 ~]# subscription-manager list --consumed
+//	> No consumed subscription pools to list
+//	> [root@jsefler-os7 ~]# docker pull registry.access.redhat.com/rhel7:latest
+//	> Pulling repository registry.access.redhat.com/rhel7
+//	> bef54b8f8a2f: Download complete
+//	> Status: Image is up to date for registry.access.redhat.com/rhel7:latest
+//	>
+//	> Thoughts?  I'll ping you Tues morning.
+//	> John
+//	>
+//	>
+//	> PS.  I'm working with the latest packages...
+//	>
+//	> [root@jsefler-os7 ~]# rpm -q subscription-manager
+//	> subscription-manager-plugin-container docker
+//	> subscription-manager-1.13.12-1.el7.x86_64
+//	> subscription-manager-plugin-container-1.13.12-1.el7.x86_64
+//	> docker-1.4.1-4.el7.x86_64
+//	>
+
