@@ -250,29 +250,39 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		// assert that there is only one entitled osTreeContentNamespaceMatchingInstalledProducts
 		// TEMPORARY WORKAROUND FOR BUG: 1160771 - Missing provides/requires tags in ostree content sets (not product cert) 
 		invokeWorkaroundWhileBugIsOpen = true;
+		invokeWorkaroundWhileBugIsOpen = false; // Status: 	MODIFIED 
 		bugId="1160771"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			if (osTreeContentNamespacesMatchingInstalledProducts.size()>1) log.warning("Found more than one entitled ostree ContentNamespace whose RequiredTags match the installed productCerts.  Blocked by Jira request https://projects.engineering.redhat.com/browse/APPINFRAT-246");
 			log.warning("Skipping the assertion for more than one entitled ostree ContentNamespace whose RequiredTags match the installed productCerts due to open bug '"+bugId+"'.");
-		} else
+		}
 		// END OF WORKAROUND
-		Assert.assertEquals(osTreeContentNamespacesMatchingInstalledProducts.size(), 1, "At most there should only be one entitled ostree ContentNamespace that matches the installed product certs.");
-		ContentNamespace osTreeContentNamespaceMatchingInstalledProducts = osTreeContentNamespacesMatchingInstalledProducts.get(0);
-
-		
-		
-		// assert that the ostree origin file has been updated to the newly entitled ostree repo remote
-		//	-bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin
-		//	/ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
-		//	-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
-		//	[origin]
-		//	refspec=rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
-		Assert.assertEquals(ostreeOriginRefspecAfter.split(":")[1], ostreeOriginRefspecBefore.split(":")[1],"The remote path portion of the refspec in the ostree origin file '"+ostreeOriginFile+"' should remain unchanged after attaching atomic subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
-		Assert.assertEquals(ostreeOriginRefspecAfter.split(":")[0], osTreeContentNamespaceMatchingInstalledProducts.label,"The remote label portion of the refspec in the ostree origin file '"+ostreeOriginFile+"' should be updated to the newly entitled ostree content label after attaching atomic subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
+		if (clienttasks.isPackageVersion("subscription-manager-plugin-ostree", "<", "1.13.9-1")) {	// commit 11b377f78dcb06d8dbff5645750791b729e20a0e
+			// Bug 1152734 - Update subman ostree content plugin to use ostree cli for manipulating 'remote' configs
+			Assert.fail("This version of subscription-manager-plugin-ostree is blocked by bug 1152734.");
+		}
+		ContentNamespace osTreeContentNamespaceMatchingInstalledProducts = null;
+		if (osTreeContentNamespacesMatchingInstalledProducts.isEmpty()) {
+			log.warning("This is probably NOT an atomic system.");
+			Assert.assertEquals(ostreeOriginRefspecAfter, ostreeOriginRefspecBefore, "When there are no installed products whose tags match the ostree ContentNamespace tags, then the ostree origin refspec in file '"+ostreeOriginFile+"' should remain unchanged after attaching subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
+		} else {
+			Assert.assertEquals(osTreeContentNamespacesMatchingInstalledProducts.size(), 1, "At most there should only be one entitled ostree ContentNamespace that matches the installed product certs.");
+			osTreeContentNamespaceMatchingInstalledProducts = osTreeContentNamespacesMatchingInstalledProducts.get(0);
+			
+			// assert that the ostree origin file has been updated to the newly entitled ostree repo remote
+			//	-bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin
+			//	/ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
+			//	-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
+			//	[origin]
+			//	refspec=rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
+			Assert.assertEquals(ostreeOriginRefspecAfter.split(":")[1], ostreeOriginRefspecBefore.split(":")[1],"The remote path portion of the refspec in the ostree origin file '"+ostreeOriginFile+"' should remain unchanged after attaching atomic subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
+			Assert.assertEquals(ostreeOriginRefspecAfter.split(":")[0], osTreeContentNamespaceMatchingInstalledProducts.label,"The remote label portion of the refspec in the ostree origin file '"+ostreeOriginFile+"' should be updated to the newly entitled ostree content label after attaching atomic subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
+		}
 		
 		// attempt to do an atomic upgrade
-		if (!clienttasks.isPackageInstalled("rpm-ostree-client")) {log.warning("Skipping assertion attempt to do an atomic upgrade after attaching the atomic subscription.");} else {
+		String pkg = "rpm-ostree-client";
+		if (!clienttasks.isPackageInstalled(pkg)) {log.warning("Skipping assertion attempt to do an atomic upgrade after attaching the atomic subscription since package '"+pkg+"' is not installed.");} else {
 			SSHCommandResult atomicUpgradeResultAfterSubscribe = client.runCommandAndWait("atomic upgrade");
 			//	-bash-4.2# atomic upgrade
 			//	Updating from: rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard
@@ -351,7 +361,8 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		
 		// attempt to run the atomic upgrade without an entitlement
 		// /usr/bin/atomic is provided by rpm-ostree-client-2014.109-2.atomic.el7.x86_64
-		if (!clienttasks.isPackageInstalled("rpm-ostree-client")) {log.warning("Skipping assertion attempt to do an atomic upgrade after removing the atomic subscription.");} else {
+		pkg = "rpm-ostree-client";
+		if (!clienttasks.isPackageInstalled(pkg)) {log.warning("Skipping assertion attempt to do an atomic upgrade after removing the atomic subscription since package '"+pkg+"' is not installed.");} else {
 			SSHCommandResult atomicUpgradeResultAfterUnsubscribe = client.runCommandAndWait("atomic upgrade");
 			//	-bash-4.2# atomic upgrade
 			//	Updating from: rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard
@@ -383,7 +394,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		// attach each available pool in search of ones that provide content of type="ostree"
 		List <SubscriptionPool> currentlyAvailableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 /*debugTesting*/ if (sm_serverType.equals(CandlepinType.standalone)) currentlyAvailableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools("37091", sm_serverUrl);	// 37091 Product Name:   Awesome OS OStree Bits
-///*debugTesting*/ if (sm_serverType.equals(CandlepinType.hosted)) currentlyAvailableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools("272", sm_serverUrl);	// 272 Product Name:   Red Hat Enterprise Linux Atomic Host Beta
+///*debugTesting DO NOT COMMIT THIS LINE UNCOMMENTED */ if (sm_serverType.equals(CandlepinType.hosted)) currentlyAvailableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools("272", sm_serverUrl);	// 272 Product Name:   Red Hat Enterprise Linux Atomic Host Beta
 		for (SubscriptionPool subscriptionPool : currentlyAvailableSubscriptionPools) {
 			File serialPemFile = clienttasks.subscribeToSubscriptionPool_(subscriptionPool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(serialPemFile);
