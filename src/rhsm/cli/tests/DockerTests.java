@@ -359,13 +359,19 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 					}
 				}
 				if (contentNamespaceArches.contains("x86")) {contentNamespaceArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
-
+				
+				// when the content namespace is not of type "yum", it will not appear in either the yum repolist of the host or the running docker image
+				if (!contentNamespaceOnHost.type.equals("yum")) {
+					Assert.assertTrue(!enabledYumReposOnHost.contains(contentNamespaceOnHost.label), "Entitled content namespace '"+contentNamespaceOnHost.label+"' of type '"+contentNamespaceOnHost.type+"' should never appear on the yum repolist of the host.");
+					Assert.assertTrue(!enabledYumReposOnRunningDockerImage.contains(contentNamespaceOnHost.label), "Entitled content namespace '"+contentNamespaceOnHost.label+"' of type '"+contentNamespaceOnHost.type+"' should never appear on the yum repolist of the running docker container.");
+					continue;	// go to the next content namespace
+				}
 				
 				// when the content namespace is not enabled, it will not appear in either the yum repolist of the host or the running docker image
 				if (!contentNamespaceOnHost.enabled) {
 					Assert.assertTrue(!enabledYumReposOnHost.contains(contentNamespaceOnHost.label), "Entitled content namespace '"+contentNamespaceOnHost.label+"' is disabled and should NOT appear on the yum repolist of the host because it is disabled by default.");
 					Assert.assertTrue(!enabledYumReposOnRunningDockerImage.contains(contentNamespaceOnHost.label), "Entitled content namespace '"+contentNamespaceOnHost.label+"' is disabled and should NOT appear on the yum repolist of the running docker container because it is disabled by default.");
-					continue;
+					continue;	// go to the next content namespace
 				}
 				
 				// when the content namespace is enabled, it's appearance on the yum repolist of the running docker image depends on the installed product certs on the image.
