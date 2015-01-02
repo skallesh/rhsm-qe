@@ -351,7 +351,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit 
         String virt_limit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit");
 		if (servertasks.statusStandalone && virt_limit!=null && !virt_limit.equals("0")) {
-			newEventTitles = new String[]{"ENTITLEMENT DELETED","POOL DELETED"};
+			newEventTitles = new String[]{"COMPLIANCE CREATED","ENTITLEMENT DELETED"};
 		}
 		
 		// assert the owner feed...
