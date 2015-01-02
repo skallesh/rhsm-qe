@@ -995,9 +995,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			String supportLevelExemptValue = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level_exempt");
 
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(dryrunSubscriptionPool);
-			Assert.assertNotNull(entitlementCert, "Found an entitlement cert corresponding to dry-run pool: "+dryrunSubscriptionPool);
-			Assert.assertTrue(newlyGrantedEntitlementCerts.contains(entitlementCert),"This entitlement cert is among the newly granted entitlement from the autosubscribe.");
-			Assert.assertEquals(Integer.valueOf(entitlementCert.orderNamespace.quantityUsed), quantity, "The actual entitlement quantityUsed matches the dry-run quantity results for pool :"+dryrunSubscriptionPool);
+			if (entitlementCert==null) {	// can occur when there are multiple available pools that provide coverage for the same installed product
+				log.warning("After actually running auto-subscribe, the predicted dry-run pool '"+dryrunSubscriptionPool.poolId+"' was NOT among the attached subscriptions.  This is probably because there is another available pool that also provides the same provided products '"+dryrunSubscriptionPool.provides+"' (at least one of which is installed) which was granted instead of the dry-run pool.");
+				// assert that the warning statement is true
+				// the follow assertion may expectedly fail when the provided products exceeds one.
+				ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("provides", dryrunSubscriptionPool.provides, clienttasks.getCurrentlyConsumedProductSubscriptions());
+				Assert.assertNotNull(consumedProductSubscription, "Found a consumed Product Subscription that provides the same products corresponding to dry-run pool: "+dryrunSubscriptionPool+"  (IF THIS FAILS, SEE WARNING ABOCVE FOR PROBABLE EXPLANATION)");
+				Assert.assertEquals(Integer.valueOf(consumedProductSubscription.quantityUsed), quantity, "The actual entitlement quantityUsed matches the dry-run quantity results for pool :"+dryrunSubscriptionPool);
+			} else {
+				Assert.assertNotNull(entitlementCert, "Found an entitlement cert corresponding to dry-run pool: "+dryrunSubscriptionPool);
+				Assert.assertTrue(newlyGrantedEntitlementCerts.contains(entitlementCert),"This entitlement cert is among the newly granted entitlement from the autosubscribe.");
+				Assert.assertEquals(Integer.valueOf(entitlementCert.orderNamespace.quantityUsed), quantity, "The actual entitlement quantityUsed matches the dry-run quantity results for pool :"+dryrunSubscriptionPool);
+			}
 		}
 		
 		
