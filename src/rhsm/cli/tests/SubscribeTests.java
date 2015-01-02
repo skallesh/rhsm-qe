@@ -1520,9 +1520,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe with the --file option
 		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe_(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null);
-		Assert.assertTrue(subscribeWithFileResult.getStdout().trim().isEmpty(), "The stdout result from subscribe with an empty file of poolIds is empty.");
-		Assert.assertEquals(subscribeWithFileResult.getExitCode(), new Integer(1), "The exitCode from subscribe with an empty file of poolIds.");
-		
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.13-1")) {	// commit 1ec3ee950642b24e6b55a23db10e447bd0fada4f	// Bug 1175291 - subscription-manager attach --file <file> ,with file being empty attaches subscription for installed product
+			String expectedStderr = String.format("Error: The file \"%s\" does not contain any pool IDs.",tmpFile);
+			Assert.assertEquals(subscribeWithFileResult.getStdout().trim(), "", "The stdout result from subscribe with an empty file of poolIds is empty.");
+			Assert.assertEquals(subscribeWithFileResult.getStderr().trim(), expectedStderr, "The stderr result from subscribe with an empty file of poolIds is empty.");
+			Assert.assertEquals(subscribeWithFileResult.getExitCode(), new Integer(65)/*EX_DATAERR*/, "The exitCode from subscribe with an empty file of poolIds.");
+		} else {
+			Assert.assertTrue(subscribeWithFileResult.getStdout().trim().isEmpty(), "The stdout result from subscribe with an empty file of poolIds is empty.");
+			Assert.assertEquals(subscribeWithFileResult.getExitCode(), new Integer(1), "The exitCode from subscribe with an empty file of poolIds.");			
+		}
 		// assert that no subscriptions have been consumed
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No subscriptions should be attached after attempting to attach an empty file of pool ids.");
 	}
@@ -1568,6 +1574,30 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(), subscribeWithFileResult.getExitCode(), "Exit Code comparison between the expected result of subscribing with a file of poolIds and subscribing with the poolIds piped to stdin.");
 		Assert.assertEquals(stdinFileSubscribeCommandResult.getStdout(), subscribeWithFileResult.getStdout(), "Stdout comparison between the expected result of subscribing with a file of poolIds and subscribing with the poolIds piped from stdin.");
 		Assert.assertEquals(stdinFileSubscribeCommandResult.getStderr(), subscribeWithFileResult.getStderr(), "Stderr comparison between the expected result of subscribing with a file of poolIds and subscribing with the poolIds piped from stdin.");
+	}
+	
+	
+	@Test(	description="subscription-manager: subscribe with --file=- which indicates that the pools will be read from stdin",
+			groups={"blockedByBug-1159974","blockedByBug-1175291"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithFileOfEmptyPoolIdsFromStdin_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
+		
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		
+		// now let's run the same poolOnlyListCommand and pipe the results to subscription-manager attach --file - (the hyphen indicates stdin)
+		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, "-", null, null, null);
+		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait("echo \"\" | "+stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
+				
+		// assert the two subscribe results are identical
+		// if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.13-1")) {	// commit 1ec3ee950642b24e6b55a23db10e447bd0fada4f	// Bug 1175291 - subscription-manager attach --file <file> ,with file being empty attaches subscription for installed product
+		Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(), new Integer(65)/*EX_DATAERR*/, "Exit Code from subscribing with a file of empty poolIds from stdin.");
+		Assert.assertEquals(stdinFileSubscribeCommandResult.getStdout().trim(), "", "Stdout from subscribing with a file of empty poolIds from stdin.");
+		Assert.assertEquals(stdinFileSubscribeCommandResult.getStderr().trim(), "Error: Received data does not contain any pool IDs.", "Stderr from subscribing with a file of empty poolIds from stdin.");
 	}
 	
 	
