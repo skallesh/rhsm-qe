@@ -4400,6 +4400,12 @@ if (false) {
 					log.warning("None of the currently installed product certs provide the required tags '"+contentNamespace.requiredTags+"' for entitled content namespace: "+contentNamespace.name);
 					continue;
 				}
+				
+				// we should NOT count contentNamespaces that are not of type=yum
+				if (!contentNamespace.type.equals("yum")) {
+					log.warning("Encountered the following Content Namespace whose type is not \"yum\" (it should not contribute to the list of yum repos):  "+contentNamespace);
+					continue;
+				}
 
 				numContentNamespaces++;
 			}
