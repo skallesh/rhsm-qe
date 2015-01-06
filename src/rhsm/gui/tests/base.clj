@@ -44,10 +44,10 @@
       (run-and-assert "service vncserver start")))
   (run-command "echo -n \"Waiting for startup.\" & until $(netstat -lnt | awk '$6 == \"LISTEN\" && $4 ~ \".4118\"' | grep -q .); do echo -n \".\"; sleep 2; done; echo")
   ( . Thread (sleep 10000))
-  (if (= "RHEL7" (get-release))
-    (do
-      (run-command "gsettings set org.gnome.settings-daemon.plugins.a11y-settings active false")
-      (run-command "gsettings set org.gnome.desktop.interface toolkit-accessibility true"))))
+  (comment (if (= "RHEL7" (get-release))
+             (do
+               (run-command "gsettings set org.gnome.settings-daemon.plugins.a11y-settings active false")
+               (run-command "gsettings set org.gnome.desktop.interface toolkit-accessibility true")))))
 
 
 (defn ^{BeforeSuite {:groups ["setup"]}}

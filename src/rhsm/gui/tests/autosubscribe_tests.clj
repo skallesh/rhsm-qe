@@ -285,8 +285,13 @@
   check_subscription_type_auto_attach
   "Asserts if type column is present in register dialog"
   [_]
+  (if (= "RHEL7" (get-release))
+    (throw (SkipException.
+            (str "Skipping 'check_subscription_type_auto_attach' test on RHEL7.
+                  Cannot access radio-butons through ldtp !!!!"))))
   (try
-    (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel @complytests)
+    (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
+     @complytests)
     (tasks/restart-app)
     (verify (dirsetup? multi-sla-dir))
     (tasks/register-with-creds)
@@ -299,13 +304,13 @@
     (let [values (into [] (tasks/get-table-elements :auto-attach-subscriptions-table 1))
           phy-virt? (fn [val]
                       (not (or (= (.toLowerCase val) "virtual")
-                                 (= (.toLowerCase val) "physical"))))
+                               (= (.toLowerCase val) "physical"))))
           error-list (filter phy-virt? values)]
       (verify (= 0 (count error-list))))
     (finally
-     (if (bool(tasks/ui guiexist :register-dialog))
-       (tasks/ui click :register-cancel))
-     (tasks/unregister))))
+      (if (bool(tasks/ui guiexist :register-dialog))
+        (tasks/ui click :register-cancel))
+      (tasks/unregister))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "tier2"
@@ -314,8 +319,13 @@
   autosubscribe_select_product_sla
   "Asserts if autosubscribe works with selecting product sla"
   [_]
+  (if (= "RHEL7" (get-release))
+    (throw (SkipException.
+            (str "Skipping 'autosubscribe_select_product_sla' test on RHEL7.
+                  Cannot access radio-butons through ldtp !!!!"))))
   (try
-    (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel @complytests)
+    (.configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
+     @complytests)
     (tasks/restart-app)
     (verify (dirsetup? multi-sla-dir))
     (tasks/register-with-creds)
@@ -331,8 +341,8 @@
         (tasks/ui waittillwindownotexist :register-dialog 80)))
     (verify (substring? "System is properly subscribed" (tasks/ui gettextvalue :overall-status)))
     (finally
-     (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
-     (tasks/unregister))))
+      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
+      (tasks/unregister))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

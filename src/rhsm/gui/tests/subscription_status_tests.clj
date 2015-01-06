@@ -111,9 +111,14 @@
   "Asserts that status message displayed in main-window is right after attaching future
    subscriptions"
   [_]
+  (if (= "RHEL7" (get-release))
+    (throw
+     (SkipException.
+      (str "Cannot generate keyevents in RHEL7 !!
+            Skipping Test 'check_status_message_future_subscriptions'."))))
   (try
     (let
-  	[subscribed-products-date (atom {})
+        [subscribed-products-date (atom {})
          after-date-products (atom {})
          present-date (do (tasks/ui selecttab :all-available-subscriptions)
                           (tasks/ui gettextvalue :date-entry))
@@ -127,8 +132,9 @@
       (dotimes [n 3]
         (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
                                    (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
-      (reset! subscribed-products-date (count (filter #(= "Subscribed" %)
-                                                      (tasks/get-table-elements :installed-view 2))))
+      (reset! subscribed-products-date (count
+                                        (filter #(= "Subscribed" %)
+                                                (tasks/get-table-elements :installed-view 2))))
       (reset! after-date-products (Integer. (re-find #"\d*"
                                                      (tasks/ui gettextvalue :overall-status))))
       (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date))))))

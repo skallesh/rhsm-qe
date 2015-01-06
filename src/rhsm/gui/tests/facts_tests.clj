@@ -173,6 +173,10 @@
   check_available_releases
   "Checks that all avaiable releases are shown in the GUI properly."
   [_]
+  (if (= "RHEL7" (get-release))
+     (throw (SkipException.
+             (str "Skipping 'check_available_releases' test on RHEL7.
+                   Cannot access sub-menus/dropdown through ldtp !!!!"))))
   (try
     (tasks/register-with-creds)
     (tasks/subscribe_all)
@@ -185,7 +189,6 @@
       (tasks/ui click :preferences)
       (tasks/ui waittillwindowexist :system-preferences-dialog 10)
       (tasks/ui showlist :release-dropdown)
-      (sleep 2000)
       (let [gui-releases (into [] (sort (tasks/ui listsubmenus :release-dropdown)))]
         (verify (bash-bool (compare expected-releases gui-releases)))
         (verify (not (nil? (some #{"Not Set"} gui-releases))))))
@@ -200,7 +203,8 @@
 
 (defn ^{Test {:groups ["facts"
                        "tier1"
-                       "acceptance"]}}
+                       "acceptance"]
+              :dependsOnMethods ["check_available_releases"]}}
   check_releases
   "Tests that all available releases are shown in the GUI"
   [_]
