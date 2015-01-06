@@ -27,7 +27,14 @@ import com.redhat.qe.tools.SSHCommandResult;
 /**
  * @author jsefler
  *
- *
+ * Workflow to create environments within Satellite...   https://bugzilla.redhat.com/show_bug.cgi?id=1065158#c8
+ * Create a TestOrg1, and within it...
+ * Create new Content > Lifecycle Environment path Library/TestEnv1 with a label
+ * Create new Content > Lifecycle Environment path Library/TestEnv2 with a label
+ * Create new Content > Content View TestView1 with a label
+ * Create new Content > Content View TestView2 with a label
+ * Publish TestView1 and promoted it to Library > TestEnv1
+ * Publish TestView2 and promoted it to Library > TestEnv2
  */
 @Test(groups={"EnvironmentsTests","Tier2Tests"})
 public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
