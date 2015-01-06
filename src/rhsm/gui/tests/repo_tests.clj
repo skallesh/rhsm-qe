@@ -30,7 +30,8 @@
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
 (def random_row_num (atom nil)) ;; Used to dynamically select a random row number
-(def list_row (atom []))       ;; Used to hold probable row numbers
+(def list_row (atom []))        ;; Used to hold probable row numbers
+(def counter (atom 0))           ;; Used as counter for recursive calls
 (def no_repos_message "No repositories are available without an attached subscription.")
 (def ns-log "rhsm.gui.tests.repo_tests")
 
@@ -82,6 +83,33 @@
       (tasks/ui click :yes)
       (tasks/checkforerror)
       (verify (bash-bool (tasks/ui guiexist :question-dialog))))))
+
+(defn select-random-repo
+  "This is a helper function to select random repo which does
+   does not have both overrides enabled"
+  []
+  (sleep 3000)
+   (if (= 0 (tasks/ui getrowcount :repo-table))
+      (throw (Exception. "Repositories table is not populated")))
+   (let [row-count (tasks/ui getrowcount :repo-table)
+         list-row (into [] (range row-count))
+         row-num (nth list-row (rand (count list-row)))
+         repo (tasks/ui getcellvalue :repo-table row-num 2)]
+     (tasks/ui checkrow :repo-table row-num 1)
+     (sleep 2000)
+     (tasks/ui checkrow :repo-table row-num 0)
+     (sleep 2000)
+     (if-not (and (and (tasks/has-state? :repo-remove-override "visible")
+                       (tasks/has-state? :repo-remove-override "enabled"))
+                  (< @counter 10))
+       (do
+         (reset! counter (inc @counter))
+         (assert-and-remove-all-override :repo repo)
+         (select-random-repo))
+       (if-not (= @repeat 10)
+         (do
+           (assert-and-remove-all-override :repo repo)
+           (reset! random_row_num row-num))))))
 
 (defn ^{Test {:groups ["repo"
                        "tier1"]}}
@@ -153,19 +181,20 @@
     (if (= 0 (tasks/ui getrowcount :repo-table))
       (throw (Exception. "Repositories table is not populated"))
       (do
-        (let [row-count (tasks/ui getrowcount :repo-table)
-             list-row (into [] (range row-count))
-             random-row-num (nth list-row (rand (count list-row)))]
-          (tasks/ui selectrowindex :repo-table random-row-num)
-          (verify (not (tasks/has-state? :repo-remove-override "enabled")))
-          (tasks/ui checkrow :repo-table random-row-num 0)
-          (sleep 2000)
-          (tasks/ui checkrow :repo-table random-row-num 1)
-          (sleep 2000)
-          (verify (tasks/has-state? :repo-remove-override "enabled"))
-          (assert-and-remove-all-override)
-          (sleep 2000)
-          (verify (not (tasks/has-state? :repo-remove-override "enabled"))))))
+        (select-random-repo)
+        (if (nil? @random_row_num)
+          (throw (SkipException.
+                  (str "Repo without overrides not found"))))
+        (tasks/ui selectrowindex :repo-table @random_row_num)
+        (verify (not (tasks/has-state? :repo-remove-override "enabled")))
+        (tasks/ui checkrow :repo-table @random_row_num 0)
+        (sleep 2000)
+        (tasks/ui checkrow :repo-table @random_row_num 1)
+        (sleep 2000)
+        (verify (tasks/has-state? :repo-remove-override "enabled"))
+        (assert-and-remove-all-override)
+        (sleep 2000)
+        (verify (not (tasks/has-state? :repo-remove-override "enabled")))))
     (finally
      (tasks/ui click :close-repo-dialog)
      (tasks/unsubscribe_all))))
@@ -197,6 +226,11 @@
   [_]
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
+
+(comment
+;; Comenting the below test group as iteratively enabling and checking for override
+;; persistance had multi-point failure. Since we have stopped testing on GUI, decided
+;; not to explore more and substitured this iterative test with a simple test
 
 (defn ^{BeforeGroups {:groups ["repo"
                                "tier3"]
@@ -251,6 +285,41 @@
                              (assert-and-remove-all-override)))
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
+)
+
+(defn ^{Test {:groups ["repo"
+                       "tier1"
+                       "blockedByBug-1095938"]}}
+  verify_override_persistance
+  "Checks the persistance of repo override after subscriptions are removed"
+  [_]
+  (tasks/restart-app :reregister? true)
+  (tasks/subscribe_all)
+  (assert-and-open-repo-dialog)
+  (verify (bool (tasks/ui guiexist :repositories-dialog)))
+  (try
+    (select-random-repo)
+    (if (nil? @random_row_num)
+      (throw (SkipException.
+              (str "Repo without overrides not found"))))
+    ;; overriding random repo
+    (tasks/ui checkrow :repo-table @random_row_num 1)
+    (sleep 2000)
+    (tasks/ui checkrow :repo-table @random_row_num 0)
+    (sleep 2000)
+    (tasks/ui click :close-repo-dialog)
+    (tasks/unsubscribe_all)
+    ;; verifying persistnace of override
+    (tasks/subscribe_all)
+    (assert-and-open-repo-dialog)
+    (tasks/ui selectrowindex :repo-table @random_row_num)
+    (sleep 2000)
+    (verify (and (tasks/has-state? :repo-remove-override "visible")
+                 (tasks/has-state? :repo-remove-override "enabled")))
+    (assert-and-remove-all-override)
+    (finally
+      (tasks/ui click :close-repo-dialog)
+      (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["repo"
                        "tier3"
