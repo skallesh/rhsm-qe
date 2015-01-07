@@ -112,15 +112,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void VerifyAttachingEmptyFile() throws Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");
-		String pool = "/tmp/empty_file";
+		String file = "/tmp/empty_file";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);	// disable
-		client.runCommandAndWait("touch "+ pool);
-		client.runCommandAndWait("cat "+ pool);
-		String result=clienttasks.subscribe_(null,(String)null,(String)null,(String)null, null, null, null, null, pool, null, null, null).getStdout();
-		 Assert.assertNull(result); // Will update once the fix is in
+		client.runCommandAndWait("touch "+ file);
+		client.runCommandAndWait("cat "+ file);
+		SSHCommandResult sshCommandResult = clienttasks.subscribe_(null,(String)null,(String)null,(String)null, null, null, null, null, file, null, null, null);
+		String expectedStderr = String.format("Error: The file \"%s\" does not contain any pool IDs.",file);	// commit 1ec3ee950642b24e6b55a23db10e447bd0fada4f	// Bug 1175291 - subscription-manager attach --file <file> ,with file being empty attaches subscription for installed product
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "The stderr result from subscribe with an empty file of poolIds.");
 	 }
 	
 	/**
@@ -219,7 +220,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ProductCert installedProductCert32060 = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "32060", clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert32060, "Found installed product cert 32060 needed for this test.");
 		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[]{}));
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentProductCertFiles().isEmpty(),"No product certs are installed.");
@@ -229,7 +230,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("cp "+installedProductCert32060.file+" "+tmpProductCertDir);	// OR THIS IS VALID TOO configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[]{installedProductCert32060}));
 		result=clienttasks.status(null, null, null, null).getStdout();
 			expectedStatus = "Overall Status: Invalid";
-		Assert.assertTrue(result.contains(expectedStatus), "System status displays '"+expectedStatus+"' after manully installing a product cert and running the rhsmcertd worker.");
+		Assert.assertTrue(result.contains(expectedStatus), "System status displays '"+expectedStatus+"' after manully installing a product cert.");
+		clienttasks.autoheal(null, true, null, null, null, null);	// enable
 		clienttasks.run_rhsmcertd_worker(true);
 		result=clienttasks.status(null, null, null, null).getStdout();
 		expectedStatus = "Overall Status: Current";
@@ -569,6 +571,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void ManPagesTest() throws Exception {
 		String expectedResult="subscription-manager-gui(8)  Subscription Manager  subscription-manager-gui(8)";
+		if (clienttasks.isPackageVersion("subscription-manager-gui", ">=", "1.13.12-1")) expectedResult="subscription-manager-gui(8) System Manager's Manualsubscription-manager-gui(8)";	// commit 5094c9ff71eaec4ce5b6fbcf10431614bb7e9012	// Bug 1122530 - [RFE] > Scrub out the use of the acronyms or confusing terms in display or man pages...
 		String result=client.runCommandAndWait("man "+clienttasks.command+"-gui | head -1").getStdout();
 		Assert.assertEquals(result.trim(), expectedResult);
 	}
