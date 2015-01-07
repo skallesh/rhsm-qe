@@ -7384,6 +7384,11 @@ if (false) {
 		//	ExitCode: 255
 		//  ^^^^^^^^^^^^^ Indicative of a 502 Proxy Error
 		
+		//	ssh root@ibm-p740-01-lp2.rhts.eng.bos.redhat.com subscription-manager register --username=stage_auto_testuser --password=redhat --serverurl=subscription.rhn.stage.redhat.com/subscription --force
+		//	Stdout:
+		//	Stderr: Unable to reach the server at subscription.rhn.stage.redhat.com:443/subscription
+		//	ExitCode: 69
+		
 		//	ssh root@intel-canoepass-12.lab.bos.redhat.com subscription-manager subscribe --pool=8a99f981498757d40149a5a9b04f4b00
 		//	Stdout:
 		//	Stderr: The proxy server received an invalid response from an upstream server
@@ -7418,6 +7423,7 @@ if (false) {
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Problem encountered".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Remote server error".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to verify server's identity".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to reach the server".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("timed out".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase())) {
 			// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
