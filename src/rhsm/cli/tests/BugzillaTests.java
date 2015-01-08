@@ -4593,8 +4593,10 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); 
-		randomAvailableProductId = pool.productId;
+		if (!pools.isEmpty()) {
+			SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); 
+			randomAvailableProductId = pool.productId;
+		}
 	}
 	
 	public static Object getJsonObjectValue (JSONObject json, String jsonName) throws JSONException, Exception {
