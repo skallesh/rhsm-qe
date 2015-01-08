@@ -161,7 +161,7 @@
       (if (substring? "Unable to find object name in application map"
                       (.getMessage e))
         (throw (SkipException.
-                (str "Cannot access combo-box !! Skipping Test 'check_available_releases'.")))))
+                (str "Cannot access combo-box !! Skipping Test 'check_available_service_levels'.")))))
     (finally (if (bool (tasks/ui guiexist :system-preferences-dialog))
                (tasks/ui click :close-system-prefs)))))
 
@@ -203,8 +203,7 @@
 
 (defn ^{Test {:groups ["facts"
                        "tier1"
-                       "acceptance"]
-              :dependsOnMethods ["check_available_releases"]}}
+                       "acceptance"]}}
   check_releases
   "Tests that all available releases are shown in the GUI"
   [_]
