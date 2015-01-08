@@ -1325,7 +1325,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	    removeProxyServerConfigurations();	// cleanup from prior tests
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("ppc64le")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("aarch64")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
-		
+		if (sm_rhnUsername.equals("")) {throw new SkipException("This test requires an RHN Username for authentication.");}
+		if (sm_rhnPassword.equals("")) {throw new SkipException("This test requires an RHN Password for authentication.");}
 // DELETEME
 //		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
 //		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
@@ -2345,6 +2346,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public List<List<Object>> getRhnMigrateClassicToRhsmDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
+		if (sm_rhnUsername.equals("")) {log.warning("RHN Username was not provided."); return ll;}
+		if (sm_rhnPassword.equals("")) {log.warning("RHN Password was not provided."); return ll;}
 		
 		int rhnChildChannelSubSize = 40;	// 50;	// used to break down rhnAvailableChildChannels into smaller sub-lists to avoid bugs 818786 881952
 		
@@ -2546,6 +2549,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getRhnMigrateClassicToRhsmUsingProxyServerDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
+		if (sm_rhnUsername.equals("")) {log.warning("RHN Username was not provided."); return ll;}
+		if (sm_rhnPassword.equals("")) {log.warning("RHN Password was not provided."); return ll;}
 		
 		int rhnChildChannelSubSize = 40;	// 50;	// used to break down rhnAvailableChildChannels into smaller sub-lists to avoid bugs 818786 881952
 		

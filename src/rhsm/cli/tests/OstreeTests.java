@@ -384,6 +384,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getOstreeSubscriptionPoolsDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		checkPackageVersionBeforeClass();
 		
 		// disable /etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf while this dataProvider runs
 		clienttasks.updateConfFileParameter(ostreeContentPluginFile.getPath(), "enabled", "0");
