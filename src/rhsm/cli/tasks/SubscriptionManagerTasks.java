@@ -296,6 +296,9 @@ if (false) {
 		// make sure installOptions begins with --disablerepo=* to make sure the updates ONLY come from the rhel-zstream repos we are about to define
 		if (!installOptions.contains("--disablerepo=*")) installOptions = "--disablerepo=* "+installOptions;
 		
+		// avoid ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
+		installOptions += " --disableplugin=rhnplugin";
+		
 		// locally create a yum.repos.d zstream repos file
 		// now dump out the list of userData to a file
 	    File file = new File("tmp/rhel-zstream.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
