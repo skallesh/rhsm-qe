@@ -106,10 +106,11 @@
          (reset! counter (inc @counter))
          (assert-and-remove-all-override :repo repo)
          (select-random-repo))
-       (if-not (= @repeat 10)
+       (if-not (= @counter 10)
          (do
            (assert-and-remove-all-override :repo repo)
-           (reset! random_row_num row-num))))))
+           (reset! random_row_num row-num)
+           (reset! counter 0))))))
 
 (defn ^{Test {:groups ["repo"
                        "tier1"]}}
