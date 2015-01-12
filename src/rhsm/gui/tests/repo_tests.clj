@@ -99,8 +99,8 @@
      (sleep 2000)
      (tasks/ui checkrow :repo-table row-num 0)
      (sleep 2000)
-     (if-not (and (and (tasks/has-state? :repo-remove-override "visible")
-                       (tasks/has-state? :repo-remove-override "enabled"))
+     (if-not (and (tasks/has-state? :repo-remove-override "visible")
+                  (tasks/has-state? :repo-remove-override "enabled")
                   (< @counter 10))
        (do
          (reset! counter (inc @counter))
