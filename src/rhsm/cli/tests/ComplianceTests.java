@@ -78,10 +78,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the statusDetails for the consumed entitlement
 		if (poolArches.contains(clienttasks.arch)) {
-			Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "The statusDetails from the consumed product subscription should be empty when the system's arch '"+clienttasks.arch+"' is covered by the product subscription arches '"+poolArch.trim()+"'.");
+			List<String> expectedStatusDetails = new ArrayList<String>();	// empty
+			if (clienttasks.isPackageVersion("subscription-manager",">=", "1.13.13-1")) {	 // commit 252ec4520fb6272b00ae379703cd004f558aac63	// bug 1180400: "Status Details" are now populated on CLI
+				expectedStatusDetails = Arrays.asList(new String[]{"Subscription is current"});	// Bug 1180400 - Status datails is blank in list consumed output
+			}
+			Assert.assertEquals(productSubscription.statusDetails, expectedStatusDetails, "The statusDetails from the consumed product subscription '"+productSubscription.productName+"' poolId='"+productSubscription.poolId+"' should be "+expectedStatusDetails+" when the system's arch '"+clienttasks.arch+"' is covered by the product subscription arches '"+poolArch.trim()+"'.");
 		} else {
-			if (productSubscription.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
-			Assert.assertEquals(productSubscription.statusDetails.get(0)/*assumes only one detail*/, String.format("Supports architecture %s but the system is %s.", poolArch.trim(), clienttasks.arch), "The statusDetails from the consumed product subscription when the system's arch '"+clienttasks.arch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'."); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
+			if (productSubscription.statusDetails.isEmpty()) log.warning("Status Details from the consumed product subscription '"+productSubscription.productName+"' poolId='"+productSubscription.poolId+"' appears empty.  Is your candlepin server older than 0.8.6?");
+			Assert.assertEquals(productSubscription.statusDetails.get(0)/*assumes only one detail*/, String.format("Supports architecture %s but the system is %s.", poolArch.trim(), clienttasks.arch), "The statusDetails from the consumed product subscription '"+productSubscription.productName+"' poolId='"+productSubscription.poolId+"' when the system's arch '"+clienttasks.arch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'."); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 		}
 		
 		/* THIS ASSERTION BLOCK IS NOT ACCURATE SINCE THE ARCH ON THE PRODUCT CERT IS NOT CONSIDERED AT ALL
@@ -181,7 +185,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by more than one common service level",
-			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","cli.tests","blockedbyBug-859652"},
+			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","cli.tests","blockedbyBug-859652","blockedbyBug-1183175"},
 			dataProvider="getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesData",
 			priority=100,
 			enabled=true)
