@@ -391,7 +391,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}));
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.13.6-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.5");		// RHEL7.1
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.13.13-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.10");		// RHEL7.1	// commit 649f5f7a814e05374b5c0ba56f29a59f4925f7ff Use custom JSON encoding function to encode sets.
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.13.6-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.5");		// RHEL7.1
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.12.3-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.12.3");		// RHEL7.1
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.14-6"))	expectedRequiresList.add("manual: python-rhsm >= 1.10.12-2");	// RHEL7.0	// Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.10.9");		// RHEL7.0
