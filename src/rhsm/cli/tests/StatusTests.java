@@ -291,11 +291,16 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		// assert the individual consumed subscription status details
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 			
-			// asset the list status output
-			if (productSubscription.statusDetails.isEmpty()) {
+			// assert the list status output
+//			if (productSubscription.statusDetails.isEmpty()) {	// is not sufficient after bug 1180400 implementation
+			if (productSubscription.statusDetails.isEmpty() && clienttasks.isPackageVersion("subscription-manager","<", "1.13.13-1")) {
 				Assert.assertTrue(getSubstringMatches(statusResult.getStdout(), "(^|/)"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+"(|/.+):").isEmpty(),
-						"Expecting the empty status details "+productSubscription.statusDetails+" of consumed subscription '"+productSubscription.productName+"' to NOT appear in the list of overall status details.");
-			} else {
+						"Expecting the empty status details "+productSubscription.statusDetails+" of consumed subscription '"+productSubscription.productName+"' to NOT appear in the list of overall status details of the installed products.");
+			} else if (productSubscription.statusDetails.size()==1 && productSubscription.statusDetails.get(0).trim().equals("Subscription is current") && clienttasks.isPackageVersion("subscription-manager",">=", "1.13.13-1")) {	// commit 252ec4520fb6272b00ae379703cd004f558aac63	// bug 1180400: "Status Details" are now populated on CLI
+				Assert.assertTrue(getSubstringMatches(statusResult.getStdout(), "(^|/)"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+"(|/.+):").isEmpty(),
+						"Expecting the compliant status details '"+"Subscription is current"+"' of consumed subscription '"+productSubscription.productName+"' to NOT appear in the list of overall status details of the installed products.");			
+			}
+			else {
 				for (String statusDetail : productSubscription.statusDetails) {
 					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "(^|/)"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+"(|/.+):(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")).isEmpty(),
 							"Expecting the status detail '"+statusDetail+"' of consumed subscription '"+productSubscription.productName+"' to appear in the list of overall status details.");
