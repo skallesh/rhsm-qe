@@ -194,6 +194,20 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			int quantityAttached=0;
 			for (int quantityAttempted=0; quantityAttempted<=poolInstanceMultiplier+1; quantityAttempted++) {
 				SSHCommandResult sshCommandResult = clienttasks.subscribe_(false,null,pool.poolId,null,null,String.valueOf(quantityAttempted),null,null,null,null,null, null);
+				
+				// TEMPORARY WORKAROUND FOR BUG: 1183122 - rhsmd/subman dbus traceback on 'attach --pool'
+				if (sshCommandResult.getStderr().contains("KeyError: 'product_id'")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1183122"; 
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						log.warning("Encountered bug '"+bugId+"'. Skipping stdout/stderr/exitCode assertion from the prior subscribe command while bug '"+bugId+"' is open.");
+						if (quantityAttempted%poolInstanceMultiplier==0) quantityAttached+=quantityAttempted;
+						continue;
+					}
+				}
+				// END OF WORKAROUND
+				
 				if (quantityAttempted==0) {
 					if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 						Assert.assertEquals(sshCommandResult.getStderr().trim(), "Error: Quantity must be a positive integer.", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
@@ -221,7 +235,12 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(productSubscription, "Found a consumed product subscription to '"+pool.subscriptionName+"' after manually subscribing.");
 			Assert.assertEquals(productSubscription.quantityUsed,Integer.valueOf(poolInstanceMultiplier),"The attached quantity of instance based subscription '"+pool.subscriptionName+"' in the list of consumed product subscriptions.");
 			if (poolInstanceMultiplier>=expectedQuantityToAchieveCompliance) {	// compliant when true
-				Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "Indicated by an empty value, Status Details for consumed product subscription '"+productSubscription.productName+"' is compliant (Actual="+productSubscription.statusDetails+").");
+//				Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "Indicated by an empty value, Status Details for consumed product subscription '"+productSubscription.productName+"' is compliant (Actual="+productSubscription.statusDetails+").");
+				List<String> expectedStatusDetails = new ArrayList<String>();	// empty
+				if (clienttasks.isPackageVersion("subscription-manager",">=", "1.13.13-1")) {	 // commit 252ec4520fb6272b00ae379703cd004f558aac63	// bug 1180400: "Status Details" are now populated on CLI
+					expectedStatusDetails = Arrays.asList(new String[]{"Subscription is current"});	// Bug 1180400 - Status datails is blank in list consumed output
+				}
+				Assert.assertEquals(productSubscription.statusDetails, expectedStatusDetails, "The statusDetails from the consumed product subscription '"+productSubscription.productName+"' poolId='"+productSubscription.poolId+"' should be "+expectedStatusDetails+" indicating compliance.");
 			} else {
 				List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only supports %s of %s sockets.",(quantityAttached*poolSockets)/poolInstanceMultiplier,systemSockets)});	// Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 				if (productSubscription.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
@@ -278,7 +297,12 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 						float socketsCoveredByThisPool = prodSub.quantityUsed.floatValue()*thisPoolSockets.floatValue()/thisPoolInstanceMultiplier.floatValue();
 						log.info("Attached product subscription '"+prodSub.productName+"' with quantity '"+prodSub.quantityUsed+"' contributes to '"+socketsCoveredByThisPool+"' cpu_socket(s) of coverage.");
 						totalSocketsCovered+=socketsCoveredByThisPool;
-						Assert.assertTrue(prodSub.statusDetails.isEmpty(),"Status Details of auto-attached subscription '"+prodSub.productName+"' covering '"+thisPoolSockets+"' sockets with instance_multiplier '"+thisPoolInstanceMultiplier+"' expected to contribute to the full compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be empty.  Actual="+prodSub.statusDetails);
+//						Assert.assertTrue(prodSub.statusDetails.isEmpty(),"Status Details of auto-attached subscription '"+prodSub.productName+"' covering '"+thisPoolSockets+"' sockets with instance_multiplier '"+thisPoolInstanceMultiplier+"' expected to contribute to the full compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be empty.  Actual="+prodSub.statusDetails);
+						List<String> expectedStatusDetails = new ArrayList<String>();	// empty
+						if (clienttasks.isPackageVersion("subscription-manager",">=", "1.13.13-1")) {	 // commit 252ec4520fb6272b00ae379703cd004f558aac63	// bug 1180400: "Status Details" are now populated on CLI
+							expectedStatusDetails = Arrays.asList(new String[]{"Subscription is current"});	// Bug 1180400 - Status datails is blank in list consumed output
+						}
+						Assert.assertEquals(prodSub.statusDetails, expectedStatusDetails, "Status Details of auto-attached subscription '"+prodSub.productName+"' covering '"+thisPoolSockets+"' sockets with instance_multiplier '"+thisPoolInstanceMultiplier+"' expected to contribute to the full compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should indicate compliance.  Actual="+prodSub.statusDetails);
 					}
 				}
 				Assert.assertTrue(systemSockets+maxIncrementOfPhysicalSocketCoverage>totalSocketsCovered && totalSocketsCovered>=systemSockets, "After auto-subscribing to complete a stacked quantity of subscriptions providing for installed product ids '"+providedProductIdsActuallyInstalled+"', the total cpu_socket(s) coverage of '"+totalSocketsCovered+"' should minimally satistfy the system's physical socket count of '"+systemSockets+"' cpu_socket(s) within '"+maxIncrementOfPhysicalSocketCoverage+"' sockets of excess coverage.");
