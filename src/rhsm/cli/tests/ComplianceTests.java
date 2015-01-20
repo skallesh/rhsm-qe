@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -22,8 +23,10 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
+
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
@@ -32,6 +35,7 @@ import rhsm.data.ProductCert;
 import rhsm.data.ProductNamespace;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
+
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -261,7 +265,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by one common service level",
-			groups={"configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","cli.tests","blockedbyBug-859652"},
+			groups={"configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","cli.tests","blockedbyBug-859652","blockedbyBug-1183175"},
 			priority=200,
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -308,7 +312,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when some installed products are subscribable",
-			groups={"configureProductCertDirForSomeProductsSubscribable","cli.tests"},
+			groups={"configureProductCertDirForSomeProductsSubscribable","cli.tests","blockedbyBug-1183175"},
 			priority=300,
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -387,7 +391,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable",
-			groups={"configureProductCertDirForAllProductsSubscribable","cli.tests"},
+			groups={"configureProductCertDirForAllProductsSubscribable","cli.tests","blockedbyBug-1183175"},
 			priority=400,
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -450,7 +454,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when no installed products are subscribable",
-			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests"},
+			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests","blockedbyBug-1183175"},
 			priority=500,
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -531,7 +535,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when no products are installed",
-			groups={"configureProductCertDirForNoProductsInstalled","cli.tests"},
+			groups={"configureProductCertDirForNoProductsInstalled","cli.tests","blockedbyBug-1183175"},
 			priority=600,
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -700,7 +704,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact remains False when all installed products are subscribable in the future",
-			groups={"configureProductCertDirForAllProductsSubscribableInTheFuture","cli.tests","blockedbyBug-737553","blockedbyBug-649068"},
+			groups={"configureProductCertDirForAllProductsSubscribableInTheFuture","cli.tests","blockedbyBug-737553","blockedbyBug-649068","blockedbyBug-1183175"},
 			priority=800,
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -1099,6 +1103,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForSomeProductsSubscribable")
 	public void configureProductCertDirForSomeProductsSubscribable() {
 		clienttasks.unregister(null, null, null);
+		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1183175"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Cannot configure a different productCertDir while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForSomeProductsSubscribable);
 		SSHCommandResult r0 = client.runCommandAndWait("ls -1 "+productCertDirForSomeProductsSubscribable+" | wc -l");
 		SSHCommandResult r1 = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribable+" | wc -l");
@@ -1114,6 +1126,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribable")
 	public void configureProductCertDirForAllProductsSubscribable() {
 		clienttasks.unregister(null, null, null);
+		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1183175"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Cannot configure a different productCertDir while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribable);	
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribable+" | wc -l");
 		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are subscribable based on the currently available subscriptions.");
@@ -1126,6 +1146,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForNoProductsSubscribable")
 	public void configureProductCertDirForNoProductsSubscribable() {
 		clienttasks.unregister(null, null, null);
+		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1183175"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Cannot configure a different productCertDir while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForNoProductsSubscribable);
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForNoProductsSubscribable+" | wc -l");
 		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are non-subscribable based on the currently available subscriptions.");
@@ -1138,6 +1166,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForNoProductsInstalled")
 	public void configureProductCertDirForNoProductsInstalled() {
 		clienttasks.unregister(null, null, null);
+		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1183175"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Cannot configure a different productCertDir while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForNoProductsinstalled);
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForNoProductsinstalled+" | wc -l");
 		Assert.assertEquals(Integer.valueOf(r.getStdout().trim()),Integer.valueOf(0),
@@ -1149,6 +1185,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableInTheFuture")
 	public void configureProductCertDirForAllProductsSubscribableInTheFuture() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
+		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1183175"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Cannot configure a different productCertDir while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribableInTheFuture);	
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribableInTheFuture+" | wc -l");
 		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are subscribable to future available subscriptions.");
@@ -1161,6 +1205,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel")
 	public void configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel() {
 		clienttasks.unregister(null, null, null);
+		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1183175"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Cannot configure a different productCertDir while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribableByOneCommonServiceLevel);	
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribableByOneCommonServiceLevel+" | wc -l");
 		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are autosubscribable via one common service level.");
@@ -1173,6 +1225,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel")
 	public void configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel() {
 		clienttasks.unregister(null, null, null);
+		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1183175"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Cannot configure a different productCertDir while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel);	
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel+" | wc -l");
 		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are autosubscribable via more than one common service level.");
