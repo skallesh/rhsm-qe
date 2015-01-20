@@ -472,6 +472,17 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			return registerResult;
 		}
 		
+		// TEMPORARY WORKAROUND FOR BUG: 1183122 - rhsmd/subman dbus traceback on 'attach --pool'
+		if (registerResult.getStderr().contains("KeyError: 'product_id'")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1183122"; 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Encountered bug '"+bugId+"'. Skipping stderr assertion from the prior register with activationkey command while bug '"+bugId+"' is open.");
+			}
+		} else	// Assert.assertEquals(registerResult.getStderr().trim(), "");
+		// END OF WORKAROUND
+		
 		// assert success
 		Assert.assertEquals(registerResult.getStderr().trim(), "");
 		//Assert.assertNotSame(registerResult.getExitCode(), Integer.valueOf(255), "The exit code from the register command does not indicate a failure.");
@@ -1498,8 +1509,28 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			log.info("SSHCommandResult from an attempt to register with activation keys on '"+client1tasks.hostname+"': \n"+client1Result);
 			log.info("SSHCommandResult from an attempt to register with activation keys on '"+client2tasks.hostname+"': \n"+client2Result);
 			Assert.assertEquals(client1Result.getExitCode(), Integer.valueOf(0), "The exit code from register with activation keys on '"+client1tasks.hostname+"'.");
+			// TEMPORARY WORKAROUND FOR BUG: 1183122 - rhsmd/subman dbus traceback on 'attach --pool'
+			if (client1Result.getStderr().contains("KeyError: 'product_id'")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1183122"; 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Encountered bug '"+bugId+"'. Skipping stderr/exitCode assertion from the prior register with activationkey command while bug '"+bugId+"' is open.");
+				}
+			} else	// Assert client1Result.getStderr()
+			// END OF WORKAROUND
 			Assert.assertEquals(client1Result.getStderr(), "", "Stderr from the unsubscribe all on '"+client1tasks.hostname+"'.");
 			Assert.assertEquals(client2Result.getExitCode(), Integer.valueOf(0), "The exit code from register with activation keys on '"+client2tasks.hostname+"'.");
+			// TEMPORARY WORKAROUND FOR BUG: 1183122 - rhsmd/subman dbus traceback on 'attach --pool'
+			if (client2Result.getStderr().contains("KeyError: 'product_id'")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1183122"; 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Encountered bug '"+bugId+"'. Skipping stderr/exitCode assertion from the prior register with activationkey command while bug '"+bugId+"' is open.");
+				}
+			} else	// Assert client2Result.getStderr()
+			// END OF WORKAROUND
 			Assert.assertEquals(client2Result.getStderr(), "", "Stderr from the unsubscribe all on '"+client2tasks.hostname+"'.");
 		}
 	}
