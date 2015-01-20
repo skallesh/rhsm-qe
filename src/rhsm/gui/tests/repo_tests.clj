@@ -95,11 +95,13 @@
          list-row (into [] (range row-count))
          row-num (nth list-row (rand (count list-row)))
          repo (tasks/ui getcellvalue :repo-table row-num 2)]
+     (tasks/ui selectrow :repo-table repo)
+     (sleep 2000)
      (tasks/ui checkrow :repo-table row-num 1)
      (sleep 2000)
      (tasks/ui checkrow :repo-table row-num 0)
      (sleep 2000)
-     (if-not (and (tasks/has-state? :repo-remove-override "visible")
+     (if-not (and (tasks/has-state? :repo-remove-override "sensitive")
                   (tasks/has-state? :repo-remove-override "enabled")
                   (< @counter 10))
        (do
@@ -200,6 +202,21 @@
      (tasks/ui click :close-repo-dialog)
      (tasks/unsubscribe_all))))
 
+(defn toggle-checkbox-state
+  "This is a helper function to toggle state of checkbox"
+  [row-num]
+  (tasks/ui checkrow :repo-table row-num 1)
+  (sleep 2000)
+  (tasks/ui checkrow :repo-table row-num 0)
+  (sleep 2000)
+  (if-not (and (tasks/has-state? :repo-remove-override "enabled")
+               (tasks/has-state? :repo-remove-override "sensitive"))
+    (do
+      (tasks/ui uncheckrow :repo-table row-num 0)
+      (sleep 2000)
+      (tasks/ui uncheckrow :repo-table row-num 1)
+      (sleep 2000))))
+
 (defn ^{Test {:groups ["repo"
                        "tier3"
                        "blockedByBug-1095938"
@@ -210,11 +227,9 @@
   [_ repo]
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
+  (sleep 3000)
   (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
-    (tasks/ui checkrow :repo-table row-num 1)
-    (sleep 2000)
-    (tasks/ui checkrow :repo-table row-num 0)
-    (sleep 2000))
+    (toggle-checkbox-state row-num))
   (verify (tasks/has-state? :repo-remove-override "enabled"))
   (assert-and-remove-all-override)
   (verify (not (tasks/has-state? :repo-remove-override "enabled"))))
@@ -267,7 +282,7 @@
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
   (sleep 2000)
-  (verify (and (tasks/has-state? :repo-remove-override "visible")
+  (verify (and (tasks/has-state? :repo-remove-override "sensitive")
                (tasks/has-state? :repo-remove-override "enabled"))))
 
 (defn ^{AfterGroups {:groups ["repo"
@@ -286,6 +301,8 @@
                              (assert-and-remove-all-override)))
   (tasks/ui click :close-repo-dialog)
   (tasks/unsubscribe_all))
+
+;; Comment ends here
 )
 
 (defn ^{Test {:groups ["repo"
@@ -304,6 +321,8 @@
       (throw (SkipException.
               (str "Repo without overrides not found"))))
     ;; overriding random repo
+    (tasks/ui selectrowindex :repo-table @random_row_num)
+    (sleep 3000)
     (tasks/ui checkrow :repo-table @random_row_num 1)
     (sleep 2000)
     (tasks/ui checkrow :repo-table @random_row_num 0)
@@ -315,7 +334,7 @@
     (assert-and-open-repo-dialog)
     (tasks/ui selectrowindex :repo-table @random_row_num)
     (sleep 2000)
-    (verify (and (tasks/has-state? :repo-remove-override "visible")
+    (verify (and (tasks/has-state? :repo-remove-override "sensitive")
                  (tasks/has-state? :repo-remove-override "enabled")))
     (assert-and-remove-all-override)
     (finally

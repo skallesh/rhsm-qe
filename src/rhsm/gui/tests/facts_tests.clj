@@ -57,7 +57,7 @@
                      :arch arch})))))
     @productlist))
 
-(defn ^{BeforeClass {:groups ["facts"]}}
+(defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
   (try
     (if (= "RHEL7" (get-release)) (base/startup nil))
