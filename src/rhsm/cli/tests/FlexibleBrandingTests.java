@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -27,6 +28,7 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -474,6 +476,15 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		productCert37060 = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "37060", productCerts);
 		if (productCert32060==null) throw new SkipException("Could not find expected flexible branded product cert id 32060 installed.");
 		if (productCert37060==null) throw new SkipException("Could not find expected flexible branded product cert id 37060 installed.");
+		
+		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1183175"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Cannot configure a different productCertDir while bug '"+bugId+"' is open.");
+		}
+		// END OF WORKAROUND
 		
 		originalProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
 		Assert.assertNotNull(originalProductCertDir);
