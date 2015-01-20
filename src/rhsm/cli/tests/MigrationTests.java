@@ -2500,6 +2500,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
 				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 				bugIds.add("1131213");	// Bug 1131213 - rhn-migrate-classic-to-rhsm throws gaierror: [Errno -2] Name or service not known
+				bugIds.add("1171808");	// Bug 1171808 - rhn-migrate-classic-to-rhsm throws gaierror: [Errno -2] Name or service not known
 				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 				l.set(0, blockedByBzBug);
 			}
@@ -2643,6 +2644,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
 				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 				bugIds.add("1131213");	// Bug 1131213 - rhn-migrate-classic-to-rhsm throws gaierror: [Errno -2] Name or service not known
+				bugIds.add("1171808");	// Bug 1171808 - rhn-migrate-classic-to-rhsm throws gaierror: [Errno -2] Name or service not known
 				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 				l.set(0, blockedByBzBug);
 			}
