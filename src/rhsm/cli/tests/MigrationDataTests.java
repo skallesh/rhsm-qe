@@ -1947,6 +1947,16 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 //					bugIds.add("896195");
 //				}
 				
+				if (rhnChannel.startsWith("rhel-x86_64-server-7-ost-6")) {	// rhel-x86_64-server-7-ost-6 rhel-x86_64-server-7-ost-6-debuginfo rhel-x86_64-server-7-ost-6-installer rhel-x86_64-server-7-ost-6-installer-debuginfo
+					// Bug 1184653 - RHN channel to product cert mappings for OpenStack-6.0 191.pem are missing from subscription-manager-migration-data
+					bugIds.add("1184653");
+				}
+				
+				if (rhnChannel.startsWith("redhat-rhn-satellite-5.7-server")) {	// redhat-rhn-satellite-5.7-server-x86_64-6 redhat-rhn-satellite-5.7-server-s390x-6
+					// Bug 1184657 - RHN channel to product cert mappings for Satellite Server 5.7 250.pem are missing from subscription-manager-migration-data
+					bugIds.add("1184657");
+				}
+				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 				ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnChannel,	productCertFile}));
