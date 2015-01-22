@@ -1790,6 +1790,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		
 			for (String rhnChannel : cdnProductCertsChannelMap.keySet()) {
 				File productCertFile = cdnProductCertsChannelMap.get(rhnChannel);
+				String productId = getProductIdFromProductCertFilename(productCertFile.getPath());
 				
 				// filter out all RHN Channels that map to a release of rhel that does not equal the current release (clienttasks.redhatReleaseXY)
 				String regex="/rhel-(\\d+)\\.(\\d+).*";	// match it against example like: /rhel-5.9-beta/Server-Server-x86_64-4b918bda53c0-69.pem  /rhel-6.3/EUS-HighAvailability-x86_64-51676442768e-84.pem  /mrg-2.1/Server-MRG-R-x86_64-e1d154eaac1f-172.pem
@@ -1801,151 +1802,137 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 						continue;
 					}
 				}
-
-
-// UNDER CONSTRUCTION
-//				// filter out all RHN Channels not associated with this release  (e.g., assume that an rhn channel containing "-5-" or ends in "-5" is only applicable to rhel5 
-//				if (!(rhnChannel.contains("-"+clienttasks.redhatReleaseX+"-") || rhnChannel.endsWith("-"+clienttasks.redhatReleaseX))) continue;
-//				
-//				// skip on these RHN Channels that slip through this ^ filter
-//				// [root@jsefler-onprem-5server tmp]# grep jboss /tmp/product-baseline.json | grep -v Label
-//	            // "rhel-x86_64-server-6-rhevm-3-jboss-5", 
-//	            // "rhel-x86_64-server-6-rhevm-3-jboss-5-beta", 
-//	            // "rhel-x86_64-server-6-rhevm-3-jboss-5-debuginfo", 
-//	            // "rhel-x86_64-server-6-rhevm-3-jboss-5-beta-debuginfo"
-//				List<String> rhnChannelExceptions = Arrays.asList("rhel-x86_64-server-6-rhevm-3-jboss-5","rhel-x86_64-server-6-rhevm-3-jboss-5-beta","rhel-x86_64-server-6-rhevm-3-jboss-5-debuginfo","rhel-x86_64-server-6-rhevm-3-jboss-5-beta-debuginfo");
-//				if (rhnChannelExceptions.contains(rhnChannel) && !clienttasks.redhatReleaseX.equals(/*"5"*/"6")) continue;
-				
+								
 				// bugzillas
 				Set<String> bugIds = new HashSet<String>();
-//				if (rhnChannel.contains("-rhev-agent-") && clienttasks.redhatReleaseX.equals("5")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
-//					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
-//					bugIds.add("786278");
-//				}
-//				if (rhnChannel.contains("-vt-")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
-//					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
-//					bugIds.add("786278");
-//				}
-//				if (rhnChannel.startsWith("rhel-i386-rhev-agent-") /* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
-//					// Bug 816364 - channel-cert-mapping.txt is missing a mapping for product 150 "Red Hat Enterprise Virtualization" on i386
-//					bugIds.add("816364");
-//				}
-//				if (rhnChannel.endsWith("-beta") && clienttasks.redhatReleaseX.equals("5")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
-//					// Bug 786203 - all RHN *beta Channels in channel-cert-mapping.txt are mapped to "none" instead of valid productId
-//					bugIds.add("786203");
-//				}			
-//				if (rhnChannel.endsWith("-debuginfo") && clienttasks.redhatReleaseX.equals("5")) { 
-//					// Bug 786140 - RHN Channels for "*debuginfo" are missing from the channel-cert-mapping.txt 
-//					bugIds.add("786140");
-//				}
-//				if (rhnChannel.startsWith("rhel-x86_64-server-6-rhevh") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3-jboss-5") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-sjis-6") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-sap-6") ||
-//					/*
-//					rhnChannel.startsWith("rhel-x86_64-server-optional-6-htb") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-sfs-6-htb") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-ha-6-htb") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-rs-6-htb") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-6-htb") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-lb-6-htb") ||
-//					rhnChannel.startsWith("rhel-x86_64-workstation-sfs-6-htb") ||
-//					rhnChannel.startsWith("rhel-x86_64-workstation-6-htb") ||
-//					rhnChannel.startsWith("rhel-x86_64-workstation-optional-6-htb") ||
-//					*/
-//					rhnChannel.startsWith("rhel-x86_64-rhev-mgmt-agent-6") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-6-cf-tools-1") || rhnChannel.startsWith("rhel-i386-server-6-cf-tools-1") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-6-cf-ae-1") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-6-cf-ce-1") ||
-//					rhnChannel.startsWith("rhel-x86_64-server-6-cf-se-1") ||	
-//					rhnChannel.startsWith("sam-rhel-x86_64-server-6-htb") || rhnChannel.startsWith("sam-rhel-x86_64-server-6-beta")) { 
-//					// Bug 799152 - subscription-manager-migration-data is missing some product certs for RHN Channels in product-baseline.json
-//					bugIds.add("799152");
-//				}
-//				if (rhnChannel.equals("rhel-s390x-server-6") ||
-//					rhnChannel.equals("rhel-s390x-server-optional-6") ||
-//					rhnChannel.equals("rhel-s390x-server-supplementary-6")) { 
-//					// Bug 799103 - no mapping for s390x product cert included in the subscription-manager-migration-data
-//					bugIds.add("799103");
-//				}
-//				if (rhnChannel.equals("sam-rhel-x86_64-server-6") ||
-//					rhnChannel.equals("sam-rhel-x86_64-server-6-debuginfo")) { 
-//					// Bug 815433 - sam-rhel-x86_64-server-6-beta channel mapping needs replacement in channel-cert-mapping.txt 
-//					bugIds.add("815433");
-//				}
-//				if (productId.equals("167")) {
-//					// Bug 811633 - channel-cert-mapping.txt is missing a mapping for product 167 "Red Hat CloudForms"
-//					bugIds.add("811633");
-//				}
-//				if (productId.equals("183") || productId.equals("184") || productId.equals("185")) if (clienttasks.redhatReleaseX.equals("6")) {
-//					// Bug 825603 - channel-cert-mapping.txt is missing a mapping for JBoss product ids 183,184,185
-//					bugIds.add("825603");
-//				}
-//				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("6")) { 
-//					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
-//					//TODO UNCOMMENT AFTER BUG 884688 IS FIXED bugIds.add("820749");
-//				}
-//				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("5")) { 
-//					// Bug 852551 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
-//					bugIds.add("852551");
-//				}
-//				if (productId.equals("195")) if (clienttasks.redhatReleaseX.equals("5")) {
-//					// Bug 869008 - mapping for productId 195 "Red Hat Developer Toolset (for RHEL for IBM POWER)" is missing
-//					bugIds.add("869008");
-//				}
-//				if (productId.equals("195")) if (clienttasks.redhatReleaseX.equals("6")) {
-//					// Bug 875802 - mapping for productId 195 "Red Hat Developer Toolset (for RHEL for IBM POWER)" is missing
-//					bugIds.add("875802");
-//				}
-//				if (productId.equals("181")) {
-//					// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
-//					bugIds.add("840148");
-//					// Bug 847069 - Add certificates for rhel-x86_64-server-eucjp-5* channels.
-//					bugIds.add("847069");
-//				}
-//				if (rhnChannel.startsWith("rhel-i386-rhev-agent-5-")) { 
-//					// Bug 849305 - rhel-i386-rhev-agent-5-* maps in channel-cert-mapping.txt do not match CDN Product Baseline
-//					bugIds.add("849305");
-//				}
-//				if (rhnChannel.startsWith("jbappplatform-4.2-els-")) { 
-//					// Bug 861470 - JBoss Enterprise Application Platform - ELS (jbappplatform-4.2.0) 192.pem product certs are missing from subscription-manager-migration-data
-//					bugIds.add("861470");
-//				}
-//				if (rhnChannel.startsWith("rhel-x86_64-rhev-mgmt-agent-5")) { 
-//					// Bug 861420 - Red Hat Enterprise Virtualization (rhev-3.0) 150.pem product certs are missing from subscription-manager-migration-data
-//					bugIds.add("861420");
-//				}
-//				if (rhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-5-debuginfo") || rhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-5-beta-debuginfo")) { 
-//					// Bug 865566 - RHEL-5/channel-cert-mapping.txt is missing a mapping for two rhev debuginfo channels
-//					bugIds.add("865566");
-//				}
-//				if (productId.equals("167") || productId.equals("155") || productId.equals("186") || productId.equals("191") || productId.equals("188") || productId.equals("172")) if (clienttasks.redhatReleaseX.equals("6")) {
-//					// Bug 872959 - many product certs and their RHN Channel mappings are missing from the RHEL64 subscription-manager-migration-data
-//					bugIds.add("872959");
-//				}
-//				if (productId.equals("197") || productId.equals("198")) {
-//					// Bug 875760 - some openshift product certs and their RHN Channel mappings are missing from the RHEL64 subscription-manager-migration-data
-//					bugIds.add("875760");
-//				}
-//				if (rhnChannel.startsWith("rhel-x86_64-server-6-ost-folsom")) { 
-//					// Bug 884657 - the server-6-ost-folsom channels need to be mapped into channel-cert-mapping.txt
-//					bugIds.add("884657");
-//				}
-//				if (rhnChannel.equals("rhel-x86_64-hpc-node-dts-6") || rhnChannel.equals("rhel-x86_64-hpc-node-dts-6-debuginfo")) {
-//					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
-//					bugIds.add("820749");
-//					// Bug 884688 - RHN channel "rhel-x86_64-hpc-node-dts-6" is mapped to 177, but the product cert 177.pem is missing 
-//					bugIds.add("884688");
-//				}
-//				if (rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3.1")) { 
-//					// Bug 888791 - product cert mappings for RHN Channels rhel-x86_64-server-6-rhevm-3.1* are missing
-//					bugIds.add("888791");
-//				}
-//				if (rhnChannel.startsWith("rhel-i386-server-sjis-6")) {	// rhel-i386-server-sjis-6 rhel-i386-server-sjis-6-debuginfo rhel-i386-server-sjis-6-beta rhel-i386-server-sjis-6-beta-debuginfo
-//					// Bug 896195 - rhel-i386-server-sjis-6 channels are not yet mapped in channel-cert-mapping.txt
-//					bugIds.add("896195");
-//				}
+				if (rhnChannel.contains("-rhev-agent-") && clienttasks.redhatReleaseX.equals("5")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
+					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
+					bugIds.add("786278");
+				}
+				if (rhnChannel.contains("-vt-")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
+					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
+					bugIds.add("786278");
+				}
+				if (rhnChannel.startsWith("rhel-i386-rhev-agent-") /* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
+					// Bug 816364 - channel-cert-mapping.txt is missing a mapping for product 150 "Red Hat Enterprise Virtualization" on i386
+					bugIds.add("816364");
+				}
+				if (rhnChannel.endsWith("-beta") && clienttasks.redhatReleaseX.equals("5")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
+					// Bug 786203 - all RHN *beta Channels in channel-cert-mapping.txt are mapped to "none" instead of valid productId
+					bugIds.add("786203");
+				}			
+				if (rhnChannel.endsWith("-debuginfo") && clienttasks.redhatReleaseX.equals("5")) { 
+					// Bug 786140 - RHN Channels for "*debuginfo" are missing from the channel-cert-mapping.txt 
+					bugIds.add("786140");
+				}
+				if (rhnChannel.startsWith("rhel-x86_64-server-6-rhevh") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3-jboss-5") ||
+					rhnChannel.startsWith("rhel-x86_64-server-sjis-6") ||
+					rhnChannel.startsWith("rhel-x86_64-server-sap-6") ||
+					/*
+					rhnChannel.startsWith("rhel-x86_64-server-optional-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-sfs-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-ha-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-rs-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-lb-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-workstation-sfs-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-workstation-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-workstation-optional-6-htb") ||
+					*/
+					rhnChannel.startsWith("rhel-x86_64-rhev-mgmt-agent-6") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-cf-tools-1") || rhnChannel.startsWith("rhel-i386-server-6-cf-tools-1") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-cf-ae-1") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-cf-ce-1") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-cf-se-1") ||	
+					rhnChannel.startsWith("sam-rhel-x86_64-server-6-htb") || rhnChannel.startsWith("sam-rhel-x86_64-server-6-beta")) { 
+					// Bug 799152 - subscription-manager-migration-data is missing some product certs for RHN Channels in product-baseline.json
+					bugIds.add("799152");
+				}
+				if (rhnChannel.equals("rhel-s390x-server-6") ||
+					rhnChannel.equals("rhel-s390x-server-optional-6") ||
+					rhnChannel.equals("rhel-s390x-server-supplementary-6")) { 
+					// Bug 799103 - no mapping for s390x product cert included in the subscription-manager-migration-data
+					bugIds.add("799103");
+				}
+				if (rhnChannel.equals("sam-rhel-x86_64-server-6") ||
+					rhnChannel.equals("sam-rhel-x86_64-server-6-debuginfo")) { 
+					// Bug 815433 - sam-rhel-x86_64-server-6-beta channel mapping needs replacement in channel-cert-mapping.txt 
+					bugIds.add("815433");
+				}
+				if (productId.equals("167")) {
+					// Bug 811633 - channel-cert-mapping.txt is missing a mapping for product 167 "Red Hat CloudForms"
+					bugIds.add("811633");
+				}
+				if (productId.equals("183") || productId.equals("184") || productId.equals("185")) if (clienttasks.redhatReleaseX.equals("6")) {
+					// Bug 825603 - channel-cert-mapping.txt is missing a mapping for JBoss product ids 183,184,185
+					bugIds.add("825603");
+				}
+				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("6")) { 
+					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
+					//TODO UNCOMMENT AFTER BUG 884688 IS FIXED bugIds.add("820749");
+				}
+				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("5")) { 
+					// Bug 852551 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
+					bugIds.add("852551");
+				}
+				if (productId.equals("195")) if (clienttasks.redhatReleaseX.equals("5")) {
+					// Bug 869008 - mapping for productId 195 "Red Hat Developer Toolset (for RHEL for IBM POWER)" is missing
+					bugIds.add("869008");
+				}
+				if (productId.equals("195")) if (clienttasks.redhatReleaseX.equals("6")) {
+					// Bug 875802 - mapping for productId 195 "Red Hat Developer Toolset (for RHEL for IBM POWER)" is missing
+					bugIds.add("875802");
+				}
+				if (productId.equals("181")) {
+					// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
+					bugIds.add("840148");
+					// Bug 847069 - Add certificates for rhel-x86_64-server-eucjp-5* channels.
+					bugIds.add("847069");
+				}
+				if (rhnChannel.startsWith("rhel-i386-rhev-agent-5-")) { 
+					// Bug 849305 - rhel-i386-rhev-agent-5-* maps in channel-cert-mapping.txt do not match CDN Product Baseline
+					bugIds.add("849305");
+				}
+				if (rhnChannel.startsWith("jbappplatform-4.2-els-")) { 
+					// Bug 861470 - JBoss Enterprise Application Platform - ELS (jbappplatform-4.2.0) 192.pem product certs are missing from subscription-manager-migration-data
+					bugIds.add("861470");
+				}
+				if (rhnChannel.startsWith("rhel-x86_64-rhev-mgmt-agent-5")) { 
+					// Bug 861420 - Red Hat Enterprise Virtualization (rhev-3.0) 150.pem product certs are missing from subscription-manager-migration-data
+					bugIds.add("861420");
+				}
+				if (rhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-5-debuginfo") || rhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-5-beta-debuginfo")) { 
+					// Bug 865566 - RHEL-5/channel-cert-mapping.txt is missing a mapping for two rhev debuginfo channels
+					bugIds.add("865566");
+				}
+				if (productId.equals("167") || productId.equals("155") || productId.equals("186") || productId.equals("191") || productId.equals("188") || productId.equals("172")) if (clienttasks.redhatReleaseX.equals("6")) {
+					// Bug 872959 - many product certs and their RHN Channel mappings are missing from the RHEL64 subscription-manager-migration-data
+					bugIds.add("872959");
+				}
+				if (productId.equals("197") || productId.equals("198")) {
+					// Bug 875760 - some openshift product certs and their RHN Channel mappings are missing from the RHEL64 subscription-manager-migration-data
+					bugIds.add("875760");
+				}
+				if (rhnChannel.startsWith("rhel-x86_64-server-6-ost-folsom")) { 
+					// Bug 884657 - the server-6-ost-folsom channels need to be mapped into channel-cert-mapping.txt
+					bugIds.add("884657");
+				}
+				if (rhnChannel.equals("rhel-x86_64-hpc-node-dts-6") || rhnChannel.equals("rhel-x86_64-hpc-node-dts-6-debuginfo")) {
+					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
+					bugIds.add("820749");
+					// Bug 884688 - RHN channel "rhel-x86_64-hpc-node-dts-6" is mapped to 177, but the product cert 177.pem is missing 
+					bugIds.add("884688");
+				}
+				if (rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3.1")) { 
+					// Bug 888791 - product cert mappings for RHN Channels rhel-x86_64-server-6-rhevm-3.1* are missing
+					bugIds.add("888791");
+				}
+				if (rhnChannel.startsWith("rhel-i386-server-sjis-6")) {	// rhel-i386-server-sjis-6 rhel-i386-server-sjis-6-debuginfo rhel-i386-server-sjis-6-beta rhel-i386-server-sjis-6-beta-debuginfo
+					// Bug 896195 - rhel-i386-server-sjis-6 channels are not yet mapped in channel-cert-mapping.txt
+					bugIds.add("896195");
+				}
 				
 				if (rhnChannel.startsWith("rhel-x86_64-server-7-ost-6")) {	// rhel-x86_64-server-7-ost-6 rhel-x86_64-server-7-ost-6-debuginfo rhel-x86_64-server-7-ost-6-installer rhel-x86_64-server-7-ost-6-installer-debuginfo
 					// Bug 1184653 - RHN channel to product cert mappings for OpenStack-6.0 191.pem are missing from subscription-manager-migration-data
