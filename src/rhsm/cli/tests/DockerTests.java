@@ -179,10 +179,43 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	protected String consumerId=null;
-
 	
 	
-	
+	@Test(	description="Verify that subscription-manager-container-plugin production needed registry_hostnames and CA certs",
+			groups={"AcceptanceTests","blockedbyBug-1184940"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyExpectedRegistryHostnamesAreConfigured_Test() {
+		
+		// get the list of registry_hostnames from /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf
+		String registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
+		List<String> registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
+		
+		// verify all the expected registry hostnames are configured
+		List<String> expectedRegistryHostnames = new ArrayList<String>();
+		expectedRegistryHostnames.add("registry.access.redhat.com");
+		expectedRegistryHostnames.add("cdn.redhat.com");
+		//if (clienttasks.isPackageVersion("subscription-manager-plugin-container", ">", "1.13.17-1"))
+		expectedRegistryHostnames.add("access.redhat.com");	// added by bug 1184940
+		for (String expectedRegistryHostname : expectedRegistryHostnames) {
+			Assert.assertTrue(registryHostnames.contains(expectedRegistryHostname), "Container plugin file '"+containerContentPluginFile+"' configuration for registry_hostnames includes expected '"+expectedRegistryHostname+"'.  Actual='"+registry_hostnames+"'");
+		}
+		
+		// verify the CA cert file is installed in all of the expected registry hostname directories.
+		for (String expectedRegistryHostname : expectedRegistryHostnames) {
+			File caCertFile = getRegistryHostnameCACert(expectedRegistryHostname);
+			Assert.assertTrue(RemoteFileTasks.testExists(client, caCertFile.getPath()), "Expected CA Cert '"+caCertFile+"' is installed.");
+			
+			// also assert that it is identical to /etc/rhsm/ca/redhat-uep.crt
+			//	[root@jsefler-os7 RHEL-7]# cmp /etc/rhsm/ca/redhat-uep.pem /etc/docker/certs.d/cdn.redhat.com/redhat-uep.crt
+			//	[root@jsefler-os7 RHEL-7]# echo $?
+			//	0
+			SSHCommandResult result = client.runCommandAndWait("cmp "+clienttasks.caCertDir+"/"+"redhat-uep.pem"+" "+caCertFile.getPath());
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "Exitcode from comparing CA cert files byte by byte for equality.");
+			Assert.assertEquals(result.getStderr(), "", "Stderr from comparing CA cert files byte by byte for equality.");
+			Assert.assertEquals(result.getStdout(), "", "Stdout from comparing CA cert files byte by byte for equality.");
+		}
+	}
 	
 	
 	
@@ -512,7 +545,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	protected File getRegistryHostnameCertKeyFileFromEntitlementCert(String registryHostname, EntitlementCert entitlementCert) {
 		return (new File("/etc/docker/certs.d/"+registryHostname+"/"+(entitlementCert.file.getName().split("\\.")[0])+".key"));
 	}
-	
+	protected File getRegistryHostnameCACert(String registryHostname) {
+		return (new File("/etc/docker/certs.d/"+registryHostname+"/"+"redhat-uep.crt"));
+	}
 	
 	
 	
