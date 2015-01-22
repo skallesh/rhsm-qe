@@ -213,7 +213,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify status check and response from server after addition and deletion of product from /etc/pki/product/",
-			groups={"VerifyStatusCheck","blockedByBug-921870"},
+			groups={"VerifyStatusCheck","blockedByBug-921870","blockedByBug-1183175"},
 			enabled=true)
 	public void VerifyStatusCheck() throws Exception {
 		String result,expectedStatus;
@@ -1942,7 +1942,7 @@ Expected_Message = clienttasks.msg_RemoteErrorCheckConnection;
 	 * @throws JSONException
 	 */
 	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", // TODO, correct this description
-			groups = { "certificateStacking","blockedByBug-726409"}, enabled = true)
+			groups = { "certificateStacking","blockedByBug-726409","blockedByBug-1183175"}, enabled = true)
 	public void certificateStacking() throws JSONException,Exception {
 		Map<String,String> attributes = new HashMap<String,String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
