@@ -3,10 +3,13 @@ package rhsm.cli.tests;
 
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.tools.RemoteFileTasks;
 
@@ -43,12 +46,27 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(description="unregister should not make unauthorized requests",
-			groups={"AcceptanceTests","blockedByBug-997935","blockedByBug-1158578"},
+			groups={"AcceptanceTests","UnregisterShouldNotThrowUnauthorizedRequests_Test","blockedByBug-997935","blockedByBug-1158578"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnregisterShouldNotThrowUnauthorizedRequests_Test() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.1-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=997935 which is fixed in subscription-manager-1.10.1-1.");
-
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (clienttasks.isPackageInstalled("subscription-manager-plugin-ostree") && !clienttasks.isPackageInstalled("ostree")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1185958"; 	// Bug 1185958 - Error looking up OSTree origin file.
+			
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				pluginConfDir_forUnregisterShouldNotThrowUnauthorizedRequests_Test = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"pluginConfDir");
+				ostreeContentPluginEnabled_forUnregisterShouldNotThrowUnauthorizedRequests_Test = clienttasks.getConfFileParameter((pluginConfDir_forUnregisterShouldNotThrowUnauthorizedRequests_Test+"/"+"ostree_content.OstreeContentPlugin.conf").replaceAll("//+","/"),"enabled");
+				log.warning("Avoid bug '"+bugId+"' by disabling the 'ostree_content.OstreeContentPlugin'...");
+				clienttasks.updateConfFileParameter((pluginConfDir_forUnregisterShouldNotThrowUnauthorizedRequests_Test+"/"+"ostree_content.OstreeContentPlugin.conf").replaceAll("//+","/"), "enabled", "0");
+			}
+		}
+		// END OF WORKAROUND
+		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
 		String logMarker = System.currentTimeMillis()+" Testing UnregisterShouldNotThrowUnauthorizedRequests_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -77,7 +95,17 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, unexpectedLogMessage).trim();
 		Assert.assertFalse(logTail.contains(unexpectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' should not encounter unexpected log message '"+unexpectedLogMessage+"' after unregister.");
 	}
-	
+	String pluginConfDir_forUnregisterShouldNotThrowUnauthorizedRequests_Test=null;
+	String ostreeContentPluginEnabled_forUnregisterShouldNotThrowUnauthorizedRequests_Test=null;
+	@AfterGroups(groups={"setup"},value="UnregisterShouldNotThrowUnauthorizedRequests_Test")
+	public void afterUnregisterShouldNotThrowUnauthorizedRequests_Test() {
+		// restore the the "enabled" parameter in /etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf
+		if (pluginConfDir_forUnregisterShouldNotThrowUnauthorizedRequests_Test!=null) {
+			if (ostreeContentPluginEnabled_forUnregisterShouldNotThrowUnauthorizedRequests_Test!=null) {
+				clienttasks.updateConfFileParameter((pluginConfDir_forUnregisterShouldNotThrowUnauthorizedRequests_Test+"/"+"ostree_content.OstreeContentPlugin.conf").replaceAll("//+","/"), "enabled", ostreeContentPluginEnabled_forUnregisterShouldNotThrowUnauthorizedRequests_Test);
+			}
+		}
+	}
 	
 	
 	// Candidates for an automated Test:
