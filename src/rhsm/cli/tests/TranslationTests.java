@@ -218,7 +218,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 					"blockedByBug-1020474",	// Zanata 1.10.X NOT 100%
 					//"blockedByBug-1093201" // Zanata 1.11.X NOT 100%		// see Skip on Known Issue
 					//"blockedByBug-1118020" // Zanata 1.12.X NOT 100%		// see Skip on Known Issue
-					"blockedByBug-1166333" /*Zanata 1.13.X NOT 100%*/
+					//"blockedByBug-1166333" // Zanata 1.13.X NOT 100%		// see Skip on Known Issue
 					},
 			dataProvider="getTranslationFileData",
 			enabled=true)
@@ -240,14 +240,31 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		// Skip on Known Issue: https://bugzilla.redhat.com/show_bug.cgi?id=1093201#c5
 		if (translationFile.getPath().contains("/pa/") && clienttasks.isPackageVersion("subscription-manager","==", "1.11")) {
 			if (!translationFilePassed) {
-				throw new SkipException("Missing translations for Punjabi is a Known Issue for subscription-manager-1.11.");
+				throw new SkipException("Missing translations for Punjabi /pa/ is a Known Issue for subscription-manager-1.11.  See https://bugzilla.redhat.com/show_bug.cgi?id=1093201#c5");
 			}
 		}
 		
 		// Skip on Known Issue: https://bugzilla.redhat.com/show_bug.cgi?id=1118020#c3
 		if (translationFile.getPath().contains("/pa/") && clienttasks.isPackageVersion("subscription-manager","==", "1.12")) {
 			if (!translationFilePassed) {
-				throw new SkipException("Missing translations for Punjabi is a Known Issue for subscription-manager-1.12.");
+				throw new SkipException("Missing translations for Punjabi /pa/ is a Known Issue for subscription-manager-1.12.  See https://bugzilla.redhat.com/show_bug.cgi?id=1118020#c3");
+			}
+		}
+		
+		// Skip on Known Issue: https://bugzilla.redhat.com/show_bug.cgi?id=1166333#c1
+		if (translationFile.getPath().contains("/pa/") && clienttasks.isPackageVersion("subscription-manager","==", "1.13")) {
+			if (!translationFilePassed) {
+				throw new SkipException("Missing translations for Punjabi /pa/ is a Known Issue for subscription-manager-1.13.  See https://bugzilla.redhat.com/show_bug.cgi?id=1166333#c1");
+			}
+		}
+		if (translationFile.getPath().contains("/ko/") && clienttasks.isPackageVersion("subscription-manager","==", "1.13")) {
+			if (!translationFilePassed) {
+				throw new SkipException("Missing translations for Korean /ko/ is a Known Issue for subscription-manager-1.13.  See https://bugzilla.redhat.com/show_bug.cgi?id=1166333#c1");
+			}
+		}
+		if (translationFile.getPath().contains("/as/") && clienttasks.isPackageVersion("subscription-manager","==", "1.13")) {
+			if (!translationFilePassed) {
+				throw new SkipException("Missing translations for Assamese /as/ is a Known Issue for subscription-manager-1.13.  See https://bugzilla.redhat.com/show_bug.cgi?id=1166333#c1");
 			}
 		}
 		
