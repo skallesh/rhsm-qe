@@ -305,6 +305,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.installSubscriptionManagerRPMs(sm_yumInstallOptions);
 		if (sm_yumInstallZStreamUpdates)				smt.installZStreamUpdates(sm_yumInstallOptions, sm_yumInstallZStreamUpdatePackages);
 		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions);
+		smt.initializeMsgStringsAfterInstallingSubscriptionManagerRPMs();
 		
 		// rewrite rhsmcertd.certFrequency -> rhsmcertd.certCheckInterval   see bug 882459
 		String certFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "rhsmcertd", "certFrequency");

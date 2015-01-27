@@ -88,7 +88,7 @@ public class SubscriptionManagerTasks {
 	public final String productCertDefaultDir		= "/etc/pki/product-default"; // introduced by Bug 1123029 - Use default product certificates when they are present
 
 	
-	// will be initialized by installSubscriptionManagerRPMs()
+	// will be initialized after installSubscriptionManagerRPMs()
 	public String msg_ConsumerNotRegistered			= null;
 	public String msg_NeedListOrUpdateOption		= null;
 	public String msg_NetworkErrorUnableToConnect	= null;
@@ -438,10 +438,16 @@ if (false) {
 		List<String> pkgsInstalled = new ArrayList<String>();
 		
 		// skip installation of packages on an Atomic system
+		
 		//	-bash-4.2# cat /etc/redhat-release 
 		//	Red Hat Atomic Host Preview release 7.0 Beta
 		//	-bash-4.2# rpm -q redhat-release-atomic-host
 		//	redhat-release-atomic-host-7.0-20140925.0.atomic.el7.x86_64
+		
+		//	[root@10-16-7-142 ~]# cat /etc/redhat-release
+		//	Red Hat Atomic Host release 7.1 
+		//	[root@10-16-7-142 ~]# rpm -q redhat-release-atomic-host
+		//	redhat-release-atomic-host-7.1-20150113.0.atomic.el7.4.x86_64
 		if (redhatRelease.startsWith("Red Hat Atomic Host")) {
 			log.warning("Skipping setup procedure installSubscriptionManagerRPMs() on '"+redhatRelease+"'.");
 			return;
@@ -555,7 +561,9 @@ if (false) {
 		for (String pkg : pkgsInstalled) {
 			isPackageVersion(pkg, "==", "0.0");	// this will simply populate the cached Map<String,String> installedPackageVersionMap
 		}
-		
+	}
+	
+	public void initializeMsgStringsAfterInstallingSubscriptionManagerRPMs() {
 		// initialize client fields that depend on the installed package version
 		msg_ConsumerNotRegistered		= "Consumer not registered. Please register using --username and --password";
 		if (isPackageVersion("subscription-manager", ">=", "0.98.4-1"))		msg_ConsumerNotRegistered = "Error: You need to register this system by running `register` command.  Try register --help.";	// effective after bug fix 749332 subscription-manager commit 6241cd1495b9feac2ed123f60405061b03815721
