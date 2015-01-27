@@ -186,6 +186,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyExpectedRegistryHostnamesAreConfigured_Test() {
+		clienttasks.unregister(null, null, null);
 		
 		// get the list of registry_hostnames from /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf
 		String registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
@@ -242,7 +243,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify the specified docker image downloads and will run subscription-manager >= 1.12.4-1",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-1186386"},
 			dependsOnMethods={"InstallDockerPackageOnHost_Test"},
 			dataProvider="getDockerImageData",
 			enabled=true)
@@ -256,8 +257,17 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		//	[root@jsefler-7 ~]# docker pull docker-registry.usersys.redhat.com/brew/rhel7:latest
 		//	Pulling repository docker-registry.usersys.redhat.com/brew/rhel7
 		//	81ed26a5d836: Download complete 
+		// Bug 1186386 - Docker unable to pull from CDN due to CA failure
+		//	[root@10-16-7-142 ~]# docker pull registry.access.redhat.com/rhel7:latest
+		//	FATA[0000] Error: v1 ping attempt failed with error: Get https://registry.access.redhat.com/v1/_ping: x509: certificate signed by unknown authority. If this private registry supports only HTTP or HTTPS with an unknown CA certificate, please add `--insecure-registry registry.access.redhat.com` to the daemon's arguments. In the case of HTTPS, if you have access to the registry's CA certificate, no need for the flag; simply place the CA certificate at /etc/docker/certs.d/registry.access.redhat.com/ca.crt 
+		//	[root@10-16-7-142 ~]# echo $?
+		//	1
 		//RemoteFileTasks.runCommandAndAssert(client, "docker pull "+dockerImage, 0,"Download complete",null);
-		RemoteFileTasks.runCommandAndAssert(client, "docker pull "+dockerImage, 0);
+		String dockerPullCommand = "docker pull "+dockerImage;
+		SSHCommandResult dockerPullResult = client.runCommandAndWait(dockerPullCommand);
+		Assert.assertEquals(dockerPullResult.getExitCode(), Integer.valueOf(0), "The exit code from an attempt to run '"+dockerPullCommand+"'");
+		Assert.assertEquals(dockerPullResult.getStderr(), "", "Stderr from an attempt to run '"+dockerPullCommand+"'");
+		
 		
 		//	[root@jsefler-7 ~]# docker images
 		//	REPOSITORY                                      TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
