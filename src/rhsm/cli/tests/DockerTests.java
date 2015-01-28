@@ -182,7 +182,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that subscription-manager-container-plugin production needed registry_hostnames and CA certs",
-			groups={"AcceptanceTests","blockedbyBug-1184940"},
+			groups={"AcceptanceTests","blockedbyBug-1184940","blockedbyBug-1186386"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyExpectedRegistryHostnamesAreConfigured_Test() {
@@ -204,17 +204,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		
 		// verify the CA cert file is installed in all of the expected registry hostname directories.
 		for (String expectedRegistryHostname : expectedRegistryHostnames) {
-			File caCertFile = getRegistryHostnameCACert(expectedRegistryHostname);
-			Assert.assertTrue(RemoteFileTasks.testExists(client, caCertFile.getPath()), "Expected CA Cert '"+caCertFile+"' is installed.");
-			
-			// also assert that it is identical to /etc/rhsm/ca/redhat-uep.crt
-			//	[root@jsefler-os7 RHEL-7]# cmp /etc/rhsm/ca/redhat-uep.pem /etc/docker/certs.d/cdn.redhat.com/redhat-uep.crt
-			//	[root@jsefler-os7 RHEL-7]# echo $?
-			//	0
-			SSHCommandResult result = client.runCommandAndWait("cmp "+clienttasks.caCertDir+"/"+"redhat-uep.pem"+" "+caCertFile.getPath());
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "Exitcode from comparing CA cert files byte by byte for equality.");
-			Assert.assertEquals(result.getStderr(), "", "Stderr from comparing CA cert files byte by byte for equality.");
-			Assert.assertEquals(result.getStdout(), "", "Stdout from comparing CA cert files byte by byte for equality.");
+			verifyCaCertInEtcDockerCertsRegistryHostnameDir(expectedRegistryHostname);
 		}
 	}
 	
@@ -496,7 +486,8 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		String registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
 		List<String> registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
 		// configure another registry_hostname for functional test purposes
-		if (!registryHostnames.contains("rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"rhsm-test.redhat.com");
+		if (!registryHostnames.contains("rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"rhsm-test.redhat.com");	// rhsm-test.redhat.com does NOT appear to come from a redhat.com CDN
+		if (!registryHostnames.contains("cdn.rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"cdn.rhsm-test.redhat.com");	// cdn.rhsm-test.redhat.com DOES appear to come from a redhat.com CDN because it matches regex ^cdn\.(?:.*\.)?redhat\.com$
 		registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
 		registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
 		
@@ -528,6 +519,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);					
 					Assert.assertTrue(RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was copied to '"+certFile+"'.");
 					Assert.assertTrue(RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was copied to '"+keyFile+"'.");
+					
+					// also assert that the ca cert corresponding to registry hostname is copied to the directory as a ca.crt, but only if it appears to be a redhat.com CDN
+					verifyCaCertInEtcDockerCertsRegistryHostnameDir(registryHostname);
 				}
 			}
 		}
@@ -549,16 +543,69 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
+	protected final String etcDockerCertsDir = "/etc/docker/certs.d/";
 	protected File getRegistryHostnameCertFileFromEntitlementCert(String registryHostname, EntitlementCert entitlementCert) {
-		return (new File("/etc/docker/certs.d/"+registryHostname+"/"+(entitlementCert.file.getName().split("\\.")[0])+".cert"));
+		return (new File(etcDockerCertsDir+registryHostname+"/"+(entitlementCert.file.getName().split("\\.")[0])+".cert"));
 	}
 	protected File getRegistryHostnameCertKeyFileFromEntitlementCert(String registryHostname, EntitlementCert entitlementCert) {
-		return (new File("/etc/docker/certs.d/"+registryHostname+"/"+(entitlementCert.file.getName().split("\\.")[0])+".key"));
+		return (new File(etcDockerCertsDir+registryHostname+"/"+(entitlementCert.file.getName().split("\\.")[0])+".key"));
 	}
+	/**
+	 * @param registryHostname
+	 * @return File path to /etc/docker/certs.d/registryHostname/ca.crt
+	 */
 	protected File getRegistryHostnameCACert(String registryHostname) {
-		return (new File("/etc/docker/certs.d/"+registryHostname+"/"+"redhat-uep.crt"));
+		/* Bug 1184940 - Subscription Manager Container Plugin Requires Config / CA Cert Update
+		 * FailedQA thereby invalidating this solution
+		return (new File("/etc/docker/certs.d/"+registryHostname+"/"+"redhat-uep.crt"));	// implemented by commit 6246a41fc1666eafa60b4d4341c8a50bde0df297
+		*/
+		
+		// commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4 from Bug 1186386 - Docker unable to pull from CDN due to CA failure
+		// Only registry hostnames that appear to match a redhat.com CDN should get a redhat-entitlement-authority.pem
+		//if (clienttasks.isPackageVersion("subscription-manager-plugin-container",">=","1.13.19-1")) {	// Bug 1186386 - Docker unable to pull from CDN due to CA failure	// commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4
+			if (registryHostname.matches("cdn\\.(?:.*\\.)?redhat\\.com")) {
+				return (new File(etcDockerCertsDir+registryHostname+"/"+"redhat-entitlement-authority.crt"));	// implemented by commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4
+			}
+		//}
+		
+		return null;	// the ca cert for this registry is unknown
 	}
 	
+	
+	/**
+	 * For the given registryHostname (comes from registry_hostnames configured in /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf),
+	 * verify that the redhat-entitlement-authority.pem is copied to the directory ONLY when the registryHostname appears to be a redhat.com CDN.
+	 * @param registryHostname
+	 */
+	protected void verifyCaCertInEtcDockerCertsRegistryHostnameDir(String registryHostname) {
+		if (clienttasks.isPackageVersion("subscription-manager-plugin-container","<","1.13.19-1")) {	// Bug 1186386 - Docker unable to pull from CDN due to CA failure	// commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4
+			Assert.fail("This version of subscription-manager-plugin-container does not properly place a CA crt in /etc/docker/certs.d/<registry_hostname>/ca.crt");
+		}
+		
+		// also assert that the ca cert corresponding to registry hostname is copied to the directory as a ca.crt, but only if it appears to be a redhat.com CDN
+		File caCertFile = getRegistryHostnameCACert(registryHostname);
+		if (caCertFile==null) { // assert that there is NO ca.crt located in /etc/docker/certs.d/<registryHostname>
+			//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/registry.access.redhat.com/*.crt
+			//	ls: cannot access /etc/docker/certs.d/registry.access.redhat.com/*.crt: No such file or directory
+			//	[root@jsefler-os7 ~]# echo $?
+			//	2
+			String path = etcDockerCertsDir+registryHostname;
+			SSHCommandResult result = client.runCommandAndWait("ls "+path+"/*.crt");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(2), "The exitCode above should indicate that there are no ca.crt files installed in '"+path+"'. ");
+		} else {
+			//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/cdn.redhat.com/*.crt
+			//	/etc/docker/certs.d/cdn.redhat.com/redhat-entitlement-authority.crt
+			//	[root@jsefler-os7 ~]# echo $?
+			//	0
+			File redhatEntitlementAuthorityPemFile = new File(clienttasks.caCertDir+"/redhat-entitlement-authority.pem");	// redhat-entitlement-authority.pem
+			Assert.assertTrue(RemoteFileTasks.testExists(client, caCertFile.getPath()),"CA crt '"+redhatEntitlementAuthorityPemFile+"' was copied to '"+caCertFile+"' because registry hostname '"+registryHostname+"' appears to match a redhat.com CDN.");
+			
+			SSHCommandResult result = client.runCommandAndWait("cmp "+redhatEntitlementAuthorityPemFile.getPath()+" "+caCertFile.getPath());
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from comparing CA cert files byte by byte for equality.");
+			Assert.assertEquals(result.getStderr(), "", "Stderr from comparing CA cert files byte by byte for equality.");
+			Assert.assertEquals(result.getStdout(), "", "Stdout from comparing CA cert files byte by byte for equality.");
+		}
+	}
 	
 	
 	
