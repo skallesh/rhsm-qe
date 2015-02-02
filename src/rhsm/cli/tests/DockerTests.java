@@ -482,6 +482,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyContainerConfigurationsAreSetAfterAutoSubscribingAndUnsubscribing_Test() {
 		
+		// get a list of the currently installed product Certs
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
+		
 		// get the list of registry_hostnames from /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf
 		String registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
 		List<String> registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
@@ -504,7 +507,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		for (EntitlementCert entitlementCert : entitlementCerts) {
 			List<ContentNamespace> containerImageContentNamespaces = ContentNamespace.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("type", "containerimage", entitlementCert.contentNamespaces);
 			if (containerImageContentNamespaces.isEmpty()) {
-				// assert that the entitlementCert was NOT copied to the directory of registry_hostnames
+				// assert that the entitlementCert was NOT copied to the directory of registry_hostnames because it does not contain content of type 'containerimage' (case insensitive).
 				for (String registryHostname : registryHostnames) {
 					File certFile = getRegistryHostnameCertFileFromEntitlementCert(registryHostname,entitlementCert);
 					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);
@@ -513,15 +516,30 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 				}
 			} else {
 				foundContainerImageContent = true;
-				// assert that the entitlementCert was copied to the directory of registry_hostnames
+				// assert that the entitlementCert was copied to the directory of registry_hostnames (but only if all of its required_tags are installed)
 				for (String registryHostname : registryHostnames) {
 					File certFile = getRegistryHostnameCertFileFromEntitlementCert(registryHostname,entitlementCert);
 					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);					
-					Assert.assertTrue(RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was copied to '"+certFile+"'.");
-					Assert.assertTrue(RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was copied to '"+keyFile+"'.");
 					
-					// also assert that the ca cert corresponding to registry hostname is copied to the directory as a ca.crt, but only if it appears to be a redhat.com CDN
-					verifyCaCertInEtcDockerCertsRegistryHostnameDir(registryHostname);
+					// determine if this entitlement contains at least one container image with required tags that are provided by the installed product certs
+					boolean entitlementContainsAtLeastOneContainerImageContentNamespaceWithRequiredTagsThatAreProvidedByInstalledProducts = false;
+					for (ContentNamespace containerImageContentNamespace : containerImageContentNamespaces) {
+						if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(containerImageContentNamespace, currentProductCerts)) {
+							entitlementContainsAtLeastOneContainerImageContentNamespaceWithRequiredTagsThatAreProvidedByInstalledProducts = true;
+							log.info("containerImageContentNamespace '"+containerImageContentNamespace.name+"' has requiredTags '"+containerImageContentNamespace.requiredTags+"' that ARE provided by the currently installed products.");
+						} else {
+							log.info("containerImageContentNamespace '"+containerImageContentNamespace.name+"' has requiredTags '"+containerImageContentNamespace.requiredTags+"' that are NOT provided by the currently installed products.");			
+						}
+					}
+					if (entitlementContainsAtLeastOneContainerImageContentNamespaceWithRequiredTagsThatAreProvidedByInstalledProducts) {	
+						Assert.assertTrue(RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was copied to '"+certFile+"' because at least one contentNamespace of type 'containerimage' from the entitlement has required_tags that are provided by the currently installed product certs.");
+						Assert.assertTrue(RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was copied to '"+keyFile+"' because at least one contentNamespace of type 'containerimage' from the entitlement has required_tags that are provided by the currently installed product certs.");
+						// also assert that the ca cert corresponding to registry hostname is copied to the directory as a ca.crt, but only if it appears to be a redhat.com CDN
+						verifyCaCertInEtcDockerCertsRegistryHostnameDir(registryHostname);
+					} else {
+						Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was NOT copied to '"+certFile+"' because no contentNamespace of type 'containerimage' from the entitlement has required_tags that are provided by the currently installed product certs.");
+						Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was NOT copied to '"+keyFile+"' because no contentNamespace of type 'containerimage' from the entitlement has required_tags that are provided by the currently installed product certs.");
+					}
 				}
 			}
 		}
