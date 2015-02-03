@@ -319,15 +319,60 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData",
-			enabled=true)
+			enabled=false)	// disabled in favor of replacement InstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool_Test
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
 	public void InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(String pkg, String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
 		if (pkg==null) throw new SkipException("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
+		
+		// to avoid interference from an already enabled repo from a prior attached subscription that also
+		// contains this same pkg (e.g. -htb- repos) it would be best to remove all previously attached subscriptions
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// subscribe to this pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
 		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 
+		// install the package and assert that it is successfully installed
+		SSHCommandResult yumInstallPackageResult = clienttasks.yumInstallPackageFromRepo(pkg, repoLabel, null); //pkgInstalled = true;
+		
+		// now remove the package
+		clienttasks.yumRemovePackage(pkg);
+		
+		// also remove any dependencies that were installed with pkg
+// FIXME: This will fail if we do not remove the dependent packages in the correct order - suppose dep-pkg1 depends on dep-pkg2 and remove dep-pkg2 first, then dep-pkg1 is already gone
+// for (String depPkg : getYumDependencyPackagesInstalledFromYumInstallPackageResult(yumInstallPackageResult)) clienttasks.yumRemovePackage(depPkg);
+// committing untested FIXME: ...
+		List<String> depPkgsAlreadyRemoved = new ArrayList<String>();
+		for (String depPkg : getYumDependencyPackagesInstalledFromYumInstallPackageResult(yumInstallPackageResult)) {
+			if (!depPkgsAlreadyRemoved.contains(depPkg)) {
+				depPkgsAlreadyRemoved.addAll(getYumDependencyPackagesRemovedFromYumRemovePackageResult(clienttasks.yumRemovePackage(depPkg)));
+			}
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
+			dataProvider="getEnabledRepoAndSubscriptionPoolData",
+			enabled=true)
+	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
+	public void InstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool_Test(String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
+		
+		// to avoid interference from an already enabled repo from a prior attached subscription that also
+		// contains this same packages (e.g. -htb- repos versus non -htb- repos) it would be best to remove
+		// all previously attached subscriptions.  actually this will speed up the test
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		
+		// subscribe to this pool
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
+		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
+		
+		// find an available package that is uniquely provided by repo
+		String pkg = clienttasks.findUniqueAvailablePackageFromRepo(repoLabel);
+		if (pkg==null) {
+			throw new SkipException("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
+		}
+		
 		// install the package and assert that it is successfully installed
 		SSHCommandResult yumInstallPackageResult = clienttasks.yumInstallPackageFromRepo(pkg, repoLabel, null); //pkgInstalled = true;
 		
@@ -1500,6 +1545,47 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		return ll;
 	}
 	
+	
+	@DataProvider(name="getEnabledRepoAndSubscriptionPoolData")
+	public Object[][] getEnabledRepoAndSubscriptionPoolDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getEnabledRepoAndSubscriptionPoolDataAsListOfLists());
+	}
+	protected List<List<Object>> getEnabledRepoAndSubscriptionPoolDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		if (clienttasks==null) return ll;
+		if (sm_clientUsername==null) return ll;
+		if (sm_clientPassword==null) return ll;
+		
+		// get the currently installed product certs to be used when checking for conditional content tagging
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
+		
+		// assure we are freshly registered and process all available subscription pools
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			String quantity = null;
+			/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
+			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
+			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
+				if (contentNamespace.enabled && clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
+					String repoLabel = contentNamespace.label;
+					
+					// String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool, String quantity
+					ll.add(Arrays.asList(new Object[]{repoLabel, pool, quantity}));
+				}
+			}
+			
+			// minimize the number of dataProvided rows (useful during automated testcase development)
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
+		}
+		
+		// no reason to remain subscribed to any subscriptions
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		
+		return ll;
+	}
 	
 	
 	@DataProvider(name="getYumGroupFromEnabledRepoAndSubscriptionPoolData")
