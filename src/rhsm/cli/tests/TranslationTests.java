@@ -14,14 +14,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import rhsm.base.CandlepinType;
+import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.Translation;
+
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
-import rhsm.base.CandlepinType;
-import rhsm.base.SubscriptionManagerCLITestScript;
-import rhsm.data.Translation;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -226,7 +227,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	public void VerifyTranslationFileContainsAllMsgids_Test(Object bugzilla, File translationFile) {
 		List<Translation> translationList = translationFileMapForSubscriptionManager.get(translationFile);
 		boolean translationFilePassed=true;
-		for (String msgid : translationMsgidSet) {
+		for (String msgid : translationMsgidSetForSubscriptionManager) {
 			int numMsgidOccurances=0;
 			for (Translation translation : translationList) {
 				if (translation.msgid.equals(msgid)) numMsgidOccurances++;
@@ -268,7 +269,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
-		Assert.assertTrue(translationFilePassed,"Exactly 1 occurance of all the expected translation msgids ("+translationMsgidSet.size()+") were found in translation file '"+translationFile+"'.");
+		Assert.assertTrue(translationFilePassed,"Exactly 1 occurance of all the expected translation msgids ("+translationMsgidSetForSubscriptionManager.size()+") were found in translation file '"+translationFile+"'.");
 	}
 	
 	@Test(	description="run pofilter translate tests on the translation file",
@@ -514,6 +515,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager-migration-data","subscription-manager","python-rhsm","rhn-migrate-classic-to-rhsm","firstboot"}));
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"consumer_types","consumer_export","proxy_hostname:proxy_port"}));
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"%(mappingfile)s","%(package)s"}));	// from key: Unable to read mapping file: %(mappingfile)s.\nDo you have the %(package)s package installed?
+		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"{dateexample}"}));	// from key: Date entered is invalid. Date should be in YYYY-MM-DD format (example: {dateexample})
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();
 		ignoreTheseExceptionalCases.add("View and configure subscription-manager plugins");
@@ -639,8 +641,6 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
-	
 	// Candidates for an automated Test:
 	// TODO Bug 752321 - [ALL LANG] [RHSM CLI] Word [OPTIONS] is unlocalized and some message translation is still not complete https://github.com/RedHatQE/rhsm-qe/issues/213
 	//      TODO NESTED LANG LOOP...  for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do for C in list refresh register subscribe unregister unsubscribe clean config environments facts identity import orgs redeem repos; do echo ""; echo "# LANG=$L.UTF8 subscription-manager $C --help | grep OPTIONS"; LANG=$L.UTF8 subscription-manager $C --help | grep OPTIONS; done; done;
@@ -675,21 +675,15 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration Methods ***********************************************************************
 	@BeforeClass (groups="setup")
-	public void buildTranslationFileMapForSubscriptionManagerBeforeClass() {
+	public void buildTranslationFileMapsBeforeClass() {
 		translationFileMapForSubscriptionManager = buildTranslationFileMapForSubscriptionManager();
 		translationFileMapForCandlepin = buildTranslationFileMapForCandlepin();
 	}
 	Map<File,List<Translation>> translationFileMapForSubscriptionManager = null;
 	Map<File,List<Translation>> translationFileMapForCandlepin = null;
 
-//	@BeforeClass (groups="setup")
-//	public void buildTranslationFileMapForCandlepinBeforeClass() {
-//		translationFileMapForCandlepin = buildTranslationFileMapForCandlepin();
-//	}
-//	Map<File,List<Translation>> translationFileMapForCandlepin;
-
-	@BeforeClass (groups="setup",dependsOnMethods={"buildTranslationFileMapForSubscriptionManagerBeforeClass"})
-	public void buildTranslationMsgidSet() {
+	@BeforeClass (groups="setup",dependsOnMethods={"buildTranslationFileMapsBeforeClass"})
+	public void buildTranslationMsgidSets() {
 		if (clienttasks==null) return;
 		
 		// assemble a unique set of msgids (by taking the union of all the msgids from all of the translation files.)
@@ -700,11 +694,19 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
 			List<Translation> translationList = translationFileMapForSubscriptionManager.get(translationFile);
 			for (Translation translation : translationList) {
-				translationMsgidSet.add(translation.msgid);
+				translationMsgidSetForSubscriptionManager.add(translation.msgid);
+			}
+		}
+		
+		for (File translationFile : translationFileMapForCandlepin.keySet()) {
+			List<Translation> translationList = translationFileMapForCandlepin.get(translationFile);
+			for (Translation translation : translationList) {
+				translationMsgidSetForCandlepin.add(translation.msgid);
 			}
 		}
 	}
-	Set<String> translationMsgidSet = new HashSet<String>(500);  // 500 is an estimated size
+	Set<String> translationMsgidSetForSubscriptionManager = new HashSet<String>(500);  // 500 is an estimated size
+	Set<String> translationMsgidSetForCandlepin = new HashSet<String>(500);  // 500 is an estimated size
 
 	// Protected Methods ***********************************************************************
 	List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
@@ -722,7 +724,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	protected void verifyTranslatedMsdIdContainsSubStringForAllLangs(String msgid, String subString) {
-		if (!translationMsgidSet.contains(msgid)) Assert.fail("Could not find expected msgid \""+msgid+"\".  Has this msgid changed?");
+		if (!translationMsgidSetForSubscriptionManager.contains(msgid)) Assert.fail("Could not find expected msgid \""+msgid+"\".  Has this msgid changed?");
 		boolean warningsFound = false;
 		for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {
 			Translation translation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgid, translationFileMapForSubscriptionManager.get(translationFile));
