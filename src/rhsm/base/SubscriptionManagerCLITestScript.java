@@ -135,6 +135,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks.setupTranslateToolkitFromTarUrl(sm_translateToolkitTarUrl);
 			servertasks.reportAPI();
 			
+			// install packages
+			SSHCommandResult yumInstallResult = server.runCommandAndWait("yum install -y --quiet hunspell");
+			Assert.assertEquals(yumInstallResult.getExitCode(), Integer.valueOf(0),"ExitCode from yum install of packages on server '"+server.getConnection().getHostname()+"'.");
+			
 			// also connect to the candlepin server database
 			dbConnection = connectToDatabase();  // do this after the call to deploy since deploy will restart postgresql
 			

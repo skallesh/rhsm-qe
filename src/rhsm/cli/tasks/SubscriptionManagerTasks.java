@@ -410,6 +410,7 @@ if (false) {
 		pkgs.add(0,"expect");	// used for interactive cli prompting
 		pkgs.add(0,"sos");	// used to create an sosreport for debugging hardware
 		pkgs.add(0,"bash-completion");	// used in BashCompletionTests
+		pkgs.add(0,"hunspell");	// used for spellcheck testing
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
