@@ -411,6 +411,7 @@ if (false) {
 		pkgs.add(0,"sos");	// used to create an sosreport for debugging hardware
 		pkgs.add(0,"bash-completion");	// used in BashCompletionTests
 		pkgs.add(0,"hunspell");	// used for spellcheck testing
+		pkgs.add(0,"gettext");	// used for Pofilter and Translation testing - msgunfmt
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
