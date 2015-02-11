@@ -3177,6 +3177,46 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		return ll;
 	}
+	
+	
+	/**
+	 * Write a big Set of Strings to a local file - Use a BufferedWriter
+	 * @param lines
+	 * @param file
+	 * @param separator TODO
+	 */
+	protected void writeSetOfStringsToFile(Set<String> lines, File file, String separator) {
+		Writer fileWriter = null;
+		BufferedWriter bufferedWriter = null;
+		try {
+			fileWriter = new FileWriter(file);
+			bufferedWriter = new BufferedWriter(fileWriter);
+	
+			// Write the lines one by one
+			for (String line : lines) {
+				bufferedWriter.write(line);
+				if (separator==null) {
+					bufferedWriter.newLine();
+				} else {
+					bufferedWriter.write(separator);
+				}
+			}
+	
+		} catch (IOException e) {
+			System.err.println("Error writing the file : ");
+			e.printStackTrace();
+		} finally {
+	
+			if (bufferedWriter != null && fileWriter != null) {
+				try {
+					bufferedWriter.close();
+					fileWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
 
 
 

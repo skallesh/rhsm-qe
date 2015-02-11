@@ -1,10 +1,7 @@
 package rhsm.cli.tests;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -221,7 +218,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgIds.add(msgId);
 		}
 		// write the msgIds to a temporary file on the client
-		writeMsgidSetToFile(msgIds,localFile);
+		writeSetOfStringsToFile(msgIds,localFile, System.getProperty("line.separator")+"--------"+System.getProperty("line.separator"));
 		RemoteFileTasks.putFile(client.getConnection(), localFile.getPath(), remoteFile.getPath(), "0644");
 		
 		// run a hunspell check on the msgIds
@@ -324,7 +321,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgIds.add(msgId);
 		}
 		// write the msgIds to a temporary file on the client
-		writeMsgidSetToFile(msgIds,localFile);
+		writeSetOfStringsToFile(msgIds,localFile, System.getProperty("line.separator")+"--------"+System.getProperty("line.separator"));
 		RemoteFileTasks.putFile(server.getConnection(), localFile.getPath(), remoteFile.getPath(), "0644");
 		
 		// run a hunspell check on the msgIds
@@ -391,43 +388,6 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	}
 	Set<String> translationMsgidSetForSubscriptionManager = new HashSet<String>(500);  // 500 is an estimated size
 	Set<String> translationMsgidSetForCandlepin = new HashSet<String>(500);  // 500 is an estimated size
-
-	// Protected Methods ***********************************************************************
-	
-	/**
-	 * Write a big list of Strings to a file - Use a BufferedWriter
-	 */
-	public static void writeMsgidSetToFile(Set<String> content, File file) {
-		Writer fileWriter = null;
-		BufferedWriter bufferedWriter = null;
-		try {
-			fileWriter = new FileWriter(file);
-			bufferedWriter = new BufferedWriter(fileWriter);
-
-			// Write the lines one by one
-			for (String line : content) {
-				line += System.getProperty("line.separator");
-				line += "--------" + System.getProperty("line.separator");
-				bufferedWriter.write(line);
-
-				// alternatively add bufferedWriter.newLine() to change line
-			}
-
-		} catch (IOException e) {
-			System.err.println("Error writing the file : ");
-			e.printStackTrace();
-		} finally {
-
-			if (bufferedWriter != null && fileWriter != null) {
-				try {
-					bufferedWriter.close();
-					fileWriter.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
 	
 	// Data Providers ***********************************************************************
 	
