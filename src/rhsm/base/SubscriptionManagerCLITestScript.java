@@ -443,6 +443,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// dump hardware info from sosreport...
 			if (clienttasks.isPackageInstalled("sos")) {
+				String plugins = "hardware";
+				if (Integer.valueOf(clienttasks.redhatReleaseX)>=6) plugins = "hardware,powerpc";
+				if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) plugins = "hardware,powerpc,processor,ceph";
 				//	[root@jsefler-os7 ~]# sosreport --batch --only-plugins=processor,powerpc  --tmp-dir=/var/tmp
 				//
 				//	sosreport (version 3.2)
@@ -484,7 +487,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				//	[root@jsefler-os7 ~]# ls -l /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz
 				//	-rw-r--r--. 1 root root 5444 Oct 13 12:19 /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz
 				//	[root@jsefler-os7 ~]# 
-				SSHCommandResult sosResult = client.runCommandAndWait("sosreport --batch --only-plugins=processor,powerpc  --tmp-dir=/var/tmp");
+				SSHCommandResult sosResult = client.runCommandAndWait("sosreport --batch --tmp-dir=/var/tmp --only-plugins="+plugins);
 				File remoteFile = new File(getSubstringMatches(sosResult.getStdout(), "/var/tmp/sosreport-.+\\.tar\\.xz").get(0));	// /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz
 				if (RemoteFileTasks.testExists(client, remoteFile.getPath())) {
 					File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
