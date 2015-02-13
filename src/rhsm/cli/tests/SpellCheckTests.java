@@ -508,11 +508,15 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="check the install-num-migrate-to-rhsm man page for misspelled words and typos",
-			groups={"debugTest"},
-			enabled=false) // TODO
+			groups={},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SpellCheckManPageForInstallNumMigrateToRhsm_Test() throws IOException {
-		
+		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
+			throw new SkipException("Due to bug 1092754, the migration tool '"+rhsm.cli.tests.MigrationTests.installNumTool+"' has been removed from RHEL5.");
+		}
+		Assert.fail("This test has not been implemented for this version of subscription-manager");	// TODO
 	}
 	
 	
