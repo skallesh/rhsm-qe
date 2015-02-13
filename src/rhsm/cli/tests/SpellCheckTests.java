@@ -354,8 +354,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void SpellCheckManPageForSubscriptionManager_Test() throws IOException {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
-		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
-		String tool = clienttasks.command;
+		String tool = clienttasks.command;	// "subscription-manager";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
 		Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
 		
@@ -410,36 +409,105 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		}
 		// END OF WORKAROUND
 		
-		// write the modifiedManPage to a file on the client
-		File remoteFile = new File("/tmp/sm-modifiedManPageForSubscriptionManager.txt");
-		File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
-		Writer fileWriter = new FileWriter(localFile);
-		fileWriter.write(modifiedManPage);
-		fileWriter.close();
-		RemoteFileTasks.putFile(client.getConnection(), localFile.getPath(), remoteFile.getPath(), "0644");
-		
-		// run a hunspell check on the modifiedManPage
-		SSHCommandResult hunspellResult = client.runCommandAndWait("hunspell -l -d en_US "+remoteFile);
-		Assert.assertEquals(hunspellResult.getExitCode(), Integer.valueOf(0),"ExitCode from running hunspell check on "+remoteFile);
-		Assert.assertEquals(hunspellResult.getStderr(), "", "Stderr from running hunspell check on "+remoteFile);
-		
-		// report the hunspell check failures and the msgIds that the failed words are found in
-		List<String> hunspellFailures = new ArrayList<String>();
-		List<String> manPageLines = Arrays.asList(manPageResult.getStdout().split("\n"));
-		if (!hunspellResult.getStdout().trim().isEmpty()) hunspellFailures = Arrays.asList(hunspellResult.getStdout().trim().split("\n"));
-		for (String hunspellFailure : hunspellFailures) {
-			log.warning("'"+hunspellFailure+"' was identified by hunspell check as a potential misspelling.");
-			for (String manPageLine : manPageLines) {
-				if (manPageLine.contains(hunspellFailure)) {
-					log.info("   '"+hunspellFailure+"' was found in man page line: "+manPageLine);
-				}
-			}
-		}
-		
 		// assert that there were no unexpected hunspell check failures
-		Assert.assertEquals(hunspellFailures.size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
+		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
 	
+	
+	@Test(	description="check the subscription-manager-gui man page for misspelled words and typos",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SpellCheckManPageForSubscriptionManagerGui_Test() throws IOException {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String tool = "subscription-manager-gui";
+		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
+		Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
+		
+		// modify the contents of manPageResult for acceptable word spellings
+		String modifiedManPage = manPageResult.getStdout();
+		modifiedManPage = modifyMisspellingsInManPage(manPageResult.getStdout());
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		//	[root@jsefler-os7 ~]# man -P cat subscription-manager-gui | head -1
+		//	subscription-manager-gui(8) System Manager's Manualsubscription-manager-gui(8)
+		if (modifiedManPage.contains("System Manager's Manual")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1192574";	// Bug 1192574 - typos and poor grammar in subscription-manager-gui man page
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Ignoring poor man page title while bug '"+bugId+"' is open.");
+				modifiedManPage = modifiedManPage.replaceAll("Manualsubscription", "Manual subscription");
+			}
+		}
+		// END OF WORKAROUND
+		
+		// assert that there were no unexpected hunspell check failures
+		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
+	}
+	
+	
+	@Test(	description="check the rhn-migrate-classic-to-rhsm man page for misspelled words and typos",
+			groups={"debugTest"},
+			enabled=false) // TODO
+	//@ImplementsNitrateTest(caseId=)
+	public void SpellCheckManPageForRhnMigrateClassicToRhsm_Test() throws IOException {
+		
+	}
+	
+	
+	@Test(	description="check the install-num-migrate-to-rhsm man page for misspelled words and typos",
+			groups={"debugTest"},
+			enabled=false) // TODO
+	//@ImplementsNitrateTest(caseId=)
+	public void SpellCheckManPageForInstallNumMigrateToRhsm_Test() throws IOException {
+		
+	}
+	
+	
+	@Test(	description="check the rhsm.conf man page for misspelled words and typos",
+			groups={"debugTest"},
+			enabled=false) // TODO
+	//@ImplementsNitrateTest(caseId=)
+	public void SpellCheckManPageForRhsmConf_Test() throws IOException {
+		
+	}
+	
+	
+	@Test(	description="check the rct man page for misspelled words and typos",
+			groups={"debugTest"},
+			enabled=false) // TODO
+	//@ImplementsNitrateTest(caseId=)
+	public void SpellCheckManPageForRct_Test() throws IOException {
+		
+	}
+	
+	
+	@Test(	description="check the rhsmcertd man page for misspelled words and typos",
+			groups={"debugTest"},
+			enabled=false) // TODO
+	//@ImplementsNitrateTest(caseId=)
+	public void SpellCheckManPageForRhsmcertd_Test() throws IOException {
+		
+	}
+	
+	
+	@Test(	description="check the rhsm-icon man page for misspelled words and typos",
+			groups={"debugTest"},
+			enabled=false) // TODO
+	//@ImplementsNitrateTest(caseId=)
+	public void SpellCheckManPageForRhsmIcon_Test() throws IOException {
+		
+	}
+	
+	
+	@Test(	description="check the rhsm-debug man page for misspelled words and typos",
+			groups={"debugTest"},
+			enabled=false) // TODO
+	//@ImplementsNitrateTest(caseId=)
+	public void SpellCheckManPageForRhsmDebug_Test() throws IOException {
+		
+	}
 	
 	
 	// Candidates for an automated Test:
@@ -484,6 +552,48 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Protected Methods ***********************************************************************
+	
+	/**
+	 * @param tool - name of the tool for which the man page was reported
+	 * @param originalManPage - original stdout from typing man tool on the command line
+	 * @param modifiedManPage - a modified copy of originalManPage for which acceptable substitutions have been made for known misspellings
+	 * @return List of all the words that failed hunspell -l -d en_US 
+	 * @throws IOException
+	 */
+	protected List<String> getSpellCheckFailuresForModifiedManPage(String tool, String originalManPage, String modifiedManPage) throws IOException {
+		// write the modifiedManPage to a file on the client
+		File remoteFile = new File("/tmp/sm-modifiedManPageFor-"+tool+".txt");
+		File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
+		Writer fileWriter = new FileWriter(localFile);
+		fileWriter.write(modifiedManPage);
+		fileWriter.close();
+		RemoteFileTasks.putFile(client.getConnection(), localFile.getPath(), remoteFile.getPath(), "0644");
+		
+		// run a hunspell check on the modifiedManPage
+		SSHCommandResult hunspellResult = client.runCommandAndWait("hunspell -l -d en_US "+remoteFile);
+		Assert.assertEquals(hunspellResult.getExitCode(), Integer.valueOf(0),"ExitCode from running hunspell check on "+remoteFile);
+		Assert.assertEquals(hunspellResult.getStderr(), "", "Stderr from running hunspell check on "+remoteFile);
+		
+		// report the hunspell check failures and lines of the man page that contain the failed word
+		List<String> hunspellFailures = new ArrayList<String>();
+		List<String> manPageLines = Arrays.asList(originalManPage.split("\n"));
+		if (!hunspellResult.getStdout().trim().isEmpty()) hunspellFailures = Arrays.asList(hunspellResult.getStdout().trim().split("\n"));
+		for (String hunspellFailure : hunspellFailures) {
+			log.warning("'"+hunspellFailure+"' was identified by hunspell check as a potential misspelling.");
+			for (String manPageLine : manPageLines) {
+				if (manPageLine.contains(hunspellFailure)) {
+					log.info("   '"+hunspellFailure+"' was found in man page line: "+manPageLine);
+				}
+			}
+		}
+		
+		return hunspellFailures;
+	}
+	
+	/**
+	 * @param originalManPage - original stdout result from typing man tool on the command line
+	 * @return - return a modified copy of the originalManPage with acceptable substitutions for known strings that would otherwise fail the hunspell check
+	 */
 	protected String modifyMisspellingsInManPage(String originalManPage) {
 		String modifiedManPage = originalManPage;
 		modifiedManPage = modifiedManPage.replaceAll("(\\w+)‐\\n\\s+(\\w+)", "$1$2");	// unhyphenate all words at the ends of a line
@@ -499,6 +609,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("SERIALNUMBER", "SERIAL_NUMBER");
 		modifiedManPage = modifiedManPage.replaceAll("POOLID", "POOL_ID");
 		modifiedManPage = modifiedManPage.replaceAll("ENV([^I])", "ENVIRONMENT$1");
+		modifiedManPage = modifiedManPage.replaceAll("by pressing <F1>", "by pressing <Function-1>");
 		modifiedManPage = modifiedManPage.replaceAll("--servicelevel", "--service_level");
 		modifiedManPage = modifiedManPage.replaceAll("--activationkey", "--activation_key");
 		modifiedManPage = modifiedManPage.replaceAll("--serverurl", "--server_url");
@@ -589,6 +700,9 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("CDN", "Content Delivery Network");
 		modifiedManPage = modifiedManPage.replaceAll("SKU", "Stock Keeping Unit");
 		modifiedManPage = modifiedManPage.replaceAll("SSL", "Secure Sockets Layer");
+		modifiedManPage = modifiedManPage.replaceAll("GUI", "Graphical User Interface");
+		modifiedManPage = modifiedManPage.replaceAll("UI", "User Interface");
+		modifiedManPage = modifiedManPage.replaceAll("GPLv2", "General Public License, version 2");
 		modifiedManPage = modifiedManPage.replaceAll("HTTPS", "Hypertext Transfer Protocol Secure");
 		modifiedManPage = modifiedManPage.replaceAll("Pradeep Kilambi", "My Colleague");
 				
