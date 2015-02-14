@@ -296,7 +296,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
-						msgId = msgId.replace(word, "replaced typo");
+						msgId = msgId.replace(word, "TYPO");
 					}
 				}
 			}
@@ -408,7 +408,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
-					modifiedManPage = modifiedManPage.replace(word, "replaced typo");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
 				}
 			}
 		}
@@ -443,6 +443,20 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Ignoring poor man page title while bug '"+bugId+"' is open.");
 				modifiedManPage = modifiedManPage.replaceAll("System Manager's Manualsubscription", "System Manager's Manual subscription");
+			}
+		}
+		// END OF WORKAROUND
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		for (String word : Arrays.asList(new String[]{"bugzilla1192574comment3isNotFixed"})) {
+			if (modifiedManPage.contains(word)) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1192574";	// Bug 1192574 - typos and poor grammar in subscription-manager-gui man page
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
 			}
 		}
 		// END OF WORKAROUND
@@ -521,11 +535,36 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="check the rhsm.conf man page for misspelled words and typos",
-			groups={"debugTest"},
-			enabled=false) // TODO
+			groups={},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SpellCheckManPageForRhsmConf_Test() throws IOException {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String tool = "rhsm.conf";
+		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
+		Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
 		
+		// modify the contents of manPageResult for acceptable word spellings
+		String modifiedManPage = manPageResult.getStdout();
+		modifiedManPage = modifyMisspellingsInManPage(manPageResult.getStdout());
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		for (String word : Arrays.asList(new String[]{"subscription-mananager","pulldown","bugzilla1192646comment4isNotFixed","bugzilla1192646comment5isNotFixed"})) {
+			if (modifiedManPage.contains(word)) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1192646";	// Bug 1192646 - typos and poor grammar in rhsm.conf man page
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+			}
+		}
+		// END OF WORKAROUND
+		
+		// assert that there were no unexpected hunspell check failures in the modified man page
+		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
+	
 	}
 	
 	
@@ -651,10 +690,19 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	 */
 	protected String modifyMisspellingsInManPage(String originalManPage) {
 		String modifiedManPage = originalManPage;
-		modifiedManPage = modifiedManPage.replaceAll("(\\w+)‐\\n\\s+(\\w+)", "$1$2");	// unhyphenate all words at the ends of a line
-		modifiedManPage = modifiedManPage.replaceAll("[a-f,0-9,\\-]{36}", "UUID");		// consumer identity: eff9a4c9-3579-49e5-a52f-83f2db29ab52
-		modifiedManPage = modifiedManPage.replaceAll("[a-f,0-9,]{32}", "POOLID");		// Pool Id: ff8080812bc382e3012bc3845da100d2
 		
+		// modifications to correct for man-page formatting
+		modifiedManPage = modifiedManPage.replaceAll("(\\w+)‐\\n\\s+(\\w+)", "$1$2");	// unhyphenate all words at the ends of a line
+		
+		// modifications for specific bug comments that hunspell needs some help to catch
+		modifiedManPage = modifiedManPage.replaceAll("/old- licenses/", "/ bugzilla1192646comment4isNotFixed /");
+		modifiedManPage = modifiedManPage.replaceAll(" 11/07/2014 ", " bugzilla1192646comment5isNotFixed ");
+		modifiedManPage = modifiedManPage.replaceAll("https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Subscription_Management/1.0/html/Subscription_Management_Guide/index.html", " bugzilla1192574comment3isNotFixed ");
+		
+		// modifications for hashed id strings
+		modifiedManPage = modifiedManPage.replaceAll("[a-f,0-9,\\-]{36}", "UUID");		// consumer identity: eff9a4c9-3579-49e5-a52f-83f2db29ab52
+		modifiedManPage = modifiedManPage.replaceAll("[a-f,0-9,]{32}", "POOLID");		// Pool Id: ff8080812bc382e3012bc3845da100d2	
+
 		modifiedManPage = modifiedManPage.replaceAll("proxyuser", "proxy_user");
 		modifiedManPage = modifiedManPage.replaceAll("proxypass", "proxy_pass");
 		modifiedManPage = modifiedManPage.replaceAll("PROXYUSERNAME", "PROXY_USERNAME");
@@ -689,9 +737,19 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("USERNAME", "USER_NAME");
 		modifiedManPage = modifiedManPage.replaceAll("SYS0395", "SYSTEM SKU 395");
 		modifiedManPage = modifiedManPage.replaceAll("baseurl", "base_url");
+		modifiedManPage = modifiedManPage.replaceAll("productCertDir", "product-Certificate-Directory");
+		modifiedManPage = modifiedManPage.replaceAll("entitlementCertDir", "entitlement-Certificate-Directory");
+		modifiedManPage = modifiedManPage.replaceAll("consumerCertDir", "consumer-Certificate-Directory");
+		modifiedManPage = modifiedManPage.replaceAll("pluginDir", "plugin-in-Directory");
+		modifiedManPage = modifiedManPage.replaceAll("pluginConfDir", "plug-in-Configuration-Directory");
+		modifiedManPage = modifiedManPage.replaceAll("certCheckInterval", "certificate-Check-Interval");
+		modifiedManPage = modifiedManPage.replaceAll("autoAttachInterval", "auto-Attach-Interval");
 		modifiedManPage = modifiedManPage.replaceAll("certFrequency", "certificate_frequency");
-		modifiedManPage = modifiedManPage.replaceAll("Candlepin", "Candle_pin");
-		modifiedManPage = modifiedManPage.replaceAll("candlepin", "candle_pin");
+		modifiedManPage = modifiedManPage.replaceAll("ca_cert_dir","certificate_authority_certificate_directory");
+		modifiedManPage = modifiedManPage.replaceAll("repo_ca_cert","repository_certificate_authority_certificate");
+		modifiedManPage = modifiedManPage.replaceAll("ssl_verify_depth","secure_socket_layer_verify_depth");
+		modifiedManPage = modifiedManPage.replaceAll("Candlepin", "Candle-pin");
+		modifiedManPage = modifiedManPage.replaceAll("candlepin", "candle-pin");
 		modifiedManPage = modifiedManPage.replaceAll("\\{\"fact1\": \"value1\",\"fact2\": \"value2\"\\}", "");
 		modifiedManPage = modifiedManPage.replaceAll("cpu","computer_processing_unit");
 		modifiedManPage = modifiedManPage.replaceAll("mhz.","mega_hertz");
@@ -711,12 +769,15 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("preselected", "already selected");
 		modifiedManPage = modifiedManPage.replaceAll("cdn.redhat.com", "content_delivery_network.red_hat.com");
 		modifiedManPage = modifiedManPage.replaceAll("rhsmcertd", "red hat subscription management certificate daemon");
+		modifiedManPage = modifiedManPage.replaceAll("RHSMCERTD", "Red Hat Subscription Management Certificate Daemon");
 		modifiedManPage = modifiedManPage.replaceAll("subscription-manager-gui", "subscription-manager-graphical-user-interface");
 		modifiedManPage = modifiedManPage.replaceAll("firstboot", "first-boot");
 		modifiedManPage = modifiedManPage.replaceAll("up2date", "up-to-date");
+		modifiedManPage = modifiedManPage.replaceAll("virt-who", "virtual-who");
 		modifiedManPage = modifiedManPage.replaceAll("install-num-migrate", "install-number-migrate");
 		modifiedManPage = modifiedManPage.replaceAll("systemid([^e])", "system-id$1");
-		modifiedManPage = modifiedManPage.replaceAll("rhsm.conf([^i])", "rhsm.configuration$1");
+		modifiedManPage = modifiedManPage.replaceAll("rhsm\\.conf([^i])", "rhsm.configuration$1");
+		modifiedManPage = modifiedManPage.replaceAll("RHSM\\.CONF([^i])", "RHSM.CONFIGURATION$1");
 		modifiedManPage = modifiedManPage.replaceAll("myserver.example.com", "my.server.example.com");
 		modifiedManPage = modifiedManPage.replaceAll("cloudforms.example.com", "cloud.forms.example.com");
 		modifiedManPage = modifiedManPage.replaceAll("newsubscription.example.com", "new.subscription.example.com");
@@ -725,6 +786,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll(".git.28.5cd97a5.fc20", "");
 		modifiedManPage = modifiedManPage.replaceAll(".git.1.2f38ded.fc20", "");
 		modifiedManPage = modifiedManPage.replaceAll("2012-09-14T14:55:29.280519", "2012-09-14 14:55:29.280519");
+		modifiedManPage = modifiedManPage.replaceAll("gpl-2.0.txt", "General-Public-License-version-2-text");
 		modifiedManPage = modifiedManPage.replaceAll("grep migr([^a])", "grep migrate$1");
 		modifiedManPage = modifiedManPage.replaceAll("hostname", "host-name");
 		modifiedManPage = modifiedManPage.replaceAll("HOSTNAME", "HOST-NAME");
@@ -744,8 +806,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("REPOS OPTIONS", "REPOSITORIES OPTIONS");
 		modifiedManPage = modifiedManPage.replaceAll("REPO-OVERRIDE", "REPOSITORY-OVERRIDE");
 		modifiedManPage = modifiedManPage.replaceAll("CONFIG OPTIONS", "CONFIGURATION OPTIONS");
-		modifiedManPage = modifiedManPage.replaceAll("config ", "configuration ");
-		modifiedManPage = modifiedManPage.replaceAll("config\n", "configuration\n");
+		modifiedManPage = modifiedManPage.replaceAll("config([^u])", "configuration$1");
 		modifiedManPage = modifiedManPage.replaceAll("orgs", "organizations");
 		modifiedManPage = modifiedManPage.replaceAll("ORGS", "ORGANIZATIONS");
 		modifiedManPage = modifiedManPage.replaceAll("preconfigured", "configured in advance");
@@ -755,6 +816,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("rhsm", "red-hat-subscription-management");
 		modifiedManPage = modifiedManPage.replaceAll("rhel", "red-hat-enterprise-Linux");	// lowercase linux fails hunspell
 		modifiedManPage = modifiedManPage.replaceAll("RHN", "Red Hat Network");
+		modifiedManPage = modifiedManPage.replaceAll("RHSM", "Red Hat Subscription Management");
 		modifiedManPage = modifiedManPage.replaceAll("RHEL", "Red Hat Enterprise Linux");
 		modifiedManPage = modifiedManPage.replaceAll("-url", "-uniform-resource-locator");
 		modifiedManPage = modifiedManPage.replaceAll("_url", "_uniform_resource_locator");
@@ -772,11 +834,14 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("GPLv2", "General Public License, version 2");
 		modifiedManPage = modifiedManPage.replaceAll("HTTPS", "Hypertext Transfer Protocol Secure");
 		modifiedManPage = modifiedManPage.replaceAll("MERCHANTABILITY", "MERCHANTABLE");
-		modifiedManPage = modifiedManPage.replaceAll("Pradeep +Kilambi", "My Colleague");
-		modifiedManPage = modifiedManPage.replaceAll("Deon +Lackey", "My Colleague");
-		modifiedManPage = modifiedManPage.replaceAll("Mark +Huth", "My Colleague");
-		modifiedManPage = modifiedManPage.replaceAll("Paresh +Mutha", "My Colleague");
-		modifiedManPage = modifiedManPage.replaceAll("Tasos +Papaioannou", "My Colleague");
+		
+		// modifications for people's name
+		modifiedManPage = modifiedManPage.replaceAll("Pradeep +Kilambi", "Author");
+		modifiedManPage = modifiedManPage.replaceAll("Deon +Lackey", "Author");
+		modifiedManPage = modifiedManPage.replaceAll("Mark +Huth", "Author");
+		modifiedManPage = modifiedManPage.replaceAll("Paresh +Mutha", "Author");
+		modifiedManPage = modifiedManPage.replaceAll("Tasos +Papaioannou", "Author");
+		modifiedManPage = modifiedManPage.replaceAll("Bryan +Kearney", "Author");
 		return modifiedManPage;
 	}
 	
