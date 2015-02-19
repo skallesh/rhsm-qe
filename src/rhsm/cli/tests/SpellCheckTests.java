@@ -604,11 +604,36 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="check the rhsmcertd man page for misspelled words and typos",
-			groups={"debugTest"},
-			enabled=false) // TODO
+			groups={},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SpellCheckManPageForRhsmcertd_Test() throws IOException {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String tool = "rhsmcertd";
+		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
+		Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
 		
+		// modify the contents of manPageResult for acceptable word spellings
+		String modifiedManPage = manPageResult.getStdout();
+		modifiedManPage = modifyMisspellingsInManPage(manPageResult.getStdout());
+		modifiedManPage = modifiedManPage.replaceAll("System Manager's Manual", " bugzilla1194453comment3isNotFixed ");
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		for (String word : Arrays.asList(new String[]{"certmgr.py","autoattachInterval","bugzilla1194453comment3isNotFixed"})) {
+			if (modifiedManPage.contains(word)) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1194453";	// Bug 1194453 - typos and poor grammar in rhsmcertd man page
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+			}
+		}
+		// END OF WORKAROUND
+		
+		// assert that there were no unexpected hunspell check failures in the modified man page
+		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
 	
 	
@@ -774,7 +799,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("pluginConfDir", "plug-in-Configuration-Directory");
 		modifiedManPage = modifiedManPage.replaceAll("certCheckInterval", "certificate-Check-Interval");
 		modifiedManPage = modifiedManPage.replaceAll("autoAttachInterval", "auto-Attach-Interval");
-		modifiedManPage = modifiedManPage.replaceAll("certFrequency", "certificate_frequency");
+		modifiedManPage = modifiedManPage.replaceAll("certFrequency", "certificate_Frequency");
+		modifiedManPage = modifiedManPage.replaceAll("certInterval", "certificate_Interval");
 		modifiedManPage = modifiedManPage.replaceAll("ca_cert_dir","certificate_authority_certificate_directory");
 		modifiedManPage = modifiedManPage.replaceAll("repo_ca_cert","repository_certificate_authority_certificate");
 		modifiedManPage = modifiedManPage.replaceAll("ssl_verify_depth","secure_socket_layer_verify_depth");
@@ -890,6 +916,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("Tasos(\n *| +)Papaioannou", "Author");
 		modifiedManPage = modifiedManPage.replaceAll("Bryan(\n *| +)Kearney", "Author");
 		modifiedManPage = modifiedManPage.replaceAll("James(\n *| +)Bowes", "Author");
+		modifiedManPage = modifiedManPage.replaceAll("Jeff(\n *| +)Ortel", "Author");
 		
 		return modifiedManPage;
 	}
