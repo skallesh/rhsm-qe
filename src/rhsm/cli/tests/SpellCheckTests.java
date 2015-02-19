@@ -647,11 +647,36 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="check the rhsm-debug man page for misspelled words and typos",
-			groups={"debugTest"},
-			enabled=false) // TODO
+			groups={},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SpellCheckManPageForRhsmDebug_Test() throws IOException {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String tool = "rhsm-debug";
+		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
+		Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
 		
+		// modify the contents of manPageResult for acceptable word spellings
+		String modifiedManPage = manPageResult.getStdout();
+		modifiedManPage = modifyMisspellingsInManPage(manPageResult.getStdout());
+		modifiedManPage = modifiedManPage.replaceAll("System Manager's Manual", " bugzilla1194468comment2isNotFixed ");
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		for (String word : Arrays.asList(new String[]{"intead","bugzilla1194468comment2isNotFixed"})) {
+			if (modifiedManPage.contains(word)) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1194468";	// Bug 1194468 - typos and poor grammar in rhsm-debug man page
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+			}
+		}
+		// END OF WORKAROUND
+		
+		// assert that there were no unexpected hunspell check failures in the modified man page
+		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
 	
 	
@@ -768,9 +793,11 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("--listslots", "--list_slots");
 		modifiedManPage = modifiedManPage.replaceAll("--listhooks", "--list_hooks");
 		modifiedManPage = modifiedManPage.replaceAll("--consumerid", "--consumer_identifier");
+		modifiedManPage = modifiedManPage.replaceAll("--sos", "--save-our-souls");
 		modifiedManPage = modifiedManPage.replaceAll("--repo([^s])", "--repository$1");
 		modifiedManPage = modifiedManPage.replaceAll("stdin", "standard-in");
 		modifiedManPage = modifiedManPage.replaceAll("stdout", "standard-out");
+		modifiedManPage = modifiedManPage.replaceAll("gzipped", "GNU compressed");	// man rhsm-debug
 		modifiedManPage = modifiedManPage.replaceAll("Multi-", "Multiple-");
 		modifiedManPage = modifiedManPage.replaceAll("multi-", "multiple-");
 		modifiedManPage = modifiedManPage.replaceAll("hypervisor", "virtual machine monitor");
@@ -829,6 +856,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("RHSMCERTD", "Red Hat Subscription Management Certificate Daemon");
 		modifiedManPage = modifiedManPage.replaceAll("subscription-manager-gui", "subscription-manager-graphical-user-interface");
 		modifiedManPage = modifiedManPage.replaceAll("firstboot", "first-boot");
+		modifiedManPage = modifiedManPage.replaceAll("sosreport", "save-our-soul-report");
 		modifiedManPage = modifiedManPage.replaceAll("up2date", "up-to-date");
 		modifiedManPage = modifiedManPage.replaceAll("virt-who", "virtual-who");
 		modifiedManPage = modifiedManPage.replaceAll("rct( |\n)", "read-certificate$1");
@@ -912,6 +940,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("Bryan(\n *| +)Kearney", "Author");
 		modifiedManPage = modifiedManPage.replaceAll("James(\n *| +)Bowes", "Author");
 		modifiedManPage = modifiedManPage.replaceAll("Jeff(\n *| +)Ortel", "Author");
+		modifiedManPage = modifiedManPage.replaceAll("William(\n *| +)Poteat", "Author");
 		
 		return modifiedManPage;
 	}
