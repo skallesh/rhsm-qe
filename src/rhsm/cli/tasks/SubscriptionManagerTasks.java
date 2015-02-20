@@ -7018,9 +7018,10 @@ if (false) {
 	/**
 	 * @param sos TODO
 	 * @param noSubscriptions TODO
+	 * @param subscriptions TODO
 	 * @return the command line syntax for calling rhsm-debug system with these options
 	 */
-	public String rhsmDebugSystemCommand(String destination, Boolean noArchive, Boolean sos, Boolean noSubscriptions, String proxy, String proxyuser, String proxypassword) {
+	public String rhsmDebugSystemCommand(String destination, Boolean noArchive, Boolean sos, Boolean noSubscriptions, Boolean subscriptions, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = "rhsm-debug";					command += " system";
@@ -7028,6 +7029,7 @@ if (false) {
 		if (noArchive!=null && noArchive)				command += " --no-archive";
 		if (sos!=null && sos)							command += " --sos";
 		if (noSubscriptions!=null && noSubscriptions)	command += " --no-subscriptions";
+		if (subscriptions!=null && subscriptions)		command += " --subscriptions";
 		if (proxy!=null)								command += " --proxy="+proxy;
 		if (proxyuser!=null)							command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)						command += " --proxypassword="+proxypassword;

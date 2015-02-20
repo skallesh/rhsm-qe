@@ -1374,7 +1374,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--destination=DESTINATION");	// https://bugzilla.redhat.com/show_bug.cgi?id=1040338#c2
 		options.add("--no-archive");
 		options.add("--sos");	// added by Bug 1060727 - rhsm-debug duplicates sos data and may collect secrets
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.12.7-1")) options.add("--no-subscriptions");	// added by Bug 1114117 - rhsm-debug takes forever
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.12.7-1")) options.add("--no-subscriptions");	// added by Bug 1114117 - rhsm-debug takes forever	// commit 68a1a418c27172c4fb851d536813f8060f4d3d1f
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.1-1")) options.add("--subscriptions");		// added by 	1114117: Stop collecting subs info by default.	// commit 029f786999f5b1cd1d9614976fb4544ca6541b3b
 		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",command,module);

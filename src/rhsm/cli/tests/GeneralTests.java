@@ -846,7 +846,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --regtoken=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --pool=FOO",								new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe",											new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1162331"}),clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null),		new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1162331"}),clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null,null),new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1078091","1119688"}),clienttasks.command+" register --serverurl=https://sat6_fqdn/ --insecure",	new Integer(69),	"","Unable to reach the server at sat6_fqdn:443/"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" register --servicelevel=foo",							new Integer(64),	"","Error: Must use --auto-attach with --servicelevel."}));	// changed by bug 874804,876305		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"856236","1119688"}),	clienttasks.command+" register --activationkey=foo --org=foo --env=foo",	new Integer(64),	"","Error: Activation keys do not allow environments to be specified."}));
@@ -882,7 +882,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(64),	"","Error: Must use --auto with --servicelevel."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(64),	"","Error: Must use --auto with --servicelevel."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --file=/missing/poolIds.txt",				new Integer(65),	"","Error: The file \"/missing/poolIds.txt\" does not exist or cannot be read."}));	// added by bug 1159974
-
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.1-1")) {
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1194906"}),		clienttasks.rhsmDebugSystemCommand(null,null,null,true,true,null,null,null),new Integer(64),	"","Error: You may not use --subscriptions with --no-subscriptions."}));	// added by bug 1194906
+			}
 		} else {	// pre commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --product=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --regtoken=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
@@ -892,7 +894,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("856236"),	clienttasks.command+" register --activationkey=foo --org=foo --env=foo",	new Integer(255),	"Error: Activation keys do not allow environments to be specified.", ""}));
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --installed --servicelevel=foo",					new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe",											new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
-			ll.add(Arrays.asList(new Object[]{null,							clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null),		new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+			ll.add(Arrays.asList(new Object[]{null,							clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null,null),new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) {
 				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" list --no-overlap",									new Integer(255),	"Error: --no-overlap is only applicable with --available", ""}));
 				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" list --match-installed",								new Integer(255),	"Error: --match-installed is only applicable with --available", ""}));
