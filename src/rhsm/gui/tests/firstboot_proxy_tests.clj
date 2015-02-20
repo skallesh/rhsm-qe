@@ -111,10 +111,13 @@
   [_]
   (try
     (start_firstboot)
-    (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-    (tasks/ui click :firstboot-window "proxy_button")
-    (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-    (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+    (if-not (= "RHEL7" (get-release))
+      (tasks/ui click :register-rhsm)
+      (do
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (let [hostname (@config :basicauth-proxy-hostname)
          port     (@config :basicauth-proxy-port)
          username (@config :basicauth-proxy-username)
@@ -140,19 +143,22 @@
   [_]
   (try
     (start_firstboot)
-    (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-    (tasks/ui click :firstboot-window "proxy_button")
-    (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-    (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+    (if (= "RHEL7" (get-release))
+      (tasks/ui click :register-rhsm)
+      (do
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (let [hostname (@config :noauth-proxy-hostname)
           port (@config :noauth-proxy-port)]
       (tasks/enableproxy hostname :port port :firstboot? true)
-    (tasks/firstboot-register (@config :username) (@config :password))
-    (tasks/ui click :firstboot-forward)
-    (sleep 2000)
-    (verify (not (bool (tasks/ui guiexist :firstboot-window))))
-    (verify (not (tasks/ui showing? :register-system)))
-    (tasks/verify-conf-proxies hostname port "" ""))
+      (tasks/firstboot-register (@config :username) (@config :password))
+      (tasks/ui click :firstboot-forward)
+      (sleep 2000)
+      (verify (not (bool (tasks/ui guiexist :firstboot-window))))
+      (verify (not (tasks/ui showing? :register-system)))
+      (tasks/verify-conf-proxies hostname port "" ""))
     (finally
       (reset_firstboot)
       (tasks/disableproxy true)
@@ -178,10 +184,13 @@
   [_]
   (try
     (start_firstboot)
-    (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-    (tasks/ui click :firstboot-window "proxy_button")
-    (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-    (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+    (if-not (= "RHEL7" (get-release))
+      (tasks/ui click :register-rhsm)
+      (do
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (let [hostname (@config :basicauth-proxy-hostname)
           port     (@config :basicauth-proxy-port)
           username (@config :basicauth-proxy-username)
@@ -212,10 +221,13 @@
   [_]
   (try
     (start_firstboot)
-    (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-    (tasks/ui click :firstboot-window "proxy_button")
-    (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-    (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+    (if-not (= "RHEL7" (get-release))
+      (tasks/ui click :register-rhsm)
+      (do
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (let [hostname (@config :noauth-proxy-hostname)
           port     (@config :noauth-proxy-port)
           logoutput (get-logging @noauth-proxyrunner
@@ -257,10 +269,13 @@
   [_]
   (try
     (start_firstboot)
-    (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-    (tasks/ui click :firstboot-window "proxy_button")
-    (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-    (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+    (if-not (= "RHEL7" (get-release))
+      (tasks/ui click :register-rhsm)
+      (do
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (let [hostname (@config :basicauth-proxy-hostname)
          port     (@config :basicauth-proxy-port)
          username (@config :basicauth-proxy-username)
@@ -281,10 +296,13 @@
   [_]
   (try
     (start_firstboot)
-    (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-    (tasks/ui click :firstboot-window "proxy_button")
-    (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-    (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+    (if-not (= "RHEL7" (get-release))
+      (tasks/ui click :register-rhsm)
+      (do
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (let [hostname (@config :noauth-proxy-hostname)
          port     (@config :noauth-proxy-port)]
       (tasks/enableproxy hostname :port port :firstboot? true :close? false))
@@ -302,10 +320,13 @@
   [_]
   (try
     (start_firstboot)
-    (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-    (tasks/ui click :firstboot-window "proxy_button")
-    (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-    (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+    (if-not (= "RHEL7" (get-release))
+      (tasks/ui click :register-rhsm)
+      (do
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (test_proxy "")
     (finally
       (tasks/ui click :close-proxy)
@@ -320,10 +341,13 @@
   [_]
   (try
     (start_firstboot)
-    (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-    (tasks/ui click :firstboot-window "proxy_button")
-    (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-    (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+    (if-not (= "RHEL7" (get-release))
+      (tasks/ui click :register-rhsm)
+      (do
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (tasks/enableproxy "" :close? false :firstboot? true)
     (test_proxy "Proxy connection failed")
     (finally (firstboot_disable_proxy nil))))
@@ -336,10 +360,13 @@
   [_]
   (try
     (start_firstboot)
-    (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-    (tasks/ui click :firstboot-window "proxy_button")
-    (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-    (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+    (if-not (= "RHEL7" (get-release))
+      (tasks/ui click :register-rhsm)
+      (do
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (tasks/enableproxy "" :close? false :auth? true :user "" :pass "" :firstboot? true)
     (test_proxy "Proxy connection failed")
     (finally (firstboot_disable_proxy nil))))
@@ -351,10 +378,13 @@
   [_]
   (try+
    (start_firstboot)
-   (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-   (tasks/ui click :firstboot-window "proxy_button")
-   (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-   (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+   (if-not (= "RHEL7" (get-release))
+     (tasks/ui click :register-rhsm)
+     (do
+       (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+       (tasks/ui click :firstboot-window "proxy_button")
+       (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+       (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
    (tasks/enableproxy "doesnotexist.redhat.com" :close? false :firstboot? true)
    (test_proxy "Proxy connection failed")
    (finally (firstboot_disable_proxy nil))))
@@ -366,10 +396,13 @@
   [_]
   (try
     (start_firstboot)
-    (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-    (tasks/ui click :firstboot-window "proxy_button")
-    (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-    (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+    (if-not (= "RHEL7" (get-release))
+      (tasks/ui click :register-rhsm)
+      (do
+        (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+        (tasks/ui click :firstboot-window "proxy_button")
+        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (let [hostname  "blahblah"
           port      "666"]
       (tasks/enableproxy hostname :port port :firstboot? true)
@@ -390,10 +423,13 @@
   [_]
   (try+
    (start_firstboot)
-   (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
-   (tasks/ui click :firstboot-window "proxy_button")
-   (tasks/ui waittillguiexist :firstboot-proxy-dialog)
-   (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))
+   (if-not (= "RHEL7" (get-release))
+     (tasks/ui click :register-rhsm)
+     (do
+       (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
+       (tasks/ui click :firstboot-window "proxy_button")
+       (tasks/ui waittillguiexist :firstboot-proxy-dialog)
+       (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
    (tasks/enableproxy "http://some.host.name:1337" :firstboot? true)
    ;;(tasks/ui click :configure-proxy)
    (tasks/ui click :firstboot-window "proxy_button")
