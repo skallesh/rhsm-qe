@@ -484,7 +484,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposEnableDisableWildcardRepos_Test() throws JSONException, Exception{
+	public void ReposEnableDisableAllReposUsingWildcard_Test() throws JSONException, Exception{
 		//	[root@jsefler-6 ~]# subscription-manager repos --enable=* --disable=*
 		//	Repo awesomeos is enabled for this system.
 		//	Repo awesomeos-x86_64 is enabled for this system.
@@ -520,21 +520,120 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
-
-		SSHCommandResult result = clienttasks.repos_(null, null, null, "*", "*", null, null, null);
-		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable all repos (using wildcard *).");
+		
 		String expectedStdoutMsgFormat = "Repo %s is %s for this system.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdoutMsgFormat = "Repo '%s' is %s for this system.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdoutMsgFormat = "Repository '%s' is %s for this system.";	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
+		
+		// test: subscription-manager repos --enablerepo=* --disablerepo=*
+		SSHCommandResult result = clienttasks.repos_(null, null, null, "*", "*", null, null, null);
+		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable all repos (using wildcard *).");
+		// verify the feedback
 		for (Repo subscribedRepo : subscribedRepos) {
 			String expectedEnableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"enabled");
 			String expectedDisableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"disabled");
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.12.8-1")) {
-				Assert.assertFalse(result.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable/disable all repos (using wildcard *) contains expected message: "+expectedEnableStdoutMsg);		
+				Assert.assertTrue(!result.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable/disable all repos (using wildcard *) does NOT contain message: "+expectedEnableStdoutMsg);		
 			} else {
 				Assert.assertTrue(result.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable/disable all repos (using wildcard *) contains expected message: "+expectedEnableStdoutMsg);		
 			}
 			Assert.assertTrue(result.getStdout().contains(expectedDisableStdoutMsg), "Stdout from an attempt to enable/disable all repos (using wildcard *) contains expected message: "+expectedDisableStdoutMsg);		
+		}
+		// verify the actual yum repolist disabled
+		List<String> yumRepoListDisabled = clienttasks.getYumRepolist("disabled");
+		for (Repo subscribedRepo : subscribedRepos) {
+			Assert.assertTrue(yumRepoListDisabled.contains(subscribedRepo.repoId), "After using wildcard * to disable all repos using subscription-manager, entitled repo '"+subscribedRepo.repoId+"' appears on the yum repolist disabled.");
+		}
+		
+		// test: subscription-manager repos --enablerepo=*
+		result = clienttasks.repos_(null, null, null, "*", null, null, null, null);
+		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable all repos (using wildcard *).");
+		// verify the feedback
+		for (Repo subscribedRepo : subscribedRepos) {
+			String expectedEnableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"enabled");
+			String expectedDisableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"disabled");
+			Assert.assertTrue(result.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable all repos (using wildcard *) contains expected message: "+expectedEnableStdoutMsg);		
+			Assert.assertTrue(!result.getStdout().contains(expectedDisableStdoutMsg), "Stdout from an attempt to enable all repos (using wildcard *) does NOT contain message: "+expectedDisableStdoutMsg);		
+		}
+		// verify the actual yum repolist enabled
+		List<String> yumRepoListEnabled = clienttasks.getYumRepolist("enabled");
+		for (Repo subscribedRepo : subscribedRepos) {
+			Assert.assertTrue(yumRepoListDisabled.contains(subscribedRepo.repoId), "After using wildcard * to enable all repos using subscription-manager, entitled repo '"+subscribedRepo.repoId+"' appears on the yum repolist enabled.");
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager: attempt enable/disable some repos (using wildcard ?)",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposEnableDisableSomeReposUsingWildcard_Test() throws JSONException, Exception{
+		//	[root@jsefler-os6 ~]# subscription-manager repos --disable=awesomeos-i???
+		//	Repository 'awesomeos-i686' is disabled for this system.
+		//	Repository 'awesomeos-ia64' is disabled for this system.
+		//	[root@jsefler-6 ~]# echo $?
+		//	0
+
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
+		
+		String expectedStdoutMsgFormat = "Repo %s is %s for this system.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdoutMsgFormat = "Repo '%s' is %s for this system.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdoutMsgFormat = "Repository '%s' is %s for this system.";	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
+		
+		// get a random subscribedRepo
+		Repo randomSubscribedRepo = getRandomListItem(subscribedRepos);
+		String randomSubscribedRepoId = randomSubscribedRepo.repoId;
+		String wildcardedRepo = randomSubscribedRepoId.replaceAll(String.valueOf(randomSubscribedRepoId.charAt(randomGenerator.nextInt(randomSubscribedRepoId.length()))),"?");	// e.g. "awesomeos-s390x" to "awes?me?s-s390x"
+		String regexRepo = wildcardedRepo.replaceAll("\\?",".");
+		
+		// test: subscription-manager repos --disablerepo=awes?me?s-s390x
+		clienttasks.repos_(null, null, null, "*", null, null, null, null);
+		SSHCommandResult result = clienttasks.repos_(null, null, null, null, wildcardedRepo, null, null, null);
+		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable some repos (using wildcard ?).");
+		// verify the feedback
+		for (Repo subscribedRepo : subscribedRepos) {
+			String expectedEnableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"enabled");
+			String expectedDisableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"disabled");
+			if (subscribedRepo.repoId.matches(regexRepo)) {
+				Assert.assertTrue(result.getStdout().contains(expectedDisableStdoutMsg), "Stdout from an attempt to disable repos '"+wildcardedRepo+"' (using wildcard ?) contains expected message: "+expectedDisableStdoutMsg);		
+			} else {
+				Assert.assertTrue(!result.getStdout().contains(expectedDisableStdoutMsg), "Stdout from an attempt to disable repos '"+wildcardedRepo+"' (using wildcard ?) does NOT contain message: "+expectedDisableStdoutMsg);		
+			}
+		}
+		// verify the actual yum repolist disabled
+		List<String> yumRepoListDisabled = clienttasks.getYumRepolist("disabled");
+		for (Repo subscribedRepo : subscribedRepos) {
+			if (subscribedRepo.repoId.matches(regexRepo)) {
+				Assert.assertTrue(yumRepoListDisabled.contains(subscribedRepo.repoId), "After calling subscription-manager repos to disable '"+wildcardedRepo+"', entitled repo '"+subscribedRepo.repoId+"' appears on the yum repolist disabled.");
+			} else {
+				Assert.assertTrue(!yumRepoListDisabled.contains(subscribedRepo.repoId), "After calling subscription-manager repos to disable '"+wildcardedRepo+"', entitled repo '"+subscribedRepo.repoId+"' does NOT appear on the yum repolist disabled.");	
+			}
+		}
+		
+		// test: subscription-manager repos --enablerepo=*
+		clienttasks.repos_(null, null, null, null, "*", null, null, null);
+		result = clienttasks.repos_(null, null, null, wildcardedRepo, null, null, null, null);
+		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable some repos (using wildcard ?).");
+		// verify the feedback
+		for (Repo subscribedRepo : subscribedRepos) {
+			String expectedEnableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"enabled");
+			String expectedDisableStdoutMsg = String.format(expectedStdoutMsgFormat,subscribedRepo.repoId,"disabled");
+			if (subscribedRepo.repoId.matches(regexRepo)) {
+				Assert.assertTrue(result.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable repos '"+wildcardedRepo+"' (using wildcard ?) contains expected message: "+expectedEnableStdoutMsg);		
+			} else {
+				Assert.assertTrue(!result.getStdout().contains(expectedEnableStdoutMsg), "Stdout from an attempt to enable repos '"+wildcardedRepo+"' (using wildcard ?) does NOT contain message: "+expectedEnableStdoutMsg);		
+			}
+		}
+		// verify the actual yum repolist enabled
+		yumRepoListDisabled = clienttasks.getYumRepolist("enabled");
+		for (Repo subscribedRepo : subscribedRepos) {
+			if (subscribedRepo.repoId.matches(regexRepo)) {
+				Assert.assertTrue(yumRepoListDisabled.contains(subscribedRepo.repoId), "After calling subscription-manager repos to enable '"+wildcardedRepo+"', entitled repo '"+subscribedRepo.repoId+"' appears on the yum repolist enabled.");
+			} else {
+				Assert.assertTrue(!yumRepoListDisabled.contains(subscribedRepo.repoId), "After calling subscription-manager repos to enable '"+wildcardedRepo+"', entitled repo '"+subscribedRepo.repoId+"' does NOT appear on the yum repolist enabled.");	
+			}
 		}
 	}
 	
