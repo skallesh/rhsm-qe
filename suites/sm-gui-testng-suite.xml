@@ -226,20 +226,6 @@
     </groups>
   </test>
 
-  <test name="GUI: Search Status">
-    <packages>
-      <package name="rhsm.gui.tests" />
-      <package name="rhsm.base"></package>
-    </packages>
-    <groups>
-      <run>
-        <include name="setup" />
-        <include name="search_status"/>
-        <include name="cleanup" />
-      </run>
-    </groups>
-  </test>
-
   <test name="GUI: Firstoot Proxy">
     <packages>
       <package name="rhsm.gui.tests" />
