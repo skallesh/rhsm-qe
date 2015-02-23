@@ -226,7 +226,7 @@
     </groups>
   </test>
 
-  <test name="GUI: Firstoot Proxy">
+  <test name="GUI: Firstboot Proxy">
     <packages>
       <package name="rhsm.gui.tests" />
       <package name="rhsm.base"></package>
