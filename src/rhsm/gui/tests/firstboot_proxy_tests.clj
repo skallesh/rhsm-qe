@@ -166,8 +166,8 @@
 
 (defn ^{Test {:groups ["firstboot_proxy"
                        "tier1"]
-              :dependsOnMethods ["firstboot_enable_proxy_auth"
-                                 "firstboot_enable_proxy_noauth"]}}
+              :dependsOnMethods ["firstboot_enable_proxy_auth_connect"
+                                 "firstboot_enable_proxy_noauth_connect"]}}
   firstboot_disable_proxy
   "Asserts that the rhsm.conf file is correctly set after diabling proxies."
   [_]
@@ -178,7 +178,7 @@
 
 (defn ^{Test {:groups ["firstboot_proxy"
                        "tier1"]
-              :dependsOnMethods ["firstboot_enable_proxy_auth"]}}
+              :dependsOnMethods ["firstboot_enable_proxy_auth_connect"]}}
   firstboot_proxy_auth_connect_logging
   "Asserts that rhsm can connect after setting a proxy with auth."
   [_]
@@ -215,7 +215,7 @@
 
 (defn ^{Test {:groups ["firstboot_proxy"
                        "tier1"]
-              :dependsOnMethods ["firstboot_enable_proxy_noauth"]}}
+              :dependsOnMethods ["firstboot_enable_proxy_noauth_connect"]}}
   firstboot_proxy_noauth_connect_logging
   "Asserts that rhsm can connect after setting a proxy without auth."
   [_]
@@ -263,7 +263,7 @@
 
 (defn ^{Test {:groups ["firstboot_proxy"
                        "tier1"]
-              :dependsOnMethods ["firstboot_enable_proxy_auth"]}}
+              :dependsOnMethods ["firstboot_enable_proxy_auth_connect"]}}
   firstboot_test_auth_proxy
   "Tests the 'test connection' button when using a proxy with auth."
   [_]
@@ -290,7 +290,7 @@
 
 (defn ^{Test {:groups ["firstboot_proxy"
                        "tier1"]
-              :dependsOnMethods ["firstboot_enable_proxy_noauth"]}}
+              :dependsOnMethods ["firstboot_enable_proxy_noauth_connect"]}}
   firstboot_test_noauth_proxy
   "Tests the 'test connection' button when using a proxy without auth."
   [_]
@@ -431,8 +431,9 @@
        (tasks/ui waittillguiexist :firstboot-proxy-dialog)
        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
    (tasks/enableproxy "http://some.host.name:1337" :firstboot? true)
-   ;;(tasks/ui click :configure-proxy)
-   (tasks/ui click :firstboot-window "proxy_button")
+   (if-not (= "RHRL7" (get-release))
+	(tasks/ui click :configure-proxy)
+   	(tasks/ui click :firstboot-window "proxy_button"))
    (tasks/ui waittillwindowexist :proxy-config-dialog 60)
    (let [location (tasks/ui gettextvalue :proxy-location)]
      (verify (not (substring? "http://" location)))
