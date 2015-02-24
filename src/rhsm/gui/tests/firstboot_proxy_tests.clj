@@ -143,7 +143,7 @@
   [_]
   (try
     (start_firstboot)
-    (if (= "RHEL7" (get-release))
+    (if-not (= "RHEL7" (get-release))
       (tasks/ui click :register-rhsm)
       (do
         (verify (tasks/fbshowing? :firstboot-window "proxy_button"))
