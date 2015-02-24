@@ -220,6 +220,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 					//"blockedByBug-1093201" // Zanata 1.11.X NOT 100%		// see Skip on Known Issue
 					//"blockedByBug-1118020" // Zanata 1.12.X NOT 100%		// see Skip on Known Issue
 					//"blockedByBug-1166333" // Zanata 1.13.X NOT 100%		// see Skip on Known Issue
+					"blockedByBug-1195824"	// Zanata 1.14.X NOT 100%
 					},
 			dataProvider="getTranslationFileData",
 			enabled=true)
