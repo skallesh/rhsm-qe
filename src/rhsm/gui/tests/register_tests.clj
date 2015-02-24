@@ -87,14 +87,16 @@
 
 (data-driven register_bad_credentials {Test {:groups ["registration"
                                                       "tier1"]}}
-  [^{Test {:groups ["blockedByBug-718045"]}}
-   ["sdf" "sdf" :invalid-credentials]
-   ;need to add a case with a space in the middle re: 719378
-   ;^{Test {:groups ["blockedByBug-719378"]}}
-   ;["test user" :invalid-credentials]
-   ["" "" :no-username]
-   ["" "password" :no-username]
-   ["sdf" "" :no-password]])
+   [^{Test {:groups ["blockedByBug-718045"
+                     "blockedByBug-1194365"]}}
+    ["sdf" "sdf" :invalid-credentials]
+    ;^{Test {:groups ["blockedByBug-719378"]}}
+    ["test user" "password" :invalid-credentials]
+    ["test user" "" :no-password]
+    ["  " "  " :no-username]
+    ["" "" :no-username]
+    ["" "password" :no-username]
+    ["sdf" "" :no-password]])
 
 (defn ^{Test {:groups ["registration"
                        "tier1"
