@@ -1064,6 +1064,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				options.remove("-s SERVICE_LEVEL, --service-level=SERVICE_LEVEL");
 				options.add("-s SERVICE_LEVEL, --servicelevel=SERVICE_LEVEL");
 			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.1-1")) { // commit 00461f3751f9db182227c9973c41b305e378638a  RFE Bug 1154375: Allow use of activation keys during migration.
+				options.add("--activation-key=ACTIVATION_KEYS");
+			}
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();

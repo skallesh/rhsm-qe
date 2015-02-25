@@ -285,6 +285,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1161694 - incorrect bash completion for new subscription-manager list option "--pool-only"
 			if (bashCommand.startsWith("subscription-manager list ")) bugIds.add("1161694");
 			
+			// Bug 1196418 - rhn-migrate-classic-to-rhsm --activation-key does not bash complete
+			if (bashCommand.startsWith("rhn-migrate-classic-to-rhsm ")) bugIds.add("1196418");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			// append a new row to the dataProvider
