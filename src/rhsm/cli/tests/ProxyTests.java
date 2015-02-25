@@ -1479,20 +1479,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		basicauthproxy = new SSHCommandRunner(sm_basicauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		noauthproxy = new SSHCommandRunner(sm_noauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		if (clienttasks!=null) nErrMsg = clienttasks.msg_NetworkErrorUnableToConnect;
-		if (clienttasks!=null) ipv4_address = clienttasks.getFactValue("network.ipv4_address");	// clienttasks.ipaddr;
-		// when client is an openstack instance, the ipv4_address is private and we need the public address when asserting the proxy logs
-		//	[root@rhel6 ~]# dmidecode --string system-product-name
-		//	Not Specified
-		//	[root@rhel7 ~]# dmidecode --string system-product-name
-		//	Not Specified
-		//	[root@rhel6-openstack-instance ~]# dmidecode --string system-product-name
-		//	OpenStack Compute
-		//	[root@rhel7-openstack-instance ~]# dmidecode --string system-product-name
-		//	RHEV Hypervisor
-		if (clienttasks!=null && !clienttasks.getFactValue("dmi.system.product_name").equals("Not Specified")) {
-			SSHCommandResult ipv4_addressResult = RemoteFileTasks.runCommandAndAssert(client, "curl --stderr /dev/null http://169.254.169.254/latest/meta-data/public-ipv4", 0);		// will timeout on a non-openstack instance and then fail the exit code assert
-			ipv4_address = ipv4_addressResult.getStdout().trim();
-		}
+		if (clienttasks!=null) ipv4_address = clienttasks.getIPV4Address();
 	}
 	
 	@BeforeMethod(groups={"setup"})

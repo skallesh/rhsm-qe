@@ -528,13 +528,24 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the expected migration.* facts are set
 		//	[root@ibm-x3620m3-01 ~]# subscription-manager facts --list | grep migration
-		//	migration.classic_system_id: 1023061526
-		//	migration.migrated_from: rhn_hosted_classic
-		//	migration.migration_date: 2012-07-13T18:51:44.254543
 		Map<String,String> factMap = clienttasks.getFacts();
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13")) {
-			Assert.assertEquals(factMap.get(migrationFromFact), rhnHostname+"/XMLRPC", "The migration fact '"+migrationFromFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");			
+			//	migration.classic_system_id: 1000021964
+			//	migration.migrated_from: https://sat-56-server.usersys.redhat.com/XMLRPC
+			//	migration.migration_date: 2015-02-07T18:42:18.744943
+			
+			//	migration.classic_system_id: 1033298347
+			//	migration.migrated_from: https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC
+			//	migration.migration_date: 2015-02-24T19:52:14.685785
+			
+			String expectedMigrationFromFact = rhnHostname+"/XMLRPC";
+			if (!expectedMigrationFromFact.startsWith("http")) expectedMigrationFromFact = "https://xmlrpc."+expectedMigrationFromFact;
+			Assert.assertEquals(factMap.get(migrationFromFact), expectedMigrationFromFact, "The migration fact '"+migrationFromFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");			
 		} else {
+			//	migration.classic_system_id: 1023061526
+			//	migration.migrated_from: rhn_hosted_classic
+			//	migration.migration_date: 2012-07-13T18:51:44.254543
+			
 			Assert.assertEquals(factMap.get(migrationFromFact), "rhn_hosted_classic", "The migration fact '"+migrationFromFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		}
 		Assert.assertEquals(factMap.get(migrationSystemIdFact), rhnSystemId, "The migration fact '"+migrationSystemIdFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
@@ -761,9 +772,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
 		
 		// assert that traffic to RHN went through the proxy
-		String ipaddr = clienttasks.ipaddr;	// appears to always match system fact net.interface.eth0.ipv4_address
-		ipaddr = clienttasks.getFactValue("network.ipv4_address");	// works on both a kvm virt guest and an openstack instance
-		String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+		String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipv4_address);	// accounts for multiple tests hitting the same proxy server simultaneously
 		Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHN.");
 		
 		// subscribe to more RHN Classic channels
@@ -784,7 +793,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
 		
 		// assert that traffic to RHSM went through the proxy (unless testing --no-proxy)
-		proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+		proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipv4_address);	// accounts for multiple tests hitting the same proxy server simultaneously
 		int numberOfConnectionAttempts;
 		String conflictingProductCertsMsg = "You are subscribed to channels that have conflicting product certificates.";	// "Unable to continue migration!";
 		if (sshCommandResult.getStdout().contains(conflictingProductCertsMsg)) numberOfConnectionAttempts=3; else numberOfConnectionAttempts=4;
@@ -797,7 +806,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//	1375391532.900    356 10.16.120.123 TCP_MISS/200 3571 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
 			//	1375391533.435    514 10.16.120.123 TCP_MISS/200 1811 CONNECT xmlrpc.rhn.code.stage.redhat.com:443 redhat DIRECT/10.24.127.44 -
 			if (proxyLogRegex.equals("TCP_MISS") && !proxyLogResult.trim().isEmpty()) for (String proxyLogEntry : proxyLogResult.trim().split("\n")) {
-				Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", "")), "Running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' from subscription-manager client ip '"+ipaddr+"'.");
+				Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", "")), "Running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' from subscription-manager client ip '"+ipv4_address+"'.");
 			}
 			// /var/log/tinyproxy.log
 			//	CONNECT   Aug 01 17:44:56 [10139]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
@@ -806,7 +815,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//	CONNECT   Aug 01 17:44:57 [10136]: Connect (file descriptor 7): 10-16-120-123.rhq.lab.eng.bos.redhat.com [10.16.120.123]
 			Assert.assertEquals(proxyLogResult.split("\n").length, numberOfConnectionAttempts, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm --no-proxy while RHN up2date is configured with a proxy will yield this number of connection attempts through the proxy.");
 		} else {
-			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHSM from the subscription-manager client ip '"+ipaddr+"'.");
+			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to RHSM from the subscription-manager client ip '"+ipv4_address+"'.");
 
 			// /var/log/squid/access.log
 			//	1375391369.882     52 10.16.120.123 TCP_MISS/200 1710 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
@@ -823,8 +832,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//	1375391374.579     51 10.16.120.123 TCP_MISS/200 2110 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
 			//	1375391374.701    106 10.16.120.123 TCP_MISS/200 1518 CONNECT jsefler-f14-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.202 -
 			if (proxyLogRegex.equals("TCP_MISS") && !proxyLogResult.trim().isEmpty()) {
-				Assert.assertTrue(proxyLogResult.contains(rhnHostname.replaceFirst("https?://", "")) && proxyLogResult.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' and '"+candlepinServerHostname+"' from subscription-manager client ip '"+ipaddr+"'.");
-				for (String proxyLogEntry : proxyLogResult.trim().split("\n")) Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", ""))||proxyLogEntry.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' or '"+candlepinServerHostname+"' from subscription-manager client ip '"+ipaddr+"'.");
+				Assert.assertTrue(proxyLogResult.contains(rhnHostname.replaceFirst("https?://", "")) && proxyLogResult.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' and '"+candlepinServerHostname+"' from subscription-manager client ip '"+ipv4_address+"'.");
+				for (String proxyLogEntry : proxyLogResult.trim().split("\n")) Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", ""))||proxyLogEntry.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' or '"+candlepinServerHostname+"' from subscription-manager client ip '"+ipv4_address+"'.");
 				Assert.assertEquals(getSubstringMatches(proxyLogResult,rhnHostname.replaceFirst("https?://", "")).size(), numberOfConnectionAttempts, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield exactly this number of connection attempts through the proxy to RHN hostname '"+rhnHostname.replaceFirst("https?://", "")+"'.");
 			}
 			// /var/log/tinyproxy.log
@@ -1424,20 +1433,20 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
 
 		// Step 1: determine ip addresses of our desired address (rhn) and the man-in-the-middle (bugzilla)
-		rhnHostnameIpAddress = client.runCommandAndWait("dig +short xmlrpc."+sm_rhnHostname).getStdout().trim();
-		bugzillaHostnameIpAddress =  client.runCommandAndWait("dig +short bugzillavip.proxy.prod.ext.phx2.redhat.com").getStdout().trim();	// could really be any known web app; this is the man-in-the-middle attacker
-		Assert.assertMatch(rhnHostnameIpAddress, "\\d+\\.\\d+\\.\\d+\\.\\d+", "Validated rhn hostname '"+sm_rhnHostname+"' ipAddress to be '"+rhnHostnameIpAddress+"'.");
-		Assert.assertMatch(bugzillaHostnameIpAddress, "\\d+\\.\\d+\\.\\d+\\.\\d+", "Validated bugzilla hostname '"+"bugzillavip.proxy.prod.ext.phx2.redhat.com"+"' ipAddress to be '"+bugzillaHostnameIpAddress+"'.");
+		rhnHostnameIPAddress = client.runCommandAndWait("dig +short xmlrpc."+sm_rhnHostname).getStdout().trim();
+		bugzillaHostnameIPAddress =  client.runCommandAndWait("dig +short bugzillavip.proxy.prod.ext.phx2.redhat.com").getStdout().trim();	// could really be any known web app; this is the man-in-the-middle attacker
+		Assert.assertMatch(rhnHostnameIPAddress, "\\d+\\.\\d+\\.\\d+\\.\\d+", "Validated rhn hostname '"+sm_rhnHostname+"' IPAddress to be '"+rhnHostnameIPAddress+"'.");
+		Assert.assertMatch(bugzillaHostnameIPAddress, "\\d+\\.\\d+\\.\\d+\\.\\d+", "Validated bugzilla hostname '"+"bugzillavip.proxy.prod.ext.phx2.redhat.com"+"' IPAddress to be '"+bugzillaHostnameIPAddress+"'.");
 		
 		// Step 2: add a row to iptables setting bugzilla as the man-in-the-middle attacker of rhn
-		client.runCommandAndWait("iptables -t nat -I OUTPUT -d "+rhnHostnameIpAddress+" -j DNAT --to-destination "+bugzillaHostnameIpAddress);
+		client.runCommandAndWait("iptables -t nat -I OUTPUT -d "+rhnHostnameIPAddress+" -j DNAT --to-destination "+bugzillaHostnameIPAddress);
 		
 		// Step 3: verify the iptable row has been added
-		//Assert.assertTrue(client.runCommandAndWait("iptables -t nat -L -v -n").getStdout().contains(rhnHostnameIpAddress+"        to:"+bugzillaHostnameIpAddress),"iptables is configured with a man-in-the-middle security attacker on rhn.");
-		Assert.assertContainsMatch(client.runCommandAndWait("iptables -t nat -L -v -n").getStdout().trim(), (rhnHostnameIpAddress+"\\s+to:"+bugzillaHostnameIpAddress).replaceAll("\\.", "\\\\."),"iptables is configured with a man-in-the-middle security attacker on rhn.");
+		//Assert.assertTrue(client.runCommandAndWait("iptables -t nat -L -v -n").getStdout().contains(rhnHostnameIPAddress+"        to:"+bugzillaHostnameIPAddress),"iptables is configured with a man-in-the-middle security attacker on rhn.");
+		Assert.assertContainsMatch(client.runCommandAndWait("iptables -t nat -L -v -n").getStdout().trim(), (rhnHostnameIPAddress+"\\s+to:"+bugzillaHostnameIPAddress).replaceAll("\\.", "\\\\."),"iptables is configured with a man-in-the-middle security attacker on rhn.");
 		
 		// Step 4: verify that traffic to rhn is being redirected to bugzilla
-		Assert.assertEquals(client.runCommandAndWait("curl --stderr /dev/null -k https://xmlrpc."+sm_rhnHostname+" | grep \"<title>\"").getStdout().trim(), "<title>Red Hat Bugzilla Main Page</title>", "curl calls to rhn ipAddress '"+rhnHostnameIpAddress+"' are being re-directed to bugzilla ipAddress '"+bugzillaHostnameIpAddress+"'.");
+		Assert.assertEquals(client.runCommandAndWait("curl --stderr /dev/null -k https://xmlrpc."+sm_rhnHostname+" | grep \"<title>\"").getStdout().trim(), "<title>Red Hat Bugzilla Main Page</title>", "curl calls to rhn IPAddress '"+rhnHostnameIPAddress+"' are being re-directed to bugzilla IPAddress '"+bugzillaHostnameIPAddress+"'.");
 		
 		// Step 5: not neccessary
 		
@@ -1474,14 +1483,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups="setup", value="RhnMigrateClassicToRhsmCertificateVerification_Test")
 	public void deleteManInTheMiddleAttackerFromIptables() {
 		// Step 7: determine iptables entry of the man-in-the-middle (bugzilla) and delete it
-		if (!bugzillaHostnameIpAddress.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {log.warning("The man-in-the-middle '"+bugzillaHostnameIpAddress+"' is not a valid ip address."); return;}
-		String iptablesRow = client.runCommandAndWait("iptables -t nat -L --line-numbers | grep to:"+bugzillaHostnameIpAddress).getStdout().trim().split("\\s")[0];
-		if (!isInteger(iptablesRow)) {log.warning("could not find an iptables row for man-in-the-middle "+bugzillaHostnameIpAddress); return;}
+		if (!bugzillaHostnameIPAddress.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {log.warning("The man-in-the-middle '"+bugzillaHostnameIPAddress+"' is not a valid ip address."); return;}
+		String iptablesRow = client.runCommandAndWait("iptables -t nat -L --line-numbers | grep to:"+bugzillaHostnameIPAddress).getStdout().trim().split("\\s")[0];
+		if (!isInteger(iptablesRow)) {log.warning("could not find an iptables row for man-in-the-middle "+bugzillaHostnameIPAddress); return;}
 		RemoteFileTasks.runCommandAndAssert(client,"iptables -t nat -D OUTPUT "+iptablesRow, null,null,Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(client,"iptables -t nat -L --line-numbers | grep \"to:"+bugzillaHostnameIpAddress+"\"", null,null,Integer.valueOf(1));
+		RemoteFileTasks.runCommandAndAssert(client,"iptables -t nat -L --line-numbers | grep \"to:"+bugzillaHostnameIPAddress+"\"", null,null,Integer.valueOf(1));
 	}
-	protected String rhnHostnameIpAddress="";
-	protected String bugzillaHostnameIpAddress="";	// could really be any known web app
+	protected String rhnHostnameIPAddress="";
+	protected String bugzillaHostnameIPAddress="";	// could really be any known web app
 
 
 
@@ -1721,10 +1730,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	public static SSHCommandRunner basicAuthProxyRunner = null;
 	public static SSHCommandRunner noAuthProxyRunner = null;
+	protected String ipv4_address = null;
 	@BeforeClass(groups={"setup"})
 	public void setupProxyRunnersBeforeClass() throws IOException {
 		basicAuthProxyRunner = new SSHCommandRunner(sm_basicauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		noAuthProxyRunner = new SSHCommandRunner(sm_noauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		if (clienttasks!=null) ipv4_address = clienttasks.getIPV4Address();
 	}
 	
 	@AfterClass(groups="setup",alwaysRun=true)
