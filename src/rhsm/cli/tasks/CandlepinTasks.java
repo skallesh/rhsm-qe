@@ -3702,6 +3702,65 @@ schema generation failed
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);		
 	}
 	
+	public static JSONObject createActivationKeyUsingRESTfulAPI(String authenticator, String password, String url, String org, String name, List<String> poolIds, Integer quantity) throws JSONException, Exception  {
+	
+		// delete the existing activation key
+		// process all of the subscriptions belonging to ownerKey
+		JSONArray jsonActivationKeys = new JSONArray(getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+org+"/activation_keys"));	
+		for (int i = 0; i < jsonActivationKeys.length(); i++) {
+			JSONObject jsonActivationKeyI = (JSONObject) jsonActivationKeys.get(i);
+				//{
+				//    "autoAttach": null,
+				//    "contentOverrides": [],
+				//    "created": "2015-02-24T20:12:36.848+0000",
+				//    "description": null,
+				//    "id": "2c90af8b4bbd3828014bbd3846700009",
+				//    "name": "default_key",
+				//    "owner": {
+				//        "displayName": "Admin Owner",
+				//        "href": "/owners/admin",
+				//        "id": "2c90af8b4bbd3828014bbd3842bb0002",
+				//        "key": "admin"
+				//    },
+				//    "pools": [],
+				//    "productIds": [],
+				//    "releaseVer": {
+				//        "releaseVer": null
+				//    },
+				//    "serviceLevel": null,
+				//    "updated": "2015-02-24T20:12:36.848+0000"
+				//}
+			if (jsonActivationKeyI.getString("name").equals(name)) {
+				String result = CandlepinTasks.deleteResourceUsingRESTfulAPI(authenticator,password,url, "/activation_keys/"+jsonActivationKeyI.getString("id"));
+				if (result!=null) {	// assert success TODO
+					Assert.fail("The deletion of activation key '"+name+"' appears to have failed: "+result);
+				}
+			}
+		}
+		
+		// create a JSON object to represent the request body
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", name);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+
+		// call the candlepin api to create an activation key
+		JSONObject jsonActivationKey = new JSONObject(postResourceUsingRESTfulAPI(authenticator,password,url, "/owners/"+org+"/activation_keys", jsonActivationKeyRequest.toString()));
+		if (jsonActivationKey.has("displayMessage")) {	// assert success
+			Assert.fail("The creation of an activation key appears to have failed: "+jsonActivationKey.getString("displayMessage"));
+		}
+		
+		// add the pools to the key
+		for (String poolId : poolIds) {
+			// add the pool with quantity
+			jsonActivationKey = new JSONObject(postResourceUsingRESTfulAPI(authenticator,password,url, "/activation_keys/" + jsonActivationKey.getString("id")+"/pools/"+poolId + (quantity==null?"":"?quantity="+quantity), null));
+			if (jsonActivationKey.has("displayMessage")) {	// assert success
+				Assert.fail("Adding pool '"+poolId+"' to activation key '"+name+"' appears to have failed: "+jsonActivationKey.getString("displayMessage"));
+			}
+		}
+		
+		return jsonActivationKey;
+	}
+	
 	
 	
 	public String invalidCredentialsRegexMsg() {
