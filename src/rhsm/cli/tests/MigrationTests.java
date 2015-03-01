@@ -15,8 +15,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -32,11 +32,14 @@ import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
+
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
+import rhsm.data.SubscriptionPool;
+
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -420,6 +423,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// execute rhn-migrate-classic-to-rhsm with options
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, serviceLevelIndex);
 		
+		// assert valid usage
+		if (sshCommandResult.getStdout().contains("Usage: rhn-migrate-classic-to-rhsms")) {
+			Assert.fail("Detected a usage error.");
+		}
+		
 		// get a map of the productid.js file after we attempt migration
 		Map<String,List<String>> productIdRepoMapAfterMigration = clienttasks.getProductIdToReposMap();
 		
@@ -627,7 +635,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String autosubscribeFailedMsg = "Unable to auto-subscribe.  Do your existing subscriptions match the products installed on this system?";
 		autosubscribeFailedMsg = "Unable to auto-attach.  Do your existing subscriptions match the products installed on this system?";	// changed by bug 876294
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) autosubscribeFailedMsg = "Unable to find available subscriptions for all your installed products.";	// commit fad3de89779f2217e788b3564ef5dca7f85914fb	// matches functionality from bug 864195
-		if (options.contains("-n")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
+//		if (options.contains("-n")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
+		if (options.contains("-n") && !options.contains("--activation-key")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
 
 			// assert that autosubscribe was NOT attempted
 			Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeAttemptedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeAttemptedMsg);			
@@ -642,7 +651,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			// assert that we are NOT consuming any entitlements
 			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should NOT be consuming any RHSM entitlements after call to "+rhnMigrateTool+" with options ("+options+") that indicate no autosubscribe.");
 			
-		} else {
+//		} else {
+		} if (!options.contains("-n") && !options.contains("--activation-key")) {
 			
 			// assert that autosubscribe was attempted
 			Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeAttemptedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeAttemptedMsg);			
@@ -686,6 +696,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					}
 				}
 			}
+		}
+		if (options.contains("--activation-key")) {
+			// assert that autosubscribe was NOT attempted
+			//Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeAttemptedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeAttemptedMsg);	// not a fair assertion since autosubscribeAttemptedMsg was set to "Installed Product Current Status:"
+			//Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);	// also not a fair assertion since autosubscribeFailedMsg was set to "Unable to find available subscriptions for all your installed products."
+			Assert.assertTrue(!sshCommandResult.getStdout().toLowerCase().contains("auto-attach"),"Stdout from an attempt to migrate with options ("+options+") which include an activation key should make no reference to 'auto-attach'");
+			Assert.assertTrue(!sshCommandResult.getStdout().toLowerCase().contains("auto-subscribe"),"Stdout from an attempt to migrate with options ("+options+") which include an activation key should make no reference to 'auto-subscribe'");
+			
+			// assert that we are consuming entitlements, TODO but this is really dependent on the activation key
+			Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some entitlements after a call to "+rhnMigrateTool+" with options ("+options+").  This assumes the activation key contained one or more pools.");
+			
+			// TODO When an activation key is used, all of the consumed subscriptions should have come from the activation key.
+			// It would be best to make these assertion in the test that calls this function.
 		}
 		
 		// assert that the rhnplugin has been disabled
@@ -958,6 +981,202 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
 		RhnMigrateClassicToRhsm_Test(bugzilla,rhnreg_ksUsername,rhnreg_ksPassword,rhnServer,rhnChannelsToAdd,options,rhnUsername,rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,serviceLevelIndex,serviceLevelExpected);
+	}
+	
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a valid activation-key",
+			groups={"AcceptanceTests","blockedByBug-1154375"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=130765)
+	public void RhnMigrateClassicToRhsmWithActivationKey_Test() throws Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("The --activation-key option was not implemented in this version of subscription-manager.");
+		
+		// create a valid activation key
+		SubscriptionPool pool = getRandomListItem(availableSubscriptionPools);	// randomly choose a valid available pool for this key
+		String activationKeyName = String.format("activationKeyForOrg_%s_Pool_%s", clientOrgKey,pool.productId);	// choose an activationKey name
+		JSONObject jsonActivationKey = CandlepinTasks.createActivationKeyUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl,clientOrgKey, activationKeyName, Arrays.asList(pool.poolId), null);		
+		
+		// register with the activation key
+		if (false) { // debugTesting
+			clienttasks.register_(null, null, clientOrgKey, null, null, null, null, null, null, null, activationKeyName, null, null, null, true, null, null, null, null);
+			clienttasks.unregister_(null, null, null);
+		}
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1196416"; // Bug 1196416 - rhn-migrate-classic-to-rhsm with --activation-key option should not prompt for destination credentials 
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
+		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
+		// END OF WORKAROUND
+		
+		// migrate from RHN Classic to RHSM using the activation key 
+		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName,sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
+		
+		// assert that the system is consuming the pool from the activation key.
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(consumedProductSubscriptions.size(), 1, "Number of consumed subscriptions after migrating from RHN Classic to RHSM with activation key '"+activationKeyName+"'.");
+		Assert.assertEquals(consumedProductSubscriptions.get(0).poolId, pool.poolId, "The sole consumed subscription poolId after migrating from RHN Classic to RHSM with activation key '"+activationKeyName+"'.");
+	}
+	
+	
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a bad activation-key",
+			groups={"blockedByBug-1154375"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=130765)
+	public void RhnMigrateClassicToRhsmWithBadActivationKey_Test() throws Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("The --activation-key option was not implemented in this version of subscription-manager.");
+		
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("ppc64le")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("aarch64")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
+		
+		clienttasks.unregister_(null,null,null);
+		clienttasks.removeAllCerts(true,true,true);
+		clienttasks.removeAllFacts();
+		restoreOriginallyConfiguredServerUrl();
+		
+		// register to RHN Classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
+		
+		// choose a bad activation key
+		String activationKeyName = "badActivationKey";
+		
+		// execute rhn-migrate-classic-to-rhsm with options
+		SSHCommandResult executeRhnMigrateClassicToRhsmResult;
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1196416"; // Bug 1196416 - rhn-migrate-classic-to-rhsm with --activation-key option should not prompt for destination credentials 
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			executeRhnMigrateClassicToRhsmResult = executeRhnMigrateClassicToRhsm("--activation-key="+activationKeyName,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
+		} else	// call executeRhnMigrateClassicToRhsm with rhsmUsername=null and rhsmPassword=null
+		// END OF WORKAROUND
+		executeRhnMigrateClassicToRhsmResult = executeRhnMigrateClassicToRhsm("--activation-key="+activationKeyName,sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
+		
+		//	201502272153:09.897 - FINE: ssh root@jsefler-os6.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --activation-key=badActivationKey qa@redhat.com redhatqa testuser1 password admin null null (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201502272153:12.049 - FINE: Stdout: 
+		//	spawn rhn-migrate-classic-to-rhsm --activation-key=badActivationKey
+		//	Legacy username: qa@redhat.com
+		//	Legacy password: 
+		//	Destination username: testuser1
+		//	Destination password: 
+		//	Org: admin
+		//
+		//	Retrieving existing legacy subscription information...
+		//
+		//	+-----------------------------------------------------+
+		//	System is currently subscribed to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-6
+		//
+		//	+-----------------------------------------------------+
+		//	Installing product certificates for these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-6
+		//
+		//	Product certificates installed successfully to /etc/pki/product.
+		//
+		//	Preparing to unregister system from legacy server...
+		//	System successfully unregistered from legacy server.
+		//
+		//	Attempting to register system to destination server...
+		//	None of the activation keys specified exist for this org.
+		//
+		//	Unable to register.
+		//	For further assistance, please contact Red Hat Global Support Services.
+		
+		// assert the result
+		String expectedFailureMessage="None of the activation keys specified exist for this org.";
+		expectedFailureMessage += "\n\nUnable to register.\nFor further assistance, please contact Red Hat Global Support Services.";
+		Assert.assertTrue(executeRhnMigrateClassicToRhsmResult.getStdout().contains(expectedFailureMessage),"The result from an attempt to migrate from RHN Classic to RHSM with a bad activation key reported this expected messge: \n"+expectedFailureMessage);
+		
+		// assert that the system is not registered
+		Assert.assertNull(clienttasks.getCurrentConsumerCert(),"Confirmed that system is NOT registered with Subscription Manager after an attempt to migrate from RHN Classic using activation key '"+activationKeyName+"'.");
+	}
+	
+	
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with valid comma separated keys",
+			groups={"blockedByBug-1154375"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=130765)
+	public void RhnMigrateClassicToRhsmWithCommaSeparatedActivationKeys_Test() throws Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("The --activation-key option was not implemented in this version of subscription-manager.");
+		
+		// create valid activation keys
+		SubscriptionPool pool1 = getRandomListItem(availableSubscriptionPools);	// randomly choose a valid available pool for this key
+		String activationKeyName1 = String.format("activationKeyForOrg_%s_Pool_%s", clientOrgKey,pool1.productId);	// choose an activationKey name
+		JSONObject jsonActivationKey1 = CandlepinTasks.createActivationKeyUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl,clientOrgKey, activationKeyName1, Arrays.asList(pool1.poolId), null);		
+		SubscriptionPool pool2 = getRandomListItem(availableSubscriptionPools);	// randomly choose a valid available pool for this key
+		String activationKeyName2 = String.format("activationKeyForOrg_%s_Pool_%s", clientOrgKey,pool2.productId);	// choose an activationKey name
+		JSONObject jsonActivationKey2 = CandlepinTasks.createActivationKeyUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl,clientOrgKey, activationKeyName2, Arrays.asList(pool2.poolId), null);		
+		String name = activationKeyName1+","+activationKeyName2;	// comma separated name
+		
+		// register with the activation key
+		if (false) { // debugTesting
+			clienttasks.register_(null, null, clientOrgKey, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);
+			clienttasks.unregister_(null, null, null);
+		}
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1196416"; // Bug 1196416 - rhn-migrate-classic-to-rhsm with --activation-key option should not prompt for destination credentials 
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
+		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
+		// END OF WORKAROUND
+		
+		// migrate from RHN Classic to RHSM using the activation key 
+		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name,sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
+		
+		// assert that the system is consuming the pools from the activation key.
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool1.poolId, consumedProductSubscriptions), "Found consumed subscription from pool '"+pool1.poolId+"' after migrating with activation keys '"+name+"'.");
+		Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool2.poolId, consumedProductSubscriptions), "Found consumed subscription from pool '"+pool2.poolId+"' after migrating with activation keys '"+name+"'.");
+		Assert.assertEquals(consumedProductSubscriptions.size(), 2, "Number of consumed subscriptions after migrating from RHN Classic to RHSM with activation key '"+name+"'.");
+	}
+	
+	
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with multiple --activation-key options specified",
+			groups={"blockedByBug-1154375"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=130765)
+	public void RhnMigrateClassicToRhsmWithMultipleActivationKeys_Test() throws Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("The --activation-key option was not implemented in this version of subscription-manager.");
+		
+		// create valid activation keys
+		SubscriptionPool pool1 = getRandomListItem(availableSubscriptionPools);	// randomly choose a valid available pool for this key
+		String name1 = String.format("activationKeyForOrg_%s_Pool_%s", clientOrgKey,pool1.productId);	// choose an activationKey name
+		JSONObject jsonActivationKey1 = CandlepinTasks.createActivationKeyUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl,clientOrgKey, name1, Arrays.asList(pool1.poolId), null);		
+		SubscriptionPool pool2 = getRandomListItem(availableSubscriptionPools);	// randomly choose a valid available pool for this key
+		String name2 = String.format("activationKeyForOrg_%s_Pool_%s", clientOrgKey,pool2.productId);	// choose an activationKey name
+		JSONObject jsonActivationKey2 = CandlepinTasks.createActivationKeyUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl,clientOrgKey, name2, Arrays.asList(pool2.poolId), null);		
+		
+		// register with the activation keys
+		if (false) { // debugTesting
+			clienttasks.register_(null, null, clientOrgKey, null, null, null, null, null, null, null, Arrays.asList(name1,name2), null, null, null, true, null, null, null, null);
+			clienttasks.unregister_(null, null, null);
+		}
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1196416"; // Bug 1196416 - rhn-migrate-classic-to-rhsm with --activation-key option should not prompt for destination credentials 
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name1+" "+"--activation-key="+name2,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
+		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
+		// END OF WORKAROUND
+		
+		// migrate from RHN Classic to RHSM using the activation key 
+		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name1+" "+"--activation-key="+name2,sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
+		
+		// assert that the system is consuming the pools from the activation key.
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool1.poolId, consumedProductSubscriptions), "Found consumed subscription from pool '"+pool1.poolId+"' after migrating with activation keys '"+name1+"' and '"+name2+"'.");
+		Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool2.poolId, consumedProductSubscriptions), "Found consumed subscription from pool '"+pool2.poolId+"' after migrating with activation keys '"+name1+"' and '"+name2+"'.");
+		Assert.assertEquals(consumedProductSubscriptions.size(), 2, "Number of consumed subscriptions after migrating from RHN Classic to RHSM with activation keys '"+name1+"' and '"+name2+"'.");
 	}
 	
 	
@@ -1717,6 +1936,16 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		//Assert.assertTrue(rhnAvailableChildChannels.size()>0,"A positive number of child channels under the RHN Classic base channel '"+rhnBaseChannel+"' are available for consumption.");
 		if (rhnAvailableChildChannels.isEmpty()) log.warning("Did NOT find any child channels under the RHN Classic base channel '"+rhnBaseChannel+"' available for consumption.");
+	}
+	
+	protected List<SubscriptionPool> availableSubscriptionPools = null;	// used to create activation keys
+	protected String clientOrgKey = null;
+	@BeforeClass(groups="setup")
+	public void determineAvailableSubscriptions() throws JSONException, Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(String)null,null,null,null,true,false,null,null,null);
+		clientOrgKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+		availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		clienttasks.unregister(null, null, null);
 	}
 	
 	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test","RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test"})
