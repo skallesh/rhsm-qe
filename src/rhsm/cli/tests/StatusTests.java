@@ -240,7 +240,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		//
 		//	Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390 Bits:
 		//	- Not covered by a valid subscription.
-
+		
+		//	Awesome OS Server Bits:
+		//		- Guest has not been reported on any host and is using a temporary unmapped guest subscription.
+		
 		// assert the overall status
 		String expectedStatus = null;
  		if (systemEntitlementsValid.equals("valid")) {
@@ -283,6 +286,21 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 							"Status detail '"+statusDetail+"' of installed product '"+installedProduct.productName+"' should not appear in duplicate.");
 				}
 			} else {
+				
+				// TEMPORARY WORKAROUND FOR BUG:
+				if (!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":").isEmpty()) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1197897";	// Bug 1197897 - subscription-manager status is yellow due to 24-hour subscription despite redundant coverage from a green subscription
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						String expectedReason = "Guest has not been reported on any host and is using a temporary unmapped guest subscription.";
+						log.warning("Verifying that the reason product '"+installedProduct.productName+"' appears in the status report is because a temporary 24 hour subscription has been attached since '"+expectedReason+"'.");
+						Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":"+"\n- "+expectedReason).isEmpty(),
+							"Installed product '"+installedProduct.productName+"' appears to be covered by a temporary 24 hours entitlement because the status module reports '"+expectedReason+"'");
+					}
+				} else	// assert
+				// END OF WORKAROUND
+				
 				Assert.assertTrue(getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":").isEmpty(),
 						"Installed product '"+installedProduct.productName+"' should NOT be included in the overall status details report when its own status '"+installedProduct.status+"' is something other than Not Subscribed.");
 			}
