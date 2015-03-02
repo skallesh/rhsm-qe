@@ -183,7 +183,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		try {
 			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
 			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"","","/status"));
-			//The above call works against onpremises, but causes the following againsta stage
+			//The above call works against onpremises, but causes the following against stage
 			//201108251644:10.040 - INFO: SSH alternative to HTTP request: curl -k  --request GET https://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/status (rhsm.cli.tasks.CandlepinTasks.getResourceUsingRESTfulAPI)
 			//201108251644:10.049 - WARNING: Required credentials not available for BASIC <any realm>@rubyvip.web.stage.ext.phx2.redhat.com:80 (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
 			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)

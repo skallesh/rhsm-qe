@@ -320,7 +320,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
@@ -1049,7 +1049,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="Verify that the expected RHN Rhel channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864"},
 			dataProvider="RhnRhelChannelsFromChannelMappingData",
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
@@ -2262,7 +2262,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1129948");
 			}
 			
-			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-sjis-6") ||
+			if (//https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c0
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-sjis-6-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-eucjp-6") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-eucjp-6-debuginfo") ||
@@ -2270,12 +2270,30 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-optional-3-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-bigdata-3") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-bigdata-3-debuginfo") ||
+				//https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c1
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-sjis-6") ||
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c2
+				rhnAvailableChildChannel.equals("rhel-i386-server-sjis-6") ||
+				rhnAvailableChildChannel.equals("rhel-i386-server-sjis-6-debuginfo") ||
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c3
 				rhnAvailableChildChannel.equals("rhel-ppc64-server-bluegene-6") ||
 				rhnAvailableChildChannel.equals("rhel-ppc64-server-bluegene-6-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-ppc64-server-p7ih-6") ||
 				rhnAvailableChildChannel.equals("rhel-ppc64-server-p7ih-6-debuginfo") ||
-				rhnAvailableChildChannel.equals("rhel-i386-server-sjis-6") ||
-				rhnAvailableChildChannel.equals("rhel-i386-server-sjis-6-debuginfo")) {
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c9
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-v2vwin-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-v2vwin-6-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-3-cts") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-3-cts-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.5") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.5-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ose-2.2-infrastructure") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ose-2.2-infrastructure-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cert") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cert-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.1-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.1-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-6-debuginfo") ){
 				// Bug 1133942 - various RHN channel maps to product certs missing in subscription-manager-migration-data
 				bugIds.add("1133942");
 			}
