@@ -950,7 +950,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -2293,7 +2293,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cert-beta") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.1-beta") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.1-beta-debuginfo") ||
-				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-6-debuginfo") ){
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-6-debuginfo") ||
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c10
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-3.2") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-3.2-debuginfo") ){
 				// Bug 1133942 - various RHN channel maps to product certs missing in subscription-manager-migration-data
 				bugIds.add("1133942");
 			}
