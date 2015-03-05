@@ -377,6 +377,8 @@
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
   [_]
+  (if-not (bool (tasks/ui guiexist :main-window))
+    (tasks/start-app))
   (if-not (tasks/ui showing? :register-system)
     (tasks/unregister))
   (tasks/ui click :main-window "System")
@@ -393,6 +395,8 @@
   check_system_preference_dialog
   "Verifies behavior of system preference dialog and its content"
   [_]
+  (if-not (bool (tasks/ui guiexist :main-window))
+    (tasks/start-app))
   (try+ (tasks/unregister)
         (catch [:type :not-registered] _))
   (try
