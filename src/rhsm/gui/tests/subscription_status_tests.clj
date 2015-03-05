@@ -90,17 +90,21 @@
   [_]
   (try
     (let
-  	[subscribed-products (atom {})
-         after-subscribe (atom {})]
+  	[subscribed-products (atom (int 0))
+         partially-subscribed (atom (int 0))
+         after-subscribe (atom (int 0))]
       (tasks/search :match-installed? true)
       (dotimes [n 3]
         (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
                                    (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
       (reset! subscribed-products (count (filter #(= "Subscribed" %)
                                                  (tasks/get-table-elements :installed-view 2))))
+      (reset! partially-subscribed (count (filter #(= "Partially Subscribed" %)
+                                                  (tasks/get-table-elements :installed-view 2))))
       (reset! after-subscribe (Integer. (re-find #"\d*"
                                                  (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-subscribe (- @status-before-subscribe @subscribed-products))))))
+      (verify (= @after-subscribe (- @status-before-subscribe
+                                     (+ @subscribed-products @partially-subscribed)))))))
 
 (defn ^{Test {:groups ["subscription_status"
                        "tier1"
@@ -118,8 +122,8 @@
             Skipping Test 'check_status_message_future_subscriptions'."))))
   (try
     (let
-        [subscribed-products-date (atom {})
-         after-date-products (atom {})
+        [subscribed-products-date (atom (int 0))
+         after-date-products (atom (int 0))
          present-date (do (tasks/ui selecttab :all-available-subscriptions)
                           (tasks/ui gettextvalue :date-entry))
          date-split (split present-date #"-")
