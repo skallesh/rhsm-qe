@@ -7266,6 +7266,31 @@ if (false) {
 	
 	
 	/**
+	 * Use this function to keep unmapped_guest_only pools from appearing in the list of available pools on a virtual system. <BR>
+	 * This method fakes the job of virt-who by telling candlepin that this virtual system is actually a guest of itself (a trick for testing) <BR>
+	 * Note: unmapped_guest_only pools was introduced in candlepin 0.9.42-1 commit ff5c1de80c4d2d9ca6370758ad77c8b8e0c71308 <BR>
+	 * @throws Exception
+	 */
+	public void mapVirtualSystemAsAGuestOfItself() {
+		// fake the job of virt-who by telling candlepin that this virtual system is actually a guest of itself (a trick for testing)
+		if (Boolean.valueOf(getFactValue("virt.is_guest"))) {
+			String systemUuid = getCurrentConsumerId();
+			if (systemUuid!=null) {	// is registered
+				String virtUuid = getFactValue("virt.uuid");
+				try {
+					String authenticator = this.currentlyRegisteredUsername!=null?this.currentlyRegisteredUsername:SubscriptionManagerBaseTestScript.sm_serverAdminUsername;
+					String password = this.currentlyRegisteredPassword!=null?this.currentlyRegisteredPassword:SubscriptionManagerBaseTestScript.sm_serverAdminPassword;
+					CandlepinTasks.setGuestIdsForConsumer(authenticator,password, SubscriptionManagerBaseTestScript.sm_serverUrl, systemUuid,Arrays.asList(new String[]{"this-guest-is-self-hosted",virtUuid,"trick-for-testing"}));
+				} catch (Exception e) {
+					e.printStackTrace();
+					Assert.fail(e.getMessage());
+				}
+			}
+		}
+	}
+	
+	
+	/**
 	 * Check the SSHCommandResult for errors.  If an error is detected, log a warning with information to help troubleshoot it. 
 	 * @param result
 	 */

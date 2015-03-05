@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
@@ -52,6 +53,15 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 	
+	@BeforeGroups(groups={"setup"},value="VerifyComplianceConsidersSystemArch_Test")
+	public void createFactsFileWithOverridingValuesBeforeVerifyComplianceConsidersSystemArch_Test() {
+		// these facts will prevent cores, sockets, and ram from interfering with compliance based on the system arch
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.put("cpu.cpu_socket(s)","1");
+		factsMap.put("cpu.core(s)_per_socket","1");
+		factsMap.put("memory.memtotal","1");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+	}
 	@Test(	description="when a subscription is attached that does not match the system's arch, assert the installed product status is blocked from going green",
 			groups={"cli.tests","VerifyComplianceConsidersSystemArch_Test","blockedByBug-909467"},
 			dataProvider="getSubscriptionPoolProvidingProductIdOnArchData",
@@ -106,8 +116,15 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		REPLACING THIS ASSERTION BLOCK WITH THE FOLLOWING BLOCK */
 		// assert the status and statusDetails for the installed product
 		if (poolArches.contains(clienttasks.arch)) {
-			Assert.assertEquals(installedProduct.status, "Subscribed", "When installed product '"+installedProduct.productName+"' is covered by subscription '"+pool.subscriptionName+"' whose arches '"+poolArch+"' cover the system's arch '"+clienttasks.arch+"', then the installed product can achieve full green compliance.");
-			Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "The statusDetails for installed product '"+installedProduct.productName+"' productId='"+providingProductId+"' should be empty when the system's arch '"+clienttasks.arch+"' is covered by the product subscription arches '"+poolArch.trim()+"'. (Note: the installed products arches '"+installedProduct.arch+"' are not considered)");
+//			if (CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, pool.poolId)) {
+//				// handle the system status of when entitled by a unmapped_guests_only pool
+//				Assert.assertEquals(installedProduct.status, "Partially Subscribed", "When installed product '"+installedProduct.productName+"' is covered by subscription '"+pool.subscriptionName+"' whose arches '"+poolArch+"' cover the system's arch '"+clienttasks.arch+"', then the installed product can achieve full green compliance.  However, since this pool '"+pool.poolId+"' is restricted to unmapped guests only, then the status is yellow.");
+//				Assert.assertEquals(installedProduct.statusDetails.get(0), "Guest has not been reported on any host and is using a temporary unmapped guest subscription.", "The statusDetails for installed product '"+installedProduct.productName+"' productId='"+providingProductId+"' when the system's arch '"+clienttasks.arch+"' is covered by the product subscription arches '"+poolArch.trim()+"' and the entitlement was granted from a unmapped guests only pool '"+pool.poolId+"'. (Note: the installed products arches '"+installedProduct.arch+"' are not considered)");
+//				Assert.assertEquals(installedProduct.statusDetails.toArray(new String[]{}), new String[]{"Guest has not been reported on any host and is using a temporary unmapped guest subscription."}, "The statusDetails for installed product '"+installedProduct.productName+"' productId='"+providingProductId+"' when the system's arch '"+clienttasks.arch+"' is covered by the product subscription arches '"+poolArch.trim()+"' and the entitlement was granted from a unmapped guests only pool '"+pool.poolId+"'. (Note: the installed products arches '"+installedProduct.arch+"' are not considered)");
+//			} else {
+				Assert.assertEquals(installedProduct.status, "Subscribed", "When installed product '"+installedProduct.productName+"' is covered by subscription '"+pool.subscriptionName+"' whose arches '"+poolArch+"' cover the system's arch '"+clienttasks.arch+"', then the installed product can achieve full green compliance.");
+				Assert.assertTrue(installedProduct.statusDetails.isEmpty(), "The statusDetails for installed product '"+installedProduct.productName+"' productId='"+providingProductId+"' should be empty when the system's arch '"+clienttasks.arch+"' is covered by the product subscription arches '"+poolArch.trim()+"'. (Note: the installed products arches '"+installedProduct.arch+"' are not considered)");
+//			}
 		} else {
 			if (installedProduct.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 			Assert.assertEquals(installedProduct.status, "Partially Subscribed", "When installed product '"+installedProduct.productName+"' is covered by subscription '"+pool.subscriptionName+"' whose arches '"+poolArch+"' do NOT cover the system's arch '"+clienttasks.arch+"', then the installed product is limited to yellow compliance.");
@@ -129,15 +146,6 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(installedProduct.statusDetails.get(0)/*assumes only one detail*/, String.format("Supports architecture %s but the system is %s.", poolArch.trim(), fakeArch), "The statusDetails of the installed product '"+installedProduct.productName+"' when the system's arch '"+clienttasks.arch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'."); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
 		}
 	}
-	@BeforeGroups(groups={"setup"},value="VerifyComplianceConsidersSystemArch_Test")
-	public void createFactsFileWithOverridingValuesBeforeVerifyComplianceConsidersSystemArch_Test() {
-		// these facts will prevent cores, sockets, and ram from interfering with compliance based on the system arch
-		Map<String,String> factsMap = new HashMap<String,String>();
-		factsMap.put("cpu.cpu_socket(s)","1");
-		factsMap.put("cpu.core(s)_per_socket","1");
-		factsMap.put("memory.memtotal","1");
-		clienttasks.createFactsFileWithOverridingValues(factsMap);
-	}
 	@AfterGroups(groups={"setup"},value="VerifyComplianceConsidersSystemArch_Test")
 	public void deleteFactsFileWithOverridingValuesAfterVerifyComplianceConsidersSystemArch_Test() {
 		clienttasks.deleteFactsFileWithOverridingValues();
@@ -148,7 +156,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public Object[][] getSubscriptionPoolProvidingProductIdOnArchDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionPoolProvidingProductIdOnArchDataAsListOfLists());
 	}
-	protected List<List<Object>> getSubscriptionPoolProvidingProductIdOnArchDataAsListOfLists() throws JSONException, Exception{
+	protected List<List<Object>> getSubscriptionPoolProvidingProductIdOnArchDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		//configureProductCertDirAfterClass(); is not needed since the priority of this test is implied as 0 and run first before the other tests alter the productCertDir
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
@@ -156,11 +164,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		for (List<Object> allAvailableSubscriptionPoolsDataList : getAllAvailableSubscriptionPoolsDataAsListOfLists()) {
 			SubscriptionPool availableSubscriptionPool = (SubscriptionPool) allAvailableSubscriptionPoolsDataList.get(0);
+///*debugTesting */if(!availableSubscriptionPool.productId.equals("awesomeos-onesocketib")) continue;			
+			// for the purpose of this test, skip unmapped_guests_only pools when system is virtual otherwise the subscribe will fail with "Pool is restricted to unmapped virtual guests: '8a9087e34bdb9471014bdb9573e60af6'."
+			if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId)) continue;
 			
-			// for the purpose of this test, skip physical_only pools when system is virtual otherwise the register will fail with "Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'."
+			// for the purpose of this test, skip physical_only pools when system is virtual otherwise the subscribe will fail with "Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'."
 			if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId)) continue;
 			
-			// for the purpose of this test, skip virt_only pools when system is physical otherwise the register will fail with "Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'."
+			// for the purpose of this test, skip virt_only pools when system is physical otherwise the subscribe will fail with "Pool is restricted to virtual guests: '8a9086d344549b0c0144549bf9ae0dd4'."
 			if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId)) continue;
 			
 			List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId);
@@ -200,7 +211,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister_(null,null,null);
 		//Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,	// THIS ASSERTION IS NO LONGER VALID NOW THAT COMPLIANCE IS CALCULATED ON THE SERVER.  INSTEAD, THE LOCAL COMPLIANCE SHOULD BE TAKEN FROM THE SYSTEM CACHE.  THIS WORK IS CURRENTLY UNDER DEVELOPMENT 3/13/2013.
 		//		"Before attempting to register with autosubscribe and a common servicelevel to become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,servicelevel,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,/*true*/null,/*servicelevel*/null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
+		clienttasks.subscribe(true, servicelevel, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
@@ -318,6 +331,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
@@ -397,6 +411,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
@@ -460,6 +475,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
@@ -541,6 +557,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertTrue(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"No products are currently installed.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
@@ -711,6 +728,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		
 		// initial assertions
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
@@ -884,7 +902,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			if (!serviceLevelToProductIdsMap.containsKey(serviceLevel)) serviceLevelToProductIdsMap.put(serviceLevel, new HashSet<String>());
 			HashSet<String> productIdSet = (HashSet<String>) serviceLevelToProductIdsMap.get(serviceLevel);		
 			for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
-//debugTesting if (productNamespace.id.equals("27060")) continue;
+///*debugTesting*/ if (productNamespace.id.equals("27060")) continue;
 				productIdSet.add(productNamespace.id);
 			}
 		}
@@ -924,6 +942,26 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		}
 	}
+
+//MOVED TO SubscriptionManagerTasks
+//	/**
+//	 * Use this function to keep unmapped_guest_only pools from appearing in the list of available pools. <BR>
+//	 * This method fakes the job of virt-who by telling candlepin that this virtual system is actually a guest of itself (a trick for testing) <BR>
+//	 * Note: unmapped_guest_only pools was introduced in candlepin 0.9.42-1 commit ff5c1de80c4d2d9ca6370758ad77c8b8e0c71308 <BR>
+//	 * @throws Exception
+//	 */
+//	protected void mapVirtualSystemAsAGuestOfItself() throws Exception {
+//		// fake the job of virt-who by telling candlepin that this virtual system is actually a guest of itself (a trick for testing)
+//		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.42-1")) {
+//			if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) {
+//				String systemUuid = clienttasks.getCurrentConsumerId();
+//				if (systemUuid!=null) {	// is registered
+//					String virtUuid = clienttasks.getFactValue("virt.uuid");
+//					JSONObject jsonConsumer = CandlepinTasks.setGuestIdsForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, systemUuid,Arrays.asList(new String[]{"abc",virtUuid,"def"}));
+//				}
+//			}
+//		}
+//	}
 	
 	// Configuration Methods ***********************************************************************
 
@@ -936,14 +974,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	protected String serverHostname=null;
 	@BeforeClass(groups={"setup"})
-	public void saveHostnameBeforeClass() throws ParseException, JSONException, Exception {
+	public void saveHostnameBeforeClass() throws ParseException {
 		if (clienttasks!=null) {
 			serverHostname = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
 		}
 	}
 	
 	@BeforeClass(groups={"setup"})
-	public void setupProductCertDirsBeforeClass() throws ParseException, JSONException, Exception {
+	public void setupProductCertDirsBeforeClass() throws JSONException, Exception {
 		
 		// clean out the productCertDirs
 		for (String productCertDir : new String[]{
@@ -957,9 +995,10 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+productCertDir, 0);
 			RemoteFileTasks.runCommandAndAssert(client, "mkdir "+productCertDir, 0);
 		}
-
+		
 		// register and subscribe to all available subscriptions
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
 		// get the current certs
@@ -1009,7 +1048,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// determine the serviceLevel and all the products that are subscribable by one common service level 
 //		Map<String,Set<String>> serviceLevelToProductIdsMap = getServiceLevelToProductIdsMapFromEntitlementCerts(clienttasks.getCurrentEntitlementCerts());	// TODO not efficient; testing fix on next line
 		Map<String,Set<String>> serviceLevelToProductIdsMap = getServiceLevelToProductIdsMapFromEntitlementCerts(currentEntitlementCerts);
-//debugTesting serviceLevelToProductIdsMap.get("Premium").add("17000");
+///*debugTesting*/ serviceLevelToProductIdsMap.get("Premium").add("17000");
 		Map<String,Set<String>> productIdsToServiceLevelsMap = getInvertedMap(serviceLevelToProductIdsMap);
 		Set<String> allProductsSubscribableByOneCommonServiceLevelCandidates = productIdsToServiceLevelsMap.keySet();
 		boolean allProductsSubscribableByOneCommonServiceLevelDeterminable=true;
@@ -1068,7 +1107,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			// randomly choose the service levels from the candidates
 //			allProductsSubscribableByMoreThanOneCommonServiceLevelValues = Arrays.asList(productIdsToServiceLevelsMap.get(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.get(randomGenerator.nextInt(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.size()))).toArray(new String[]{}));
 			allProductsSubscribableByMoreThanOneCommonServiceLevelValues.addAll(productIdsToServiceLevelsMap.get(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.get(randomGenerator.nextInt(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.size()))));
-//debugTesting allProductsSubscribableByMoreThanOneCommonServiceLevelValues = Arrays.asList(new String[]{"None", "Standard", "Premium"});
+///*debugTesting*/ allProductsSubscribableByMoreThanOneCommonServiceLevelValues = Arrays.asList(new String[]{"None", "Standard", "Premium"});
 			// pluck out the productIds that do not map to all of the values in allProductsSubscribableByMoreThanOneCommonServiceLevelValues
 			for (String  productId : productIdsToServiceLevelsMap.keySet()) {
 				if (!productIdsToServiceLevelsMap.get(productId).containsAll(allProductsSubscribableByMoreThanOneCommonServiceLevelValues)) {
@@ -1183,7 +1222,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	protected boolean configureProductCertDirForAllProductsSubscribableInTheFutureCompleted=false;	
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableInTheFuture")
-	public void configureProductCertDirForAllProductsSubscribableInTheFuture() throws JSONException, Exception {
+	public void configureProductCertDirForAllProductsSubscribableInTheFuture() {
 		clienttasks.unregister(null, null, null);
 		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
 		boolean invokeWorkaroundWhileBugIsOpen = true;

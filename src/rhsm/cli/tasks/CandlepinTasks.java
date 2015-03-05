@@ -756,8 +756,18 @@ schema generation failed
 		return setAttributeForConsumer(authenticator, password, url, consumerid, "autoheal", autoheal);
 	}
 	
-	static public JSONObject setGuestIdsForConsumer(String authenticator, String password, String url, String consumerid, List<String> guestIds) throws Exception {
-		return setAttributeForConsumer(authenticator, password, url, consumerid, "guestIds", guestIds);
+	/**
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param consumerId - the registered consumer id of the host system (retrieved by running subscription-manager identity)
+	 * @param guestIds - comes from the virt.uuid fact of the guest system
+	 * @return
+	 * @throws Exception
+	 */
+	static public JSONObject setGuestIdsForConsumer(String authenticator, String password, String url, String consumerId, List<String> guestIds) throws Exception {
+		//[root@jsefler-5 ~]# curl -k -u testuser1:password --request PUT --data '{"guestIds":["e6f55b91-aae1-44d6-f0db-c8f25ec73ef5","guest-fact-virt.uuid"]}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/d2ee0c6e-a57d-4e37-8be3-228a44ca2739 
+		return setAttributeForConsumer(authenticator, password, url, consumerId, "guestIds", guestIds);
 	}
 	
 	static public JSONObject setCapabilitiesForConsumer(String authenticator, String password, String url, String consumerid, List<String> capabilities) throws Exception {
@@ -2387,6 +2397,30 @@ schema generation failed
 		if (virtOnlyPool!=null) return Boolean.valueOf(virtOnlyPool);
 		if (virtOnlyPoolProduct!=null) return Boolean.valueOf(virtOnlyPoolProduct);
 		return false;	// the absence of a virt_only attribute means this pool is NOT restricted to virtual systems
+	}
+	
+	/**
+	 * A pool restricted to unmapped virtual systems was designed to be a derived pool
+	 * for host_limited products with a virt_limit that grants 24 hour entitlements.
+	 * It should only be available to any virt.is_guest that has not yet been reported
+	 * to candlepin via virt-who (which informs candlepin all the virt.uuid's that are
+	 * running on the consumer.uuid of a physical host)
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param poolId
+	 * @return
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static boolean isPoolRestrictedToUnmappedVirtualSystems (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		String unmappedGuestsOnlyPool = getPoolAttributeValue(authenticator, password, url, poolId, "unmapped_guests_only");
+		//String virtOnlyPool = getPoolAttributeValue(authenticator, password, url, poolId, "virt_only");	// should implicitly be true
+		// Note: the unmapped_guests_only poolAttribute should be set to true when productAttributes contain a "virt_limit" attribute and "host_limited" attribute is true
+		//String hostLimitedPoolProduct = getPoolProductAttributeValue(authenticator, password, url, poolId, "host_limited"); // should implicitly be true when candlepin.standalone=false in /etc/candlepin/candlepin.conf
+		//String virtLimitedPoolProduct = getPoolProductAttributeValue(authenticator, password, url, poolId, "virt_limit"); // should implicitly be set
+		if (unmappedGuestsOnlyPool!=null) return Boolean.valueOf(unmappedGuestsOnlyPool);
+		return false;	// the absence of unmapped_guests_only attribute means this pool is NOT restricted to unmapped virtual systems
 	}
 	
 	public static boolean isPoolDerived (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
