@@ -191,7 +191,9 @@
 (defn ^{Test {:groups ["firstboot"
                        "tier2"
                        "blockedByBug-973269"
-                       "blockedByBug-988411"]}}
+                       "blockedByBug-988411"
+                       "blockedByBug-1199211"]
+              :priority (int 200)}}
   firstboot_enable_proxy_auth
   "Checks whether the proxy and authentication is enabled in rhsm-conf file"
   [_]
@@ -218,7 +220,8 @@
 (defn ^{Test {:groups ["firstboot"
                        "tier2"
                        "blockedByBug-973269"
-                       "blockedByBug-988411"]}}
+                       "blockedByBug-988411"]
+              :dependsOnMethods ["firstboot_enable_proxy_auth"]}}
   firstboot_enable_proxy_noauth
   "Checks whether the proxy is enabled and authentication is disabled in rhsm-conf file"
   [_]
@@ -245,7 +248,8 @@
       (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot"
-                       "tier2"]}}
+                       "tier2"]
+              :dependsOnMethods ["firstboot_enable_proxy_noauth"]}}
   firstboot_disable_proxy
   "Checks whether the proxy and authentication is disabled in rhsm-conf file"
   [_]
@@ -266,7 +270,8 @@
   [user pass recovery]
   (if (= "RHEL7" (get-release))
     (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
+            (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
+  (skip-if-bz-open "1199211")
   (reset_firstboot)
   (tasks/disableproxy true)
   (tasks/ui click :register-rhsm)
