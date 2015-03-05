@@ -73,6 +73,7 @@
 (defn register_bad_credentials
   "Checks error messages upon registering with bad credentials."
   [user pass recovery]
+  (skip-if-bz-open "1194365")
   (try+ (tasks/unregister) (catch [:type :not-registered] _))
   (let [test-fn (fn [username password expected-error-type]
                   (try+ (tasks/register username password)
