@@ -156,9 +156,8 @@
          key  (@config :owner-key)
          ownername (ctasks/get-owner-display-name user pass key)]
      (tasks/unregister)
-     (verify (= (str beforesubs)
-               dircount))
-     (if (= 0 beforesubs)
+     (verify (= (str beforesubs) dircount))
+     (if (= 0 (Integer. beforesubs))
       (verify (tasks/compliance?))
       (do
         (tasks/register user
