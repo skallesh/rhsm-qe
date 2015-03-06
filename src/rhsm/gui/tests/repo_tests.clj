@@ -86,11 +86,15 @@
 (defn exception-handler
   "This is to handle exceptions thrown while checking and unchecking
    checkbox in repo-dialog"
-  [row-num col-num]
-  (try (tasks/ui checkrow :repo-table row-num col-num)
+  [row-num col-num & {:keys [uncheck]
+                      :or [uncheck false]}]
+  (try
+    (if (true? uncheck)
+      (tasks/ui uncheckrow :repo-table row-num col-num)
+      (tasks/ui checkrow :repo-table row-num col-num))
        (catch Exception e
          (if (substring? "Failed to grab focus" (.getMessage e))
-           (sleep 3000)
+           (sleep 5000)
            (throw e)))))
 
 (defn select-random-repo
@@ -220,7 +224,7 @@
           (do
             (log/info (str "======= Work Around in check_repo_remove_override_button
                             as Bug 1155954 is not resolved"))
-            ;; Work around catches exception and ignores it.
+            ;; Workaround: Catches exception and ignores it.
             ;; Why Workaround ?? At the moment 'checkrow' fails because
             ;;                   there is a performance issue in the repo
             ;;                   dialog were the checkbox takes a while
@@ -260,8 +264,8 @@
       (if-not (and (tasks/has-state? :repo-remove-override "enabled")
                (tasks/has-state? :repo-remove-override "sensitive"))
         (do
-          (exception-handler row-num 0)
-          (exception-handler row-num 1))))
+          (exception-handler row-num 0 :uncheck true)
+          (exception-handler row-num 1 :uncheck true))))
     ;; No work around. If the performance improvement is as expected
     ;; the sleep command embedded inbetween can be removed.
     (do
