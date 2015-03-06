@@ -119,7 +119,6 @@
                                nil
                                (register))]
     (verify (clojure.string/blank? logoutput)))
-  (tasks/unregister)
   (let [logoutput (get-logging @noauth-proxyrunner
                                noauth-log
                                "disabled-noauth-connect"
