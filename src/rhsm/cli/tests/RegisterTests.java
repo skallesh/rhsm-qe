@@ -515,7 +515,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 		// determine all of the productIds that are provided by available subscriptions
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-		Set<String> providedProductIds = new HashSet<String>();
+		Set<String> providedProductIdsFromAvailableUnmappedGuestOnlyPools = new HashSet<String>();
+		Set<String> providedProductIdsFromAvailableVirtOnlyPools = new HashSet<String>();	// but not the unmapped_guest_only pools
+		Set<String> providedProductIdsFromAvailablePools = new HashSet<String>();	// all the rest of the pools
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));	
 			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
@@ -523,7 +525,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
 				String providedProductName = jsonProvidedProduct.getString("productName");
 				String providedProductId = jsonProvidedProduct.getString("productId");
-				providedProductIds.add(providedProductId);
+				if (CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername,sm_clientPassword,sm_serverUrl, pool.poolId)) {
+					providedProductIdsFromAvailableUnmappedGuestOnlyPools.add(providedProductId);
+				} if (CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername,sm_clientPassword,sm_serverUrl, pool.poolId)) {
+					providedProductIdsFromAvailableVirtOnlyPools.add(providedProductId);
+				} else {
+					providedProductIdsFromAvailablePools.add(providedProductId);
+				}
 			}
 		}
 		
@@ -552,7 +560,14 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		List<InstalledProduct> autosubscribedProducts = InstalledProduct.parse(registerResult.getStdout());
 		for (InstalledProduct autosubscribedProduct : autosubscribedProducts) {
 			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", autosubscribedProduct.productName, installedProducts);
-			if (providedProductIds.contains(installedProduct.productId)) {
+			if (providedProductIdsFromAvailableUnmappedGuestOnlyPools.contains(installedProduct.productId) && !providedProductIdsFromAvailableVirtOnlyPools.contains(installedProduct.productId)) {
+				// must be "Subscribed"
+				Assert.assertEquals(autosubscribedProduct.status,"Partially Subscribed","Status for productName '"+autosubscribedProduct.productName+"' in feedback from registration with autosubscribe. (Partial/yellow because this productId was only provided by an available unmapped_guests_only pool.)");
+			} else if (providedProductIdsFromAvailableUnmappedGuestOnlyPools.contains(installedProduct.productId) && providedProductIdsFromAvailableVirtOnlyPools.contains(installedProduct.productId)) {
+				// could be either "Partially Subscribed" or "Subscribed"
+				List <String> eitherPartiallySubscribedOrSubscribed = Arrays.asList("Partially Subscribed","Subscribed");
+				Assert.assertTrue(eitherPartiallySubscribedOrSubscribed.contains(autosubscribedProduct.status),"Status for productName '"+autosubscribedProduct.productName+"' in feedback from registration (actual='"+autosubscribedProduct.status+"') with autosubscribe can be either "+eitherPartiallySubscribedOrSubscribed+". (Either because this product id was provided by both an available unmapped_guests_only pool as well as other virt_only pools.  Autosubscribe could randomly choose either.)");		
+			} else if (providedProductIdsFromAvailablePools.contains(installedProduct.productId)) {
 				
 				// TEMPORARY WORKAROUND FOR BUG
 				if (installedProduct.arch.contains(",")) {
@@ -566,8 +581,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				}
 				// END OF WORKAROUND
 				
+				// must be "Subscribed"
 				Assert.assertEquals(autosubscribedProduct.status,"Subscribed","Status for productName '"+autosubscribedProduct.productName+"' in feedback from registration with autosubscribe.");
 			} else {
+				// must be "Not Subscribed"
 				Assert.assertEquals(autosubscribedProduct.status,"Not Subscribed","Status for productName '"+autosubscribedProduct.productName+"' in feedback from registration with autosubscribe.");
 			}
 		}
@@ -575,7 +592,14 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// assert the expected installed product status in the list --installed after the register with --autosubscribe
 		installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		for (InstalledProduct installedProduct : installedProducts) {
-			if (providedProductIds.contains(installedProduct.productId)) {
+			if (providedProductIdsFromAvailableUnmappedGuestOnlyPools.contains(installedProduct.productId) && !providedProductIdsFromAvailableVirtOnlyPools.contains(installedProduct.productId)) {
+				// must be "Subscribed"
+				Assert.assertEquals(installedProduct.status,"Partially Subscribed","Status for Installed Product name='"+installedProduct.productName+"' id='"+installedProduct.productId+"' in list of installed products after registration with autosubscribe (Partial/yellow because this productId '"+installedProduct.productId+"' was only provided by an available unmapped_guests_only pool.)");
+			} else if (providedProductIdsFromAvailableUnmappedGuestOnlyPools.contains(installedProduct.productId) && providedProductIdsFromAvailableVirtOnlyPools.contains(installedProduct.productId)) {
+				// could be either "Partially Subscribed" or "Subscribed"
+				List <String> eitherPartiallySubscribedOrSubscribed = Arrays.asList("Partially Subscribed","Subscribed");
+				Assert.assertTrue(eitherPartiallySubscribedOrSubscribed.contains(installedProduct.status),"Status for productName '"+installedProduct.productName+"' in feedback from registration (actual='"+installedProduct.status+"') with autosubscribe can be either "+eitherPartiallySubscribedOrSubscribed+". (Either because this productId '"+installedProduct.productId+"' was provided by both an available unmapped_guests_only pool as well as other virt_only pools.  Autosubscribe could randomly choose either.)");		
+			} else if (providedProductIdsFromAvailablePools.contains(installedProduct.productId)) {
 				
 				// TEMPORARY WORKAROUND FOR BUG
 				if (installedProduct.arch.contains(",")) {
@@ -589,8 +613,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				}
 				// END OF WORKAROUND
 				
+				// must be "Subscribed"
 				Assert.assertEquals(installedProduct.status,"Subscribed","Status for Installed Product name='"+installedProduct.productName+"' id='"+installedProduct.productId+"' in list of installed products after registration with autosubscribe.");
 			} else {
+				// must be "Not Subscribed"
 				Assert.assertEquals(installedProduct.status,"Not Subscribed","Status for Installed Product name='"+installedProduct.productName+"' id='"+installedProduct.productId+"' in list of installed products after registration with autosubscribe.");
 			}
 		}
