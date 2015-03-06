@@ -641,8 +641,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
 	public void VerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck_Test() throws Exception {
+		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-
+		
+		// to prevent the unmapped_guests_only pools from being available for autosubscribe in subsequent VerifyInstalledProductCertWasAutoSubscribed_Test,
+		// let's simulate a host consumer and simulate virt-who by mapping this virtual system as a guest of itself
+		clienttasks.mapVirtualSystemAsAGuestOfItself();
+		
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,false);
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (List<Object> subscriptionPoolProductDatum : subscriptionPoolProductData) {
@@ -708,8 +713,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
+		/* I think an unsubscribe --all should be sufficient to make sure all the expected subscriptionPoolProductId are available
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		*/
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// autosubscribe
 		sshCommandResultFromAutosubscribe = clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null);
