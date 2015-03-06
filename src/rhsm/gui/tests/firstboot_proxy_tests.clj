@@ -104,7 +104,8 @@
 
 (defn ^{Test {:groups ["firstboot_proxy"
                        "tier1"
-                       "acceptance"]
+                       "acceptance"
+                       "blockedByBug-1199211"]
               :priority (int 100)}}
   firstboot_enable_proxy_auth_connect
   "Asserts that the rhsm.conf file is correctly set after setting a proxy with auth."
@@ -136,7 +137,8 @@
 
 (defn ^{Test {:groups ["firstboot_proxy"
                        "tier1"
-                       "acceptance"]
+                       "acceptance"
+                       "blockedByBug-1199211"]
               :priority (int 101)}}
   firstboot_enable_proxy_noauth_connect
   "Asserts that the rhsm.conf file is correctly set after setting a proxy without auth."
@@ -165,7 +167,8 @@
       (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_enable_proxy_auth_connect"
                                  "firstboot_enable_proxy_noauth_connect"]}}
   firstboot_disable_proxy
@@ -177,7 +180,8 @@
   (tasks/verify-conf-proxies "" "" "" ""))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_enable_proxy_auth_connect"]}}
   firstboot_proxy_auth_connect_logging
   "Asserts that rhsm can connect after setting a proxy with auth."
@@ -214,7 +218,8 @@
       (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_enable_proxy_noauth_connect"]}}
   firstboot_proxy_noauth_connect_logging
   "Asserts that rhsm can connect after setting a proxy without auth."
@@ -262,7 +267,8 @@
       (finally (tasks/ui click :close-proxy))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_enable_proxy_auth_connect"]}}
   firstboot_test_auth_proxy
   "Tests the 'test connection' button when using a proxy with auth."
@@ -289,7 +295,8 @@
     (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_enable_proxy_noauth_connect"]}}
   firstboot_test_noauth_proxy
   "Tests the 'test connection' button when using a proxy without auth."
@@ -313,7 +320,8 @@
     (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_disable_proxy"]}}
   firstboot_test_disabled_proxy
   "Test that the 'test connection' button is disabled when proxy settings are cleared."
@@ -334,7 +342,8 @@
       (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_disable_proxy"]}}
   firstboot_test_proxy_with_blank_proxy
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
@@ -353,7 +362,8 @@
     (finally (firstboot_disable_proxy nil))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_disable_proxy"]}}
   firstboot_test_proxy_with_blank_credentials
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
@@ -372,7 +382,8 @@
     (finally (firstboot_disable_proxy nil))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"]}}
+                       "tier2"
+                       "blockedByBug-1199211"]}}
   firstboot_test_bad_proxy
   "Tests the 'test connection' button when using a non-existant proxy."
   [_]
@@ -390,7 +401,8 @@
    (finally (firstboot_disable_proxy nil))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"]}}
+                       "tier2"
+                       "blockedByBug-1199211"]}}
   firstboot_bad_proxy
   "Tests error message when using a non-existant proxy."
   [_]
@@ -417,7 +429,8 @@
      (firstboot_disable_proxy nil))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"]}}
+                       "tier2"
+                       "blockedByBug-1199211"]}}
   firstboot_test_proxy_formatting
   "Tests the auto-formatting feature of the proxy location field."
   [_]
