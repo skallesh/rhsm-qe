@@ -83,7 +83,8 @@
                        "tier1"
                        "acceptance"
                        "blockedByBug-1012501"
-                       "blockedByBug-1040119"]
+                       "blockedByBug-1040119"
+                       "blockedByBug-1199671"]
               :dependsOnMethods ["check_status_message_before_attaching"]}}
   check_status_message_after_attaching
   "Asserts that status message displayed in main-window is right after attaching subscriptions"
@@ -91,7 +92,6 @@
   (try
     (let
   	[subscribed-products (atom (int 0))
-         partially-subscribed (atom (int 0))
          after-subscribe (atom (int 0))]
       (tasks/search :match-installed? true)
       (dotimes [n 3]
@@ -99,17 +99,15 @@
                                    (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
       (reset! subscribed-products (count (filter #(= "Subscribed" %)
                                                  (tasks/get-table-elements :installed-view 2))))
-      (reset! partially-subscribed (count (filter #(= "Partially Subscribed" %)
-                                                  (tasks/get-table-elements :installed-view 2))))
       (reset! after-subscribe (Integer. (re-find #"\d*"
                                                  (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-subscribe (- @status-before-subscribe
-                                     (+ @subscribed-products @partially-subscribed)))))))
+      (verify (= @after-subscribe (- @status-before-subscribe @subscribed-products))))))
 
 (defn ^{Test {:groups ["subscription_status"
                        "tier1"
                        "blockedByBug-1012501"
-                       "blockedByBug-1040119"]
+                       "blockedByBug-1040119"
+                       "blockedByBug-1199671"]
               :dependsOnMethods ["check_status_message_after_attaching"]}}
   check_status_message_future_subscriptions
   "Asserts that status message displayed in main-window is right after attaching future
