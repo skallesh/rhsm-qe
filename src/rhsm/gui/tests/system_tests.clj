@@ -87,12 +87,13 @@
   "Asserts that a second instance of rhsm-gui cannot be run."
   [_]
   (tasks/restart-app)
+  (sleep 3000)
   (let [output (get-logging @clientcmd
                             ldtpd-log
                             "run_second_instance"
                             nil
                             (tasks/start-app)
-                            (sleep 10000))]
+                            (sleep 15000))]
     (verify (substring? "subscription-manager-gui is already running" output))
     (verify (not (substring? "Traceback" output)))))
 
