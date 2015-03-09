@@ -102,8 +102,9 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		// instrument the system facts from the dataProvider
 		Map<String,String> factsMap = new HashMap<String,String>();
 		factsMap.clear();
-		factsMap.put("virt.is_guest",Boolean.toString(systemIsGuest));
 		factsMap.put("cpu.cpu_socket(s)",String.valueOf(systemSockets));
+		factsMap.put("virt.is_guest",Boolean.toString(systemIsGuest));
+		factsMap.put("virt.uuid",client.runCommandAndWait("dmidecode --string=system-uuid").getStdout().toLowerCase().trim());	// reset to actual value from dmidecode --string=system-uuid
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// update the facts on the system
@@ -152,6 +153,13 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			
 			// now let's unsubscribe from all entitlements and attempt auto-subscribing
 			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+			
+			// but first, let's pretend that this virtual system is mapped so that we can avoid unmapped_guests_only pools during auto-subscribe
+			factsMap.put("virt.uuid","avoid-unmapped-guests-only");
+			clienttasks.createFactsFileWithOverridingValues(factsMap);
+			clienttasks.facts(null,true,null,null,null);
+			clienttasks.mapSystemAsAGuestOfItself();
+			
 			// TEMPORARY WORKAROUND FOR BUG
 			String bugId = "964332"; boolean invokeWorkaroundWhileBugIsOpen = true;
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -160,6 +168,8 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null, null);
 			}
 			// END OF WORKAROUND
+			
+			// attempt auto-subscribing
 			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null);
 			
 			// assert the quantity of consumption
@@ -330,16 +340,25 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				clienttasks.facts(null,true,null,null,null);
 				List<SubscriptionPool> availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", pool.productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 				for (SubscriptionPool availableInstanceBasedSubscriptionPool : availableInstanceBasedSubscriptionPools) {
-					Assert.assertEquals(availableInstanceBasedSubscriptionPool.machineType, "Physical", "Only physical pools to '"+pool.subscriptionName+"' should be available to a guest system when its virt_uuid is not on the host's list of guestIds.");
+					if (!CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, availableInstanceBasedSubscriptionPool.poolId)) {
+						Assert.assertEquals(availableInstanceBasedSubscriptionPool.machineType, "Physical", "Only physical pools to '"+pool.subscriptionName+"' (poolId="+availableInstanceBasedSubscriptionPool.poolId+") should be available to a guest system when its virt_uuid is not on the host's list of guestIds (unless it is an unmapped_guests_only pool).");
+					} else {
+						Assert.assertEquals(availableInstanceBasedSubscriptionPool.machineType, "Virtual", "Only unmapped_guests_only virtual pools to '"+pool.subscriptionName+"' (poolId="+availableInstanceBasedSubscriptionPool.poolId+") should be available to a guest system when its virt_uuid is not on the host's list of guestIds.");	
+					}
 				}
 				
 				// now fake this consumer's facts and guestIds to make it think it is a guest of itself (a trick for testing)
-				String systemUuid = clienttasks.getCurrentConsumerId();
-				factsMap.put("virt.uuid",systemUuid);
+//DELETEME
+//				String systemUuid = clienttasks.getCurrentConsumerId();
+//				factsMap.put("virt.uuid",systemUuid);
+//				clienttasks.createFactsFileWithOverridingValues(factsMap);
+//				clienttasks.facts(null,true,null,null,null);
+//				//[root@jsefler-5 ~]# curl -k -u testuser1:password --request PUT --data '{"guestIds":["e6f55b91-aae1-44d6-f0db-c8f25ec73ef5","abcd"]}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/d2ee0c6e-a57d-4e37-8be3-228a44ca2739 
+//				JSONObject jsonConsumer = CandlepinTasks.setGuestIdsForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, systemUuid,Arrays.asList(new String[]{"abc",systemUuid,"def"}));
+				factsMap.put("virt.uuid","fake-virt-uuid");
 				clienttasks.createFactsFileWithOverridingValues(factsMap);
 				clienttasks.facts(null,true,null,null,null);
-				//[root@jsefler-5 ~]# curl -k -u testuser1:password --request PUT --data '{"guestIds":["e6f55b91-aae1-44d6-f0db-c8f25ec73ef5","abcd"]}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/d2ee0c6e-a57d-4e37-8be3-228a44ca2739 
-				JSONObject jsonConsumer = CandlepinTasks.setGuestIdsForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, systemUuid,Arrays.asList(new String[]{"abc",systemUuid,"def"}));
+				clienttasks.mapSystemAsAGuestOfItself();
 				
 				// now the host_limited subpool for this virtual system should be available
 				availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", pool.productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
@@ -374,6 +393,12 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> list : getAvailableSubscriptionPoolsDataAsListOfLists(false)) {
 			SubscriptionPool pool = (SubscriptionPool)(list.get(0));
 			
+			// skip unmapped_guests_only pools
+			if (CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
+				continue;
+			}
+			
+			// test auto-subscribing acriss multiple instance_multiplier pools
 			if (poolProductIdsQuantityMap.containsKey(pool.productId)) {
 				
 				// the fact that we are here means that there are multiple pools available for the same instance-based product subscription
@@ -382,8 +407,11 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"963227"/*,"964332"*/}),	false,	Integer.valueOf(pool.quantity)+poolProductIdsQuantityMap.get(pool.productId),	pool}));
 
 				poolProductIdsQuantityMap.put(pool.productId, Integer.valueOf(pool.quantity)+poolProductIdsQuantityMap.get(pool.productId));
-
-			} else if (CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
+				continue;
+			}
+			
+			// test instance_multiplier pools
+			if (CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
 				BlockedByBzBug blockedByBzBug = null;
 				if (pool.productId.equals("RH00073")) blockedByBzBug = new BlockedByBzBug("1046158");	// Bug 1046158 - Attaching quantity=1 of SKU RH00073 on a 2 socket physical system yields "Only covers 0 of 2 sockets."
 				
@@ -397,6 +425,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				
 				// keep a quantity map of the instance based pools we are testing
 				poolProductIdsQuantityMap.put(pool.productId, Integer.valueOf(pool.quantity));
+				continue;
 			}
 		}
 		return ll;

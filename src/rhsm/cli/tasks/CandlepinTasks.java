@@ -762,7 +762,7 @@ schema generation failed
 	 * @param url
 	 * @param consumerId - the registered consumer id of the host system (retrieved by running subscription-manager identity)
 	 * @param guestIds - comes from the virt.uuid fact of the guest system
-	 * @return
+	 * @return JSONObject representing the consumer
 	 * @throws Exception
 	 */
 	static public JSONObject setGuestIdsForConsumer(String authenticator, String password, String url, String consumerId, List<String> guestIds) throws Exception {

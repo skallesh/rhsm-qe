@@ -212,7 +212,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		//Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,	// THIS ASSERTION IS NO LONGER VALID NOW THAT COMPLIANCE IS CALCULATED ON THE SERVER.  INSTEAD, THE LOCAL COMPLIANCE SHOULD BE TAKEN FROM THE SYSTEM CACHE.  THIS WORK IS CURRENTLY UNDER DEVELOPMENT 3/13/2013.
 		//		"Before attempting to register with autosubscribe and a common servicelevel to become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,/*true*/null,/*servicelevel*/null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
-		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
+		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		clienttasks.subscribe(true, servicelevel, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
@@ -331,7 +331,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
-		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
+		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
@@ -411,7 +411,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
-		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
+		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
@@ -475,7 +475,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
-		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
+		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
@@ -557,7 +557,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
-		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
+		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertTrue(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"No products are currently installed.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
@@ -728,7 +728,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
-		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
+		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		
 		// initial assertions
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
@@ -998,7 +998,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 		// register and subscribe to all available subscriptions
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-		clienttasks.mapVirtualSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
+		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
 		// get the current certs
