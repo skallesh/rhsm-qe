@@ -661,7 +661,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		
 		// to prevent the unmapped_guests_only pools from being available for autosubscribe in subsequent VerifyInstalledProductCertWasAutoSubscribed_Test,
-		// let's simulate a host consumer and simulate virt-who by mapping this virtual system as a guest of itself
+		// let's pretend that this system is a host consumer and simulate virt-who by mapping this virtual system as a guest of itself
 		clienttasks.mapVirtualSystemAsAGuestOfItself();
 		
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,false);
@@ -847,6 +847,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1198494"; // Bug 1198494 - Auto-heal continuously attaches subscriptions to make the system compliant on a guest machine
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			clienttasks.mapVirtualSystemAsAGuestOfItself();
+		}
+		// END OF WORKAROUND
 		
 		// autosubscribe once
 		SSHCommandResult result1 = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null, null);
