@@ -27,6 +27,7 @@ import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.data.ConsumerCert;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
@@ -60,16 +61,19 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
-		
+///*debugTesting*/ if (!productId.equals("awesomeos-onesocketib")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("awesomeos-guestlimit-4-stackable")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 		// is this system a virtual guest system or a physical system
 		boolean systemIsGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
 		// begin test with a fresh register
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
-
+		
 		// assert the subscription pool with the matching productId is available
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// clienttasks.getCurrentlyAvailableSubscriptionPools() is tested at the conclusion of this test
+		boolean isPoolRestrictedToUnmappedVirtualSystems = CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
+		
 		// special case...
 		if (pool==null) {	// when pool is null, another likely cause is that all of the available subscriptions from the pools are being consumed, let's check...
 			for (String poolId: CandlepinTasks.getPoolIdsForProductId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), productId)) {
@@ -136,7 +140,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 		List<ProductSubscription> currentlyConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-
+		
 		// after subscribing to a pool, assert that its corresponding productSubscription is found among the currently consumed productSubscriptions
 		ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", pool.productId, currentlyConsumedProductSubscriptions);
 		Assert.assertNotNull(consumedProductSubscription, "The consumed ProductSubscription corresponding to the subscribed SubscriptionPool productId '"+pool.productId+"' was found among the list of consumed ProductSubscriptions.");
@@ -162,11 +166,21 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert that the consumed product subscription provides all the expected bundled products.
 		Assert.assertTrue(consumedProductSubscription.provides.containsAll(bundledProductNames)&&bundledProductNames.containsAll(consumedProductSubscription.provides),"The consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
 		
-		// assert the dates of the consumed product subscription match the originating subscription pool
-		Assert.assertEquals(ProductSubscription.formatDateString(consumedProductSubscription.endDate),ProductSubscription.formatDateString(pool.endDate),
+		// assert the dates of the consumed product subscription...
+		if (isPoolRestrictedToUnmappedVirtualSystems) {
+			// ... assert endDate is 24 hours after the date of registration
+			ConsumerCert cert = clienttasks.getCurrentConsumerCert();
+			Calendar consumerCertStartDate = cert.validityNotBefore; consumerCertStartDate.add(Calendar.HOUR, 24);
+			Assert.assertEquals(ProductSubscription.formatDateString(consumedProductSubscription.endDate),ProductSubscription.formatDateString(consumerCertStartDate),
+				"Consumed productSubscription (from a unmapped_guests_only pool '"+pool.poolId+"') expires 24 hours after the time of consumer registration ("+ConsumerCert.formatDateString(clienttasks.getCurrentConsumerCert().validityNotBefore)+").");
+			//TODO Assert the start date after bug 1199670 is resolved
+		} else {
+			// ... assert endDate matches the originating subscription pool
+			Assert.assertEquals(ProductSubscription.formatDateString(consumedProductSubscription.endDate),ProductSubscription.formatDateString(pool.endDate),
 				"Consumed productSubscription expires on the same DAY as the originating subscription pool.");
-		//FIXME	Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
-
+			//FIXME	Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
+		}
+		
 		// assert the expected products are consumed
 		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
 			JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
@@ -236,8 +250,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 						poolProductSocketsAttribute = null;
 					}
 					
-					// consider the socket/vcpu coverage and assert the installed product's status 
-					if (pool.subscriptionType!=null && pool.subscriptionType.equals("Other")) {
+					// consider the socket/vcpu coverage and assert the installed product's status
+					if (isPoolRestrictedToUnmappedVirtualSystems) {
+						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to an unmapped_guests_only pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed regardless of any hardware socket/vcpu coverage or other subscriptions attached.");	// for more info, see bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1197897
+					} else if (pool.subscriptionType!=null && pool.subscriptionType.equals("Other")) {
 						Assert.fail("Encountered a subscription pool of type '"+pool.subscriptionType+"'.  Do not know how to assert the installedProduct.status after subscribing to pool: "+pool);
 				    } else if (pool.multiEntitlement==null && pool.subscriptionType!=null && pool.subscriptionType.isEmpty()) {
 				    	log.warning("Encountered a pool with an empty value for subscriptionType (indicative of an older candlepin server): "+pool);

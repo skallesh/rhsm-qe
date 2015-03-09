@@ -1668,7 +1668,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// skip subscriptions that have already been added to SystemSubscriptionPoolProductData
 			if (productIdsAddedToSystemSubscriptionPoolProductData.contains(productId)) continue;
-
+			
 			// process this subscription productId
 			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
 			boolean productAttributesPassRulesCheck = true; // assumed
