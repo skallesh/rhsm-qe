@@ -139,24 +139,25 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 	public void HealingOfInstanceBasedSubscription() throws JSONException,Exception {
 		
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, true, null, null,
+				sm_clientOrg, null, null, null, null, false, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
+		clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null,null);
 		int healFrequency=2;
 		
 		if(clienttasks.getFactValue("virt.is_guest").equalsIgnoreCase("false")){
 			Integer sockets = 4;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+			clienttasks.createFactsFileWithOverridingValues(factsMap);
 			clienttasks.facts(null, true, null, null, null);
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
-						if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
-							clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null, null);
-					
+				if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
+					clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null, null);
+
+				}
 			}
-		
-		 }
 			String messageDetails="Only covers 2 of "+sockets+" sockets.";
-		
+
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				if(installed.productId.contains("Instance Server")){
 					Assert.assertEquals(installed.status.trim(), "Partially Subscribed");
@@ -164,31 +165,36 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				}
 			}
 		}
+/* replacing call to restart_rhsmcertd with a faster call to run_rhsmcertd_worker	
 		clienttasks.restart_rhsmcertd(null, healFrequency, true);
 		SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+*/		clienttasks.run_rhsmcertd_worker(true);		
 		for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.productName.contains("Instance Server")){
 				Assert.assertEquals(installed.status.trim(), "Subscribed");
+			}
 		}
-	}
 		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			Integer sockets = 4;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+			clienttasks.createFactsFileWithOverridingValues(factsMap);
 			clienttasks.facts(null, true, null, null, null);
+/* replacing call to restart_rhsmcertd with a faster call to run_rhsmcertd_worker	
 			clienttasks.restart_rhsmcertd(null, healFrequency, true);
 			SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
+*/			clienttasks.run_rhsmcertd_worker(true);		
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.productName.contains("Instance Server")){
-				Assert.assertEquals(installed.status.trim(), "Subscribed");
-		}
-	}
+				if(installed.productName.contains("Instance Server")){
+					Assert.assertEquals(installed.status.trim(), "Subscribed");
+				}
+			}
 			for(ProductSubscription consumed:clienttasks.getCurrentlyConsumedProductSubscriptions()){
 				if(consumed.productName.contains("Instance Based")){
-				Integer quantity =1;		
-				Assert.assertEquals(consumed.quantityUsed,quantity );
-			}}
-	}
+					Integer quantity =1;		
+					Assert.assertEquals(consumed.quantityUsed,quantity );
+				}
+			}
+		}
 	}
 	
 	/**
@@ -201,12 +207,14 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 	public void AutoBindingInstanceBasedSubscription() throws JSONException,Exception {
 		
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, true, null, null,
+				sm_clientOrg, null, null, null, null, false, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
+		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
+		clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null,null);
 		if(clienttasks.getFactValue("virt.is_guest").equalsIgnoreCase("false")){
 			Integer sockets = 4;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+			clienttasks.createFactsFileWithOverridingValues(factsMap);
 			clienttasks.facts(null, true, null, null, null);
 			clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
@@ -227,7 +235,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			}if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 				Integer sockets = 4;
 				factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-				clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+				clienttasks.createFactsFileWithOverridingValues(factsMap);
 				clienttasks.facts(null, true, null, null, null);
 				clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
@@ -260,7 +268,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			Integer sockets = 4;
 			String poolId=null;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-			clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+			clienttasks.createFactsFileWithOverridingValues(factsMap);
 			clienttasks.facts(null, true, null, null, null);
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 						if(availList.subscriptionName.contains("Instance Based")){
@@ -288,7 +296,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 	}if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 		Integer sockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		clienttasks.createFactsFileWithOverridingValues("/custom.facts", factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 					if(availList.subscriptionName.contains("Instance Based")){
