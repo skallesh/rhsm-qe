@@ -60,6 +60,7 @@
 
 (defn ^{Test {:groups ["subscription_status"
                        "tier1"
+                       "acceptance"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"]
               :priority (int 100)}}
@@ -80,17 +81,18 @@
 
 (defn ^{Test {:groups ["subscription_status"
                        "tier1"
+                       "acceptance"
                        "blockedByBug-1012501"
-                       "blockedByBug-1040119"]
-              :dependsOnMethods ["check_status_message_before_attaching"]
-              :priority (int 101)}}
+                       "blockedByBug-1040119"
+                       "blockedByBug-1199671"]
+              :dependsOnMethods ["check_status_message_before_attaching"]}}
   check_status_message_after_attaching
   "Asserts that status message displayed in main-window is right after attaching subscriptions"
   [_]
   (try
     (let
-  	[subscribed-products (atom {})
-         after-subscribe (atom {})]
+  	[subscribed-products (atom (int 0))
+         after-subscribe (atom (int 0))]
       (tasks/search :match-installed? true)
       (dotimes [n 3]
         (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
@@ -104,9 +106,9 @@
 (defn ^{Test {:groups ["subscription_status"
                        "tier1"
                        "blockedByBug-1012501"
-                       "blockedByBug-1040119"]
-              :dependsOnMethods ["check_status_message_after_attaching"]
-              :priority (int 102)}}
+                       "blockedByBug-1040119"
+                       "blockedByBug-1199671"]
+              :dependsOnMethods ["check_status_message_after_attaching"]}}
   check_status_message_future_subscriptions
   "Asserts that status message displayed in main-window is right after attaching future
    subscriptions"
@@ -118,8 +120,8 @@
             Skipping Test 'check_status_message_future_subscriptions'."))))
   (try
     (let
-        [subscribed-products-date (atom {})
-         after-date-products (atom {})
+        [subscribed-products-date (atom (int 0))
+         after-date-products (atom (int 0))
          present-date (do (tasks/ui selecttab :all-available-subscriptions)
                           (tasks/ui gettextvalue :date-entry))
          date-split (split present-date #"-")
@@ -145,8 +147,7 @@
                          "tier1"
                          "blockedByBug-1012501"
                          "blockedByBug-1040119"]
-                :dependsOnMethods ["check_status_message_future_subscriptions"]
-                :priority (int 103)}}
+                :dependsOnMethods ["check_status_message_future_subscriptions"]}}
     check_status_message_expired_subscriptions
     "Asserts that status message displayed in main-window is right after expiring
    attached subscriptions"

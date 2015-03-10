@@ -45,7 +45,7 @@
       (reset! (skip-groups :system) true)
       (throw e))))
 
-(defn ^{AfterClass {:groups ["setup"]
+(defn ^{AfterClass {:groups ["cleanup"]
                     :alwaysRun true}}
   restart_env [_]
   (assert-valid-testing-arch)
@@ -87,12 +87,13 @@
   "Asserts that a second instance of rhsm-gui cannot be run."
   [_]
   (tasks/restart-app)
+  (sleep 3000)
   (let [output (get-logging @clientcmd
                             ldtpd-log
                             "run_second_instance"
                             nil
                             (tasks/start-app)
-                            (sleep 10000))]
+                            (sleep 15000))]
     (verify (substring? "subscription-manager-gui is already running" output))
     (verify (not (substring? "Traceback" output)))))
 
@@ -329,8 +330,7 @@
                        "tier2"
                        "blockedByBug-1086377"
                        "blockedByBug-916666"]
-              :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]
-              :priority (int 31)}}
+              :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]}}
   rhsmcertd_stop_check_timestamp
   "Checks wheter the timestamp in about dialog is displayed when rhsmcertd is stopped"
   [_]
@@ -378,6 +378,8 @@
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
   [_]
+  (if-not (bool (tasks/ui guiexist :main-window))
+    (tasks/start-app))
   (if-not (tasks/ui showing? :register-system)
     (tasks/unregister))
   (tasks/ui click :main-window "System")
@@ -394,6 +396,8 @@
   check_system_preference_dialog
   "Verifies behavior of system preference dialog and its content"
   [_]
+  (if-not (bool (tasks/ui guiexist :main-window))
+    (tasks/start-app))
   (try+ (tasks/unregister)
         (catch [:type :not-registered] _))
   (try
