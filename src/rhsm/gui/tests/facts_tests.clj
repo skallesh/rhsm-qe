@@ -188,6 +188,7 @@
           expected-releases (into [] (sort (conj cli-releases "Not Set")))]
       (tasks/ui click :preferences)
       (tasks/ui waittillwindowexist :system-preferences-dialog 10)
+      (sleep 3000)
       (tasks/ui showlist :release-dropdown)
       (let [gui-releases (into [] (sort (tasks/ui listsubmenus :release-dropdown)))]
         (verify (bash-bool (compare expected-releases gui-releases)))

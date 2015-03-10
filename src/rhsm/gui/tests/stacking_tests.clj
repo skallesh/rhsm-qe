@@ -472,7 +472,18 @@
         (verify (= "Partially Subscribed"
                    (tasks/ui getcellvalue :installed-view
                              (tasks/skip-dropdown :installed-view provides-product) 2)))
-        (tasks/skip-dropdown :all-subscriptions-view rand-sub)
+        ;; The below conditional statemnet checks if the required amount to cover the
+        ;; product is available. It skips if required > available.
+        (if (< (Integer.
+                (re-find #"\d+"
+                         (tasks/ui getcellvalue :all-subscriptions-view
+                                   (tasks/skip-dropdown :all-subscriptions-view rand-sub) 2)))
+               quantity-after)
+          (throw (SkipException.
+                  (str "Quantiy Available is insufficient to cove the product completely
+                        Possible Work Around:
+                            1) Reduce the 'stacking parameter' value
+                            2) Generate new test data"))))
         (tasks/ui generatekeyevent (str
                                     (repeat-cmd 3 "<right> ")
                                     "<space> " quantity-after  " <enter>"))

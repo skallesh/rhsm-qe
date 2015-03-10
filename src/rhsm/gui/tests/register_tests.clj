@@ -73,6 +73,7 @@
 (defn register_bad_credentials
   "Checks error messages upon registering with bad credentials."
   [user pass recovery]
+  (skip-if-bz-open "1194365")
   (try+ (tasks/unregister) (catch [:type :not-registered] _))
   (let [test-fn (fn [username password expected-error-type]
                   (try+ (tasks/register username password)
@@ -87,14 +88,16 @@
 
 (data-driven register_bad_credentials {Test {:groups ["registration"
                                                       "tier1"]}}
-  [^{Test {:groups ["blockedByBug-718045"]}}
-   ["sdf" "sdf" :invalid-credentials]
-   ;need to add a case with a space in the middle re: 719378
-   ;^{Test {:groups ["blockedByBug-719378"]}}
-   ;["test user" :invalid-credentials]
-   ["" "" :no-username]
-   ["" "password" :no-username]
-   ["sdf" "" :no-password]])
+   [^{Test {:groups ["blockedByBug-718045"
+                     "blockedByBug-1194365"]}}
+    ["sdf" "sdf" :invalid-credentials]
+    ;^{Test {:groups ["blockedByBug-719378"]}}
+    ["test user" "password" :invalid-credentials]
+    ["test user" "" :no-password]
+    ["  " "  " :no-username]
+    ["" "" :no-username]
+    ["" "password" :no-username]
+    ["sdf" "" :no-password]])
 
 (defn ^{Test {:groups ["registration"
                        "tier1"
@@ -126,8 +129,7 @@
 (defn ^{Test {:groups ["registration"
                        "tier2"
                        "blockedByBug-918303"]
-              :dependsOnMethods ["register_check_syslog"]
-              :priority (int 20)}}
+              :dependsOnMethods ["register_check_syslog"]}}
   unregister_check_syslog
   "Asserts unregister events are logged in the syslog."
   [_]
