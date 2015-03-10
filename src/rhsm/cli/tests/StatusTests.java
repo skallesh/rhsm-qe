@@ -288,16 +288,14 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			} else {
 				
 				// TEMPORARY WORKAROUND FOR BUG:
-				if (!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":").isEmpty()) {
-					boolean invokeWorkaroundWhileBugIsOpen = true;
-					String bugId="1197897";	// Bug 1197897 - subscription-manager status is yellow due to 24-hour subscription despite redundant coverage from a green subscription
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-					if (invokeWorkaroundWhileBugIsOpen) {
-						String expectedReason = "Guest has not been reported on any host and is using a temporary unmapped guest subscription.";
-						log.warning("Verifying that the reason product '"+installedProduct.productName+"' appears in the status report is because a temporary 24 hour subscription has been attached since '"+expectedReason+"'.");
-						Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":"+"\n- "+expectedReason).isEmpty(),
-							"Installed product '"+installedProduct.productName+"' appears to be covered by a temporary 24 hours entitlement because the status module reports '"+expectedReason+"'");
-					}
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1197897";	// Bug 1197897 - subscription-manager status is yellow due to 24-hour subscription despite redundant coverage from a green subscription
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen  && !getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":").isEmpty()) {
+					String expectedReason = "Guest has not been reported on any host and is using a temporary unmapped guest subscription.";
+					log.warning("Verifying that the reason product '"+installedProduct.productName+"' appears in the status report is because a temporary 24 hour subscription has been attached since '"+expectedReason+"'.");
+					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "^"+installedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+":"+"\n- "+expectedReason).isEmpty(),
+						"Installed product '"+installedProduct.productName+"' appears to be covered by a temporary 24 hours entitlement because the status module reports '"+expectedReason+"'");
 				} else	// assert
 				// END OF WORKAROUND
 				
