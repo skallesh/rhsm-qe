@@ -26,7 +26,27 @@ import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
+ * 
+ * Good sources for acceptable spellings...
+ * 	http://www.oxforddictionaries.com/
+ * 	http://dictionary.reference.com/
  *   
+ *   To interactively test a spelling...
+[root@jsefler-7 ~]# hunspell -d en_US -a
+@(#) International Ispell Version 3.2.06 (but really Hunspell 1.3.2)
+couldn't
+*
+
+could not
+*
+*
+
+couldnt
+& couldnt 2 0: couldn't, could
+
+^C
+[root@jsefler-7 ~]# 
+
  **/
 @Test(groups={"SpellCheckTests","Tier3Tests"})
 public class SpellCheckTests extends SubscriptionManagerCLITestScript {
@@ -104,8 +124,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("privacy_statement.html", "privacy_statement.HTML");
 			msgId = msgId.replace("rhn", "red hat network");
 			msgId = msgId.replace("RHN", "Red Hat Network");
-			msgId = msgId.replace("url", "uniform resource locator");
-			msgId = msgId.replace("URL", "Uniform Resource Locator");
+			msgId = msgId.replace("url", "uniform resource location");	// locator is not recognized by hunspell-1.2.8-16.el6
+			msgId = msgId.replace("URL", "Uniform Resource Location");	// Locator is not recognized by hunspell-1.2.8-16.el6
 			msgId = msgId.replace("DER size", "binary size");
 			msgId = msgId.replace("SSL", "Secure Sockets Layer");
 			msgId = msgId.replace("UUID", "universally unique identifier");
@@ -122,6 +142,13 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("'Subscription Manager'", "Subscription Manager");
 			msgId = msgId.replace("'release --list'", "release --list");
 			msgId = msgId.replace("'red hat network-channel --remove --channel=<conflicting_channel>'","red hat network-channel --remove --channel=<conflicting_channel>");
+			msgId = msgId.replace("/kb/","/knowledge-base/");	//Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563
+			msgId = msgId.replace("Doesn't","Does not");	// not recognized by hunspell-1.2.8-16.el6
+			msgId = msgId.replace("doesn't","does not");
+			msgId = msgId.replace("Couldn't","Could not");
+			msgId = msgId.replace("couldn't","could not");
+			msgId = msgId.replace("Shouldn't","Should not");
+			msgId = msgId.replace("shouldn't","should not");
 			//msgId = msgId.replace("'%s'", "%s");	// already fixed by adjustment below
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
 			
@@ -216,6 +243,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			}
 			// END OF WORKAROUND
 			msgId = msgId.replace("preconfigure", "prior configure");	// hunspell -d en_US does not recognize preconfigure
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			if (msgId.contains("plugin")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1200507";	// Bug 1200507 - Grammar issue, "plugin" should be hyphenated.
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring unrecognized word '"+"plugin"+"' while bug '"+bugId+"' is open.");
+					msgId = msgId.replace("plugin", "plug-in");
+				}
+			}
+			// END OF WORKAROUND
 			
 			msgIds.add(msgId);
 		}
@@ -363,7 +402,11 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		
 		// modify the contents of manPageResult for acceptable word spellings
 		String modifiedManPage = manPageResult.getStdout();
-		modifiedManPage = modifyMisspellingsInManPage(manPageResult.getStdout());
+		modifiedManPage = modifyMisspellingsInManPage(modifiedManPage);
+		modifiedManPage = modifiedManPage.replaceAll("PLUGIN OPTIONS", "PLUG-IN OPTIONS");	// TODO: should not fail on "PLUGIN OPTIONS" since it is a valid module
+		modifiedManPage = modifiedManPage.replaceAll("The plugins command", "The plug-ins command");	// TODO: should not fail on "PLUGIN OPTIONS" since it is a valid module
+		modifiedManPage = modifiedManPage.replaceAll("plugins", " bugzilla1192120comment13isNotFixed ");
+		modifiedManPage = modifiedManPage.replaceAll("plugin", " bugzilla1192120comment13isNotFixed ");
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		if (doesStringContainMatches(modifiedManPage,"[^-]servicelevel")) {
@@ -401,7 +444,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		
 		// TEMPORARY WORKAROUND FOR BUG
-		for (String word : Arrays.asList(new String[]{"wildcards","wildcard","suborganizations","expirations","reregistered","reregister","instaled"})) {
+		for (String word : Arrays.asList(new String[]{"wildcards","wildcard","suborganizations","expirations","reregistered","reregister","instaled","equilivent","bugzilla1192120comment13isNotFixed"})) {
 			if (modifiedManPage.contains(word)) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1192120";	// Bug 1192120 - typos and poor grammar in subscription-manager man page
@@ -431,7 +474,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		
 		// modify the contents of manPageResult for acceptable word spellings
 		String modifiedManPage = manPageResult.getStdout();
-		modifiedManPage = modifiedManPage.replaceAll("(\\w+)‐\\n\\s+(\\w+)", "$1$2");	// unhyphenate all words at the ends of a line
+		modifiedManPage = modifiedManPage.replaceAll("(\\w+)(?:‐|-)\\n\\s+(\\w+)", "$1$2");	// unhyphenate all words at the ends of a line
 		modifiedManPage = modifiedManPage.replaceAll("System Manager's Manual", " bugzilla1192574comment2isNotFixed ");
 		modifiedManPage = modifiedManPage.replaceAll("https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Subscription_Management/1.0/html/Subscription_Management_Guide/index.html", " bugzilla1192574comment3isNotFixed ");
 		modifiedManPage = modifyMisspellingsInManPage(modifiedManPage);
@@ -531,6 +574,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "rhsm.conf";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
+		manPageResult = client.runCommandAndWait("man "+tool);
 		Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
 		
 		// modify the contents of manPageResult for acceptable word spellings
@@ -538,9 +582,11 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifyMisspellingsInManPage(manPageResult.getStdout());
 		modifiedManPage = modifiedManPage.replaceAll("/old- licenses/", "/ bugzilla1192646comment4isNotFixed /");
 		modifiedManPage = modifiedManPage.replaceAll(" 11/07/2014 ", " bugzilla1192646comment5isNotFixed ");
+		modifiedManPage = modifiedManPage.replaceAll("subscription manager plugins", " bugzilla1192646comment7isNotFixed ");
+		modifiedManPage = modifiedManPage.replaceAll("plugin configuration", " bugzilla1192646comment7isNotFixed ");
 		
 		// TEMPORARY WORKAROUND FOR BUG
-		for (String word : Arrays.asList(new String[]{"subscription-mananager","pulldown","bugzilla1192646comment4isNotFixed","bugzilla1192646comment5isNotFixed"})) {
+		for (String word : Arrays.asList(new String[]{"subscription-mananager","pulldown","bugzilla1192646comment4isNotFixed","bugzilla1192646comment5isNotFixed","bugzilla1192646comment7isNotFixed"})) {
 			if (modifiedManPage.contains(word)) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1192646";	// Bug 1192646 - typos and poor grammar in rhsm.conf man page
@@ -750,6 +796,12 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		if (!hunspellResult.getStdout().trim().isEmpty()) hunspellFailures = Arrays.asList(hunspellResult.getStdout().trim().split("\n"));
 		for (String hunspellFailure : hunspellFailures) {
 			log.warning("'"+hunspellFailure+"' was identified by hunspell check as a potential misspelling.");
+			int occurances=0;
+			for (String manPageLine : manPageLines) if (manPageLine.contains(hunspellFailure)) occurances++;
+			if (occurances>20) {	// avoid running out of java memory
+				log.info("   '"+hunspellFailure+"' was found in too many lines to list");
+				continue;
+			}
 			for (String manPageLine : manPageLines) {
 				if (manPageLine.contains(hunspellFailure)) {
 					log.info("   '"+hunspellFailure+"' was found in man page line: "+manPageLine);
@@ -768,7 +820,19 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		String modifiedManPage = originalManPage;
 		
 		// modifications to correct for man-page formatting
-		modifiedManPage = modifiedManPage.replaceAll("(\\w+)‐\\n\\s+(\\w+)", "$1$2");	// unhyphenate all words at the ends of a line
+		modifiedManPage = modifiedManPage.replaceAll(".", "");	// needed on rhel6 to fix highlighted .SH words like NNAAMMEE
+		
+		// join acceptable hyphenated words that have been wrapped across two lines (e.g. third-
+		//      party) 
+		modifiedManPage = modifiedManPage.replaceAll("(auto)(?:‐|-)\\n\\s+(attach)", "$1-$2");
+		modifiedManPage = modifiedManPage.replaceAll("(rhn)(?:‐|-)\\n\\s+(migrate)", "$1-$2");
+		modifiedManPage = modifiedManPage.replaceAll("(subscription)(?:‐|-)\\n\\s+(manager)", "$1-$2");
+		modifiedManPage = modifiedManPage.replaceAll("(third)(?:‐|-)\\n\\s+(party)", "$1-$2");
+		modifiedManPage = modifiedManPage.replaceAll("(on)(?:‐|-)\\n\\s+(premise)", "$1-$2");
+		
+		// unhyphenate all words that the man tool wrapped at the end of a line (e.g. oper-
+	    //      ating)
+		modifiedManPage = modifiedManPage.replaceAll("(\\w+)(?:‐|-)\\n\\s+(\\w+)", "$1$2");
 		
 		// modifications for hashed id strings
 		modifiedManPage = modifiedManPage.replaceAll("[a-f,0-9,\\-]{36}", "UUID");		// consumer identity: eff9a4c9-3579-49e5-a52f-83f2db29ab52
@@ -792,11 +856,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("--baseurl", "--base_url");
 		modifiedManPage = modifiedManPage.replaceAll("--listslots", "--list_slots");
 		modifiedManPage = modifiedManPage.replaceAll("--listhooks", "--list_hooks");
+		modifiedManPage = modifiedManPage.replaceAll("--legacyuser", "--legacy-user");
+		modifiedManPage = modifiedManPage.replaceAll("--legacypassword", "--legacy-password");
 		modifiedManPage = modifiedManPage.replaceAll("--consumerid", "--consumer_identifier");
 		modifiedManPage = modifiedManPage.replaceAll("--sos", "--save-our-souls");
 		modifiedManPage = modifiedManPage.replaceAll("--repo([^s])", "--repository$1");
 		modifiedManPage = modifiedManPage.replaceAll("stdin", "standard-in");
 		modifiedManPage = modifiedManPage.replaceAll("stdout", "standard-out");
+		modifiedManPage = modifiedManPage.replaceAll("stdout", "standard-out");
+		modifiedManPage = modifiedManPage.replaceAll("isn't", "is not");	// fails on hunspell-1.2.8-16.el6
+		modifiedManPage = modifiedManPage.replaceAll("isn’t", "is not");	// fails on hunspell-1.2.8-16.el6
+		modifiedManPage = modifiedManPage.replaceAll("aren't", "are not");	// fails on hunspell-1.2.8-16.el6
+		modifiedManPage = modifiedManPage.replaceAll("aren’t", "are not");	// fails on hunspell-1.2.8-16.el6
 		modifiedManPage = modifiedManPage.replaceAll("gzipped", "GNU compressed");	// man rhsm-debug
 		modifiedManPage = modifiedManPage.replaceAll("Multi-", "Multiple-");
 		modifiedManPage = modifiedManPage.replaceAll("multi-", "multiple-");
@@ -817,7 +888,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("productCertDir", "product-Certificate-Directory");
 		modifiedManPage = modifiedManPage.replaceAll("entitlementCertDir", "entitlement-Certificate-Directory");
 		modifiedManPage = modifiedManPage.replaceAll("consumerCertDir", "consumer-Certificate-Directory");
-		modifiedManPage = modifiedManPage.replaceAll("pluginDir", "plugin-in-Directory");
+		modifiedManPage = modifiedManPage.replaceAll("pluginDir", "plug-in-Directory");
 		modifiedManPage = modifiedManPage.replaceAll("pluginConfDir", "plug-in-Configuration-Directory");
 		modifiedManPage = modifiedManPage.replaceAll("certCheckInterval", "certificate-Check-Interval");
 		modifiedManPage = modifiedManPage.replaceAll("autoAttachInterval", "auto-Attach-Interval");
@@ -884,6 +955,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("x86", "x_86");
 		modifiedManPage = modifiedManPage.replaceAll("ia64", "i_a_64");
 		modifiedManPage = modifiedManPage.replaceAll("'east colo'", "east organization");
+		modifiedManPage = modifiedManPage.replaceAll("’east colo’", "east organization");
 		modifiedManPage = modifiedManPage.replaceAll("login", "log-in");
 		modifiedManPage = modifiedManPage.replaceAll("Login", "Log-in");
 		modifiedManPage = modifiedManPage.replaceAll("Repo ", "Repository ");
@@ -907,9 +979,9 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("RHN", "Red Hat Network");
 		modifiedManPage = modifiedManPage.replaceAll("RHSM", "Red Hat Subscription Management");
 		modifiedManPage = modifiedManPage.replaceAll("RHEL", "Red Hat Enterprise Linux");
-		modifiedManPage = modifiedManPage.replaceAll("-url", "-uniform-resource-locator");
-		modifiedManPage = modifiedManPage.replaceAll("_url", "_uniform_resource_locator");
-		modifiedManPage = modifiedManPage.replaceAll("URL", "Uniform Resource Locator");
+		modifiedManPage = modifiedManPage.replaceAll("-url", "-uniform-resource-location");	// locator is not recognized by hunspell-1.2.8-16.el6
+		modifiedManPage = modifiedManPage.replaceAll("_url", "_uniform_resource_location");	// locator is not recognized by hunspell-1.2.8-16.el6
+		modifiedManPage = modifiedManPage.replaceAll("URL", "Uniform Resource Location");	// Locator is not recognized by hunspell-1.2.8-16.el6
 		modifiedManPage = modifiedManPage.replaceAll("\\.pem", ".certificate");	// Base64-encoded X.509 certificate
 		modifiedManPage = modifiedManPage.replaceAll("PEM file", "Privacy-enhanced mail certificate file");	// Base64-encoded X.509 certificate
 		modifiedManPage = modifiedManPage.replaceAll("PEM certificate", "Privacy-enhanced mail certificate");	// Base64-encoded X.509 certificate
