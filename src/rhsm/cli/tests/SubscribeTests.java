@@ -61,8 +61,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
-///*debugTesting*/ if (!productId.equals("awesomeos-onesocketib")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("awesomeos-guestlimit-4-stackable")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("awesomeos-onesocketib")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 		// is this system a virtual guest system or a physical system
 		boolean systemIsGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
@@ -72,6 +72,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the subscription pool with the matching productId is available
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// clienttasks.getCurrentlyAvailableSubscriptionPools() is tested at the conclusion of this test
+///*debugTesting*/pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c097838014c097989881a54", clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 		boolean isPoolRestrictedToUnmappedVirtualSystems = CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
 		
 		// special case...
@@ -252,6 +253,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					
 					// consider the socket/vcpu coverage and assert the installed product's status
 					if (isPoolRestrictedToUnmappedVirtualSystems) {
+						// TEMPORARY WORKAROUND
+						/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
+						/*String*/ bugId="1200882"; // Bug 1200882 - Wrong installed product status is displayed when a unmapped_guests_only pool is attached
+						try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+						if (invokeWorkaroundWhileBugIsOpen) {
+							log.warning("Skipping the assertion of the installed product status after subscribing to an unmapped_guests_only pool for ProductId '"+productId+"' while bug '"+bugId+"' is open.");
+						} else
+						// END OF WORKAROUND
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to an unmapped_guests_only pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed regardless of any hardware socket/vcpu coverage or other subscriptions attached.");	// for more info, see bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1197897
 					} else if (pool.subscriptionType!=null && pool.subscriptionType.equals("Other")) {
 						Assert.fail("Encountered a subscription pool of type '"+pool.subscriptionType+"'.  Do not know how to assert the installedProduct.status after subscribing to pool: "+pool);
@@ -276,6 +285,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to a pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the system's sockets/vcpu needs were met.");
 					}
 					
+					// TEMPORARY WORKAROUND
+					/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
+					/*String*/ bugId="1199443"; // Bug 1199443 - Wrong "End date" in installed list after attaching 24-hour subscription on a unmapped-guest
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen && isPoolRestrictedToUnmappedVirtualSystems) {
+						log.warning("Skipping the assertion of installed product start-end date range after subscribing to an unmapped_guests_only pool for ProductId '"+productId+"' while bug '"+bugId+"' is open.");
+					} else	// call if (installedProduct.status.equals("Subscribed")) {
+					// END OF WORKAROUND
 					// behavior update after fix from Bug 767619 - Date range for installed products needs to be smarter.
 					//Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.startDate), ProductSubscription.formatDateString(productSubscription.startDate), "Installed Product '"+bundledProductName+"' starts on the same DAY as the consumed ProductSubscription: "+productSubscription);					
 					if (installedProduct.status.equals("Subscribed")) {
