@@ -1653,6 +1653,42 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager: subscribe with no args should now default to --auto",
+			groups={},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+			public void SubscribeDefaultsToAutosubscribe_Test() throws JSONException, Exception {
+		// commit cb590a75f3a2de921961808d00ab251180c51691 subscription-manager-1.13.13-1)
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("Defaulting subscribe/attach to imply option --auto was not implemented in this version of subscription-manager.");	// commit cb590a75f3a2de921961808d00ab251180c51691 Make 'attach' auto unless otherwise specified
+
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null);
+		}
+
+		// first let's run subscribe --auto and collect the results.
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		String subscribeWithAutoCommand = clienttasks.subscribeCommand(true, null, (List<String>) null, (List<String>) null, null, null, null, null, null, null, null, null);
+		//SSHCommandResult subscribeWithAutoCommandResult = client.runCommandAndWait(subscribeWithAutoCommand);
+		SSHCommandResult subscribeWithAutoCommandResult = clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null);
+		List<InstalledProduct> subscribeWithAutoCommandResultList = InstalledProduct.parse(subscribeWithAutoCommandResult.getStdout());
+		int subscribeWithAutoEntitlementCount = clienttasks.getCurrentEntitlementCertFiles().size();
+
+		// second let's run subscribe without --auto and collect the results.
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		String subscribeWithoutAutoCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, null, null, null, null);
+		//SSHCommandResult subscribeWithoutAutoCommandResult = client.runCommandAndWait(subscribeWithoutAutoCommand);
+		SSHCommandResult subscribeWithoutAutoCommandResult = clienttasks.subscribe(null, null, (String)null, null, null, null, null, null, null, null, null, null);
+		List<InstalledProduct> subscribeWithoutAutoCommandResultList = InstalledProduct.parse(subscribeWithoutAutoCommandResult.getStdout());
+		int subscribeWithoutAutoEntitlementCount = clienttasks.getCurrentEntitlementCertFiles().size();
+
+		// assert the two subscribe results are identical
+		Assert.assertEquals(subscribeWithoutAutoCommandResult.getExitCode(), subscribeWithAutoCommandResult.getExitCode(), "eCode from subscribing without --auto should match exitCode from subscribing with --auto");
+		Assert.assertTrue(subscribeWithoutAutoCommandResultList.containsAll(subscribeWithAutoCommandResultList) && subscribeWithAutoCommandResultList.containsAll(subscribeWithoutAutoCommandResultList), "The Installed Product status reported is identical when running the subscribe module with or without --auto option.");
+		Assert.assertEquals(subscribeWithoutAutoEntitlementCount,subscribeWithAutoEntitlementCount, "The number of entitlements granted is identical when running the subscribe module with or without --auto option.");
+	}
+	
+	
 	
 	
 	// Candidates for an automated Test:

@@ -877,10 +877,11 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			
 			// negative tests that require the system to be registered before attempting the test...
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+(sm_clientOrg==null?"":" --org "+sm_clientOrg),	new Integer(0),	null,	""}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe",											new Integer(64),	"","Error: This command requires that you specify a pool with --pool or use --auto.".replace("with --pool", "with --pool or --file,")}));	// after bug 1159974 Error: This command requires that you specify a pool with --pool or --file, or use --auto.
+			if (clienttasks.isPackageVersion("subscription-manager","<","1.13.13-1")) {	// commit cb590a75f3a2de921961808d00ab251180c51691 Make 'attach' auto unless otherwise specified.
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),		clienttasks.command+" subscribe",											new Integer(64),	"","Error: This command requires that you specify a pool with --pool or use --auto.".replace("with --pool", "with --pool or --file,")}));	// after bug 1159974 Error: This command requires that you specify a pool with --pool or --file, or use --auto.
+			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --pool=123 --auto",							new Integer(64),	"","Error: --auto may not be used when specifying pools."/*"Error: Only one of --pool or --auto may be used with this command."*/}));	// message changed by commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(64),	"","Error: Must use --auto with --servicelevel."}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(64),	"","Error: Must use --auto with --servicelevel."}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1200972"}),clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(64),	"","Error: Must use --auto with --servicelevel."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --file=/missing/poolIds.txt",				new Integer(65),	"","Error: The file \"/missing/poolIds.txt\" does not exist or cannot be read."}));	// added by bug 1159974
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.1-1")) {
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1194906"}),		clienttasks.rhsmDebugSystemCommand(null,null,null,true,true,null,null,null),new Integer(64),	"","Error: You may not use --subscriptions with --no-subscriptions."}));	// added by bug 1194906
@@ -923,7 +924,6 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+(sm_clientOrg==null?"":" --org "+sm_clientOrg),	new Integer(0),	null,	""}));
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe",											new Integer(255),	"Error: This command requires that you specify a pool with --pool or use --auto.",	""}));
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe --pool=123 --auto",							new Integer(255),	"Error: Only one of --pool or --auto may be used with this command.", ""}));
-			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(255),	"Error: Must use --auto with --servicelevel.", ""}));
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(255),	"Error: Must use --auto with --servicelevel.", ""}));
 		}
 		

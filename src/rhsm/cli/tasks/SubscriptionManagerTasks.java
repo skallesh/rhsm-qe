@@ -4717,6 +4717,8 @@ if (false) {
 			Assert.assertTrue(sshCommandResult.getStdout().contains("Service level set to: "+servicelevel), "The autosubscribe stdout reports: Service level set to: "+servicelevel);
 		if (auto)
 			Assert.assertTrue(sshCommandResult.getStdout().contains("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
+		else if (!auto && file==null && (poolIds==null||poolIds.isEmpty()) && isPackageVersion("subscription-manager",">=","1.14.1-1"))	// defaults to auto
+			Assert.assertTrue(sshCommandResult.getStdout().contains("Installed Product Current Status:"), "The subscribe stdout reports: Installed Product Current Status (when the default behavior implies to autosubscribe)");
 		else {
 			//Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports 'Success'.");
 			if (file!=null || poolIds.size()==1) {
@@ -4728,7 +4730,9 @@ if (false) {
 		
 		// assert the exit code was not a failure
 		if (auto)
-			Assert.assertNotSame(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code from the subscribe --auto command does not indicate a failure (exit code 0 indicates an entitlement was granted, 1 indicates an entitlement was not granted, 255 indicates a failure).");
+			Assert.assertTrue(Integer.valueOf(sshCommandResult.getExitCode())<=1, "The exit code ("+sshCommandResult.getExitCode()+") from the subscribe --auto command does not indicate a failure (exit code 0 indicates an entitlement was granted, 1 indicates an entitlement was not granted, 255 indicates a failure).");
+		else if (!auto && file==null && (poolIds==null||poolIds.isEmpty()) && isPackageVersion("subscription-manager",">=","1.14.1-1"))	// defaults to auto
+			Assert.assertTrue(Integer.valueOf(sshCommandResult.getExitCode())<=1, "The exit code ("+sshCommandResult.getExitCode()+") from the subscribe command (defaulting to autosubscribe) does not indicate a failure (exit code 0 indicates an entitlement was granted, 1 indicates an entitlement was not granted, 255 indicates a failure).");
 		else
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
 			
