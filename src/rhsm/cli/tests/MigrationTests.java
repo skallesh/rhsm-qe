@@ -559,7 +559,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(factMap.get(migrationSystemIdFact), rhnSystemId, "The migration fact '"+migrationSystemIdFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		Assert.assertNotNull(factMap.get(migrationDateFact), "The migration fact '"+migrationDateFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		int tol = 180; // tolerance in seconds to assert that the migration_date facts was set within the last few seconds
-		Calendar migrationDate = parseDateStringUsingDatePattern(factMap.get(migrationDateFact), "yyyy-MM-dd'T'HH:mm:ss", client.runCommandAndWait("date +%Z").getStdout().trim());	// NOTE: The .SSS milliseconds was dropped from the date pattern because it was getting confused as seconds from the six digit value in migration.migration_date: 2012-08-08T11:11:15.818782
+		Calendar migrationDate;
+		if (client.runCommandAndWait("date +%Z").getStdout().trim().endsWith("DT")) {	// are we currently on daylight summer/savings time?
+			// determined on Mar 9, 2015 (day after Daylight Summer/Savings Time starts), when date +%Z returns EDT, passing passing null for timeZone will correctly pass the migrationDateFact assertion (Note: passing "EDT" will actually screw it up)
+			migrationDate = parseDateStringUsingDatePattern(factMap.get(migrationDateFact), "yyyy-MM-dd'T'HH:mm:ss", null);	// NOTE: The .SSS milliseconds was dropped from the date pattern because it was getting confused as seconds from the six digit value in migration.migration_date: 2012-08-08T11:11:15.818782
+		} else {
+			migrationDate = parseDateStringUsingDatePattern(factMap.get(migrationDateFact), "yyyy-MM-dd'T'HH:mm:ss", client.runCommandAndWait("date +%Z").getStdout().trim());	// NOTE: The .SSS milliseconds was dropped from the date pattern because it was getting confused as seconds from the six digit value in migration.migration_date: 2012-08-08T11:11:15.818782
+		}
 		long systemTimeInSeconds = Long.valueOf(client.runCommandAndWait("date +%s").getStdout().trim());	// seconds since 1970-01-01 00:00:00 UTC
 		long migratTimeInSeconds = migrationDate.getTimeInMillis()/1000;
 		Assert.assertTrue(systemTimeInSeconds-tol < migratTimeInSeconds && migratTimeInSeconds < systemTimeInSeconds+tol, "The migration date fact '"+factMap.get(migrationDateFact)+"' was set within the last '"+tol+"' seconds (local system time).  Actual diff='"+String.valueOf(systemTimeInSeconds-migratTimeInSeconds)+"' seconds.");
