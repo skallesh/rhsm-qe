@@ -242,7 +242,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		//	- Not covered by a valid subscription.
 		
 		//	Awesome OS Server Bits:
-		//		- Guest has not been reported on any host and is using a temporary unmapped guest subscription.
+		//	- Guest has not been reported on any host and is using a temporary unmapped guest subscription.
 		
 		// assert the overall status
 		String expectedStatus = null;
@@ -304,19 +304,36 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		
-		// assert the individual consumed subscription status details
-		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+		// assert the individual consumed subscription status details 
+		List <ProductSubscription> currentlyConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		for (ProductSubscription productSubscription : currentlyConsumedProductSubscriptions) {
 			
 			// assert the list status output
 //			if (productSubscription.statusDetails.isEmpty()) {	// is not sufficient after bug 1180400 implementation
 			if (productSubscription.statusDetails.isEmpty() && clienttasks.isPackageVersion("subscription-manager","<", "1.13.13-1")) {
+				// since this productSubscription is empty, it should NOT be reported in the Status report 
 				Assert.assertTrue(getSubstringMatches(statusResult.getStdout(), "(^|/)"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+"(|/.+):").isEmpty(),
 						"Expecting the empty status details "+productSubscription.statusDetails+" of consumed subscription '"+productSubscription.productName+"' to NOT appear in the list of overall status details of the installed products.");
 			} else if (productSubscription.statusDetails.size()==1 && productSubscription.statusDetails.get(0).trim().equals("Subscription is current") && clienttasks.isPackageVersion("subscription-manager",">=", "1.13.13-1")) {	// commit 252ec4520fb6272b00ae379703cd004f558aac63	// bug 1180400: "Status Details" are now populated on CLI
-				Assert.assertTrue(getSubstringMatches(statusResult.getStdout(), "(^|/)"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+"(|/.+):").isEmpty(),
-						"Expecting the compliant status details '"+"Subscription is current"+"' of consumed subscription '"+productSubscription.productName+"' to NOT appear in the list of overall status details of the installed products.");			
-			}
-			else {
+				
+				// since this productSubscription appears to be current, it should NOT be reported in the Status report, UNLESS there is another overconsumed subscription by the same name that is not current. 
+				boolean allOtherConsumedProductSubscriptionsWithThisProductNameAreCurrent= true;	//assume
+				for (ProductSubscription otherConsumedProductSubscription : currentlyConsumedProductSubscriptions) {
+					if (otherConsumedProductSubscription.productName.equals(productSubscription.productName) &&
+						!otherConsumedProductSubscription.poolId.equals(productSubscription.poolId) &&
+						!otherConsumedProductSubscription.statusDetails.isEmpty() &&
+						!otherConsumedProductSubscription.statusDetails.get(0).equals("Subscription is current")) {
+						allOtherConsumedProductSubscriptionsWithThisProductNameAreCurrent = false;
+						log.warning("There are multiple consumed subscriptions for '"+productSubscription.productName+"'.  Not all of them are current.");
+					}
+				}
+				boolean statusReportIncludesProductSubscriptionProductName = getSubstringMatches(statusResult.getStdout(), "(^|/)"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+"(|/.+):").isEmpty();
+				if (allOtherConsumedProductSubscriptionsWithThisProductNameAreCurrent) {
+					Assert.assertTrue(statusReportIncludesProductSubscriptionProductName,
+							"Since the status details of consumed subscription '"+productSubscription.productName+"' states Subscription is current, product '"+productSubscription.productName+"' should NOT appear in the list of overall status details of the installed products.");
+				} // else the actual status report will be asserted when the outer for loop hits the otherConsumedProductSubscriptionsWithThisProductName
+			} else {
+				// since this productSubscription is not current, its status details should be reported in the Status report under the subscription's name. 
 				for (String statusDetail : productSubscription.statusDetails) {
 					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "(^|/)"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+"(|/.+):(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")).isEmpty(),
 							"Expecting the status detail '"+statusDetail+"' of consumed subscription '"+productSubscription.productName+"' to appear in the list of overall status details.");
