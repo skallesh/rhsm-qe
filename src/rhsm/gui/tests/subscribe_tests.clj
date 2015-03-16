@@ -103,7 +103,7 @@
         (catch [:type :not-subscribed] _)))
 
 (defn ^{Test {:groups ["subscribe"
-                       "tier2"
+                       "tier1"
                        "blockedByBug-918617"]
               :dependsOnMethods ["unsubscribe_each"]}}
   subscribe_check_syslog
@@ -122,7 +122,7 @@
   (sleep 5000))
 
 (defn ^{Test {:groups ["subscribe"
-                       "tier2"
+                       "tier1"
                        "blockedByBug-918617"]
               :dependsOnMethods ["subscribe_check_syslog"]}}
   unsubscribe_check_syslog
