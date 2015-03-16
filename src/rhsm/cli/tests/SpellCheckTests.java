@@ -35,14 +35,14 @@ import com.redhat.qe.tools.SSHCommandResult;
 [root@jsefler-7 ~]# hunspell -d en_US -a
 @(#) International Ispell Version 3.2.06 (but really Hunspell 1.3.2)
 couldn't
-*
+*            <==== indicates one word spelled correctly
 
 could not
 *
-*
+*            <==== indicates two words spelled correctly
 
 couldnt
-& couldnt 2 0: couldn't, could
+& couldnt 2 0: couldn't, could     <==== indicates misspelling and shows suggestions
 
 ^C
 [root@jsefler-7 ~]# 
@@ -324,6 +324,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("multi-entitlement", "multiple entitlement");
 			msgId = msgId.replace("Multi-Entitleable", "Capability for Multiple Entitlements");
 			msgId = msgId.replace("SKU", "Stock Keeping Unit");
+			msgId = msgId.replace("unmapped", "not mapped");	// unmapped fails on hunspell-1.3.3-3.fc20.x86_64
 			msgId = msgId.replace("''", "'");	// remove the escaping single quotes
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
 			
