@@ -1,11 +1,7 @@
 package rhsm.cli.tests;
 
-import java.io.File;
-import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -13,33 +9,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.testng.SkipException;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
-import com.redhat.qe.auto.bugzilla.BzChecker;
-import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
-import com.redhat.qe.auto.testng.TestNGUtils;
-import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
-import rhsm.cli.tasks.CandlepinTasks;
-import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
-import rhsm.data.OrderNamespace;
-import rhsm.data.ProductCert;
-import rhsm.data.ProductNamespace;
 import rhsm.data.ProductSubscription;
-import rhsm.data.SubscriptionPool;
 
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -464,7 +444,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Protected methods ***********************************************************************
-	protected Map<String,String> getProductStatusMapFromStatusResult(SSHCommandResult statusResult) {
+	public static Map<String,String> getProductStatusMapFromStatusResult(SSHCommandResult statusResult) {
 		
 		//	FINE: ssh root@jsefler-7.usersys.redhat.com subscription-manager status --ondate=2014-11-04
 		//	FINE: Stdout: 
