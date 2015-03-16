@@ -384,7 +384,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getOstreeSubscriptionPoolsDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-		checkPackageVersionBeforeClass();
+		if (!checkPackageVersionBeforeClass()) return ll;
 		
 		// disable /etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf while this dataProvider runs
 		clienttasks.updateConfFileParameter(ostreeContentPluginFile.getPath(), "enabled", "0");
@@ -601,12 +601,14 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 	@BeforeClass(groups={"setup"})
-	public void checkPackageVersionBeforeClass() {
+	public boolean checkPackageVersionBeforeClass() {
 		if (clienttasks!=null) {
 			// skip test class when subscription-manager-plugin-ostree is not installed
 			String pkg = "subscription-manager-plugin-ostree";
 			if (!clienttasks.isPackageInstalled(pkg)) {
-				throw new SkipException("Subscription Management compatibility with ostree requires package '"+pkg+"'.");
+				//throw new SkipException("Subscription Management compatibility with ostree requires package '"+pkg+"'.");	// this shows up in Jenkins as a failure... TODO figure out why
+				log.warning("Subscription Management compatibility with ostree requires package '"+pkg+"'.");
+				return false;
 			}
 			// where is the ostree repo config file located that will be managed by subscription-manager
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
@@ -614,7 +616,9 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			} else {
 				ostreeRepoConfigFile = oldOstreeRepoConfigFile;
 			}
+			return true;
 		}
+		return false;
 	}
 	
 	
