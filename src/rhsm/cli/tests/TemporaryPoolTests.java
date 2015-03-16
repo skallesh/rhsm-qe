@@ -4,6 +4,7 @@ import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,13 +18,17 @@ import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.data.ConsumerCert;
 import rhsm.data.EntitlementCert;
+import rhsm.data.InstalledProduct;
 import rhsm.data.ProductNamespace;
+import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
@@ -37,37 +42,172 @@ import com.redhat.qe.auto.testng.TestNGUtils;
  * Etherpad for 24 Hour Temporary Pools for Unmapped Guests
  *   http://etherpad.corp.redhat.com/MZhnahVIDk  --for review
  */
-@Test(groups={"TemporaryPoolTests","Tier2Tests"})
+@Test(groups={"TemporaryPoolTests","Tier3Tests"})
 public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
-	@Test(	description="given an available unmapped_guests_only pool, assert that it is available only to virtual systems whose host consumer has not yet mapped its virt.uuid as a guestId onto the host consumer.  Moreover, assert that the temporary pool is replaced by a host-limited pool once the guest has been mapped.",
-			groups={"AcceptanceTests","Tier1Tests","VerifyAvailabilityOfUnmappedGuestsOnlySubpools_Test"},
+	@Test(	description="given an available unmapped_guests_only pool, assert that it is available only to virtual systems whose host consumer has not yet mapped its virt.uuid as a guestId onto the host consumer.  Moreover, assert that once mapped, the pool is no longer available.",
+			groups={"VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
-			enabled=false)	//TODO
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAvailabilityOfUnmappedGuestsOnlySubpools_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) {
+	public void VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
-		// system has already been registered 
+		// system facts are overridden with factsMap to fake this syatem as a guest
 		
-		// make sure we are unsubscribed from all subscriptions
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
-		//clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();	// unsubscribe this way to ensure the newest serial is removed first
-		
+		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
 		
 		// verify the unmapped_guests_only pool is available for consumption
+		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId",unmappedGuestsOnlyPool.poolId, availableSubscriptionPools),
+				"Temporary pool '"+unmappedGuestsOnlyPool.subscriptionName+"' poolId='"+unmappedGuestsOnlyPool.poolId+"' (for virtual systems whose host consumer has not yet reported this system's virt.uuid as a guest) is available for consumption.");
 		
-		// verify that the corresponding bonus pool is NOT available
+		// verify that it is for Virtual systems
+		Assert.assertEquals(unmappedGuestsOnlyPool.machineType, "Virtual","Temporary pools intended for unmapped guests only should indicate that it is for machine type Virtual.");
+		
+		// verify that the corresponding Physical pool is also available (when not physical_only)
+//		String subscriptionId = CandlepinTasks.getSubscriptionIdForPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, unmappedGuestsOnlyPool.poolId);
+//		String ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+//		List<String> poolIdsForSubscriptionId = CandlepinTasks.getPoolIdsForSubscriptionId(sm_clientUsername, sm_clientPassword, sm_serverUrl, ownerKey, subscriptionId);
+//		String parentPhysicalPoolId = null;
+//		for (String poolId : poolIdsForSubscriptionId) {
+//			if (!poolId.equals(unmappedGuestsOnlyPool.poolId)) {
+//				SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", poolId, availableSubscriptionPools);
+//				if (CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId)) {
+//					Assert.assertNull(pool, "Should NOT found parent pool corresponding to temporary unmapped guests only poolId '"+unmappedGuestsOnlyPool.poolId+"' among available pools since it is Physical only.");		
+//		
+//				} else {
+//					Assert.assertNotNull(pool, "Found parent Physical pool corresponding to temporary unmapped guests only poolId '"+unmappedGuestsOnlyPool.poolId+"' among available pools.");		
+//					Assert.assertEquals(pool.machineType,"Physical", "The machine type for the parent pool corresponding to temporary unmapped guests only poolId '"+unmappedGuestsOnlyPool.poolId+"'.");
+//				}
+//				Assert.assertNull(parentPhysicalPoolId, "Found only one parent Physical poolId corresponding to temporary unmapped guests only poolId '"+unmappedGuestsOnlyPool.poolId+"'.");
+//				parentPhysicalPoolId = poolId;
+//			}
+//		}
+//		Assert.assertNotNull(parentPhysicalPoolId, "Found parent Physical poolId corresponding to temporary unmapped guests only poolId '"+unmappedGuestsOnlyPool.poolId+"'.");
+		String parentPhysicalPoolId = getParentPoolIdCorrespondingToDerivedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), unmappedGuestsOnlyPool.poolId);
+		Assert.assertNotNull(parentPhysicalPoolId, "Found parent Physical poolId corresponding to temporary unmapped guests only poolId '"+unmappedGuestsOnlyPool.poolId+"'.");
+		SubscriptionPool parentPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", parentPhysicalPoolId, availableSubscriptionPools);
+		if (CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, parentPhysicalPoolId)) {
+			Assert.assertNull(parentPool, "Should NOT found parent pool corresponding to temporary unmapped guests only poolId '"+unmappedGuestsOnlyPool.poolId+"' among available pools since it is Physical only.");		
+		} else {
+			Assert.assertNotNull(parentPool, "Found parent Physical pool corresponding to temporary unmapped guests only poolId '"+unmappedGuestsOnlyPool.poolId+"' among available pools.");		
+			Assert.assertEquals(parentPool.machineType,"Physical", "The machine type for the parent pool corresponding to temporary unmapped guests only poolId '"+unmappedGuestsOnlyPool.poolId+"'.");
+		}
 		
 		// simulate the actions of virt-who my mapping the virt.uuid as a guestID onto a host consumer
+		clienttasks.mapSystemAsAGuestOfItself();
 		
 		// verify that the unmapped_guests_only pool is no longer available
+		Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId",unmappedGuestsOnlyPool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()),
+				"Temporary pool '"+unmappedGuestsOnlyPool.subscriptionName+"' poolId='"+unmappedGuestsOnlyPool.poolId+"' (for virtual systems whose host consumer has not yet reported this system's virt.uuid as a guest) is NO LONGER available for consumption after it's virt.uuid has been mapped to a consumer's guestId list.");
 		
-		// verify that the corresponding bonus pool is now available
+	}
+	
+	
+	@Test(	description="given an available unmapped_guests_only pool, assert that attaching it does not throw any Tracebacks ",
+			groups={"blockedByBug-1198369","VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
+			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyNoTracebacksAreThrownWhenSubscribingToUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
+		// system facts are overridden with factsMap to fake this syatem as a guest
 		
-		//		
+		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
+		
+		// subscribe and assert stderr does not report an UnboundLocalError
+		SSHCommandResult result = clienttasks.subscribe(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		//	201503161528:29.708 - FINE: ssh root@jsefler-os6.usersys.redhat.com subscription-manager subscribe --pool=8a9087e34c097838014c09799c231f02
+		//	201503161528:33.439 - FINE: Stdout: Successfully attached a subscription for: Awesome OS Server Basic (data center)
+		//	201503161528:33.442 - FINE: Stderr: 
+		//	Traceback (most recent call last):
+		//	  File "/usr/share/rhsm/subscription_manager/dbus_interface.py", line 59, in emit_status
+		//	    self.validity_iface.emit_status()
+		//	  File "/usr/lib/python2.6/site-packages/dbus/proxies.py", line 68, in __call__
+		//	    return self._proxy_method(*args, **keywords)
+		//	  File "/usr/lib/python2.6/site-packages/dbus/proxies.py", line 140, in __call__
+		//	    **keywords)
+		//	  File "/usr/lib/python2.6/site-packages/dbus/connection.py", line 630, in call_blocking
+		//	    message, timeout)
+		//	dbus.exceptions.DBusException: org.freedesktop.DBus.Python.UnboundLocalError: Traceback (most recent call last):
+		//	  File "/usr/lib/python2.6/site-packages/dbus/service.py", line 702, in _message_cb
+		//	    retval = candidate_method(self, *args, **keywords)
+		//	  File "/usr/libexec/rhsmd", line 202, in emit_status
+		//	    self._dbus_properties = refresh_compliance_status(self._dbus_properties)
+		//	  File "/usr/share/rhsm/subscription_manager/managerlib.py", line 920, in refresh_compliance_status
+		//	    entitlements[label] = (name, state, message)
+		//	UnboundLocalError: local variable 'state' referenced before assignment
+		
+		Assert.assertTrue(!result.getStderr().contains("Traceback"), "stderr when subscribing to a temporary unmapped guests only pool should NOT throw a Traceback.");
+	}
+	
+	
+	@Test(	description="given an available unmapped_guests_only pool, ",	// TODO
+			groups={"VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
+			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyStatusDetailsAfterAttachingUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
+		
+		// system facts are overridden with factsMap to fake this syatem as a guest
+		
+		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
+		ConsumerCert cert = clienttasks.getCurrentConsumerCert();
+		
+		// attach the unmapped guests only pool
+		//File serialPemFile = clienttasks.subscribeToSubscriptionPool(unmappedGuestsOnlyPool, null, sm_clientUsername, sm_clientPassword, sm_serverUrl);
+		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(serialPemFile);
+		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		ProductSubscription consumedUnmappedGuestsOnlyProductSubscription = clienttasks.getCurrentlyConsumedProductSubscriptions().get(0);	// assumes only one consumed entitlement
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToProductSubscription(consumedUnmappedGuestsOnlyProductSubscription);
+
+		// assert the expiration is 24 hours post the consumer's registration
+		Calendar expectedEntitlementCertEndDate = (Calendar) cert.validityNotBefore.clone();
+		expectedEntitlementCertEndDate.add(Calendar.HOUR, 24);
+		Assert.assertEquals(ConsumerCert.formatDateString(entitlementCert.validityNotAfter), ConsumerCert.formatDateString(expectedEntitlementCertEndDate), "The End Date of the entitlement from a temporary pool should be exactly 24 hours after the registration date of the current consumer '"+ConsumerCert.formatDateString(cert.validityNotBefore)+"'.");
+		
+		// assert the Status Details of the attached subscription
+		String expectedStatusDetailsForAnUnmappedGuestsOnlyProductSubscription = "Guest has not been reported on any host and is using a temporary unmapped guest subscription.";
+		Assert.assertEquals(consumedUnmappedGuestsOnlyProductSubscription.statusDetails, Arrays.asList(new String[]{expectedStatusDetailsForAnUnmappedGuestsOnlyProductSubscription}),"Status Details of a consumed subscription from a temporary pool for unmapped guests only.");
+		
+		// assert that the temporary subscription appears in the status report
+		SSHCommandResult statusResult = clienttasks.status(null, null, null, null);
+		Map<String,String> statusMap = StatusTests.getProductStatusMapFromStatusResult(statusResult);
+		Assert.assertTrue(statusMap.containsKey(consumedUnmappedGuestsOnlyProductSubscription.productName),"The status module reports an incompliance from temporary subscription '"+consumedUnmappedGuestsOnlyProductSubscription.productName+"'.");
+		Assert.assertEquals(statusMap.get(consumedUnmappedGuestsOnlyProductSubscription.productName),expectedStatusDetailsForAnUnmappedGuestsOnlyProductSubscription,"The status module reports an incompliance from temporary subscription '"+consumedUnmappedGuestsOnlyProductSubscription.productName+"' for this reason.");
+		
+		// assert the status of installed products provided by the temporary subscription
+		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, unmappedGuestsOnlyPool.poolId);
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		for (String providedProductId : providedProductIds) {
+			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
+			if (installedProduct!=null) {	// providedProduct is installed
+				// assert the status details
+				Assert.assertEquals(installedProduct.status,"Subscribed","Status of an installed product provided for by a temporary entitlement from a pool reserved for unmapped guests only.");	// see CLOSED NOTABUG Bug 1200882 - Wrong installed product status is displayed when a unmapped_guests_only pool is attached
+				Assert.assertEquals(installedProduct.statusDetails,new ArrayList<String>(),"Status Details of an installed product provided for by a temporary entitlement from a pool reserved for unmapped guests only.");
+				// TODO: The above two asserts could be changed by RFE Bug 1201520 - [RFE] Usability suggestions to better identify a temporary (aka 24 hour) entitlement 
+				
+				// assert the start-end dates
+				// TEMPORARY WORKAROUND FOR BUG
+				String bugId = "1199443";	// Bug 1199443 - Wrong "End date" in installed list after attaching 24-hour subscription on a unmapped-guest
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping assertion of the End Date for installed product '"+installedProduct.productName+"' provided by a temporary pool while bug '"+bugId+"' is open.");
+				} else	// assert the End Date
+				// END OF WORKAROUND			
+				Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.endDate), InstalledProduct.formatDateString(entitlementCert.validityNotAfter), "The End Date of coverage for the installed product '"+installedProduct.productName+"' should exactly match the end date from the temporary pool subscription.");
+
+			}
+		}
+		
+	}
+
 //		// get some attributes from the subscription pool
 //		String poolDerivedProductId = (String)CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "derivedProductId");
 //		String poolDerivedProductName = (String)CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "derivedProductName");
@@ -281,11 +421,11 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 //		//	ExitCode: 255
 //		clienttasks.unsubscribeFromSerialNumber(derivedEntitlementCert.serialNumber);
 //		clienttasks.unsubscribeFromSerialNumber(hostEntitlementCert.serialNumber);
-	}
+//	}
 	
-	@AfterGroups(value={"VerifyAvailabilityOfUnmappedGuestsOnlySubpools_Test"},groups={"setup"})
-	public void afterVerifyAvailabilityOfDerivedProductSubpools_Test() {
-		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();	// will avoid: Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a99f98a46b4fa990146ba9494032318] at org.hibernate.UnresolvableObjectException.throwIfNull:64
+	@AfterGroups(value={"VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},groups={"setup"})
+	public void afterVerifyAvailabilityOfDerivedProductSubpool_Test() {
+//		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();	// will avoid: Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a99f98a46b4fa990146ba9494032318] at org.hibernate.UnresolvableObjectException.throwIfNull:64
 		clienttasks.unregister(null,null,null);
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
@@ -335,8 +475,19 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Protected methods ***********************************************************************
-
-
+	protected String getParentPoolIdCorrespondingToDerivedPoolId(String authenticator, String password, String url, String ownerKey, String derivedPoolId) throws JSONException, Exception {
+		String subscriptionId = CandlepinTasks.getSubscriptionIdForPoolId(authenticator, password, url, derivedPoolId);
+		List<String> poolIdsForSubscriptionId = CandlepinTasks.getPoolIdsForSubscriptionId(authenticator, password, url, ownerKey, subscriptionId);
+		String parentPhysicalPoolId = null;
+		for (String poolId : poolIdsForSubscriptionId) {
+			if (!poolId.equals(derivedPoolId)) {
+				Assert.assertNull(parentPhysicalPoolId, "Found one parent Physical poolId corresponding to derived poolId '"+derivedPoolId+"' (we should find only one).");
+				parentPhysicalPoolId = poolId;
+			}
+		}
+		Assert.assertNotNull(parentPhysicalPoolId, "Found parent Physical poolId corresponding to derived poolId '"+derivedPoolId+"'.");
+		return parentPhysicalPoolId;
+	}
 	
 	// Data Providers ***********************************************************************
 
