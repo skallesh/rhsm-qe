@@ -332,7 +332,8 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 				Assert.assertNull(ostreeRepo, "Should no longer find an OSTree repo configuration for remote '"+osTreeContentNamespace.label+"' in '"+ostreeRepoConfigFile+"' after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
 			}
 			
-			// when removing the entitlement, assert the ostree origin respec remains unchanged
+			// when removing the entitlement, assert the ostree origin refspec remains unchanged
+			// TODO: This assertion may be changed by Bug 1193208 - 'atomic host upgrade' gives incorrect error after unregistering with subscription-manager
 			Assert.assertEquals(clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec"), ostreeOriginRefspecAfter, "The OSTree origin refspec in '"+ostreeOriginFile+"' should remain unchanged after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
 			
 			
