@@ -54,7 +54,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
-		// system facts are overridden with factsMap to fake this syatem as a guest
+		// system facts are overridden with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
@@ -114,7 +114,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyNoTracebacksAreThrownWhenSubscribingToUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
-		// system facts are overridden with factsMap to fake this syatem as a guest
+		// system facts are overridden with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
@@ -146,14 +146,14 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="given an available unmapped_guests_only pool, ",	// TODO
+	@Test(	description="given an available unmapped_guests_only pool, attach it and verify the status details of the consumed subscription, installed product, and system status.",	// TODO
 			groups={"VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyStatusDetailsAfterAttachingUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
-		// system facts are overridden with factsMap to fake this syatem as a guest
+		// system facts are overridden with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
@@ -180,7 +180,10 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		Map<String,String> statusMap = StatusTests.getProductStatusMapFromStatusResult(statusResult);
 		Assert.assertTrue(statusMap.containsKey(consumedUnmappedGuestsOnlyProductSubscription.productName),"The status module reports an incompliance from temporary subscription '"+consumedUnmappedGuestsOnlyProductSubscription.productName+"'.");
 		Assert.assertEquals(statusMap.get(consumedUnmappedGuestsOnlyProductSubscription.productName),expectedStatusDetailsForAnUnmappedGuestsOnlyProductSubscription,"The status module reports an incompliance from temporary subscription '"+consumedUnmappedGuestsOnlyProductSubscription.productName+"' for this reason.");
-		
+		// assert that the temporary subscription causes an overall status is Invalid
+		String expectedStatus = "Overall Status: Invalid";
+		Assert.assertTrue(statusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' when a temporary subscription for '"+consumedUnmappedGuestsOnlyProductSubscription.productName+"' is attached.");
+
 		// assert the status of installed products provided by the temporary subscription
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, unmappedGuestsOnlyPool.poolId);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -190,7 +193,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 				// assert the status details
 				Assert.assertEquals(installedProduct.status,"Subscribed","Status of an installed product provided for by a temporary entitlement from a pool reserved for unmapped guests only.");	// see CLOSED NOTABUG Bug 1200882 - Wrong installed product status is displayed when a unmapped_guests_only pool is attached
 				Assert.assertEquals(installedProduct.statusDetails,new ArrayList<String>(),"Status Details of an installed product provided for by a temporary entitlement from a pool reserved for unmapped guests only.");
-				// TODO: The above two asserts could be changed by RFE Bug 1201520 - [RFE] Usability suggestions to better identify a temporary (aka 24 hour) entitlement 
+				// TODO: The above two asserts might be changed by RFE Bug 1201520 - [RFE] Usability suggestions to better identify a temporary (aka 24 hour) entitlement 
 				
 				// assert the start-end dates
 				// TEMPORARY WORKAROUND FOR BUG
@@ -205,7 +208,81 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 
 			}
 		}
+	}
+	
+	
+	@Test(	description="given an available unmapped_guests_only pool, attach it and attempt to auto-heal - repeated attempts to auto-heal should NOT add more and more entitlements",
+			groups={"blockedByBug-1198494","VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
+			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyAutoHealingIsStableAfterAttachingUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
+		// system facts are overridden with factsMap to fake this system as a guest
+		
+		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests) and auto-subscribed
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);	
+		
+		// attach the unmapped guests only pool
+		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		
+		// assert that the temporary subscription appears in the status report
+		SSHCommandResult statusResult = clienttasks.status(null, null, null, null);
+		//	[root@jsefler-os6 ~]# subscription-manager status
+		//	+-------------------------------------------+
+		//	   System Status Details
+		//	+-------------------------------------------+
+		//	Overall Status: Invalid
+		//
+		//	Awesome OS Instance Server Bits:
+		//	- Guest has not been reported on any host and is using a temporary unmapped guest subscription.
+		//
+		//	UNABLE_TO_GET_NAME:
+		//	- Guest has not been reported on any host and is using a temporary unmapped guest subscription.
+		//
+		Map<String,String> statusMap = StatusTests.getProductStatusMapFromStatusResult(statusResult);
+		Assert.assertTrue(!statusMap.containsKey("UNABLE_TO_GET_NAME"),"The status module should NOT report 'UNABLE_TO_GET_NAME'.");	// occurred in candlepin 0.9.45-1 // TODO block by a bug
+		Assert.assertTrue(statusMap.containsKey(unmappedGuestsOnlyPool.subscriptionName),"The status module reports an incompliance from temporary subscription '"+unmappedGuestsOnlyPool.subscriptionName+"'.");
+
+		// get a list of the current entitlements
+		List<File> entitlementCertFileAfterSubscribed = clienttasks.getCurrentEntitlementCertFiles();
+		
+		// trigger an auto-heal event
+		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.run_rhsmcertd_worker(true);
+		
+		// get a list of the entitlements after auto-heal
+		List<File> entitlementCertFileAfterAutoHeal1 = clienttasks.getCurrentEntitlementCertFiles();
+		
+		// assert that no additional entitlements were added (test for Bug 1198494 - Auto-heal continuously attaches subscriptions to make the system compliant on a guest machine)
+		Assert.assertTrue(entitlementCertFileAfterSubscribed.containsAll(entitlementCertFileAfterAutoHeal1) && entitlementCertFileAfterAutoHeal1.containsAll(entitlementCertFileAfterSubscribed),
+				"The entitlement certs remained the same after first attempt to auto-heal despite the attched temporary pool. (Assuming that the initial registration with autosubcribe provided as much coverage as possible for the installed products from subscriptions with plenty of available quantity, repeated attempts to auto-heal should not consume more entitlements.)");
+
+		// trigger a second auto-heal event
+		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.run_rhsmcertd_worker(true);
+		
+		// get a list of the entitlements after second auto-heal event
+		List<File> entitlementCertFileAfterAutoHeal2 = clienttasks.getCurrentEntitlementCertFiles();
+		
+		// assert that no additional entitlements were added (test for Bug 1198494 - Auto-heal continuously attaches subscriptions to make the system compliant on a guest machine)
+		Assert.assertTrue(entitlementCertFileAfterSubscribed.containsAll(entitlementCertFileAfterAutoHeal2) && entitlementCertFileAfterAutoHeal2.containsAll(entitlementCertFileAfterSubscribed),
+				"The entitlement certs remained the same after a second attempt to auto-heal despite the attched temporary pool. (Assuming that the initial registration with autosubcribe provided as much coverage as possible for the installed products from subscriptions with plenty of available quantity, repeated attempts to auto-heal should not consume more entitlements.)");
+	}
+	
+	
+	@Test(	description="given an available unmapped_guests_only pool,...",	// TODO
+			groups={"debugTest","VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
+			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
+			enabled=false)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyAutoHealingAfterAttachingUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
+		
+		// map the guest
+		
+		// trigger a rhsmcertd checkin
+		
+		// verify that the attached temporary subscription is automatically removed
 	}
 
 //		// get some attributes from the subscription pool
