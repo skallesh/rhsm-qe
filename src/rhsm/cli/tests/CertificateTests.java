@@ -61,28 +61,45 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOnlyOneBaseRHELProductCertIsInstalled_Test() {
 		
-		//  find all installed RHEL product Certs
+		// base RHEL product ids
+		// Reference: http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/tree/product_ids
+		List<String> baseProductIds = Arrays.asList(
+//			"180",	// Red Hat Beta
+			"68",	// Red Hat Enterprise Linux Desktop
+			"69",	// Red Hat Enterprise Linux Server
+			"71",	// Red Hat Enterprise Linux Workstation
+			"72",	// Red Hat Enterprise Linux for IBM System z
+			"74",	// Red Hat Enterprise Linux for IBM POWER
+			"76",	// Red Hat Enterprise Linux for Scientific Computing
+			"279",	// Red Hat Enterprise Linux for IBM POWER LE
+			"294");	// Red Hat Enterprise Linux Server for ARM
+					// 70,73,75 are "Extended Update Support"
+		
+		// find all installed RHEL product Certs
 		List<ProductCert> rhelProductCertsInstalled = new ArrayList<ProductCert>();
 		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
-			if (Arrays.asList("68","69","71","72","74","76").contains(productCert.productId)) { // 70,73,75 are "Extended Update Support"
+			if (baseProductIds.contains(productCert.productId)) {
 				rhelProductCertsInstalled.add(productCert);
 			}
 		}
-		// handle RHEL 7
-		if (rhelProductCertsInstalled.isEmpty() && clienttasks.redhatReleaseX.equals("7")) {
-			rhelProductCertsInstalled = clienttasks.getCurrentProductCerts("rhel-7-.*");
-		}
-		// handle Red Hat Enterprise Linux Server for ARM
-		if (rhelProductCertsInstalled.isEmpty() && clienttasks.arch.equals("aarch64")) {
-			rhelProductCertsInstalled = clienttasks.getCurrentProductCerts("rhsa-.*");
-		}
+// DELETEME
+//		// handle RHEL 7
+//		if (rhelProductCertsInstalled.isEmpty() && clienttasks.redhatReleaseX.equals("7")) {
+//			rhelProductCertsInstalled = clienttasks.getCurrentProductCerts("rhel-7-.*");
+//		}
+//		// handle Red Hat Enterprise Linux Server for ARM
+//		if (rhelProductCertsInstalled.isEmpty() && clienttasks.arch.equals("aarch64")) {
+//			rhelProductCertsInstalled = clienttasks.getCurrentProductCerts("rhsa-.*");
+//		}
 		if (rhelProductCertsInstalled.size()>1) {
 			log.warning("Found multiple installed RHEL product certs:");
 			for (ProductCert productCert : rhelProductCertsInstalled) {
 				log.warning(productCert.toString());
 			}
 		}
-		Assert.assertTrue(rhelProductCertsInstalled.size()==1,"At most only one RHEL product cert should ever be installed.");
+		Assert.assertTrue(rhelProductCertsInstalled.size()==1,"At most only one base RHEL product cert should ever be installed.");
+		
+		Assert.assertNotNull(clienttasks.getCurrentRhelProductCert(),"Discovered the currently installed base RHEL product cert based on an expected tag.");
 	}
 	
 	

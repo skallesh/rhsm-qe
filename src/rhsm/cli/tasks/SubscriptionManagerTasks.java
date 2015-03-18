@@ -156,6 +156,7 @@ public class SubscriptionManagerTasks {
 		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
 		
 		// TODO This is a WORKAROUND to treat an ARM Development Preview as a RHEL7.0 system.  Not sure if this is what we ultimately want.
+		/* 3/18/2015 NO LONGER NEEDED NOW THAT THE GA PRODUCT Red Hat Enterprise Linux Server for ARM ProductId=294 HAS BEEN CREATED
 		// Product:	ID: 261		Name: Red Hat Enterprise Linux Server for ARM Development Preview	Version: Snapshot	Arch: aarch64	Tags: rhsa-dp-server,rhsa-dp-server-7	Brand Type: 	Brand Name: 
 		// [root@apm-mustang-ev3-04 ~]# cat /etc/redhat-release 
 		// Red Hat Enterprise Linux Server for ARM Development Preview
@@ -165,6 +166,7 @@ public class SubscriptionManagerTasks {
 			redhatReleaseXY = "7.0";
 			redhatReleaseX = "7";
 		}
+		*/
 		
 		// predict sockets on the system   http://libvirt.org/formatdomain.html#elementsCPU
 		/* 5/6/2013: DON'T PREDICT THIS USING lscpu ANY MORE.  IT LEADS TO TOO MANY TEST FAILURES TO TROUBLESHOOT.  INSTEAD, RELY ON FactsTests.MatchingCPUSocketsFact_Test() TO ASSERT BUGZILLA Bug 751205 - cpu_socket(s) facts value occasionally differs from value reported by lscpu (which is correct?)
@@ -1572,14 +1574,15 @@ if (false) {
 	}
 
 	/**
-	 * @return the currently installed ProductCert that provides tag "rhel-5" or "rhel-6" depending on this redhat-release;
-	 * also asserts that at most only one product cert is installed that provides this tag;
-	 * returns null if not found
+	 * @return the currently installed ProductCert that provides tag "rhel-5", "rhel-6", or "rhel-7"
+	 * depending on system's redhat-release; also asserts that at most only one product cert is installed
+	 * that provides this tag; returns null if not found
 	 */
 	public ProductCert getCurrentRhelProductCert() {
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+redhatReleaseX;
 		List<ProductCert> rhelProductCerts = getCurrentProductCerts(providingTag);
+		
 		// special case (rhel5ClientDesktopVersusWorkstation)
 		if (rhelProductCerts.isEmpty() && releasever.equals("5Client")) {
 			//	Product:
@@ -1598,7 +1601,9 @@ if (false) {
 			providingTag = "rhel-5-client-workstation";
 			rhelProductCerts = getCurrentProductCerts(providingTag);
 		}
-		// special case (rhel7)
+		
+		// special case (rhel70)
+		/* NOT NECESSARY AFTER rhel-7.0-beta
 		if (rhelProductCerts.isEmpty() && redhatReleaseX.equals("7")) {
 			//[root@jsefler-7 rhel-7.0-beta]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
 			//Product:
@@ -1700,6 +1705,9 @@ if (false) {
 			providingTag = "rhel-"+redhatReleaseX+"-.*";	// use a regex for rhel-7
 			rhelProductCerts = getCurrentProductCerts(providingTag);
 		}
+		*/
+		
+		/* NOT NECESSARY AFTER rhelsa-dp Development Preview
 		// special case (rhel for ARM)
 		if (rhelProductCerts.isEmpty() && arch.equals("aarch64")) {
 			
@@ -1715,12 +1723,13 @@ if (false) {
 			providingTag = "rhsa-.*";
 			rhelProductCerts = getCurrentProductCerts(providingTag);
 		}
-		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
-		ProductCert rhelProductCert = rhelProductCerts.get(0);
+		*/
 		
+		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
 		Assert.assertTrue(rhelProductCerts.size()<=1, "No more than one product cert is installed that provides RHEL tag '"+providingTag+"' (actual='"+rhelProductCerts.size()+"').");
-		if (rhelProductCerts.isEmpty()) return null; 
-		return rhelProductCerts.get(0);
+		if (rhelProductCerts.isEmpty()) return null;
+		ProductCert rhelProductCert = rhelProductCerts.get(0);
+		return rhelProductCert;
 	}
 	
 	public boolean isRhelProductCertSubscribed() {
@@ -1967,7 +1976,8 @@ if (false) {
 		//	OpenStack Compute
 		//	[root@rhel7-openstack-instance ~]# dmidecode --string system-product-name
 		//	RHEV Hypervisor
-		if (!getFactValue("dmi.system.product_name").equals("Not Specified")) {	// then this is likely an openstack instance
+		String dmiSystemProduct_name = getFactValue("dmi.system.product_name");
+		if (dmiSystemProduct_name!=null && !dmiSystemProduct_name.equals("Not Specified")) {	// then this is likely an openstack instance
 			SSHCommandResult ipv4_addressResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "curl --stderr /dev/null http://169.254.169.254/latest/meta-data/public-ipv4", 0);		// will timeout on a non-openstack instance and then fail the exit code assert
 			ipv4_address = ipv4_addressResult.getStdout().trim();
 			Assert.assertMatch(ipv4_address, "\\d+\\.\\d+\\.\\d+\\.\\d+", "Validated format of ipv4 address '"+ipv4_address+"' detected from openstack curl query above.");
