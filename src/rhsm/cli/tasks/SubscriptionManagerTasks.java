@@ -4692,6 +4692,7 @@ if (false) {
 			sshCommandResult.getStdout().trim().startsWith("No subscriptions are available") ||				// No subscriptions are available from the pool with id '8a90f8303c98703a013c98715ca80494'.   (Bug 846758)
 			sshCommandResult.getStdout().trim().startsWith("Pool is restricted") ||							// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
 																											// Pool is restricted to physical systems: '8a9086d3443c043501443c052aec1298'.
+																											// Pool is restricted to unmapped virtual guests: '8a9087e34c2f214a014c2f22a7d11ad0'
 			sshCommandResult.getStdout().trim().startsWith("All installed products are covered") ||			// All installed products are covered by valid entitlements. No need to update subscriptions at this time.
 			sshCommandResult.getStdout().trim().startsWith("No Installed products on system.") ||			// No Installed products on system. No need to attach subscriptions.
 			sshCommandResult.getStdout().trim().startsWith("Unable to entitle consumer")) {					// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
