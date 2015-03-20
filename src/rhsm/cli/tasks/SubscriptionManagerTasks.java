@@ -4840,7 +4840,7 @@ if (false) {
 		} else if (pool.multiEntitlement!=null && !pool.multiEntitlement) {
 			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
 					"When the pool is not multi-entitleable, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
-		} else if (pool.subscriptionType!=null && (!pool.subscriptionType.equals("Stackable") && !pool.subscriptionType.equals("Multi-Entitleable") && !pool.subscriptionType.equals("Instance Based")) ) {	// see https://bugzilla.redhat.com/show_bug.cgi?id=1029968#c2
+		} else if (pool.subscriptionType!=null && (!pool.subscriptionType.equals("Stackable") && !pool.subscriptionType.equals("Multi-Entitleable") && !pool.subscriptionType.equals("Instance Based") && !pool.subscriptionType.equals("Stackable (Temporary)") && !pool.subscriptionType.equals("Multi-Entitleable (Temporary)") && !pool.subscriptionType.equals("Instance Based (Temporary)")) ) {	// see https://bugzilla.redhat.com/show_bug.cgi?id=1029968#c2
 			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
 					"When the pool is not multi-entitleable (not Stackable && not Multi-Entitleable && not Instance Based), the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
 		} else if (!poolProductAttributeArches.isEmpty() && !poolProductAttributeArches.contains("ALL") && !poolProductAttributeArches.contains(arch)) {
