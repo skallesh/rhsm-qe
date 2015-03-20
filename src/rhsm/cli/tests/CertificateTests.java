@@ -77,7 +77,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		// find all installed RHEL product Certs
 		List<ProductCert> rhelProductCertsInstalled = new ArrayList<ProductCert>();
-		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
+		for (ProductCert productCert : currentProductCerts) {
 			if (baseProductIds.contains(productCert.productId)) {
 				rhelProductCertsInstalled.add(productCert);
 			}
@@ -97,7 +98,14 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				log.warning(productCert.toString());
 			}
 		}
+		if (rhelProductCertsInstalled.isEmpty()) {
+			log.warning("Did not detect any RHEL product certs among the following installed products:");
+			for (ProductCert productCert : currentProductCerts) {
+				log.info(productCert.toString());
+			}
+		}
 		Assert.assertTrue(rhelProductCertsInstalled.size()==1,"At most only one base RHEL product cert should ever be installed.");
+		log.info("Found the following RHEL product cert installed:\n"+rhelProductCertsInstalled.get(0));
 		
 		Assert.assertNotNull(clienttasks.getCurrentRhelProductCert(),"Discovered the currently installed base RHEL product cert based on an expected tag.");
 	}

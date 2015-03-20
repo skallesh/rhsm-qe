@@ -40,8 +40,8 @@ public class ProductNamespace extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (id != null)				string += String.format(" %s='%s'", "id",id);
 		if (name != null)			string += String.format(" %s='%s'", "name",name);
+		if (id != null)				string += String.format(" %s='%s'", "id",id);
 		if (version != null)		string += String.format(" %s='%s'", "version",version);
 		if (arch != null)			string += String.format(" %s='%s'", "arch",arch);
 		if (providedTags != null)	string += String.format(" %s='%s'", "providedTags",providedTags);

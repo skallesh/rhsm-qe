@@ -57,14 +57,16 @@ public class ProductCert extends AbstractCommandLineData {
 		
 		String string = "";
 		if (productNamespace != null)	string += String.format(" %s",		productNamespace);
+/* already printed from the productNamespace
 		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
 		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
+*/
+		if (file != null)				string += String.format(" %s='%s'", "file",file);
 		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (id != null)					string += String.format(" %s='%s'", "id",id);
 		if (issuer != null)				string += String.format(" %s='%s'", "issuer",issuer);
 		if (validityNotBefore != null)	string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
 		if (validityNotAfter != null)	string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
-		if (file != null)				string += String.format(" %s='%s'", "file",file);
 		if (version != null)			string += String.format(" %s='%s'", "version",version);
 
 		return string.trim();
