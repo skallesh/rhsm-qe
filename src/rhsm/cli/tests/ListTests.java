@@ -1242,7 +1242,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 	}
 	@Test(	description="subscription-manager: subcription manager list --consumed with wildcard --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
-			groups={"blockedByBug-1146125"},
+			groups={"blockedByBug-1146125","blockedByBug-1204311"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListConsumedWithWildcardMatches_Test() throws JSONException, Exception {
@@ -1265,7 +1265,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// randomly choose one of the consumed Product Subscriptions
 		ProductSubscription randomConsumedProductSubscription = getRandomListItem(consumedProductSubscriptions);
-		
+///*debugTesting*/randomConsumedProductSubscription=ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c34472d014c3448290e0747", consumedProductSubscriptions);
 		//	+-------------------------------------------+
 		//	   Consumed Subscriptions
 		//	+-------------------------------------------+
@@ -1287,7 +1287,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		//	System Type:       Physical
 		
 		
-		// Test 1: test exact --matches on Subscription Name:
+		// Test 1: test --matches with a * wild card on Subscription Name:
 		matchesString = randomConsumedProductSubscription.productName;
 		matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// drop first word
 		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
@@ -1299,7 +1299,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		
 		
-		// Test 2: test exact --matches on Provides:
+		// Test 2: test --matches with a * wild card on Provides:
 		if (!randomConsumedProductSubscription.provides.isEmpty()) {
 			matchesString = getRandomListItem(randomConsumedProductSubscription.provides);
 			matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// drop last word
@@ -1313,7 +1313,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		} else log.warning("Skipping list --consumed --matches test on a Provides item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
 		
-		// Test 3: test exact --matches on SKU:
+		// Test 3: test --matches with a ? wild card on SKU:
 		matchesString = randomConsumedProductSubscription.productId;
 		matchesString = matchesString.replaceFirst("^.","?");	// drop first char
 		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
@@ -1325,7 +1325,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		
 		
-		// Test 4: test exact --matches on Contract:
+		// Test 4: test --matches with a ? wild card on Contract:
 		matchesString = String.valueOf(randomConsumedProductSubscription.contractNumber);
 		matchesString = matchesString.replaceFirst(".$","?");	// drop last char
 		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
@@ -1338,7 +1338,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		*/
 		
-		// Test 5: test exact --matches on Service Level:
+		// Test 5: test --matches with a * wild card on Service Level:
 		if (randomConsumedProductSubscription.serviceLevel!=null && !randomConsumedProductSubscription.serviceLevel.isEmpty()) {
 			matchesString = randomConsumedProductSubscription.serviceLevel;
 			matchesString = matchesString.replaceFirst("^.","*");	// drop first char
@@ -1352,11 +1352,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		} else log.warning("Skipping list --consumed --matches test on a Service Level item since it is null on our random consumed subscription: "+randomConsumedProductSubscription);
 		
 		
-		// Test 6: test exact --matches on Provided ProductId:
+		// Test 6: test --matches with a ? wild card on Provided ProductId:
 		if (!randomConsumedProductSubscription.provides.isEmpty()) {
 			matchesString = getRandomListItem(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, randomConsumedProductSubscription.poolId));
 			int i = randomGenerator.nextInt(matchesString.length());
 			matchesString = matchesString.replaceAll(String.valueOf(matchesString.charAt(i)), "?");
+///*debugTesting*/matchesString="3?060";		
 			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		} else log.warning("Skipping list --consumed --matches test on a Provides ProductId item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
@@ -1413,6 +1414,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 				}
 			}
 			
+// debugTesting
+// THIS TEST IS WRONG. DO NOT CHECK FOR MATCHES ON *DERIVED* PRODUCT IDS
+//			// Test for match on Derived Provided ProductId:
+//			for (String derivedProvidedProductId : CandlepinTasks.getPoolDerivedProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumedProductSubscription.poolId)) {
+//				if (derivedProvidedProductId.toLowerCase().matches(regexString)) {
+//					log.info("Found a hit on matches '"+matchesString+"' against the consumed subscription '"+consumedProductSubscription.productName+"' Derived Provided Product ID: "+derivedProvidedProductId);
+//					if (!expectedProductSubscriptionMatches.contains(consumedProductSubscription)) expectedProductSubscriptionMatches.add(consumedProductSubscription);		
+//				}
+//			}
+			
 			// Test for match on Derived Provided ProductId:
 			// NOTE: list --available --matches is implemented server-side and appears to be searching the derivedProvidedProducts for product id matches.  Although unexpected, this feature has some benefit.
 			// This behavior is in contrast to list --consumed --matches which is implemented client-side and does NOT search the derivedProvidedProducts for match on product id.
@@ -1440,6 +1451,15 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// assert that all of the expectedProductSubscriptionMatches is identical to the actualProductSubscriptionMatches
+		for (ProductSubscription expectedProductSubscription : expectedProductSubscriptionMatches) {
+			if (!actualProductSubscriptionMatches.contains(expectedProductSubscription))
+				log.warning("The actual list of product subscription matches does NOT contain expected product subscription: "+expectedProductSubscription);
+		}
+		for (ProductSubscription actualProductSubscription : actualProductSubscriptionMatches) {
+			if (!expectedProductSubscriptionMatches.contains(actualProductSubscription))
+				// issues with bug 1204311 are showing up here 
+				log.warning("The expected list of product subscription matches does NOT contain actual product subscription: "+actualProductSubscription);
+		}
 		Assert.assertTrue(expectedProductSubscriptionMatches.containsAll(actualProductSubscriptionMatches)&&actualProductSubscriptionMatches.containsAll(expectedProductSubscriptionMatches), "All of the expected consumed subscriptions with an exact match (ignoring case) on '"+matchesString+"' were returned with the list --consumed --matches option.");
 
 	}
