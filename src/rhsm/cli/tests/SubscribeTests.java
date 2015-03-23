@@ -72,7 +72,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the subscription pool with the matching productId is available
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// clienttasks.getCurrentlyAvailableSubscriptionPools() is tested at the conclusion of this test
-///*debugTesting*/pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c097838014c097989881a54", clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+///*debugTesting*/pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c4816e8014c48183bd81b03", clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// awesomeos-onesocketib; Instance Based (Temporary)
 		boolean isPoolRestrictedToUnmappedVirtualSystems = CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
 		
 		// special case...
@@ -252,7 +252,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					}
 					
 					// consider the socket/vcpu coverage and assert the installed product's status
-					if (isPoolRestrictedToUnmappedVirtualSystems) {
+					if (isPoolRestrictedToUnmappedVirtualSystems && false/*since 1200882 was CLOSED NOTABUG, never run the assertion in this if condition*/) {
 						// TEMPORARY WORKAROUND
 						/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
 						/*String*/ bugId="1200882"; // Bug 1200882 - Wrong installed product status is displayed when a unmapped_guests_only pool is attached
@@ -261,7 +261,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 							log.warning("Skipping the assertion of the installed product status after subscribing to an unmapped_guests_only pool for ProductId '"+productId+"' while bug '"+bugId+"' is open.");
 						} else
 						// END OF WORKAROUND
-						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to an unmapped_guests_only pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed regardless of any hardware socket/vcpu coverage or other subscriptions attached.");	// for more info, see bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1197897
+						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to an unmapped_guests_only pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed regardless of any hardware socket/vcpu coverage or other subscriptions attached.");	// for more info, see bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1197897	// CLOSED NOTABUG
 					} else if (pool.subscriptionType!=null && pool.subscriptionType.equals("Other")) {
 						Assert.fail("Encountered a subscription pool of type '"+pool.subscriptionType+"'.  Do not know how to assert the installedProduct.status after subscribing to pool: "+pool);
 				    } else if (pool.multiEntitlement==null && pool.subscriptionType!=null && pool.subscriptionType.isEmpty()) {
