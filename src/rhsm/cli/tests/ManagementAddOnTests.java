@@ -2,7 +2,9 @@ package rhsm.cli.tests;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,6 +15,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
@@ -37,7 +40,7 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 			dependsOnGroups={},
 			dataProvider="getAddOnSubscriptionData",
 			enabled=true)
-	public void VerifyManagementAddOnEntitlementsContainNoContentNamespace (SubscriptionPool managementAddOnPool) {
+	public void VerifyManagementAddOnEntitlementsContainNoContentNamespace (Object bugzilla, SubscriptionPool managementAddOnPool) {
 		
 		// subscribe to a management add-on pool
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(managementAddOnPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
@@ -52,7 +55,7 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 			dependsOnGroups={},
 			dataProvider="getAddOnSubscriptionData",
 			enabled=true)
-	public void VerifyManagementAddOnEntitlementsContainNoProductNamespace (SubscriptionPool managementAddOnPool) {
+	public void VerifyManagementAddOnEntitlementsContainNoProductNamespace (Object bugzilla, SubscriptionPool managementAddOnPool) {
 		
 		// subscribe to a management add-on pool
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(managementAddOnPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
@@ -107,9 +110,16 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));	
 			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
 			if (jsonProvidedProducts.length()==0) {
+				Set<String> bugIds = new HashSet<String>();
+				
+				// Bug 1204311 - derivedProvidedProducts should not show up on a consumed subscription from a temporary pool
+				if (CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername,sm_clientPassword,sm_serverUrl, pool.poolId)) {
+					bugIds.add("1204311");
+				}
 				
 				// found a subscription to a Management Add-on, add it to the list of subscriptions to test
-				ll.add(Arrays.asList(new Object[]{pool}));
+				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				ll.add(Arrays.asList(new Object[]{blockedByBzBug, pool}));
 			}
 		}
 				
