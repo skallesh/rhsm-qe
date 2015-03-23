@@ -1265,7 +1265,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// randomly choose one of the consumed Product Subscriptions
 		ProductSubscription randomConsumedProductSubscription = getRandomListItem(consumedProductSubscriptions);
-///*debugTesting*/randomConsumedProductSubscription=ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c34472d014c3448290e0747", consumedProductSubscriptions);
+///*debugTesting 1204311*/randomConsumedProductSubscription=ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c4816e8014c48184d1b1f30", consumedProductSubscriptions);	// SKU: awesomeos-server-basic-dc; System Type: Virtual; Subscription Type: Standard (Temporary)
+///*debugTesting 1204311*/randomConsumedProductSubscription=ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c4816e8014c48184cec1f16", consumedProductSubscriptions);	// SKU: awesomeos-server-basic-dc; System Type: Physical; Subscription Type: Standard
+///*debugTesting 1204311*/randomConsumedProductSubscription=ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c4816e8014c48180b350dd0", consumedProductSubscriptions);	// SKU: awesomeos-virt-unlmtd-phys; System Type: Virtual; Subscription Type: Standard; Provides Awesome OS Server Bits
+
 		//	+-------------------------------------------+
 		//	   Consumed Subscriptions
 		//	+-------------------------------------------+
@@ -1357,7 +1360,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			matchesString = getRandomListItem(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, randomConsumedProductSubscription.poolId));
 			int i = randomGenerator.nextInt(matchesString.length());
 			matchesString = matchesString.replaceAll(String.valueOf(matchesString.charAt(i)), "?");
-///*debugTesting*/matchesString="3?060";		
+///*debugTesting 1204311*/matchesString="3?060";		
 			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		} else log.warning("Skipping list --consumed --matches test on a Provides ProductId item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
