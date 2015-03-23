@@ -559,9 +559,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 
-
-	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="delete selected secondary/duplicate subscriptions to reduce the number of available pools against a standalone candlepin server")
-	public void deleteSomeSecondarySubscriptionsBeforeSuite() throws JSONException, Exception {
+/* deleteSomeSecondarySubscriptionsBeforeSuite() IS A BETTER IMPLEMENTATION THAT THIS.  DELETEME 3/23/2015
+	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="delete selected secondary/duplicate subscription pools to reduce the number of available pools against a standalone candlepin server")
+	public void deleteSomeSecondarySubscriptionPoolsBeforeSuite() throws JSONException, Exception {
 		Set<String> secondarySkusSkipped = new HashSet<String>();
 		Set<String> secondarySkusToDelete = new HashSet<String>(Arrays.asList(new String[]{
 		//	[root@jsefler-5 ~]# subscription-manager register --username admin --password admin --org admin --type system
@@ -593,10 +593,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			"awesomeos-ia64",
 		//	"awesomeos-instancebased",		// kept because it will help test bug 963227
 		//	"awesomeos-instancebased",
+		//	"awesomeos-instancebased",	// temporary
+		//	"awesomeos-instancebased",	// temporary
 			"awesomeos-modifier",
 			"awesomeos-modifier",
 			"awesomeos-onesocketib",
 			"awesomeos-onesocketib",
+			"awesomeos-onesocketib",	// temporary
+			"awesomeos-onesocketib",	// temporary
 			"awesomeos-ostree",
 			"awesomeos-ostree",
 			"awesomeos-per-arch-cont",
@@ -617,6 +621,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			"awesomeos-server-basic-dc",
 		//	"awesomeos-server-basic-me",	// kept because it is Multi-Entitlement: Yes
 		//	"awesomeos-server-basic-me",
+//			"awesomeos-server-basic-vdc",	// temporary derived from awesomeos-server-basic-dc
+//			"awesomeos-server-basic-vdc",	// temporary derived from awesomeos-server-basic-dc
 			"awesomeos-super-hypervisor",
 			"awesomeos-super-hypervisor",
 			"awesomeos-super-hypervisor",
@@ -627,6 +633,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			"awesomeos-virt-4",
 			"awesomeos-virt-datacenter",
 			"awesomeos-virt-datacenter",
+			"awesomeos-virt-datacenter",	// temporary
+			"awesomeos-virt-datacenter",	// temporary
 			"awesomeos-virt-unlimited",
 			"awesomeos-virt-unlimited",
 			"awesomeos-virt-unlimited",
@@ -704,6 +712,146 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						
 			// delete the subscription
 			String subscriptionId = jsonPool.getString("subscriptionId");
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/subscriptions/"+subscriptionId);
+			secondarySubscriptionIdsDeleted.add(subscriptionId);
+		}
+		
+		// refresh the pools
+		if (!secondarySubscriptionIdsDeleted.isEmpty()) {
+			JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,sm_clientOrg);
+			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
+		}
+	}
+*/
+	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="delete selected secondary/duplicate subscriptions to reduce the number of available pools against a standalone candlepin server")
+	public void deleteSomeSecondarySubscriptionsBeforeSuite() throws JSONException, Exception {
+		Set<String> secondarySkusSkipped = new HashSet<String>();
+		Set<String> secondarySkusToDelete = new HashSet<String>(Arrays.asList(new String[]{
+		//	[jsefler@jseflerT5400 ~]$ curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions?include=product.id | python -m simplejson/tool | grep \"id\" | sort | awk '{print $2}' | xargs -i[] echo \"[]\",
+			"2cores-2ram-multiattr",
+			"2cores-2ram-multiattr",
+			"awesomeos-all-just-86_64-cont",
+			"awesomeos-all-just-86_64-cont",
+			"awesomeos-all-no-86_64-cont",
+			"awesomeos-all-no-86_64-cont",
+			"awesomeos-all-x86-cont",
+			"awesomeos-all-x86-cont",
+			"awesomeos-docker",
+			"awesomeos-docker",
+			"awesomeos-everything",
+			"awesomeos-everything",
+			"awesomeos-guestlimit-4-stackable",
+			"awesomeos-guestlimit-4-stackable",
+			"awesomeos-i386",
+			"awesomeos-i386",
+			"awesomeos-i686",
+			"awesomeos-i686",
+			"awesomeos-ia64",
+			"awesomeos-ia64",
+		//	"awesomeos-instancebased",		// kept because it will help test bug 963227
+		//	"awesomeos-instancebased",
+		//	"awesomeos-instancebased",	// future?
+			"awesomeos-modifier",
+			"awesomeos-modifier",
+			"awesomeos-onesocketib",
+			"awesomeos-onesocketib",
+			"awesomeos-ostree",
+			"awesomeos-ostree",
+			"awesomeos-per-arch-cont",
+			"awesomeos-per-arch-cont",
+			"awesomeos-ppc64",
+			"awesomeos-ppc64",
+			"awesomeos-s390",
+			"awesomeos-s390",
+			"awesomeos-s390x",
+			"awesomeos-s390x",
+			"awesomeos-server",
+			"awesomeos-server",
+			"awesomeos-server-2-socket-std",
+			"awesomeos-server-2-socket-std",
+		//	"awesomeos-server-basic",		// kept because it is Multi-Entitlement: No
+		//	"awesomeos-server-basic",
+			"awesomeos-server-basic-dc",
+			"awesomeos-server-basic-dc",
+		//	"awesomeos-server-basic-me",	// kept because it is Multi-Entitlement: Yes
+		//	"awesomeos-server-basic-me",
+		//	"awesomeos-server-basic-me",	// future?
+			"awesomeos-super-hypervisor",
+			"awesomeos-super-hypervisor",
+			"awesomeos-virt-4",
+			"awesomeos-virt-4",
+			"awesomeos-virt-datacenter",
+			"awesomeos-virt-datacenter",
+			"awesomeos-virt-unlimited",
+			"awesomeos-virt-unlimited",
+			"awesomeos-virt-unlmtd-phys",
+			"awesomeos-virt-unlmtd-phys",
+			"awesomeos-workstation-basic",
+			"awesomeos-workstation-basic",
+			"awesomeos-x86",
+			"awesomeos-x86",
+			"awesomeos-x86_64",
+			"awesomeos-x86_64",
+			"cores-26",
+			"cores-26",
+			"cores4-multiattr",
+			"cores4-multiattr",
+			"cores-8-stackable",
+			"cores-8-stackable",
+			"management-100",
+			"management-100",
+		//	"MKT-multiplier-client-50",
+		//	"MKT-multiplier-client-50",
+		//	"MKT-multiplier-client-50",	// future?
+			"non-stacked-6core8ram-multiattr",
+			"non-stacked-6core8ram-multiattr",
+			"non-stacked-8core4ram-multiattr",
+			"non-stacked-8core4ram-multiattr",
+			"non-stacked-multiattr",
+			"non-stacked-multiattr",
+			"ram-2gb-stackable",
+			"ram-2gb-stackable",
+			"ram2-multiattr",
+			"ram2-multiattr",
+			"ram-4gb-stackable",
+			"ram-4gb-stackable",
+			"ram-8gb",
+			"ram-8gb",
+			"ram-cores-8gb-4cores",
+			"ram-cores-8gb-4cores",
+			"sfs",
+			"sfs",
+			"sock2-multiattr",
+			"sock2-multiattr",
+			"sock-core-ram-multiattr",
+			"sock-core-ram-multiattr",
+			"stackable-with-awesomeos-x86_64",
+			"stackable-with-awesomeos-x86_64",
+			"virt-awesomeos-i386",
+			"virt-awesomeos-i386",
+			""}));
+		
+		if (sm_clientOrg==null) return;
+		if (!CandlepinType.standalone.equals(sm_serverType)) return;
+		
+		// process all of the subscriptions belonging to ownerKey
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/subscriptions"));	
+		List<String> secondarySubscriptionIdsDeleted = new ArrayList<String>();
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.get("product");
+			String productId = jsonProduct.getString("id");
+			
+			// TODO check the startDate and keep future subscriptions
+			
+			// skip the first secondarySkusToDelete encountered (this will be the one kept)
+			if (!secondarySkusSkipped.contains(productId)) {
+				secondarySkusSkipped.add(productId);
+				continue;
+			}
+			
+			// delete the subscription
+			String subscriptionId = jsonSubscription.getString("id");
 			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/subscriptions/"+subscriptionId);
 			secondarySubscriptionIdsDeleted.add(subscriptionId);
 		}
