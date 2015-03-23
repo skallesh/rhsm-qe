@@ -537,6 +537,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repo_override(null,true,(List<String>)null,(List<String>)null,null,null,null,null);
 		repoOverridesMapOfMaps.clear();
 		
+		// 3/23/2015 ocassional workaround needed to remove stale repos from /etc/yum.repos.d/redhat.repo	// TODO figure out how to remove this
+		clienttasks.getYumRepolist(null);
+		
 		// verify the current YumRepos read from the redhat.repo file no longer contains any overrides (the original should be restored)
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, false);
 	}
@@ -660,6 +663,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		do {
 			//not important clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
 			SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+///*debugTesting*/ pool = SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", "awesomeos-per-arch-cont", pools);
 			pools.remove(pool);
 			clienttasks.subscribeToSubscriptionPool(pool);
 			yumRepos = clienttasks.getCurrentlySubscribedYumRepos();
