@@ -584,6 +584,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: TemporaryPool Tests">
+		<classes>
+			<class name="rhsm.cli.tests.TemporaryPoolTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="Tier2Tests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+		
 	<test name="CLI: Modifier Tests">
 		<classes>
 			<class name="rhsm.cli.tests.ModifierTests" />
