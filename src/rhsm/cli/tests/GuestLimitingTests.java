@@ -211,8 +211,11 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 			if((!(GuestLimitAttribute == null))&&(GuestLimitAttribute.equals(guestLimit))){
 				poolId=pool.poolId;
 				providedProductId=(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId));
+				log.info("Found the following subscription pool with guest_limit '"+guestLimit+"' that provides at least one product: "+pool);
+				if (!providedProductId.isEmpty()) return poolId; 
 			}
 		}
+		if (providedProductId.isEmpty()) log.warning("Could not find a subscription pool with guest_limit '"+guestLimit+"' that provides a product for this test.");
 		return poolId;
 	}
 
