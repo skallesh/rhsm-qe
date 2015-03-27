@@ -47,6 +47,9 @@ import com.redhat.qe.tools.SSHCommandRunner;
 /**
  * @author jsefler
  *
+ *	Migrating Systems Between Subscription Services (from the Customer Portal):
+ *		https://access.redhat.com/documentation/en-US/Red_Hat_Subscription_Management/1/html/MigratingRHN/index.html
+ *
  *	References:
  *		http://documentation-stage.bne.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/5/html/Deployment_Guide/rhn-migration.html
  *		https://engineering.redhat.com/trac/PBUPM/browser/trunk/documents/Releases/RHEL6/Variants/RHEL6-Variants.rst
