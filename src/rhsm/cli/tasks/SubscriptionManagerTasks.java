@@ -7344,6 +7344,36 @@ if (false) {
 		}
 		// END OF WORKAROUND
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		//	201503281401:54.767 - FINE: Stdout: Successfully attached a subscription for: Red Hat Enterprise Linux High Touch Beta
+		//	201503281401:54.767 - FINE: Stderr: 
+		//	Traceback (most recent call last):
+		//	  File "/usr/share/rhsm/subscription_manager/dbus_interface.py", line 59, in emit_status
+		//	    self.validity_iface.emit_status()
+		//	  File "/usr/lib/python2.6/site-packages/dbus/proxies.py", line 68, in __call__
+		//	    return self._proxy_method(*args, **keywords)
+		//	  File "/usr/lib/python2.6/site-packages/dbus/proxies.py", line 140, in __call__
+		//	    **keywords)
+		//	  File "/usr/lib/python2.6/site-packages/dbus/connection.py", line 630, in call_blocking
+		//	    message, timeout)
+		//	dbus.exceptions.DBusException: org.freedesktop.DBus.Python.UnboundLocalError: Traceback (most recent call last):
+		//	  File "/usr/lib/python2.6/site-packages/dbus/service.py", line 702, in _message_cb
+		//	    retval = candidate_method(self, *args, **keywords)
+		//	  File "/usr/libexec/rhsmd", line 202, in emit_status
+		//	    self._dbus_properties = refresh_compliance_status(self._dbus_properties)
+		//	  File "/usr/share/rhsm/subscription_manager/managerlib.py", line 920, in refresh_compliance_status
+		//	    entitlements[label] = (name, state, message)
+		//	UnboundLocalError: local variable 'state' referenced before assignment
+		//	201503281401:54.767 - FINE: ExitCode: 0
+		issue = "UnboundLocalError: local variable 'state' referenced before assignment";
+		if (result.getStderr().contains(issue)) {
+			String bugId = "1198369"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1198369 - UnboundLocalError: local variable 'state' referenced before assignment
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
 		
 		//	ssh root@mgmt6.rhq.lab.eng.bos.redhat.com rhn-migrate-classic-to-rhsm.tcl '--force --servicelevel=STANDARD --destination-url=https://subscription.rhn.stage.redhat.com:443/subscription' admin nimda stage_auto_testuser redhat null null null
 		//	Stdout:
