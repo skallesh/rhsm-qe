@@ -65,6 +65,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 ///*debugTesting*/ if (!productId.equals("awesomeos-onesocketib")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("awesomeos-server-basic-dc")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("2cores-2ram-multiattr")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("RH0380468")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("RH00284")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 		// is this system a virtual guest system or a physical system
 		boolean systemIsGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
@@ -108,7 +110,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// END OF WORKAROUND
 		// assert that the pool's list of Provides matches the list of bundled product names after implementation of Bug 996993 - [RFE] Search for or list matching providedProducts; subscription-manager commit b8738a74c1109975e387fc51105c8ff58eaa8f01
 		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.provides!=null) {
-			Assert.assertTrue(bundledProductNames.containsAll(pool.provides) && pool.provides.containsAll(bundledProductNames), "The actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
+			Assert.assertTrue(bundledProductNames.containsAll(pool.provides) && pool.provides.containsAll(bundledProductNames), "The actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".  (If this fails due to provided Product Names changes by Release Engineering, refresh pools for account '"+sm_clientUsername+"' is needed.)");
 		}
 		
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
