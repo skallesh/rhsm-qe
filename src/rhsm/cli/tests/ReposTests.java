@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.json.JSONException;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
@@ -1125,7 +1126,11 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	public void setManageReposConfiguration() {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
 	}
-
+	
+	@AfterClass(groups="setup")
+	public void unregisterAfterClass() {
+		clienttasks.unregister(null, null, null);
+	}
 	
 	
 	// Protected methods ***********************************************************************
