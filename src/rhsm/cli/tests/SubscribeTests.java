@@ -63,6 +63,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
 ///*debugTesting*/ if (!productId.equals("awesomeos-guestlimit-4-stackable")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("awesomeos-onesocketib")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("awesomeos-server-basic-dc")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("2cores-2ram-multiattr")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 		// is this system a virtual guest system or a physical system
 		boolean systemIsGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
@@ -72,7 +74,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the subscription pool with the matching productId is available
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// clienttasks.getCurrentlyAvailableSubscriptionPools() is tested at the conclusion of this test
-///*debugTesting*/pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c4816e8014c48183bd81b03", clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// awesomeos-onesocketib; Instance Based (Temporary)
+///*debugTesting*/pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c6b0d69014c6b0ede641f42", clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// awesomeos-onesocketib; Instance Based (Temporary)
 		boolean isPoolRestrictedToUnmappedVirtualSystems = CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
 		
 		// special case...
@@ -164,6 +166,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(consumedProductSubscription.machineType, pool.machineType, "After subscribing from a pool with a machine type '"+pool.machineType+"', the consumed product subscription's machine type should match.");
 		}
 		
+		// TEMPORARY WORKAROUND
+		/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
+		/*String*/ bugId="1204311"; // Bug 1204311 - Refreshing pools causes unexpected temporary pools for unmapped guests to become available 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen && isPoolRestrictedToUnmappedVirtualSystems) {
+			log.warning("While bug '"+bugId+"' is open and we have subscrbed to a Temporary pool, skip assertion that the consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
+		} else
+		// END OF WORKAROUND
 		// assert that the consumed product subscription provides all the expected bundled products.
 		Assert.assertTrue(consumedProductSubscription.provides.containsAll(bundledProductNames)&&bundledProductNames.containsAll(consumedProductSubscription.provides),"The consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
 		
