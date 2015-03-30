@@ -7315,6 +7315,34 @@ if (false) {
 	public void logRuntimeErrors(SSHCommandResult result) {
 		String issue;
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		//	201503290125:44.627 - FINE: ssh root@jsefler-os6server.usersys.redhat.com subscription-manager unsubscribe --all
+		//	201503290125:46.273 - FINE: Stdout: 
+		//	3 subscriptions removed at the server.
+		//	3 local certificates have been deleted.
+		//	201503290125:46.274 - FINE: Stderr: 
+		//	Traceback (most recent call last):
+		//	  File "/usr/share/rhsm/subscription_manager/dbus_interface.py", line 59, in emit_status
+		//	    self.validity_iface.emit_status()
+		//	  File "/usr/lib/python2.6/site-packages/dbus/proxies.py", line 68, in __call__
+		//	    return self._proxy_method(*args, **keywords)
+		//	  File "/usr/lib/python2.6/site-packages/dbus/proxies.py", line 140, in __call__
+		//	    **keywords)
+		//	  File "/usr/lib/python2.6/site-packages/dbus/connection.py", line 630, in call_blocking
+		//	    message, timeout)
+		//	dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
+		//	201503290125:46.274 - FINE: ExitCode: 0
+		issue = "Message did not receive a reply (timeout by message bus)";
+		if (result.getStderr().contains(issue)) {
+			String bugId = "1207306"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1207306 - dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
+		
+		
 		//	ssh root@mgmt6.rhq.lab.eng.bos.redhat.com rhn-migrate-classic-to-rhsm.tcl '--force --servicelevel=STANDARD --destination-url=https://subscription.rhn.stage.redhat.com:443/subscription' admin nimda stage_auto_testuser redhat null null null
 		//	Stdout:
 		//	spawn rhn-migrate-classic-to-rhsm --force --servicelevel=STANDARD --destination-url=https://subscription.rhn.stage.redhat.com:443/subscription
@@ -7731,7 +7759,14 @@ if (false) {
 			//	  File "/usr/lib64/python2.7/site-packages/dbus/connection.py", line 651, in call_blocking
 			//	    message, timeout)
 			//	DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
-
+			issue = "Message did not receive a reply (timeout by message bus)";
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
+				String bugId = "1207306"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1207306 - dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
 		}
 	}
 	
