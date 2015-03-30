@@ -20,14 +20,14 @@ import rhsm.data.SubscriptionPool;
  * @author ssalevan
  *
  */
-@Test(groups={"UnregisterTests"})
+@Test(groups={"UnregisterTests","Tier2Tests"})
 public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
 
 	@Test(description="unregister the consumer",
-			groups={"blockedByBug-589626","Tier2Tests"},
+			groups={"blockedByBug-589626"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=46714)
 	public void RegisterSubscribeAndUnregisterTest() {
@@ -46,7 +46,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(description="unregister should not make unauthorized requests",
-			groups={"AcceptanceTests","UnregisterShouldNotThrowUnauthorizedRequests_Test","blockedByBug-997935","blockedByBug-1158578"},
+			groups={"AcceptanceTests","UnregisterShouldNotThrowUnauthorizedRequests_Test","blockedByBug-997935","blockedByBug-1158578","blockedByBug-1207403"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnregisterShouldNotThrowUnauthorizedRequests_Test() {
