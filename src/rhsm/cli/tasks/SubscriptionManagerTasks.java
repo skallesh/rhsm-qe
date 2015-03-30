@@ -7333,6 +7333,8 @@ if (false) {
 		//	dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
 		//	201503290125:46.274 - FINE: ExitCode: 0
 		issue = "Message did not receive a reply (timeout by message bus)";
+		//	dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Did not receive a reply. Possible causes include: the remote application did not send a reply, the message bus security policy blocked the reply, the reply timeout expired, or the network connection was broken.
+		issue = "dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply";
 		if (result.getStderr().contains(issue)) {
 			String bugId = "1207306"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1207306 - dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -7724,7 +7726,6 @@ if (false) {
 			// END OF WORKAROUND
 			
 			
-			// TODO
 			// TEMPORARY WORKAROUND FOR BUG
 			//	201411291639:35.361 - FINE: ssh root@cloud-qe-22.idmqe.lab.eng.bos.redhat.com subscription-manager unsubscribe --serial=8305861300287544370 (com.redhat.qe.tools.SSHCommandRunner.run)
 			//	201411291639:41.734 - FINE: Stdout: 
@@ -7760,6 +7761,7 @@ if (false) {
 			//	    message, timeout)
 			//	DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
 			issue = "Message did not receive a reply (timeout by message bus)";
+			issue = "DBusException: org.freedesktop.DBus.Error.NoReply";
 			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1207306"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1207306 - dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
