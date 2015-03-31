@@ -7757,6 +7757,38 @@ if (false) {
 			
 			
 			// TEMPORARY WORKAROUND FOR BUG
+			//	2015-03-31 03:19:17,873 [DEBUG] rhsmd:22939 @connection.py:494 - Making request: GET /candlepin/consumers/589555ff-42bf-45e4-9799-1419bc945006/compliance
+			//	2015-03-31 03:19:18,270 [DEBUG] rhsmd:22939 @connection.py:521 - Response: status=200, requestUuid=eabfdf97-edf7-44ac-91ee-815e82c350be
+			//	2015-03-31 03:19:18,339 [DEBUG] rhsmd:22939 @cache.py:272 - Started thread to write cache: /var/lib/rhsm/cache/entitlement_status.json
+			//	2015-03-31 03:19:19,130 [DEBUG] subscription-manager:22933 @connection.py:521 - Response: status=500
+			//	2015-03-31 03:19:19,130 [ERROR] subscription-manager:22933 @managercli.py:161 - Unregister failed
+			//	2015-03-31 03:19:19,130 [ERROR] subscription-manager:22933 @managercli.py:162 - Runtime Error could not execute statement at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse:2,102
+			//	Traceback (most recent call last):
+			//	  File "/usr/share/rhsm/subscription_manager/managercli.py", line 1240, in _do_command
+			//	    managerlib.unregister(self.cp, self.identity.uuid)
+			//	  File "/usr/share/rhsm/subscription_manager/managerlib.py", line 788, in unregister
+			//	    uep.unregisterConsumer(consumer_uuid)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 990, in unregisterConsumer
+			//	    return self.conn.request_delete(method)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 614, in request_delete
+			//	    return self._request("DELETE", method, params)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 530, in _request
+			//	    self.validateResponse(result, request_type, handler)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 572, in validateResponse
+			//	    raise RestlibException(response['status'], error_msg)
+			//	RestlibException: Runtime Error could not execute statement at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse:2,102
+			issue = "Runtime Error could not execute statement at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse:2,102";
+			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+				String bugId = "1207721"; boolean invokeWorkaroundWhileBugIsOpen = true;	//	Bug 1207721 - Runtime Error could not execute statement at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse:2,102
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
 			//	201411291639:35.361 - FINE: ssh root@cloud-qe-22.idmqe.lab.eng.bos.redhat.com subscription-manager unsubscribe --serial=8305861300287544370 (com.redhat.qe.tools.SSHCommandRunner.run)
 			//	201411291639:41.734 - FINE: Stdout: 
 			//	Serial numbers unsuccessfully removed at the server:
