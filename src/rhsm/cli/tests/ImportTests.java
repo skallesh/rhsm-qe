@@ -17,7 +17,10 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.testng.TestNGUtils;
+
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
@@ -624,16 +627,22 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+importCertificatesDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+importCertificatesDir+"/*",Integer.valueOf(0));
 		
-		// subscribe to all available pools (so as to create valid entitlement cert/key pairs)
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-		
-//		// assemble a list of entitlements that we can use for import
-//		entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
-				
 		// generate a future entitlement for the ImportACertificateForAFutureEntitlement_Test
-		Object[][] futureSystemSubscriptionPoolsData = getAllFutureSystemSubscriptionPoolsDataAs2dArray();
-		if (futureSystemSubscriptionPoolsData.length>0) {
-			SubscriptionPool futurePool = (SubscriptionPool) futureSystemSubscriptionPoolsData[randomGenerator.nextInt(futureSystemSubscriptionPoolsData.length)][0];
+		List<List<Object>> futureSystemSubscriptionPoolsDataAsListOfLists = new ArrayList<List<Object>>();
+		boolean isGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
+		for (List<Object> futureSystemSubscriptionPoolsDataList : getAllFutureSystemSubscriptionPoolsDataAsListOfLists()) {
+			// filter out...  Pool is restricted when it is temporary and begins in the future:  '8a9087e34c715b2e014c715c44c40be0'
+			if (CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, ((SubscriptionPool)futureSystemSubscriptionPoolsDataList.get(0)).poolId)) continue;
+			// filter out...  Pool is restricted to physical systems: '8a9086d3443c043501443c052aec1298'.
+			if (CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, ((SubscriptionPool)futureSystemSubscriptionPoolsDataList.get(0)).poolId) && isGuest) continue;
+			// filter out...  Pool is restricted to virtual systems: '8a90f85734205a010134205ae8d80403'.
+			if (CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, ((SubscriptionPool)futureSystemSubscriptionPoolsDataList.get(0)).poolId) && !isGuest) continue;
+			futureSystemSubscriptionPoolsDataAsListOfLists.add(futureSystemSubscriptionPoolsDataList);
+		}
+		if (futureSystemSubscriptionPoolsDataAsListOfLists.isEmpty()) {
+			log.warning("Could not find a pool to a future system subscription.");
+		} else {
+			SubscriptionPool futurePool = (SubscriptionPool) getRandomListItem(futureSystemSubscriptionPoolsDataAsListOfLists).get(0);
 			
 			// subscribe to the future subscription pool
 			SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,futurePool.poolId,null,null,null,null,null,null,null, null, null);
@@ -648,10 +657,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			
 			// remember the futureEntitlementCertFile
 			futureEntitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(futureEntitlementCert);
-
-		} else {
-			log.warning("Could not find a pool to a future system subscription.");
 		}
+		
+		// subscribe to all available pools (so as to create valid entitlement cert/key pairs)
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
 		// assemble a list of entitlements that we can use for import (excluding the future cert)
 		entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
