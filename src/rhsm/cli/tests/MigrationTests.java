@@ -2317,7 +2317,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to add RHN Classic channel.");
 				Assert.assertEquals(result.getStderr(), "","Stderr from attempt to add RHN Classic channel.");
 			}
-		} else {	// THIS APPROACH WORKS WELL, BUT IT HIDES OFFENDING CHANNELS
+		} else if (false) {	// THIS APPROACH WORKS WELL, BUT IT HIDES OFFENDING CHANNELS AND AFTER 3 MINUTES, IT THROWS A rhn-plugin: Error communicating with server. The message was: Connection timed out on readline
 			String command="";
 			for (String rhnChannel : rhnChannels) {
 				//command += String.format(" && rhn-channel --user=%s --password=%s --add --channel=%s",rhnUsername,rhnPassword,rhnChannel);
@@ -2327,6 +2327,28 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			SSHCommandResult result = client.runCommandAndWait(command);
 			Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to add RHN Classic channels.");
 			Assert.assertEquals(result.getStderr(), "","Stderr from attempt to add RHN Classic channel.");
+		} else {	// THIS APPROACH WORKS WELL, BUT IT HIDES OFFENDING CHANNELS
+			// add the rhn channels in blocks of 10 to help insure the command is executed under 3 minutes.
+			int i = 0;
+			String command="";
+			for (String rhnChannel : rhnChannels) {
+				//command += String.format(" && rhn-channel --user=%s --password=%s --add --channel=%s",rhnUsername,rhnPassword,rhnChannel);
+				command += " && "+String.format("rhn-channel -u %s -p %s -a -c %s",rhnUsername,rhnPassword,rhnChannel);
+				i++;
+				if (i%10==0) {	// add these 10 rhn channels
+					SSHCommandResult result = client.runCommandAndWait(command.replaceFirst("^ *&& *", ""));
+					if (!result.getExitCode().equals(Integer.valueOf(0))) result = client.runCommandAndWait(command.replaceFirst("^ *&& *", ""));	// sometimes trying again will work
+					Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"Exitcode from attempt to add RHN Classic channels.");
+					Assert.assertEquals(result.getStderr(), "","Stderr from attempt to add RHN Classic channel.");
+					command = "";
+				}
+			}
+			if (i%10!=0) {	// add the remaining rhn channels
+				SSHCommandResult result = client.runCommandAndWait(command.replaceFirst("^ *&& *", ""));
+				if (!result.getExitCode().equals(Integer.valueOf(0))) result = client.runCommandAndWait(command.replaceFirst("^ *&& *", ""));	// sometimes trying again will work
+				Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"Exitcode from attempt to add RHN Classic channels.");
+				Assert.assertEquals(result.getStderr(), "","Stderr from attempt to add RHN Classic channel.");
+			}
 		}
 	}
 
