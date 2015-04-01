@@ -2296,7 +2296,27 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-6-debuginfo") ||
 				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c10
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-3.2") ||
-				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-3.2-debuginfo") ){
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-me-3.2-debuginfo") ||
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c11
+				rhnAvailableChildChannel.equals("rhel-i386-server-hts-6-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-i386-server-6-cert") ||
+				rhnAvailableChildChannel.equals("rhel-i386-server-6-cert-beta") ||
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c12
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-hts-6-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-dts-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-dts-6-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-6-cert") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-6-cert-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc-server-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc-server-optional-6-beta") ||
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c13
+				rhnAvailableChildChannel.equals("rhel-s390x-server-6-cert") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-6-cert-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-hts-6-debuginfo") ||
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c14
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-dts-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-dts-6-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-dts-6-debuginfo") 	){
 				// Bug 1133942 - various RHN channel maps to product certs missing in subscription-manager-migration-data
 				bugIds.add("1133942");
 			}
