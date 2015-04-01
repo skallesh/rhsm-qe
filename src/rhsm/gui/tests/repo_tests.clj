@@ -222,8 +222,7 @@
         (verify (not (tasks/has-state? :repo-remove-override "enabled")))
         (if (check-bz-open? "1155954")
           (do
-            (log/info (str "======= Work Around in check_repo_remove_override_button
-                            as Bug 1155954 is not resolved"))
+            (log/info (str "======= Work Around in check_repo_remove_override_button as Bug 1155954 is not resolved"))
             ;; Workaround: Catches exception and ignores it.
             ;; Why Workaround ?? At the moment 'checkrow' fails because
             ;;                   there is a performance issue in the repo
@@ -284,6 +283,7 @@
 (defn ^{Test {:groups ["repo"
                        "tier3"
                        "blockedByBug-1095938"
+                       "blockedByBug-1155954"
                        "assert_remove_all_overrides"]
               :dataProvider "repolist"}}
   enable_repo_remove_all_overrides
