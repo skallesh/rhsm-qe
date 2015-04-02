@@ -36,7 +36,8 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getModifierSubscriptionData",
 			enabled=true)
 	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListAfterTheModifiesPoolIsSubscribed_Test(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> poolsModified) throws JSONException, Exception {
-		
+///*debugTesting*/ if (!label.equals("rhel-6-server-eus-optional-rpms")) throw new SkipException("Contact automation maintainer to comment out this line of debugging.");		
+///*debugTesting*/ if (!label.equals("rhel-6-server-eus-supplementary-isos")) throw new SkipException("Contact automation maintainer to comment out this line of debugging.");		
 		// remove selected pools from the poolsModified list that are not consumable by this system to avoid: Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'.
 		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		for (SubscriptionPool subscriptionPool : new ArrayList<SubscriptionPool>(poolsModified)) {
@@ -56,12 +57,23 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		log.info("Before subscribing to anything, assert that the label (repo id) '"+label+"' is not available.");
 		Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
 				"Before beginning our test, yum repolist all excludes label (repo id) '"+label+"'.");
-
+		
 		log.info("Now subscribe to the modifier pool and assert that the label (repo id) '"+label+"' is still not available.");
 		//clienttasks.subscribeToSubscriptionPool(modifierPool);	// fails on systems that have no available pools, replacing with the next call that passed credentials
 		clienttasks.subscribeToSubscriptionPool(modifierPool, sm_clientUsername, sm_clientPassword, sm_serverUrl);	// FIXME, this call assumes that  sm_clientUsername, sm_clientPassword is the currently registered consumer.  TODO I should query clienttasks to get the currently registered credentials
-		Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
-				"After subscribing to modifier pool for productId '"+modifierPool.productId+"', yum repolist all does not include (repo id) '"+label+"' because at least one of the providing product subscription(s) being modified is not yet subscribed to.");
+		if (poolsModified.contains(modifierPool)) {	// catch corner case when the modifierPool actually modifies itself
+			log.warning("Modifier Subscription Pool '"+modifierPool.subscriptionName+"' appears to modify itself. That means that one of the modifiedProductIds "+modifiedProductIds+" from repo '"+label+"' is among this subscription's providedProducts "+modifierPool.provides+".");
+			if (areAllRequiredTagsProvided) {
+				Assert.assertTrue(clienttasks.getYumRepolist("all").contains(label),
+					"After subscribing only to modifier pool for productId '"+modifierPool.productId+"', yum repolist all DOES include (repo id) '"+label+"' because this subscription pool appears to modify itself and all of the requiredTags '"+requiredTags+"' are provided by the installed product certs.  See warning above.");
+			} else {
+				Assert.assertTrue(!clienttasks.getYumRepolist("all").contains(label),
+						"After subscribing only to modifier pool for productId '"+modifierPool.productId+"', yum repolist all does NOT include (repo id) '"+label+"' because all of the requiredTags '"+requiredTags+"' are NOT provided by the installed product certs despite the facts that this subscription pool appears to modify itself.  See warning above.");
+			}
+			return;
+		}
+		Assert.assertTrue(!clienttasks.getYumRepolist("all").contains(label),
+				"After subscribing to modifier pool for productId '"+modifierPool.productId+"', yum repolist all does NOT include (repo id) '"+label+"' because at least one of the providing product subscription(s) being modified is not yet subscribed to.");
 
 		log.info("Now individually subscribe to each of the subscribing products being modified and assert that once both the modifier pool and product subscription being modified are both subscribed, then the modifier (repo id) '"+label+"' will become available.");
 		for (SubscriptionPool pool : poolsModified) {
@@ -70,11 +82,11 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(clienttasks.getYumRepolist("all").contains(label),
 					"Having subscribed to both the modifier pool and the pool it modifies for productId '"+pool.productId+"', now the modifier pool's (repo id) '"+label+"' is available in yum repolist all.");
 			} else {
-				Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
+				Assert.assertTrue(!clienttasks.getYumRepolist("all").contains(label),
 						"Because not all of the requiredTags '"+requiredTags+"' for content label '"+label+"' are not 100% provided by the currently installed product certs, we are blocked from seeing the repo id label '"+label+"' in yum repolist all.");				
 			}
 			clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
-			Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
+			Assert.assertTrue(!clienttasks.getYumRepolist("all").contains(label),
 					"After unsubscribing from the modified pool for productId '"+pool.productId+"', yum repolist all no longer includes (repo id) '"+label+"' from modifier productId '"+modifierPool.productId+"'.");
 		}
 		
@@ -82,9 +94,6 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
 				"Yum repolist now excludes label (repo id) '"+label+"' since we are not subscribed to anything.");
-//		for (SubscriptionPool providingPool : providingPools) {
-//			clienttasks.subscribeToSubscriptionPool(providingPool);
-//		}
 		List<String> modifiedPoolIds = new ArrayList<String>();
 		if (poolsModified.isEmpty()) throw new SkipException("Cannot complete this test because it appears that there are no modifiable pools (e.g. EUS extended update subscription) available to this consumer's organization that can be modified by the modifier pool '"+modifierPool.subscriptionName+"'.");
 		for (SubscriptionPool pool : poolsModified) modifiedPoolIds.add(pool.poolId);
@@ -94,13 +103,13 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(clienttasks.getYumRepolist("all").contains(label),
 					"Having subscribed to all of the pools modified and the modifier pool, the modifier pool's (repo id) '"+label+"' is immediately be available in yum repolist all.");
 		} else {
-			Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
+			Assert.assertTrue(!clienttasks.getYumRepolist("all").contains(label),
 					"Because not all of the requiredTags '"+requiredTags+"' for content label '"+label+"' are not 100% provided by the currently installed product certs, we are blocked from seeing the repo id label '"+label+"' in yum repolist all.");
 		}
 		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
-		Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
+		Assert.assertTrue(!clienttasks.getYumRepolist("all").contains(label),
 				"After unsubscribing from the modifier pool, yum repolist all no longer includes (repo id) '"+label+"' from modifier productId '"+modifierPool.productId+"'.");
-	
+		
 		if (!areAllRequiredTagsProvided) {
 			throw new SkipException("We cannot claim success on this test until 100% of the requiredTags '"+requiredTags+"' are provided by the currently install products.");
 		}
@@ -139,7 +148,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 	
 	@DataProvider(name="getModifierSubscriptionData")
 	public Object[][] getModifierSubscriptionDataAs2dArray() throws JSONException, Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getModifierSubscriptionDataAsListOfLists(2));
+		return TestNGUtils.convertListOfListsTo2dArray(getModifierSubscriptionDataAsListOfLists(null));
 	}
 // MOVED UP TO SUPERCLASS
 //	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists() throws JSONException, Exception {
