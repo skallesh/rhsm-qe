@@ -3091,7 +3091,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	/**
 	 * @param limitPoolsModifiedCount This test takes a long time to run when there are many poolsModified.
 	 * To reduce the execution time, use limitPoolsModifiedCount to limit the number of modifies pools tested,
-	 * otherwise pass null to to include all poolsModified in the data for a more complete test.
+	 * otherwise pass null to to include all poolsModified in the data for a more complete test. Update 4/2/2015: I think this is a bad idea because it could potentially hide the case where the modifierPool actually modifies itself (like the Employee SKU or RH00003).  For now always pass null.)
 	 * @return List of [SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> poolsModified]
 	 */
 	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists(Integer limitPoolsModifiedCount) throws JSONException, Exception {
@@ -3106,8 +3106,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
 		// iterate through all available pools looking for those that contain products with content that modify other products
+		// use maps to reduce repeated Candlepin calls and save a lot of network time
+		Map <String,JSONObject> jsonPoolMap = new HashMap<String,JSONObject>();	// keys are poolId, values are jsonPool
+		Map <String,JSONObject> jsonProductMap = new HashMap<String,JSONObject>();	// keys are productId, values are jsonProduct
 		for (SubscriptionPool modifierPool : allAvailablePools) {
-			JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId));	
+			//JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId));	
+			if (!jsonPoolMap.containsKey(modifierPool.poolId)) jsonPoolMap.put(modifierPool.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId+"?include=providedProducts.productId")));
+			JSONObject jsonModifierPool = jsonPoolMap.get(modifierPool.poolId);
 			
 			// iterate through each of the providedProducts
 			JSONArray jsonModifierProvidedProducts = jsonModifierPool.getJSONArray("providedProducts");
@@ -3116,7 +3121,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				String modifierProvidedProductId = jsonModifierProvidedProduct.getString("productId");
 				
 				// get the productContents
-				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId));	
+				//JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId));	
+				if (!jsonProductMap.containsKey(modifierProvidedProductId)) jsonProductMap.put(modifierProvidedProductId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId+"?include=productContent.content")));
+				JSONObject jsonProduct = jsonProductMap.get(modifierProvidedProductId);
 				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 				for (int j = 0; j < jsonProductContents.length(); j++) {
 					JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
@@ -3125,6 +3132,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					// get the label and modifiedProductIds for each of the productContents
 					String label = jsonContent.getString("label");
 					String requiredTags = jsonContent.isNull("requiredTags")? null:jsonContent.getString("requiredTags"); // comma separated string
+					String type = jsonContent.getString("type");
 					JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
 					List<String> modifiedProductIds = new ArrayList<String>();
 					for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
@@ -3132,13 +3140,35 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						modifiedProductIds.add(modifiedProductId);
 					}
 					
+					// skip non-"yum" content like this example which does not make sense to me...  why would a content set that contains isos modify a product?
+					//	[root@jsefler-os6 ~]# curl --stderr /dev/null --insecure --user stage_auto_testuser:redhat --request GET https://subscription.rhn.stage.redhat.com/subscription/products/70?include=productContent.content | python -m simplejson/tool | grep "rhel-6-server-eus-supplementary-isos" -A10 -B5
+					//        "content": {
+					//            "arches": "x86,x86_64", 
+					//            "contentUrl": "/content/eus/rhel/server/6/$releasever/$basearch/supplementary/iso", 
+					//            "gpgUrl": "http://", 
+					//            "id": "685", 
+					//            "label": "rhel-6-server-eus-supplementary-isos", 
+					//            "metadataExpire": 86400, 
+					//            "modifiedProductIds": [
+					//                "69"
+					//            ], 
+					//            "name": "Red Hat Enterprise Linux 6 Server - Extended Update Support - Supplementary (ISOs)", 
+					//            "releaseVer": null, 
+					//            "requiredTags": "rhel-6-server", 
+					//            "type": "file", 
+					//            "vendor": "Red Hat"
+					//        }
+					if (!type.equalsIgnoreCase("yum")) continue;
+					
 					// does this pool contain productContents that modify other products?
 					if (modifiedProductIds.size()>0) {
 						
 						// yes, now its time to find the pools that provide the modifiedProductIds and therefore are considered to be the pools that provide products that are modified
 						List<SubscriptionPool> poolsModified = new ArrayList<SubscriptionPool>();
 						LOOP_FOR_ALL_AVAILABLE_POOLS: for (SubscriptionPool poolModified : allAvailablePools) {
-							JSONObject jsonPoolModified = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId));	
+							//JSONObject jsonPoolModified = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId));	
+							if (!jsonPoolMap.containsKey(poolModified.poolId)) jsonPoolMap.put(poolModified.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId+"?include=providedProducts.productId")));
+							JSONObject jsonPoolModified = jsonPoolMap.get(poolModified.poolId);
 							
 							// iterate through each of the providedProducts of the poolModified
 							JSONArray jsonPoolModifiedProvidedProducts = jsonPoolModified.getJSONArray("providedProducts");
