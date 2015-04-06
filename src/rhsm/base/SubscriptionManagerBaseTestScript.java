@@ -99,7 +99,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_disabledPassword			= getProperty("sm.client.password.disabled","");
 	
 	public String sm_regtoken					= getProperty("sm.client.regtoken","");
-	public String sm_yumInstallOptions			= getProperty("sm.client.yumInstallOptions","--nogpgcheck");	// TODO update the hudson jobs to use sm.client.yumInstallOptions instead of sm.client.enableRepoForDeps  use a default value of --nogpgcheck on hudson
+	public String sm_yumInstallOptions			= getProperty("sm.client.yumInstallOptions",""/*"--nogpgcheck"*/);
 	public Boolean sm_yumInstallZStreamUpdates	= Boolean.valueOf(getProperty("sm.client.yumInstallZStreamUpdates","false"));
 
 	public String sm_sshUser					= getProperty("sm.ssh.user","root");

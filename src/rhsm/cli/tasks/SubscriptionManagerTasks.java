@@ -292,8 +292,184 @@ if (false) {
 			RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), productCertDir+"/", "0644");
 		}
 	}
-
+	
+	/**
+	 * When the Jenkins parameter UPDATE_ZSTREAM=true, this setup methods is called.<BR>
+	 * Jenkins UPDATE_ZSTREAM Description: While setting up the client, configure a rhel-zstream.repo to <A HREF=http://download.devel.redhat.com/nightly/updates/>http://download.devel.redhat.com/nightly/updates/</A>latest-RHEL-X/compose/VARIANT[-optional]/ARCH/os and yum update the UPDATE_ZSTREAM_PACKAGES
+	 * @param installOptions
+	 * @param updatePackages
+	 * @throws IOException
+	 */
 	public void installZStreamUpdates(String installOptions, List<String> updatePackages) throws IOException {
+		
+		// I doubt these will ever be used
+		if (Integer.valueOf(redhatReleaseX)==5) {installZStreamUpdates_DEPRECATED(installOptions, updatePackages); return;}
+		if (Float.valueOf(redhatReleaseXY)<6.7) {installZStreamUpdates_DEPRECATED(installOptions, updatePackages); return;}
+		
+		// make sure installOptions begins with --disablerepo=* to make sure the updates ONLY come from the rhel-zstream repos we are about to define
+		if (!installOptions.contains("--disablerepo=*")) installOptions = "--disablerepo=* "+installOptions;
+		
+		// avoid ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
+		installOptions += " --disableplugin=rhnplugin";
+		
+		// locally create a yum.repos.d zstream repos file
+		// now dump out the list of userData to a file
+	    File file = new File("tmp/rhel-zstream.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+	    String archZStream = arch;
+	    if (Integer.valueOf(redhatReleaseX)==5 && arch.equals("i686")) archZStream = "i386"; // only i386 arch packages are built in brew for RHEL5
+	    if (Integer.valueOf(redhatReleaseX)==6 && arch.equals("i386")) archZStream = "i686"; // only i686 arch packages are built in brew for RHEL6
+//	    String baseurl = "http://download.devel.redhat.com/rel-eng/repos/RHEL-"+redhatReleaseXY+"-Z/"+archZStream;
+	    String baseurl			= "http://download.devel.redhat.com/nightly/updates/latest-RHEL-"+redhatReleaseX+"/compose/"+variant+"/"+archZStream+"/os";
+	    String baseurlOptional	= "http://download.devel.redhat.com/nightly/updates/latest-RHEL-"+redhatReleaseX+"/compose/"+variant+"-optional/"+archZStream+"/os";
+//	    if (Integer.valueOf(redhatReleaseX)==7) baseurl = baseurl.replace("/RHEL-", "/rhel-").replace("-Z/", "-z/");
+	    
+	    // test the baseurl; log a warning if "Not Found" and abort the ZStream Update
+	    // dgregor says: 5.10 isn't EUS, so there wouldn't be an active RHEL-5.10-Z
+	    if (sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurl).getStdout().contains("404 Not Found")) {
+			log.warning("Skipping the install of ZStream updates since the baseurl is Not Found.");
+	    	Assert.fail("The ZStream baseurl '"+baseurl+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+	    }
+	    if (sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlOptional).getStdout().contains("404 Not Found")) {
+			log.warning("Skipping the install of ZStream updates since the baseurl is Not Found.");
+	    	Assert.fail("The ZStream baseurl '"+baseurlOptional+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+	    }
+	    
+	    try {
+	    	Writer output = new BufferedWriter(new FileWriter(file));
+			
+			// write out the rows of the table...
+	    	
+	    	// write the zstream repo
+			output.write("[rhel-zstream-"+variant+"-"+archZStream+"]\n");
+			output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" "+archZStream+"\n");
+			output.write("enabled  = 0\n");
+			//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+			output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+			output.write("baseurl  = "+baseurl+"\n");
+			output.write("\n");
+		    installOptions += " --enablerepo=rhel-zstream-"+variant+"-"+archZStream;
+
+		    // write the zstream optional repo
+			output.write("[rhel-zstream-"+variant+"-optional-"+archZStream+"]\n");
+			output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" optional "+archZStream+"\n");
+			output.write("enabled  = 0\n");
+			//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+			output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+			output.write("baseurl  = "+baseurlOptional+"\n");
+			//output.write("skip_if_unavailable = 1\n");	// if set to True yum will continue running if this repository cannot be contacted for any reason.
+			output.write("\n");
+		    installOptions += " --enablerepo=rhel-zstream-"+variant+"-optional-"+archZStream;
+		    
+		    // special cases repos based on arch
+		    if (archZStream.equals("ppc64") && Integer.valueOf(redhatReleaseX)<7) {
+				output.write("[rhel-zstream-"+variant+"-ppc]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" ppc\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurl.replaceAll("ppc64$", "ppc")+"\n");
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-"+variant+"-ppc";
+			    
+				output.write("[rhel-zstream-"+variant+"-optional-ppc]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" optional ppc\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurlOptional+"\n");
+				//output.write("skip_if_unavailable = 1\n");	// if set to True yum will continue running if this repository cannot be contacted for any reason.
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-"+variant+"-optional-ppc";
+		    }
+		    
+		    if (archZStream.equals("s390x") && Integer.valueOf(redhatReleaseX)<7) {
+				output.write("[rhel-zstream-s390]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" s390\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurl.replaceAll("s390x$", "s390")+"\n");
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-s390";
+			    
+				output.write("[rhel-zstream-"+variant+"-optional-s390]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" optional s390\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurlOptional+"\n");
+				//output.write("skip_if_unavailable = 1\n");	// if set to True yum will continue running if this repository cannot be contacted for any reason.
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-"+variant+"-optional-s390";
+		    }
+		    
+		    if (archZStream.equals("x86_64") && Integer.valueOf(redhatReleaseX)==5) {
+				output.write("[rhel-zstream-"+variant+"-i386]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" i386\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurl.replaceAll("x86_64$", "i386")+"\n");
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-"+variant+"-i386";
+			    
+				output.write("[rhel-zstream-"+variant+"-optional-i386]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" optional i386\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurlOptional+"\n");
+				//output.write("skip_if_unavailable = 1\n");	// if set to True yum will continue running if this repository cannot be contacted for any reason.
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-"+variant+"-optional-i386";
+		    }
+		    
+		    if (archZStream.equals("x86_64") && Integer.valueOf(redhatReleaseX)==6) {
+				output.write("[rhel-zstream-"+variant+"-i686]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" i686\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurl.replaceAll("x86_64$", "i686")+"\n");
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-"+variant+"-i686";
+			    
+				output.write("[rhel-zstream-"+variant+"-optional-i686]\n");
+				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" optional i686\n");
+				output.write("enabled  = 0\n");
+				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+				output.write("baseurl  = "+baseurlOptional+"\n");
+				//output.write("skip_if_unavailable = 1\n");	// if set to True yum will continue running if this repository cannot be contacted for any reason.
+				output.write("\n");
+			    installOptions += " --enablerepo=rhel-zstream-"+variant+"-optional-i686";
+		    }
+		    
+		    output.close();
+		    
+		    //log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		
+		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
+		String updatePackagesAsString = "";
+		for (String updatePackage : updatePackages) updatePackagesAsString += updatePackage+" "; updatePackagesAsString=updatePackagesAsString.trim();
+
+		// run yum update
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from zstream repo: "+baseurl);	// exclude all redhat-release* packages for safety; rhel5-client will undesirably upgrade from redhat-release-5Client-5.9.0.2 ---> Package redhat-release.x86_64 0:5Server-5.9.0.2 set to be updated
+	}
+	/**
+	 * When the Jenkins parameter UPDATE_ZSTREAM=true, this setup methods is called.<BR>
+	 * Jenkins UPDATE_ZSTREAM Description: While setting up the client, configure a rhel-zstream.repo to <A HREF=http://download.devel.redhat.com/rel-eng/repos/>http://download.devel.redhat.com/rel-eng/repos/</A>RHEL-X.Y-Z/ARCH and yum update the UPDATE_ZSTREAM_PACKAGES
+	 * @param installOptions
+	 * @param updatePackages
+	 * @throws IOException
+	 */
+	@Deprecated	// Deprecating this method's approach with the introduction of Consolidated ZStream process https://mojo.redhat.com/docs/DOC-1021938 starting with RHEL 7.1.z and RHEL 6.7.z
+	public void installZStreamUpdates_DEPRECATED(String installOptions, List<String> updatePackages) throws IOException {
 		
 		// make sure installOptions begins with --disablerepo=* to make sure the updates ONLY come from the rhel-zstream repos we are about to define
 		if (!installOptions.contains("--disablerepo=*")) installOptions = "--disablerepo=* "+installOptions;
