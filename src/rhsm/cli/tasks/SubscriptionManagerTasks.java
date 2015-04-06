@@ -318,10 +318,10 @@ if (false) {
 	    String archZStream = arch;
 	    if (Integer.valueOf(redhatReleaseX)==5 && arch.equals("i686")) archZStream = "i386"; // only i386 arch packages are built in brew for RHEL5
 	    if (Integer.valueOf(redhatReleaseX)==6 && arch.equals("i386")) archZStream = "i686"; // only i686 arch packages are built in brew for RHEL6
-//	    String baseurl = "http://download.devel.redhat.com/rel-eng/repos/RHEL-"+redhatReleaseXY+"-Z/"+archZStream;
+//	    String baseurl			= "http://download.devel.redhat.com/rel-eng/repos/RHEL-"+redhatReleaseXY+"-Z/"+archZStream;	// applicable on RHEL5 RHEL6
+//	    if (Integer.valueOf(redhatReleaseX)==7) baseurl = baseurl.replace("/RHEL-", "/rhel-").replace("-Z/", "-z/");
 	    String baseurl			= "http://download.devel.redhat.com/nightly/updates/latest-RHEL-"+redhatReleaseX+"/compose/"+variant+"/"+archZStream+"/os";
 	    String baseurlOptional	= "http://download.devel.redhat.com/nightly/updates/latest-RHEL-"+redhatReleaseX+"/compose/"+variant+"-optional/"+archZStream+"/os";
-//	    if (Integer.valueOf(redhatReleaseX)==7) baseurl = baseurl.replace("/RHEL-", "/rhel-").replace("-Z/", "-z/");
 	    
 	    // test the baseurl; log a warning if "Not Found" and abort the ZStream Update
 	    // dgregor says: 5.10 isn't EUS, so there wouldn't be an active RHEL-5.10-Z
@@ -343,7 +343,7 @@ if (false) {
 			output.write("[rhel-zstream-"+variant+"-"+archZStream+"]\n");
 			output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" "+archZStream+"\n");
 			output.write("enabled  = 0\n");
-			//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+			output.write("gpgcheck = 0\n");	// needed since the z-stream packages may not be signed until on REL_PREP
 			output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 			output.write("baseurl  = "+baseurl+"\n");
 			output.write("\n");
@@ -353,7 +353,7 @@ if (false) {
 			output.write("[rhel-zstream-"+variant+"-optional-"+archZStream+"]\n");
 			output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" optional "+archZStream+"\n");
 			output.write("enabled  = 0\n");
-			//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+			output.write("gpgcheck = 0\n");	// needed since the z-stream packages may not be signed until on REL_PREP
 			output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 			output.write("baseurl  = "+baseurlOptional+"\n");
 			//output.write("skip_if_unavailable = 1\n");	// if set to True yum will continue running if this repository cannot be contacted for any reason.
@@ -365,7 +365,7 @@ if (false) {
 				output.write("[rhel-zstream-"+variant+"-ppc]\n");
 				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" ppc\n");
 				output.write("enabled  = 0\n");
-				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("gpgcheck = 0\n");	// needed since the z-stream packages may not be signed until on REL_PREP
 				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 				output.write("baseurl  = "+baseurl.replaceAll("ppc64$", "ppc")+"\n");
 				output.write("\n");
@@ -374,7 +374,7 @@ if (false) {
 				output.write("[rhel-zstream-"+variant+"-optional-ppc]\n");
 				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" optional ppc\n");
 				output.write("enabled  = 0\n");
-				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("gpgcheck = 0\n");	// needed since the z-stream packages may not be signed until on REL_PREP
 				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 				output.write("baseurl  = "+baseurlOptional+"\n");
 				//output.write("skip_if_unavailable = 1\n");	// if set to True yum will continue running if this repository cannot be contacted for any reason.
@@ -386,7 +386,7 @@ if (false) {
 				output.write("[rhel-zstream-s390]\n");
 				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" s390\n");
 				output.write("enabled  = 0\n");
-				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("gpgcheck = 0\n");	// needed since the z-stream packages may not be signed until on REL_PREP
 				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 				output.write("baseurl  = "+baseurl.replaceAll("s390x$", "s390")+"\n");
 				output.write("\n");
@@ -395,7 +395,7 @@ if (false) {
 				output.write("[rhel-zstream-"+variant+"-optional-s390]\n");
 				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" optional s390\n");
 				output.write("enabled  = 0\n");
-				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("gpgcheck = 0\n");	// needed since the z-stream packages may not be signed until on REL_PREP
 				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 				output.write("baseurl  = "+baseurlOptional+"\n");
 				//output.write("skip_if_unavailable = 1\n");	// if set to True yum will continue running if this repository cannot be contacted for any reason.
@@ -407,7 +407,7 @@ if (false) {
 				output.write("[rhel-zstream-"+variant+"-i386]\n");
 				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" i386\n");
 				output.write("enabled  = 0\n");
-				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("gpgcheck = 0\n");	// needed since the z-stream packages may not be signed until on REL_PREP
 				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 				output.write("baseurl  = "+baseurl.replaceAll("x86_64$", "i386")+"\n");
 				output.write("\n");
@@ -416,7 +416,7 @@ if (false) {
 				output.write("[rhel-zstream-"+variant+"-optional-i386]\n");
 				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" optional i386\n");
 				output.write("enabled  = 0\n");
-				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("gpgcheck = 0\n");	// needed since the z-stream packages may not be signed until on REL_PREP
 				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 				output.write("baseurl  = "+baseurlOptional+"\n");
 				//output.write("skip_if_unavailable = 1\n");	// if set to True yum will continue running if this repository cannot be contacted for any reason.
@@ -428,7 +428,7 @@ if (false) {
 				output.write("[rhel-zstream-"+variant+"-i686]\n");
 				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" i686\n");
 				output.write("enabled  = 0\n");
-				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("gpgcheck = 0\n");	// needed since the z-stream packages may not be signed until on REL_PREP
 				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 				output.write("baseurl  = "+baseurl.replaceAll("x86_64$", "i686")+"\n");
 				output.write("\n");
@@ -437,7 +437,7 @@ if (false) {
 				output.write("[rhel-zstream-"+variant+"-optional-i686]\n");
 				output.write("name     = Z-Stream updates for RHEL"+redhatReleaseXY+" "+variant+" optional i686\n");
 				output.write("enabled  = 0\n");
-				//output.write("gpgcheck = 0\n");	// not really needed since the z-stream packages are signed
+				output.write("gpgcheck = 0\n");	// needed since the z-stream packages may not be signed until on REL_PREP
 				output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 				output.write("baseurl  = "+baseurlOptional+"\n");
 				//output.write("skip_if_unavailable = 1\n");	// if set to True yum will continue running if this repository cannot be contacted for any reason.
