@@ -101,7 +101,10 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_regtoken					= getProperty("sm.client.regtoken","");
 	public String sm_yumInstallOptions			= getProperty("sm.client.yumInstallOptions",""/*"--nogpgcheck"*/);
 	public Boolean sm_yumInstallZStreamUpdates	= Boolean.valueOf(getProperty("sm.client.yumInstallZStreamUpdates","false"));
-
+	public String sm_yumInstallZStreamComposeUrl= getProperty("sm.client.yumInstallZStreamComposeUrl","http://UNSPECIFIED/");
+	public String sm_yumInstallZStreamBrewUrl	= getProperty("sm.client.yumInstallZStreamBrewUrl","http://UNSPECIFIED/");
+	public String sm_ciMessage					= getProperty("CI_MESSAGE","");	// comes from a CI event Build Trigger in Jenkins 
+	
 	public String sm_sshUser					= getProperty("sm.ssh.user","root");
 	public String sm_sshKeyPrivate				= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
 	public String sm_sshkeyPassphrase			= getProperty("sm.sshkey.passphrase","");
