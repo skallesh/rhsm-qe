@@ -27,7 +27,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public String id;				// entitlement uuid on the candlepin server
 	public String issuer;
 	public Calendar validityNotBefore;
-	public Calendar validityNotAfter;
+	public Calendar validityNotAfter;	// Entitlement End Date versus ProductSubscription End Date, see https://bugzilla.redhat.com/show_bug.cgi?id=1210149#c3 for a Local Time Zone explanation
 	public File file;
 	public String version;
 	

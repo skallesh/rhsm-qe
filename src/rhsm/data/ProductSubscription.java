@@ -30,7 +30,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 	public Integer quantityUsed;
 	public Boolean isActive;
 	public Calendar startDate;
-	public Calendar endDate;
+	public Calendar endDate;	// Entitlement End Date versus ProductSubscription End Date, see https://bugzilla.redhat.com/show_bug.cgi?id=1210149#c3 for a Local Time Zone explanation
 	public String serviceLevel;
 	public String serviceType;
 	public List<String> statusDetails;
