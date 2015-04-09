@@ -14,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.testng.SkipException;
@@ -429,12 +430,17 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@AfterClass(groups={"setup"})
-	public void assertTheClientAndServerDates() {
+	public void assertTheClientAndServerDatesAfterClass() {
 		Assert.assertEquals(clientHoursFastForwarded, 0, "The net number of hours the client date has been fast forwarded and rewound during expiration testing in this class.  If this fails, the client date is probably wrong");
 		Assert.assertEquals(serverHoursFastForwarded, 0, "The net number of hours the server date has been fast forwarded and rewound during expiration testing in this class.  If this fails, the server date is probably wrong");
-
+		if (client!=null) RemoteFileTasks.runCommandAndAssert(client, "service ntpd start", 0);
+		if (server!=null) RemoteFileTasks.runCommandAndAssert(server, "service ntpd start", 0);
 	}
-	
+	@BeforeClass(groups={"setup"})
+	public void stopTheTimeServerBeforeClass() {
+		if (client!=null) RemoteFileTasks.runCommandAndAssert(client, "service ntpd stop", 0);
+		if (server!=null) RemoteFileTasks.runCommandAndAssert(server, "service ntpd stop", 0);
+	}
 	
 	
 	
