@@ -32,21 +32,21 @@ import com.redhat.qe.tools.SSHCommandResult;
  * 	http://dictionary.reference.com/
  *   
  *   To interactively test a spelling...
-[root@jsefler-7 ~]# hunspell -d en_US -a
-@(#) International Ispell Version 3.2.06 (but really Hunspell 1.3.2)
-couldn't
-*            <==== indicates one word spelled correctly
-
-could not
-*
-*            <==== indicates two words spelled correctly
-
-couldnt
-& couldnt 2 0: couldn't, could     <==== indicates misspelling and shows suggestions
-
-^C
-[root@jsefler-7 ~]# 
-
+ *   [root@jsefler-7 ~]# hunspell -d en_US -a
+ *   @(#) International Ispell Version 3.2.06 (but really Hunspell 1.3.2)
+ *   couldn't
+ *   *            <==== indicates one word spelled correctly
+ *   
+ *   could not
+ *   *
+ *   *            <==== indicates two words spelled correctly
+ *   
+ *   couldnt
+ *   & couldnt 2 0: couldn't, could     <==== indicates misspelling and shows suggestions
+ *   
+ *   ^C
+ *   [root@jsefler-7 ~]# 
+ *   
  **/
 @Test(groups={"SpellCheckTests","Tier3Tests"})
 public class SpellCheckTests extends SubscriptionManagerCLITestScript {
