@@ -357,7 +357,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="Consume a temporary pool entitlement and wait a day for it to expire, then assert its removal and assert the pool is not longer available to this consumer.",
 			groups={"blockedByBug-1199078","VerifyExpirationOfUnmappedGuestsOnlySubpool_Test"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
-			enabled=true)
+			enabled=false)	// TODO Temporarily disabling this test because changing the system clock during an automated test seems to knock the system off the network during runs on Jenkins thereby loosing ssh connection; service network restarts are needed
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyExpirationOfUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		if (!CandlepinType.standalone.equals(sm_serverType)) throw new SkipException("This automated test should only be attempted on a standalone server.");
