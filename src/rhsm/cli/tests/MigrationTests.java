@@ -1555,7 +1555,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-807477","blockedByBug-1052297","blockedByBug-1111258"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-807477","blockedByBug-1052297","blockedByBug-1111258","blockedByBug-1212515"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
@@ -1564,14 +1564,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("aarch64")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
 		if (sm_rhnUsername.equals("")) {throw new SkipException("This test requires an RHN Username for authentication.");}
 		if (sm_rhnPassword.equals("")) {throw new SkipException("This test requires an RHN Password for authentication.");}
-// DELETEME
-//		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
-//		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
-//		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
-//			rhsmUsername = sm_clientUsername;
-//			rhsmPassword = sm_clientPassword;
-//			rhsmOrg = sm_clientOrg;
-//		}
+		
 		// when we are migrating away from RHN Classic to a non-hosted candlepin server, determine good credentials for rhsm registration
 		String rhsmUsername=sm_clientUsername, rhsmPassword=sm_clientPassword, rhsmOrg=sm_clientOrg;	// default
 		if (clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null).getExitCode().equals(new Integer(0))) { // try sm_rhnUsername sm_rhnPassword...
@@ -1585,7 +1578,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String rhsmServerUrlOption = "--serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;	// passing the --serverurl forces prompting for rhsm credentials
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(rhsmServerUrlOption,sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
 		String expectedStdout = "Unable to locate SystemId file. Is this system registered?";
-		expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";	// changed to this value by subscription-manager commit 53c7f0745d1857cd5e1e080e06d577e67e76ecdd for the benefit of unit testing on Fedora
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.8.2-1")) expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";	// changed to this value by subscription-manager commit 53c7f0745d1857cd5e1e080e06d577e67e76ecdd for the benefit of unit testing on Fedora
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedStdout = "Problem encountered getting the list of subscribed channels.  See /var/log/rhsm/rhsm.log for more details.";	// changed by commit c0f8052ec2b5b7b5c736eb626e381aef0e5327e5
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file.");
