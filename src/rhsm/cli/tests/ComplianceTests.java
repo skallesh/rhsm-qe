@@ -744,6 +744,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			// unfortunately this situation may occur (which will result in a null entitlementCertFile
 			// WARNING: Pool is restricted to physical systems: '2c90af8c49a0ab3d0149a0af28d409f8'.
 			// WARNING: CandlepinTasks could not getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId '2c90af8c49a0ab3d0149a0af28d409f8'. This pool has probably not been subscribed to by authenticator 'testuser1'. (rhsm.cli.tasks.CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId)
+			// WARNING: Pool is restricted to unmapped virtual guests: '2c90af964cba07a6014cba0b1ab80e24'
 			if (entitlementCertFile==null) {
 				log.warning("Encountered a problem trying to attach future subscription '"+futureSystemSubscriptionPool.subscriptionName+"'.  Look for two preceeding WARNING messages.  Skipping assertion of installed product status.");
 				continue;
@@ -764,6 +765,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			Assert.assertEquals(installedProduct.status, "Future Subscription", "Status of every installed product should be a Future Subscription after subscribing all installed products to a future pool.  This Installed Product: "+installedProduct);
 			// If this fails, search the log for a WARNING from the FIXME above
+			// If this can't be fixed, then instead of failing here, we should probably remove the product cert so that it does not cause a false pass on the next assertion... finally assert that the overall system is non-compliant
 		}
 		
 		// finally assert that the overall system is non-compliant
