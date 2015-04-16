@@ -43,6 +43,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAvailabilityOfDerivedProductSubpools_Test(Object bugzilla, /*Boolean systemIsGuest, Integer systemSockets,*/ SubscriptionPool pool) throws NumberFormatException, JSONException, Exception {
+		String expectedTemporaryPoolIndicator = " (Temporary)";
 		
 		// make sure we are unsubscribed from all subscriptions
 		//clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
@@ -113,8 +114,18 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null,true,null,null,null);	// update facts
 		availablePoolsForDerivedProductId = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", poolDerivedProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-		Assert.assertTrue(availablePoolsForDerivedProductId.isEmpty(),"A subpool for the derivedProductId should NOT be available to a guest system when its virt_uuid is not on the host's list of guestIds.");
-		
+		if (clienttasks.isVersion(servertasks.statusVersion, "<", "0.9.45-1")) {
+			// this assertion was valid prior to introduction of Temporary pools for unmapped guests
+			Assert.assertTrue(availablePoolsForDerivedProductId.isEmpty(),"A subpool for the derivedProductId '"+poolDerivedProductId+"' should NOT be available to a guest system when its virt_uuid is not on the host's list of guestIds.");
+		} else {
+			// this assertion is valid after the introduction of Temporary pools for unmapped guests
+			Assert.assertTrue(!availablePoolsForDerivedProductId.isEmpty(),"Starting with candlepin version 0.9.45-1, a temporary subpool for the derivedProductId '"+poolDerivedProductId+"' should NOW be available to a guest system when its virt_uuid is not on the host's list of guestIds.");
+			if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.47-1")) {	// commit dfd7e68ae83642f77c80590439353a0d66fe2961	// Bug 1201520 - [RFE] Usability suggestions to better identify a temporary (aka 24 hour) entitlement
+				for (SubscriptionPool subscriptionPool : availablePoolsForDerivedProductId) {
+					Assert.assertTrue(subscriptionPool.subscriptionType.endsWith(expectedTemporaryPoolIndicator),"Starting with candlepin version 0.9.47-1, a temporary subpool (indicated by subscription type ending in '"+expectedTemporaryPoolIndicator+"') for the derivedProductId '"+poolDerivedProductId+"' should NOW be available to a guest system when its virt_uuid is not on the host's list of guestIds: "+subscriptionPool);
+				}
+			}
+		}
 			
 		// now fake this consumer's facts and guestIds to make it think it is a guest of itself (a trick for testing)
 		factsMap.put("virt.uuid",systemUuid);
@@ -128,6 +139,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!availablePoolsForDerivedProductId.isEmpty(),"Host_limited subpool from data center product id '"+pool.productId+"' to derived product id '"+poolDerivedProductId+"' is available to its guest.");
 		Assert.assertEquals(availablePoolsForDerivedProductId.size(),1,"Only one host_limited subpool to derived product id '"+poolDerivedProductId+"' is available to its guest.");
 		SubscriptionPool derivedPool = availablePoolsForDerivedProductId.get(0);
+		Assert.assertTrue(!derivedPool.subscriptionType.endsWith(expectedTemporaryPoolIndicator),"The host_limited subpool to derived product id '"+poolDerivedProductId+"' available to its guest should NOT indicate that the subscription type '"+derivedPool.subscriptionType+"' is temporary.");
 		Assert.assertEquals(derivedPool.subscriptionName, poolDerivedProductName, "Subscription name for the derived product id '"+poolDerivedProductId+"'.");
 		Assert.assertEquals(derivedPool.quantity.toLowerCase(),poolVirtLimit,"The quantity of entitlements from the host_limited subpool to derived product subscription '"+poolDerivedProductName+"' should be the same as the host data center subscription's virt_limit '"+poolVirtLimit+"'.");
 		
