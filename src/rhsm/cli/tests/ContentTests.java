@@ -1091,7 +1091,69 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	
+	@Test(	description="Verify that yum install does not fail when service rsyslog is stopped",
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1211557","VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"},
+			dependsOnMethods={"VerifyRhelSubscriptionContentIsAvailable_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test() throws JSONException, Exception {
+		// assume a RHEL subscription is available from dependent VerifyRhelSubscriptionContentIsAvailable_Test
+		
+		// register and attach a RHEL subscription via autosubscribe
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		
+		String pkg = "rcs";
+		if (clienttasks.isPackageInstalled(pkg)) clienttasks.yumRemovePackage(pkg);
+		
+		// stop the rsyslog service
+		RemoteFileTasks.runCommandAndAssert(client,"service rsyslog stop",Integer.valueOf(0),"^Shutting down system logger: *\\[  OK  \\]$",null);	
+		
+		// yum install the package
+		//  Failure From Bug 1211557 - subscription-manager causes failure of yum 
+		//	[root@jsefler-os6 ~]# yum -y install rcs
+		//	Loaded plugins: product-id, refresh-packagekit, rhnplugin, security, subscription-manager
+		//	Traceback (most recent call last):
+		//	  File "/usr/bin/yum", line 29, in <module>
+		//	    yummain.user_main(sys.argv[1:], exit_code=True)
+		//	  File "/usr/share/yum-cli/yummain.py", line 300, in user_main
+		//	    errcode = main(args)
+		//	  File "/usr/share/yum-cli/yummain.py", line 115, in main
+		//	    base.getOptionsConfig(args)
+		//	  File "/usr/share/yum-cli/cli.py", line 229, in getOptionsConfig
+		//	    self.conf
+		//	  File "/usr/lib/python2.6/site-packages/yum/__init__.py", line 911, in <lambda>
+		//	    conf = property(fget=lambda self: self._getConfig(),
+		//	  File "/usr/lib/python2.6/site-packages/yum/__init__.py", line 348, in _getConfig
+		//	    self.plugins.run('postconfig')
+		//	  File "/usr/lib/python2.6/site-packages/yum/plugins.py", line 184, in run
+		//	    func(conduitcls(self, self.base, conf, **kwargs))
+		//	  File "/usr/lib/yum-plugins/subscription-manager.py", line 129, in postconfig_hook
+		//	    logutil.init_logger_for_yum()
+		//	  File "/usr/share/rhsm/subscription_manager/logutil.py", line 136, in init_logger_for_yum
+		//	    init_logger()
+		//	  File "/usr/share/rhsm/subscription_manager/logutil.py", line 132, in init_logger
+		//	    file_config(logging_config=LOGGING_CONFIG)
+		//	  File "/usr/share/rhsm/subscription_manager/logutil.py", line 118, in file_config
+		//	    disable_existing_loggers=False)
+		//	  File "/usr/lib64/python2.6/logging/config.py", line 84, in fileConfig
+		//	    handlers = _install_handlers(cp, formatters)
+		//	  File "/usr/lib64/python2.6/logging/config.py", line 162, in _install_handlers
+		//	    h = klass(*args)
+		//	  File "/usr/lib64/python2.6/logging/handlers.py", line 721, in __init__
+		//	    self._connect_unixsocket(address)
+		//	  File "/usr/lib64/python2.6/logging/handlers.py", line 737, in _connect_unixsocket
+		//	    self.socket.connect(address)
+		//	  File "<string>", line 1, in connect
+		//	socket.error: [Errno 2] No such file or directory
+		//	[root@jsefler-os6 ~]# echo $?
+		//	1
+		clienttasks.yumInstallPackage(pkg);
+	}
+	@AfterGroups(groups={"setup"}, value={"VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"})
+	@AfterClass(groups={"setup"})	// insurance; not really needed
+	public void restartRsyslogAfterGroup() {
+		if (client!=null) RemoteFileTasks.runCommandAndAssert(client, "service rsyslog start", 0);
+	}
 	
 	
 	
