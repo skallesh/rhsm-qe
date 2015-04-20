@@ -1985,7 +1985,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: list installed should include product certs in /etc/pki/product-default",  // see description in https://github.com/candlepin/subscription-manager/pull/1009
-			groups={"AcceptanceTests","ListInstalledWithProductDefault_Test","blockedByBug-1123029"},	// corresponding rel-eng RFE 1080012
+			groups={"AcceptanceTests","ListInstalledWithProductDefault_Test","blockedByBug-1123029"/*1080012*/},	// subscription-manager 1123029 - [RFE] Use default product certificates when they are present COMPLEMENT TO REL-ENG RFE 1080012 - [RFE] Include default product certificate in redhat-release
 			priority=150,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
