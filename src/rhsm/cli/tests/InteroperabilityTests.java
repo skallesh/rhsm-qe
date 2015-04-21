@@ -40,43 +40,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result;
 		
 		// interoperabilityWarningMessage is defined in /usr/share/rhsm/subscription_manager/branding/__init__.py self.REGISTERED_TO_OTHER_WARNING
-		String interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
-			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
-			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// after Bug 730018 - Warning text message is confusing
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
-			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
-			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// during rhel59, terminology changes were made for "RHN Certificate-Based technology"
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
-			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends (except in a few cases) that customers only register once. " +"\n\n"+
-			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// after Bug 847795 - String Update: redhat_branding.py Updates
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with Red Hat using RHN Classic technology." +"\n\n"+
-			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends that customers only register once. " +"\n\n"+
-			"To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// after Bug 859090 - String Update: redhat_branding.py
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with Red Hat using RHN Classic." +"\n\n"+
-			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends that customers only register once. " +"\n\n"+
-			"To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// after Bug 877590 - The tool you are using is attempting to re-register using Red Hat Subscription Management technology.
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with Red Hat using RHN Classic." +"\n\n"+
-			"Your system is being registered again using Red Hat Subscription Management. Red Hat recommends that customers only register once." +"\n\n"+
-			"To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// during RHEL58, DEV trimmed whitespace from strings...
-		interoperabilityWarningMessage = interoperabilityWarningMessage.replaceAll(" +(\n|$)", "$1"); 
+		String interoperabilityWarningMessage = clienttasks.msg_InteroperabilityWarning;
 		
 		// query the branding python file directly to get the default interoperabilityWarningMessage (when the subscription-manager rpm came from a git build - this assumes that any build of subscription-manager must have a branding module e.g. redhat_branding.py)
 		/* TEMPORARILY COMMENTING OUT SINCE JBOWES IS INCLUDING THIS BRANDING FILE IN THE PUBLIC REPO - jsefler 9/15/2011

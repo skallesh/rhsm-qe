@@ -96,6 +96,7 @@ public class SubscriptionManagerTasks {
 	public String msg_RemoteErrorCheckConnection	= null;
 	public String msg_ClockSkewDetection			= null;
 	public String msg_ContainerMode					= null;
+	public String msg_InteroperabilityWarning		= null;
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir					= null; // "/etc/pki/product";
@@ -858,6 +859,45 @@ if (false) {
 		msg_ClockSkewDetection			= "Clock skew detected, please check your system time";
 		msg_ContainerMode				= "subscription-manager is disabled when running inside a container. Please refer to your host system for subscription management.";
 		msg_RemoteErrorCheckConnection	= "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
+		
+		// msg_InteroperabilityWarning is defined in /usr/share/rhsm/subscription_manager/branding/__init__.py self.REGISTERED_TO_OTHER_WARNING
+		msg_InteroperabilityWarning		=
+			"WARNING" +"\n\n"+
+			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
+			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
+			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// after Bug 730018 - Warning text message is confusing
+		msg_InteroperabilityWarning		= 
+			"WARNING" +"\n\n"+
+			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
+			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
+			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// during rhel59, terminology changes were made for "RHN Certificate-Based technology"
+		msg_InteroperabilityWarning = 
+			"WARNING" +"\n\n"+
+			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
+			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends (except in a few cases) that customers only register once. " +"\n\n"+
+			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// after Bug 847795 - String Update: redhat_branding.py Updates
+		msg_InteroperabilityWarning = 
+			"WARNING" +"\n\n"+
+			"This system has already been registered with Red Hat using RHN Classic technology." +"\n\n"+
+			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends that customers only register once. " +"\n\n"+
+			"To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// after Bug 859090 - String Update: redhat_branding.py
+		msg_InteroperabilityWarning = 
+			"WARNING" +"\n\n"+
+			"This system has already been registered with Red Hat using RHN Classic." +"\n\n"+
+			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends that customers only register once. " +"\n\n"+
+			"To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// after Bug 877590 - The tool you are using is attempting to re-register using Red Hat Subscription Management technology.
+		msg_InteroperabilityWarning = 
+			"WARNING" +"\n\n"+
+			"This system has already been registered with Red Hat using RHN Classic." +"\n\n"+
+			"Your system is being registered again using Red Hat Subscription Management. Red Hat recommends that customers only register once." +"\n\n"+
+			"To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// during RHEL58, DEV trimmed whitespace from strings...
+		msg_InteroperabilityWarning = msg_InteroperabilityWarning.replaceAll(" +(\n|$)", "$1"); 
 	}
 	
 	public void setupRhnDefinitions(String gitRepository) {
