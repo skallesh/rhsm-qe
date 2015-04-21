@@ -11,10 +11,12 @@ import java.util.Map;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
@@ -56,11 +58,25 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		String poolVirtLimit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "virt_limit");
 		List<String> poolProvidedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
 		
-		// assert that the derivedProductId is different from the host pool's productId
-		Assert.assertNotSame(pool.productId, poolDerivedProductId, "The host pool's data center subscription product Id '"+pool.productId+"' should be different than its derived pool's product Id '"+poolDerivedProductId+"'.");
+		// TEMPORARY WORKAROUND FOR BUG
+		if (sm_serverType.equals(CandlepinType.hosted)) {
+			String bugId = "1214001";	// Bug 1214001 - after stage refresh, Virtual Data Center SKUs no longer have a host_limited pool productAttributes
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this Virtual Data Center test against SKU '"+pool.productId+"' while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
 		
-		// assert that the derivedProductName is different from the host pool's subscription name
-		Assert.assertNotSame(pool.subscriptionName, poolDerivedProductName, "The host pool's data center subscription name '"+pool.subscriptionName+"' should be different than its derived pool's product name '"+poolDerivedProductName+"'.");
+		// assert that this virtual data center SKU is host_limited
+		Assert.assertTrue(CandlepinTasks.isPoolProductHostLimited(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId), "As a functional requirement for Virtual Data Center SKUs, asserting that the pool's productAttributes contains host_limited=true so that a subscription pool for derivedProductId '"+poolDerivedProductId+"' is available ONLY to mapped virtual guests.");
+		
+		// assert that the derivedProductId is different from the host pool's productId
+		Assert.assertTrue(!pool.productId.equals(poolDerivedProductId), "The host pool's data center subscription product Id '"+pool.productId+"' should be different than its derived pool's product Id '"+poolDerivedProductId+"'.");
+		
+//NOT NECESSARILY TRUE		// assert that the derivedProductName is different from the host pool's subscription name
+//NOT NECESSARILY TRUE		Assert.assertNotSame(pool.subscriptionName, poolDerivedProductName, "The host pool's data center subscription name '"+pool.subscriptionName+"' should be different than its derived pool's product name '"+poolDerivedProductName+"'.");
 		
 		// instrument the system facts to behave as a physical host
 		factsMap.put("virt.is_guest",String.valueOf(false));
@@ -303,7 +319,8 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 			SubscriptionPool pool = (SubscriptionPool)(list.get(0));
 			
 			if (CandlepinTasks.isPoolADataCenter(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
-				ll.add(Arrays.asList(new Object[]{null,	pool}));
+// will mask bug 1214001				if (CandlepinTasks.isPoolProductHostLimited(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId))
+					ll.add(Arrays.asList(new Object[]{null,	pool}));
 			}
 		}
 		return ll;
