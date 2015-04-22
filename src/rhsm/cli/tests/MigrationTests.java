@@ -1754,6 +1754,139 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --keep-classic which implies that we do not want to deregister from classic which will result in dual interoperability registration.",
+			groups={/*"blockedByBug-1180273"*/},
+			dependsOnMethods={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RhnMigrateClassicToRhsmWithKeepClassic_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3")) throw new SkipException("This version of subscription-manager does not support 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic");	// commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377
+		
+		String keepOption = "--registration-state=keep";
+//TODO		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.X")) keepOption = "--keep-classic";
+		
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
+		clienttasks.unregister(null, null, null);
+		
+		// register to rhn classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
+
+		// subscribe to more RHN Classic channels (just to add a little unnecessary fun)
+		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(rhnAvailableChildChannels, 1));	// only add 1 child channel to avoid "You are subscribed to channels that have conflicting product certificates."
+		
+		// attempt to run rhn-migrate-classic-to-rhsm
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(keepOption+" "+"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		//	[root@jsefler-os6 ~]# rhn-migrate-classic-to-rhsm --registration-state=keep --destination-url=subscription.rhn.stage.redhat.com:443/subscription
+		//	Destination username: stage_auto_testuser
+		//	Destination password: 
+		//
+		//	Retrieving existing legacy subscription information...
+		//
+		//	+-----------------------------------------------------+
+		//	System is currently subscribed to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-6
+		//
+		//	+-----------------------------------------------------+
+		//	Installing product certificates for these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-6
+		//
+		//	Product certificates installed successfully to /etc/pki/product.
+		//
+		//	Attempting to register system to destination server...
+		//	WARNING
+		//
+		//	This system has already been registered with Red Hat using RHN Classic.
+		//
+		//	Your system is being registered again using Red Hat Subscription Management. Red Hat recommends that customers only register once.
+		//
+		//	To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563
+		//	The system has been registered with ID: 19ff59fe-c824-4acb-bd8b-ef843dd7d149 
+		//
+		//	Installed Product Current Status:
+		//	Product Name: Red Hat Enterprise Linux Server
+		//	Status:       Subscribed
+		//
+		//	System 'jsefler-os6' successfully registered.
+		//
+		//	[root@jsefler-os6 ~]# echo $?
+		//	0
+		
+		// verify the migration was successful
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
+		
+		// verify that we are newly registered to RHSM
+		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
+		
+		// verify that we are still classically registered to RHN
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is STILL registered on the RHN Classic server (because we passed an option to keep the classic registration).");
+		
+		// verify that we were warned with the interoperability message
+		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(clienttasks.msg_InteroperabilityWarning), "The expected stdout result from a call to '"+rhnMigrateTool+"' with the option to keep the classic registration should warn the user with the interoperability message: "+clienttasks.msg_InteroperabilityWarning);
+		
+		
+		// Now attempt the same migration while supplying the destination credentials on the command line instead of being prompted...
+		clienttasks.unregister(null, null, null);
+		sshCommandResult = executeRhnMigrateClassicToRhsm(keepOption+" "+"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+"--destination-user="+sm_clientUsername+" "+"--destination-password="+sm_clientPassword+" "+(sm_clientOrg!=null?"--org="+sm_clientOrg:""), null, null, null, null, null, null, null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
+		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is STILL registered on the RHN Classic server (because we passed an option to keep the classic registration).");
+		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(clienttasks.msg_InteroperabilityWarning), "The expected stdout result from a call to '"+rhnMigrateTool+"' with the option to keep the classic registration should warn the user with the interoperability message: "+clienttasks.msg_InteroperabilityWarning);
+	}
+	
+	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --keep-classic AND unnecessary classic credentials --legacy-user/--legacy-password (unnecessary because --keep-classic implies that we do NOT want to deregister from classic)",
+			groups={"blockedByBug-1180273"},
+			dependsOnMethods={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RhnMigrateClassicToRhsmWithKeepClassicAndLegacyCredentials_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3")) throw new SkipException("This version of subscription-manager does not support 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic");	// commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377
+		
+		String keepOption = "--registration-state=keep";
+//TODO		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.X")) keepOption = "--keep-classic";
+		
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
+		clienttasks.unregister(null, null, null);
+		
+		// register to rhn classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
+
+		// subscribe to more RHN Classic channels (just to add a little unnecessary fun)
+		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(rhnAvailableChildChannels, 1));	// only add 1 child channel to avoid "You are subscribed to channels that have conflicting product certificates."
+		
+		// attempt to run rhn-migrate-classic-to-rhsm
+//TODO not sure how valid this test is, but it does throw an error.  Maybe I should explicitly call subscription-manager config on the server hostname port prefix
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(keepOption+" "+/*"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+*/"--legacy-user="+sm_rhnUsername+" "+"--legacy-password="+sm_rhnPassword, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		//	[root@jsefler-os6 ~]# rhn-migrate-classic-to-rhsm --registration-state=keep --legacy-user=qa@redhat.com --legacy-password=REDACTED
+		//	Unable to connect to certificate server: Invalid credentials..  See /var/log/rhsm/rhsm.log for more details.
+		//	[root@jsefler-os6 ~]# echo $?
+		//	1
+		
+		// verify the migration was successful
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
+
+		// verify that we are newly registered to RHSM
+		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
+		
+		// verify that we are still classically registered to RHN
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is STILL registered on the RHN Classic server (because we passed an option to keep the classic registration).");
+		
+		// verify that we were warned with the interoperability message
+		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(clienttasks.msg_InteroperabilityWarning), "The expected stdout result from a call to '"+rhnMigrateTool+"' with the option to keep the classic registration should warn the user with the interoperability message: "+clienttasks.msg_InteroperabilityWarning);
+		
+		
+		// Now attempt the same migration while supplying the destination credentials on the command line instead of being prompted...
+		clienttasks.unregister(null, null, null);
+//TODO not sure how valid this test is.  Maybe I should explicitly call subscription-manager config on the server hostname port prefix
+		sshCommandResult = executeRhnMigrateClassicToRhsm(keepOption+" "+/*"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+*/"--legacy-user="+sm_rhnUsername+" "+"--legacy-password="+sm_rhnPassword+" "+"--destination-user="+sm_clientUsername+" "+"--destination-password="+sm_clientPassword+" "+(sm_clientOrg!=null?"--org="+sm_clientOrg:""), /*sm_rhnUsername*/null, /*sm_rhnPassword*/null, null, null, null, null, null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
+		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is STILL registered on the RHN Classic server (because we passed an option to keep the classic registration).");
+		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(clienttasks.msg_InteroperabilityWarning), "The expected stdout result from a call to '"+rhnMigrateTool+"' with the option to keep the classic registration should warn the user with the interoperability message: "+clienttasks.msg_InteroperabilityWarning);
+	}
 	
 	
 	
@@ -2737,6 +2870,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// test --redhat-user --redhat-password --subscription-service-user --subscription-service-password as a command line option
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"912375","1087603"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		String.format("--redhat-user=%s --redhat-password=%s",sm_rhnUsername,sm_rhnPassword)+rhsmServerUrlOption,			null,	null,	rhsmUsername,	rhsmPassword,	rhsmOrg,	null,	defaultServiceLevel}));
+		
+		// ...END OF ADDED ROWS
+		
+		// ADDING BlockedByBzBug TO SELECTED ROWS...
 		
 		// when rhsmOrg is not null, add bug BlockedByBzBug 849483 to all rows
 		if (rhsmOrg!=null) for (List<Object> l : ll) {
