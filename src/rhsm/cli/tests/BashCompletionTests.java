@@ -288,6 +288,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1196418 - rhn-migrate-classic-to-rhsm --activation-key does not bash complete
 			if (bashCommand.startsWith("rhn-migrate-classic-to-rhsm ")) bugIds.add("1196418");
 			
+			// Bug 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic
+			if (bashCommand.startsWith("rhn-migrate-classic-to-rhsm ") && clienttasks.isPackageVersion("subscription-manager",">=","1.14.3-1")) bugIds.add("1180273");		// https://bugzilla.redhat.com/show_bug.cgi?id=1180273#c9
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			// append a new row to the dataProvider

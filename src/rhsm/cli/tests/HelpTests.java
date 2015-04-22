@@ -292,7 +292,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*, --\\w+(=\\w+)*";
 		       optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.-]+)*|^  -[\\?\\w]( \\w+)*, --[\\w\\.-]+(=\\w+)*";
 		       optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.:-]+)*|^  -[\\?\\w]( \\w+)*, --[\\w\\.:-]+(=\\w+)*";
-		
+		       optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.:,\\-]+)*|^  -[\\?\\w]( \\w+)*, --[\\w\\.:,\\-]+(=\\w+)*";		
 		// EXAMPLES FOR optionsRegex
 		//  -h, --help            show this help message and exit
 		//  --list                list the configuration for this system
@@ -1066,6 +1066,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			}
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.1-1")) { // commit 00461f3751f9db182227c9973c41b305e378638a  RFE Bug 1154375: Allow use of activation keys during migration.
 				options.add("--activation-key=ACTIVATION_KEYS");
+			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.3-1")) { // commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377	RFE Bug 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic
+				options.add("--registration-state=keep,purge");
 			}
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
