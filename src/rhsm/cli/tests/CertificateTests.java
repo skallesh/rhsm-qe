@@ -744,9 +744,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, null, null, null, null);
 		if (!clienttasks.isRhelProductCertSubscribed()) throw new SkipException("Failed to autosubscribe to an available RHEL subscription.");
 		
-		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
-		
-		
+		// determine the newest available release
+		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);	// Example: [6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6Server] 6.6 is the newest
+		String newestRelease = null;
+		for (String release : availableReleases) {
+			if (isFloat(release)) {
+				if (newestRelease==null) {
+					newestRelease=release;
+				} else if (Float.valueOf(release) > Float.valueOf(newestRelease)) {
+					newestRelease=release;
+				}
+			}
+		}
 		
 		// Step 5: set the GA release corresponding to the old product cert version
 		clienttasks.release(null, null, oldRelease, null, null, null, null);
@@ -809,8 +818,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	2014-05-16 12:09:23,976 [DEBUG] yum @productid.py:418 - about to run post_product_id_update
 		rhelProductCert=clienttasks.getCurrentRhelProductCert();
 		Assert.assertNotNull(rhelProductCert,"Expected a base RHEL product cert to be installed.");
-		Assert.assertEquals(rhelProductCert.productNamespace.version, originalRhelProductCert.productNamespace.version, "After updating package '"+testPackage+"' from the latest release, the installed product cert version is updated from '"+newerRelease+"' to the original version '"+originalRhelProductCert.productNamespace.version+"'.");
-		
+		//if (!originalRhelProductCert.productNamespace.version.toLowerCase().contains("beta")) {	// skip assertion when originalRhelProductCert is a beta cert since a beta productId will not be available for the latest release on the CDN 
+		//	Assert.assertEquals(rhelProductCert.productNamespace.version, originalRhelProductCert.productNamespace.version, "After updating package '"+testPackage+"' to the latest release, the installed product cert version is updated from '"+newerRelease+"' to the original version '"+originalRhelProductCert.productNamespace.version+"'.");
+		//}
+		Assert.assertEquals(rhelProductCert.productNamespace.version, newestRelease, "After updating package '"+testPackage+"' to the latest release, the installed product cert version is updated from '"+newerRelease+"' to the latest released version '"+newestRelease+"'.");
 		
 		
 		// Step 11: set the rhel release backward to perform downgrade testing
@@ -829,7 +840,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	2014-05-16 12:11:48,234 [DEBUG] yum @productid.py:418 - about to run post_product_id_update
 		ProductCert finalRhelProductCert=clienttasks.getCurrentRhelProductCert();
 		Assert.assertNotNull(finalRhelProductCert,"Expected a base RHEL product cert to be installed.");
-		Assert.assertEquals(finalRhelProductCert.productNamespace.version, originalRhelProductCert.productNamespace.version, "After downgrading package '"+testPackage+"' from the latest release, the installed product cert version remains the same as the original version '"+originalRhelProductCert.productNamespace.version+"'.");
+		//if (!originalRhelProductCert.productNamespace.version.toLowerCase().contains("beta")) {	// skip assertion when originalRhelProductCert is a beta cert since a beta productId will not be available for the latest release on the CDN 
+		//	Assert.assertEquals(finalRhelProductCert.productNamespace.version, originalRhelProductCert.productNamespace.version, "After downgrading package '"+testPackage+"' from the latest release, the installed product cert version remains the same as the original version '"+originalRhelProductCert.productNamespace.version+"'.");
+		//}
+		Assert.assertEquals(finalRhelProductCert.productNamespace.version, newestRelease, "After downgrading package '"+testPackage+"' from the latest release '"+newestRelease+"' to '"+newerRelease+"', the installed product cert version remains unchanged at release version '"+newestRelease+"'.");
 	}
 	@DataProvider(name="getVerifyBaseRHELProductCertVersionUpdates_TestData")
 	public Object[][] getVerifyBaseRHELProductCertVersionUpdates_TestDataAs2dArray() {
@@ -855,8 +869,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107","1119809"}),	"zsh",	"5.8 Beta",	"5.8",	"5.9"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("6")) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3",		"6.3",	"6.4"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3 Beta",	"6.3",	"6.4"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573","1214856"}),	"zsh",	"6.3",		"6.3",	"6.4"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573","1214856"}),	"zsh",	"6.3 Beta",	"6.3",	"6.4"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.1",		"6.1",	"6.5"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.1-Beta",	"6.1",	"6.5"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("7") && !clienttasks.redhatReleaseXY.equals("7.0") && !clienttasks.redhatReleaseXY.equals("7.1")) {	// Note: this test depends on an available Release level of 7.0 and 7.1 in the release listing file which will not be available until the rhel 7.2 test cycle; skipping until we test rhel 7.2
 			ll.add(Arrays.asList(new Object[]{null,	"sudo-FIXME"/*FIXME choose a simple package that has been updated between each release 7.0 to 7.1 to 7.2*/ ,	"7.0",		"7.0",	"7.1"}));

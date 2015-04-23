@@ -1027,10 +1027,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	      Integer.parseInt(string);  
 	      return true;  
 	   }  
-	   catch(Exception e) {  
+	   catch(NumberFormatException e) {  
 	      return false;  
 	   }  
-	} 
+	}
+	
+	public static boolean isFloat(String string) {  
+		   try {  
+		      Float.parseFloat(string);  
+		      return true;  
+		   }  
+		   catch(NumberFormatException e) {  
+		      return false;  
+		   }  
+		} 
 
 	/**
 	 * @param <T>
