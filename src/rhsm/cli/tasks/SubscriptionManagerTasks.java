@@ -2883,7 +2883,7 @@ if (false) {
 		return productCertsProvidedBySubscriptionPool;
 	}
 	
-	public List <EntitlementCert> getEntitlementCertsCorrespondingToProductCert(ProductCert productCert) {
+	public List <EntitlementCert> getEntitlementCertsProvidingProductCert(ProductCert productCert) {
 		List<EntitlementCert> correspondingEntitlementCerts = new ArrayList<EntitlementCert>();
 		ProductNamespace productNamespaceMatchingProductCert = null;
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {

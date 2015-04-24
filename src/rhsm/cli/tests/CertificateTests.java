@@ -33,6 +33,7 @@ import rhsm.data.EntitlementCert;
 import rhsm.data.OrderNamespace;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductNamespace;
+import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -696,6 +697,104 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	@Test(	description="Verify that the base RHEL product certs on the CDN for each release correctly reflect the release version.  For example, this affects users that want use subcription-manager release --set=6.3 to keep yum updates fixed to an older release.",
+			groups={"VerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_Test","AcceptanceTests","Tier1Tests"},
+			dataProvider="VerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_TestData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release, String rhelRepoUrl, File rhelEntitlementCertFile, File caCertFile) {
+		
+		File certFile = rhelEntitlementCertFile;
+		File keyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(rhelEntitlementCertFile);
+		
+		// determine the exact path to the productid on the CDN
+		// Repo URL:  https://cdn.redhat.com/content/dist/rhel/server/6/$releasever/$basearch/os
+		// ProductId: https://cdn.redhat.com/content/dist/rhel/server/6/$releasever/$basearch/os/repodata/productid
+		String rhelRepoUrlToProductId = rhelRepoUrl.replace("$releasever", release).replace("$basearch", clienttasks.arch)+"/repodata/productid";
+		
+		// use the entitlement certificates to get the productid
+		File localProductIdFile = new File("/tmp/productid");
+		RemoteFileTasks.runCommandAndAssert(client,"wget -nv -O "+localProductIdFile+" --ca-certificate="+caCertFile+" --certificate-type=PEM --certificate="+certFile+" --private-key="+keyFile+" --private-key-type=pem "+rhelRepoUrlToProductId,Integer.valueOf(0),null,"-> \""+localProductIdFile+"\"");
+		
+		// create a ProductCert corresponding to the productid file
+		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
+		
+		// assert the expected productIdCert release version
+		String expectedRelease = release;
+		if (!isFloat(expectedRelease)) {	// happens when release is 6Server
+			// in this case of 6Server, the newset release version should be expected (TODO, not sure this is entirely true)
+			expectedRelease = getNewestReleaseFromReleases(clienttasks.getCurrentlyAvailableReleases(null, null, null));
+		}
+		Assert.assertEquals(productIdCert.productNamespace.version, expectedRelease,"Version of the productid on the CDN at '"+rhelRepoUrlToProductId+"' that will be installed by the yum product-id plugin after setting the subscription-manager release to '"+release+"'.");
+	}
+	@DataProvider(name="VerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_TestData")
+	public Object[][] getVerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getVerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAsListOfLists());
+	}
+	protected List<List<Object>> getVerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
+		if (clienttasks==null) return ll;
+		
+		// unregister
+		clienttasks.unregister(null, null, null);
+		restoreRhsmProductCertDir();
+		
+		// get the currently installed RHEL product cert
+		ProductCert rhelProductCert=clienttasks.getCurrentRhelProductCert();
+		if (rhelProductCert==null) throw new SkipException("Failed to find an installed RHEL product cert.");	// rhel product cert cannot be subscribed if a rhel product cert is not installed
+		
+		// register with autosubscribe
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, null, null, null, null);
+		
+		// find the autosubscribed entitlement that provides access to RHEL content 
+		List<EntitlementCert> rhelEntitlementCerts = clienttasks.getEntitlementCertsProvidingProductCert(rhelProductCert);
+		if(rhelEntitlementCerts.isEmpty()) {
+			log.warning("Could not find an entitlement to a RHEL subscription.");
+			return ll;
+		}
+		EntitlementCert rhelEntitlementCert = clienttasks.getEntitlementCertsProvidingProductCert(rhelProductCert).get(0);
+		
+		// get the cacert file
+		File caCertFile = new File(clienttasks.getConfParameter("repo_ca_cert"));
+		
+		// get the repo url to the currently enabled base RHEL repo (assume it ends in /6/$releasever/$basearch/os
+		// get the list of currently enabled repos
+		//	[root@jsefler-os6 ~]# subscription-manager repos --list-enabled 
+		//	+----------------------------------------------------------+
+		//	    Available Repositories in /etc/yum.repos.d/redhat.repo
+		//	+----------------------------------------------------------+
+		//	Repo ID:   rhel-6-server-rpms
+		//	Repo Name: Red Hat Enterprise Linux 6 Server (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel/server/6/$releasever/$basearch/os
+		//	Enabled:   1
+		String rhelRepoUrl = null;
+		for (Repo enabledRepo :  Repo.parse(clienttasks.repos(null, true, false, (String)null,(String)null,null, null, null).getStdout())) {
+			if (enabledRepo.enabled) {
+				if (enabledRepo.repoUrl.endsWith(clienttasks.redhatReleaseX+"/$releasever/$basearch/os")) {
+					if (rhelRepoUrl!=null && !rhelRepoUrl.equals(enabledRepo.repoUrl)) {
+						Assert.fail("Encountered multiple enabled repos enabled that appear to serve the base RHEL content.  Did not expect this.  "+rhelRepoUrl+" "+enabledRepo.repoUrl);
+					}
+					rhelRepoUrl = enabledRepo.repoUrl;
+				}
+			}
+		}
+		
+		// add each available release as a row to the dataProvider
+		for (String release : clienttasks.getCurrentlyAvailableReleases(null, null, null)) {
+			List<String> bugIds = new ArrayList<String>();
+			
+			if (release.equals("6.2")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
+			if (release.equals("6.4")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
+			
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			
+			// Object blockedByBug, String release, String rhelRepoUrl, File rhelEntitlementCertFile, File caCertFile
+			ll.add(Arrays.asList(new Object[]{blockedByBzBug, release, rhelRepoUrl, rhelEntitlementCert.file, caCertFile}));
+		}
+		
+		return ll;
+	}
 	
 	
 	
@@ -746,16 +845,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		// determine the newest available release
 		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);	// Example: [6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6Server] 6.6 is the newest
-		String newestRelease = null;
-		for (String release : availableReleases) {
-			if (isFloat(release)) {
-				if (newestRelease==null) {
-					newestRelease=release;
-				} else if (Float.valueOf(release) > Float.valueOf(newestRelease)) {
-					newestRelease=release;
-				}
-			}
-		}
+		String newestRelease = getNewestReleaseFromReleases(availableReleases);
 		
 		// Step 5: set the GA release corresponding to the old product cert version
 		clienttasks.release(null, null, oldRelease, null, null, null, null);
@@ -946,8 +1036,25 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Protected methods ***********************************************************************
-
-
+	
+	/**
+	 * @param releases - from getCurrentlyAvailableReleases() Example: [6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6Server] 6.6 is the newest 
+	 * @return
+	 */
+	String getNewestReleaseFromReleases(List<String> releases) {
+		String newestRelease = null;
+		for (String release : releases) {
+			if (isFloat(release)) {
+				if (newestRelease==null) {
+					newestRelease=release;
+				} else if (Float.valueOf(release) > Float.valueOf(newestRelease)) {
+					newestRelease=release;
+				}
+			}
+		}
+		return newestRelease;
+	}
+	
 	
 	// Data Providers ***********************************************************************
 	@DataProvider(name="getProductCertFilesData")
