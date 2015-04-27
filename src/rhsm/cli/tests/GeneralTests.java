@@ -882,7 +882,11 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),		clienttasks.command+" subscribe",											new Integer(64),	"","Error: This command requires that you specify a pool with --pool or use --auto.".replace("with --pool", "with --pool or --file,")}));	// after bug 1159974 Error: This command requires that you specify a pool with --pool or --file, or use --auto.
 			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --pool=123 --auto",							new Integer(64),	"","Error: --auto may not be used when specifying pools."/*"Error: Only one of --pool or --auto may be used with this command."*/}));	// message changed by commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1200972"}),clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(64),	"","Error: Must use --auto with --servicelevel."}));
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.3-1")) {	// commit bb6424e5cac93bfd3dfc9e5163d593b954359f52 1200972: Fixed grammar issue with error message in the attach command
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1200972"}),clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(64),	"","Error: The --servicelevel option cannot be used when specifying pools."}));		// was "Error: Servicelevel is unused with --pool" for a short time from subscription-manager-1.14.1-1
+			} else {
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1200972"}),clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(64),	"","Error: Must use --auto with --servicelevel."}));
+			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --file=/missing/poolIds.txt",				new Integer(65),	"","Error: The file \"/missing/poolIds.txt\" does not exist or cannot be read."}));	// added by bug 1159974
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.1-1")) {
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1194906"}),		clienttasks.rhsmDebugSystemCommand(null,null,null,true,true,null,null,null),new Integer(64),	"","Error: You may not use --subscriptions with --no-subscriptions."}));	// added by bug 1194906
