@@ -1496,6 +1496,42 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		int subMax = 3;	// maximum subset count of data rows to return
 		return TestNGUtils.convertListOfListsTo2dArray(getRandomSubsetOfList(getAvailableSubscriptionPoolsDataAsListOfLists(),subMax));
 	}
+	
+	
+	@DataProvider(name="getAllAvailableNonTemporarySubscriptionPoolsData")
+	public Object[][] getAllAvailableNonTemporarySubscriptionPoolsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableNonTemporarySubscriptionPoolsDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllAvailableNonTemporarySubscriptionPoolsDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getAvailableSubscriptionPoolsDataAsListOfLists(true)) {
+			SubscriptionPool p = (SubscriptionPool)l.get(0);
+			if (!p.subscriptionType.contains("Temporary")) ll.add(l);
+		}
+		return ll;
+	}
+	@DataProvider(name="getAvailableNonTemporarySubscriptionPoolsData")
+	public Object[][] getAvailableNonTemporarySubscriptionPoolsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getAvailableNonTemporarySubscriptionPoolsDataAsListOfLists());
+	}
+	protected List<List<Object>> getAvailableNonTemporarySubscriptionPoolsDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getAvailableSubscriptionPoolsDataAsListOfLists(false)) {
+			SubscriptionPool p = (SubscriptionPool)l.get(0);
+			if (!p.subscriptionType.contains("Temporary")) ll.add(l);
+		}
+		return ll;
+	}
+	/**
+	 * @return a random subset of data rows from getAvailableNonTemporarySubscriptionPoolsDataAsListOfLists() (maximum of 3 rows) (useful to help reduce excessive test execution time)
+	 * @throws Exception
+	 */
+	@DataProvider(name="getRandomSubsetOfAvailableNonTemporarySubscriptionPoolsData")
+	public Object[][] getRandomSubsetOfAvailableNonTemporarySubscriptionPoolsDataAs2dArray() throws Exception {
+		int subMax = 3;	// maximum subset count of data rows to return
+		return TestNGUtils.convertListOfListsTo2dArray(getRandomSubsetOfList(getAvailableNonTemporarySubscriptionPoolsDataAsListOfLists(),subMax));
+	}
+	
 	/**
 	 * @return List of [SubscriptionPool pool]
 	 */

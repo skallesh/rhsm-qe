@@ -46,7 +46,8 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			groups={"ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test"},
 			dependsOnGroups={},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
-			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
+			//dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
+			dataProvider="getRandomSubsetOfAvailableNonTemporarySubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56025)
 	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool originalPool) throws Exception {
