@@ -1615,7 +1615,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm while already registered to RHSM",
-			groups={"blockedByBug-807477","blockedByBug-1052297"},
+			groups={"blockedByBug-807477","blockedByBug-1052297","blockedByBug-1212515"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
