@@ -7156,6 +7156,22 @@ if (false) {
 		return yumDowngradePackageFromRepo(pkg,null,null);
 	}
 	
+	
+	/**
+	 * yum -y remove pkg --disableplugin=rhnplugin<br>
+	 * Assert the removal is Complete! and no longer installed.
+	 * @param pkg
+	 * @param options - additional yum options to append
+	 * @return
+	 */
+	public SSHCommandResult yumRemovePackage (String pkg, String options) {
+		String command = "yum -y remove "+pkg;
+		command += " --disableplugin=rhnplugin";	// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		if (options!=null) command += " "+options; 
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 1, null,"Error: No matching Packages to list");
+		return result;
+	}
 	/**
 	 * yum -y remove pkg<br>
 	 * Assert the removal is Complete! and no longer installed.
@@ -7163,10 +7179,7 @@ if (false) {
 	 * @return
 	 */
 	public SSHCommandResult yumRemovePackage (String pkg) {
-		String command = "yum -y remove "+pkg+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 1, null,"Error: No matching Packages to list");
-		return result;
+		return yumRemovePackage (pkg, null);
 	}
 	
 	public SSHCommandResult yumInstallGroup (String group) {

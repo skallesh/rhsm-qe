@@ -808,7 +808,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		restoreRhsmProductCertDir();
 		
 		// Step 0: remove the test package
-		if (clienttasks.isPackageInstalled(testPackage)) clienttasks.yumRemovePackage(testPackage);
+		if (clienttasks.isPackageInstalled(testPackage)) clienttasks.yumRemovePackage(testPackage, "--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
 		
 		// Step 1: determine the currently installed RHEL product cert
 		ProductCert originalRhelProductCert=clienttasks.getCurrentRhelProductCert();
@@ -854,7 +854,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 		// Step 6: install the test package and assert the product id has been upgraded.
 		clienttasks.yumClean("metadata");	// to avoid... Not using downloaded repomd.xml because it is older than what we have:
-		clienttasks.yumInstallPackage(testPackage);
+		clienttasks.yumInstallPackage(testPackage,"--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
 		// tail -f /var/log/rhsm/rhsm.log
 		//	2014-05-16 12:04:27,444 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
 		//	2014-05-16 12:04:27,449 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
@@ -868,7 +868,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(rhelProductCert.productNamespace.version, oldRelease, "After installing package '"+testPackage+"' from release '"+oldRelease+"', the installed product cert version is updated from '"+oldProductCertVersion+"'.");
 		
 		// remove the test package
-		clienttasks.yumRemovePackage(testPackage);
+		clienttasks.yumRemovePackage(testPackage, "--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
 		
 		
 		
@@ -876,7 +876,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		clienttasks.release(null, null, newerRelease, null, null, null, null);
 		
 		// Step 8: install the test package and assert the product id has been upgraded.
-		clienttasks.yumInstallPackage(testPackage);
+		clienttasks.yumInstallPackage(testPackage,"--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
 		// tail -f /var/log/rhsm/rhsm.log
 		//	2014-05-16 12:07:02,447 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
 		//	2014-05-16 12:07:02,448 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
@@ -896,7 +896,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		clienttasks.release(null, null, null, true, null, null, null);
 		
 		// Step 10: yum update the test package to the latest version and assert the product id has been upgraded to the original product cert.
-		clienttasks.yumUpdatePackage(testPackage);
+		clienttasks.yumUpdatePackageFromRepo(testPackage, null, "--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
 		// tail -f /var/log/rhsm/rhsm.log
 		//	2014-05-16 12:09:23,974 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
 		//	2014-05-16 12:09:23,975 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
@@ -919,7 +919,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		// Step 12: downgrade the test package and assert the original product id remains installed.
 		clienttasks.yumClean("metadata");	// to avoid... Not using downloaded repomd.xml because it is older than what we have:
-		clienttasks.yumDowngradePackage(testPackage);
+		clienttasks.yumDowngradePackageFromRepo(testPackage, null, "--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
 		// tail -f /var/log/rhsm/rhsm.log
 		//	2014-05-16 12:11:48,233 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
 		//	2014-05-16 12:11:48,233 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
