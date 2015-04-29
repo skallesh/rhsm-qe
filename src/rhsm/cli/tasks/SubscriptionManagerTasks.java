@@ -2281,7 +2281,6 @@ if (false) {
 	
 	public String getIPV4Address () {
 		String ipv4_address = ipaddr;	// stopped working when we started using open stack instances of RHEL7
-		
 		ipv4_address = getFactValue("network.ipv4_address");	// stopped working when we started using openstack instances of RHEL6
 
 		// when client is an openstack instance, the ipv4_address is private and we need the public address when asserting the proxy logs
@@ -2294,8 +2293,8 @@ if (false) {
 		//	[root@rhel7-openstack-instance ~]# dmidecode --string system-product-name
 		//	RHEV Hypervisor
 		String dmiSystemProduct_name = getFactValue("dmi.system.product_name");
-		if (dmiSystemProduct_name!=null && !dmiSystemProduct_name.equals("Not Specified")) {	// then this is likely an openstack instance
-			SSHCommandResult ipv4_addressResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "curl --stderr /dev/null http://169.254.169.254/latest/meta-data/public-ipv4", 0);		// will timeout on a non-openstack instance and then fail the exit code assert
+		if ("Not Specified".equals(dmiSystemProduct_name)) {	// then this is likely an openstack instance
+			SSHCommandResult ipv4_addressResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "curl --stderr /dev/null http://169.254.169.254/latest/meta-data/public-ipv4", 0);		// will timeout on a non-openstack instance and then fail the exit code assert (probably with code 7)
 			ipv4_address = ipv4_addressResult.getStdout().trim();
 			Assert.assertMatch(ipv4_address, "\\d+\\.\\d+\\.\\d+\\.\\d+", "Validated format of ipv4 address '"+ipv4_address+"' detected from openstack curl query above.");
 		}
