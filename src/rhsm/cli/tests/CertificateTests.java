@@ -710,12 +710,25 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// determine the exact path to the productid on the CDN
 		// Repo URL:  https://cdn.redhat.com/content/dist/rhel/server/6/$releasever/$basearch/os
 		// ProductId: https://cdn.redhat.com/content/dist/rhel/server/6/$releasever/$basearch/os/repodata/productid
-		String rhelRepoUrlToProductId = rhelRepoUrl.replace("$releasever", release).replace("$basearch", clienttasks.arch)+"/repodata/productid";
+		String basearch = clienttasks.arch;
+		if (basearch.equals("i686")||basearch.equals("i586")||basearch.equals("i486")) basearch="i386";	// releng content for these systems is published under arch i386
+		String rhelRepoUrlToProductId = rhelRepoUrl.replace("$releasever",release).replace("$basearch",basearch)+"/repodata/productid";
 		
 		// use the entitlement certificates to get the productid
 		File localProductIdFile = new File("/tmp/productid");
 		RemoteFileTasks.runCommandAndAssert(client,"wget -nv -O "+localProductIdFile+" --ca-certificate="+caCertFile+" --certificate-type=PEM --certificate="+certFile+" --private-key="+keyFile+" --private-key-type=pem "+rhelRepoUrlToProductId,Integer.valueOf(0),null,"-> \""+localProductIdFile+"\"");
-		
+		//	[root@dell-pe650-02 ~]# wget -nv -O /tmp/productid --ca-certificate=/etc/rhsm/ca/redhat-uep.pem --certificate-type=PEM --certificate=/etc/pki/entitlement/19553491962157768.pem --private-key=/etc/pki/entitlement/19553491962157768-key.pem --private-key-type=pem https://cdn.redhat.com/content/dist/rhel/server/6/6.1/x86_64/os/repodata/productid
+		//	2015-04-29 11:58:44 URL:https://cdn.redhat.com/content/dist/rhel/server/6/6.1/x86_64/os/repodata/productid [2163/2163] -> "/tmp/productid" [1]
+		//	[root@dell-pe650-02 ~]# rct cat-cert /tmp/productid | grep -A8 "Product:"
+		//	Product:
+		//		ID: 69
+		//		Name: Red Hat Enterprise Linux 6 Server
+		//		Version: 6.1
+		//		Arch: x86_64
+		//		Tags: rhel-6,rhel-6-server
+		//		Brand Type: 
+		//		Brand Name: 
+
 		// create a ProductCert corresponding to the productid file
 		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
 		
@@ -773,7 +786,22 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			if (enabledRepo.enabled) {
 				if (enabledRepo.repoUrl.endsWith(clienttasks.redhatReleaseX+"/$releasever/$basearch/os")) {
 					if (rhelRepoUrl!=null && !rhelRepoUrl.equals(enabledRepo.repoUrl)) {
-						Assert.fail("Encountered multiple enabled repos enabled that appear to serve the base RHEL content.  Did not expect this.  "+rhelRepoUrl+" "+enabledRepo.repoUrl);
+						// NOTE: I just learned that this will happen when the subscription also provides:  Red Hat Enterprise Linux Server - Extended Update Support
+						// In this case an additional product cert could get installed...
+						//	[root@dell-pe650-02 ~]# wget -nv -O /tmp/productid --ca-certificate=/etc/rhsm/ca/redhat-uep.pem --certificate-type=PEM --certificate=/etc/pki/entitlement/19553491962157768.pem --private-key=/etc/pki/entitlement/19553491962157768-key.pem --private-key-type=pem https://cdn.redhat.com/content/eus/rhel/server/6/6.1/x86_64/os/repodata/productid
+						//	2015-04-29 12:01:28 URL:https://cdn.redhat.com/content/eus/rhel/server/6/6.1/x86_64/os/repodata/productid [2208/2208] -> "/tmp/productid" [1]
+						//	[root@dell-pe650-02 ~]# rct cat-cert /tmp/productid | grep -A8 "Product:"Product:
+						//		ID: 70
+						//		Name: Red Hat Enterprise Linux Server - Extended Update Support
+						//		Version: 6.1
+						//		Arch: x86_64
+						//		Tags: rhel-6-eus-server,rhel-6-server
+						//		Brand Type: 
+						//		Brand Name: 
+						
+						// repoName='Red Hat Enterprise Linux 6 Server - Extended Update Support (RPMs)' repoId='rhel-6-server-eus-rpms' repoUrl='https://cdn.redhat.com/content/eus/rhel/server/6/$releasever/$basearch/os' enabled='true'
+						if (enabledRepo.repoUrl.contains("/eus/")) continue;	// skip Extended Update Support repos
+						Assert.fail("Excluding EUS, encountered multiple enabled repos enabled that appear to serve the base RHEL content.  Did not expect this:\n "+rhelRepoUrl+"\n "+enabledRepo.repoUrl);
 					}
 					rhelRepoUrl = enabledRepo.repoUrl;
 				}
