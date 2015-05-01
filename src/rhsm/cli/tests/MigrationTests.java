@@ -992,7 +992,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		RhnMigrateClassicToRhsm_Test(bugzilla,rhnreg_ksUsername,rhnreg_ksPassword,rhnServer,rhnChannelsToAdd,options,rhnUsername,rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,serviceLevelIndex,serviceLevelExpected);
 	}
 	
-	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a valid activation-key",
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a valid activation-key (and a good org)",
 			groups={"AcceptanceTests","blockedByBug-1154375"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
@@ -1015,12 +1015,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
+			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,null,null,null);
 		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
 		// END OF WORKAROUND
 		
 		// migrate from RHN Classic to RHSM using the activation key 
-		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName,sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
+		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,null,null,null,null,null);
 		
 		// assert that the system is consuming the pool from the activation key.
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -1029,7 +1029,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a bad activation-key",
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a bad activation-key (and a good org)",
 			groups={"blockedByBug-1154375"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
@@ -1059,10 +1059,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			executeRhnMigrateClassicToRhsmResult = executeRhnMigrateClassicToRhsm("--activation-key="+activationKeyName,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
+			executeRhnMigrateClassicToRhsmResult = executeRhnMigrateClassicToRhsm("--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,null,null,null);
 		} else	// call executeRhnMigrateClassicToRhsm with rhsmUsername=null and rhsmPassword=null
 		// END OF WORKAROUND
-		executeRhnMigrateClassicToRhsmResult = executeRhnMigrateClassicToRhsm("--activation-key="+activationKeyName,sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
+		executeRhnMigrateClassicToRhsmResult = executeRhnMigrateClassicToRhsm("--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,null,null,null,null,null);
 		
 		//	201502272153:09.897 - FINE: ssh root@jsefler-os6.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --activation-key=badActivationKey qa@redhat.com redhatqa testuser1 password admin null null (com.redhat.qe.tools.SSHCommandRunner.run)
 		//	201502272153:12.049 - FINE: Stdout: 
@@ -1097,7 +1097,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	For further assistance, please contact Red Hat Global Support Services.
 		
 		// assert the result
-		String expectedFailureMessage="None of the activation keys specified exist for this org.";
+		String expectedFailureMessage = String.format("Activation key '%s' not found for organization '%s'.",activationKeyName, clientOrgKey);
+		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedFailureMessage = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		expectedFailureMessage += "\n\nUnable to register.\nFor further assistance, please contact Red Hat Global Support Services.";
 		Assert.assertTrue(executeRhnMigrateClassicToRhsmResult.getStdout().contains(expectedFailureMessage),"The result from an attempt to migrate from RHN Classic to RHSM with a bad activation key reported this expected messge: \n"+expectedFailureMessage);
 		
@@ -1106,7 +1107,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with valid comma separated keys",
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with valid comma separated keys (and a good org)",
 			groups={"blockedByBug-1154375"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
@@ -1133,18 +1134,20 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
+			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
 		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
 		// END OF WORKAROUND
 		
 		// migrate from RHN Classic to RHSM using the activation key 
-		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name,sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
+		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
 		
 		// assert that the system is consuming the pools from the activation key.
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool1.poolId, consumedProductSubscriptions), "Found consumed subscription from pool '"+pool1.poolId+"' after migrating with activation keys '"+name+"'.");
 		Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool2.poolId, consumedProductSubscriptions), "Found consumed subscription from pool '"+pool2.poolId+"' after migrating with activation keys '"+name+"'.");
-		Assert.assertEquals(consumedProductSubscriptions.size(), 2, "Number of consumed subscriptions after migrating from RHN Classic to RHSM with activation key '"+name+"'.");
+		int expectedNumberOfConsumedSubscription = 2;
+		if (activationKeyName1.equals(activationKeyName2)) expectedNumberOfConsumedSubscription=1;
+		Assert.assertEquals(consumedProductSubscriptions.size(), expectedNumberOfConsumedSubscription, "Number of consumed subscriptions after migrating from RHN Classic to RHSM with activation key '"+name+"'.");
 	}
 	
 	
