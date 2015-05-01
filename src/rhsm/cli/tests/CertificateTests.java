@@ -751,7 +751,6 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		// unregister
 		clienttasks.unregister(null, null, null);
-		restoreRhsmProductCertDir();
 		
 		// get the currently installed RHEL product cert
 		ProductCert rhelProductCert=clienttasks.getCurrentRhelProductCert();
@@ -833,7 +832,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyBaseRHELProductCertVersionUpdates_Test(Object blockedByBug, String testPackage, String oldProductCertVersion, String oldRelease, String newerRelease) {
 		clienttasks.unregister(null, null, null);
-		restoreRhsmProductCertDir();
+		restoreOriginalRhsmProductCertDirAndProductIdJsonFile();
 		
 		// Step 0: remove the test package
 		if (clienttasks.isPackageInstalled(testPackage)) clienttasks.yumRemovePackage(testPackage, "--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
@@ -842,12 +841,13 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		ProductCert originalRhelProductCert=clienttasks.getCurrentRhelProductCert();
 		Assert.assertNotNull(originalRhelProductCert,"Expected a base RHEL product cert to be installed.");
 		
-		// Step 2: configure a temporary productCertDir
+		// Step 2: configure a temporary productCertDir and backup the productid json database file
 		log.info("Configuring a temporary product cert directory...");
 		if (rhsmProductCertDir==null) {rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");Assert.assertNotNull(rhsmProductCertDir);} // remember the original so it can be restored later
 		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+tmpProductCertDir+"/*.pem",Integer.valueOf(0));
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
+		if (productIdJsonFile==null) {productIdJsonFile = client.runCommandAndWait("cat "+clienttasks.productIdJsonFile).getStdout().replaceAll("\\s*\n\\s*",""); Assert.assertTrue(productIdJsonFile!=null && !productIdJsonFile.isEmpty());} // remember the original so it can be restored later
 		
 		// Step 3: install an old RHEL product cert
 		ProductCert oldProductCert = null;	
@@ -1003,12 +1003,21 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	@AfterGroups(groups="setup", value = {"VerifyBaseRHELProductCertVersionUpdates_Test"})
-//	@AfterClass(groups="setup")	// called after class for insurance
-	public void restoreRhsmProductCertDir() {
+	public void restoreOriginalRhsmProductCertDirAndProductIdJsonFile() {
 		if (clienttasks==null) return;
-		if (rhsmProductCertDir==null) return;	
-		log.info("Restoring the originally configured product cert directory...");
-		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", rhsmProductCertDir);
+		
+		if (rhsmProductCertDir!=null) {
+			log.info("Restoring the originally configured product cert directory...");
+			clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", rhsmProductCertDir);
+			rhsmProductCertDir=null;
+		}
+		
+		if (productIdJsonFile != null) {
+			log.info("Restoring the original productid json database file...");
+			RemoteFileTasks.runCommandAndAssert(client,"echo '"+productIdJsonFile+"' > "+clienttasks.productIdJsonFile, Integer.valueOf(0));
+			productIdJsonFile=null;
+			clienttasks.yumClean("all");
+		}
 	}
 	@BeforeGroups(groups="setup", value = {"VerifyBaseRHELProductCertVersionUpdates_Test"})
 	protected void findAllRhelProductCertsFromRhnDefinitions() {
@@ -1042,9 +1051,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	protected String rhsmProductCertDir = null;	// original rhsm.productCertDir
 	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir";
 	protected List<ProductCert> rhelProductCertsFromRhnDefinition = new ArrayList<ProductCert>();
-	
-	
-	
+	protected String productIdJsonFile = null;	// original /var/lib/rhsm/productid.js
 	
 	
 	
