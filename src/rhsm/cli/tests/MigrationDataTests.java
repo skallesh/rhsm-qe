@@ -232,6 +232,109 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="Verify RHEL6 channel mappings for AUS channels exist in channel-cert-mapping.txt",
+			groups={"blockedByBug-825089"},
+			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyRHEL6AUSChannelMappings_Test() {
+		
+		// hand assemble a list of expected RHEL6 aus channels
+		//	[root@jsefler-os6 ~]# grep ".aus" /usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt
+		//	rhel-x86_64-server-6.2.aus: AUS-Server-x86_64-570a9cca61c9-251.pem
+		//	[root@jsefler-os6 ~]# grep ".aus" /usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt | cut -d: -f 1 | xargs -i[] echo \"[]\",
+		//	"rhel-x86_64-server-6.2.aus",
+
+		// [root@jsefler-6 ~]# egrep 'rhel-.*-4(:|-.*:|\.[[:digit:]]\.z:)' /usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt | egrep --invert-match  '(-ost-4|-4-els|-4-hwcert)'
+		// rhel-i386-as-4: AS-AS-i386-002dbe5bbca3-69.pem
+		List<String> expectedRhel6AusChannels = Arrays.asList(new String[]{
+				"rhel-x86_64-server-6.2.aus",
+				"rhel-x86_64-server-6.2.aus-debuginfo",
+				"rhel-x86_64-server-6.2.aus-thirdparty-oracle-java",	// TODO
+				"rhel-x86_64-server-6.4.aus",
+				"rhel-x86_64-server-6.4.aus-debuginfo",
+				"rhel-x86_64-server-6.4.aus-thirdparty-oracle-java",	// TODO
+				"rhel-x86_64-server-6.5.aus",
+				"rhel-x86_64-server-6.5.aus-debuginfo",
+				"rhel-x86_64-server-6.5.aus-thirdparty-oracle-java",	// TODO
+				"rhel-x86_64-server-ha-6.2.aus",
+				"rhel-x86_64-server-ha-6.2.aus-debuginfo",
+				"rhel-x86_64-server-ha-6.4.aus",
+				"rhel-x86_64-server-ha-6.4.aus-debuginfo",
+				"rhel-x86_64-server-ha-6.5.aus",
+				"rhel-x86_64-server-ha-6.5.aus-debuginfo",
+				"rhel-x86_64-server-lb-6.2.aus",
+				"rhel-x86_64-server-lb-6.2.aus-debuginfo",
+				"rhel-x86_64-server-lb-6.4.aus",
+				"rhel-x86_64-server-lb-6.4.aus-debuginfo",
+				"rhel-x86_64-server-lb-6.5.aus",
+				"rhel-x86_64-server-lb-6.5.aus-debuginfo",
+				"rhel-x86_64-server-optional-6.2.aus",
+				"rhel-x86_64-server-optional-6.2.aus-debuginfo",
+				"rhel-x86_64-server-optional-6.4.aus",
+				"rhel-x86_64-server-optional-6.4.aus-debuginfo",
+				"rhel-x86_64-server-optional-6.5.aus",
+				"rhel-x86_64-server-optional-6.5.aus-debuginfo",
+				"rhel-x86_64-server-rs-6.2.aus",
+				"rhel-x86_64-server-rs-6.2.aus-debuginfo",
+				"rhel-x86_64-server-rs-6.4.aus",
+				"rhel-x86_64-server-rs-6.4.aus-debuginfo",
+				"rhel-x86_64-server-rs-6.5.aus",
+				"rhel-x86_64-server-rs-6.5.aus-debuginfo",
+				"rhel-x86_64-server-sfs-6.2.aus",
+				"rhel-x86_64-server-sfs-6.2.aus-debuginfo",
+				"rhel-x86_64-server-sfs-6.4.aus",
+				"rhel-x86_64-server-sfs-6.4.aus-debuginfo",
+				"rhel-x86_64-server-sfs-6.5.aus",
+				"rhel-x86_64-server-sfs-6.5.aus-debuginfo",
+				"rhel-x86_64-server-supplementary-6.2.aus",
+				"rhel-x86_64-server-supplementary-6.2.aus-debuginfo",
+				"rhel-x86_64-server-supplementary-6.4.aus",
+				"rhel-x86_64-server-supplementary-6.4.aus-debuginfo",
+				"rhel-x86_64-server-supplementary-6.5.aus",
+				"rhel-x86_64-server-supplementary-6.5.aus-debuginfo",
+				"rhn-tools-rhel-x86_64-server-6.2.aus",
+				"rhn-tools-rhel-x86_64-server-6.2.aus-debuginfo",
+				"rhn-tools-rhel-x86_64-server-6.4.aus",
+				"rhn-tools-rhel-x86_64-server-6.4.aus-debuginfo",
+				"rhn-tools-rhel-x86_64-server-6.5.aus",
+				"rhn-tools-rhel-x86_64-server-6.5.aus-debuginfo"
+		});
+		
+		// use a regex and grep to detect actual RHEL6 aus channel mappings
+		List<String> actualRhel6AusChannels = new ArrayList<String>();
+		SSHCommandResult result = client.runCommandAndWait("grep '.aus' "+channelCertMappingFilename);
+		for (String line: result.getStdout().trim().split("\\n")){
+			if (line.trim().equals("")) continue; // skip blank lines
+			if (line.trim().startsWith("#")) continue; // skip comments
+			String channel = line.split(":")[0].trim();
+			String productCertFilename = line.split(":")[1].trim();
+			actualRhel6AusChannels.add(channel);
+		}
+		
+		boolean allExpectedRhel6AusChannelsAreMapped = true;
+		for (String channel : expectedRhel6AusChannels) {
+			if (actualRhel6AusChannels.contains(channel)) {
+				Assert.assertTrue(actualRhel6AusChannels.contains(channel), "Expected RHEL6 AUS channel '"+channel+"' was found in channel cert mapping file '"+channelCertMappingFilename+"'.");
+			} else {
+				log.warning("Expected RHEL6 AUS channel '"+channel+"' was not found in channel cert mapping file '"+channelCertMappingFilename+"'.");
+				allExpectedRhel6AusChannelsAreMapped = false;
+			}
+		}
+		
+		boolean allActualRhel6AusChannelsMappedAreExpected = true;
+		for (String channel : actualRhel6AusChannels) {
+			if (!expectedRhel6AusChannels.contains(channel)) {
+				log.warning("Actual RHEL6 AUS channel '"+channel+"' in channel cert mapping file '"+channelCertMappingFilename+"' that was not expected.  This automated test may need an update.");
+				allActualRhel6AusChannelsMappedAreExpected = false;
+			}
+		}
+		
+		Assert.assertTrue(allExpectedRhel6AusChannelsAreMapped, "All expected RHEL6 AUS channels are mapped in '"+channelCertMappingFilename+"'. (See above warnings for offenders.)");
+		Assert.assertTrue(allActualRhel6AusChannelsMappedAreExpected, "All actual RHEL6 AUS channels mapped in '"+channelCertMappingFilename+"' are expected. (See above warnings for offenders.)");
+	}
+	
+	
 	@Test(	description="Verify that all product cert files mapped in channel-cert-mapping.txt exist",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-771615"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
