@@ -632,6 +632,9 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/ta_IN/")) bugIds.add("1071022");
 			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("1071022");
 			
+			// Bug 1189950 - [ko_KR] bad translation for "{dateexample}" prevents error message from rendering
+			if (translationFile.getPath().contains("/ko/")) bugIds.add("1189950");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
 		}
