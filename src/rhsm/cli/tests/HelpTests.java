@@ -1070,6 +1070,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.3-1")) { // commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377	RFE Bug 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic
 				options.add("--registration-state=keep,purge");
 			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.6-1")) { // commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20	RFE Bug 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic
+				options.remove("--registration-state=keep,purge");
+				options.add("--keep");
+			}
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();

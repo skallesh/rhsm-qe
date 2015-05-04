@@ -1757,8 +1757,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --keep-classic which implies that we do not want to deregister from classic which will result in dual interoperability registration.",
-			groups={/*"blockedByBug-1180273"*/},
+	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --keep classic which implies that we do not want to deregister from classic which will result in dual interoperability registration.",
+			groups={"blockedByBug-1180273"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1766,7 +1766,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3")) throw new SkipException("This version of subscription-manager does not support 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic");	// commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377
 		
 		String keepOption = "--registration-state=keep";
-//TODO		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.X")) keepOption = "--keep-classic";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.6")) keepOption = "--keep";	// commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20
 		
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		clienttasks.unregister(null, null, null);
@@ -1848,7 +1848,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3")) throw new SkipException("This version of subscription-manager does not support 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic");	// commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377
 		
 		String keepOption = "--registration-state=keep";
-//TODO		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.X")) keepOption = "--keep-classic";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.6")) keepOption = "--keep";	// commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20
 		
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		clienttasks.unregister(null, null, null);
