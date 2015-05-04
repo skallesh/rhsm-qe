@@ -2284,16 +2284,14 @@ if (false) {
 		ipv4_address = getFactValue("network.ipv4_address");	// stopped working when we started using openstack instances of RHEL6
 
 		// when client is an openstack instance, the ipv4_address is private and we need the public address when asserting the proxy logs
-		//	[root@rhel6 ~]# dmidecode --string system-product-name
-		//	Not Specified
-		//	[root@rhel7 ~]# dmidecode --string system-product-name
-		//	Not Specified
 		//	[root@rhel6-openstack-instance ~]# dmidecode --string system-product-name
 		//	OpenStack Compute
 		//	[root@rhel7-openstack-instance ~]# dmidecode --string system-product-name
 		//	RHEV Hypervisor
 		String dmiSystemProduct_name = getFactValue("dmi.system.product_name");
-		if ("Not Specified".equals(dmiSystemProduct_name)) {	// then this is likely an openstack instance
+//		if (dmiSystemProduct_name!=null && !dmiSystemProduct_name.equals("Not Specified")) {	// then this is likely an openstack instance		// WRONG, fails on SGI hardware which returns dmi.system.product_name: UV2000
+		if ((redhatReleaseX.equals("6") && "OpenStack Compute".equals(dmiSystemProduct_name)) ||
+			(redhatReleaseX.equals("7") && "RHEV Hypervisor".equals(dmiSystemProduct_name))	) {	// then this is likely an openstack instance
 			SSHCommandResult ipv4_addressResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "curl --stderr /dev/null http://169.254.169.254/latest/meta-data/public-ipv4", 0);		// will timeout on a non-openstack instance and then fail the exit code assert (probably with code 7)
 			ipv4_address = ipv4_addressResult.getStdout().trim();
 			Assert.assertMatch(ipv4_address, "\\d+\\.\\d+\\.\\d+\\.\\d+", "Validated format of ipv4 address '"+ipv4_address+"' detected from openstack curl query above.");
