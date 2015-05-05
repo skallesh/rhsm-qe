@@ -3080,6 +3080,9 @@ if (false) {
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && (environment!=null)) {
 			// Server does not support environments.
 		} else
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && sshCommandResult.getStderr().trim().endsWith("cannot register with any organizations.") && isPackageVersion("subscription-manager",">=","1.14.7-1")) {	// post commit 270f2a3e5f7d55b69a6f98c160d38362961b3059
+			// stderr= testuser3 cannot register with any organizations.
+		} else
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(64)) ||	// EX_USAGE			Error: Activation keys cannot be used with --auto-attach.
 			sshCommandResult.getExitCode().equals(Integer.valueOf(69)) ||	// EX_UNAVAILABLE	Unable to reach the server
 			sshCommandResult.getExitCode().equals(Integer.valueOf(70)) ||	// EX_SOFTWARE		Error parsing serverurl:
@@ -3092,7 +3095,7 @@ if (false) {
 			this.currentlyRegisteredType = null;
 			*/
 		} else {
-			Assert.fail("Encountered an unknown exitCode '"+sshCommandResult.getExitCode()+"' during a attempt to register.");
+			Assert.fail("Encountered an unexpected exitCode '"+sshCommandResult.getExitCode()+"' during a attempt to register.");
 		}
 		
 		// set autoheal attribute of the consumer

@@ -122,7 +122,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			
 			//Assert.assertEquals(registerResult.getStderr().trim(), String.format("%s cannot register to any organizations.", username), "Error message when READ_ONLY user attempts to register.");	// Bug 903298 - String Update: "Register to" -> "Register with"
 			Assert.assertEquals(registerResult.getStderr().trim(), String.format("%s cannot register with any organizations.", username), "Error message when READ_ONLY user attempts to register.");
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.7-1")) {	// post commit 270f2a3e5f7d55b69a6f98c160d38362961b3059 Specified error codes on system_exit in rhn-migrate-classic-to-rhsm
+				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(1), "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
+			} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE*/, "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
 			} else {
 				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
