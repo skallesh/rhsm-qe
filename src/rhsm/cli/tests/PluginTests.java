@@ -723,12 +723,13 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	// CURRENTLY BLOCKED BY BUGZILLA 922882
 	@Test(	description="enable ProductIdRemoveTestPlugin and assert the plugins list reports enablement",
 			groups={"blockedByBug-922882"},
-			priority=710, enabled=false)	// CLOSED WONTFIX 922882 - [RFE] request for pre_product_id_remove_hook and post_product_id_remove_hook 
+			priority=710, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListWithEnabledProductIdRemoveTestPlugin_Test() {
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "922882"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		// RFE Bug 922882 was CLOSED NOTABUG and will be re-opened when actually needed.  However, we still need to invoke this workaround to remove the ccs package from the prior test
+		try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// remove the HA package that was installed by prior test verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test
 			if (!sm_haPackages.isEmpty() && clienttasks.isPackageInstalled(sm_haPackages.get(0))) {
@@ -746,7 +747,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			}
 			Assert.assertNull(haInstalledProduct, "The High Availability product id '"+HighAvailabilityTests.haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
 			
-			throw new SkipException("Skipping test while bug '"+bugId+"' is open.");
+			throw new SkipException("Skipping test while bug '"+bugId+"' is not implemented.");
 		}
 		// END OF WORKAROUND
 		
