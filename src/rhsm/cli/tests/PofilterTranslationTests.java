@@ -699,8 +699,10 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 872697 - [ja_JP] two accelerators for msgid "Configure Pro_xy"
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("872697");
 				// Bug 908879 - [es_ES] pofilter acceleratiors test failed for subscription-manager 1.8.X 
-				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/es_ES/")) bugIds.add("908879");
-				
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/es_ES/")) bugIds.add("908879");	
+				// Bug 1220287 - [RHSM GUI][ja_JP]Incorrect short-cut key '_S' of Save button in Proxy Configuration dialog.
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("1220287");
+
 //				// Bug 825397	Many translated languages fail the pofilter newlines test
 //				if (pofilterTest.equals("newlines") && !(translationFile.getPath().contains("/zh_CN/")||translationFile.getPath().contains("/ru/")||translationFile.getPath().contains("/ja/"))) bugIds.add("825397");			
 				// Bug 887957 	[ml_IN] pofilter newlines test failed for msgid="Redeeming the subscription may take..." 
