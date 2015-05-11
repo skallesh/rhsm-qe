@@ -2839,7 +2839,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// test variations of a valid serverUrl
 		for (String serverUrl : rhsmServerUrls) {
 			List<String> availableChildChannelList = rhnAvailableChildChannels.isEmpty()? rhnAvailableChildChannels : Arrays.asList(rhnAvailableChildChannels.get(randomGenerator.nextInt(rhnAvailableChildChannels.size())));	// randomly choose an available child channel just to add a little fun
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("977321"),		sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	availableChildChannelList,	"-f --serverurl="+serverUrl,		sm_rhnUsername,	sm_rhnPassword,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,	defaultServiceLevel}));		
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"977321","1220493"}),		sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	availableChildChannelList,	"-f --serverurl="+serverUrl,		sm_rhnUsername,	sm_rhnPassword,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,	defaultServiceLevel}));		
 		}
 		
 		// test each servicelevel
