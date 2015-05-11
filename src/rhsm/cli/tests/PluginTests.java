@@ -722,8 +722,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	// TODO ProductIdRemoveTestPlugin Tests ***************************************************
 	// CURRENTLY BLOCKED BY BUGZILLA 922882
 	@Test(	description="enable ProductIdRemoveTestPlugin and assert the plugins list reports enablement",
-			groups={/*"blockedByBug-922882"*/},
-			priority=710, enabled=true)
+			groups={"blockedByBug-922882"},
+			priority=710, enabled=false)	// CLOSED WONTFIX 922882 - [RFE] request for pre_product_id_remove_hook and post_product_id_remove_hook 
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListWithEnabledProductIdRemoveTestPlugin_Test() {
 		// TEMPORARY WORKAROUND FOR BUG
