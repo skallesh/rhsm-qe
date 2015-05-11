@@ -1147,7 +1147,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		//	socket.error: [Errno 2] No such file or directory
 		//	[root@jsefler-os6 ~]# echo $?
 		//	1
-		clienttasks.yumInstallPackage(pkg);
+		
+		// Note: On ComputeNode, package rcs is under rhel-6-hpc-node-optional-rpms
+		// Note: On Client, package rcs is under rhel-6-client-optional-rpms
+		//clienttasks.yumInstallPackage(pkg);
+		clienttasks.yumInstallPackage(pkg,"--enablerepo=*-optional-rpms");
 	}
 	@AfterGroups(groups={"setup"}, value={"VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"})
 	@AfterClass(groups={"setup"})	// insurance; not really needed
