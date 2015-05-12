@@ -876,9 +876,11 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" repo-override --remove-all",							new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" repo-override --list",								new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" repo-override",										new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
-			if (clienttasks.isPackageVersion("subscription-manager-migration",">=","1.14.3-1")) {
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1196416"}),		"rhn-migrate-classic-to-rhsm --activation-key=foo",							new Integer(1),		"","The --activation-key option requires that a --org be given."}));	// see https://bugzilla.redhat.com/show_bug.cgi?id=1196416#c5
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1196416","1217835"}),	"rhn-migrate-classic-to-rhsm --activation-key=foo",							new Integer(64),		"","Error: The --activation-key option requires that a --org be given."}));	// see https://bugzilla.redhat.com/show_bug.cgi?id=1196416#c5
+			if (clienttasks.isPackageVersion("subscription-manager-migration",">=","1.14.3-1") && clienttasks.isPackageVersion("subscription-manager-migration","<","1.14.7-1")) {
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1196416"}),				"rhn-migrate-classic-to-rhsm --activation-key=foo",					new Integer(1),		"","The --activation-key option requires that a --org be given."}));	// see https://bugzilla.redhat.com/show_bug.cgi?id=1196416#c5
+			}
+			if (clienttasks.isPackageVersion("subscription-manager-migration",">=","1.14.7-1")) {
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1196416","1217835"}),	"rhn-migrate-classic-to-rhsm --activation-key=foo",					new Integer(64),	"","Error: The --activation-key option requires that a --org be given."}));	// commit 270f2a3e5f7d55b69a6f98c160d38362961b3059 Bug 1217835 - exit code from rhn-migrate-classic-to-rhsm activation-key without an org should be EX_USAGE
 			}
 			
 			// negative tests that require the system to be registered before attempting the test...
