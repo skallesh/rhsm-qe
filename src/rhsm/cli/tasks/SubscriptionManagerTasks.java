@@ -8167,6 +8167,35 @@ if (false) {
 					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2015-05-11 20:56:36,029 [DEBUG] subscription-manager:70001 @connection.py:494 - Making request: POST /subscription/consumers/4abab952-0b4b-4daa-bb34-5a0938c99672/entitlements?pool=8a99f9864d0ba396014d10a2642a1537
+			//	2015-05-11 20:56:48,012 [DEBUG] subscription-manager:70001 @connection.py:521 - Response: status=500
+			//	2015-05-11 20:56:48,012 [ERROR] subscription-manager:70001 @managercli.py:1496 - Runtime Error com.mysql.jdbc.exceptions.jdbc4.MySQLTransactionRollbackException: Deadlock found when trying to get lock; try restarting transaction at sun.reflect.NativeConstructorAccessorImpl.newInstance0:-2
+			//	Traceback (most recent call last):
+			//	File "/usr/share/rhsm/subscription_manager/managercli.py", line 1486, in _do_command
+			//	ents = self.cp.bindByEntitlementPool(self.identity.uuid, pool, self.options.quantity)
+			//	File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 1017, in bindByEntitlementPool
+			//	return self.conn.request_post(method)
+			//	File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 605, in request_post
+			//	return self._request("POST", method, params)
+			//	File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 530, in _request
+			//	self.validateResponse(result, request_type, handler)
+			//	File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 572, in validateResponse
+			//	raise RestlibException(response['status'], error_msg)
+			//	RestlibException: Runtime Error com.mysql.jdbc.exceptions.jdbc4.MySQLTransactionRollbackException: Deadlock found when trying to get lock; try restarting transaction at sun.reflect.NativeConstructorAccessorImpl.newInstance0:-2
+			issue = "Runtime Error com.mysql.jdbc.exceptions.jdbc4.MySQLTransactionRollbackException: Deadlock found when trying to get lock";
+			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+				String bugId = "1220830"; boolean invokeWorkaroundWhileBugIsOpen = true;	//	Bug 1220830 - subscription-manager encounters occasional Deadlock from stage IT-Candlepin
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
 		}
 	}
 	
