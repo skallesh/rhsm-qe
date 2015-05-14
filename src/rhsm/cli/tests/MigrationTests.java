@@ -413,13 +413,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// get the product cert filenames that we should expect rhn-migrate-classic-to-rhsm to copy (or use the ones supplied to the @Test)
 		Set<String> expectedMigrationProductCertFilenames = getExpectedMappedProductCertFilenamesCorrespondingToChannels(rhnChannelsConsumed);
 		
-		// screw up the currently configured serverUrl when the input options specify a new one
+		// screw up the currently configured [server]hostname:port/prefix when the command line options specify a new URL
 		if (options.contains("--serverurl") || options.contains("--destination-url")) {
 			log.info("Configuring a bad server hostname:port/prefix to test that the specified --serverurl can override it...");
 			List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-			listOfSectionNameValues.add(new String[]{"server","hostname","bad-hostname.com"});
-			listOfSectionNameValues.add(new String[]{"server","port","000"});
-			listOfSectionNameValues.add(new String[]{"server","prefix","/bad-prefix"});
+			if (doesStringContainMatches(options, "(--serverurl|--destination-url)=(https://)?[\\w\\.-]+")) {	// hostname
+				listOfSectionNameValues.add(new String[]{"server","hostname","bad-hostname.com"});
+			}
+			if (doesStringContainMatches(options, "(--serverurl|--destination-url)=(https://)?[\\w\\.-]+:\\d+")) {	// port
+				listOfSectionNameValues.add(new String[]{"server","port","000"});
+			}
+			if (doesStringContainMatches(options, "(--serverurl|--destination-url)=(https://)?[\\w\\.-]+(:\\d+)?/\\w+")) {	// prefix
+				listOfSectionNameValues.add(new String[]{"server","prefix","/bad-prefix"});
+			}
 			clienttasks.config(null, null, true, listOfSectionNameValues);
 		}
 		
