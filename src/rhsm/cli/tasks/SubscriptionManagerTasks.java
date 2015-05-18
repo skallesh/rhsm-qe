@@ -7063,10 +7063,20 @@ if (false) {
 		//	spice-server     x86_64     0.7.3-2.el6       rhel-6-server-beta-rpms            245 k
 		//  cman             x86_64     3.0.12.1-19.el6   beaker-HighAvailability            427 k
 		//  cmirror          x86_64     7:2.02.103-5.el7  rhel-rs-for-rhel-7-server-htb-rpms 166 k
+		
+		// Installing:
+		//	ricci-debuginfo
+		//	            x86_64 0.16.2-35.el6 rhel-ha-for-rhel-6-server-htb-debug-rpms 4.4 M
+		
+		// Installing:
+		//	jline-eap6 noarch 0.9.94-10.GA_redhat_2.ep6.el6.4
+		//	                                       jb-eap-6-for-rhel-6-for-power-rpms 135 k
 		if (repoLabel==null) {
-			regex=pkgName+"\\n? +(\\w+) +([\\w:\\.-]+) +([\\w-]+)";		
+			regex=pkgName+"\\n? +(\\w+) +([\\w:\\.-]+) +([\\w-]+)";
+			regex=pkgName+"\\n? +(\\w+) +([\\w:\\.-]+)\\n? +([\\w-]+) +(\\d+(\\.\\d+)? (k|M|G))";		
 		} else {
 			regex=pkgName+"\\n? +(\\w+) +([\\w:\\.-]+) +("+repoLabel+")";
+			regex=pkgName+"\\n? +(\\w+) +([\\w:\\.-]+)\\n? +("+repoLabel+") +(\\d+(\\.\\d+)? (k|M|G))";
 		}
 		pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		matcher = pattern.matcher(sshCommandRunner.getStdout());
@@ -7074,6 +7084,7 @@ if (false) {
 		String arch = matcher.group(1);
 		String version = matcher.group(2);
 		String repo = matcher.group(3);
+		String size = matcher.group(4);
 		
 
 		// finally assert that the package is actually installed
