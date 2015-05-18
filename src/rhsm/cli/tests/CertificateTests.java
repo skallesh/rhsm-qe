@@ -30,6 +30,7 @@ import rhsm.data.CertStatistics;
 import rhsm.data.ConsumerCert;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
+import rhsm.data.InstalledProduct;
 import rhsm.data.OrderNamespace;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductNamespace;
@@ -1002,7 +1003,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		return ll;
 	}
-	@AfterGroups(groups="setup", value = {"VerifyBaseRHELProductCertVersionUpdates_Test"})
+	@AfterGroups(groups="setup",
+//			value = {"VerifyBaseRHELProductCertVersionUpdates_Test"}
+			value = {"VerifyBaseRHELProductCertVersionUpdates_Test","VerifyYumUpdateWithDisabledRepoWillNotDeleteJBossProductId_Test"}
+	)
 	public void restoreOriginalRhsmProductCertDirAndProductIdJsonFile() {
 		if (clienttasks==null) return;
 		
@@ -1016,8 +1020,9 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			log.info("Restoring the original productid json database file...");
 			RemoteFileTasks.runCommandAndAssert(client,"echo '"+productIdJsonFile+"' > "+clienttasks.productIdJsonFile, Integer.valueOf(0));
 			productIdJsonFile=null;
-			clienttasks.yumClean("all");
+//			clienttasks.yumClean("all");
 		}
+		clienttasks.yumClean("all");
 	}
 	@BeforeGroups(groups="setup", value = {"VerifyBaseRHELProductCertVersionUpdates_Test"})
 	protected void findAllRhelProductCertsFromRhnDefinitions() {
@@ -1056,6 +1061,123 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	
+	
+	
+	
+	@Test(	description="When updating a RHEL package on a system with JBoss, verify that the JBoss productId is not deleted when calling yum update with --disablerepo=jb-eap-6-for-rhel-6-server-rpms",
+			groups={"VerifyYumUpdateWithDisabledRepoWillNotDeleteJBossProductId_Test","AcceptanceTests","Tier1Tests","blockedByBug-1159163"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyYumUpdateWithDisabledRepoWillNotDeleteJBossProductId_Test() throws JSONException, Exception {
+		// fixed in https://bugzilla.redhat.com/show_bug.cgi?id=1159163#c12  subscription-manager commit 68d210bb9145e7ea65aea979fde694436e3e0373 subscription-manager-1.14.6-1
+		clienttasks.unregister(null, null, null);
+		restoreOriginalRhsmProductCertDirAndProductIdJsonFile();
+		
+		// hard data for this test...
+		String rhelPackage		= "zsh";
+		String rhelRepo			= "rhel-6-server-rpms";	// Required Tags: rhel-6-server Arches: x86_64, x86
+		String rhelProductId	= "69";	// Red Hat Enterprise Linux Server	// Tags: rhel-6,rhel-6-server Arch: x86_64
+		String jbossPackage		= "jline-eap6";	// rpm -q jline-eap6.noarch --requires  => rpmlib
+		String jbossRepo		= "jb-eap-6-for-rhel-6-server-rpms";	// Required Tags: rhel-6-server Arches: x86_64, x86
+		String jbossProductId	= "183";	// JBoss Enterprise Application Platform
+		if (clienttasks.arch.equals("ppc64")) {
+			rhelRepo			= "rhel-6-for-power-rpms";	// Required Tags: rhel-6-ibm-power Arches: ppc64
+			rhelProductId		= "74";	// Red Hat Enterprise Linux for Power, big endian	// Tags: rhel-6,rhel-6-ibm-power Arch: ppc64
+			jbossRepo			= "jb-eap-6-for-rhel-6-for-power-rpms";	// Required Tags: rhel-6-ibm-power Arches: ppc64
+			jbossProductId		= "183";	// JBoss Enterprise Application Platform
+		}
+		
+		// remove the test packages in case they are already installed
+		if (clienttasks.isPackageInstalled(rhelPackage)) clienttasks.yumRemovePackage(rhelPackage, "--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
+		if (clienttasks.isPackageInstalled(jbossPackage)) clienttasks.yumRemovePackage(jbossPackage, "--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
+		
+		// determine the currently installed product certs
+		List <ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
+		ProductCert rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductId, currentProductCerts);
+		if (rhelProductCert==null) throw new SkipException("JBoss Enterprise Application Platform is not offered on this variant '"+clienttasks.variant+"' of RHEL.");
+		ProductCert jbossProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", jbossProductId, currentProductCerts);
+		Assert.assertNull(jbossProductCert,"Do not expect the JBoss product to be installed at the beginning of this test.");
+		
+		// configure a temporary productCertDir and backup the productid json database file
+		log.info("Configuring a temporary product cert directory...");
+		if (rhsmProductCertDir==null) {rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");Assert.assertNotNull(rhsmProductCertDir);} // remember the original so it can be restored later
+		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+tmpProductCertDir, Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+tmpProductCertDir+"/*.pem", Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"cp "+rhsmProductCertDir+"/*.pem "+tmpProductCertDir, Integer.valueOf(0));
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
+		if (productIdJsonFile==null) {productIdJsonFile = client.runCommandAndWait("cat "+clienttasks.productIdJsonFile).getStdout().replaceAll("\\s*\n\\s*",""); Assert.assertTrue(productIdJsonFile!=null && !productIdJsonFile.isEmpty());} // remember the original so it can be restored later
+		
+		// register with autosubscribe for rhel content
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, null, null, null, null);
+		List <InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		InstalledProduct rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductId, currentlyInstalledProducts);
+		Assert.assertNotNull(rhelInstalledProduct, "Expecting the installed RHEL Server product '"+rhelProductId+"' to be installed.");
+		Assert.assertEquals(rhelInstalledProduct.status, "Subscribed","Expecting the RHEL Server product to have been auto-subscribed during registration.");
+		
+		// subscribe to JBoss Enterprise Application Platform - Example SKU MW0167254 Red Hat JBoss Enterprise Application Platform with Management, 16 Core Standard, L3 Support Partner)
+		String jbossPoolId = null;
+		List <SubscriptionPool> jbossSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools(jbossProductId, sm_serverUrl);
+		if (jbossSubscriptionPools.isEmpty() && !CandlepinType.standalone.equals(sm_serverType)) Assert.fail("Expected to find an available subscription pool for Red Hat JBoss Enterprise Application Platform.");
+		if (jbossSubscriptionPools.isEmpty()) throw new SkipException("Cannot run this test when there is no available subscription for Red Hat JBoss Enterprise Application Platform.");
+		// too many asserts... clienttasks.subscribeToSubscriptionPool(jbossSubscriptionPools.get(0));
+		clienttasks.subscribe_(null, null, jbossSubscriptionPools.get(0).poolId, null, null, null, null, null, null, null, null, null);
+		
+		// enable the jb-eap-6-for-rhel-6-server-rpms repo
+		// Note: This is necessary. If only enabled during yum install --enablerepo=jb-eap-6-for-rhel-6-server-rpms then the jboss product id will install, but it will also be deleted during the yum install of a rhel package.
+		clienttasks.repos(null, null, null, jbossRepo, null, null, null, null);
+		
+		// yum install jline-eap6 from repo jb-eap-6-for-rhel-6-server-rpms
+		//clienttasks.yumInstallPackageFromRepo(jbossPackage, jbossRepo, null);
+		clienttasks.yumInstallPackage(jbossPackage);
+		
+		// assert that the jboss product id 183 has been newly installed
+		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		InstalledProduct jbossInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", jbossProductId, currentlyInstalledProducts);
+		Assert.assertNotNull(jbossInstalledProduct, "After installing jboss package '"+jbossPackage+"' from enabled jboss repo '"+jbossRepo+"', the jboss product id '"+jbossProductId+"' is installed.");
+		
+		// now for the real test...  install a rhel package with yum --disablerepo and then verify that the jboss product cert remains installed...
+		//clienttasks.repos(null, null, null, rhelRepo, null, null, null, null); // is already enabled by default
+		clienttasks.yumInstallPackage(rhelPackage, "--disablerepo="+jbossRepo);
+		
+		// verify that the jboss product cert remains installed - Bug 1159163 - RHSM product certificate gets deleted by product-id plugin on running 'yum update --disablerepo
+		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		jbossInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", jbossProductId, currentlyInstalledProducts);
+		Assert.assertNotNull(jbossInstalledProduct, "After installing rhel package '"+rhelPackage+"' while disabling the jboss repo '"+jbossRepo+"' in-line, the jboss product id '"+jbossProductId+"' remains installed.");
+		
+		
+		// remove the only installed jboss package while disabling the rhel repo and verify the jboss product id has been removed, but the rhel product id remains
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1222627"; // Bug 1222627 - deletion of JBOSS product certificate is neglected by product-id plugin on running 'yum remove JBOSS-PKG --disablerepo=RHEL-REPO'
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("While bug '"+bugId+"' is open, we will exclude the --disablerepo="+rhelRepo+" option from the yum removal of the jboss package.");
+			clienttasks.yumRemovePackage(jbossPackage); // THIS PASSES THE FOLLOWING Assert.assertNull(jbossInstalledProduct,...
+		} else
+		// END OF WORKAROUND
+		clienttasks.yumRemovePackage(jbossPackage, "--disablerepo="+rhelRepo);	// THIS FAILS THE FOLLOWING Assert.assertNull(jbossInstalledProduct,...  due to Bug 1222627
+		
+		// verify that the jboss product cert is removed
+		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		jbossInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", jbossProductId, currentlyInstalledProducts);
+		Assert.assertNull(jbossInstalledProduct, "After removing jboss package '"+jbossPackage+"' while disabling rhel repo '"+rhelRepo+"', the jboss product id '"+jbossProductId+"' is removed (because it is the final remaining package installed from jboss repo '"+jbossRepo+"').");
+		// verify that the rhel product cert remains installed
+		rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductId, currentlyInstalledProducts);
+		Assert.assertNotNull(rhelInstalledProduct, "After removing jboss package '"+jbossPackage+"' while disabling rhel repo '"+rhelRepo+"', the rhel product id '"+rhelProductId+"' remains installed (because there are many other rhel packages from rhel repo '"+rhelRepo+"' still installed).");
+
+		
+		// remove the rhel package
+		clienttasks.yumRemovePackage(rhelPackage);
+		
+		// verify that the jboss product cert remains uninstalled
+		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		jbossInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", jbossProductId, currentlyInstalledProducts);
+		Assert.assertNull(jbossInstalledProduct, "After removing rhel package '"+rhelPackage+"', the jboss product id '"+jbossProductId+"' from enabled repo '"+jbossRepo+"' remains uninstalled.");
+		// verify that the rhel product cert remains installed
+		rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductId, currentlyInstalledProducts);
+		Assert.assertNotNull(rhelInstalledProduct, "After removing rhel package '"+rhelPackage+"' the rhel product id '"+rhelProductId+"' remains installed (because there are many other rhel packages from rhel repo '"+rhelRepo+"' still installed).");
+	}
 	
 	
 	
