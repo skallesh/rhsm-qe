@@ -1113,6 +1113,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		List <InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 		InstalledProduct rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductId, currentlyInstalledProducts);
 		Assert.assertNotNull(rhelInstalledProduct, "Expecting the installed RHEL Server product '"+rhelProductId+"' to be installed.");
+		if (!rhelInstalledProduct.status.equals("Subscribed") && CandlepinType.standalone.equals(sm_serverType)) throw new SkipException("This test is designed for execution against a non-standalone candlepin server where available RHEL subscriptions are expected.");
 		Assert.assertEquals(rhelInstalledProduct.status, "Subscribed","Expecting the RHEL Server product to have been auto-subscribed during registration.");
 		
 		// subscribe to JBoss Enterprise Application Platform - Example SKU MW0167254 Red Hat JBoss Enterprise Application Platform with Management, 16 Core Standard, L3 Support Partner)
