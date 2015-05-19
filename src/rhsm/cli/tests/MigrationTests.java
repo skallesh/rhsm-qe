@@ -1178,6 +1178,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			clienttasks.unregister_(null, null, null);
 		}
 		
+		// migrate from RHN Classic to RHSM using the activation key 
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "1196416"; // Bug 1196416 - rhn-migrate-classic-to-rhsm with --activation-key option should not prompt for destination credentials 
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1186,9 +1187,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name1+" "+"--activation-key="+name2,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
 		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
 		// END OF WORKAROUND
-		
-		// migrate from RHN Classic to RHSM using the activation key 
-		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name1+" "+"--activation-key="+name2,sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
+		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name1+" "+"--activation-key="+name2+" "+"--org="+clientOrgKey,sm_rhnUsername,sm_rhnPassword,null,null,null,null,null);
 		
 		// assert that the system is consuming the pools from the activation key.
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -1511,6 +1510,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	@ImplementsNitrateTest(caseId=136404)
 	public void RhnMigrateClassicToRhsmWithInvalidCredentials_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.3-1")) throw new SkipException("This test was implemented for subscription-manager-migration < 1.14.3-1.  See replacement RhnMigrateClassicToRhsmWithInvalidRhsmCredentials_Test.");
+
 		clienttasks.unregister(null,null,null);
 		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
 		if (!sm_serverType.equals(CandlepinType.hosted)) {rhsmUsername="foo"; rhsmPassword="bar";}
@@ -1520,9 +1521,30 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "Unable to connect to certificate server: "+servertasks.invalidCredentialsMsg()+".  See "+clienttasks.rhsmLogFile+" for more details.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid credentials ended with: "+expectedStdout);
 	}
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid RHSM credentials, but valid RHN credentials",
+			groups={"blockedByBug-789008","blockedByBug-807477","blockedByBug-1052297"},
+			dependsOnMethods={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=136404)
+	public void RhnMigrateClassicToRhsmWithInvalidRhsmCredentials_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3-1")) throw new SkipException("This test is implemented for subscription-manager-migration >= 1.14.3-1.  See former RhnMigrateClassicToRhsmWithInvalidCredentials_Test.");
+	
+		clienttasks.unregister(null,null,null);
+		// register to RHN Classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
+		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
+		if (sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test is not functionally possible when migrating from RHN Classic to an RHSM Hosted entitlement server because the credentials are assumed to be equivalent; the customer account is the same.");
+		if (!sm_serverType.equals(CandlepinType.hosted)) {rhsmUsername="foo"; rhsmPassword="bar";}
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername, sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(70)/*EX_SOFTWARE*/, "The expected exit code from call to '"+rhnMigrateTool+"' with invalid RHSM credentials.");
+		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to connect to certificate server.  See "+clienttasks.rhsmLogFile+" for more details.", "The expected stdout result from call to "+rhnMigrateTool+" with invalid credentials.");		// valid prior to bug fix 789008
+		String expectedStdout = "Unable to connect to certificate server: "+servertasks.invalidCredentialsMsg()+".  See "+clienttasks.rhsmLogFile+" for more details.";
+		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid RHSM credentials ended with: "+expectedStdout);
+	}
 	
 	
-	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid credentials, but valid subscription-manager credentials",
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid RHN credentials, but valid RHSM credentials",
 			groups={"blockedByBug-1052297"},
 			dependsOnMethods={},
 			enabled=true)
@@ -1589,8 +1611,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "Unable to locate SystemId file. Is this system registered?";
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.8.2-1")) expectedStdout = "Problem encountered getting the list of subscribed channels.  Exiting.";	// changed to this value by subscription-manager commit 53c7f0745d1857cd5e1e080e06d577e67e76ecdd for the benefit of unit testing on Fedora
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedStdout = "Problem encountered getting the list of subscribed channels.  See /var/log/rhsm/rhsm.log for more details.";	// changed by commit c0f8052ec2b5b7b5c736eb626e381aef0e5327e5
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.7-1")) expectedStdout = "Could not read legacy systemid at /etc/sysconfig/rhn/systemid";	// changed by commit 49db2c8b60d552837527974150bff77fcf5d51fa
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file ended with: "+expectedStdout);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file.");
+		// Skip ExitCode assertion because it is masked by the rhn-migrate-classic-to-rhsm.tcl wrapper Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without an RHN Classic systemid file.");
 		
 		// TODO: We could get the tail of the rhsm.log and assert the expected log messages
 		// -from up2date_client import up2dateErrors => "Unable to locate SystemId file. Is this system registered?" when no systemId file is present
@@ -1628,15 +1651,34 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
-		clienttasks.removeRhnSystemIdFile();
+		// register to RHN Classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
+		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.7-1")) clienttasks.removeRhnSystemIdFile();
+		
+		// register to RHSM
 		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, null, null, null));
+		
+		// attempt to migrate
 		SSHCommandResult sshCommandResult;
-		if (isCurrentlyConfiguredServerTypeHosted()) {
-			// note that the validity of the username and password really do not matter for this test
-			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,null,null,null,null, null);
-		} else {
-			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,sm_clientUsername,sm_clientPassword,sm_clientOrg,null, null);
+		String options = null;
+		String rhnUsername = sm_clientUsername;
+		String rhnPassword = sm_clientPassword;
+		String rhsmUsername = sm_clientUsername;
+		String rhsmPassword = sm_clientPassword;
+		String rhsmOrg = sm_clientOrg;
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.6-1")) {
+			options = "--keep";	// commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20
+			rhnUsername = null;
+			rhnPassword = null;
 		}
+		if (isCurrentlyConfiguredServerTypeHosted()) {
+			rhsmUsername = null;
+			rhsmPassword = null;
+			rhsmOrg = null;
+		}
+		// note that the validity of the username and password really do not matter for this test
+		sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);
 		String expectedStdout;
 		expectedStdout = "This machine appears to be already registered to Certificate-based RHN.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 847380
 		expectedStdout = "This machine appears to be already registered to Red Hat Subscription Management.  Exiting."+"\n\n"+"Please visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 874760
@@ -1745,9 +1787,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult;
 		sshCommandResult = executeRhnMigrateClassicToRhsm("--serverurl="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
 		String expectedStdout = "Unable to read mapping file: "+channelCertMappingFilename+"."+"\n"+"Do you have the subscription-manager-migration-data package installed?";
+		Integer expectedExitCode = Integer.valueOf(1);
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedStdout = "Unable to read mapping file: "+channelCertMappingFilename+"."+"\n"+"Please check that you have the subscription-manager-migration-data package installed.";	// changed by commit c0f8052ec2b5b7b5c736eb626e381aef0e5327e5
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.7")) expectedExitCode = Integer.valueOf(78)/*EX_CONFIG*/;	// changed by commit 270f2a3e5f7d55b69a6f98c160d38362961b3059	 // Specified error codes on system_exit in rhn-migrate-classic-to-rhsm
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from a call to '"+rhnMigrateTool+"' without subscription-manager-migration-data installed should be: "+expectedStdout);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The expected exitcode from a call to '"+rhnMigrateTool+"' without subscription-manager-migration-data installed.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "The expected exitcode from a call to '"+rhnMigrateTool+"' without subscription-manager-migration-data installed.");
 		
 		// verify that we have not yet migrated since subscription-manager-migration-data was not installed
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is still registered on the RHN Classic server after failing to migrate from RHN Classic using '"+rhnMigrateTool+"'.");
