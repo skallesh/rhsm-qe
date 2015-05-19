@@ -437,11 +437,36 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				//201112021710:31.298 - FINE: Stdout: The system with UUID fc463d3d-dacb-4581-a2c6-2f4d69c7c457 has been unregistered
 				//201112021710:31.299 - FINE: Stderr: Guest's host does not match owner of pool: '8a90f85733fc4df80133fc6f6bf50e29'.
 				//201112021710:31.299 - FINE: ExitCode: 255
-				Assert.assertEquals(registerResult.getStderr().trim(),"Guest's host does not match owner of pool: '"+poolId+"'.");
-				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a virt_only derived_pool on a standalone candlepin server for which our system's host is not registered.");
-				Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
-
-				return registerResult;
+				if (clienttasks.isVersion(servertasks.statusVersion, "<", "0.9.45-1")) {	// valid prior to the pools of "type": "UNMAPPED_GUEST"
+					Assert.assertEquals(registerResult.getStderr().trim(),"Guest's host does not match owner of pool: '"+poolId+"'.");
+					Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a virt_only derived_pool on a standalone candlepin server for which our system's host is not registered.");
+					Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
+					return registerResult;
+				} else {
+					//TODO beyond the scope of this test, we could assert that the consumed subscription details match...
+					// Status Details:      Guest has not been reported on any host and is using a temporary unmapped guest subscription.
+					//	[root@jsefler-os6 ~]# subscription-manager list --consumed
+					//	+-------------------------------------------+
+					//	   Consumed Subscriptions
+					//	+-------------------------------------------+
+					//	Subscription Name:   Awesome OS Instance Based (Standard Support)
+					//	Provides:            Awesome OS Instance Server Bits
+					//	SKU:                 awesomeos-instancebased
+					//	Contract:            0
+					//	Account:             12331131231
+					//	Serial:              4452426557824085674
+					//	Pool ID:             ff8080814d6d978a014d6d98c5f41aaa
+					//	Provides Management: No
+					//	Active:              True
+					//	Quantity Used:       1
+					//	Service Level:       Standard
+					//	Service Type:        L1-L3
+					//	Status Details:      Guest has not been reported on any host and is using a temporary unmapped guest subscription.
+					//	Subscription Type:   Instance Based (Temporary)
+					//	Starts:              05/18/2015
+					//	Ends:                05/20/2015
+					//	System Type:         Virtual
+				}
 			}
 		}
 		
@@ -1755,11 +1780,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getRegisterWithActivationKeyContainingPool_TestDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-//		for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {	// takes a long time and rarely reveals a bug, limiting the loop to a random subset...
+		//for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {	// takes a long time and rarely reveals a bug, limiting the loop to a random subset...
 		for (List<Object> l : getRandomSubsetOfList(getAllJSONPoolsDataAsListOfLists(),10)) {
 			JSONObject jsonPool = (JSONObject)l.get(0);
 			String keyName = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), jsonPool.getString("id"));
 ///*debugTesting*/ if (!jsonPool.getString("productName").equals("Awesome OS physical with unlimited guests")) continue;
+///*debugTesting*/ if (!jsonPool.getString("productId").equals("awesomeos-instancebased")) continue;	// to create activationkeys with a temorary pool for unmapped guests
 			
 			// Object blockedByBug, String keyName, JSONObject jsonPool)
 			ll.add(Arrays.asList(new Object[] {null, keyName, jsonPool}));
