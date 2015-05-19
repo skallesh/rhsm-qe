@@ -66,6 +66,10 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   Translation Bug Reporting Process:
  *   	https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nBugReportingProcess
  *   
+ *   Issues:
+ *      Spring 2015: Ankit Patel is no longer in charge after G11N re-org.
+ *      New contacts: G11N operation team (Manuel Eduardo Ospina Sarmiento /Michelle Kim) and L10n team(Issaac Rooskov / Carlos Munos)
+ *   
  *   Translation Ticket Requests:
  *   	Subscription Manger 1.1.X Translation Request
  *   	https://engineering.redhat.com/rt/Ticket/Display.html?id=180955
