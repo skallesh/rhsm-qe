@@ -68,8 +68,12 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   
  *   Issues:
  *      Spring 2015: Ankit Patel is no longer in charge after G11N re-org.
- *      New contacts: G11N operation team (Manuel Eduardo Ospina Sarmiento /Michelle Kim) and L10n team(Issaac Rooskov / Carlos Munos)
- *   
+ *      New contacts: G11N operation team (Michelle Kim / Manuel Eduardo Ospina Sarmiento) and L10n team(Issaac Rooskov / Carlos Munos)
+ *      Ticket requests should be mailed to globalization-requests@redhat.com
+ *       and Operation team will be able to respond your request and access the
+ *       priority and pass it to localization supervisors in timely manner.
+ *       If you have any questions, please feel free to contact Michelle or Manuel.
+ *       
  *   Translation Ticket Requests:
  *   	Subscription Manger 1.1.X Translation Request
  *   	https://engineering.redhat.com/rt/Ticket/Display.html?id=180955
