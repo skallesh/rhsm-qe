@@ -2419,7 +2419,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c14
 				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-dts-6-beta") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-dts-6-beta-debuginfo") ||
-				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-dts-6-debuginfo") 	){
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-dts-6-debuginfo") ||
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1133942#c16
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-sap-hana-6") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-sap-hana-6-debuginfo")  ){
 				// Bug 1133942 - various RHN channel maps to product certs missing in subscription-manager-migration-data
 				bugIds.add("1133942");
 			}
