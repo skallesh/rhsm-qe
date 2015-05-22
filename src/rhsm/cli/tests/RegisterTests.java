@@ -1468,14 +1468,14 @@ Expected Results:
 	protected String server_hostname = null;
 	protected String server_port = null;
 	protected String server_prefix = null;
-	@BeforeGroups(value={"RegisterWithServerurl_Test"}, groups={"setup"})
+	@BeforeGroups(value={"RegisterWithServerurl_Test","RegisterWithServerurlAutosubscribeAndBadServicelevel_Test"}, groups={"setup"})
 	public void beforeRegisterWithServerurl_Test() {
 		if (clienttasks==null) return;
-		server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
-		server_port		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
-		server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
+		if (server_hostname==null)	server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
+		if (server_port==null)		server_port		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
+		if (server_prefix==null)	server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 	}
-	@Test(	description="subscription-manager-cli: register with --serverurl",
+	@Test(	description="subscription-manager-cli: register with --serverurl; assert positive registrations persist the serverurl to rhsm.conf, negative registrations do not.",
 			dataProvider="getServerurl_TestData",
 			groups={"RegisterWithServerurl_Test","AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -1511,11 +1511,48 @@ Expected Results:
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"), expectedPort, "The "+clienttasks.rhsmConfFile+" configuration for [server] port has been updated from the specified --serverurl "+serverurl);
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), expectedPrefix, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix has been updated from the specified --serverurl "+serverurl);
 	}
-	@AfterGroups(value={"RegisterWithServerurl_Test"}, groups={"setup"})
+	@AfterGroups(value={"RegisterWithServerurl_Test","RegisterWithServerurlAutosubscribeAndBadServicelevel_Test"}, groups={"setup"})
 	public void afterRegisterWithServerurl_Test() {
 		if (server_hostname!=null)	clienttasks.config(null,null,true,new String[]{"server","hostname",server_hostname});
 		if (server_port!=null)		clienttasks.config(null,null,true,new String[]{"server","port",server_port});
 		if (server_prefix!=null)	clienttasks.config(null,null,true,new String[]{"server","prefix",server_prefix});
+	}
+	@Test(	description="subscription-manager-cli: register with good --serverurl --autosubscribe and bad --servicelevel; assert persistance of serverurl from good registration",
+			groups={"RegisterWithServerurlAutosubscribeAndBadServicelevel_Test","blockedByBug-1221273"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithServerurlAutosubscribeAndBadServicelevel_Test() throws JSONException, Exception {
+		clienttasks.unregister(null, null, null);
+		
+		// get the original good serverurl from the rhsm.conf file
+		String goodHostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
+		String goodPort		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
+		String goodPrefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
+		String serverurl=goodHostname+":"+goodPort+goodPrefix;
+		
+		// bork the serverurl in the rhsm.conf file
+		clienttasks.config(null, null, true, Arrays.asList(new String[]{"server","hostname","bad-server.redhat.com"},new String[]{"server","port","1234"},new String[]{"server","prefix","/bad-prefix"}));
+		
+		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, true, "bad-service", null, (String)null, serverurl, null, null, null, null, null, null, null);
+		//	201505221639:19.676 - FINE: ssh root@jsefler-os6.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin --autosubscribe --servicelevel=bad-service --serverurl=jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin
+		//	201505221639:23.089 - FINE: Stdout: The system has been registered with ID: 4e9e924d-2a5d-42ca-a78f-501716d62f56
+		//	201505221639:23.091 - FINE: Stderr: Service level 'bad-service' is not available to units of organization admin.
+		//	201505221639:23.094 - FINE: ExitCode: 70
+		
+		// Assert a successful registration identity
+		//String registeredOwnerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+		String consumerId = clienttasks.getCurrentConsumerId(sshCommandResult);
+		String registeredOwnerKey = CandlepinTasks.getOwnerOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId).getString("key");
+		
+		// Assert the command returned a error with "Service level 'bad-service' is not available to units of organization admin."
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE*/,"ExitCode after register with --serverurl="+serverurl+" and a bad servicelevel.");
+		String expectedStderr = String.format("Service level 'bad-service' is not available to units of organization %s.",registeredOwnerKey);
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr after register with --serverurl="+serverurl+" and a bad servicelevel");
+		
+		// Assert the serverurl persisted to rhsm.conf
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), goodHostname, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname has been updated from the specified --serverurl "+serverurl);
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"), goodPort, "The "+clienttasks.rhsmConfFile+" configuration for [server] port has been updated from the specified --serverurl "+serverurl);
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), goodPrefix, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix has been updated from the specified --serverurl "+serverurl);
 	}
 	
 	
