@@ -482,6 +482,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: usermode-gtk"
 			}));
 		}
+		if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.14.8-1")) {		// commit dc727c4adef8cdc49e319f2d90738e848061da78  Adrian says that these imports were never used
+			expectedRequiresList.remove("manual: gnome-python2");
+			expectedRequiresList.remove("manual: gnome-python2-canvas");
+			expectedRequiresList.remove("gnome-python2");
+			expectedRequiresList.remove("gnome-python2-canvas");
+		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
