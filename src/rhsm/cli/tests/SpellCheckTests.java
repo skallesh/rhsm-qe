@@ -256,6 +256,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			}
 			// END OF WORKAROUND
 			
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1223852
+			if (msgId.contains("Deletedfd")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1223852";	// Bug 1223852 - repolib report has 'deletedfd' typo in string catalog
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring unrecognized word '"+"Deletedfd"+"' while bug '"+bugId+"' is open.");
+					msgId = msgId.replace("Deletedfd", "Deleted");
+				}
+			}
+			// END OF WORKAROUND
+			
 			msgIds.add(msgId);
 		}
 		// write the msgIds to a temporary file on the client
