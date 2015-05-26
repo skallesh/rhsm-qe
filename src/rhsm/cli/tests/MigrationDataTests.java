@@ -1151,7 +1151,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (!allBaseChannelProductCertsMatchThisRhelRelease) Assert.fail("Review logged warnings above for expected RHN base channel product cert versions that do not match this system.s dot release.");
 	}
 	
-	@Test(	description="Verify that the expected RHN Rhel channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y",
+	@Test(	description="Verify that the expected RHN RHEL channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1222712"},
 			dataProvider="RhnRhelChannelsFromChannelMappingData",
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
@@ -1262,6 +1262,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				//	rhel-x86_64-server-hts-6
 				if (rhnChannel.contains("-hts-")) continue;
 				
+				// skip Red Hat Certification (for RHEL Server)		// productId 282
+				//	rhel-i386-server-6-cert-beta
+				//	rhel-ppc64-server-6-cert-beta
+				//	rhel-s390x-server-6-cert-beta
+				//	rhel-x86_64-server-6-cert-beta
+				if (rhnChannel.endsWith("-server-6-cert-beta")) continue;
+				if (rhnChannel.endsWith("-server-6-cert")) continue;
+				
 				// skip Red Hat Directory Server
 				//	rhel-x86_64-server-5-rhdirserv-8
 				if (rhnChannel.contains("-rhdirserv-")) continue;
@@ -1308,7 +1316,11 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				
 				// skip Red Hat Enterprise Linux Resilient Storage (for RHEL Server)
 				//	rhel-ppc-server-cluster-storage-5
-				if (rhnChannel.contains("-storage-")) continue;
+				if (rhnChannel.contains("-cluster-storage-")) continue;
+				
+				// skip Red Hat Storage Server for On-premise	// productId 186
+				//	rhel-x86_64-server-6-rh-gluster-3-samba
+				if (rhnChannel.contains("-rh-gluster-")) continue;
 				
 				// skip Red Hat Enterprise Linux High Availability (for RHEL Server)
 				//	rhel-ppc-server-cluster-5
