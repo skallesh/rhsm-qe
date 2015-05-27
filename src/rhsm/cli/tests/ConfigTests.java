@@ -3,7 +3,9 @@ package rhsm.cli.tests;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,7 +70,6 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the value was written to the config file
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name), setValue, "After executing subscription-manager config to set '"+section+"."+name+"', the value is saved to config file '"+clienttasks.rhsmConfFile+"'.");
-		
 	}
 	
 	
@@ -148,7 +149,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: use config module to remove each of the rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
-			groups={},
+			groups={"blockedByBug-1223860"},
 			dataProvider="getConfigSectionNameData",
 			//dependsOnMethods={"ConfigGetSectionNameValue_Test"}, alwaysRun=true,
 			priority=30,
@@ -164,11 +165,18 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the parameter was removed from the config file (only for names in defaultConfFileParameterNames) otherwise the value is blanked
 		String newValue = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name);
-		//if (clienttasks.defaultConfFileParameterNames(false).contains(name)) {	// RHEL63 behavior change
+		/* RHEL63 behavior change
+		if (clienttasks.defaultConfFileParameterNames(false).contains(name)) {
 			Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter is absent from config file '"+clienttasks.rhsmConfFile+"'.");
-		//} else {
-		//	Assert.assertEquals(newValue, "", "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter value is blanked from config file '"+clienttasks.rhsmConfFile+"'. (e.g. parameter_name = )");			
-		//}
+		} else {
+			Assert.assertEquals(newValue, "", "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter value is blanked from config file '"+clienttasks.rhsmConfFile+"'. (e.g. parameter_name = )");			
+		}
+		*/
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.14.8-1")) {	// commit d1160c303a0a015c97a6cf28bc084fc058f0ebf6	// Bug 1223860 - subscription-manager config --rhsmcertd.autoattachinterval adds configuration with incorrect case.
+			Assert.assertEquals(newValue, defaultConfFileParameterMap.get(section+"."+name), "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter's configuration value is restored to it's hard-coded default value in config file '"+clienttasks.rhsmConfFile+"'.  (Prior to Bug 1223860, it was completely removed from the config file)");
+		} else {
+			Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter is absent from config file '"+clienttasks.rhsmConfFile+"'.");
+		}
 	}
 	
 	
@@ -267,7 +275,12 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			String newValue = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name);
 //			if (clienttasks.defaultConfFileParameterNames(true).contains(name.toLowerCase())) {	// before bug 988476
 			if (clienttasks.defaultConfFileParameterNames(section,true).contains(name.toLowerCase())) {
-				Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
+				
+				if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.14.8-1")) {	// commit d1160c303a0a015c97a6cf28bc084fc058f0ebf6	// Bug 1223860 - subscription-manager config --rhsmcertd.autoattachinterval adds configuration with incorrect case.
+					Assert.assertEquals(newValue, defaultConfFileParameterMap.get(section+"."+name), "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter's configuration value is restored to it's hard-coded default value in config file '"+clienttasks.rhsmConfFile+"'.  (Prior to Bug 1223860, it was completely removed from the config file)");
+				} else {
+					Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
+				}
 			} else {
 				Assert.assertEquals(newValue, "", "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter value is blanked from config file '"+clienttasks.rhsmConfFile+"'. (e.g. parameter_name = )");			
 			}
@@ -395,7 +408,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="verify the default configurations for server hostname:port/prefix after running config removal",
-			groups={"blockedByBug-988085","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
+			groups={"blockedByBug-988085","blockedByBug-1223860","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test() {
@@ -412,18 +425,22 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "server", "port".toLowerCase()});
 		listOfSectionNameValues.add(new String[] { "server", "prefix".toLowerCase()});
 		clienttasks.config(null, true, null, listOfSectionNameValues);
-		
+				
 		// assert that they are removed
 		for (String[] sectionNameValues : listOfSectionNameValues) {
 			String section = sectionNameValues[0];
 			String name = sectionNameValues[1];
-			Assert.assertNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name),"After using subscription-manager config to remove section '"+section+"' parameter '"+name+"', it should no longer be readable from config file '"+clienttasks.rhsmConfFile+"'.");
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.14.8-1")) {	// commit d1160c303a0a015c97a6cf28bc084fc058f0ebf6	// Bug 1223860 - subscription-manager config --rhsmcertd.autoattachinterval adds configuration with incorrect case.
+				Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name),defaultConfFileParameterMap.get("server."+name), "After using subscription-manager config to remove section '"+section+"' parameter '"+name+"', it is restored to its hard-coded default in config file '"+clienttasks.rhsmConfFile+"'.  (Prior to Bug 1223860, it was completely removed from the config file)");
+			} else {
+				Assert.assertNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name),"After using subscription-manager config to remove section '"+section+"' parameter '"+name+"', it should no longer be readable from config file '"+clienttasks.rhsmConfFile+"'.");
+			}
 		}
 		
 		// assert the expected interpolated defaults
-		Assert.assertEquals(clienttasks.getConfParameter("hostname"),"subscription.rhn.redhat.com","The interpolated default configuration for [server].hostname after it has been deleted from configuration file '"+clienttasks.rhsmConfFile+"'.");
-		Assert.assertEquals(clienttasks.getConfParameter("port"),"443","The interpolated default configuration for [server].port after it has been deleted from configuration file '"+clienttasks.rhsmConfFile+"'.");
-		Assert.assertEquals(clienttasks.getConfParameter("prefix"),"/subscription","The interpolated default configuration for [server].prefix after it has been deleted from configuration file '"+clienttasks.rhsmConfFile+"'.");
+		Assert.assertEquals(clienttasks.getConfParameter("hostname"),defaultConfFileParameterMap.get("server.hostname"),"The interpolated default configuration for [server].hostname after it has been deleted from configuration file '"+clienttasks.rhsmConfFile+"'.");
+		Assert.assertEquals(clienttasks.getConfParameter("port"),defaultConfFileParameterMap.get("server.port"),"The interpolated default configuration for [server].port after it has been deleted from configuration file '"+clienttasks.rhsmConfFile+"'.");
+		Assert.assertEquals(clienttasks.getConfParameter("prefix"),defaultConfFileParameterMap.get("server.prefix"),"The interpolated default configuration for [server].prefix after it has been deleted from configuration file '"+clienttasks.rhsmConfFile+"'.");
 	}
 	@AfterGroups(value={"VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},groups={"setup"})
 	public void afterVerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test() {
@@ -514,7 +531,61 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	// Protected Class Variables ***********************************************************************
 	
 	protected File rhsmConfigBackupFile = new File("/tmp/rhsm.conf.backup");
-	
+	// hard-code defaults
+	protected final Map<String,String> defaultConfFileParameterMap = new HashMap<String,String>(){
+		// [root@jsefler-os6 ~]# cat /etc/rhsm/rhsm.conf
+		// # Red Hat Subscription Manager Configuration File:
+		//
+		// # Unified Entitlement Platform Configuration
+		// [server]
+		// # Server hostname:
+		{put("server.hostname","subscription.rhn.redhat.com");}
+		// # Server prefix:
+		{put("server.prefix","/subscription");}
+		// # Server port:
+		{put("server.port","443");}
+		// # Set to 1 to disable certificate validation:
+		{put("server.insecure","0");}
+		// # Set the depth of certs which should be checked when validating a certificate
+		{put("server.ssl_verify_depth","3");}
+		// # an http proxy server to use
+		{put("server.proxy_hostname","");}
+		// # port for http proxy server
+		{put("server.proxy_port","");}
+		// # user name for authenticating to an http proxy, if needed
+		{put("server.proxy_user","");}
+		// # password for basic http proxy auth, if needed
+		{put("server.proxy_password","");}
+		//
+		// [rhsm]
+		// # Content base URL:
+		{put("rhsm.baseurl","https://cdn.redhat.com");}
+		// # Server CA certificate location:
+		{put("rhsm.ca_cert_dir","/etc/rhsm/ca/");}
+		// # Where the certificates should be stored
+		{put("rhsm.productCertDir","/etc/pki/product");}
+		{put("rhsm.entitlementCertDir","/etc/pki/entitlement");}
+		{put("rhsm.consumerCertDir","/etc/pki/consumer");}
+		// # Refresh repo files with server overrides on every yum command
+		{put("rhsm.full_refresh_on_yum","0");}
+		// # Manage generation of yum repositories for subscribed content:
+		{put("rhsm.manage_repos","1");}
+		// # The directory to search for plugin configuration files
+		{put("rhsm.pluginConfDir","/etc/rhsm/pluginconf.d");}
+		// # The directory to search for subscription manager plugins
+		{put("rhsm.pluginDir","/usr/share/rhsm-plugins");}
+		// # Default CA cert to use when generating yum repo configs:
+		{put("rhsm.repo_ca_cert","%(ca_cert_dir)sredhat-uep.pem");}
+		// # If set to zero, the client will not report the package profile to the subscription management service.
+		{put("rhsm.report_package_profile","1");}
+		//
+		// [rhsmcertd]
+		// # Interval to run auto-attach (in minutes):
+		{put("rhsmcertd.autoAttachInterval","1440");}
+		// # Interval to run cert check (in minutes):
+		{put("rhsmcertd.certCheckInterval","240");}
+	};
+
 	
 	
 	// Protected methods ***********************************************************************
@@ -612,19 +683,19 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 //988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_password",		"rhsm_proxy_password"}));
 //988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_port",			"100"}));
 //988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"proxy_user",			"rhsm_proxy_user"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"repo_ca_cert",			"/tmp/rhsm/repo_ca_cert.pem"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("1225600"),"rhsm",			"repo_ca_cert",			"/tmp/rhsm/repo_ca_cert.pem"}));
 //988476ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"ssl_verify_depth",		"1"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("797996"),	"rhsm",			"manage_repos",			"0"}));
 		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"report_package_profile",	"0"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"plugindir",				"/tmp/rhsm/plugindir"}));
-		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"pluginconfdir",			"/tmp/rhsm/pluginconfdir"}));
+		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"pluginDir",				"/tmp/rhsm/plugindir"}));
+		ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"pluginConfDir",			"/tmp/rhsm/pluginconfdir"}));
 //988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"100"}));
 //988476ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"807721","882459"}),	"rhsm",			/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"1000"}));
 		if (clienttasks.isPackageVersion("python-rhsm",">=","1.10.6-1")) ll.add(Arrays.asList(new Object[]{null,							"rhsm",			"full_refresh_on_yum",	"1"}));	// was added as part of RFE Bug 803746  python_rhsm commit 1bbbfad490bb7985a50d80465f726e7514825a1a
 		
 //988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"ca_cert_dir",			"/tmp/rhsmcertd/ca_cert_dir"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),		"300"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval".toLowerCase(),		"3000"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval",		"300"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("882459"),	"rhsmcertd",	/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval",		"3000"}));
 //988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"hostname",				"rhsmcertd.hostname.redhat.com"}));
 //988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"insecure",				"0"}));
 //988476ll.add(Arrays.asList(new Object[]{null,							"rhsmcertd",	"port",					"3000"}));
