@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -869,6 +870,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected static ArrayList<String> invokedWorkaroundBugs = new ArrayList<String>();;
 	@AfterSuite(groups={"cleanup"},description="log all the invoked bugzilla workarounds")
 	public void logInvokedWorkaroundsAfterSuite() {
+		Collections.sort(invokedWorkaroundBugs);
 		if (!invokedWorkaroundBugs.isEmpty()) log.info(String.format("There were %s workarounds invoked for bugs in this run: https://bugzilla.redhat.com/buglist.cgi?bug_id=%s",invokedWorkaroundBugs.size(),joinListToString(invokedWorkaroundBugs,",")));
 	}
 	public static void addInvokedWorkaround(String bugId) {
