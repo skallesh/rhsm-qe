@@ -11,6 +11,7 @@ import java.util.Set;
 import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -643,6 +644,67 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	@BeforeGroups(groups="setup",value={"VerifyYumSearchDoesNotThrowAsciiCodecError_Test"})
+	public void beforeVerifyYumSearchDoesNotThrowAsciiCodecError_Test() {
+		if (clienttasks==null) return;
+		// register with auto-subscribe
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);
+		// skip the test when we do not have access to RHEL content
+		if (!clienttasks.isRhelProductCertSubscribed()) throw new SkipException("Cannot perform this test until an available RHEL subscription has been attached.");
+		// remove python-simplejson
+		String pkg="python-simplejson";
+		if (clienttasks.isPackageInstalled(pkg)) clienttasks.yumRemovePackage(pkg);
+	}
+	@Test(	description="verify that \"'ascii' codec can't decode byte\" errors do not occur with yum search",
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1199597","VerifyYumSearchDoesNotThrowAsciiCodecError_Test"},
+			dataProvider="getSupportedLangsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyYumSearchDoesNotThrowAsciiCodecError_Test(Object bugzilla, String lang) {
+		
+		// attempt to search for the zsh package using the lang
+		String command = "yum search zsh";
+		SSHCommandResult result = clienttasks.runCommandWithLang(lang, command);
+		
+		//	201505281651:59.086 - FINE: ssh root@jsefler-os6.usersys.redhat.com LANG=as.UTF-8 yum search zsh
+		//	201505281652:05.593 - FINE: Stdout: 
+		//	Loaded plugins: product-id, refresh-packagekit, rhnplugin, security,
+		//	              : subscription-manager
+		//	=============================== N/S Matched: zsh ===============================
+		//	zsh.x86_64 : A powerful interactive shell
+		//
+		//	  Name and summary matches only, use "search all" for everything.
+		//	201505281652:05.599 - FINE: Stderr: 
+		//	Failed to set locale, defaulting to C
+		//	This system is not registered with RHN Classic or RHN Satellite.
+		//	You can use rhn_register to register.
+		//	RHN Satellite or RHN Classic support will be disabled.
+		//	201505281652:05.603 - FINE: ExitCode: 0 
+		String errorMsg = "Failed to set locale, defaulting to C";
+		Assert.assertTrue(!result.getStdout().toLowerCase().contains(errorMsg.toLowerCase()), "Stdout from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+		Assert.assertTrue(!result.getStderr().toLowerCase().contains(errorMsg.toLowerCase()), "Stderr from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+		
+		//	201505281705:36.206 - FINE: ssh root@jsefler-os6.usersys.redhat.com LANG=de_DE.UTF-8 yum search zsh (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201505281705:42.591 - FINE: Stdout: 
+		//	Geladene Plugins: product-id, refresh-packagekit, rhnplugin, security,
+		//	                : subscription-manager
+		//	=============================== N/S Matched: zsh ===============================
+		//	zsh.x86_64 : A powerful interactive shell
+		//
+		//	  Name and summary matches only, use "search all" for everything.
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201505281705:42.592 - FINE: Stderr: 
+		//	'ascii' codec can't decode byte 0xc3 in position 8: ordinal not in range(128)
+		//	This system is not registered with RHN Classic or RHN Satellite.
+		//	You can use rhn_register to register.
+		//	RHN Satellite oder RHN Classic Unterstützung wird deaktiviert.
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201505281705:42.592 - FINE: ExitCode: 0
+		errorMsg = "'ascii' codec can't decode byte";
+		Assert.assertTrue(!result.getStdout().toLowerCase().contains(errorMsg.toLowerCase()), "Stdout from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+		Assert.assertTrue(!result.getStderr().toLowerCase().contains(errorMsg.toLowerCase()), "Stderr from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+	}
+
 	
 	
 	// Candidates for an automated Test:
@@ -760,6 +822,25 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			
 			// Object bugzilla, String locale
 			ll.add(Arrays.asList(new Object[] {bugzilla,	locale}));
+		}
+		return ll;
+	}
+	
+	
+	
+	@DataProvider(name="getSupportedLangsData")
+	public Object[][] getSupportedLangsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getSupportedLangsDataAsListOfLists());
+	}
+	protected List<List<Object>> getSupportedLangsDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (String lang : supportedLangs) {
+			
+			// bugzillas
+			Object bugzilla = null;
+			
+			// Object bugzilla, String locale
+			ll.add(Arrays.asList(new Object[] {bugzilla,	lang}));
 		}
 		return ll;
 	}

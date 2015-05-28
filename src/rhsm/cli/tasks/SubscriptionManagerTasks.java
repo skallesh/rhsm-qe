@@ -3001,6 +3001,11 @@ if (false) {
 		
 		return command;
 	}
+	public String registerCommand(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
+		return registerCommand(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword);
+	}
+	
 
 	/**
 	 * register WITHOUT asserting results.
