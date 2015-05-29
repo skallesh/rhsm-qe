@@ -191,6 +191,16 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 					msgId = msgId.replace("Deregister", "Register");	// Deregister is not recognized by hunspell -d en_US
 					msgId = msgId.replace("Deregistration", "Registration");	// Deregistration is not recognized by hunspell -d en_US
 				}
+				else {
+					log.info("Bug '"+bugId+"' was CLOSED WONTFIX.  Tolerating 'unregister'.");
+					msgId = msgId.replace("unregister", "deregister");
+					msgId = msgId.replace("Unregister", "Deregister");
+					msgId = msgId.replace("unregistration", "Deregistration");
+					msgId = msgId.replace("reregister", "register again");
+					msgId = msgId.replace("deregister", "register");	// deregister is not recognized by hunspell -d en_US
+					msgId = msgId.replace("Deregister", "Register");	// Deregister is not recognized by hunspell -d en_US
+					msgId = msgId.replace("Deregistration", "Registration");	// Deregistration is not recognized by hunspell -d en_US
+				}
 			}
 			// END OF WORKAROUND
 			
@@ -201,6 +211,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"Wildcard"+"' while bug '"+bugId+"' is open.");
+					msgId = msgId.replace("Wildcard", "Wild card");
+				}
+				else {
+					log.info("Bug '"+bugId+"' was CLOSED WONTFIX.  Tolerating 'Wildcard'.");
 					msgId = msgId.replace("Wildcard", "Wild card");
 				}
 			}
@@ -251,6 +265,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"plugin"+"' while bug '"+bugId+"' is open.");
+					msgId = msgId.replace("plugin", "plug-in");
+				}
+				else {
+					log.info("Bug '"+bugId+"' was CLOSED WONTFIX.  Tolerating 'plugin'.");
 					msgId = msgId.replace("plugin", "plug-in");
 				}
 			}
