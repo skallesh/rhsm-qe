@@ -2192,11 +2192,23 @@ if (false) {
 	 * @return Map of the system's facts filtered by grepping for specific values
 	 */
 	public Map<String,String> getFacts(String grepFilter) {
+		return getFacts(null,null,grepFilter);
+	}
+
+	/**
+	 * @param localeVariable
+	 * @param lang
+	 * @param grepFilter
+	 * @return Map of the system's facts filtered by grepping for specific values
+	 */
+	public Map<String,String> getFacts(String localeVariable, String lang, String grepFilter) {
 		Map<String,String> factsMap = new HashMap<String,String>();
 		List<String> factNames = new ArrayList<String>();
-
+		
 		//SSHCommandResult factsList = facts_(true, false, null, null, null);
-		SSHCommandResult factsList = sshCommandRunner.runCommandAndWait(this.command+" facts --list" + (grepFilter==null? "":" | grep \""+grepFilter+"\""));
+		String rhsmCommand = factsCommand(true, null, null, null, null);
+		if (grepFilter!=null) rhsmCommand+=" | grep \""+grepFilter+"\"";
+		SSHCommandResult factsList = runCommandWithLang(localeVariable, lang, rhsmCommand);
 		String factsListAsString = factsList.getStdout().trim();
 		// # subscription-manager facts --list
 		// cpu.architecture: x86_64
@@ -5894,6 +5906,22 @@ if (false) {
 	
 	
 	// facts module tasks ************************************************************
+	/**
+	 * @return the command line syntax for calling this subscription-manager module with these options
+	 */
+	public String factsCommand(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;	command += " facts";	
+		if (list!=null && list)			command += " --list";
+		if (update!=null && update)		command += " --update";
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		return command;
+	}
+	
 	
 	/**
 	 * facts without asserting results
@@ -5904,13 +5932,14 @@ if (false) {
 	public SSHCommandResult facts_(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
-		String command = this.command;	command += " facts";	
-		if (list!=null && list)			command += " --list";
-		if (update!=null && update)		command += " --update";
-		if (proxy!=null)				command += " --proxy="+proxy;
-		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
-		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
-		
+//		String command = this.command;	command += " facts";	
+//		if (list!=null && list)			command += " --list";
+//		if (update!=null && update)		command += " --update";
+//		if (proxy!=null)				command += " --proxy="+proxy;
+//		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+//		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		String command =factsCommand(list, update, proxy, proxyuser, proxypassword);
+				
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
 		logRuntimeErrors(sshCommandResult);
@@ -7424,25 +7453,41 @@ if (false) {
 	
 	/**
 	 * This command is very useful to run an rhsm cli command in a specific language.<p>
-	 * It is also very useful to run an rhsm cli command in the native local (with lang=nul)
+	 * It is also very useful to run an rhsm cli command in the native local (with lang=null)
 	 * when the normal sshCommandRunner encounters:<br>
 	 * Stderr: 'ascii' codec can't decode byte 0xe2 in position 55: ordinal not in range(128)
-	 * @param lang
+	 * @param localeVariable - either "LANG" or "LC_ALL" or somethinf else.  run locale on a command line to see variables; passing null will default to LANG
+	 * @param lang - "as_IN","bn_IN","de_DE", etc  See TranslationTests.supportedLangs
 	 * @param rhsmCommand
 	 * @return
 	 */
-	public SSHCommandResult runCommandWithLang(String lang, String rhsmCommand){
+	public SSHCommandResult runCommandWithLang(String localeVariable, String lang, String rhsmCommand){
+		if (localeVariable==null) {
+			localeVariable="LANG";
+		}
 		if (lang==null) {
 			lang="";
 		} else {
 			if (!lang.toUpperCase().contains(".UTF")) lang=lang+".UTF-8";	// append ".UTF-8" when not already there
-			lang="LANG="+lang;
+			lang=localeVariable+"="+lang;
 		}
-		String command = lang+" "+rhsmCommand;
+		String command = (lang+" "+rhsmCommand).trim();
 		/* this workaround should no longer be needed after rhel70 fixes by ckozak similar to bugs 1052297 1048325 commit 6fe57f8e6c3c35ac7761b9fa5ac7a6014d69ce20 that employs #!/usr/bin/python -S    sys.setdefaultencoding('utf-8')    import site
 		command = "PYTHONIOENCODING=ascii "+command;	// THIS WORKAROUND IS NEEDED AFTER master commit 056e69dc833919709bbf23d8a7b73a5345f77fdf RHEL6.4 commit 1bc25596afaf294cd217200c605737a43112a378 for bug 800323
 		*/
 		return sshCommandRunner.runCommandAndWait(command);
+	}
+	/**
+	 * This command is very useful to run an rhsm cli command in a specific language.<p>
+	 * It is also very useful to run an rhsm cli command in the native local (with lang=null)
+	 * when the normal sshCommandRunner encounters:<br>
+	 * Stderr: 'ascii' codec can't decode byte 0xe2 in position 55: ordinal not in range(128)
+	 * @param lang - "as_IN","bn_IN","de_DE", etc  See TranslationTests.supportedLangs
+	 * @param rhsmCommand
+	 * @return
+	 */
+	public SSHCommandResult runCommandWithLang(String lang, String rhsmCommand){
+		return (runCommandWithLang(null, lang, rhsmCommand));
 	}
 	public SSHCommandResult runCommandWithLangAndAssert(String lang, String rhsmCommand, Integer exitCode, String stdoutRegex, String stderrRegex){
 		List<String> stdoutRegexs = null;

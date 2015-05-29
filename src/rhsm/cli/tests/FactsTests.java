@@ -22,6 +22,7 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
+
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
@@ -1155,6 +1156,42 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		clienttasks.deleteFactsFileWithOverridingValues(emptyFactsFilename);
 	}
 	private final String emptyFactsFilename = "empty.facts";
+	
+	
+	
+	@Test(	description="verify that the facts --list of name keys is independent of LANG/LC_ALL",
+			groups={"blockedByBug-1225435"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyFactsListNamesIsLangIndependent_Test() {
+		
+		// this is the list of base facts in English
+		Map<String,String> baseFacts = clienttasks.getFacts();
+		
+		// test all of the supported langs
+		boolean allBaseFactKeyAreLangIndependent = true;	// assume
+		for (String lang : TranslationTests.supportedLangs) {
+			// get the facts for lang using the locale variable "LC_ALL"
+			Map<String,String> langFacts = clienttasks.getFacts("LC_ALL",lang,null);
+			
+			// assert that each of the fact names have not changed despite running under LC_ALL=ja_JP.utf-8
+			for (String baseFactKey : baseFacts.keySet()) {
+				if (langFacts.containsKey(baseFactKey)) {
+					Assert.assertTrue(langFacts.containsKey(baseFactKey), "Fact key name '"+baseFactKey+"' for lang '"+lang+"' exists in the untranslated facts list.");
+				} else {
+					allBaseFactKeyAreLangIndependent = false;
+					log.warning("Failed to find fact key name '"+baseFactKey+"' in the facts list for lang '"+lang+"' .  It should NOT be translated.");
+				}
+			}
+			
+		}
+		Assert.assertTrue(allBaseFactKeyAreLangIndependent, "All the fact keys are independent of lang.  If this fails, see the warnings logged above.");
+	}
+	
+	
+	
+	
+	
 	
 	
 	// Candidates for an automated Test:

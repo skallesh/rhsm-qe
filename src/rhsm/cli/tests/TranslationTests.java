@@ -704,7 +704,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!result.getStdout().toLowerCase().contains(errorMsg.toLowerCase()), "Stdout from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
 		Assert.assertTrue(!result.getStderr().toLowerCase().contains(errorMsg.toLowerCase()), "Stderr from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
 	}
-
+	
+	
+	
+	
 	
 	
 	// Candidates for an automated Test:
@@ -775,8 +778,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	Set<String> translationMsgidSetForCandlepin = new HashSet<String>(500);  // 500 is an estimated size
 
 	// Protected Methods ***********************************************************************
-	List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
-	List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru_RU","ta_IN","te_IN","zh_CN","zh_TW"); 
+	static final List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
+	static final List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru_RU","ta_IN","te_IN","zh_CN","zh_TW"); 
 
 	
 	protected List<String> newList(String item) {
