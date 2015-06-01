@@ -218,10 +218,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 					"blockedByBug-912460",	// Zanata 1.8.X NOT 100%
 					"blockedByBug-1003017",	// Zanata 1.9.X NOT 100%
 					"blockedByBug-1020474",	// Zanata 1.10.X NOT 100%
-					//"blockedByBug-1093201" // Zanata 1.11.X NOT 100%		// see Skip on Known Issue
-					//"blockedByBug-1118020" // Zanata 1.12.X NOT 100%		// see Skip on Known Issue
-					//"blockedByBug-1166333" // Zanata 1.13.X NOT 100%		// see Skip on Known Issue
-					"blockedByBug-1195824"	// Zanata 1.14.X NOT 100%
+					"blockedByBug-1093201",	// Zanata 1.11.X NOT 100%		// see Skip on Known Issue
+					"blockedByBug-1118020",	// Zanata 1.12.X NOT 100%		// see Skip on Known Issue
+					"blockedByBug-1166333",	// Zanata 1.13.X NOT 100%		// see Skip on Known Issue
+					"blockedByBug-1195824"	// Zanata 1.14.X NOT 100%		// see Skip on Known Issue
 					},
 			dataProvider="getTranslationFileData",
 			enabled=true)
@@ -268,6 +268,15 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		if (translationFile.getPath().contains("/as/") && clienttasks.isPackageVersion("subscription-manager","==", "1.13")) {
 			if (!translationFilePassed) {
 				throw new SkipException("Missing translations for Assamese /as/ is a Known Issue for subscription-manager-1.13.  See https://bugzilla.redhat.com/show_bug.cgi?id=1166333#c1");
+			}
+		}
+		
+		// Skip on Known Issue: https://bugzilla.redhat.com/show_bug.cgi?id=1195824#c2 (reduction to supportedLocales10)
+		if (!translationFilePassed && clienttasks.isPackageVersion("subscription-manager",">=", "1.14")) {
+			for (String unsupportedLocale : unsupportedLocales) {
+				if (translationFile.getPath().contains("/"+unsupportedLocale+"/")) {
+					throw new SkipException("Missing translations for '"+unsupportedLocale+"' in '"+translationFile.getPath()+"' is a Known Issue for subscription-manager-1.14+.  See https://bugzilla.redhat.com/show_bug.cgi?id=1195824#c2 stating the reduction in supported language translations.");
+				}
 			}
 		}
 		
@@ -779,6 +788,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 
 	// Protected Methods ***********************************************************************
 	static final List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
+	static final List<String> unsupportedLocales = Arrays.asList(	"as",	"bn_IN",	/*"de_DE",*/	/*"es_ES",*/	/*"fr",*/	"gu",	"hi",	/*"it",*/	/*"ja",*/	"kn",	/*"ko",*/	"ml",	"mr",	"or",	"pa",	/*"pt_BR",*/	/*"ru",*/	"ta_IN",	"te"	/*"zh_CN",*/	/*"zh_TW"*/);	// comes from https://bugzilla.redhat.com/show_bug.cgi?id=1195824#c2
 	static final List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru_RU","ta_IN","te_IN","zh_CN","zh_TW"); 
 
 	
