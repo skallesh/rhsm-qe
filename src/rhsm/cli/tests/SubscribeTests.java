@@ -960,25 +960,27 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/7033f5c0-c451-4d4c-bf88-c5061dc2c521/entitlements/dry-run?service_level=Premium | python -m simplejson/tool
 		JSONArray jsonDryrunResults= new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, String.format("/consumers/%s/entitlements/dry-run%s",consumerId, serviceLevel==null?"":String.format("?service_level=%s",urlEncode(serviceLevel)))));	// urlEncode is needed to handle whitespace in the serviceLevel
 
-		// assert that each of the dry run results match the service level and the proposed quantity is available
+		// assert that each of the dry run results match the service level (or is null, or "") and the proposed quantity is available
 		//List<SubscriptionPool> dryrunSubscriptionPools = new ArrayList<SubscriptionPool>();
 		for (int i = 0; i < jsonDryrunResults.length(); i++) {
 			// jsonDryrunResults is an array of two values per entry: "pool" and "quantity"
 			JSONObject jsonPool = ((JSONObject) jsonDryrunResults.get(i)).getJSONObject("pool");
 			Integer quantity = ((JSONObject) jsonDryrunResults.get(i)).getInt("quantity");
 			
-			// assert that all of the pools proposed provide the requested service level
+			// assert that all of the pools proposed provide the requested service level (or a no support_level is now a valid contender based on Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled)
 			String poolId = jsonPool.getString("id");
+			String poolProductAttributeSupportLevel = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level");
 			SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", poolId, initialAvailableSubscriptionPools);
 			//dryrunSubscriptionPools.add(subscriptionPool);
-			if (serviceLevel==null || serviceLevel.equals("")) {
-				log.info("Pool '"+poolId+"' returned by the dry-run results (without requesting a service-level) has a value of '"+CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level")+"'.");
-			} else if (exemptServiceLevelsInUpperCase.contains(CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level").toUpperCase())) {
-				log.warning("Pool '"+poolId+"' returned by the dry-run results provides the exempt service-level '"+CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level")+"'.");
+			if (serviceLevel==null || serviceLevel.isEmpty()) {
+				log.info("Without requesting a service-level, pool '"+poolId+"' returned by the dry-run results  has a support_level of '"+poolProductAttributeSupportLevel+"'.");
+			} else if (poolProductAttributeSupportLevel==null || poolProductAttributeSupportLevel.isEmpty()) {
+				log.info("Despite the requested service-level '"+serviceLevel+"', pool '"+poolId+"' returned by the dry-run results has a support_level of '"+poolProductAttributeSupportLevel+"'.  (Requested behavior from bug https://bugzilla.redhat.com/show_bug.cgi?id=1223560)");	// candlepin commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22
+			} else if (exemptServiceLevelsInUpperCase.contains(poolProductAttributeSupportLevel.toUpperCase())) {
+				log.info("Pool '"+poolId+"' returned by the dry-run results provides the exempt support_level '"+poolProductAttributeSupportLevel+"'.");
 			} else {
-				String support_level = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level");
 				//CASE SENSITIVE ASSERTION Assert.assertEquals(support_level, serviceLevel,"Pool '"+poolId+"' returned by the dry-run results provides the requested service-level '"+serviceLevel+"'.");
-				Assert.assertTrue(serviceLevel.equalsIgnoreCase(support_level),"Pool '"+poolId+"' returned by the dry-run results provides a case-insensitive support_level '"+support_level+"' match to the requested service-level '"+serviceLevel+"'.");
+				Assert.assertTrue(serviceLevel.equalsIgnoreCase(poolProductAttributeSupportLevel),"Pool '"+poolId+"' returned by the dry-run results provides a case-insensitive support_level '"+poolProductAttributeSupportLevel+"' match to the requested service-level '"+serviceLevel+"'.");
 			}
 			
 			Assert.assertNotNull(subscriptionPool,"Pool '"+poolId+"' returned by the dry-run results for service-level '"+serviceLevel+"' was found in the list --available.");
@@ -1001,13 +1003,16 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// determine the newly granted entitlement certs
  		List<EntitlementCert> newlyGrantedEntitlementCerts = new ArrayList<EntitlementCert>();
-		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+ 		List<EntitlementCert> currentlyGrantedEntitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		for (EntitlementCert entitlementCert : currentlyGrantedEntitlementCerts) {
 			if (!initialEntitlementCerts.contains(entitlementCert)) {
 				newlyGrantedEntitlementCerts.add(entitlementCert);
 				if (serviceLevel==null || serviceLevel.equals("")) {
-					log.info("The service level provided by the entitlement cert granted after autosubscribe (without specifying a service level) is '"+entitlementCert.orderNamespace.supportLevel+"'.");
+					log.info("Without specifying a service level preference, the service level provided by the entitlement cert granted after autosubscribe is '"+entitlementCert.orderNamespace.supportLevel+"'.");
+				} else if (entitlementCert.orderNamespace.supportLevel==null || entitlementCert.orderNamespace.supportLevel.isEmpty()) {
+					log.info("Despite the requested service-level '"+serviceLevel+"', the entitlement cert granted after autosubscribe has a support_level of '"+entitlementCert.orderNamespace.supportLevel+"'.  (Requested behavior from bug https://bugzilla.redhat.com/show_bug.cgi?id=1223560)");	// candlepin commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22
 				} else if (entitlementCert.orderNamespace.supportLevel!=null && exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
-					log.warning("After autosubscribe with service level '"+serviceLevel+"', this autosubscribed entitlement provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
+					log.info("After autosubscribe with service level '"+serviceLevel+"', this autosubscribed entitlement provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
 				} else {
 					//CASE SENSITIVE ASSERTION Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel,"The service level provided by the entitlement cert granted after autosubscribe matches the requested servicelevel.");
 					Assert.assertTrue(serviceLevel.equalsIgnoreCase(entitlementCert.orderNamespace.supportLevel),"Ignoring case, the service level '"+entitlementCert.orderNamespace.supportLevel+"' provided by the entitlement cert granted after autosubscribe matches the requested servicelevel '"+serviceLevel+"'.");
@@ -1020,7 +1025,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// both of these cases will default to use the service_level that is already set on the consumer, however a call to subscribe --auto --service_level="" is not the same as calling the candlepin dry-run API with service_level="" since the CLI will actually UNSET the consumer's current service level (as requested by bug 1001169)
 		// [root@jsefler-6 ~]#  curl --stderr /dev/null --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/6474c913-4c2f-4283-bcf5-2fc2c44da3ef/entitlements/dry-run?service_level= | python -m simplejson/tool
 		if ("".equals(serviceLevel)) {
-			log.warning("When testing dry-run with an empty string for service level, the jsonPools returned should match the service-level that the consumer object already has (unless the service-level granted is exempt).  This is different than calling subscription-manager subscribe --auto --service-level=\"\".");
+			//log.warning("When testing dry-run with an empty string for service level, the jsonPools returned should match the service-level that the consumer object already has (unless the service-level granted is exempt).  This is different than calling subscription-manager subscribe --auto --service-level=\"\".");
+			log.warning("When testing dry-run with an empty string for service level, the jsonPools returned should match the service-level that the consumer object already has (unless the service-level granted is exempt or null).  This is different than calling subscription-manager subscribe --auto --service-level=\"\".");
 			if (!"".equals(initialServiceLevel)) {
 				for (int i = 0; i < jsonDryrunResults.length(); i++) {
 					// jsonDryrunResults is an array of two values per entry: "pool" and "quantity"
@@ -1034,7 +1040,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					
 					// check for an exempt service level
 					if (supportLevelExemptValue==null || !Boolean.valueOf(supportLevelExemptValue)) {
-						Assert.assertTrue(dryrunSubscriptionPool.serviceLevel.equalsIgnoreCase(initialServiceLevel), "When dry-run is called with an empty service-level, the actual consumer's initially set service-level '"+initialServiceLevel+"' matches the service-level '"+dryrunSubscriptionPool.serviceLevel+"' granted from the dry-run pool result: "+dryrunSubscriptionPool+". (EXCEPTION: This is not true when the service-level is exempt.)");
+						// when the support_level_exempt value is absent or true, then either...
+						if (dryrunSubscriptionPool.serviceLevel==null || dryrunSubscriptionPool.serviceLevel.isEmpty()) {	// case 1: the serviceLevel from the pool must be null or "" due to changes from Bug 1223560 candlepin commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22; or...
+							log.info("When dry-run is called with an empty service-level, an entitlement from a pool with no support_level '"+dryrunSubscriptionPool.serviceLevel+"' was granted from the dry-run pool result: "+dryrunSubscriptionPool+". (Note: This was newly possible by Bug 1223560).");
+						} else {	// case 2: the serviceLevel from the pool must match the consumer's initial support_level preference
+							Assert.assertTrue(dryrunSubscriptionPool.serviceLevel.equalsIgnoreCase(initialServiceLevel), "When dry-run is called with an empty service-level, the actual consumer's initially set service-level '"+initialServiceLevel+"' matches the service-level '"+dryrunSubscriptionPool.serviceLevel+"' granted from the dry-run pool result: "+dryrunSubscriptionPool+". (EXCEPTION: This is not true when the service-level is exempt.)");
+						}
 					} else {
 						log.info("An exempt service level '"+dryrunSubscriptionPool.serviceLevel+"' was included in the dry-run pool result: "+dryrunSubscriptionPool);
 					}
@@ -1045,8 +1056,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 			
 		// assert that one entitlement was granted per dry-run pool result
-		Assert.assertEquals(newlyGrantedEntitlementCerts.size(), jsonDryrunResults.length(),"The autosubscribe results granted the same number of entitlements as the dry-run pools returned.");
-
+		//Assert.assertEquals(newlyGrantedEntitlementCerts.size(), jsonDryrunResults.length(),"The autosubscribe results granted the same number of entitlements as the dry-run pools returned.");
+		/* Update after Bug 1223560: this is not a valid assertion because one of the newly granted entitlement could
+		 * actually be a replacement for an original... e.g. a modifier entitlement might deleted and replaced by a new
+		 * one since the modifyee was added.  Therefore it is better to assert that the TOTAL new ents was increased by
+		 * the dryrun length.
+		 */
+		Assert.assertEquals(currentlyGrantedEntitlementCerts.size(), jsonDryrunResults.length()+initialEntitlementCerts.size(), "The total number of entitlement after autosubscribe increased by the number of entitlements returned from the dry-run pools.");
+		
 		// assert that the newly granted entitlements were actually granted from the dry-run pools
 		//for (SubscriptionPool dryrunSubscriptionPool : dryrunSubscriptionPools) {
 		for (int i = 0; i < jsonDryrunResults.length(); i++) {
@@ -1916,7 +1933,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeWithAutoAndServiceLevelDataAsListOfLists());
 	}
 	protected List<List<Object>>getSubscribeWithAutoAndServiceLevelDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = getAllAvailableServiceLevelDataAsListOfLists(); if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		ll = getAllAvailableServiceLevelDataAsListOfLists();
 		
 		// throw in null and "" as a possible service levels
 		// Object bugzilla, String org, String serviceLevel
