@@ -455,6 +455,15 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
 		clienttasks.listConsumedProductSubscriptions();
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			
+			// tolerate entitlements granted from pools with null/"" support_level regardless of the specified service level
+			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
+				if (entitlementCert.orderNamespace.supportLevel==null || entitlementCert.orderNamespace.supportLevel.isEmpty()) {
+					log.warning("Regardless of the consumer's service-level preference '"+jsonConsumer.get("serviceLevel")+"' or the requested service-level '"+serviceLevel+"', this EntitlementCert provides a support_level of '"+entitlementCert.orderNamespace.supportLevel+"'. (New behavior modification from Bug 1223560)");
+					continue;
+				}
+			}
+			
 			if (sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
 				log.warning("After autosubscribed registration with service level '"+serviceLevel+"', this autosubscribed entitlement provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
 			} else {
@@ -498,6 +507,15 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		if (consumedProductSubscriptions.isEmpty()) log.warning("No entitlements were granted after registering with autosubscribe and service level '"+mixedCaseServiceLevel+"'."); 
 		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+			
+			// tolerate ProductSubscriptions with a null/"" serviceLevel. (result of candlepin Bug 1223560)
+			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
+				if (productSubscription.serviceLevel==null || productSubscription.serviceLevel.isEmpty()) {
+					log.warning("After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides no service level '"+productSubscription.serviceLevel+"'.  (New behavior modification from Bug 1223560)");
+					continue;
+				}
+			}
+			
 			// tolerate exemptServiceLevels
 			if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
 				log.warning("After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides an exempt service level '"+productSubscription.serviceLevel+"'.");
@@ -564,13 +582,6 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 		// get the current consumer object and assert that the serviceLevel persisted
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+clienttasks.getCurrentConsumerId()));
-		/* DELETEME ERRONEOUS ASSERTS
-		if (serviceLevel==null || serviceLevel.equals("")) {
-			Assert.assertEquals(jsonConsumer.get("serviceLevel"), initialConsumerServiceLevel, "The consumer's serviceLevel preference should remain unchanged when calling subscribe with auto and a servicelevel of null or \"\".");
-		} else {
-			Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel persisted the servicelevel setting on the current consumer object.");			
-		}
-		*/
 		if (serviceLevel==null) {
 			Assert.assertEquals(jsonConsumer.get("serviceLevel"), initialConsumerServiceLevel, "The consumer's serviceLevel preference should remain unchanged when calling subscribe with auto and a servicelevel of null.");
 		} else {
@@ -581,26 +592,21 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 		if (subscribeResult.getExitCode().intValue()==1) Assert.assertEquals(entitlementCerts.size(), 0, "When subscribe --auto returns an exitCode of 1, then no entitlements should have been granted.");
 		for (EntitlementCert entitlementCert : entitlementCerts) {
-
+			
+			// tolerate entitlements granted from pools with null/no support_level regardless of the specified service level
+			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
+				if (entitlementCert.orderNamespace.supportLevel==null || entitlementCert.orderNamespace.supportLevel.isEmpty()) {
+					log.warning("Regardless of the consumer's service-level preference '"+initialConsumerServiceLevel+"' or the requested service-level '"+serviceLevel+"', this EntitlementCert provides a support_level of '"+entitlementCert.orderNamespace.supportLevel+"'. (New behavior modification from Bug 1223560)");
+					continue;
+				}
+			}
+			
 			// tolerate exemptServiceLevels
 			if (entitlementCert.orderNamespace.supportLevel!=null && sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
 				log.warning("After autosubscribing, this EntitlementCert provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"'.");
 				continue;
 			}
 			
-			/* DELETEME ERRONEOUS ASSERTS
-			if ((serviceLevel==null || serviceLevel.equals("")) && initialConsumerServiceLevel.equals("")) {
-				log.info("When specifying a servicelevel of null or \"\" during an autosubscribe and the current consumer's has no servicelevel preference, then the servicelevel of the granted entitlement certs can be anything.  This one is '"+entitlementCert.orderNamespace.supportLevel+"'.");
-			} else if ((serviceLevel==null || serviceLevel.equals("")) && !initialConsumerServiceLevel.equals("")){
-				//CASE SENSITIVE ASSERTION Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,initialConsumerServiceLevel, "When specifying a servicelevel of null or \"\" during an autosubscribe and the current consumer has a sericelevel preference set, then the servicelevel of the granted entitlement certs must match the current consumer's service level preference.");
-				//Assert.assertTrue(entitlementCert.orderNamespace.supportLevel.equalsIgnoreCase(initialConsumerServiceLevel), "When specifying a servicelevel of null or \"\" during an autosubscribe and the current consumer has a servicelevel preference set, then the servicelevel from the orderNamespace of this granted entitlement cert ("+entitlementCert.orderNamespace.supportLevel+") must match the current consumer's service level preference ("+initialConsumerServiceLevel+").");
-				Assert.assertTrue(initialConsumerServiceLevel.equalsIgnoreCase(entitlementCert.orderNamespace.supportLevel), "When specifying a servicelevel of null or \"\" during an autosubscribe and the current consumer has a servicelevel preference set, then the servicelevel from the orderNamespace of this granted entitlement cert ("+entitlementCert.orderNamespace.supportLevel+") must match the current consumer's service level preference ("+initialConsumerServiceLevel+").");
-			} else {
-				//CASE SENSITIVE ASSERTION Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel, "This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
-				//Assert.assertTrue(entitlementCert.orderNamespace.supportLevel.equalsIgnoreCase(serviceLevel), "Ignoring case, this autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
-				Assert.assertTrue(serviceLevel.equalsIgnoreCase(entitlementCert.orderNamespace.supportLevel), "Ignoring case, this autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
-			}
-			*/
 			if ("".equals(serviceLevel) || (serviceLevel==null && initialConsumerServiceLevel.equals(""))) {
 				log.info("When specifying a servicelevel of \"\" during an autosubscribe (or specifying a servicelevel of null and the current consumer's has no servicelevel preference), then the servicelevel of the granted entitlement certs can be anything.  This one is '"+entitlementCert.orderNamespace.supportLevel+"'.");
 			} else if (serviceLevel==null && !initialConsumerServiceLevel.equals("")){
@@ -716,7 +722,15 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		if (consumedProductSubscriptions.isEmpty()) log.warning("No entitlements were granted after autosubscribing with service level '"+mixedCaseServiceLevel+"'."); 
 		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
 			
-			// tolerate exemptServiceLevels
+			// tolerate ProductSubscriptions with a null/"" serviceLevel. (result of candlepin Bug 1223560)
+			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
+				if (productSubscription.serviceLevel==null || productSubscription.serviceLevel.isEmpty()) {
+					log.warning("After autosubscribe with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides no service level '"+productSubscription.serviceLevel+"'.  (New behavior modification from Bug 1223560)");
+					continue;
+				}
+			}
+			
+			// tolerate ProductSubscriptions with exemptServiceLevels
 			if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
 				log.warning("After autosubscribe with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides an exempt service level '"+productSubscription.serviceLevel+"'.");
 				continue;
