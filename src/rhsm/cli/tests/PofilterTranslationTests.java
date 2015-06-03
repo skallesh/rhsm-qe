@@ -1005,6 +1005,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/gu/")) bugIds.add("1117525");
 				// Bug 1140644 - [ta_IN] [subscription-manager] Auto-attach button is not localized.
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1140644");
+				// Bug 1227886 - [pt_BR][es_ES] msg_id="_Save" was not translated to "_Salvar" or "_Guardar"
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1227886");		
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("1227886");
 				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
