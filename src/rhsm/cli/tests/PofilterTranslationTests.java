@@ -885,6 +885,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/ru/")) bugIds.add("928475");
 				// Bug 928523 - [ko] pofilter options test failed
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/ko/")) bugIds.add("928523");
+				// Bug 1227932 - [ru] translation for msgid "Error: The --servicelevel option cannot be used when specifying pools." fails the options test
+				if (pofilterTest.equals("options") && translationFile.getPath().contains("/ru/")) bugIds.add("1227932");
 				
 				// Bug 828985 - [ml] failed pofilter urls test for subscription manager translations
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ml/")) bugIds.add("828985");
