@@ -1159,11 +1159,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	@Test(	description="verify that the facts --list of name keys is independent of LANG/LC_ALL",
+	@Test(	description="verify that the facts --list of name keys is independent of LANG/LC_ALL...  For example when LC_ALL=fr_FR.UTF-8 subscription-manager facts --list, EXPECTED: lscpu.virtualization_type: full  ACTUAL(failed): lscpu.type_de_virtualisation: complet",
 			groups={"blockedByBug-1225435"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyFactsListNamesIsLangIndependent_Test() {
+	public void VerifyFactKeyNamesListedIsLangIndependent_Test() {
 		
 		// this is the list of base facts in English
 		Map<String,String> baseFacts = clienttasks.getFacts();
