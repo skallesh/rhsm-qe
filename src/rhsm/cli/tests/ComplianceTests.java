@@ -838,7 +838,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public static String allProductsSubscribableByOneCommonServiceLevelValue=null;	// the value of the service_level to expect from all of the autosubscribed pools after calling configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel
 	public static List<String> allProductsSubscribableByMoreThanOneCommonServiceLevelValues= new ArrayList<String>();	// the service_level values to expect subscription-manager-gui to prompt the user to choose from when autosubscribing after calling configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
 
-	protected String productCertDir = null;
+	protected String productCertDir = null;	// original productCertDir configuration
+	protected List<File> defaultProductCertFiles = new ArrayList<File>();	// original defaultProductCertFiles in /etc/pki/product-default/
 	protected List<SubscriptionPool> futureSystemSubscriptionPools = null;
 	
 	// 8/7/2013 the following rhsmComplianceDStdoutMessages changed after ckozak altered the dbus implementation to display compliance messages in the rhsm-icon
@@ -998,6 +999,12 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			RemoteFileTasks.runCommandAndAssert(client, "mkdir "+productCertDir, 0);
 		}
 		
+		// move all default products to the side so they do not interfere with these ComplianceTests
+		defaultProductCertFiles = clienttasks.getProductCertFiles(clienttasks.defaultProductCertDir);
+		for (File defaultProductCertFile : defaultProductCertFiles) {
+			RemoteFileTasks.runCommandAndAssert(client, "mv "+defaultProductCertFile+" "+defaultProductCertFile+"_", 0);
+		}
+		
 		// register and subscribe to all available subscriptions
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
@@ -1128,7 +1135,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			log.warning("Cannot determine a set of products where allProductsSubscribableByMoreThanOneCommonServiceLevel.");
 		}
 		
-		
+		// remember the originally configured productCertDir
 		this.productCertDir = clienttasks.productCertDir;
 	}
 	
@@ -1138,6 +1145,13 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (this.productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.productCertDir);
 		allProductsSubscribableByOneCommonServiceLevelValue = null;
 		allProductsSubscribableByMoreThanOneCommonServiceLevelValues.clear();
+		
+		// restore all default products since they were moved to the side during this test class
+		if (this.defaultProductCertFiles!=null) {
+			for (File defaultProductCertFile : defaultProductCertFiles) {
+				RemoteFileTasks.runCommandAndAssert(client, "mv "+defaultProductCertFile+"_ "+defaultProductCertFile, 0);
+			}
+		}
 	}
 	
 	protected boolean configureProductCertDirForSomeProductsSubscribableCompleted=false;
