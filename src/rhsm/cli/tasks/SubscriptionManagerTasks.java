@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -106,6 +107,8 @@ public class SubscriptionManagerTasks {
 	public String baseurl							= null;
 	public String consumerKeyFile()	{				return this.consumerCertDir+"/key.pem";}
 	public String consumerCertFile() {				return this.consumerCertDir+"/cert.pem";}
+	public String defaultProductCertDir				= "/etc/pki/product-default";	// [root@jsefler-os6 ~]# rpm -q --whatprovides /etc/pki/product-default
+	// redhat-release-server-6Server-6.7.0.2.el6.x86_64
 	
 	// will be initialized by constructor SubscriptionManagerTasks(SSHCommandRunner runner)
 	public String redhatRelease						= null;	// of the client; Red Hat Enterprise Linux Server release 5.8 Beta (Tikanga)
@@ -1843,8 +1846,28 @@ if (false) {
 		return EntitlementCert.parse(certificates);
 	}
 	
+	/**
+	 * @return - Set of unique productIds from all the product certs installed in the rhsm.productCertDir and /etc/pki/product-default/
+	 */
+	public Set<String> getCurrentProductIds() {
+		Set<String> productIds = new HashSet<String>();
+		for (ProductCert productCert : getCurrentProductCerts()) productIds.add(productCert.productId);
+		return productIds;
+	}
+	
+	/**
+	 * @return - List of ProductCerts installed in the rhsm.productCertDir and /etc/pki/product-default/
+	 */
 	public List<ProductCert> getCurrentProductCerts() {
+		/* THIS ORIGINAL IMPLEMENTATION DID NOT INCLUDE THE DEFAULT PRODUCT CERTS PROVIDED BY redhat-release
+		 * See Bugs 1080007 1080012 - [RFE] Include default product certificate in redhat-release 
 		return getProductCerts(productCertDir);
+		*/
+		
+		List<ProductCert> productCerts = new ArrayList<ProductCert>();
+		for (ProductCert productCert : getProductCerts(productCertDir)) productCerts.add(productCert);
+		for (ProductCert productCert : getProductCerts(defaultProductCertDir)) productCerts.add(productCert);		
+		return productCerts;
 	}
 	public List<ProductCert> getProductCertsUsingOpensslX509(String fromProductCertDir) {
 		/* THIS ORIGINAL IMPLEMENTATION DID NOT INCLUDE THE FILE IN THE OBJECT
@@ -2447,7 +2470,14 @@ if (false) {
 	 * @return List of /etc/pki/product/*.pem files sorted using lsOptions
 	 */
 	public List<File> getCurrentProductCertFiles(String lsOptions) {
+		/* THIS ORIGINAL IMPLEMENTATION DID NOT INCLUDE THE DEFAULT PRODUCT CERTS PROVIDED BY redhat-release
+		 * See Bugs 1080007 1080012 - [RFE] Include default product certificate in redhat-release 
 		return getProductCertFiles(lsOptions,productCertDir);
+		*/
+		List<File> certFiles = new ArrayList<File>();
+		for (File certFile : getProductCertFiles(lsOptions,productCertDir)) certFiles.add(certFile);
+		for (File certFile : getProductCertFiles(lsOptions,defaultProductCertDir)) certFiles.add(certFile);
+		return certFiles;
 	}
 	public List<File> getProductCertFiles(String lsOptions, String fromProductCertDir) {
 		if (lsOptions==null) lsOptions = "";
