@@ -235,7 +235,13 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		log.info("Using regex \""+regexForSectionNameExpectedValue+"\"to assert the default value was listed by config after having removed the parameter name.");	
 		Pattern pattern = Pattern.compile(regexForSectionNameExpectedValue, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test.getStdout());
-
+		
+		// WORKAROUND FOR https://bugzilla.redhat.com/show_bug.cgi?id=1225600#c5
+		if (section.equals("rhsm") && name.equals("repo_ca_cert") && clienttasks.isPackageVersion("python-rhsm", ">=", "1.14.3-1")) {	// commit 09bf7957ac8bfbd6b6fed20b78aa3a8879a2c953	// Bug 1225600 - subscription-manager config --remove=rhsm.repo_ca_cert does not exactly restore the default value 
+			Assert.assertTrue(!matcher.find(),"After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', calling config --list DOES NOT show the default value for the parameter surrounded by square brackets[] as explained in https://bugzilla.redhat.com/show_bug.cgi?id=1225600#c5.");
+		} else
+		
+		// assert the default value is indicated in the config --list
 		Assert.assertTrue(matcher.find(),assertMsg);
 	}
 	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test = null;
