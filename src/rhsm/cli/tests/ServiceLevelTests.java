@@ -683,7 +683,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157227) // 157226 //157225
-	public void VerifyAutoSubscribeWithServiceLevelIsCaseInsensitive_Test(Object bugzilla, String serviceLevel) {
+	public void VerifyAutoSubscribeWithServiceLevelIsCaseInsensitive_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		if (sm_serverType.equals(CandlepinType.hosted)) {
@@ -714,12 +714,17 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		List<InstalledProduct> installedProductsAfterAutosubscribingWithMixedCaseServiceLevel= InstalledProduct.parse(clienttasks.subscribe(true, mixedCaseServiceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null, null).getStdout());
 
 		// assert that the two lists are identical (independent of the serviceLevel case specified during autosubscribe)
-		Assert.assertEquals(installedProductsAfterAutosubscribingWithMixedCaseServiceLevel.size(), clienttasks.getCurrentProductCertFiles().size(), "The subscribe output displayed the same number of installed product status's as the number of installed product certs.");
+		Assert.assertEquals(installedProductsAfterAutosubscribingWithMixedCaseServiceLevel.size(), clienttasks.getCurrentProductIds().size(), "The subscribe output displayed the same number of installed product status's as the current number of installed product certs.");
 		Assert.assertTrue(installedProductsAfterAutosubscribingWithServiceLevel.containsAll(installedProductsAfterAutosubscribingWithMixedCaseServiceLevel) && installedProductsAfterAutosubscribingWithMixedCaseServiceLevel.containsAll(installedProductsAfterAutosubscribingWithServiceLevel), "Autosubscribe with serviceLevel '"+mixedCaseServiceLevel+"' yielded the same installed product status as autosubscribe with serviceLevel '"+serviceLevel+"'.");
+		
+		// get the current exempt service levels
+		List<String> exemptServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), true);
+		List<String> exemptServiceLevelsInUpperCase = new ArrayList<String>();
+		for (String exemptServiceLevel : exemptServiceLevels) exemptServiceLevelsInUpperCase.add(exemptServiceLevel.toUpperCase());
 		
 		// assert that each of the consumed ProductSubscriptions match the specified service level
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		if (consumedProductSubscriptions.isEmpty()) log.warning("No entitlements were granted after autosubscribing with service level '"+mixedCaseServiceLevel+"'."); 
+		if (consumedProductSubscriptions.isEmpty()) log.warning("No entitlements were granted after autosubscribing with service level '"+mixedCaseServiceLevel+"'.");
 		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
 			
 			// tolerate ProductSubscriptions with a null/"" serviceLevel. (result of candlepin Bug 1223560)
@@ -731,7 +736,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			}
 			
 			// tolerate ProductSubscriptions with exemptServiceLevels
-			if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
+			if (/*sm_*/exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
 				log.warning("After autosubscribe with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides an exempt service level '"+productSubscription.serviceLevel+"'.");
 				continue;
 			}
