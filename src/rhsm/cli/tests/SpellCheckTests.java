@@ -390,6 +390,16 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 					msgId = msgId.replace("Deregister", "Register");	// Deregister is not recognized by hunspell -d en_US
 					msgId = msgId.replace("Deregistration", "Registration");	// Deregistration is not recognized by hunspell -d en_US
 				}
+				else {
+					log.info("Bug '"+bugId+"' was CLOSED WONTFIX.  Tolerating 'unregister'.");
+					msgId = msgId.replace("unregister", "deregister");
+					msgId = msgId.replace("Unregister", "Deregister");
+					msgId = msgId.replace("unregistration", "Deregistration");
+					msgId = msgId.replace("reregister", "register again");
+					msgId = msgId.replace("deregister", "register");	// deregister is not recognized by hunspell -d en_US
+					msgId = msgId.replace("Deregister", "Register");	// Deregister is not recognized by hunspell -d en_US
+					msgId = msgId.replace("Deregistration", "Registration");	// Deregistration is not recognized by hunspell -d en_US
+				}
 			}
 			// END OF WORKAROUND
 			
