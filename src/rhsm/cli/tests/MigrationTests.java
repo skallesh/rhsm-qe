@@ -478,8 +478,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classicwhen currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
 			
 			// assert that no product certs have been copied yet
-			Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
-
+//OLD		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+			Assert.assertEquals(clienttasks.getProductCerts(clienttasks.productCertDir).size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+			
 			// assert that we are not yet registered to RHSM
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
 			
@@ -614,11 +615,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		
 		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
-		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
-		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running "+rhnMigrateTool+" with "+options+".  (If this fails, one of these migration certs may have clobbered the other "+expectedMigrationProductCertFilenames+")");
+//OLD	List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
+//OLD	Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running "+rhnMigrateTool+" with "+options+".  (If this fails, one of these migration certs may have clobbered the other "+expectedMigrationProductCertFilenames+")");
+		List<ProductCert> migratedProductCerts = clienttasks.getProductCerts(clienttasks.productCertDir);
+		Assert.assertEquals(migratedProductCerts.size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts in '"+clienttasks.productCertDir+"' after running "+rhnMigrateTool+" with options '"+options+"'.  (If this fails, one of these migration certs may have clobbered the other "+expectedMigrationProductCertFilenames+")");
 		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
 			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
-			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly installed product certs includes the expected migration productCert: "+expectedMigrationProductCert);
+			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly migrated product certs in '"+clienttasks.productCertDir+"' includes the expected migration productCert: "+expectedMigrationProductCert);
 		}
 		
 		// assert that when --serverurl is specified, its hostname:port/prefix are preserved into rhsm.conf
@@ -650,7 +653,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String autosubscribeFailedMsg = "Unable to auto-subscribe.  Do your existing subscriptions match the products installed on this system?";
 		autosubscribeFailedMsg = "Unable to auto-attach.  Do your existing subscriptions match the products installed on this system?";	// changed by bug 876294
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) autosubscribeFailedMsg = "Unable to find available subscriptions for all your installed products.";	// commit fad3de89779f2217e788b3564ef5dca7f85914fb	// matches functionality from bug 864195
-//		if (options.contains("-n")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
+//OLD	if (options.contains("-n")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
 		if (options.contains("-n") && !options.contains("--activation-key")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
 
 			// assert that autosubscribe was NOT attempted
@@ -666,7 +669,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			// assert that we are NOT consuming any entitlements
 			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should NOT be consuming any RHSM entitlements after call to "+rhnMigrateTool+" with options ("+options+") that indicate no autosubscribe.");
 			
-//		} else {
+//OLD	} else {
 		} if (!options.contains("-n") && !options.contains("--activation-key")) {
 			
 			// assert that autosubscribe was attempted
