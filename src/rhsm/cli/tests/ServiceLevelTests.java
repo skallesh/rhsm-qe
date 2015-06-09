@@ -644,9 +644,17 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// assert that each of the autosubscribed entitlements come from a pool that supports the original service level
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
 			
+			// tolerate entitlements granted from pools with null/no support_level regardless of the specified service level
+			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
+				if (entitlementCert.orderNamespace.supportLevel==null || entitlementCert.orderNamespace.supportLevel.isEmpty()) {
+					log.warning("Regardless of the consumer's original service level '"+serviceLevel+"', this EntitlementCert provides a support_level of '"+entitlementCert.orderNamespace.supportLevel+"'. (New behavior modification from Bug 1223560)");
+					continue;
+				}
+			}
+			
 			// tolerate exemptServiceLevels
 			if (sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
-				log.warning("After autosubscribing, this EntitlementCert provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"'.");
+				log.warning("Regardless of the consumer's original service level '"+serviceLevel+"', this EntitlementCert provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"'.");
 				continue;
 			}
 
