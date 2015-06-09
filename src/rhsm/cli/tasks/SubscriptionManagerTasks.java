@@ -86,7 +86,9 @@ public class SubscriptionManagerTasks {
 	public final String rhsmCertDWorker		= "/usr/libexec/rhsmcertd-worker";
 	public final String rhsmComplianceD		= "/usr/libexec/rhsmd";	// /usr/libexec/rhsm-complianced; RHEL61
 	public final String rhnDefinitionsDir	= "/tmp/"+"rhnDefinitionsDir";
-	public final String productCertDefaultDir		= "/etc/pki/product-default"; // introduced by Bug 1123029 - Use default product certificates when they are present
+	public final String productCertDefaultDir		= "/etc/pki/product-default";	// introduced by Bug 1123029 - Use default product certificates when they are present
+																					// [root@jsefler-os6 ~]# rpm -q --whatprovides /etc/pki/product-default
+																					// redhat-release-server-6Server-6.7.0.2.el6.x86_64
 
 	
 	// will be initialized after installSubscriptionManagerRPMs()
@@ -107,8 +109,6 @@ public class SubscriptionManagerTasks {
 	public String baseurl							= null;
 	public String consumerKeyFile()	{				return this.consumerCertDir+"/key.pem";}
 	public String consumerCertFile() {				return this.consumerCertDir+"/cert.pem";}
-	public String defaultProductCertDir				= "/etc/pki/product-default";	// [root@jsefler-os6 ~]# rpm -q --whatprovides /etc/pki/product-default
-	// redhat-release-server-6Server-6.7.0.2.el6.x86_64
 	
 	// will be initialized by constructor SubscriptionManagerTasks(SSHCommandRunner runner)
 	public String redhatRelease						= null;	// of the client; Red Hat Enterprise Linux Server release 5.8 Beta (Tikanga)
@@ -1866,7 +1866,7 @@ if (false) {
 		
 		List<ProductCert> productCerts = new ArrayList<ProductCert>();
 		for (ProductCert productCert : getProductCerts(productCertDir)) productCerts.add(productCert);
-		for (ProductCert productCert : getProductCerts(defaultProductCertDir)) productCerts.add(productCert);		
+		for (ProductCert productCert : getProductCerts(productCertDefaultDir)) productCerts.add(productCert);		
 		return productCerts;
 	}
 	public List<ProductCert> getProductCertsUsingOpensslX509(String fromProductCertDir) {
@@ -2476,7 +2476,7 @@ if (false) {
 		*/
 		List<File> certFiles = new ArrayList<File>();
 		for (File certFile : getProductCertFiles(lsOptions,productCertDir)) certFiles.add(certFile);
-		for (File certFile : getProductCertFiles(lsOptions,defaultProductCertDir)) certFiles.add(certFile);
+		for (File certFile : getProductCertFiles(lsOptions,productCertDefaultDir)) certFiles.add(certFile);
 		return certFiles;
 	}
 	public List<File> getProductCertFiles(String lsOptions, String fromProductCertDir) {

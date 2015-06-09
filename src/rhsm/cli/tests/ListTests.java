@@ -185,7 +185,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// assert the number of installed product matches the product certs installed
-		Assert.assertEquals(installedProducts.size(), productCerts.size(), "A single product is reported as installed for each product cert found in "+clienttasks.productCertDir);
+		Assert.assertEquals(installedProducts.size(), productCerts.size(), "A single product is reported as installed for each unique product cert ID found in "+clienttasks.productCertDir+" and "+clienttasks.productCertDefaultDir);
 
 		// assert that each of the installed ProductCerts are listed as InstalledProducts with status "Not Subscribed"
 		for (ProductCert productCert : productCerts) {

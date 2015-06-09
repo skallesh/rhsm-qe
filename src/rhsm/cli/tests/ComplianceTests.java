@@ -1000,7 +1000,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// move all default products to the side so they do not interfere with these ComplianceTests
-		defaultProductCertFiles = clienttasks.getProductCertFiles(clienttasks.defaultProductCertDir);
+		defaultProductCertFiles = clienttasks.getProductCertFiles(clienttasks.productCertDefaultDir);
 		for (File defaultProductCertFile : defaultProductCertFiles) {
 			RemoteFileTasks.runCommandAndAssert(client, "mv "+defaultProductCertFile+" "+defaultProductCertFile+"_", 0);
 		}
