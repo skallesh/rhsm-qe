@@ -115,7 +115,8 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		// get the installed products and product database map
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		Map<String,List<String>> productIdRepoMap = clienttasks.getProductIdToReposMap();
-		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		//List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();	// VALID BEFORE Bugs 1080007 1080012 - [RFE] Include default product certificate in redhat-release
+		List<ProductCert> installedProductCerts = clienttasks.getProductCerts(clienttasks.productCertDir);
 		
 		// assert that product database and installed products are in sync
 		int installedProductCertCount=0;
