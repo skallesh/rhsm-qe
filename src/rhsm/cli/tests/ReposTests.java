@@ -1097,6 +1097,28 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="Verify that RepoActionInvoker.is_managed('some_repo') returns False when 'some_repo' does not exist and True when it is entitled",
+			groups={"blockedByBug-1223038"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerificationFixForBug1223038_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.14.9-1")) throw new SkipException("The fix for this bug was not implemented until version subscription-manager-1.14.9-1");
+		
+		// copy the ismanagedtest.py script to the client
+		File ismanagedtestFile = new File(System.getProperty("automation.dir", null)+"/scripts/ismanagedtest.py");
+		if (!ismanagedtestFile.exists()) Assert.fail("Failed to find expected script: "+ismanagedtestFile);
+		RemoteFileTasks.putFile(client.getConnection(), ismanagedtestFile.toString(), "/usr/local/bin/", "0755");
+
+		RemoteFileTasks.runCommandAndAssert(client, "ismanagedtest.py some_repo", 0, "False", null);
+		
+		// while registered and subscribed to a repo (either enabled or disabled), call ismanagedtest.py repo should be true
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);
+		List<Repo> repos = clienttasks.getCurrentlySubscribedRepos();
+		//for (Repo repo : repos) {
+		for (Repo repo : getRandomSubsetOfList(repos,5)) {
+			RemoteFileTasks.runCommandAndAssert(client, "ismanagedtest.py "+repo.repoId, 0, "True", null);
+		}
+	}
 	
 	
 	
