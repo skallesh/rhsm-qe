@@ -837,9 +837,6 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 	public static String allProductsSubscribableByOneCommonServiceLevelValue=null;	// the value of the service_level to expect from all of the autosubscribed pools after calling configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel
 	public static List<String> allProductsSubscribableByMoreThanOneCommonServiceLevelValues= new ArrayList<String>();	// the service_level values to expect subscription-manager-gui to prompt the user to choose from when autosubscribing after calling configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
-
-	protected String originalProductCertDir = null;	// original productCertDir configuration
-	protected List<File> originalProductCertDefaultDirFiles = null;	// original product certs in /etc/pki/product-default/
 	protected List<SubscriptionPool> futureSystemSubscriptionPools = null;
 	
 	// 8/7/2013 the following rhsmComplianceDStdoutMessages changed after ckozak altered the dbus implementation to display compliance messages in the rhsm-icon
@@ -983,7 +980,21 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
+	protected List<File> originalProductCertDefaultDirFiles = null;	// original product certs in /etc/pki/product-default/
 	@BeforeClass(groups={"setup"})
+	public void moveOriginalProductCertDefaultDirFilesBeforeClass() {
+		// the /etc/pki/product-default/ products were introduced by Bug 1123029 during RHEL6.7 long after these ComplianceTests were automated
+		// for simplicity, move all default products to the side so they do not interfere with these ComplianceTests
+		if (originalProductCertDefaultDirFiles==null) {
+			originalProductCertDefaultDirFiles = clienttasks.getProductCertFiles(clienttasks.productCertDefaultDir);
+			for (File defaultProductCertFile : originalProductCertDefaultDirFiles) {
+				RemoteFileTasks.runCommandAndAssert(client, "mv "+defaultProductCertFile+" "+defaultProductCertFile+"_", 0);
+			}
+		}
+	}
+	
+	protected String originalProductCertDir = null;	// original productCertDir configuration
+	@BeforeClass(groups={"setup"},dependsOnMethods={"moveOriginalProductCertDefaultDirFilesBeforeClass"})
 	public void setupProductCertDirsBeforeClass() throws JSONException, Exception {
 		
 		// clean out the productCertDirs
@@ -997,14 +1008,6 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel}) {
 			RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+productCertDir, 0);
 			RemoteFileTasks.runCommandAndAssert(client, "mkdir "+productCertDir, 0);
-		}
-		
-		// move all default products to the side so they do not interfere with these ComplianceTests
-		if (originalProductCertDefaultDirFiles==null) {
-			originalProductCertDefaultDirFiles = clienttasks.getProductCertFiles(clienttasks.productCertDefaultDir);
-			for (File defaultProductCertFile : originalProductCertDefaultDirFiles) {
-				RemoteFileTasks.runCommandAndAssert(client, "mv "+defaultProductCertFile+" "+defaultProductCertFile+"_", 0);
-			}
 		}
 		
 		// register and subscribe to all available subscriptions
@@ -1147,6 +1150,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (this.originalProductCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.originalProductCertDir);
 		allProductsSubscribableByOneCommonServiceLevelValue = null;
 		allProductsSubscribableByMoreThanOneCommonServiceLevelValues.clear();
+	}
+	
+	@AfterClass(groups={"setup"},alwaysRun=true)
+	public void restoreOriginalProductCertDefaultDirFilesAfterClass() {
+		if (clienttasks==null) return;
 		
 		// restore all default products since they were moved to the side during this test class
 		if (this.originalProductCertDefaultDirFiles!=null) {
