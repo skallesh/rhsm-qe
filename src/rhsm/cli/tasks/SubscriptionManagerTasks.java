@@ -8180,6 +8180,13 @@ if (false) {
 					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
+			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+				String bugId = "1231308"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1231308 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded"/"Unable to verify server's identity" from stage IT-Candlepin
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
 			// END OF WORKAROUND
 			
 			
@@ -8287,6 +8294,60 @@ if (false) {
 			}
 			// END OF WORKAROUND
 			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	201506121027:12.829 - FINE: ssh root@jsefler-os6.usersys.redhat.com subscription-manager subscribe --pool=8a99f98a4d730ed9014d96e90c9d275a --pool=8a99f9874d730eea014d96e682e1121e --pool=8a99f9874d730eea014d96e6849f124b --pool=8a99f9894d730ec6014d96e73e4064d9 --pool=8a99f9874d730eea014d96e687b4129e --pool=8a99f9874d730eea014d96e680ae11b9 --pool=8a99f9874d730eea014d96e6886312c7 --pool=8a99f9874d730eea014d96e68651126b --pool=8a99f9874d730eea014d96e67fd41189 --pool=8a99f9874d730eea014d96e682c71206 --pool=8a99f9874d730eea014d96e67fbb1174 --pool=8a99f9874d730eea014d96e6809811a2 --pool=8a99f9874d730eea014d96e683d1123a --pool=8a99f9874d730eea014d96e681b611eb --pool=8a99f9874d730eea014d96e6819e11d4 --pool=8a99f9874d730eea014d96e6890c12eb (com.redhat.qe.tools.SSHCommandRunner.run)
+			//	201506121036:51.780 - FINE: Stdout: 
+			//	Successfully attached a subscription for: Red Hat JBoss Enterprise Application Platform with Management, 16 Core Standard, L3 Support Partner
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux Workstation, Standard
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux Server, Standard (Physical or Virtual Nodes)
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux for IBM POWER, Standard (4 sockets) (Up to 30 LPARs) with Smart Management
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux Server, Premium (Physical or Virtual Nodes)
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux Server for HPC Compute Node, Self-support (8 sockets) (Up to 1 guest)
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux High Touch Beta
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux for Virtual Datacenters, Premium
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux Desktop, Self-support
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux Workstation, Standard
+			//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+			//	201506121036:51.796 - FINE: Stderr: Unable to verify server's identity: (104, 'Connection reset by peer')
+			//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+			//	201506121036:51.798 - FINE: ExitCode: 70 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+			//	201506121036:51.814 - FINE: ssh root@jsefler-os6.usersys.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi; (com.redhat.qe.tools.SSHCommandRunner.run)
+			//	201506121036:51.868 - WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2015-06-12 10:36:02,337 [DEBUG] rhsmd:1998 @connection.py:494 - Making request: GET /subscription/consumers/e5c74163-3bdb-47c6-ba26-f4d392d8bd92/compliance
+			//	2015-06-12 10:36:51,737 [ERROR] subscription-manager:1721 @managercli.py:160 - Unable to attach: (104, 'Connection reset by peer')
+			//	2015-06-12 10:36:51,737 [ERROR] subscription-manager:1721 @managercli.py:161 - (104, 'Connection reset by peer')
+			//	Traceback (most recent call last):
+			//	  File "/usr/share/rhsm/subscription_manager/managercli.py", line 1486, in _do_command
+			//	    ents = self.cp.bindByEntitlementPool(self.identity.uuid, pool, self.options.quantity)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 1017, in bindByEntitlementPool
+			//	    return self.conn.request_post(method)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 605, in request_post
+			//	    return self._request("POST", method, params)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 512, in _request
+			//	    response = conn.getresponse()
+			//	  File "/usr/lib64/python2.6/httplib.py", line 1012, in getresponse
+			//	    response.begin()
+			//	  File "/usr/lib64/python2.6/httplib.py", line 404, in begin
+			//	    version, status, reason = self._read_status()
+			//	  File "/usr/lib64/python2.6/httplib.py", line 360, in _read_status
+			//	    line = self.fp.readline(_MAXLINE + 1)
+			//	  File "/usr/lib64/python2.6/socket.py", line 479, in readline
+			//	    data = self._sock.recv(self._rbufsize)
+			//	  File "/usr/lib64/python2.6/site-packages/M2Crypto/SSL/Connection.py", line 228, in read
+			//	    return self._read_bio(size)
+			//	  File "/usr/lib64/python2.6/site-packages/M2Crypto/SSL/Connection.py", line 213, in _read_bio
+			//	    return m2.ssl_read(self.ssl, size, self._timeout)
+			//	SSLError: (104, 'Connection reset by peer')
+			issue = "SSLError: (104, 'Connection reset by peer')";
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
+				String bugId = "1231308"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1231308 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded"/"Unable to verify server's identity" from stage IT-Candlepin
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
 		}
 	}
 	
