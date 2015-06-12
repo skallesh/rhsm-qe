@@ -681,11 +681,14 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// subscribe to the High Availability subscription and install an HA package
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
-		if (!clienttasks.variant.equals("Server")) {
-			throw new SkipException("High Availability is only available for Server.");
-		} else if (!getArchesOfferringHighAvailabilityContent().contains(clienttasks.arch)) {
-			throw new SkipException("High Availability subscription SKU '"+sm_haSku+"' does not offer content on a '"+clienttasks.variant+"' system with arch '"+clienttasks.arch+"'.");
+		if (haPool==null) {
+			if (!clienttasks.variant.equals("Server")) {
+				throw new SkipException("High Availability is only available for Server.");
+			} else if (!getArchesOfferringHighAvailabilityContent().contains(clienttasks.arch)) {
+				throw new SkipException("High Availability subscription SKU '"+sm_haSku+"' does not offer content on a '"+clienttasks.variant+"' system with arch '"+clienttasks.arch+"'.");
+			}
 		}
+		Assert.assertNotNull(haPool, "A subscription pool for High Availability SKU '"+sm_haSku+"' is available.");
 		
 		// Subscribe to the High Availability subscription SKU
 		clienttasks.subscribe(null,null,haPool.poolId, null,null,null,null,null,null,null,null, null);
