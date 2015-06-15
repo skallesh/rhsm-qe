@@ -686,9 +686,16 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			// assert that autosubscribe feedback was a success (or not)
 			List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 			if (consumedProductSubscriptions.isEmpty()) {
-				Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When no entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);			
-			} else {
+				Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Assuming the base RHN channel has been migrated, but no entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);
+			} /*else { // 06/15/2015: This else block is wrong since an RHN Channel could have been successfully migrated, but there is no subscription available to cover it.  Replacing it with a call to get the compliance status
 				Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When autosubscribe is successful and entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);				
+			} */
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
+				if (clienttasks.status(null, null, null, null).getExitCode().equals(1)) {	// exit code of 0 indicates valid compliance, otherwise exit code is 1
+					Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager status indicates incompliance, the most likely reason is because at least one of the migrated products could not be auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);
+				} else {
+					Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager status indicates compliance, all of the migrated products should have been auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);						
+				}
 			}
 			
 			// assert that when no --servicelevel is specified, then no service level preference will be set on the registered consumer
