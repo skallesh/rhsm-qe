@@ -8180,7 +8180,7 @@ if (false) {
 					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
-			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStdout().contains(issue) || result.getStderr().contains(issue)) if (SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
 				String bugId = "1231308"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1231308 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded"/"Unable to verify server's identity" from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
@@ -8339,8 +8339,8 @@ if (false) {
 			//	  File "/usr/lib64/python2.6/site-packages/M2Crypto/SSL/Connection.py", line 213, in _read_bio
 			//	    return m2.ssl_read(self.ssl, size, self._timeout)
 			//	SSLError: (104, 'Connection reset by peer')
-			issue = "SSLError: (104, 'Connection reset by peer')";
-			if (getTracebackCommandResult.getStdout().contains(issue)) {
+			issue = "(104, 'Connection reset by peer')";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
 				String bugId = "1231308"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1231308 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded"/"Unable to verify server's identity" from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
