@@ -214,6 +214,7 @@ public class CandlepinTasks {
 		}
 		
 		// copy the patch file used to enable testing the redeem module to the candlepin proxy dir
+		if (false) {	// 06/15/2015: DefaultSubscriptionServiceAdapter.java has been removed from candlepin-2.0+ with the introduction of per-org product stuff
 		File candlepinRedeemTestsMasterPatchFile = new File(System.getProperty("automation.dir", null)+"/scripts/candlepin-RedeemTests-branch-master.patch");
 		File candlepinRedeemTestsPatchFile = new File(System.getProperty("automation.dir", null)+"/scripts/candlepin-RedeemTests-branch-"+branch+".patch");
 		if (!candlepinRedeemTestsPatchFile.exists()) {
@@ -229,6 +230,7 @@ public class CandlepinTasks {
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/server && patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);
+		}
 		
 		// modify the gen-certs file so the candlepin cert is valid for more than one year (make it 20 years)
 		//RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/proxy/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 7300 ");
