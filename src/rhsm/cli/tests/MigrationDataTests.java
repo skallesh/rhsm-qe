@@ -2439,6 +2439,72 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1133942");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-ppc64-server-dts-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-dts-6-beta-debuginfo")) {
+				// Bug 1232442 - rhel-ppc64-server-dts-6-beta channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1232442");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-i386-server-hts-6-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-hts-6-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-hts-6-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-6-debuginfo")) {
+				// Bug 1232448 - rhel-<ARCH>-server-hts-6-debuginfo channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1232448");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-dts-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-dts-6-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-dts-6-debuginfo")) {
+				// Bug 1232458 - rhel-x86_64-hpc-node-dts-6 channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1232458");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-ppc-server-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc-server-optional-6-beta")) {
+				// Bug 1232460 - rhel-ppc-server-6-beta channel map is missing from channel-cert-mapping.txt
+				bugIds.add("1232460");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-i386-server-6-cert") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-6-cert") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-6-cert") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cert")) {
+				// Bug 1232462 - rhel-<ARCH>-server-6-cert channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1232462");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-3-cts") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-3-cts-debuginfo")) {
+				// Bug 1232465 - rhel-x86_64-server-6-ost-3-cts channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1232465");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.1-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.1-beta-debuginfo")) {
+				// Bug 1232467 - rhel-x86_64-server-6-rhevm-3.1-beta channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1232467");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-optional-3") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhs-optional-3-debuginfo")) {
+				// Bug 1232470 - rhel-x86_64-server-6-rhs-optional-3 channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1232470");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-sap-hana-6") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-sap-hana-6-debuginfo")) {
+				// Bug 1232472 - rhel-x86_64-server-sap-hana-6 channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1232472");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-v2vwin-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-v2vwin-6-beta-debuginfo")) {
+				// Bug 1232474 - rhel-x86_64-server-v2vwin-6-beta channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1232474");
+			}
+			
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
