@@ -123,8 +123,12 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	public void OnPremisesMockAttemptToRedeem_Test(Object blockedByBug, String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		String warning = "This mock test was authored for execution against an on-premises candlepin server.";
 		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException(warning);
-		log.warning(warning);
 		log.info(testDescription);
+		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "2.0.0-1")) {	// 06/15/2015: DefaultSubscriptionServiceAdapter.java has been removed from candlepin-2.0.0+ with the introduction of per-org product stuff
+			throw new SkipException("This test is no longer attemptable against an OnPremise candlepin due to the removal of DefaultSubscriptionServiceAdapter.java from candlepin-2.0.0-1+");
+		}
+		log.warning(warning);
+
 
 		// create a facts file with a serialNumber that will clobber the true system facts
 		Map<String,String> facts = new HashMap<String,String>();
