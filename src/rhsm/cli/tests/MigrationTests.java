@@ -2516,7 +2516,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			SSHCommandResult result = client.runCommandAndWait(command);
 			Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to add RHN Classic channels.");
 			Assert.assertEquals(result.getStderr(), "","Stderr from attempt to add RHN Classic channel.");
-		} else {	// THIS APPROACH WORKS WELL, BUT IT HIDES OFFENDING CHANNELS
+		} else if (false) {	// THIS APPROACH WORKS WELL, BUT IT HIDES OFFENDING CHANNELS AND STILL THROWS AN OCCASIONAL rhn-plugin: Error communicating with server. The message was: Connection timed out on readline
 			// add the rhn channels in blocks of 10 to help insure the command is executed under 3 minutes.
 			int i = 0;
 			String command="";
@@ -2538,6 +2538,21 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"Exitcode from attempt to add RHN Classic channels.");
 				Assert.assertEquals(result.getStderr(), "","Stderr from attempt to add RHN Classic channel.");
 			}
+		} else {	// THIS APPROACH WORKS WELL, BUT IT HIDES OFFENDING CHANNELS AND AFTER 3 MINUTES, IT THROWS A rhn-plugin: Error communicating with server. The message was: Connection timed out on readline BUT WILL RETRY SEVERAL TIMES UNTIL SUCCESSFUL
+			String command="";
+			for (String rhnChannel : rhnChannels) {
+				//command += String.format(" && rhn-channel --user=%s --password=%s --add --channel=%s",rhnUsername,rhnPassword,rhnChannel);
+				command += String.format(" && rhn-channel -u %s -p %s -a -c %s",rhnUsername,rhnPassword,rhnChannel);
+			}
+			command = command.replaceFirst("^ *&& *", "");
+			SSHCommandResult result=null;
+			for (int retry=1; retry<=10; retry++) {
+				result = client.runCommandAndWait(command);
+				if (!result.getStderr().contains("Connection timed out on readline")) break;
+				log.info("Encountered a timeout. Re-attempt '"+retry+"' to add RHN Classic channels...");
+			}
+			Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to add RHN Classic channels.");
+			Assert.assertEquals(result.getStderr(), "","Stderr from attempt to add RHN Classic channel.");
 		}
 	}
 
