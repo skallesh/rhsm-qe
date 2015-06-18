@@ -1503,7 +1503,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" when consuming RHN Channels for multiple versions of JBEAP "+rhnChannelsToAdd);
 		
 		// assert that no product certs have been copied yet
-		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" was aborted.");
+		//Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" was aborted.");	// getCurrentlyInstalledProducts() IS NOW TAINTED BY /etc/pki/product-default CERTS
+		Assert.assertEquals(clienttasks.getProductCertFiles(clienttasks.productCertDir).size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" was aborted.");
 
 		// assert that we are not yet registered to RHSM
 		Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" was aborted.");

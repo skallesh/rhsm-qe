@@ -2467,7 +2467,7 @@ if (false) {
 	 * <br>"" no sort order preferred
 	 * <br>"-t" sort by modification time
 	 * <br>"-v" natural sort of (version) numbers within text
-	 * @return List of /etc/pki/product/*.pem files sorted using lsOptions
+	 * @return List of /etc/pki/product/*.pem files sorted using lsOptions AND the /etc/pki/product-default/*.pem files
 	 */
 	public List<File> getCurrentProductCertFiles(String lsOptions) {
 		/* THIS ORIGINAL IMPLEMENTATION DID NOT INCLUDE THE DEFAULT PRODUCT CERTS PROVIDED BY redhat-release
