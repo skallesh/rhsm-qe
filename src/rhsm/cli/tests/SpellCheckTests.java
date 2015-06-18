@@ -173,6 +173,13 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 					log.warning("Ignoring unrecognized word '"+"unentitle"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("unentitle", "unsubscribed");
 				}
+				
+				if (clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 599f217a4cf06248720fa0a30bd08b0b4ecc0f18
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+"unentitle"+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					msgId = msgId.replace("unentitle", "unsubscribed");
+				}
 			}
 			// END OF WORKAROUND
 			
@@ -242,6 +249,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 					log.warning("Ignoring unrecognized word '"+"startup"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("startup", "start-up");
 				}
+				else {
+					log.info("Bug '"+bugId+"' was CLOSED WONTFIX.  Tolerating 'startup'.");
+					msgId = msgId.replace("startup", "start-up");
+				}
 			}
 			// END OF WORKAROUND
 
@@ -252,6 +263,13 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"pre-configure"+"' while bug '"+bugId+"' is open.");
+					msgId = msgId.replace("pre-configure", "preconfigure");
+				}
+				
+				if (clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 0162a16a4dde7c54985ec27fd1515f1b664d829c
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring unrecognized word '"+"pre-configure"+"' which is fixed in newer release subscription-manager-1.15.1-1.");
 					msgId = msgId.replace("pre-configure", "preconfigure");
 				}
 			}
@@ -282,6 +300,19 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"Deletedfd"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("Deletedfd", "Deleted");
+				}
+			}
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1233379
+			if (msgId.contains("systemid")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1233379";	// Bug 1233379 - Grammar issue, "systemid" is not a word
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				String word = "systemid";
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring unrecognized word '"+word+"' while bug '"+bugId+"' is open.");
+					msgId = msgId.replace("systemid", "system id");
 				}
 			}
 			// END OF WORKAROUND
@@ -454,9 +485,16 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1192094";	// Bug 1192094 - man page for subscription-manager references "servicelevel" command when it should say "service-level
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			String word="servicelevel";
 			if (invokeWorkaroundWhileBugIsOpen) {
-				log.warning("Ignoring unrecognized word '"+"servicelevel"+"' while bug '"+bugId+"' is open.");
-				modifiedManPage = modifiedManPage.replaceAll("([^-])servicelevel", "$1service-level");
+				log.warning("Ignoring unrecognized word '"+word+"' while bug '"+bugId+"' is open.");
+				modifiedManPage = modifiedManPage.replaceAll("([^-])"+word, "$1service-level");
+			}
+			if (clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 961aa8d43ef6e18ef9cde2e740be8462101bb4c6
+				log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+				SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+				log.warning("Ignoring unrecognized word '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+				modifiedManPage = modifiedManPage.replace(word, "TYPO");
 			}
 		}
 		// END OF WORKAROUND
@@ -494,6 +532,37 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
 				}
+				
+				if (word.equals("suborganizations") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 063747b1b1d83fe89eff91fc5fb96f57d95eb5d5
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				if (word.equals("expirations") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 063747b1b1d83fe89eff91fc5fb96f57d95eb5d5
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				if (word.equals("reregistered") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 063747b1b1d83fe89eff91fc5fb96f57d95eb5d5
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				if (word.equals("instaled") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 063747b1b1d83fe89eff91fc5fb96f57d95eb5d5
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				if (word.equals("equilivent") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 063747b1b1d83fe89eff91fc5fb96f57d95eb5d5
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
 			}
 		}
 		// END OF WORKAROUND
@@ -528,6 +597,13 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				
+				if (word.equals("bugzilla1192574comment3isNotFixed") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 589bf7debe8702d147f3a69f61f34c44ab47ef63
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
 				}
 			}
@@ -636,6 +712,31 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
 				}
+				
+				if (word.equals("subscription-mananager") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 5157378c714de78fbb0ca9f5b47b567ac44efa84
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				if (word.equals("pulldown") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 5157378c714de78fbb0ca9f5b47b567ac44efa84
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				if (word.equals("bugzilla1192646comment4isNotFixed") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 5157378c714de78fbb0ca9f5b47b567ac44efa84
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				if (word.equals("bugzilla1192646comment5isNotFixed") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 5157378c714de78fbb0ca9f5b47b567ac44efa84
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
 			}
 		}
 		// END OF WORKAROUND
@@ -670,6 +771,13 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
 				}
+				
+				if (word.equals("certficate") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit a7a358714b66faf1ba2031f2e9918e1078756efa
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
 			}
 		}
 		// END OF WORKAROUND
@@ -702,6 +810,19 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				
+				if (word.equals("certmgr.py") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit cf092e1f5f51a60f983b2feacc400d97250ff406
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				if (word.equals("autoattachInterval") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit cf092e1f5f51a60f983b2feacc400d97250ff406
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
 				}
 			}
@@ -756,6 +877,12 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
+					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				}
+				if (word.equals("intead") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 23e0c319ae3ed9ff2dc684b46fc1c2bf4e05f840
+					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
 				}
 			}
@@ -1043,6 +1170,25 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("GPLv2", "General Public License, version 2");
 		modifiedManPage = modifiedManPage.replaceAll("HTTPS", "Hypertext Transfer Protocol Secure");
 		modifiedManPage = modifiedManPage.replaceAll("MERCHANTABILITY", "MERCHANTABLE");
+		
+		// filesystem was judged WONTFIX https://bugzilla.redhat.com/show_bug.cgi?id=1193991#c5
+		modifiedManPage = modifiedManPage.replaceAll("filesystem", "file system");
+		
+		// unregister was judged WONTFIX https://bugzilla.redhat.com/show_bug.cgi?id=1149098#c10
+		modifiedManPage = modifiedManPage.replaceAll("unregister", "not register");	// deregister is not recognized by hunspell -d en_US
+		modifiedManPage = modifiedManPage.replaceAll("Unregister", "Not register");	// Deregister is not recognized by hunspell -d en_US
+		modifiedManPage = modifiedManPage.replaceAll("UNREGISTER", "NOT REGISTER");	// DEREGISTER is not recognized by hunspell -d en_US
+		
+		// plugin was judged WONTFIX https://bugzilla.redhat.com/show_bug.cgi?id=1200507
+		modifiedManPage = modifiedManPage.replaceAll("plugins", "plug-ins");
+		modifiedManPage = modifiedManPage.replaceAll("plugin", "plug-in");
+		
+		// plugin was judged WONTFIX https://bugzilla.redhat.com/show_bug.cgi?id=1192646#c8
+		modifiedManPage = modifiedManPage.replaceAll("subscription manager plugins", "subscription manager plug-ins");
+		modifiedManPage = modifiedManPage.replaceAll("plugin configuration", "plug-in configuration");
+		
+		// wildcard was judged WONTFIX https://bugzilla.redhat.com/show_bug.cgi?id=1189937
+		modifiedManPage = modifiedManPage.replaceAll("wildcard", "wild-card");
 		
 		// modifications for people's name
 		modifiedManPage = modifiedManPage.replaceAll("Pradeep(\n *| +)Kilambi", "Author");
