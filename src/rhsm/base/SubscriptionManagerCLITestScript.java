@@ -1947,11 +1947,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 								break SOCKETS;
 							}
 							
+							// business rule is if this client is virtual, then we do not consider sockets at all.
+							// Example: a 1 socket physical or virtual subscription pool should be available for consumption my a 2 socket virt guest 
+							if (isSystemVirtual) {
+								// do not mark productAttributesPassRulesCheck = false;
+								break SOCKETS;
+							}
+							
 							// if the sockets attribute is zero, then this subscription should be available to this client
 							if (Integer.valueOf(attributeValue)==0) {
 								// do not mark productAttributesPassRulesCheck = false;
 							} else
-	
+							
 							// if the socket count on this client exceeds the sockets attribute, then this subscription should NOT be available to this client
 							if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
 								if (matchSystemHardware) productAttributesPassRulesCheck = false;
