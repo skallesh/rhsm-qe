@@ -306,11 +306,97 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		isSetupBeforeSuiteComplete = true;
 	}
 	
+	protected List<String> getRpmUpdateUrlsFromCiMessage(String ciMessage) throws JSONException {
+		List<String> rpmUpdateUrls = new ArrayList<String>();
+		
+		// parse the sm_ciMessage into additional sm_rpmUpdateUrls
+		if (!ciMessage.isEmpty()) {
+			// get the list of rpms from  CI_MESSSAGE
+			//	CI_MESSAGE:
+			//	{
+			//	  "tag" : {
+			//	    "maven_support" : false,
+			//	    "locked" : false,
+			//	    "name" : "rhel-7.2-candidate",
+			//	    "perm" : null,
+			//	    "perm_id" : null,
+			//	    "arches" : null,
+			//	    "maven_include_all" : false,
+			//	    "id" : 7604
+			//	  },
+			//	  "force" : false,
+			//	  "build" : {
+			//	    "owner_name" : "crog",
+			//	    "package_name" : "python-rhsm",
+			//	    "task_id" : 9402045,
+			//	    "volume_name" : "DEFAULT",
+			//	    "owner_id" : 3046,
+			//	    "creation_event_id" : 11465239,
+			//	    "creation_time" : "2015-06-22 14:58:31.692135",
+			//	    "state" : 1,
+			//	    "nvr" : "python-rhsm-1.15.2-1.el7",
+			//	    "completion_time" : "2015-06-22 15:46:14.77846",
+			//	    "epoch" : null,
+			//	    "version" : "1.15.2",
+			//	    "creation_ts" : 1.43499951169213E9,
+			//	    "volume_id" : 0,
+			//	    "release" : "1.el7",
+			//	    "package_id" : 30891,
+			//	    "completion_ts" : 1.43500237477846E9,
+			//	    "id" : 443277,
+			//	    "name" : "python-rhsm"
+			//	  },
+			//	  "user" : {
+			//	    "status" : 0,
+			//	    "usertype" : 0,
+			//	    "krb_principal" : "crog@REDHAT.COM",
+			//	    "id" : 3046,
+			//	    "name" : "crog"
+			//	  },
+			//	  "rpms" : {
+			//	    "s390x" : [ "python-rhsm-1.15.2-1.el7.s390x.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.s390x.rpm" ],
+			//	    "s390" : [ "python-rhsm-1.15.2-1.el7.s390.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.s390.rpm" ],
+			//	    "i686" : [ "python-rhsm-1.15.2-1.el7.i686.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.i686.rpm" ],
+			//	    "ppc64" : [ "python-rhsm-1.15.2-1.el7.ppc64.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.ppc64.rpm" ],
+			//	    "aarch64" : [ "python-rhsm-1.15.2-1.el7.aarch64.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.aarch64.rpm" ],
+			//	    "ppc64le" : [ "python-rhsm-1.15.2-1.el7.ppc64le.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.ppc64le.rpm" ],
+			//	    "x86_64" : [ "python-rhsm-1.15.2-1.el7.x86_64.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.x86_64.rpm" ],
+			//	    "ppc" : [ "python-rhsm-1.15.2-1.el7.ppc.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.ppc.rpm" ],
+			//	    "src" : [ "python-rhsm-1.15.2-1.el7.src.rpm" ]
+			//	  },
+			//	  "tags" : [ "rhel-7.2-candidate" ],
+			//	  "archives" : { }
+			//	}
+			JSONObject jsonCIMessage = new JSONObject(ciMessage);
+			String arch = clienttasks.arch;	// assume
+			if (jsonCIMessage.getJSONObject("rpms").has("noarch")) arch="noarch";
+			JSONArray jsonCIMessageRpms = jsonCIMessage.getJSONObject("rpms").getJSONArray(arch);
+			List<String> ciMessageRpms = new ArrayList<String>();
+			for (int r = 0; r < jsonCIMessageRpms.length(); r++) ciMessageRpms.add(jsonCIMessageRpms.getString(r));
+			String jsonCIMessageBuildName    = jsonCIMessage.getJSONObject("build").getString("name");	// python-rhsm
+			String jsonCIMessageBuildVersion = jsonCIMessage.getJSONObject("build").getString("version");	// 1.15.2
+			String jsonCIMessageBuildRelease = jsonCIMessage.getJSONObject("build").getString("release");	// 1.el7
+			for (String rpm : ciMessageRpms) {
+				String pkgVersionReleaseArch = rpm.replaceFirst(".rpm$", "");	// python-rhsm-1.15.2-1.el7.x86_64
+				String pkg = pkgVersionReleaseArch.split("-"+jsonCIMessageBuildVersion+"-"+jsonCIMessageBuildRelease)[0];	// python-rhsm or python-rhsm-debuginfo
+				
+				String rpmUpdateUrl = "http://download.devel.redhat.com/brewroot/packages/"+jsonCIMessageBuildName+"/"+jsonCIMessageBuildVersion+"/"+jsonCIMessageBuildRelease+"/"+arch+"/"+rpm;
+				if (clienttasks.isPackageInstalled(pkg)) {
+					rpmUpdateUrls.add(rpmUpdateUrl);
+				} else {
+					log.warning("Package '"+pkg+"' is not already installed and will NOT be updated to '"+pkgVersionReleaseArch+"'.");
+				}
+			}
+		}
+		return rpmUpdateUrls;
+	}
+	
 	public void setupClient(SubscriptionManagerTasks smt, File serverCaCertFile, List<File> generatedProductCertFiles) throws IOException, JSONException{		
 		smt.installSubscriptionManagerRPMs(sm_yumInstallOptions);
 		if (sm_yumInstallZStreamUpdates)	{
 			smt.installZStreamUpdates(sm_yumInstallOptions, sm_yumInstallZStreamUpdatePackages, sm_yumInstallZStreamComposeUrl, sm_yumInstallZStreamBrewUrl, sm_ciMessage);
 		}
+		sm_rpmUpdateUrls.addAll(getRpmUpdateUrlsFromCiMessage(sm_ciMessage));
 		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions);
 		smt.initializeMsgStringsAfterInstallingSubscriptionManagerRPMs();
 		
