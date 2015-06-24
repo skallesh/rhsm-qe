@@ -747,7 +747,12 @@ schema generation failed
 	 * @throws Exception
 	 */
 	static public JSONObject refreshPoolsUsingRESTfulAPI(String user, String password, String url, String owner) throws Exception {
-		return new JSONObject(putResourceUsingRESTfulAPI(user, password, url, "/owners/"+owner+"/subscriptions"));
+		String jobDetailAsString = putResourceUsingRESTfulAPI(user, password, url, "/owners/"+owner+"/subscriptions");
+		if (jobDetailAsString==null) {	// indicative of candlepin version > 2.0.0-1 where a PUT on /owners/OWNER-KEY/subscriptions is now a no-op
+			// create a dummy jobDetail
+			jobDetailAsString = "{\"state\" : \"FINISHED\",\"result\" : \"Pools no longer need to be refreshed in candlepin-2.0.  This is a fake jobDetail.\"}";
+		}
+		return new JSONObject(jobDetailAsString);
 	}
 	
 	static public JSONObject setAutohealForConsumer(String authenticator, String password, String url, String consumerid, Boolean autoheal) throws Exception {
@@ -3143,6 +3148,9 @@ schema generation failed
 	 * @throws Exception
 	 */
 	static public JSONObject waitForJobDetailStateUsingRESTfulAPI(String owner, String password, String url, JSONObject jobDetail, String state, int retryMilliseconds, int timeoutMinutes) throws Exception {
+		// do we really need to wait?
+		if (jobDetail.getString("state").equalsIgnoreCase(state)) return jobDetail;
+		
 		String statusPath = jobDetail.getString("statusPath");
 		int t = 0;
 		
