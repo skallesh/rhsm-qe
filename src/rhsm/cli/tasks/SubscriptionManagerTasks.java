@@ -545,7 +545,12 @@ if (false) {
 		//		  "tags" : [ "rhel-7.1-candidate", "rhel-7.1-pending" ]
 		//		}
 		JSONObject jsonCIMessage = new JSONObject(ciMessage);
-		JSONArray jsonCIMessageRpms = jsonCIMessage.getJSONObject("rpms").getJSONArray(arch);
+		JSONArray jsonCIMessageRpms;
+		if (jsonCIMessage.getJSONObject("rpms").has("noarch")) {
+			jsonCIMessageRpms = jsonCIMessage.getJSONObject("rpms").getJSONArray("noarch");
+		} else {
+			jsonCIMessageRpms = jsonCIMessage.getJSONObject("rpms").getJSONArray(arch);
+		}
 		List<String> ciMessageRpms = new ArrayList<String>();
 		for (int r = 0; r < jsonCIMessageRpms.length(); r++) ciMessageRpms.add(jsonCIMessageRpms.getString(r));
 		String jsonCIMessageBuildVersion = jsonCIMessage.getJSONObject("build").getString("version");	// 208
@@ -831,16 +836,18 @@ if (false) {
 			// switching to use rpm --upgrade instead
 			//SSHCommandResult updateResult = sshCommandRunner.runCommandAndWait("yum -y localupdate "+rpmPaths+" "+installOptions);
 			SSHCommandResult updateResult = sshCommandRunner.runCommandAndWait("rpm -v --upgrade "+rpmPaths);
+			Assert.assertEquals(updateResult.getExitCode(), Integer.valueOf(0), "ExitCode from attempt to upgrade packages: "+rpmPaths);
 		}
-		// assert that all of the updated rpms are now installed
-		for (String rpmPath : rpmPaths.split(" ")) {
-			rpmPath = rpmPath.trim(); if (rpmPath.isEmpty()) continue;
-			String pkg = (new File(rpmPath)).getName().replaceFirst("\\.rpm$","");
-			String rpmPackageVersion = sshCommandRunner.runCommandAndWait("rpm --query --package "+rpmPath).getStdout().trim();
-			String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
-			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
-			pkgsInstalled.add(pkg);
-		}
+// DELETEME since exitCode assertion was added above
+//		// assert that all of the updated rpms are now installed
+//		for (String rpmPath : rpmPaths.split(" ")) {
+//			rpmPath = rpmPath.trim(); if (rpmPath.isEmpty()) continue;
+//			String pkg = (new File(rpmPath)).getName().replaceFirst("\\.rpm$","");
+//			String rpmPackageVersion = sshCommandRunner.runCommandAndWait("rpm --query --package "+rpmPath).getStdout().trim();
+//			String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
+//			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
+//			pkgsInstalled.add(pkg);
+//		}
 		
 		// remember the versions of the packages installed
 		for (String pkg : pkgsInstalled) {
