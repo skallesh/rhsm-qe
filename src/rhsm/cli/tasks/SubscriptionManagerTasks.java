@@ -832,11 +832,23 @@ if (false) {
 			rpmPaths += rpmPath; rpmPaths += " ";
 		}
 		if (!rpmUpdateUrls.isEmpty()) {
-			// using yum update was causing trouble for subscription-manager-gnome => subscription-manager-gui (Package subscription-manager-gui not installed, cannot update it. Run yum install to install it instead.)
-			// switching to use rpm --upgrade instead
-			//SSHCommandResult updateResult = sshCommandRunner.runCommandAndWait("yum -y localupdate "+rpmPaths+" "+installOptions);
-			SSHCommandResult updateResult = sshCommandRunner.runCommandAndWait("rpm -v --upgrade "+rpmPaths);
+			// TODO: using yum update may cause trouble for subscription-manager-gnome => subscription-manager-gui (Package subscription-manager-gui not installed, cannot update it. Run yum install to install it instead.)
+
+			// using yum to upgrade...
+			SSHCommandResult updateResult = sshCommandRunner.runCommandAndWait("yum -y localupdate "+rpmPaths+" "+installOptions);
+			if (updateResult.getStdout().contains("does not update installed package")) {
+				log.warning("The rpmUpdateUrls does not update installed package(s).");
+			}
 			Assert.assertEquals(updateResult.getExitCode(), Integer.valueOf(0), "ExitCode from attempt to upgrade packages: "+rpmPaths);
+			
+			/* using rpm to upgrade...
+			SSHCommandResult updateResult = sshCommandRunner.runCommandAndWait("rpm -v --upgrade "+rpmPaths);
+			if (updateResult.getExitCode()==3 && updateResult.getStderr().contains("is already installed")) {
+				log.warning("The rpmUpdateUrls appear to already be installed.");
+			} else {
+				Assert.assertEquals(updateResult.getExitCode(), Integer.valueOf(0), "ExitCode from attempt to upgrade packages: "+rpmPaths);
+			}
+			*/
 		}
 // DELETEME since exitCode assertion was added above
 //		// assert that all of the updated rpms are now installed

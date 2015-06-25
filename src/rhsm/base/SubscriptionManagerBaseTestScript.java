@@ -215,7 +215,10 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 			sm_rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
 		if (sm_rhsmcertdHealFrequency==null)
 			sm_rhsmcertdHealFrequency		= getProperty("sm.rhsmcertd.healFrequency","");
-	
+		
+		// getting a CI_MESSAGE from the java properties will allow us to test a fake message independent of the ci-trigger Jenkins plugin
+		if (sm_ciMessage==null)
+			sm_ciMessage					= getProperty("CI_MESSAGE",null); 
 		
 		try {
 //			systemSubscriptionPoolProductData = new JSONArray(getProperty("sm.system.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []

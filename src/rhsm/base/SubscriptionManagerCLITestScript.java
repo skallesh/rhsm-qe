@@ -306,86 +306,197 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		isSetupBeforeSuiteComplete = true;
 	}
 	
+	/**
+	 * @param ciMessage - the value of an environment variable called CI_MESSAGE
+	 *  set by the Jenkins ci-trigger plugin
+	 * @return List of urls that can be used to update packages that are already
+	 *  installed on the system.  If a package from the ciMessage is not already
+	 *  installed on the system, then it will not be included in the return list.
+	 * @throws JSONException
+	 */
 	protected List<String> getRpmUpdateUrlsFromCiMessage(String ciMessage) throws JSONException {
 		List<String> rpmUpdateUrls = new ArrayList<String>();
+		if (ciMessage==null || ciMessage.isEmpty()) return rpmUpdateUrls;
+
+		// Example CI_MESSAGE:
 		
+		//	{
+		//	  "tag" : {
+		//	    "maven_support" : false,
+		//	    "locked" : false,
+		//	    "name" : "rhel-7.2-candidate",
+		//	    "perm" : null,
+		//	    "perm_id" : null,
+		//	    "arches" : null,
+		//	    "maven_include_all" : false,
+		//	    "id" : 7604
+		//	  },
+		//	  "force" : false,
+		//	  "build" : {
+		//	    "owner_name" : "crog",
+		//	    "package_name" : "python-rhsm",
+		//	    "task_id" : 9402045,
+		//	    "volume_name" : "DEFAULT",
+		//	    "owner_id" : 3046,
+		//	    "creation_event_id" : 11465239,
+		//	    "creation_time" : "2015-06-22 14:58:31.692135",
+		//	    "state" : 1,
+		//	    "nvr" : "python-rhsm-1.15.2-1.el7",
+		//	    "completion_time" : "2015-06-22 15:46:14.77846",
+		//	    "epoch" : null,
+		//	    "version" : "1.15.2",
+		//	    "creation_ts" : 1.43499951169213E9,
+		//	    "volume_id" : 0,
+		//	    "release" : "1.el7",
+		//	    "package_id" : 30891,
+		//	    "completion_ts" : 1.43500237477846E9,
+		//	    "id" : 443277,
+		//	    "name" : "python-rhsm"
+		//	  },
+		//	  "user" : {
+		//	    "status" : 0,
+		//	    "usertype" : 0,
+		//	    "krb_principal" : "crog@REDHAT.COM",
+		//	    "id" : 3046,
+		//	    "name" : "crog"
+		//	  },
+		//	  "rpms" : {
+		//	    "s390x" : [ "python-rhsm-1.15.2-1.el7.s390x.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.s390x.rpm" ],
+		//	    "s390" : [ "python-rhsm-1.15.2-1.el7.s390.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.s390.rpm" ],
+		//	    "i686" : [ "python-rhsm-1.15.2-1.el7.i686.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.i686.rpm" ],
+		//	    "ppc64" : [ "python-rhsm-1.15.2-1.el7.ppc64.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.ppc64.rpm" ],
+		//	    "aarch64" : [ "python-rhsm-1.15.2-1.el7.aarch64.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.aarch64.rpm" ],
+		//	    "ppc64le" : [ "python-rhsm-1.15.2-1.el7.ppc64le.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.ppc64le.rpm" ],
+		//	    "x86_64" : [ "python-rhsm-1.15.2-1.el7.x86_64.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.x86_64.rpm" ],
+		//	    "ppc" : [ "python-rhsm-1.15.2-1.el7.ppc.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.ppc.rpm" ],
+		//	    "src" : [ "python-rhsm-1.15.2-1.el7.src.rpm" ]
+		//	  },
+		//	  "tags" : [ "rhel-7.2-candidate" ],
+		//	  "archives" : { }
+		//	}
+		
+		//	{
+		//	  "tag" : {
+		//	    "maven_support" : false,
+		//	    "locked" : false,
+		//	    "name" : "rhel-7.2-candidate",
+		//	    "perm" : null,
+		//	    "perm_id" : null,
+		//	    "arches" : null,
+		//	    "maven_include_all" : false,
+		//	    "id" : 7604
+		//	  },
+		//	  "force" : false,
+		//	  "build" : {
+		//	    "owner_name" : "crog",
+		//	    "package_name" : "subscription-manager",
+		//	    "task_id" : 9402040,
+		//	    "volume_name" : "DEFAULT",
+		//	    "owner_id" : 3046,
+		//	    "creation_event_id" : 11465228,
+		//	    "creation_time" : "2015-06-22 14:56:44.401754",
+		//	    "state" : 1,
+		//	    "nvr" : "subscription-manager-1.15.2-1.el7",
+		//	    "completion_time" : "2015-06-22 15:46:58.002083",
+		//	    "epoch" : null,
+		//	    "version" : "1.15.2",
+		//	    "creation_ts" : 1.43499940440175E9,
+		//	    "volume_id" : 0,
+		//	    "release" : "1.el7",
+		//	    "package_id" : 19375,
+		//	    "completion_ts" : 1.43500241800208E9,
+		//	    "id" : 443276,
+		//	    "name" : "subscription-manager"
+		//	  },
+		//	  "user" : {
+		//	    "status" : 0,
+		//	    "usertype" : 0,
+		//	    "krb_principal" : "crog@REDHAT.COM",
+		//	    "id" : 3046,
+		//	    "name" : "crog"
+		//	  },
+		//	  "rpms" : {
+		//	    "s390x" : [ "subscription-manager-1.15.2-1.el7.s390x.rpm", "subscription-manager-debuginfo-1.15.2-1.el7.s390x.rpm", "subscription-manager-firstboot-1.15.2-1.el7.s390x.rpm", "subscription-manager-gui-1.15.2-1.el7.s390x.rpm", "subscription-manager-migration-1.15.2-1.el7.s390x.rpm", "subscription-manager-plugin-container-1.15.2-1.el7.s390x.rpm", "subscription-manager-plugin-ostree-1.15.2-1.el7.s390x.rpm" ],
+		//	    "s390" : [ "subscription-manager-1.15.2-1.el7.s390.rpm", "subscription-manager-debuginfo-1.15.2-1.el7.s390.rpm", "subscription-manager-firstboot-1.15.2-1.el7.s390.rpm", "subscription-manager-gui-1.15.2-1.el7.s390.rpm", "subscription-manager-migration-1.15.2-1.el7.s390.rpm", "subscription-manager-plugin-container-1.15.2-1.el7.s390.rpm", "subscription-manager-plugin-ostree-1.15.2-1.el7.s390.rpm" ],
+		//	    "i686" : [ "subscription-manager-1.15.2-1.el7.i686.rpm", "subscription-manager-debuginfo-1.15.2-1.el7.i686.rpm", "subscription-manager-firstboot-1.15.2-1.el7.i686.rpm", "subscription-manager-gui-1.15.2-1.el7.i686.rpm", "subscription-manager-migration-1.15.2-1.el7.i686.rpm", "subscription-manager-plugin-container-1.15.2-1.el7.i686.rpm", "subscription-manager-plugin-ostree-1.15.2-1.el7.i686.rpm" ],
+		//	    "ppc64" : [ "subscription-manager-1.15.2-1.el7.ppc64.rpm", "subscription-manager-debuginfo-1.15.2-1.el7.ppc64.rpm", "subscription-manager-firstboot-1.15.2-1.el7.ppc64.rpm", "subscription-manager-gui-1.15.2-1.el7.ppc64.rpm", "subscription-manager-migration-1.15.2-1.el7.ppc64.rpm", "subscription-manager-plugin-container-1.15.2-1.el7.ppc64.rpm", "subscription-manager-plugin-ostree-1.15.2-1.el7.ppc64.rpm" ],
+		//	    "aarch64" : [ "subscription-manager-1.15.2-1.el7.aarch64.rpm", "subscription-manager-debuginfo-1.15.2-1.el7.aarch64.rpm", "subscription-manager-firstboot-1.15.2-1.el7.aarch64.rpm", "subscription-manager-gui-1.15.2-1.el7.aarch64.rpm", "subscription-manager-migration-1.15.2-1.el7.aarch64.rpm", "subscription-manager-plugin-container-1.15.2-1.el7.aarch64.rpm", "subscription-manager-plugin-ostree-1.15.2-1.el7.aarch64.rpm" ],
+		//	    "ppc64le" : [ "subscription-manager-1.15.2-1.el7.ppc64le.rpm", "subscription-manager-debuginfo-1.15.2-1.el7.ppc64le.rpm", "subscription-manager-firstboot-1.15.2-1.el7.ppc64le.rpm", "subscription-manager-gui-1.15.2-1.el7.ppc64le.rpm", "subscription-manager-migration-1.15.2-1.el7.ppc64le.rpm", "subscription-manager-plugin-container-1.15.2-1.el7.ppc64le.rpm", "subscription-manager-plugin-ostree-1.15.2-1.el7.ppc64le.rpm" ],
+		//	    "x86_64" : [ "subscription-manager-1.15.2-1.el7.x86_64.rpm", "subscription-manager-debuginfo-1.15.2-1.el7.x86_64.rpm", "subscription-manager-firstboot-1.15.2-1.el7.x86_64.rpm", "subscription-manager-gui-1.15.2-1.el7.x86_64.rpm", "subscription-manager-migration-1.15.2-1.el7.x86_64.rpm", "subscription-manager-plugin-container-1.15.2-1.el7.x86_64.rpm", "subscription-manager-plugin-ostree-1.15.2-1.el7.x86_64.rpm" ],
+		//	    "ppc" : [ "subscription-manager-1.15.2-1.el7.ppc.rpm", "subscription-manager-debuginfo-1.15.2-1.el7.ppc.rpm", "subscription-manager-firstboot-1.15.2-1.el7.ppc.rpm", "subscription-manager-gui-1.15.2-1.el7.ppc.rpm", "subscription-manager-migration-1.15.2-1.el7.ppc.rpm", "subscription-manager-plugin-container-1.15.2-1.el7.ppc.rpm", "subscription-manager-plugin-ostree-1.15.2-1.el7.ppc.rpm" ],
+		//	    "src" : [ "subscription-manager-1.15.2-1.el7.src.rpm" ]
+		//	  },
+		//	  "tags" : [ "rhel-7.2-candidate" ],
+		//	  "archives" : { }
+		//	}
+		
+		//	{
+		//	  "tag" : {
+		//	    "maven_support" : false,
+		//	    "locked" : false,
+		//	    "name" : "rhel-7.2-candidate",
+		//	    "perm" : null,
+		//	    "perm_id" : null,
+		//	    "arches" : null,
+		//	    "maven_include_all" : false,
+		//	    "id" : 7604
+		//	  },
+		//	  "force" : false,
+		//	  "build" : {
+		//	    "owner_name" : "awood",
+		//	    "package_name" : "subscription-manager-migration-data",
+		//	    "task_id" : 9421528,
+		//	    "volume_name" : "DEFAULT",
+		//	    "owner_id" : 788,
+		//	    "creation_event_id" : 11486530,
+		//	    "creation_time" : "2015-06-25 09:50:44.416348",
+		//	    "state" : 1,
+		//	    "nvr" : "subscription-manager-migration-data-2.0.22-1.el7",
+		//	    "completion_time" : "2015-06-25 09:53:54.392923",
+		//	    "epoch" : null,
+		//	    "version" : "2.0.22",
+		//	    "creation_ts" : 1.43524024441635E9,
+		//	    "volume_id" : 0,
+		//	    "release" : "1.el7",
+		//	    "package_id" : 34209,
+		//	    "completion_ts" : 1.43524043439292E9,
+		//	    "id" : 444026,
+		//	    "name" : "subscription-manager-migration-data"
+		//	  },
+		//	  "user" : {
+		//	    "status" : 0,
+		//	    "usertype" : 0,
+		//	    "krb_principal" : "awood@REDHAT.COM",
+		//	    "id" : 788,
+		//	    "name" : "awood"
+		//	  },
+		//	  "rpms" : {
+		//	    "noarch" : [ "subscription-manager-migration-data-2.0.22-1.el7.noarch.rpm" ],
+		//	    "src" : [ "subscription-manager-migration-data-2.0.22-1.el7.src.rpm" ]
+		//	  },
+		//	  "tags" : [ "rhel-7.2-candidate" ],
+		//	  "archives" : { }
+		//	}
+	
 		// parse the sm_ciMessage into additional sm_rpmUpdateUrls
-		if (!ciMessage.isEmpty()) {
-			// get the list of rpms from  CI_MESSSAGE
-			//	CI_MESSAGE:
-			//	{
-			//	  "tag" : {
-			//	    "maven_support" : false,
-			//	    "locked" : false,
-			//	    "name" : "rhel-7.2-candidate",
-			//	    "perm" : null,
-			//	    "perm_id" : null,
-			//	    "arches" : null,
-			//	    "maven_include_all" : false,
-			//	    "id" : 7604
-			//	  },
-			//	  "force" : false,
-			//	  "build" : {
-			//	    "owner_name" : "crog",
-			//	    "package_name" : "python-rhsm",
-			//	    "task_id" : 9402045,
-			//	    "volume_name" : "DEFAULT",
-			//	    "owner_id" : 3046,
-			//	    "creation_event_id" : 11465239,
-			//	    "creation_time" : "2015-06-22 14:58:31.692135",
-			//	    "state" : 1,
-			//	    "nvr" : "python-rhsm-1.15.2-1.el7",
-			//	    "completion_time" : "2015-06-22 15:46:14.77846",
-			//	    "epoch" : null,
-			//	    "version" : "1.15.2",
-			//	    "creation_ts" : 1.43499951169213E9,
-			//	    "volume_id" : 0,
-			//	    "release" : "1.el7",
-			//	    "package_id" : 30891,
-			//	    "completion_ts" : 1.43500237477846E9,
-			//	    "id" : 443277,
-			//	    "name" : "python-rhsm"
-			//	  },
-			//	  "user" : {
-			//	    "status" : 0,
-			//	    "usertype" : 0,
-			//	    "krb_principal" : "crog@REDHAT.COM",
-			//	    "id" : 3046,
-			//	    "name" : "crog"
-			//	  },
-			//	  "rpms" : {
-			//	    "s390x" : [ "python-rhsm-1.15.2-1.el7.s390x.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.s390x.rpm" ],
-			//	    "s390" : [ "python-rhsm-1.15.2-1.el7.s390.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.s390.rpm" ],
-			//	    "i686" : [ "python-rhsm-1.15.2-1.el7.i686.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.i686.rpm" ],
-			//	    "ppc64" : [ "python-rhsm-1.15.2-1.el7.ppc64.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.ppc64.rpm" ],
-			//	    "aarch64" : [ "python-rhsm-1.15.2-1.el7.aarch64.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.aarch64.rpm" ],
-			//	    "ppc64le" : [ "python-rhsm-1.15.2-1.el7.ppc64le.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.ppc64le.rpm" ],
-			//	    "x86_64" : [ "python-rhsm-1.15.2-1.el7.x86_64.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.x86_64.rpm" ],
-			//	    "ppc" : [ "python-rhsm-1.15.2-1.el7.ppc.rpm", "python-rhsm-debuginfo-1.15.2-1.el7.ppc.rpm" ],
-			//	    "src" : [ "python-rhsm-1.15.2-1.el7.src.rpm" ]
-			//	  },
-			//	  "tags" : [ "rhel-7.2-candidate" ],
-			//	  "archives" : { }
-			//	}
-			JSONObject jsonCIMessage = new JSONObject(ciMessage);
-			String arch = clienttasks.arch;	// assume
-			if (jsonCIMessage.getJSONObject("rpms").has("noarch")) arch="noarch";
-			JSONArray jsonCIMessageRpms = jsonCIMessage.getJSONObject("rpms").getJSONArray(arch);
-			List<String> ciMessageRpms = new ArrayList<String>();
-			for (int r = 0; r < jsonCIMessageRpms.length(); r++) ciMessageRpms.add(jsonCIMessageRpms.getString(r));
-			String jsonCIMessageBuildName    = jsonCIMessage.getJSONObject("build").getString("name");	// python-rhsm
-			String jsonCIMessageBuildVersion = jsonCIMessage.getJSONObject("build").getString("version");	// 1.15.2
-			String jsonCIMessageBuildRelease = jsonCIMessage.getJSONObject("build").getString("release");	// 1.el7
-			for (String rpm : ciMessageRpms) {
-				String pkgVersionReleaseArch = rpm.replaceFirst(".rpm$", "");	// python-rhsm-1.15.2-1.el7.x86_64
-				String pkg = pkgVersionReleaseArch.split("-"+jsonCIMessageBuildVersion+"-"+jsonCIMessageBuildRelease)[0];	// python-rhsm or python-rhsm-debuginfo
-				
-				String rpmUpdateUrl = "http://download.devel.redhat.com/brewroot/packages/"+jsonCIMessageBuildName+"/"+jsonCIMessageBuildVersion+"/"+jsonCIMessageBuildRelease+"/"+arch+"/"+rpm;
-				if (clienttasks.isPackageInstalled(pkg)) {
-					rpmUpdateUrls.add(rpmUpdateUrl);
-				} else {
-					log.warning("Package '"+pkg+"' is not already installed and will NOT be updated to '"+pkgVersionReleaseArch+"'.");
-				}
+		JSONObject jsonCIMessage = new JSONObject(ciMessage);
+		String arch = clienttasks.arch;	// assume
+		if (jsonCIMessage.getJSONObject("rpms").has("noarch")) arch="noarch";
+		JSONArray jsonCIMessageRpms = jsonCIMessage.getJSONObject("rpms").getJSONArray(arch);
+		List<String> ciMessageRpms = new ArrayList<String>();
+		for (int r = 0; r < jsonCIMessageRpms.length(); r++) ciMessageRpms.add(jsonCIMessageRpms.getString(r));
+		String jsonCIMessageBuildName    = jsonCIMessage.getJSONObject("build").getString("name");	// python-rhsm
+		String jsonCIMessageBuildVersion = jsonCIMessage.getJSONObject("build").getString("version");	// 1.15.2
+		String jsonCIMessageBuildRelease = jsonCIMessage.getJSONObject("build").getString("release");	// 1.el7
+		for (String rpm : ciMessageRpms) {
+			String pkgVersionReleaseArch = rpm.replaceFirst(".rpm$", "");	// python-rhsm-1.15.2-1.el7.x86_64
+			String pkg = pkgVersionReleaseArch.split("-"+jsonCIMessageBuildVersion+"-"+jsonCIMessageBuildRelease)[0];	// python-rhsm or python-rhsm-debuginfo
+			
+			String rpmUpdateUrl = "http://download.devel.redhat.com/brewroot/packages/"+jsonCIMessageBuildName+"/"+jsonCIMessageBuildVersion+"/"+jsonCIMessageBuildRelease+"/"+arch+"/"+rpm;
+			if (clienttasks.isPackageInstalled(pkg)) {
+				rpmUpdateUrls.add(rpmUpdateUrl);
+			} else {
+				log.warning("Package '"+pkg+"' is not already installed and will NOT be updated to '"+pkgVersionReleaseArch+"'.");
 			}
 		}
 		return rpmUpdateUrls;
