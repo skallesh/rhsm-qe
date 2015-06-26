@@ -2006,28 +2006,33 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// get the product certs that are currently installed in /etc/pki/product
 		List<ProductCert> productCerts = clienttasks.getProductCerts(clienttasks.productCertDir);
 				
-		// copy migration-data product certs to /etc/pki/product-default (including productCerts whose product id matches the base RHEL productCert)
+		// copy migration-data product certs to /etc/pki/product-default (including productCerts whose product id matches /etc/pki/product cert and does not already exist in /etc/pki/product-default)
 		List<File> migrationProductCertsFiles = clienttasks.getProductCertFiles("/usr/share/rhsm/product/RHEL"+"-"+clienttasks.redhatReleaseX);
-		Set<String> migrationProductIdsCopied = new HashSet<String>();
+		Set<String> defaultProductCertProductIds = new HashSet<String>();
+		for (ProductCert defaultProductCert : originalDefaultProductCerts) defaultProductCertProductIds.add(defaultProductCert.productId);
 		String  migrationProductCertFilesToCopy = "";
 		for (File migrationProductCertFile : migrationProductCertsFiles) {
 			String migrationProductCertProductId = MigrationDataTests.getProductIdFromProductCertFilename(migrationProductCertFile.getPath());
-			// if this migrationProductCertProductId is not installed in /etc/pki/product, copy it to /etc/pki/product-default
+			
+			// if this migrationProductCertProductId is already among the defaultProductCertProductIds, skip it - do not copy another since it does not make sense to have multiple product certs with the same productId in the same directory
+			if (defaultProductCertProductIds.contains(migrationProductCertProductId)) {
+				continue;
+			}
+			
+			// if this migrationProductCertProductId is installed in /etc/pki/product, copy it to /etc/pki/product-default
 			if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", migrationProductCertProductId, productCerts) != null) {
 				// TOO MUCH LOGGING client.runCommandAndWait("cp -n "+migrationProductCertFile+" "+clienttasks.productCertDefaultDir);
 				migrationProductCertFilesToCopy += migrationProductCertFile+" ";
+				defaultProductCertProductIds.add(migrationProductCertProductId);
 				continue;
 			}
-			// if this migrationProductCertProductId has already been copied to /etc/pki/product-default, skip it - do not copy another
-			if (migrationProductIdsCopied.contains(migrationProductCertProductId)) {
-				continue;
-			}
+			
 			// copy this migrationProductCertProductId to /etc/pki/product-default
 			// randomly skip 75% of these copies to reduce logging noise
-			if (getRandomListItem(Arrays.asList(new Integer[]{1,2,3,4})).equals(1)) {
+			if (getRandomListItem(Arrays.asList(new Integer[]{1/*,2,3,4*/})).equals(1)) {
 				// TOO MUCH LOGGING client.runCommandAndWait("cp -n "+migrationProductCertFile+" "+clienttasks.productCertDefaultDir);
 				migrationProductCertFilesToCopy += migrationProductCertFile+" ";
-				migrationProductIdsCopied.add(migrationProductCertProductId);
+				defaultProductCertProductIds.add(migrationProductCertProductId);
 			}
 		}
 		if (!migrationProductCertFilesToCopy.isEmpty()) client.runCommandAndWait("cp -n "+migrationProductCertFilesToCopy+" "+clienttasks.productCertDefaultDir);
