@@ -2084,8 +2084,20 @@ if (false) {
 		}
 		*/
 		
-		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
+		// due to the implementation of Bug 1123029 - [RFE] Use default product certificates when they are present
+		// we should now purge the product-default certs from rhelProductCerts that are being trumped
+		// by a rhel product cert in /etc/pki/product, otherwise the subsequent asserts will fail
+		for (ProductCert productDefaultCert : getProductCerts(productCertDefaultDir)) {
+			if (ProductCert.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("productId", productDefaultCert.productId, rhelProductCerts).size()>=2) {
+				rhelProductCerts.remove(productDefaultCert);
+			}
+		}
+		
+		// assert that only one rhel product cert is installed
+		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"' (this assert accounts for /etc/pki/product-default certs that are trumped by /etc/pki/product certs)");
 		Assert.assertTrue(rhelProductCerts.size()<=1, "No more than one product cert is installed that provides RHEL tag '"+providingTag+"' (actual='"+rhelProductCerts.size()+"').");
+		
+		// return it
 		if (rhelProductCerts.isEmpty()) return null;
 		ProductCert rhelProductCert = rhelProductCerts.get(0);
 		return rhelProductCert;
