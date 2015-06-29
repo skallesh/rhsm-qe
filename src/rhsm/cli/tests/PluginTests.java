@@ -678,21 +678,22 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertNull(haInstalledProduct, "The High Availability product id '"+HighAvailabilityTests.haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
 		
-		// subscribe to the High Availability subscription and install an HA package
+		// Subscribe to the High Availability subscription SKU
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
-		if (haPool==null) {
-			if (!clienttasks.variant.equals("Server")) {
-				throw new SkipException("High Availability is only available for Server.");
-			} else if (!getArchesOfferringHighAvailabilityContent().contains(clienttasks.arch)) {
-				throw new SkipException("High Availability subscription SKU '"+sm_haSku+"' does not offer content on a '"+clienttasks.variant+"' system with arch '"+clienttasks.arch+"'.");
-			}
+		if (clienttasks.variant.equals("Server") && getArchesOfferringHighAvailabilityContent().contains(clienttasks.arch)) {
+			Assert.assertNotNull(haPool, "A subscription pool for High Availability SKU '"+sm_haSku+"' is available.");
+			clienttasks.subscribe(null,null,haPool.poolId, null,null,null,null,null,null,null,null, null);
+		} else {
+			throw new SkipException("Not expecting High Availability subscription SKU '"+sm_haSku+"' to offer content on a RHEL '"+clienttasks.redhatReleaseX+"' '"+clienttasks.variant+"' system with arch '"+clienttasks.arch+"'.");
 		}
-		Assert.assertNotNull(haPool, "A subscription pool for High Availability SKU '"+sm_haSku+"' is available.");
+		// Note: Despite that subscription RH00025 will be available on these arches...
+		// There will not be any HA content available unless product cert providing tag rhel-5-server or rhel-6-server or rhel-7-server is installed
+		//  "name": "arch", 
+		//  "productId": "RH00025", 
+		//  "updated": "2015-06-17T10:55:58.000+0000", 
+		//	"value": "x86_64,ppc64,ia64,ppc,x86"
 		
-		// Subscribe to the High Availability subscription SKU
-		clienttasks.subscribe(null,null,haPool.poolId, null,null,null,null,null,null,null,null, null);
-
 		// mark the rhsm.log file
 		logMarker = System.currentTimeMillis()+" Testing verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -1074,7 +1075,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.redhatReleaseX.equals("6")) {
 			return Arrays.asList("x86_64","x86","i386","i686"/*,"ia64","ppc","ppc64" IS AVAILABLE FOR CONSUMPTION, HOWEVER SUBSCRIPTION-MANAGER REPOS --LIST WILL BE EMPTY*/);
 		}
-		log.warning("FIXME:  Do not know the supported arches are for RHEL "+clienttasks.redhatReleaseX);
+		if (clienttasks.redhatReleaseX.equals("7")) {
+			return Arrays.asList("x86_64"/*,"x86","i386","i686","ia64","ppc","ppc64" IS AVAILABLE FOR CONSUMPTION, HOWEVER SUBSCRIPTION-MANAGER REPOS --LIST WILL BE EMPTY*/);
+		}
 		return Arrays.asList();
 	}
     
