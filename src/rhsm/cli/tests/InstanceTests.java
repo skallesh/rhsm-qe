@@ -101,10 +101,19 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		
 		// instrument the system facts from the dataProvider
 		Map<String,String> factsMap = new HashMap<String,String>();
+		String dmidecodeSystemUuid = client.runCommandAndWait("dmidecode --string=system-uuid").getStdout().trim();
+		//	ssh root@celeno.idmqe.lab.eng.bos.redhat.com dmidecode --string=system-uuid
+		//	Stdout:
+		//	# SMBIOS implementations newer than version 2.8 are not
+		//	# fully supported by this version of dmidecode.
+		//	174DBEBA-F6BA-1BE1-BAF6-E11BBFBFED17
+		//	Stderr:
+		//	ExitCode: 0
+		dmidecodeSystemUuid = dmidecodeSystemUuid.replaceAll("#.*\n", "").toLowerCase().trim();	// to get rid of comment lines in the dmidecode response
 		factsMap.clear();
 		factsMap.put("cpu.cpu_socket(s)",String.valueOf(systemSockets));
 		factsMap.put("virt.is_guest",Boolean.toString(systemIsGuest));
-		factsMap.put("virt.uuid",client.runCommandAndWait("dmidecode --string=system-uuid").getStdout().toLowerCase().trim());	// reset to actual value from dmidecode --string=system-uuid
+		factsMap.put("virt.uuid",dmidecodeSystemUuid);	// reset to actual value from dmidecode --string=system-uuid
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// update the facts on the system
