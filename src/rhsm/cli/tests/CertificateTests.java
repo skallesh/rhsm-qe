@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.LogRecord;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
@@ -22,6 +23,7 @@ import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.jul.TestRecords;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -1104,7 +1106,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		if (rhsmProductCertDir==null) {rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");Assert.assertNotNull(rhsmProductCertDir);} // remember the original so it can be restored later
 		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+tmpProductCertDir, Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+tmpProductCertDir+"/*.pem", Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(client,"cp "+rhsmProductCertDir+"/*.pem "+tmpProductCertDir, Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndWait(client,"cp "+rhsmProductCertDir+"/*.pem "+tmpProductCertDir, TestRecords.action()); // due to /etc/pki/product-default/ certs, this assert will fail when /etc/pki/product/ is empty  RemoteFileTasks.runCommandAndAssert(client,"cp "+rhsmProductCertDir+"/*.pem "+tmpProductCertDir, Integer.valueOf(0));
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 		if (productIdJsonFile==null) {productIdJsonFile = client.runCommandAndWait("cat "+clienttasks.productIdJsonFile).getStdout().replaceAll("\\s*\n\\s*",""); Assert.assertTrue(productIdJsonFile!=null && !productIdJsonFile.isEmpty());} // remember the original so it can be restored later
 		
