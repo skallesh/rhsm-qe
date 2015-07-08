@@ -1447,6 +1447,15 @@ if (false) {
 			} while (delay*i < 90);	// Note: should wait at least 60+ additional seconds because auto-attach can timeout after 60 seconds.  see bug https://bugzilla.redhat.com/show_bug.cgi?id=964332#c6
 			
 			// TEMPORARY WORKAROUND FOR BUG
+			bugId="1241247"; // Bug 1241247 - rhsmcertd-worker throws Traceback "ImportError: cannot import name ga"
+			invokeWorkaroundWhileBugIsOpen = true;
+			try {if (assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Restart rhsmcertd has no workaround for Bugzilla "+bugId+".");
+			}
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND FOR BUG
 			bugId="861443"; // Bug 861443 - rhsmcertd logging of Healing shows "Certificates updated." when it should fail.
 			invokeWorkaroundWhileBugIsOpen = true;
 			try {if (!assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
