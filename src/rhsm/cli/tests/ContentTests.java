@@ -32,6 +32,7 @@ import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
@@ -1239,8 +1240,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			if (i%15 == 0) yumVarPath+="$arch/";
 			if (i%20 == 0) yumVarPath+="$uuid/";
 			
-			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
-			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+yumVarPath+contentLabel, "/gpg/path/to/"+yumVarPath+contentLabel, "3600", null, null, null);
+			String resourcePath = "/content/"+contentId;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+yumVarPath+contentLabel, "/gpg/path/to/"+yumVarPath+contentLabel, "3600", null, null, null);
 		}
 		
 		// recreate a lot of arch-based content sets
@@ -1293,8 +1296,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			if (i%44 == 0) arches="";
 			if (i%92 == 0) arches="None";	// this is a legitimate and real tag and is interpreted as a real arch - None has no special meaning here
 			
-			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
-			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+yumVarPath+contentLabel, "/gpg/path/to/"+yumVarPath+contentLabel, "3600", requiredTags, arches, null);
+			String resourcePath = "/content/"+contentId;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+yumVarPath+contentLabel, "/gpg/path/to/"+yumVarPath+contentLabel, "3600", requiredTags, arches, null);
 		}
 	
 		// recreate Subscription SKUs: subscriptionSKUProvidingA185ContentSetProduct, subscriptionSKUProvidingA186ContentSetProduct
@@ -1312,16 +1317,20 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			//attributes.put("warning_period", "30");
 			// delete already existing subscription and products
 			CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, marketingProductId);
-			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+marketingProductId);
-			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+engineeringProductId);
+			String resourcePath = "/products/"+marketingProductId;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+			resourcePath = "/products/"+engineeringProductId;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
 			// create a new marketing product (MKT), engineering product (SVC), content for the engineering product, and a subscription to the marketing product that provides the engineering product
 			attributes.put("type", "MKT");
-			CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, marketingProductName, marketingProductId, 1, attributes, null);
+			CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, marketingProductName, marketingProductId, 1, attributes, null);
 			attributes.put("type", "SVC");
-			CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductName, engineeringProductId, 1, attributes, null);
+			CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, engineeringProductName, engineeringProductId, 1, attributes, null);
 			for (int i = 1; i <= N; i++) {
 				String contentId = String.format(contentIdStringFormat,i);	// must be numeric (and unique) defined above
-				CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductId, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
+				CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, engineeringProductId, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
 			}
 			CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), marketingProductId, Arrays.asList(engineeringProductId), null);
 		}
@@ -1342,19 +1351,25 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		//attributes.put("warning_period", "30");
 		// delete already existing subscription and products
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, marketingProductId);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+marketingProductId);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+engineeringProductIdA);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+engineeringProductIdB);
+		String resourcePath = "/products/"+marketingProductId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+		resourcePath = "/products/"+engineeringProductIdA;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+		resourcePath = "/products/"+engineeringProductIdB;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
 		// create a new marketing product (MKT), engineering product (SVC), content for the engineering product, and a subscription to the marketing product that provides the engineering product
 		attributes.put("type", "MKT");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, marketingProductName, marketingProductId, 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, marketingProductName, marketingProductId, 1, attributes, null);
 		attributes.put("type", "SVC");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductNameA, engineeringProductIdA, 1, attributes, null);
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductNameB, engineeringProductIdB, 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, engineeringProductNameA, engineeringProductIdA, 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, engineeringProductNameB, engineeringProductIdB, 1, attributes, null);
 		for (int i = 1; i <= 93; i++) {
 			String contentId = String.format(contentIdStringFormat,i);	// must be numeric (and unique) defined above
-			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductIdA, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
-			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductIdB, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
+			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, engineeringProductIdA, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
+			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, engineeringProductIdB, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
 		}
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), marketingProductId, Arrays.asList(engineeringProductIdA,engineeringProductIdB), null);
 
@@ -1375,16 +1390,20 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		//attributes.put("warning_period", "30");
 		// delete already existing subscription and products
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, marketingProductId);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+marketingProductId);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+engineeringProductId);
+		resourcePath = "/products/"+marketingProductId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+		resourcePath = "/products/"+engineeringProductId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
 		// create a new marketing product (MKT), engineering product (SVC), content for the engineering product, and a subscription to the marketing product that provides the engineering product
 		attributes.put("type", "MKT");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, marketingProductName, marketingProductId, 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, marketingProductName, marketingProductId, 1, attributes, null);
 		attributes.put("type", "SVC");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductName, engineeringProductId, 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, engineeringProductName, engineeringProductId, 1, attributes, null);
 		for (int i = 1; i <= N; i++) {
 			String contentId = String.format(archBasedContentIdStringFormat,i);	// must be numeric (and unique) defined above
-			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductId, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
+			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, engineeringProductId, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
 		}
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), marketingProductId, Arrays.asList(engineeringProductId), null);
 

@@ -27,6 +27,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.Org;
@@ -1080,7 +1081,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	// Configuration methods ***********************************************************************
 	@BeforeClass(groups="setup")
 	public void createSubscriptionsProvidingProductWithExemptServiceLevels() throws JSONException, Exception {
-		String name,productId, serviceLevel;
+		String name,productId, serviceLevel, resourcePath;
 		List<String> providedProductIds = new ArrayList<String>();
 		Map<String,String> attributes = new HashMap<String,String>();
 		JSONObject jsonEngProduct, jsonMktProduct, jsonSubscription;
@@ -1104,13 +1105,17 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		attributes.put("warning_period", "45");
 		// delete already existing subscription and products
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		resourcePath = "/products/"+productId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		resourcePath = "/products/"+providedProductIds.get(0);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
 		// create a new engineering product, marketing product that provides the engineering product, and a subscription for the marketing product
 		attributes.put("type", "SVC");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Exempt Product Bits", providedProductIds.get(0), 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "Exempt Product Bits", providedProductIds.get(0), 1, attributes, null);
 		attributes.put("type", "MKT");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds, null);
 		// now install the product certificate
 		JSONObject jsonProductCert = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0)+"/certificate"));
@@ -1127,7 +1132,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeClass(groups="setup")
 	public void createMultipleSubscriptionsWithSameServiceLevels() throws JSONException, Exception {
-		String name,productId, serviceLevel;
+		String name,productId, serviceLevel, resourcePath;
 		List<String> providedProductIds = new ArrayList<String>();
 		Map<String,String> attributes = new HashMap<String,String>();
 		JSONObject jsonEngProduct, jsonMktProduct, jsonSubscription;
@@ -1150,10 +1155,12 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		attributes.put("warning_period", "5");
 		// delete already existing subscription
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		resourcePath = "/products/"+productId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
 		// create a new marketing product, and a subscription for the marketing product
 		attributes.put("type", "MKT");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds, null);
 
 		// Subscription with "ultimate sla" support_level
@@ -1170,10 +1177,12 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		attributes.put("warning_period", "5");
 		// delete already existing subscription
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		resourcePath = "/products/"+productId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
 		// create a new marketing product, and a subscription for the marketing product
 		attributes.put("type", "MKT");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds, null);
 	}
 	

@@ -8460,7 +8460,7 @@ if (false) {
 	}
 	public Map<String,String> installedPackageVersionMap = new HashMap<String,String>();	// contains key=python-rhsm, value=python-rhsm-0.98.9-1.el5
 	
-	public Boolean isVersion(String version1, String comparator, String version2) {
+	public static Boolean isVersion(String version1, String comparator, String version2) {
 		String s1 = version1;
 		String s2 = version2;
 		

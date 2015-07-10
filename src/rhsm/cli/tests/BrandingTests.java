@@ -17,6 +17,7 @@ import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductNamespace;
@@ -518,8 +519,14 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		
 		// delete already existing subscription, marketing product, and provided engineering products
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
-		for (String providedProductId : providedProductIds)	CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductId);
+		String resourcePath = "/products/"+productId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+		for (String providedProductId : providedProductIds)	{
+			resourcePath = "/products/"+providedProductId;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+		}
 		
 		// create new engineering products, a marketing product that provides the engineering products, and a subscription for the marketing product
 		Map<String,String> attributes = new HashMap<String,String>();
@@ -527,20 +534,20 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		//attributes.put("variant", "server");
 		attributes.put("arch", "ALL");
 		attributes.put("version", "1.0.0");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Generic non-OS Product V"+attributes.get("version"), "99010", 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "Generic non-OS Product V"+attributes.get("version"), "99010", 1, attributes, null);
 		attributes.put("version", "2.0.0");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Generic OSX Product V"+attributes.get("version"), "99020", 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "Generic OSX Product V"+attributes.get("version"), "99020", 1, attributes, null);
 		attributes.put("version", "3.0.0");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Generic OS Product V"+attributes.get("version"), "99030", 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "Generic OS Product V"+attributes.get("version"), "99030", 1, attributes, null);
 		attributes.put("version", "4.0.0");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Generic OS Product V"+attributes.get("version"), "99040", 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "Generic OS Product V"+attributes.get("version"), "99040", 1, attributes, null);
 		attributes.put("type", "MKT");
 		attributes.put("version", "1.0");
 		attributes.put("support_level", "Generic SLA");
 		attributes.put("support_level_exempt", "false");
 		attributes.put("multi-entitlement", "yes");
 		attributes.put("warning_period", "90");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Branded subscription for Generic Products", productId, 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "Branded subscription for Generic Products", productId, 1, attributes, null);
 		List<Map<String,String>> brandingMaps = new ArrayList<Map<String,String>>();
 		//brandingMaps.add(new HashMap<String,String>(){{put("productId","99010");put("type",null);put("name",null);}});	// Runtime Error not-null property references a null or transient value: org.candlepin.model.Branding.name at org.hibernate.engine.internal.Nullability.checkNullability:103
 		//brandingMaps.add(new HashMap<String,String>(){{put("productId","99010");put("type","");put("name","");}});	// Runtime Error not-null property references a null or transient value: org.candlepin.model.Branding.name at org.hibernate.engine.internal.Nullability.checkNullability:103

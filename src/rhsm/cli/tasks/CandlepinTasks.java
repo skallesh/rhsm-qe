@@ -485,11 +485,11 @@ schema generation failed
 		String request	= "--request "+get.getName()+" ";
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
 		
-		String jsonString = getHTTPResponseAsString(client, get, authenticator, password);
+		String response = getHTTPResponseAsString(client, get, authenticator, password);
 		
 		// check for a JSON response from the server
-		if (!jsonString.startsWith("[") && !jsonString.startsWith("{")) {
-			log.warning("Expected the server to respond with valid JSON data.  Actual response:\n"+jsonString);
+		if (!response.startsWith("[") && !response.startsWith("{")) {
+			log.warning("Expected the server to respond with valid JSON data.  Actual response:\n"+response);
 			// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
 			//	<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 			//	<html><head>
@@ -503,14 +503,14 @@ schema generation failed
 			//	<hr>
 			//	<address>Apache Server at subscription.rhn.stage.redhat.com Port 443</address>
 			//	</body></html>
-			if (jsonString.contains("502 Proxy Error") && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (response.contains("502 Proxy Error") && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
 				String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
 				// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Re-attempting one more time to get a valid JSON response from the server...");
-					jsonString = getHTTPResponseAsString(client, get, authenticator, password);
-					if (!jsonString.startsWith("[") && !jsonString.startsWith("{") && jsonString.contains("502 Proxy Error")) {	// we still get a 502 Proxy Error
+					response = getHTTPResponseAsString(client, get, authenticator, password);
+					if (!response.startsWith("[") && !response.startsWith("{") && response.contains("502 Proxy Error")) {	// we still get a 502 Proxy Error
 						throw new SkipException("Encounterd a 502 response from the server and could not complete this test while bug '"+bugId+"' is open.");
 					} else {
 						log.fine("Workaround succeeded.");
@@ -558,31 +558,37 @@ schema generation failed
 //			}
 //			
 //		}
-		if (jsonString.startsWith("{\"errors\":")) {	// implemented in https://bugzilla.redhat.com/show_bug.cgi?id=1113741#c20
-				log.warning("Expected the server to respond without errors.  Actual JSON response:\n"+jsonString);	// {"errors": ["The proxy server received an invalid response from an upstream server"]}
-				//	201411251747:40.809 - FINER: Running HTTP request: GET on https://subscription.rhn.stage.redhat.com/subscription/pools/8a99f98146b4fa9d0146b5d3bd725180 with credentials for 'stage_auto_testuser' on server 'subscription.rhn.stage.redhat.com'... (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
-				//	201411251747:40.810 - FINER: HTTP Request Headers:  (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
-				//	201411251747:41.647 - FINER: HTTP server returned: 502 (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
-				//	201411251747:41.648 - FINER: HTTP server returned content: {"errors": ["The proxy server received an invalid response from an upstream server"]} (rhsm.cli.tasks.CandlepinTasks.getHTTPResponseAsString)
-				String invalidServerResponseMessage = "The proxy server received an invalid response from an upstream server";
-					// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
-					if (jsonString.contains(invalidServerResponseMessage)) {
-						String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
-						try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-						if (invokeWorkaroundWhileBugIsOpen) {
-							log.warning("Re-attempting one more time to get a valid response from the server...");
-							jsonString = getHTTPResponseAsString(client, get, authenticator, password);
-							if (jsonString.startsWith("{\"errors\":") && jsonString.contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
-								throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
-							} else {
-								log.fine("Workaround succeeded.");
-							}
-						}
+		if (response.startsWith("{\"errors\":")) {	// implemented in https://bugzilla.redhat.com/show_bug.cgi?id=1113741#c20
+			log.warning("Expected the server to respond without errors.  Actual JSON response:\n"+response);	// {"errors": ["The proxy server received an invalid response from an upstream server"]}
+			//	201411251747:40.809 - FINER: Running HTTP request: GET on https://subscription.rhn.stage.redhat.com/subscription/pools/8a99f98146b4fa9d0146b5d3bd725180 with credentials for 'stage_auto_testuser' on server 'subscription.rhn.stage.redhat.com'... (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+			//	201411251747:40.810 - FINER: HTTP Request Headers:  (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+			//	201411251747:41.647 - FINER: HTTP server returned: 502 (rhsm.cli.tasks.CandlepinTasks.doHTTPRequest)
+			//	201411251747:41.648 - FINER: HTTP server returned content: {"errors": ["The proxy server received an invalid response from an upstream server"]} (rhsm.cli.tasks.CandlepinTasks.getHTTPResponseAsString)
+			String invalidServerResponseMessage = "The proxy server received an invalid response from an upstream server";
+			// TEMPORARY WORKAROUND FOR BUG 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+			if (response.contains(invalidServerResponseMessage)) {
+				String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Re-attempting one more time to get a valid response from the server...");
+					response = getHTTPResponseAsString(client, get, authenticator, password);
+					if (response.startsWith("{\"errors\":") && response.contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
+						throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
+					} else {
+						log.fine("Workaround succeeded.");
 					}
-					// END OF WORKAROUND
-				
+				}
 			}
-		return jsonString;
+			// END OF WORKAROUND
+		}
+		
+		if (response!=null && response.startsWith("{")) {
+			JSONObject responseAsJSONObect = new JSONObject(response);
+			if (responseAsJSONObect.has("displayMessage")) {				
+				log.warning("Attempt to GET resource '"+path+"' failed: "+responseAsJSONObect.getString("displayMessage"));
+			}
+		}
+		return response;
 	}
 	
 	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
@@ -604,7 +610,14 @@ schema generation failed
 		String headers	= ""; if (jsonData != null) for (org.apache.commons.httpclient.Header header : put.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+data+headers+put.getURI());
 
-		return getHTTPResponseAsString(client, put, authenticator, password);
+		String response = getHTTPResponseAsString(client, put, authenticator, password);
+		if (response!=null) {
+			JSONObject responseAsJSONObect = new JSONObject(response);
+			if (responseAsJSONObect.has("displayMessage")) {				
+				log.warning("Attempt to PUT resource '"+path+"' failed: "+responseAsJSONObect.getString("displayMessage"));
+			}
+		}
+		return response;
 	}
 	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, JSONArray jsonData) throws Exception {
 		PutMethod put = new PutMethod(url+path);
@@ -622,7 +635,14 @@ schema generation failed
 		String headers	= ""; if (jsonData != null) for (org.apache.commons.httpclient.Header header : put.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+data+headers+put.getURI());
 
-		return getHTTPResponseAsString(client, put, authenticator, password);
+		String response = getHTTPResponseAsString(client, put, authenticator, password);
+		if (response!=null) {
+			JSONObject responseAsJSONObect = new JSONObject(response);
+			if (responseAsJSONObect.has("displayMessage")) {				
+				log.warning("Attempt to PUT resource '"+path+"' failed: "+responseAsJSONObect.getString("displayMessage"));
+			}
+		}
+		return response;
 	}
 	
 	static public String deleteResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
@@ -634,7 +654,16 @@ schema generation failed
 		String request	= "--request "+delete.getName()+" ";
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+delete.getURI()/*+" | python -m simplejson/tool"*/);
 
-		return getHTTPResponseAsString(client, delete, authenticator, password);
+		String response = getHTTPResponseAsString(client, delete, authenticator, password);
+		if (response!=null) {
+			JSONObject responseAsJSONObect = new JSONObject(response);
+			if (responseAsJSONObect.has("displayMessage")) {				
+				log.warning("Attempt to DELETE resource '"+path+"' failed: "+responseAsJSONObect.getString("displayMessage"));
+				// displayMessage equal to "Organization-agnostic product write operations are not supported." is indicative of a path supported by candlepin < 2.0.  Probably need to update the given path to /owners/<ownerKey>/path
+				// displayMessage equal to "Organization-agnostic content write operations are not supported." is indicative of a path supported by candlepin < 2.0.  Probably need to update the given path to /owners/<ownerKey>/path
+			}
+		}
+		return response;
 	}
 	
 	static public String postResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, String requestBody) throws Exception {
@@ -653,7 +682,14 @@ schema generation failed
 		String headers	= ""; if (requestBody != null) for (org.apache.commons.httpclient.Header header : post.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+data+headers+post.getURI());
 
-		return getHTTPResponseAsString(client, post, authenticator, password);
+		String response = getHTTPResponseAsString(client, post, authenticator, password);
+		if (response!=null) {
+			JSONObject responseAsJSONObect = new JSONObject(response);
+			if (responseAsJSONObect.has("displayMessage")) {				
+				log.warning("Attempt to POST resource '"+path+"' failed: "+responseAsJSONObect.getString("displayMessage"));
+			}
+		}
+		return response;
 	}
 	
 	static public JSONObject getEntitlementUsingRESTfulAPI(String authenticator, String password, String url, String dbid) throws Exception {
@@ -3678,12 +3714,14 @@ schema generation failed
 		
 	}
 	
-	public static JSONObject createProductUsingRESTfulAPI(String authenticator, String password, String url, String name, String productId, Integer multiplier, Map<String,String> attributes, List<String> dependentProductIds) throws JSONException, Exception  {
-
+	public static JSONObject createProductUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String name, String productId, Integer multiplier, Map<String,String> attributes, List<String> dependentProductIds) throws JSONException, Exception  {
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		
 		// create the product
 		String requestBody = CandlepinTasks.createProductRequestBody(name, productId, multiplier, attributes, dependentProductIds).toString();
-		JSONObject jsonProduct = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/products",requestBody));
-		
+		String path = "/products";
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0")) path = "/owners/"+ownerKey+"/products";	// products are now defined on a per org basis in candlepin-2.0+
+		JSONObject jsonProduct = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,path,requestBody));
 		if (jsonProduct.has("displayMessage")) {
 			//log.warning("Product creation appears to have failed: "+jsonProduct.getString("displayMessage"));
 			Assert.fail("Product creation appears to have failed: "+jsonProduct.getString("displayMessage"));
@@ -3692,11 +3730,14 @@ schema generation failed
 		
 	}
 	
-	public static JSONObject createContentUsingRESTfulAPI(String authenticator, String password, String url, String name, String contentId, String label, String type, String vendor, String contentUrl, String gpgUrl, String metadataExpire, String requiredTags, String arches, List<String> modifiedProductIds) throws JSONException, Exception  {
-
-		// create the product
+	public static JSONObject createContentUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String name, String contentId, String label, String type, String vendor, String contentUrl, String gpgUrl, String metadataExpire, String requiredTags, String arches, List<String> modifiedProductIds) throws JSONException, Exception  {
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		
+		// create the content
 		String requestBody = CandlepinTasks.createContentRequestBody(name, contentId, label, type, vendor, contentUrl, gpgUrl, metadataExpire, requiredTags, arches, modifiedProductIds).toString();
-		JSONObject jsonContent = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/content",requestBody));
+		String path = "/content";
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0")) path = "/owners/"+ownerKey+"/content";	// content is now defined on a per org basis in candlepin-2.0+
+		JSONObject jsonContent = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,path,requestBody));
 		
 		if (jsonContent.has("displayMessage")) {
 			//log.warning("Content creation appears to have failed: "+jsonContent.getString("displayMessage"));
@@ -3706,10 +3747,13 @@ schema generation failed
 		
 	}
 
-	public static JSONObject addContentToProductUsingRESTfulAPI(String authenticator, String password, String url, String productId, String contentId, Boolean enabled) throws JSONException, Exception  {
+	public static JSONObject addContentToProductUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId, String contentId, Boolean enabled) throws JSONException, Exception  {
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
 
 		// add the contentId to the productId
-		JSONObject jsonResult = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,String.format("/products/%s/content/%s?enabled=%s",productId,contentId,enabled),null));
+		String path = String.format("/products/%s/content/%s?enabled=%s",productId,contentId,enabled);
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0")) path = "/owners/"+ownerKey+path;	// products are now defined on a per org basis in candlepin-2.0+
+		JSONObject jsonResult = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,path,null));
 		
 		if (jsonResult.has("displayMessage")) {
 			//log.warning("Add content to product appears to have failed: "+jsonContent.getString("displayMessage"));
@@ -3720,7 +3764,8 @@ schema generation failed
 	}
 	
 	public static void deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId) throws JSONException, Exception  {
-
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		
 		// delete all the subscriptions whose product/id matches productId
 		// process all of the subscriptions belonging to ownerKey
 		JSONArray jsonSubscriptions = new JSONArray(getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/subscriptions"));	
@@ -3735,9 +3780,11 @@ schema generation failed
 				deleteResourceUsingRESTfulAPI(authenticator, password, url, "/subscriptions/"+subscriptionId);
 				
 				// assert the deleted subscription cannot be GET
+				String expectedDisplayMessage = String.format("Subscription with id %s could not be found.",subscriptionId);
+				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">", "0.9.49-1")) expectedDisplayMessage = String.format("A subscription with the ID \"%s\" could not be found.",subscriptionId);	// candlepin commit 9964eff403a9b3846ca696ee9ff6646c84bf07b8
 				jsonSubscription = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/subscriptions/"+subscriptionId));
 				Assert.assertTrue(jsonSubscription.has("displayMessage"),"Attempts to GET a deleted subscription fails with a displayMessage.");
-				Assert.assertEquals(jsonSubscription.getString("displayMessage"),"Subscription with id "+subscriptionId+" could not be found.");
+				Assert.assertEquals(jsonSubscription.getString("displayMessage"),expectedDisplayMessage);
 			}
 		}
 		
