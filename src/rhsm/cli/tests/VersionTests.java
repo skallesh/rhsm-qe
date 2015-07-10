@@ -37,7 +37,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="assert that the installed version of subscription-manager is reported by the subscription-manager version module ",
-			groups={},
+			groups={"blockedByBug-1241184"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfSubscriptionManager_Test() {
