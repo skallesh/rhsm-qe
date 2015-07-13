@@ -3,7 +3,9 @@ package rhsm.cli.tests;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
@@ -437,7 +439,12 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			providingTag = "rhsa-.*";
 			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
 		}
+		/* 7/13/2015 no longer true now that /etc/pki/product-default may also provide a duplicate rhel product
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
+		instead, let's make sure they all cover the same product id... */
+		Set<String> rhelProductIds = new HashSet<String>();
+		for (ProductCert rhelProductCert : rhelProductCerts) rhelProductIds.add(rhelProductCert.productId);
+		Assert.assertEquals(rhelProductIds.size(), 1, "Only one product cert ID (actual "+rhelProductIds+") is currently installed that provides RHEL tag '"+providingTag+"'");
 		ProductCert rhelProductCert = rhelProductCerts.get(0);
 		
 		// find an available RHEL subscription pool that provides for this base RHEL product cert
