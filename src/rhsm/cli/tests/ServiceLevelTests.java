@@ -501,7 +501,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel= InstalledProduct.parse(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, mixedCaseServiceLevel, null, (String)null, null, null, null, true, null, null, null, null).getStdout());
 
 		// assert that the two lists are identical (independent of the serviceLevel case specified during registration)
-		Assert.assertEquals(installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel.size(), clienttasks.getCurrentProductCertFiles().size(), "The registration output displayed the same number of installed product status's as the number of installed product certs.");
+		Assert.assertEquals(installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel.size(), clienttasks.getCurrentProductIds().size(), "The registration output displayed the same number of installed product status's as the number of installed product certs.");
 		Assert.assertTrue(installedProductsAfterAutosubscribedRegisterWithServiceLevel.containsAll(installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel) && installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel.containsAll(installedProductsAfterAutosubscribedRegisterWithServiceLevel), "Autosubscribed registration with serviceLevel '"+mixedCaseServiceLevel+"' yielded the same installed product status as autosubscribed registration with serviceLevel '"+serviceLevel+"'.");
 		
 		// assert that each of the consumed ProductSubscriptions match the specified service level
@@ -1107,10 +1107,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		resourcePath = "/products/"+productId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
 		resourcePath = "/products/"+providedProductIds.get(0);
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
 		// create a new engineering product, marketing product that provides the engineering product, and a subscription for the marketing product
 		attributes.put("type", "SVC");
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "Exempt Product Bits", providedProductIds.get(0), 1, attributes, null);
@@ -1118,7 +1118,9 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds, null);
 		// now install the product certificate
-		JSONObject jsonProductCert = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0)+"/certificate"));
+		resourcePath = "/products/"+providedProductIds.get(0);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		JSONObject jsonProductCert = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath+"/certificate"));
 		String cert = jsonProductCert.getString("cert");
 		String key = jsonProductCert.getString("key");
 		client.runCommandAndWait("echo \""+cert+"\" > "+clienttasks.productCertDir+"/TestExemptProduct"+providedProductIds.get(0)+"_.pem");
