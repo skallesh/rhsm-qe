@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.LogRecord;
 
 import org.apache.xmlrpc.XmlRpcException;
@@ -80,36 +82,42 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 					// 70,73,75 are "Extended Update Support"
 		
 		// find all installed RHEL product Certs
-		List<ProductCert> rhelProductCertsInstalled = new ArrayList<ProductCert>();
+		List<ProductCert> currentRhelProductCerts = new ArrayList<ProductCert>();
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		for (ProductCert productCert : currentProductCerts) {
 			if (baseProductIds.contains(productCert.productId)) {
-				rhelProductCertsInstalled.add(productCert);
+				currentRhelProductCerts.add(productCert);
 			}
 		}
 // DELETEME
 //		// handle RHEL 7
-//		if (rhelProductCertsInstalled.isEmpty() && clienttasks.redhatReleaseX.equals("7")) {
-//			rhelProductCertsInstalled = clienttasks.getCurrentProductCerts("rhel-7-.*");
+//		if (currentRhelProductCerts.isEmpty() && clienttasks.redhatReleaseX.equals("7")) {
+//			currentRhelProductCerts = clienttasks.getCurrentProductCerts("rhel-7-.*");
 //		}
 //		// handle Red Hat Enterprise Linux Server for ARM
-//		if (rhelProductCertsInstalled.isEmpty() && clienttasks.arch.equals("aarch64")) {
-//			rhelProductCertsInstalled = clienttasks.getCurrentProductCerts("rhsa-.*");
+//		if (currentRhelProductCerts.isEmpty() && clienttasks.arch.equals("aarch64")) {
+//			currentRhelProductCerts = clienttasks.getCurrentProductCerts("rhsa-.*");
 //		}
-		if (rhelProductCertsInstalled.size()>1) {
+		if (currentRhelProductCerts.size()>1) {
 			log.warning("Found multiple installed RHEL product certs:");
-			for (ProductCert productCert : rhelProductCertsInstalled) {
+			for (ProductCert productCert : currentRhelProductCerts) {
 				log.warning(productCert.toString());
 			}
 		}
-		if (rhelProductCertsInstalled.isEmpty()) {
+		if (currentRhelProductCerts.isEmpty()) {
 			log.warning("Did not detect any RHEL product certs among the following installed products:");
 			for (ProductCert productCert : currentProductCerts) {
 				log.info(productCert.toString());
 			}
 		}
+		/* 7/13/2015 no longer true now that /etc/pki/product-default may also provide a duplicate rhel product
 		Assert.assertTrue(rhelProductCertsInstalled.size()==1,"At most only one base RHEL product cert should ever be installed.");
-		log.info("Found the following RHEL product cert installed:\n"+rhelProductCertsInstalled.get(0));
+		instead, let's make sure they all cover the same product id... */
+		Set<String> rhelProductIds = new HashSet<String>();
+		for (ProductCert rhelProductCert : currentRhelProductCerts) rhelProductIds.add(rhelProductCert.productId);
+		Assert.assertEquals(rhelProductIds.size(), 1, "Only one base RHEL product cert ID (actual "+rhelProductIds+") is currently installed.");
+		String baseRhelProductId = (String)(rhelProductIds.toArray())[0];
+		Assert.assertEquals(InstalledProduct.findAllInstancesWithMatchingFieldFromList("productId", baseRhelProductId, clienttasks.getCurrentlyInstalledProducts()).size(), 1, "Only one base RHEL product cert ID ("+baseRhelProductId+") appears in list of installed products.");
 		
 		Assert.assertNotNull(clienttasks.getCurrentRhelProductCert(),"Discovered the currently installed base RHEL product cert based on an expected tag.");
 	}
