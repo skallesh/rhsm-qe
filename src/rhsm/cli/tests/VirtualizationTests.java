@@ -108,7 +108,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type and virt.uuid",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1018807"}, dependsOnGroups={},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1018807","blockedByBug-1242409"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VirtFactsReportedOnThisClient_Test() {
@@ -147,7 +147,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: facts list reports the host hypervisor type and uuid on which the guest client is running",
 			dataProvider="getVirtWhatData",
-			groups={"VirtFactsWhenClientIsAGuest_Test"}, dependsOnGroups={},
+			groups={"VirtFactsWhenClientIsAGuest_Test","blockedByBug-1242409"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70202)
 	public void VirtFactsWhenClientIsAGuest_Test(Object bugzilla, String host_type) {
