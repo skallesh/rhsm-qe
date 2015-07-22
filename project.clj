@@ -39,7 +39,7 @@
   :plugins [[lein2-eclipse "2.0.0"]]
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
-  :javac-options {:debug "on"})
+  :javac-options {:debug "on"}) 
 
 
 (comment
