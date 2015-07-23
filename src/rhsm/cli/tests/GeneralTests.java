@@ -1,6 +1,7 @@
 package rhsm.cli.tests;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.Repo;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
@@ -812,6 +814,38 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		String sat5to6 = "sat5to6";
 		//sat5to6 = pkg;	// debugTesting
 		Assert.assertTrue(!sshCommandResult.getStdout().contains(sat5to6), "The rpm query list for package '"+pkg+"' excludes the '"+sat5to6+"' tool.");
+	}
+	
+	
+	@Test(	description="python-rhsm should not set socket.setdefaulttimeout(60)",
+			groups={"blockedByBug-1195446"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyPythonRhsmDoesNotSetSocketDefaultTimeout_Test() throws IOException {
+		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.14.2-1")) throw new SkipException("Blocking bugzilla 1195446 was not fixed until version python-rhsm-1.14.2-1");	// python-rhsm commit a974e5d636009fa41bec2b4a9d33f853e9e72a2b
+		
+		// copy the ismanagedtest.py script to the client
+		File socketgetdefaulttimeouttestFile = new File(System.getProperty("automation.dir", null)+"/scripts/socketgetdefaulttimeouttest.py");
+		if (!socketgetdefaulttimeouttestFile.exists()) Assert.fail("Failed to find expected script: "+socketgetdefaulttimeouttestFile);
+		RemoteFileTasks.putFile(client.getConnection(), socketgetdefaulttimeouttestFile.toString(), "/usr/local/bin/", "0755");
+		
+		// BEFORE FIX
+		//	[root@jsefler-71 ~]# rpm -q python-rhsm
+		//	python-rhsm-1.13.10-1.el7.x86_64
+		//	[root@jsefler-71 ~]# python /usr/local/bin/socketgetdefaulttimeouttest.py
+		//	None
+		//	Loaded plugins: langpacks, product-id
+		//	60.0
+		
+		// AFTER FIX
+		//	[root@jsefler-72 ~]# rpm -q python-rhsm
+		//	python-rhsm-1.15.3-1.el7.x86_64
+		//	[root@jsefler-72 ~]# python /usr/local/bin/socketgetdefaulttimeouttest.py 
+		//	None
+		//	Loaded plugins: langpacks, product-id
+		//	None
+		
+		RemoteFileTasks.runCommandAndAssert(client, "socketgetdefaulttimeouttest.py", 0, "None\nLoaded plugins:.*\nNone", null);
 	}
 	
 	
