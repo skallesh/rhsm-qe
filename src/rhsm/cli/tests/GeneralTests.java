@@ -542,6 +542,38 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="check the rpm requires list for changes to subscription-manager-initial-setup-addon",
+			groups={"blockedbyBug-1246146"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRpmRequireListForSubscriptionManagerInitialSetupAddon_Test() {
+		String pkg = "subscription-manager-initial-setup-addon";
+		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
+		if (clienttasks.installedPackageVersionMap.get("subscription-manager-gui")==null) clienttasks.isPackageVersion("subscription-manager-gui","==","0.0");	// will populate clienttasks.installedPackageVersionMap.get("subscription-manager-gui")
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
+		
+		List<String> actualRequiresList = new ArrayList<String>();
+		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
+			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
+		}
+		
+		List<String> expectedRequiresList = new ArrayList<String>();
+		//if (clienttasks.redhatReleaseX.equals("7")) {
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"manual: initial-setup",
+					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.15.6-1.el7",
+			}));
+		//}
+		
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
+	}
+	
+	
 	@Test(	description="check the rpm requires list for changes to subscription-manager-migration",
 			groups={"blockedByBug-1049037"},
 			enabled=true)
