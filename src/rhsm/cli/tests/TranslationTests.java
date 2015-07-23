@@ -545,6 +545,18 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 							continue;
 						}
 						
+						// tolerate cases...
+						// WARNING: Substring "Red Hat" should remain untranslated in the /usr/share/locale/ru/LC_MESSAGES/rhsm.mo translation: msgid='This system appears to already be registered to Red Hat Subscription Management.' msgstr='Система уже зарегистрирована в RHSM.'
+						if (translationFile.getPath().contains("/ru/") && subString.equals("Red Hat") && translation.msgid.equals("This system appears to already be registered to Red Hat Subscription Management.") && translation.msgstr.equals("Система уже зарегистрирована в RHSM.")) {
+							log.info("Exceptional case: Tolerating translated substring \""+subString+"\" in translation "+translation+" because https://translate.google.com/ indicates the reverse translation to be \"The system is already registered in RHSM.\" which ommits substring \"Red Hat\".");  // https://translate.google.com/#auto/en/%D0%A1%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%B0%20%D1%83%D0%B6%D0%B5%20%D0%B7%D0%B0%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B0%20%D0%B2%20RHSM.
+							continue;
+						}
+						// WARNING: Substring "Red Hat" should remain untranslated in the /usr/share/locale/ru/LC_MESSAGES/rhsm.mo translation: msgid='This system has already been registered with Red Hat using RHN Classic.' msgstr='Система уже зарегистрирована в RHN Classic.'
+						if (translationFile.getPath().contains("/ru/") && subString.equals("Red Hat") && translation.msgid.equals("This system has already been registered with Red Hat using RHN Classic.") && translation.msgstr.equals("Система уже зарегистрирована в RHN Classic.")) {
+							log.info("Exceptional case: Tolerating translated substring \""+subString+"\" in translation "+translation+" because https://translate.google.com/ indicates the reverse translation to be \"The system is already registered to RHN Classic.\" which ommits substring \"Red Hat\".");  // https://translate.google.com/#auto/en/%D0%A1%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%B0%20%D1%83%D0%B6%D0%B5%20%D0%B7%D0%B0%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B0%20%D0%B2%20RHN%20Classic.
+							continue;
+						}
+						
 						// ignore the translated word when it is used at the start of a sentence
 						/* cool idea, but I'm not going to use it
 						String SubString = subString.substring(0,1).toUpperCase()+subString.substring(1,subString.length());
