@@ -114,13 +114,13 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --subscriptions option and verify the results",
-			groups={},
+			groups={"blockedByBug-1246680"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithSubscriptions_Test() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("rhsm-debug system --subscriptions is applicable in versions >= subscription-manager-1.14.1-1");
 		
-		// run the rhsmDebugSystemTest with --no-subscriptions
+		// run the rhsmDebugSystemTest with --subscriptions
 		verifyRhsmDebugSystemTestWithOptions(null,null, null, null, true);
 	}
 	
