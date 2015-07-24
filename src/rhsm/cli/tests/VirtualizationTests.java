@@ -794,7 +794,11 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		String guestPoolQuantityBefore = guestPool.quantity;
 
 		log.info("Now let's modify the start date of the virtualization-aware subscription id '"+subscriptionId+"'...");
+		/* 7/10/2015 devel consciously decided to drop @Verify(value = Owner.class, subResource = SubResource.SUBSCRIPTIONS) on this GET method starting with candlepin-2.0.
+		 * 7/10/2015 modifying this testware to simply raise the authentication credentials to admin
 		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
+		 */
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
 		JSONObject jsonSubscription = null;
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
@@ -1299,7 +1303,11 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
+		/* 7/10/2015 devel consciously decided to drop @Verify(value = Owner.class, subResource = SubResource.SUBSCRIPTIONS) on this GET method starting with candlepin-2.0.
+		 * 7/10/2015 modifying this testware to simply raise the authentication credentials to admin
 		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
+		 */
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
 		LOOP_FOR_ALL_JSON_SUBSCRIPTIONS: for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String subscriptionId = jsonSubscription.getString("id");
