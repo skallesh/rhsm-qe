@@ -198,7 +198,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyYumPluginForSubscriptionManagerEnablement_Test() {
 		SSHCommandResult sshCommandResult;
-		String stdoutRegex;
+		String stdoutRegex,stdout;
 		
 		// test /etc/yum/pluginconf.d/subscription-manager.conf enabled=1 and enabled=0 (UNREGISTERED)
 		clienttasks.unregister(null, null, null);
@@ -207,33 +207,39 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
+		//	Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-
+		//                : manager
+		stdout = sshCommandResult.getStdout().replaceAll("\\n\\s+:\\s", "");	// join multiple lines of Loaded plugins
 		stdoutRegex = "Loaded plugins:.* subscription-manager";
-		Assert.assertTrue(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
+		Assert.assertTrue(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
 		stdoutRegex = "Loaded plugins:.* product-id";
-		Assert.assertTrue(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
+		Assert.assertTrue(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
 			
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//	Loaded plugins: product-id, refresh-packagekit, security
+		stdout = sshCommandResult.getStdout().replaceAll("\\n\\s+:\\s", "");
 		stdoutRegex = "Loaded plugins:.* subscription-manager";
-		Assert.assertFalse(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
+		Assert.assertFalse(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
 		stdoutRegex = "Loaded plugins:.* product-id";
-		Assert.assertTrue(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
+		Assert.assertTrue(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
 		
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//	Loaded plugins: product-id, refresh-packagekit, security
+		stdout = sshCommandResult.getStdout().replaceAll("\\n\\s+:\\s", "");
 		stdoutRegex = "Loaded plugins:.* subscription-manager";
-		Assert.assertFalse(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
+		Assert.assertFalse(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
 		stdoutRegex = "Loaded plugins:.* product-id";
-		Assert.assertFalse(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
+		Assert.assertFalse(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
 		
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin --enableplugin=subscription-manager --enableplugin=product-id"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
+		stdout = sshCommandResult.getStdout().replaceAll("\\n\\s+:\\s", "");
 		stdoutRegex = "Loaded plugins:.* product-id";
-		Assert.assertTrue(doesStringContainMatches(sshCommandResult.getStdout(), "Loaded plugins:.* subscription-manager"),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 (but--enableplugin=subscription-manager) contains expected stdout regex '"+stdoutRegex+"'.");
+		Assert.assertTrue(doesStringContainMatches(stdout, "Loaded plugins:.* subscription-manager"),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 (but--enableplugin=subscription-manager) contains expected stdout regex '"+stdoutRegex+"'.");
 		stdoutRegex = "Loaded plugins:.* product-id";
-		Assert.assertTrue(doesStringContainMatches(sshCommandResult.getStdout(), stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=0 (but --enableplugin=product-id) contains expected stdout regex '"+stdoutRegex+"'.");
+		Assert.assertTrue(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=0 (but --enableplugin=product-id) contains expected stdout regex '"+stdoutRegex+"'.");
 	}
 	@AfterGroups(value="VerifyYumPluginForSubscriptionManagerEnablement_Test", alwaysRun=true)
 	protected void afterVerifyYumPluginForSubscriptionManagerEnablement_Test() {
@@ -393,9 +399,17 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: virt-what",
 					"manual: yum >= 3.2.19-15"
 			}));
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
-
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.13.13-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.10");		// RHEL7.1	// commit 649f5f7a814e05374b5c0ba56f29a59f4925f7ff Use custom JSON encoding function to encode sets.
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1")) {	// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
+				expectedRequiresList.remove("manual: python-simplejson");
+			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.1-1")) {	// commit d30e416b199d9d4d6e22b2ad4cc6515cfcb2069d
+				expectedRequiresList.remove("manual: pygobject2");
+				expectedRequiresList.add("manual: gobject-introspection");
+				expectedRequiresList.add("manual: pygobject3-base");
+			}
+			
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.15.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.15.0");		// RHEL7.2	// commit a2a4794d9eb7b8d74b0eb4bd27d0b6974b87d716
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.13.13-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.10");		// RHEL7.1	// commit 649f5f7a814e05374b5c0ba56f29a59f4925f7ff Use custom JSON encoding function to encode sets.
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.13.6-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.5");		// RHEL7.1
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.12.3-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.12.3");		// RHEL7.1
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.14-6"))	expectedRequiresList.add("manual: python-rhsm >= 1.10.12-2");	// RHEL7.0	// Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
@@ -483,6 +497,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"postun: scrollkeeper",
 					"manual: usermode-gtk"
 			}));
+			if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.15.1-1")) {	// commit d30e416b199d9d4d6e22b2ad4cc6515cfcb2069d
+				expectedRequiresList.remove("manual: pygtk2");
+				expectedRequiresList.remove("manual: pygtk2-libglade");
+				expectedRequiresList.add("manual: gtk3");
+				expectedRequiresList.add("manual: pygobject3");
+			}
 		}
 		if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.14.8-1")) {		// commit dc727c4adef8cdc49e319f2d90738e848061da78  Adrian says that these imports were never used
 			expectedRequiresList.remove("manual: gnome-python2");
