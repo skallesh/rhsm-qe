@@ -935,6 +935,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (sm_testpluginsUrl.isEmpty()) return; 
 		log.info("Fetching test plugins from "+sm_testpluginsUrl+" for use by this test class...");
 		RemoteFileTasks.runCommandAndAssert(client, "cd "+testPluginDir+" && wget --quiet --recursive --no-host-directories --cut-dirs=2 --no-parent --accept .py "+sm_testpluginsUrl, Integer.valueOf(0)/*,null,"Downloaded: \\d+ files"*/);
+		// Note: If above fails with exitCode 8, then the auto-services server needs changes to /etc/httpd/conf/httpd.conf  remove  AddHandler .py from mime_module and restart the httpd service
 		RemoteFileTasks.runCommandAndAssert(client, "cd "+testPluginConfDir+" && wget --quiet --recursive --no-host-directories --cut-dirs=2 --no-parent --accept .conf "+sm_testpluginsUrl, Integer.valueOf(0)/*,null,"Downloaded: \\d+ files"*/);
 		
 		// create plugin objects for simplicity
