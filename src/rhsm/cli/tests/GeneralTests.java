@@ -545,7 +545,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to subscription-manager-initial-setup-addon",
-			groups={"blockedbyBug-1246146"},
+			groups={"blockedbyBug-1246146","blockedbyBug-1246391"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForSubscriptionManagerInitialSetupAddon_Test() {
@@ -565,7 +565,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List<String> expectedRequiresList = new ArrayList<String>();
 		//if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"manual: initial-setup",
+					"manual: initial-setup-gui",
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.15.6-1.el7",
 			}));
 		//}
