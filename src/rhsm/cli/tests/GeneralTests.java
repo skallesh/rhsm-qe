@@ -583,12 +583,15 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		List<String> expectedRequiresList = new ArrayList<String>();
-		//if (clienttasks.redhatReleaseX.equals("7")) {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
+			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
+		}
+		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: initial-setup-gui",
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.15.6-1.el7",
 			}));
-		//}
+		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
@@ -678,7 +681,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to subscription-manager-plugin-ostree",
-			groups={},
+			groups={"blockedByBug-1165771"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForSubscriptionManagerPluginOstree_Test() {
@@ -701,7 +704,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: pygobject3-base",
-					"manual: python-iniparse >= 0.4"
+					"manual: python-iniparse >= 0.4",
+					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
+
 			}));
 		}
 		
@@ -712,7 +717,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="check the rpm requires list for changes to subscription-manager-plugin-container",
-			groups={},
+			groups={"blockedByBug-1165771"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRpmRequireListForSubscriptionManagerPluginContainer_Test() {
@@ -736,6 +741,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					//none
+					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
 			}));
 		}
 		
