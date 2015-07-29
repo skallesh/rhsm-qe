@@ -59,7 +59,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree
  *  
  *  git clone git://git.app.eng.bos.redhat.com/rcm/rcm-metadata.git
- *  http://git.app.eng.bos.redhat.com/?p=rcm/rcm-metadata.git;a=tree
+ *  http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/tree/
  *  
  *  product 150 is at
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree;f=product_ids/rhev-3.0;hb=HEAD
