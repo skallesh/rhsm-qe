@@ -446,7 +446,14 @@ schema generation failed
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", new Integer(0));
 	}
 	public void setupTranslateToolkitFromTarUrl(String tarUrl) {
+		// nothing to install
 		if (tarUrl.isEmpty()) return;
+		
+		// avoid redundant installation
+		if (sshCommandRunner.runCommandAndWait("which pofilter").getExitCode().equals(0)) {
+			log.warning("The TranslateToolkit appears to be installed already.  Skipping re-installation.");
+			return;
+		}
 		
 		sshCommandRunner.runCommandAndWait("easy_install six");	 // needed for translate-toolkit-1.11.0 and newer
 		
