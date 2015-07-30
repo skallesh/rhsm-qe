@@ -1,0 +1,17 @@
+## Instructions for placement of the TestNG Report images
+In order to make the icons appear to the left of a logged TestNG Report,
+the *.png files in this directory must be copied to the jenkins server
+under a /var/cache/jenkins/war/images/webui-framework directory as follows...
+
+[root@rhsm-jenkins ~]# chown -R jenkins:jenkins /var/cache/jenkins/war/images/webui-framework
+
+[root@rhsm-jenkins ~]# ls -l /var/cache/jenkins/war/images/webui-framework/
+total 20
+-rw-r--r--. 1 jenkins jenkins 3277 Jul 30 13:52 action.png
+-rw-r--r--. 1 jenkins jenkins 3289 Jul 30 13:52 assertfail.png
+-rw-r--r--. 1 jenkins jenkins 3327 Jul 30 13:52 assert.png
+-rw-r--r--. 1 jenkins jenkins 3360 Jul 30 13:52 severe.png
+-rw-r--r--. 1 jenkins jenkins 3330 Jul 30 13:52 warning.png
+
+
+## TODO: Instructions for placement of the reportng-custom.css
