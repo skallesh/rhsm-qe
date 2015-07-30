@@ -200,7 +200,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	
 	// This test is the hosted equivalent for CASE 4 from getOnPremisesMockAttemptToRedeemData
 	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server when consumer's canActivate attribute is false",
-			groups={"AcceptanceTests","Tier1Tests","MockRedeemTests", "blockedByBug-688806"},
+			groups={"AcceptanceTests","Tier1Tests","MockRedeemTests", "blockedByBug-688806", "blockedByBug-1248833"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void HostedMockAttemptToRedeemWhenCanActivateIsFalse_Test() throws JSONException, Exception {
