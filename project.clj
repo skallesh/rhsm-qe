@@ -41,7 +41,6 @@
                                 :snapshots {:update :always}}}
   :javac-options {:debug "on"})
 
-
 (comment
   (do
     (use '[clojure.repl])
@@ -83,7 +82,7 @@
       (use 'gnome.ldtp))
     (log/info "INITIALIZATION COMPLETE!!")
     "INITIALIZATION COMPLETE!!"
-    )      ;<< here for all of it
+    )      ;<< Here for all of it
 
   ;not used
   (require :reload-all '[rhsm.gui.tests.subscription-assistant-tests :as satest])

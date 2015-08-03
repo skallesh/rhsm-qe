@@ -65,7 +65,12 @@
 
 (defn start-app
   "starts the subscription-manager-gui
-  @path: lauch the application at [path]"
+
+  If no args are given, it will start up the default application (subscription-manager-gui)
+  and set the main-window to the default locale language.  It can take multiple arities
+
+  @path: launch the application at [path]
+  @window a keyword "
   ([]
      (start-app (@config :binary-path) :main-window (get-default-locale)))
   ([path]

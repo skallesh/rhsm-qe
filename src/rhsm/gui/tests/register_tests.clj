@@ -89,7 +89,8 @@
 (data-driven register_bad_credentials {Test {:groups ["registration"
                                                       "tier1"]}}
    [^{Test {:groups ["blockedByBug-718045"
-                     "blockedByBug-1194365"]}}
+                     "blockedByBug-1194365"
+                     "blockedByBug-1249723"]}}
     ["sdf" "sdf" :invalid-credentials]
     ;^{Test {:groups ["blockedByBug-719378"]}}
     ["test user" "password" :invalid-credentials]
