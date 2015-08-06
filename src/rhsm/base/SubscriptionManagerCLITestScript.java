@@ -623,7 +623,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void prepareRegisteredConsumerCertsDirectoryBeforeSuite() {
 		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
 			if (clienttasks!=null) {
-				clienttasks.sshCommandRunner.runCommandAndWait("rm -rf "+allRegisteredConsumerCertsDir);
+//debugTestSSL				clienttasks.sshCommandRunner.runCommandAndWait("rm -rf "+allRegisteredConsumerCertsDir);
 				clienttasks.sshCommandRunner.runCommandAndWait("mkdir -p "+allRegisteredConsumerCertsDir);
 			}
 		}
@@ -698,7 +698,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 		}
 	}
-	@AfterSuite(groups={"cleanup"},description="attempt to delete any abandoned entitlements granted during the run of this suite")
+//debugTestSSL	@AfterSuite(groups={"cleanup"},description="attempt to delete any abandoned entitlements granted during the run of this suite")
 	public void deleteAllRegisteredConsumerEntitlementsAfterSuite() {
 		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
 			if (clienttasks!=null) {
