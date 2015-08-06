@@ -453,7 +453,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, true, null, null, null, null).getStdout();
 		 */
-		clienttasks.register(sm_clientUsername, sm_clientPassword,null, null, null, null, null, null, null, null,(String) null, sm_serverUrl, null, null, true, null, null, null, null);
+		String serverUrl= getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
+		clienttasks.register(sm_clientUsername, sm_clientPassword,null, null, null, null, null, null, null, null,(String) null, serverUrl, null, null, true, null, null, null, null);
 		//clienttasks.config(null,null,true,new String[]{"rhsm","productcertdir","/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX});
 		//		moveProductCertFiles("*");
 		//		client.runCommandAndWait("cp " + "/usr/share/rhsm/product/RHEL-*/Server*.pem" + " "
@@ -1233,7 +1234,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(clientUsername, sm_rhuiPassword,null, null, null, null, null, null, null, null,
 				(String) null, serverurl, null, null, null, null, null, null, null).getStdout();
 		 */	
-		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (String) null, sm_serverUrl, null, null, null, null, null, null, null);
+		String serverUrl= getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
+		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (String) null, serverUrl, null, null, null, null, null, null, null);
 		String LogMarker = System.currentTimeMillis()+" Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		//		String result=clienttasks.listAvailableSubscriptionPools().getStdout();
