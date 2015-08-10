@@ -623,7 +623,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void prepareRegisteredConsumerCertsDirectoryBeforeSuite() {
 		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
 			if (clienttasks!=null) {
-//debugTestSSL				clienttasks.sshCommandRunner.runCommandAndWait("rm -rf "+allRegisteredConsumerCertsDir);
+///*debugTestSSL*/ if (false)
+				clienttasks.sshCommandRunner.runCommandAndWait("rm -rf "+allRegisteredConsumerCertsDir);
 				clienttasks.sshCommandRunner.runCommandAndWait("mkdir -p "+allRegisteredConsumerCertsDir);
 			}
 		}
@@ -698,8 +699,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 		}
 	}
-//debugTestSSL	@AfterSuite(groups={"cleanup"},description="attempt to delete any abandoned entitlements granted during the run of this suite")
+	@AfterSuite(groups={"cleanup"},description="attempt to delete any abandoned entitlements granted during the run of this suite")
 	public void deleteAllRegisteredConsumerEntitlementsAfterSuite() {
+///*debugTestSSL*/ if(true) return;
 		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
 			if (clienttasks!=null) {
 				// determine the url to the server

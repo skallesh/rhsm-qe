@@ -8058,6 +8058,7 @@ if (false) {
 			String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
 			SSHCommandResult getTracebackCommandResult = sshCommandRunner.runCommandAndWaitWithoutLogging(getTracebackCommand);
 			if (!getTracebackCommandResult.getStdout().isEmpty()) log.warning("Last request from "+rhsmLogFile+":\n"+getTracebackCommandResult.getStdout());
+///*debugTestSSL*/ if ((result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to verify server's identity".toLowerCase())) log.warning("Current RHSM Configuration:\n"); sshCommandRunner.runCommandAndWait("subscription-manager config --list");
 			
 			
 			// TEMPORARY WORKAROUND FOR BUG
