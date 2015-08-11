@@ -44,6 +44,7 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
+
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ContentNamespace;
@@ -3550,11 +3551,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 		// negative tests
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
-			serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),									serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
+			if (isCurrentlyConfiguredServerTypeHosted()) {
+				// 08-11-2015, I don't like this behavior because IT is blacklisting any prefix that does not match /subscription causing a inaccessible server to masquarade as a CA certificate error"
+				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
+			} else {
+				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
+			}
 			serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688"}),											serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:"+defaultPort+defaultPrefix}));
 			serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688"}),											serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:900"+defaultPrefix}));
 			serverurl= "hostname:900/prefix";																ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688"}),											serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:900/prefix"}));
-			serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","830767"}),									serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+defaultHostname+":"+defaultPort+"/"}));
+			// 08-11-2015, I don't like this new behavior because IT is blacklisting any prefix that does not match /subscription causing a inaccessible server to masquarade as a CA certificate error" because sub-man default to subscription.rhn.redhat.com when passing / as the serverurl
+			//serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","830767"}),								serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+defaultHostname+":"+defaultPort+"/"}));
+			serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","830767"}),									serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
 			serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496","878634","842845"}),		serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL port should be numeric"}));
 			serverurl= "https://hostname:PORT/prefix";														ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496","878634","842845"}),		serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL port should be numeric"}));
 			serverurl= "https://hostname:/prefix";															ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496","878634"}),				serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL port should be numeric"}));
@@ -3569,7 +3577,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			//TODO serverurl= "DON'T KNOW WHAT TO PUT HERE TO INVOKE THE ERROR; see exceptions.py";			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL can not be empty"}));
 			//TODO serverurl= "DON'T KNOW WHAT TO PUT HERE TO INVOKE THE ERROR; see exceptions.py";			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL can not be None"}));
 
-		}else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),									serverurl,	null,	null,	null,		new Integer(69),	null,"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
 			serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688"}),											serverurl,	null,	null,	null,		new Integer(69),	null,"Unable to reach the server at hostname:"+defaultPort+defaultPrefix}));
 			serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688"}),											serverurl,	null,	null,	null,		new Integer(69),	null,"Unable to reach the server at hostname:900"+defaultPrefix}));
@@ -3666,6 +3674,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				}
 			}
 		}
+	}
+
+
+
+
+	protected boolean isCurrentlyConfiguredServerTypeHosted() {
+		return isHostnameHosted(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"));
+	}
+
+
+
+
+	protected boolean isHostnameHosted(String hostname) {
+		return hostname.matches("subscription\\.rhn\\.(.*\\.)*redhat\\.com");
 	}
 
 

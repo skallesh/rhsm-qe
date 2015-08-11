@@ -2253,13 +2253,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String originalServerPort = null;
 	protected String originalServerPrefix = null;
 	
-	protected boolean isCurrentlyConfiguredServerTypeHosted() {
-		return isHostnameHosted(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"));
-	}
-	protected boolean isHostnameHosted(String hostname) {
-		return hostname.matches("subscription\\.rhn\\.(.*\\.)*redhat\\.com");
-	}
-	
 	protected Set<String> getExpectedMappedProductCertFilenamesCorrespondingToChannels(List<String> channels) {
 		Set<String> mappedProductCertFilenamesCorrespondingToChannels = new HashSet<String>();
 		for (String channel : channels) {

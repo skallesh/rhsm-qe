@@ -3181,6 +3181,7 @@ if (false) {
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(64)) ||	// EX_USAGE			Error: Activation keys cannot be used with --auto-attach.
 			sshCommandResult.getExitCode().equals(Integer.valueOf(69)) ||	// EX_UNAVAILABLE	Unable to reach the server
 			sshCommandResult.getExitCode().equals(Integer.valueOf(70)) ||	// EX_SOFTWARE		Error parsing serverurl:
+			sshCommandResult.getExitCode().equals(Integer.valueOf(78)) ||	// EX_CONFIG		Error: CA certificate for subscription service has not been installed.
 			sshCommandResult.getExitCode().equals(Integer.valueOf(255))){	// EX-CODES			http://docs.thefoundry.co.uk/nuke/63/pythonreference/os-module.html
 			// Traceback/Error
 			/* The current system consumer actually remains unchanged when these errors are encountered by the register attempt, stop nullifying the currentlyRegistered consumer.  TODO not confident that this is always true
