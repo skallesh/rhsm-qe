@@ -30,6 +30,7 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
+
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
@@ -41,6 +42,7 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
+
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -271,9 +273,23 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String command = clienttasks.registerCommand(username, password, null, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(command);
 		Integer expectedExitCode = new Integer(255);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		String expectedStdout = "";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 Bug 1119688
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-2")) {
+			expectedStdout = String.format("Registering to: %s%s:%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix"));	// subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89 RHEL7.2 commit 968e6a407054c96291a4e64166c4840529772fff Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
+
+			// TEMPORARY WORKAROUND FOR BUG: 1251610 format error in message "Registering to: subscription.rhn.redhat.com/subscription:443"
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1251610"; 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				expectedStdout = String.format("Registering to: %s%s:%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("prefix"),clienttasks.getConfParameter("port"));	// subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89 RHEL7.2 commit 968e6a407054c96291a4e64166c4840529772fff Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
+				log.warning("Altering the expected stdout while bug '"+bugId+"' is open.");
+			}
+			// END OF WORKAROUND
+		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode,"Exitcode from attempt to register a user who has not accepted Terms and Conditions.");
-		Assert.assertEquals(result.getStdout().trim(),"","Stdout from attempt to register a user who has not accepted Terms and Conditions.");
+		Assert.assertEquals(result.getStdout().trim(),expectedStdout,"Stdout from attempt to register a user who has not accepted Terms and Conditions.");
 		Assert.assertEquals(result.getStderr().trim(),stderr,"Stderr from attempt to register a user who has not accepted Terms and Conditions.");
 		
 		// assert that a consumer cert and key have NOT been installed
