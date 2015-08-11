@@ -231,7 +231,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options specified multiple times in a single call) to repos in redhat.repo are preserved.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843915","blockedByBug-962520","blockedByBug-1034649"/*,"blockedByBug-1121272" uncomment for rhel66*/},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843915","blockedByBug-962520","blockedByBug-1034649","blockedByBug-1121272"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListPreservesSimultaneousEnablementOfRedhatRepos_Test(){
