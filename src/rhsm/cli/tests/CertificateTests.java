@@ -1005,8 +1005,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3 Beta",	"6.3",	"6.5"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("7") && !clienttasks.redhatReleaseXY.equals("7.0") && !clienttasks.redhatReleaseXY.equals("7.1")) {	// Note: this test depends on an available Release level of 7.0 and 7.1 in the release listing file which will not be available until the rhel 7.2 test cycle; skipping until we test rhel 7.2
-			ll.add(Arrays.asList(new Object[]{null,	"sudo-FIXME"/*FIXME choose a simple package that has been updated between each release 7.0 to 7.1 to 7.2*/ ,	"7.0",		"7.0",	"7.1"}));
-			//ll.add(Arrays.asList(new Object[]{null,	"sudo",	"7.0 Beta",	"7.0",	"7.1"}));	// There is no 7.0 Beta product cert id 69 that can be updated.  The 7.0 Beta product cert is product id 226 Everything
+			ll.add(Arrays.asList(new Object[]{null,	"crash"/* wirehark FIXME choose a simple package that has been updated between each release 7.0 to 7.1 to 7.2*/ ,	"7.0",		"7.0",	"7.1"}));
+			//ll.add(Arrays.asList(new Object[]{null,	"wirehark",	"7.0 Beta",	"7.0",	"7.1"}));	// There is no 7.0 Beta product cert id 69 that can be updated.  The 7.0 Beta product cert is product id 226 Everything
 		}
 		else if (Integer.valueOf(clienttasks.redhatReleaseX)>7) {
 			ll.add(Arrays.asList(new Object[]{null,	"FIXME: Unhandled Release",	"1.0 Beta",	"1.0",	"1.1"}));
@@ -1087,14 +1087,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// hard data for this test...
 		String rhelPackage		= "zsh";
 		String rhelRepo			= "rhel-6-server-rpms";	// Required Tags: rhel-6-server Arches: x86_64, x86
+		rhelRepo				= String.format("rhel-%s-server-rpms", clienttasks.redhatReleaseX);
 		String rhelProductId	= "69";	// Red Hat Enterprise Linux Server	// Tags: rhel-6,rhel-6-server Arch: x86_64
 		String jbossPackage		= "jline-eap6";	// rpm -q jline-eap6.noarch --requires  => rpmlib
 		String jbossRepo		= "jb-eap-6-for-rhel-6-server-rpms";	// Required Tags: rhel-6-server Arches: x86_64, x86
+		jbossRepo				= String.format("jb-eap-6-for-rhel-%s-server-rpms", clienttasks.redhatReleaseX);
 		String jbossProductId	= "183";	// JBoss Enterprise Application Platform
 		if (clienttasks.arch.equals("ppc64")) {
 			rhelRepo			= "rhel-6-for-power-rpms";	// Required Tags: rhel-6-ibm-power Arches: ppc64
+			rhelRepo			= String.format("rhel-%s-for-power-rpms", clienttasks.redhatReleaseX);
 			rhelProductId		= "74";	// Red Hat Enterprise Linux for Power, big endian	// Tags: rhel-6,rhel-6-ibm-power Arch: ppc64
 			jbossRepo			= "jb-eap-6-for-rhel-6-for-power-rpms";	// Required Tags: rhel-6-ibm-power Arches: ppc64
+			jbossRepo			= String.format("jb-eap-6-for-rhel-%s-for-power-rpms", clienttasks.redhatReleaseX);
 			jbossProductId		= "183";	// JBoss Enterprise Application Platform
 		}
 		
