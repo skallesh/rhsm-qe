@@ -24,9 +24,9 @@
                  [org.clojure/tools.cli "0.2.4"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.jdom/jdom "1.1"]
-                 [org.testng/testng "6.8"] ;;forcing new testng
-                 ;[testng-bigtest "6.8.2-SNAPSHOT"] ;;experimental testng
-                 [org.uncommons/reportng "1.1.3"]
+                 [org.testng/testng "6.8"]
+                 [org.uncommons/reportng "1.1.4"
+                  :exclusions [org.testng/testng]]
                  [postgresql/postgresql "8.4-701.jdbc4"]
                  [slingshot "0.8.0"]
                  [test_clj.testng "1.0.1-SNAPSHOT"]]
