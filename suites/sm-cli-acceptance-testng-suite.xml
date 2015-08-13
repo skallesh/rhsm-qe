@@ -591,7 +591,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="TemporaryPoolTests" />
+				<include name="AcceptanceTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
