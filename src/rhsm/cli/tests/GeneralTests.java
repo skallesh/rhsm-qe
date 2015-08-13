@@ -706,7 +706,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: pygobject3-base",
 					"manual: python-iniparse >= 0.4",
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
-
+					//TODO subscription-manager >= 1.15.9-5  account for Bug 1185958: Make ostree plugin depend on ostree
 			}));
 		}
 		
