@@ -1,7 +1,8 @@
 (ns rhsm.gui.tests.autosubscribe_tests
   (:use [test-clj.testng :only (gen-class-testng)]
         [rhsm.gui.tasks.test-config :only (config
-                                           clientcmd)]
+                                           clientcmd
+                                           cli-tasks)]
         [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (trim
                                split
@@ -148,9 +149,7 @@
    (verify (dirsetup? one-sla-dir))
    (tasks/register-with-creds)
    (let [beforesubs (tasks/warn-count)
-         dircount (trim (:stdout
-                         (run-command
-                          (str "ls " one-sla-dir " | wc -l"))))
+         dircount (-> @cli-tasks .getProductIds count)
          user (@config :username)
          pass (@config :password)
          key  (@config :owner-key)

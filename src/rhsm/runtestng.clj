@@ -2,6 +2,7 @@
   (:use [clojure.pprint])
   (:require [clojure.tools.logging :as log]
             [clojure.xml :as xml]
+            [clojure.pprint :only pprint]
             [clojure.tools.cli :as cli])
   (:import [org.testng.xml Parser XmlSuite]
            [org.testng TestNG])
@@ -19,7 +20,10 @@
 Usage:   lein run [OPTIONS] [TEST-NAMES..] SUITE.XML
 Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xml")
 
-(defn -main
+;; TODO:
+;; 1. Figure out why we are not only running a single test group of a test suite (specified on command line)
+;; 2. Add testng listeners
+(defn test-main
   [& args]
   (let [[options args banner]
         (cli/cli args
@@ -28,15 +32,17 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
                   "Lists the available test names in the given suite.xml"
                   :default false
                   :flag true]
-                 ["-h" "--help"
-                  "Show help"
+                 ["-i" "--info"
+                  "Show help info"
                   :default false
                   :flag true])]
     (when (:help options)
       (println banner)
       (System/exit 0))
     (let [suites (filter (fn [x] (re-matches #".*\.xml" x)) args)
-          psuite (if-not (empty? suites) (.parse (new Parser (first suites))) nil)
+          psuite (if-not (empty? suites)
+                   (.parse (new Parser (first suites)))
+                   nil)
           tests (filter (fn [x] (nil? (re-matches #".*\.xml" x))) args)
           testng (new TestNG)]
       (cond
@@ -46,3 +52,9 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
                (when psuite (.setXmlSuites testng psuite))
                (if-not (empty? tests) (.setTestNames testng tests))
                (when psuite (.run testng)))))))
+
+
+(defn -main
+  [& args]
+  (let [testng (TestNG/privateMain (into-array String args) nil)]
+      (.getStatus testng)))

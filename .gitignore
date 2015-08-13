@@ -13,6 +13,7 @@ target
 lib
 tmp/*
 *.pyc
+.nrepl-history
 
 ## editor files
 *~
