@@ -149,7 +149,7 @@
    (verify (dirsetup? one-sla-dir))
    (tasks/register-with-creds)
    (let [beforesubs (tasks/warn-count)
-         dircount (-> @cli-tasks .getProductIds count)
+         dircount (-> @cli-tasks .getCurrentProductIds count)
          user (@config :username)
          pass (@config :password)
          key  (@config :owner-key)
