@@ -804,6 +804,12 @@ if (false) {
 			String pkg = rpm.replaceFirst("\\.rpm$", "");
 			String rpmPath = "/tmp/"+rpm; if (!rpmPath.endsWith(".rpm")) rpmPath+=".rpm";
 			
+			// exclude subscription-manager-plugin-ostree-1.15.9-5+ due to Bug 1185958: Make ostree plugin depend on ostree.
+			if (rpmUrl.contains("subscription-manager-plugin-ostree") && !isPackageInstalled("ostree")) {
+				log.warning("Skipping install of '"+rpmUrl+"' due to missing ostree package dependency.");
+				continue;
+			}
+			
 			// install rpmUrl
 			log.info("Installing RPM from "+rpmUrl+"...");
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
@@ -826,6 +832,12 @@ if (false) {
 			String rpm = Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
 			String pkg = rpm.replaceFirst("\\.rpm$", "");
 			String rpmPath = "/tmp/"+rpm; if (!rpmPath.endsWith(".rpm")) rpmPath+=".rpm";
+			
+			// exclude subscription-manager-plugin-ostree-1.15.9-5+ due to Bug 1185958: Make ostree plugin depend on ostree.
+			if (rpmUrl.contains("subscription-manager-plugin-ostree") && !isPackageInstalled("ostree")) {
+				log.warning("Skipping upgrade of '"+rpmUrl+"' due to missing ostree dependency.");
+				continue;
+			}
 			
 			// upgrade rpmUrl
 			log.info("Upgrading RPM from "+rpmUrl+"...");
