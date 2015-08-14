@@ -174,7 +174,11 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		// assert the expiration is 24 hours post the consumer's registration
 		Calendar expectedEntitlementCertEndDate = (Calendar) cert.validityNotBefore.clone();
 		expectedEntitlementCertEndDate.add(Calendar.HOUR, 24);
-		Assert.assertEquals(ConsumerCert.formatDateString(entitlementCert.validityNotAfter), ConsumerCert.formatDateString(expectedEntitlementCertEndDate), "The End Date of the entitlement from a temporary pool should be exactly 24 hours after the registration date of the current consumer '"+ConsumerCert.formatDateString(cert.validityNotBefore)+"'.");
+		//Assert.assertEquals(ConsumerCert.formatDateString(entitlementCert.validityNotAfter), ConsumerCert.formatDateString(expectedEntitlementCertEndDate), "The End Date of the entitlement from a temporary pool should be exactly 24 hours after the registration date of the current consumer '"+ConsumerCert.formatDateString(cert.validityNotBefore)+"'.");
+		// allow for a few seconds of tolerance
+		Calendar expectedEntitlementCertEndDateUpperTolerance = (Calendar) expectedEntitlementCertEndDate.clone(); expectedEntitlementCertEndDateUpperTolerance.add(Calendar.SECOND, +2);
+		Calendar expectedEntitlementCertEndDateLowerTolerance = (Calendar) expectedEntitlementCertEndDate.clone(); expectedEntitlementCertEndDateLowerTolerance.add(Calendar.SECOND, -2);
+		Assert.assertTrue(entitlementCert.validityNotAfter.before(expectedEntitlementCertEndDateUpperTolerance) && entitlementCert.validityNotAfter.after(expectedEntitlementCertEndDateLowerTolerance), "The End Date of the entitlement from a temporary pool '"+ConsumerCert.formatDateString(entitlementCert.validityNotAfter)+"' should be 24 hours (within a few seconds) after the registration date of the current consumer '"+ConsumerCert.formatDateString(cert.validityNotBefore)+"'.");
 		
 		// assert the Status Details of the attached subscription
 		String expectedStatusDetailsForAnUnmappedGuestsOnlyProductSubscription = "Guest has not been reported on any host and is using a temporary unmapped guest subscription.";
