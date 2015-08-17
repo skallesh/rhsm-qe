@@ -224,7 +224,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from the same owner",
-			groups={}, /*dependsOnGroups={"RegisterWithCredentials_Test"},*/
+			groups={"blockedByBug-1254349"}, /*dependsOnGroups={"RegisterWithCredentials_Test"},*/
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerateWithUsernameAndPaswordFromTheSameOwner_Test() throws Exception {
