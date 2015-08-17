@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -382,7 +383,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				clienttasks.subscribe_(false,null,subSubscriptionPool.poolId,null,null,"1",null,null,null,null,null, null);
 				ProductSubscription subProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", subSubscriptionPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
 				// assert Bug 1000444 - Instance based subscription on the guest gets merged with other subscription when a future instance based subscription is added on the host
-				Assert.assertTrue(subProductSubscription.provides.containsAll(productSubscription.provides)&&productSubscription.provides.containsAll(subProductSubscription.provides), "The list of provided products from the consumed subpool "+subProductSubscription.provides+" should be the same as the provided products from the consumed hostpool "+productSubscription.provides+".");
+				Assert.assertTrue(subProductSubscription.provides.containsAll(productSubscription.provides)&&productSubscription.provides.containsAll(subProductSubscription.provides), "The list of provided products from the consumed subpool '"+subProductSubscription.poolId+"' "+subProductSubscription.provides+" should be the same as the provided products from the consumed hostpool '"+productSubscription.poolId+"' "+productSubscription.provides+".");
 				clienttasks.unsubscribe_(false, subProductSubscription.serialNumber, null, null, null);
 			}
 		}
@@ -407,7 +408,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				continue;
 			}
 			
-			// test auto-subscribing acriss multiple instance_multiplier pools
+			// test auto-subscribing across multiple instance_multiplier pools
 			if (poolProductIdsQuantityMap.containsKey(pool.productId)) {
 				
 				// the fact that we are here means that there are multiple pools available for the same instance-based product subscription
