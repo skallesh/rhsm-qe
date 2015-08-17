@@ -1555,15 +1555,36 @@ Expected Results:
 		//	201505221639:23.091 - FINE: Stderr: Service level 'bad-service' is not available to units of organization admin.
 		//	201505221639:23.094 - FINE: ExitCode: 70
 		
+		//	2015-08-17 14:29:18.700  FINE: ssh root@jsefler-7.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin --autosubscribe --servicelevel=bad-service --serverurl=jsefler-f22-candlepin.usersys.redhat.com:8443/candlepin
+		//	2015-08-17 14:29:21.558  FINE: Stdout: 
+		//	Registering to: jsefler-f22-candlepin.usersys.redhat.com:8443/candlepin
+		//	The system has been registered with ID: 8f6a5c10-d9e8-475f-947f-a39531e8681c 
+		//	Service level 'bad-service' is not available to units of organization admin.
+		//
+		//	Product Name: Red Hat Enterprise Linux Server
+		//	Status:       Not Subscribed
+		//
+		//	Unable to find available subscriptions for all your installed products.
+		//
+		//	2015-08-17 14:29:21.559  FINE: Stderr: 
+		//	2015-08-17 14:29:21.559  FINE: ExitCode: 1
+		
 		// Assert a successful registration identity
 		//String registeredOwnerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
 		String consumerId = clienttasks.getCurrentConsumerId(sshCommandResult);
 		String registeredOwnerKey = CandlepinTasks.getOwnerOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId).getString("key");
 		
 		// Assert the command returned a error with "Service level 'bad-service' is not available to units of organization admin."
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE*/,"ExitCode after register with --serverurl="+serverurl+" and a bad servicelevel.");
+		Integer expectedExitCode = Integer.valueOf(70);/*EX_SOFTWARE*/
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.15.9-5")) expectedExitCode = Integer.valueOf(1);	// subscription-manager RHEL7.2 commit 84340a0acda9f070e3e0b733e4335059b5dc204e 	// post 1221273: Auto-attach failure should not short-circuit other parts of registration
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --serverurl="+serverurl+" and a bad servicelevel.");
 		String expectedStderr = String.format("Service level 'bad-service' is not available to units of organization %s.",registeredOwnerKey);
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr after register with --serverurl="+serverurl+" and a bad servicelevel");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.15.9-5")) {	// subscription-manager RHEL7.2 commit 84340a0acda9f070e3e0b733e4335059b5dc204e 	// post 1221273: Auto-attach failure should not short-circuit other parts of registration
+			Assert.assertTrue(sshCommandResult.getStdout().trim().contains(expectedStderr), "Stdout after register with --serverurl="+serverurl+" and a bad servicelevel contains expected '"+expectedStderr+"'.");
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr after register with --serverurl="+serverurl+" and a bad servicelevel");
+		} else {
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr after register with --serverurl="+serverurl+" and a bad servicelevel");
+		}
 		
 		// Assert the serverurl persisted to rhsm.conf
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), goodHostname, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname has been updated from the specified --serverurl "+serverurl);
@@ -1621,7 +1642,11 @@ Expected Results:
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-2")) {	// post subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89   Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix")), "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1")) {	// post commit 3366b1c734fd27faf48313adf60cf051836af115
