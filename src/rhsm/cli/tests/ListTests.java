@@ -862,7 +862,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Boolean all = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-
+///*debugTesting*/ matchInstalled=false; all=false; noOverlap=false;
+		
 		// register if necessary
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
@@ -874,7 +875,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// randomly choose an available pool
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
-		
+///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", "RH0802940", availableSubscriptionPools);
 		
 		// Test 1: test exact --matches on Subscription Name:
 		matchesString = randomAvailablePool.subscriptionName;
@@ -889,6 +890,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 2: test exact --matches on Provides:
 		if (!randomAvailablePool.provides.isEmpty()) {
 			matchesString = getRandomListItem(randomAvailablePool.provides);
+///*debugTesting*/ matchesString="Red Hat Beta";
 			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
@@ -1112,6 +1114,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			for (String derivedProvidedProductId : CandlepinTasks.getPoolDerivedProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
 				if (derivedProvidedProductId.toLowerCase().matches(regexString)) {
 					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Derived Provided Product ID: "+derivedProvidedProductId);
+					if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) expectedSubscriptionPoolMatches.add(subscriptionPool);		
+				}
+			}
+			// Test for match on Derived Provided ProductName:
+			// NOTE: list --available --matches is implemented server-side and appears to be searching the derivedProvidedProducts for product name matches.  Although unexpected, this feature has some benefit.
+			// This behavior is in contrast to list --consumed --matches which is implemented client-side and does NOT search the derivedProvidedProducts for match on product name.
+			// 10/31/2014 Verbal scrum discussion with devel decided to keep this behavior.
+			for (String derivedProvidedProductName : CandlepinTasks.getPoolDerivedProvidedProductNames(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
+				if (derivedProvidedProductName.toLowerCase().matches(regexString)) {
+					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Derived Provided Product Name: "+derivedProvidedProductName);
 					if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) expectedSubscriptionPoolMatches.add(subscriptionPool);		
 				}
 			}
