@@ -588,7 +588,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
-					"manual: initial-setup-gui",
+					"manual: initial-setup-gui >= 0.3.9.24-1",
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.15.6-1.el7",
 			}));
 		}
