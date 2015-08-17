@@ -37,7 +37,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: run the orgs module with valid user credentials and verify the expected organizations are listed",
-			groups={"blockedByBug-719739"},
+			groups={"blockedByBug-719739","blockedByBug-1254353"},
 			dataProvider="getCredentialsForOrgsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -49,8 +49,8 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		
 		// when the expectedOrgs is empty, there is a special message, assert it
 		if (expectedOrgs.isEmpty()) {
-			//Assert.assertEquals(String.format("%s cannot register to any organizations.", username), orgsResult.getStdout().trim(),"Special message when the expectedOrgs is empty.");	// Bug 903298 - String Update: "Register to" -> "Register with" 
-			Assert.assertEquals(String.format("%s cannot register with any organizations.", username), orgsResult.getStdout().trim(),"Special message when the expectedOrgs is empty.");
+			//Assert.assertEquals(orgsResult.getStdout().trim(), String.format("%s cannot register to any organizations.", username), "Special message when the expectedOrgs is empty.");	// Bug 903298 - String Update: "Register to" -> "Register with" 
+			Assert.assertEquals(orgsResult.getStdout().trim(), String.format("%s cannot register with any organizations.", username), "Special message when the expectedOrgs is empty.");
 		}
 		
 		// parse the actual Orgs from the orgsResult
@@ -65,7 +65,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: run the orgs module with invalid user credentials",
-			groups={},
+			groups={"blockedByBug-1254353"},
 			dataProvider="getInvalidCredentialsForOrgsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -215,7 +215,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 	}
 	@Test(	description="subscription-manager: orgs with --insecure",
-			groups={"OrgsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202"},
+			groups={"OrgsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1254353"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void OrgsWithInsecure_Test() {
