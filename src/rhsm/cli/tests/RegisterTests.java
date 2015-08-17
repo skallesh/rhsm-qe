@@ -276,7 +276,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "";
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 Bug 1119688
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-2")) {
-			expectedStdout = String.format("Registering to: %s%s:%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix"));	// subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89 RHEL7.2 commit 968e6a407054c96291a4e64166c4840529772fff Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
+			expectedStdout = String.format("Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix"));	// subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89 RHEL7.2 commit 968e6a407054c96291a4e64166c4840529772fff Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
 
 			// TEMPORARY WORKAROUND FOR BUG: 1251610 format error in message "Registering to: subscription.rhn.redhat.com/subscription:443"
 			boolean invokeWorkaroundWhileBugIsOpen = true;
