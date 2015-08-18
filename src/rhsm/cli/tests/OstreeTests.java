@@ -814,3 +814,12 @@ refspec=rhel-atomic-host-beta-ostree:rhel-atomic-host/7/x86_64/standard
 
 
 */
+
+
+/*
+TODO: For testing purposes on RHEL7 (rather than atomic)
+Install packages from brew:
+  ostree
+  libgsystem
+  rpm -Uvh http://download.devel.redhat.com/brewroot/packages/ostree/2015.6/4.atomic.el7/x86_64/ostree-2015.6-4.atomic.el7.x86_64.rpm http://download.devel.redhat.com/brewroot/packages/libgsystem/2015.1/1.atomic.el7/x86_64/libgsystem-2015.1-1.atomic.el7.x86_64.rpm
+*/
