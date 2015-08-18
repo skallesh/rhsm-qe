@@ -1,6 +1,9 @@
 package rhsm.cli.tests;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -221,8 +224,14 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Installation of docker.rpm is only applicable on RHEL7+");
 		if (!clienttasks.arch.equals("x86_64")) throw new SkipException("Installation of docker.rpm is only applicable on arch x86_64");
 		
-		// if provided in the script arguments, install the requested docker packages
-		clienttasks.installSubscriptionManagerRPMs(sm_dockerRpmInstallUrls, null, sm_yumInstallOptions);
+		// install the requested docker packages
+		// old way of installing docker
+		if (false) clienttasks.installSubscriptionManagerRPMs(sm_dockerRpmInstallUrls, null, sm_yumInstallOptions);
+		// new way of installing docker
+		List<String> dockerRpmInstallUrls = new ArrayList<String>();
+		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker         --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+		clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
 		
 		// assert the docker version is >= 1.0.0-2
 		Assert.assertTrue(clienttasks.isPackageVersion("docker", ">=", "1.0.0-2"), "Expecting docker version to be >= 1.0.0-2 (first RHSM compatible version of docker).");
@@ -230,6 +239,39 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		// restart the docker service
 		//RemoteFileTasks.runCommandAndAssert(client,"service docker restart",Integer.valueOf(0),"^Starting docker: +\\[  OK  \\]$",null);
 		RemoteFileTasks.runCommandAndAssert(client, "systemctl restart docker.service && systemctl is-active docker.service", Integer.valueOf(0), "^active$", null);
+	}
+	private SSHCommandResult runLocalCommand(String command) {
+        String stdout = new String("");
+        String stderr = new String("");
+        Integer exitCode = null;
+        try {
+            // using the Runtime exec method:
+            Process p = Runtime.getRuntime().exec(command);
+            exitCode = p.waitFor();
+            
+            BufferedReader stdInputReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            BufferedReader stdErrorReader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+ 
+            // read the output from the command
+            String s = null;
+            //System.out.println("Here is the standard output of the command:\n");
+            while ((s = stdInputReader.readLine()) != null) {
+                //System.out.println(s);
+            	stdout+=s+"\n";
+            }
+             
+            // read any errors from the attempted command
+            //System.out.println("Here is the standard error of the command (if any):\n");
+            while ((s = stdErrorReader.readLine()) != null) {
+                //System.out.println(s);
+            	stderr+=s+"\n";
+            }
+        }
+        catch (Exception e) {
+            //System.out.println("exception happened - here's what I know: ");
+            e.printStackTrace();
+        }
+		return new SSHCommandResult(exitCode,stdout.trim(),stderr.trim());
 	}
 	
 	@Test(	description="verify the specified docker image downloads and will run subscription-manager >= 1.12.4-1",
