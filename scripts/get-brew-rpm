@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# Prerequisite:  sudo yum install python-BeautifulSoup
 
 import pdb
 import re
