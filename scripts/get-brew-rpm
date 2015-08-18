@@ -1,0 +1,93 @@
+#!/usr/bin/python
+
+import pdb
+import re
+import sys
+import urllib2
+
+from BeautifulSoup import BeautifulSoup
+from distutils.version import StrictVersion
+from itertools import groupby
+from optparse import OptionParser
+
+VERSION_REGEX = "[0-9]+\.[0-9]+/"
+EPOCH_REGEX   = "\d+\.\w+/"
+
+def get_links_matching_regex(regex, page):
+    soup = BeautifulSoup(page)
+    links = soup.findAll('a')
+    matches = []
+    for link in links:
+        if (re.search(regex, link.string)):
+            matches.append(link)
+    return matches
+
+def rchop(thestring, ending):
+  if thestring.endswith(ending):
+    newstring = thestring[:-len(ending)]
+    if newstring.endswith(ending):
+      rchop(newstring, ending)
+    else:
+      return newstring
+  return thestring
+
+def find_latest_rpm_url(baseurl, arch, rpm_name, version, release, regress):
+    version_page = urllib2.urlopen(baseurl)
+    if version == '':
+        VREGEX = VERSION_REGEX
+    else:
+        VREGEX = version + "[\.\d+]*/"
+    if release == '':
+        EREGEX = EPOCH_REGEX
+    else:
+        EREGEX = "\d+\." + release + "/"
+    version_links = get_links_matching_regex(VREGEX, version_page)
+    version_links = [ str(x['href'].replace('/','')) for x in version_links ]
+    version_links.sort(key=StrictVersion)
+    version_links.reverse()
+    for v in version_links:
+        version_append = v + '/'
+        epoch_page = urllib2.urlopen(baseurl+version_append)
+        epoch_links = get_links_matching_regex(EREGEX, epoch_page)
+        if epoch_links or not regress:
+            break
+    epoch_append = epoch_links[len(epoch_links)-1]['href']
+    rpm_page = urllib2.urlopen(baseurl+version_append+epoch_append+arch+'/')
+    if not rpm_name:
+      rpm_links = get_links_matching_regex('rpm', rpm_page)
+      for link in rpm_links:
+        rpm_append = link['href']
+        print baseurl + version_append + epoch_append + arch + '/' + rpm_append
+    else:
+      rpm_links = get_links_matching_regex(rpm_name, rpm_page)
+      rpm_append = rpm_links[0]['href']
+      print baseurl + version_append + epoch_append + arch + '/' + rpm_append
+
+if __name__ in "__main__":
+    usage = "Usage: %prog [options] <Base Group>"
+    parser = OptionParser(usage=usage)
+    parser.add_option('--baseurl', action='store', type='string',
+        dest='baseurl', default='http://download.devel.redhat.com/brewroot/packages/',
+        help="URL of brew packages root.")
+    parser.add_option("--rpmname", action="store", type="string",
+        dest="rpmname", default='', help="RPM name for specific sub-package.")
+    parser.add_option("--arch", action="store", type="string",
+        dest="arch", default='x86_64', help="Arch of rpm pacages desired.")
+    parser.add_option("--version", action="store", type="string",
+        dest="version", default='', help="Version of rpm pacages desired.")
+    parser.add_option("--release", action="store", type="string",
+        dest="release", default='', help="Release of rpm pacages desired.")
+    parser.add_option("--regress", action="store_true",
+        dest="regress", help="Regress to latest working version.")
+
+    (options, args) = parser.parse_args()
+
+    basegroup = args[0]
+    baseurl = options.baseurl + basegroup + '/'
+
+    find_latest_rpm_url(baseurl,
+                        options.arch,
+                        options.rpmname,
+                        options.version,
+                        options.release,
+                        options.regress)
