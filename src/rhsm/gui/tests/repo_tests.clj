@@ -370,7 +370,8 @@
 
 (defn ^{Test {:groups ["repo"
                        "tier1"
-                       "blockedByBug-1095938"]}}
+                       "blockedByBug-1095938"]
+              :enabled false}}
   verify_override_persistance
   "Checks the persistance of repo override after subscriptions are removed"
   [_]
