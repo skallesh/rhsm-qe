@@ -196,14 +196,25 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		//	Red Hat Enterprise Linux for Virtual Datacenters, Premium (DERIVED SKU):
 		//	- Guest has not been reported on any host and is using a temporary unmapped guest subscription.
 		//
+		
+		//	2015-08-19 10:33:50.675  FINE: ssh root@ibm-p8-kvm-04-guest-06.rhts.eng.bos.redhat.com subscription-manager status
+		//	2015-08-19 10:33:52.757  FINE: Stdout: 
+		//	+-------------------------------------------+
+		//	   System Status Details
+		//	+-------------------------------------------+
+		//	Overall Status: Invalid
+		//
+		//	Red Hat Enterprise Linux for Virtual Datacenters, Premium (DERIVED SKU):
+		//	- Guest has not been reported on any host and is using a temporary unmapped guest subscription.
+		//
+		//	Red Hat Enterprise Linux for Power, little endian:
+		//	- Not supported by a valid subscription.
 		Map<String,String> statusMap = StatusTests.getProductStatusMapFromStatusResult(statusResult);
 		Assert.assertTrue(statusMap.containsKey(consumedUnmappedGuestsOnlyProductSubscription.productName),"The status module reports an incompliance from temporary subscription '"+consumedUnmappedGuestsOnlyProductSubscription.productName+"'.");
 		Assert.assertEquals(statusMap.get(consumedUnmappedGuestsOnlyProductSubscription.productName),expectedStatusDetailsForAnUnmappedGuestsOnlyProductSubscription,"The status module reports an incompliance from temporary subscription '"+consumedUnmappedGuestsOnlyProductSubscription.productName+"' for this reason.");
-		// assert that the temporary subscription causes an overall status is Invalid
-		String expectedStatus = "Overall Status: Invalid";
-		expectedStatus = "Overall Status: Insufficient";	// TODO: not sure if there is a distinction between these two or if it changed; see StatusTests for more info
-		Assert.assertTrue(statusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' when a temporary subscription for '"+consumedUnmappedGuestsOnlyProductSubscription.productName+"' is attached.");
-
+		// assert that the temporary subscription causes an overall status to be Invalid or Insufficient (either is possible and depends on what is installed and if the Temporary pool provides for what is installed)
+		Assert.assertTrue(statusResult.getStdout().contains("Overall Status: Invalid")||statusResult.getStdout().contains("Overall Status: Insufficient"), "Expecting Overall Status to be 'Invalid' or 'Insufficient' when a temporary subscription for '"+consumedUnmappedGuestsOnlyProductSubscription.productName+"' is attached (actual value depends on what is installed and if the temporary pool provides for what is installed)");
+		
 		// assert the status of installed products provided by the temporary subscription
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, unmappedGuestsOnlyPool.poolId);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
