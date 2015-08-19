@@ -1005,6 +1005,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3 Beta",	"6.3",	"6.5"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("7") && !clienttasks.redhatReleaseXY.equals("7.0") && !clienttasks.redhatReleaseXY.equals("7.1")) {	// Note: this test depends on an available Release level of 7.0 and 7.1 in the release listing file which will not be available until the rhel 7.2 test cycle; skipping until we test rhel 7.2
+			if (!clienttasks.arch.equals("ppc64le") && !clienttasks.arch.equals("aarch64"))	// ppc64le and aarch64 did not exist on 7.0 nor 7.1; exclude this row on these arches
 			ll.add(Arrays.asList(new Object[]{null,	"crash"/* wirehark FIXME choose a simple package that has been updated between each release 7.0 to 7.1 to 7.2*/ ,	"7.0",		"7.0",	"7.1"}));
 			//ll.add(Arrays.asList(new Object[]{null,	"wirehark",	"7.0 Beta",	"7.0",	"7.1"}));	// There is no 7.0 Beta product cert id 69 that can be updated.  The 7.0 Beta product cert is product id 226 Everything
 		}
