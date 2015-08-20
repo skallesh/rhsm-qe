@@ -805,10 +805,12 @@ if (false) {
 			String rpmPath = "/tmp/"+rpm; if (!rpmPath.endsWith(".rpm")) rpmPath+=".rpm";
 			
 			// exclude subscription-manager-plugin-ostree-1.15.9-5+ due to Bug 1185958: Make ostree plugin depend on ostree.
+			/* reverted commit e6a140d6d995887bd1f6488ef2549f913e4c3790 because https://bugzilla.redhat.com/show_bug.cgi?id=1185958#c7
 			if (rpmUrl.contains("subscription-manager-plugin-ostree") && !isPackageInstalled("ostree")) {
 				log.warning("Skipping install of '"+rpmUrl+"' due to missing ostree package dependency.");
 				continue;
 			}
+			*/
 			
 			// install rpmUrl
 			log.info("Installing RPM from "+rpmUrl+"...");
@@ -834,10 +836,12 @@ if (false) {
 			String rpmPath = "/tmp/"+rpm; if (!rpmPath.endsWith(".rpm")) rpmPath+=".rpm";
 			
 			// exclude subscription-manager-plugin-ostree-1.15.9-5+ due to Bug 1185958: Make ostree plugin depend on ostree.
+			/* reverted commit e6a140d6d995887bd1f6488ef2549f913e4c3790 because https://bugzilla.redhat.com/show_bug.cgi?id=1185958#c7
 			if (rpmUrl.contains("subscription-manager-plugin-ostree") && !isPackageInstalled("ostree")) {
 				log.warning("Skipping upgrade of '"+rpmUrl+"' due to missing ostree dependency.");
 				continue;
 			}
+			*/
 			
 			// upgrade rpmUrl
 			log.info("Upgrading RPM from "+rpmUrl+"...");
