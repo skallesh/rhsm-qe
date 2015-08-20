@@ -545,10 +545,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
 				}
-				if (word.equals("reregistered") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 063747b1b1d83fe89eff91fc5fb96f57d95eb5d5
+				if (word.equals("reregistered") /*&& clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1" FailedQA)*/) {	// commit 063747b1b1d83fe89eff91fc5fb96f57d95eb5d5
 					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
 					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
-					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
 				}
 				if (word.equals("instaled") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 063747b1b1d83fe89eff91fc5fb96f57d95eb5d5
@@ -989,7 +989,9 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		
 		// modifications to correct for man-page formatting
 		modifiedManPage = modifiedManPage.replaceAll(".", "");	// needed on rhel6 to fix highlighted .SH words like NNAAMMEE
-		
+		modifiedManPage = modifiedManPage.replaceAll("subscription-manager-gui\\(8\\) Subscription Managementsubscription-manager-gui\\(8\\)","subscription-manager-gui(8)   Subscription Management   subscription-manager-gui(8)");
+		modifiedManPage = modifiedManPage.replaceAll("rhn-migrate-classic-to-rhsm\\(System Manager's Manrhn-migrate-classic-to-rhsm\\(8\\)","rhn-migrate-classic-to-rhsm(8)   System Manager's Manual   rhn-migrate-classic-to-rhsm(8)");
+
 		// join acceptable hyphenated words that have been wrapped across two lines (e.g. third-
 		//      party) 
 		modifiedManPage = modifiedManPage.replaceAll("(auto)(?:‐|-)\\n\\s+(attach)", "$1-$2");
@@ -1032,6 +1034,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("stdin", "standard-in");
 		modifiedManPage = modifiedManPage.replaceAll("stdout", "standard-out");
 		modifiedManPage = modifiedManPage.replaceAll("stdout", "standard-out");
+		modifiedManPage = modifiedManPage.replaceAll("autoattachInterval", "auto-attach-Interval");
 		modifiedManPage = modifiedManPage.replaceAll("isn't", "is not");	// fails on hunspell-1.2.8-16.el6
 		modifiedManPage = modifiedManPage.replaceAll("isn’t", "is not");	// fails on hunspell-1.2.8-16.el6
 		modifiedManPage = modifiedManPage.replaceAll("aren't", "are not");	// fails on hunspell-1.2.8-16.el6
@@ -1091,6 +1094,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("whitespace", "white-space");
 		modifiedManPage = modifiedManPage.replaceAll("preselected", "already selected");
 		modifiedManPage = modifiedManPage.replaceAll("cdn.redhat.com", "content_delivery_network.red_hat.com");
+		modifiedManPage = modifiedManPage.replaceAll("index.html", "index.HTML");
+		modifiedManPage = modifiedManPage.replaceAll("rhsmcertd-worker.py", "red-hat-subscription-management-certificate-daemon-worker_python");
 		modifiedManPage = modifiedManPage.replaceAll("rhsmcertd", "red hat subscription management certificate daemon");
 		modifiedManPage = modifiedManPage.replaceAll("RHSMCERTD", "Red Hat Subscription Management Certificate Daemon");
 		modifiedManPage = modifiedManPage.replaceAll("subscription-manager-gui", "subscription-manager-graphical-user-interface");
