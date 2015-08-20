@@ -1100,6 +1100,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("virt-who", "virtual-who");
 		modifiedManPage = modifiedManPage.replaceAll("rct( |\n)", "read-certificate$1");
 		modifiedManPage = modifiedManPage.replaceAll("rct\\(8\\)", "read-certificate(8)");
+		modifiedManPage = modifiedManPage.replaceAll("RCT\\(8\\)", "READ-CERTIFICATE(8)");
 		modifiedManPage = modifiedManPage.replaceAll("install-num-migrate", "install-number-migrate");
 		modifiedManPage = modifiedManPage.replaceAll("systemid([^e])", "system-id$1");
 		modifiedManPage = modifiedManPage.replaceAll("rhsm\\.conf([^i])", "rhsm.configuration$1");
