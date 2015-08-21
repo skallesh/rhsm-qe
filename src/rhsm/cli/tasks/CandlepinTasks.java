@@ -493,7 +493,8 @@ schema generation failed
 		String request	= "--request "+get.getName()+" ";
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
 		
-		//String response = getHTTPResponseAsString(client, get, authenticator, password);
+		String response = getHTTPResponseAsString(client, get, authenticator, password);
+/* 8/21/2015 DELETEME IF TRY CATCH BLOCK IN doHTTPRequest WORKS BETTER
 		// 8/19/2015: Started encountering many Connection reset against stage, so I commented out the line above and added the following block of code
 		// TODO: Need to decide if a bugzilla should be opened against stage for these exceptions
 		String response=null;
@@ -507,6 +508,7 @@ schema generation failed
 				response = getHTTPResponseAsString(client, get, authenticator, password);
 			} else throw(e);
 		}
+*/
 		
 		// check for a JSON response from the server
 		if (!response.startsWith("[") && !response.startsWith("{")) {
@@ -763,8 +765,26 @@ schema generation failed
 			log.finer("HTTP Request entity: " + (entity==null?"":((StringRequestEntity)entity).getContent()));
 		}
 		log.finer("HTTP Request Headers: " + interpose(", ", (Object[])method.getRequestHeaders()));
-		int responseCode = client.executeMethod(method);
-		log.finer("HTTP server returned: " + responseCode) ;
+
+		
+		//int responseCode = client.executeMethod(method);
+		//log.finer("HTTP server returned: " + responseCode) ;
+		// 8/21/2015: Started encountering many Connection reset against stage, so I commented out the two lines above and added the following block of code
+		// TODO: Need to decide if a bugzilla should be opened against stage for these exceptions
+		try {
+			int responseCode = client.executeMethod(method);
+			log.finer("HTTP server returned: " + responseCode);
+		} catch (java.net.SocketException e) {
+			if (e.getMessage().trim().equals("Connection reset")) {
+				// try again after 5 seconds
+				log.warning("Encountered a '"+e.getMessage().trim()+"' SocketException while attempting an HTTP request.  Re-attempting one more time...");
+				Thread.sleep(5000);
+				int responseCode = client.executeMethod(method);
+				log.finer("HTTP server returned: " + responseCode);
+			} else throw(e);
+		}
+		
+		
 		return method;
 	}
 	
