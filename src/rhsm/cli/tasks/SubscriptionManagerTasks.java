@@ -6848,7 +6848,14 @@ if (false) {
 		return pkgFile;
 	}
 	
-	public SSHCommandResult yumDoPackageFromRepo (String installUpdateOrDowngrade, String pkg, String repoLabel, String options) {
+	/**
+	 * @param installUpdateOrDowngrade - without asserting any results
+	 * @param pkg
+	 * @param repoLabel
+	 * @param options
+	 * @return SSHCommandResult result
+	 */
+	public SSHCommandResult yumDoPackageFromRepo_ (String installUpdateOrDowngrade, String pkg, String repoLabel, String options) {
 		
 		// extract pkgName=devtoolset-1.1-valgrind-openmpi from pkg=devtoolset-1.1-valgrind-openmpi.i386
 		String pkgName = pkg;
@@ -6861,6 +6868,15 @@ if (false) {
 		if (options!=null) command += " "+options; 
 		//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		return (result);
+	}
+	
+	public SSHCommandResult yumDoPackageFromRepo (String installUpdateOrDowngrade, String pkg, String repoLabel, String options) {
+		// extract pkgName=devtoolset-1.1-valgrind-openmpi from pkg=devtoolset-1.1-valgrind-openmpi.i386
+		String pkgName = pkg;
+		if (pkg.lastIndexOf(".")!=-1) pkgName=pkg.substring(0,pkg.lastIndexOf("."));
+		
+		SSHCommandResult result = yumDoPackageFromRepo_ (installUpdateOrDowngrade, pkg, repoLabel, options);
 		Assert.assertTrue(!result.getStderr().toLowerCase().contains("error"), "Stderr from command '"+command+"' did not report an error.");
 		Assert.assertTrue(result.getStdout().contains("\nComplete!"), "Stdout from command '"+command+"' reported a successful \"Complete!\".");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'.");

@@ -935,6 +935,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		clienttasks.release(null, null, null, true, null, null, null);
 		
 		// Step 10: yum update the test package to the latest version and assert the product id has been upgraded to the original product cert.
+		if (Float.compare(Float.valueOf(newerRelease)+0.1f,Float.valueOf(clienttasks.redhatReleaseXY))==0) clienttasks.yumDoPackageFromRepo_("update", testPackage, null, "--disablerepo=beaker-*"); else	// do not assert yum transaction when newerRelease is equal to the prior minor release of the current test cycle because there is not enough content yet to update - we'll see:  No packages marked for update
 		clienttasks.yumUpdatePackageFromRepo(testPackage, null, "--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
 		// tail -f /var/log/rhsm/rhsm.log
 		//	2014-05-16 12:09:23,974 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
@@ -983,7 +984,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
-		// Step 0: remove the test package (choose a RHEL package that changes often)
+		// Step 0: remove the test package (choose a RHEL package that changes on each release - Release_Notes is a good choice)
 		// https://errata.devel.redhat.com/package/show/zsh
 		//	RHEL-5.8.0 		zsh-4.2.6-6.el5
 		//	RHEL-5.10.0 	zsh-4.2.6-9.el5
@@ -1006,8 +1007,9 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		else if (clienttasks.redhatReleaseX.equals("7") && !clienttasks.redhatReleaseXY.equals("7.0") && !clienttasks.redhatReleaseXY.equals("7.1")) {	// Note: this test depends on an available Release level of 7.0 and 7.1 in the release listing file which will not be available until the rhel 7.2 test cycle; skipping until we test rhel 7.2
 			if (!clienttasks.arch.equals("ppc64le") && !clienttasks.arch.equals("aarch64"))	// ppc64le and aarch64 did not exist on 7.0 nor 7.1; exclude this row on these arches
-			ll.add(Arrays.asList(new Object[]{null,	"crash"/* wirehark FIXME choose a simple package that has been updated between each release 7.0 to 7.1 to 7.2*/ ,	"7.0",		"7.0",	"7.1"}));
-			//ll.add(Arrays.asList(new Object[]{null,	"wirehark",	"7.0 Beta",	"7.0",	"7.1"}));	// There is no 7.0 Beta product cert id 69 that can be updated.  The 7.0 Beta product cert is product id 226 Everything
+			ll.add(Arrays.asList(new Object[]{null,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR" ,	"7.0",		"7.0",	"7.1"}));
+			//ll.add(Arrays.asList(new Object[]{null,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.0 Beta",	"7.0",	"7.1"}));	// There is no 7.0 Beta product cert id 69 that can be updated.  The 7.0 Beta product cert is product id 226 Everything
+			//TODO UNCOMMENT ON RHEL7.3 TESTING ll.add(Arrays.asList(new Object[]{null,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.1 Beta",	"7.1",	"7.2"}));
 		}
 		else if (Integer.valueOf(clienttasks.redhatReleaseX)>7) {
 			ll.add(Arrays.asList(new Object[]{null,	"FIXME: Unhandled Release",	"1.0 Beta",	"1.0",	"1.1"}));
