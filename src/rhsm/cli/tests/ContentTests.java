@@ -998,7 +998,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Verify that all there is at least one available RHEL subscription and that yum content is available for the installed RHEL product cert",
-			groups={"AcceptanceTests","Tier1Tests"/*,blockedByBug-1156638"*/},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1156638"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyRhelSubscriptionContentIsAvailable_Test() throws JSONException, Exception {
