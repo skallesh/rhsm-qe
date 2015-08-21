@@ -1107,7 +1107,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageInstalled(pkg)) clienttasks.yumRemovePackage(pkg);
 		
 		// stop the rsyslog service
-		RemoteFileTasks.runCommandAndAssert(client,"service rsyslog stop",Integer.valueOf(0),"^Shutting down system logger: *\\[  OK  \\]$",null);	
+		if (Integer.valueOf(clienttasks.redhatReleaseX) >= 7) {
+			RemoteFileTasks.runCommandAndAssert(client,"systemctl stop rsyslog.service",Integer.valueOf(0),"","");	
+		} else {
+			RemoteFileTasks.runCommandAndAssert(client,"service rsyslog stop",Integer.valueOf(0),"^Shutting down system logger: *\\[  OK  \\]$",null);	
+		}
 		
 		// yum install the package
 		//  Failure From Bug 1211557 - subscription-manager causes failure of yum 
