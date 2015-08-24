@@ -67,7 +67,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *  product 150 is at
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree;f=product_ids/rhev-3.0;hb=HEAD
  *
- *	Connecting to a Satellite (instead of rhn hosted
+ *	Connecting to a Satellite (instead of rhn hosted)
  *	1. Set automation parameters:
  *		sm.rhn.hostname : https://sat-56-server.usersys.redhat.com
  *		sm.rhn.username : admin
@@ -79,6 +79,19 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *      wget --no-verbose --no-check-certificate --output-document=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com https://sat-56-server.usersys.redhat.com/pub/RHN-ORG-TRUSTED-SSL-CERT
  *  4. Update the /etc/sysconfig/rhn/up2date with
  *      sslCACert=RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com
+ *      
+ *      
+ *  When rhnreg_ks fails with: All available subscriptions for the requested channel have been exhausted.
+ *  
+ *  Getting more RHN subscriptions:
+ *  1. Log into https://access.redhat.com as qa@redhat.com
+ *  2. Navigate to Subscription Management / Subscription Management Applications / Satellite / rhsm-sat5
+ *  3. Attach more subscriptions (Red Hat Employee Subscription)
+ *  4. click Download Satellite Certificate and scp the downloaded rhsm-sat5.xml file to the rhsm-sat5.usersys.redhat.com server
+ *  5. [root@rhsm-sat5 ~]# rhn-satellite-activate --rhn-cert rhsm-sat5.xml
+ *  6. to see the new entitlements, open https://rhsm-sat5.usersys.redhat.com/rhn/channels/software/Entitlements.do
+ *     search for the Channel Entitlement by the name of the channel (e.g. Red Hat Enterprise Linux Server (v. 7))
+ *     see the Regular Available and Available Flex Guests to get a count
  */
 @Test(groups={"MigrationTests","Tier3Tests"})
 public class MigrationTests extends SubscriptionManagerCLITestScript {
