@@ -6,7 +6,8 @@ from xmlrpclib import Server
 from optparse import OptionParser
 from pprint import pprint
 
-parser = OptionParser()
+usage = "Usage: %prog [options] <IDs>"
+parser = OptionParser(usage=usage)
 parser.add_option("-u", "--username", dest="username", help="Username")
 parser.add_option("-p", "--password", dest="password", help="Password")
 parser.add_option("-s", "--serverurl", dest="serverurl", help="URL of Satellite Server", default="http://rhsm-sat5.usersys.redhat.com")
