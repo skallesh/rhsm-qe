@@ -10,7 +10,7 @@ usage = "Usage: %prog [options] <IDs>"
 parser = OptionParser(usage=usage)
 parser.add_option("-u", "--username", dest="username", help="Username")
 parser.add_option("-p", "--password", dest="password", help="Password")
-parser.add_option("-s", "--serverurl", dest="serverurl", help="URL of Satellite Server", default="http://rhsm-sat5.usersys.redhat.com/rpc/api")
+parser.add_option("-s", "--serverurl", dest="serverurl", help="URL of Satellite Server", default="http://rhsm-sat5.usersys.redhat.com")
 parser.add_option("-n", "--delete-by-name", dest="name", action="store_true", default=False, help="Delete systems by name instead of ID")
 parser.add_option("-d", "--dry-run", dest='dryrun', action="store_true", default=False, help="Dry run; doesn't actually delete anything")
 
