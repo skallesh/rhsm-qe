@@ -52,7 +52,7 @@ psystems = [x for x in systems if x['id'] in system_ids]
 pprint(psystems)
 
 if not options.dryrun:
-    client.auth.deleteSystems(sessionKey, system_ids)
+    client.system.deleteSystems(sessionKey, system_ids)
 
 client.auth.logout(sessionKey)
 
