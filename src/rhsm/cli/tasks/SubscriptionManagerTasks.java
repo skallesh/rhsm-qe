@@ -7390,13 +7390,18 @@ if (false) {
 	 * @return SSHCommandResult containing stdout stderr and exitCode
 	 */
 	public SSHCommandResult registerToRhnClassic_(String rhnUsername, String rhnPassword, String rhnHostname) {
-		String serverUrl = rhnHostname+"/XMLRPC"; if (!rhnHostname.startsWith("http")) serverUrl = "https://xmlrpc."+serverUrl;
+		String command;
 		String profileName = "rhsm-automation."+hostname;
 		
+		// avoid creating a duplicate registration and consequently exhausting orphaned entitlements
+		// delete all existing rhn registrations under this profileName
+		deleteRhnSystemsRegisteredByName(rhnUsername, rhnPassword, rhnHostname, profileName);
+
 		// register to RHN Classic
 		// [root@jsefler-onprem-5server ~]# rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
 		//	ERROR: refreshing remote package list for System Profile
-		String command = String.format("rhnreg_ks --serverUrl=%s --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", serverUrl, rhnUsername, rhnPassword, profileName);
+		String serverUrl = rhnHostname+"/XMLRPC"; if (!rhnHostname.startsWith("http")) serverUrl = "https://xmlrpc."+serverUrl;
+		command = String.format("rhnreg_ks --serverUrl=%s --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", serverUrl, rhnUsername, rhnPassword, profileName);
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
@@ -7531,6 +7536,14 @@ if (false) {
 		String command = String.format("rhn-is-registered.py --username=%s --password=%s --serverurl=%s  %s", rhnUsername, rhnPassword, serverUrl, systemId);
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
 		return Boolean.valueOf(result.getStdout().trim());
+	}
+	
+	public void deleteRhnSystemsRegisteredByName(String rhnUsername, String rhnPassword,String rhnHostname, String systemName) {
+		
+		String serverUrl = rhnHostname; if (!serverUrl.startsWith("http")) serverUrl="https://"+serverUrl;
+		String command = String.format("rhn-delete-systems.py --username=%s --password=%s --serverurl=%s --delete-by-name %s", rhnUsername, rhnPassword, serverUrl, systemName);
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		//return (result.getExitCode());
 	}
 	
 	protected boolean poolsNoLongerAvailable(ArrayList<SubscriptionPool> beforeSubscription, ArrayList<SubscriptionPool> afterSubscription) {

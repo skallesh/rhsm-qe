@@ -2221,6 +2221,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
+	@AfterClass(groups={"setup"},alwaysRun=true)
+	public void deleteRhnSystemsRegisteredByNameAfterClass() {
+		if (clienttasks!=null) {
+			clienttasks.deleteRhnSystemsRegisteredByName(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, "rhsm-automation."+clienttasks.hostname);
+			clienttasks.removeRhnSystemIdFile();
+		}
+	}
+	
 	
 	@BeforeClass(groups={"setup"}, dependsOnMethods={"setupBeforeClass"})
 	public void buildMapsBeforeClass() throws UnsupportedEncodingException, IOException {
