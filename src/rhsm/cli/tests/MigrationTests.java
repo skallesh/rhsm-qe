@@ -2108,7 +2108,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		File rhnIsRegisteredScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-is-registered.py");
 		if (!rhnIsRegisteredScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnIsRegisteredScriptFile);
 		RemoteFileTasks.putFile(client.getConnection(), rhnIsRegisteredScriptFile.toString(), "/usr/local/bin/", "0755");
-
+		
+		// copy the rhn-delete-systems.py script to the client
+		File rhnDeleteSystemsScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-delete-systems.py");
+		if (!rhnDeleteSystemsScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnDeleteSystemsScriptFile);
+		RemoteFileTasks.putFile(client.getConnection(), rhnDeleteSystemsScriptFile.toString(), "/usr/local/bin/", "0755");
+		
 		// copy the rhn-migrate-classic-to-rhsm.tcl script to the client
 		File expectScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-migrate-classic-to-rhsm.tcl");
 		if (!expectScriptFile.exists()) Assert.fail("Failed to find expected script: "+expectScriptFile);
