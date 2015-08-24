@@ -82,9 +82,8 @@ channel_trees['rhel-x86_64-workstation-7'] = [
 
 from xmlrpclib import Server
 #s = Server('https://sat-56-server.usersys.redhat.com/rpc/api')
-s = Server('https://rhsm-sat5-server.usersys.redhat.com/rpc/api')
+s = Server('https://rhsm-sat5.usersys.redhat.com/rpc/api')
 #token = s.auth.login('admin','nimda')
-token = s.auth.login('root', 'dog8code')
 
 def create_channel(channel, parent = ''):
     print "Creating channel %s" % channel
