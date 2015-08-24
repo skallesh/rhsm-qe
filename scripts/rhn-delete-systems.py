@@ -10,6 +10,8 @@ parser = OptionParser()
 parser.add_option("-u", "--username", dest="username", help="Username")
 parser.add_option("-p", "--password", dest="password", help="Password")
 parser.add_option("-s", "--serverurl", dest="serverurl", help="URL of Satellite Server", default="http://rhsm-sat5.usersys.redhat.com")
+parser.add_option("-n", "--delete-by-name", dest="name", action="store_true", default=False, help="Delete systems by name instead of ID")
+parser.add_option("-d", "--dry-run", dest='dryrun', action="store_true", default=False, help="Dry run; doesn't actually delete anything")
 
 (options, args) = parser.parse_args()
 
@@ -38,9 +40,18 @@ while (sessionKey == None):
         time.sleep(10)
 
 systems = client.system.listSystems(sessionKey)
-system_ids = [x['id'] for x in systems if str(x['id']) in args]
+
+if not options.name:
+    system_ids = [x['id'] for x in systems if str(x['id']) in args]
+else:
+    system_ids = [x['id'] for x in systems if x['name'] in args]
+
 print "Deleting the following systems:"
-pprint(system_ids)
-client.auth.deleteSystems(sessionKey, system_ids)
+psystems = [x for x in systems if x['id'] in system_ids]
+pprint(psystems)
+
+if not options.dryrun:
+    client.auth.deleteSystems(sessionKey, system_ids)
+
 client.auth.logout(sessionKey)
 
