@@ -89,7 +89,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem with --email option (against a standalone candlepin server)",
-			groups={"blockedByBug-726791"},
+			groups={"blockedByBug-726791","blockedByBug-1248833"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RedeemWithEmail_Test() {
