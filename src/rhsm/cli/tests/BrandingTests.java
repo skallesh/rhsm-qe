@@ -559,8 +559,12 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		
 		// now install the engineering product certificates
 		for (String providedProductId : providedProductIds) {
-			JSONObject jsonProduct = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductId));
-			JSONObject jsonProductCert = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductId+"/certificate"));
+			resourcePath = "/products/"+providedProductId;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+			JSONObject jsonProduct = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
+			resourcePath = "/products/"+providedProductId+"/certificate";
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+			JSONObject jsonProductCert = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
 			String cert = jsonProductCert.getString("cert");
 			String key = jsonProductCert.getString("key");
 			String installedProductCertFilename = (/*jsonProduct.getString("name")*/"GenericProduct"+" "+jsonProduct.getString("id")+"_.pem").replaceAll(" ", "_");
