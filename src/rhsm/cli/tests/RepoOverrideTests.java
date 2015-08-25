@@ -173,7 +173,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-			Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: name, label", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+			Assert.assertMatch(result.getStderr().trim(), "Not allowed to override values for: (name, label|label, name)", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		} else {
 			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
 			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: name, label", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
@@ -184,7 +184,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-			Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: name, label, baseurl", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+			Assert.assertMatch(result.getStderr().trim(), "Not allowed to override values for: (name, label, baseurl|label, name, baseurl|name, baseurl, label|label, baseurl, name|baseurl, name, label|baseurl, label, name)", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		} else {
 			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
 			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: name, label, baseurl", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
