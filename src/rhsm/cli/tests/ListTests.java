@@ -175,6 +175,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
 
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+		Set <String> productCertIds = clienttasks.getCurrentProductIds();
 		String installedProductsAsString = clienttasks.listInstalledProducts().getStdout();
 		//List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		List <InstalledProduct> installedProducts = InstalledProduct.parse(installedProductsAsString);
@@ -185,8 +186,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			Assert.assertTrue(installedProductsAsString.contains(bannerTitle), "The list of installed products is entitled '"+bannerTitle+"'.");
 		}
 		
-		// assert the number of installed product matches the product certs installed
-		Assert.assertEquals(installedProducts.size(), productCerts.size(), "A single product is reported as installed for each unique product cert ID found in "+clienttasks.productCertDir+" and "+clienttasks.productCertDefaultDir);
+		// assert the number of installed product matches the unique product certs Ids installed
+		Assert.assertEquals(installedProducts.size(), productCertIds.size(), "A single product is reported as installed for each unique product cert ID found in "+clienttasks.productCertDir+" and "+clienttasks.productCertDefaultDir);
 
 		// assert that each of the installed ProductCerts are listed as InstalledProducts with status "Not Subscribed"
 		for (ProductCert productCert : productCerts) {
