@@ -255,7 +255,6 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(productSubscription, "Found a consumed product subscription to '"+pool.subscriptionName+"' after manually subscribing.");
 			Assert.assertEquals(productSubscription.quantityUsed,Integer.valueOf(poolInstanceMultiplier),"The attached quantity of instance based subscription '"+pool.subscriptionName+"' in the list of consumed product subscriptions.");
 			if (poolInstanceMultiplier>=expectedQuantityToAchieveCompliance) {	// compliant when true
-//				Assert.assertTrue(productSubscription.statusDetails.isEmpty(), "Indicated by an empty value, Status Details for consumed product subscription '"+productSubscription.productName+"' is compliant (Actual="+productSubscription.statusDetails+").");
 				List<String> expectedStatusDetails = new ArrayList<String>();	// empty
 				if (clienttasks.isPackageVersion("subscription-manager",">=", "1.13.13-1")) {	 // commit 252ec4520fb6272b00ae379703cd004f558aac63	// bug 1180400: "Status Details" are now populated on CLI
 					expectedStatusDetails = Arrays.asList(new String[]{"Subscription is current"});	// Bug 1180400 - Status datails is blank in list consumed output
@@ -317,7 +316,6 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 						float socketsCoveredByThisPool = prodSub.quantityUsed.floatValue()*thisPoolSockets.floatValue()/thisPoolInstanceMultiplier.floatValue();
 						log.info("Attached product subscription '"+prodSub.productName+"' with quantity '"+prodSub.quantityUsed+"' contributes to '"+socketsCoveredByThisPool+"' cpu_socket(s) of coverage.");
 						totalSocketsCovered+=socketsCoveredByThisPool;
-//						Assert.assertTrue(prodSub.statusDetails.isEmpty(),"Status Details of auto-attached subscription '"+prodSub.productName+"' covering '"+thisPoolSockets+"' sockets with instance_multiplier '"+thisPoolInstanceMultiplier+"' expected to contribute to the full compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be empty.  Actual="+prodSub.statusDetails);
 						List<String> expectedStatusDetails = new ArrayList<String>();	// empty
 						if (clienttasks.isPackageVersion("subscription-manager",">=", "1.13.13-1")) {	 // commit 252ec4520fb6272b00ae379703cd004f558aac63	// bug 1180400: "Status Details" are now populated on CLI
 							expectedStatusDetails = Arrays.asList(new String[]{"Subscription is current"});	// Bug 1180400 - Status datails is blank in list consumed output
@@ -358,13 +356,6 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				}
 				
 				// now fake this consumer's facts and guestIds to make it think it is a guest of itself (a trick for testing)
-//DELETEME
-//				String systemUuid = clienttasks.getCurrentConsumerId();
-//				factsMap.put("virt.uuid",systemUuid);
-//				clienttasks.createFactsFileWithOverridingValues(factsMap);
-//				clienttasks.facts(null,true,null,null,null);
-//				//[root@jsefler-5 ~]# curl -k -u testuser1:password --request PUT --data '{"guestIds":["e6f55b91-aae1-44d6-f0db-c8f25ec73ef5","abcd"]}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/d2ee0c6e-a57d-4e37-8be3-228a44ca2739 
-//				JSONObject jsonConsumer = CandlepinTasks.setGuestIdsForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, systemUuid,Arrays.asList(new String[]{"abc",systemUuid,"def"}));
 				factsMap.put("virt.uuid","fake-virt-uuid");
 				clienttasks.createFactsFileWithOverridingValues(factsMap);
 				clienttasks.facts(null,true,null,null,null);
@@ -383,6 +374,14 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				clienttasks.subscribe_(false,null,subSubscriptionPool.poolId,null,null,"1",null,null,null,null,null, null);
 				ProductSubscription subProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", subSubscriptionPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
 				// assert Bug 1000444 - Instance based subscription on the guest gets merged with other subscription when a future instance based subscription is added on the host
+				// TEMPORARY WORKAROUND
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1256926"; // Bug 1256926 - Instance Based pool appears to be providing extra products than expected
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("while bug '"+bugId+"' is open, skipping assertion: The list of provided products from the consumed subpool '"+subProductSubscription.poolId+"' "+subProductSubscription.provides+" should be the same as the provided products from the consumed hostpool '"+productSubscription.poolId+"' "+productSubscription.provides+".");
+				} else
+				// END OF WORKAROUND
 				Assert.assertTrue(subProductSubscription.provides.containsAll(productSubscription.provides)&&productSubscription.provides.containsAll(subProductSubscription.provides), "The list of provided products from the consumed subpool '"+subProductSubscription.poolId+"' "+subProductSubscription.provides+" should be the same as the provided products from the consumed hostpool '"+productSubscription.poolId+"' "+productSubscription.provides+".");
 				clienttasks.unsubscribe_(false, subProductSubscription.serialNumber, null, null, null);
 			}
