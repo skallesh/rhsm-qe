@@ -81,7 +81,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"debugTest","AcceptanceTests","Tier1Tests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -855,7 +855,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all of the classic RHN Channels available to a classically registered consumer are accounted for in the in the channel-cert-mapping.txt or is a known exception",
-			groups={"debugTest","AcceptanceTests","Tier1Tests","blockedByBug-1080072"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="getRhnClassicBaseAndAvailableChildChannelsData",
 			enabled=true)
