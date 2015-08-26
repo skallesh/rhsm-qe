@@ -40,6 +40,8 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import bsh.Remote;
+
 /**
  * @author jsefler
  *
@@ -737,6 +739,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"Before attempting to subscribe to any future subscription, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
 		
 		// incrementally subscribe to each future subscription pool and assert the corresponding installed product's status
+		Set<String> productIdsProvidedByFutureSubscriptionsThatFailedToAttach = new HashSet<String>();
 		for (SubscriptionPool futureSystemSubscriptionPool : futureSystemSubscriptionPools) {
 			
 			// subscribe without asserting results (not necessary)
@@ -746,10 +749,13 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			// WARNING: CandlepinTasks could not getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId '2c90af8c49a0ab3d0149a0af28d409f8'. This pool has probably not been subscribed to by authenticator 'testuser1'. (rhsm.cli.tasks.CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId)
 			// WARNING: Pool is restricted to unmapped virtual guests: '2c90af964cba07a6014cba0b1ab80e24'
 			if (entitlementCertFile==null) {
-				log.warning("Encountered a problem trying to attach future subscription '"+futureSystemSubscriptionPool.subscriptionName+"'.  Look for two preceeding WARNING messages.  Skipping assertion of installed product status.");
+				log.warning("Encountered a problem trying to attach future subscription '"+futureSystemSubscriptionPool.subscriptionName+"' start date '"+SubscriptionPool.formatDateString(futureSystemSubscriptionPool.startDate)+"'.  Look for two preceeding WARNING messages.  Skipping assertion of installed product status.");
+				// FIXME need to account for this problem in the assertions that follow this block especially if this failed futureSystemSubscriptionPool is the only one that provides one of the installed products.
+				// 8/26/2015 ATTEMPTING TO FIXME WITH productIdsProvidedByFutureSubscriptionsThatFailedToAttach
+				productIdsProvidedByFutureSubscriptionsThatFailedToAttach.addAll(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, futureSystemSubscriptionPool.poolId));
 				continue;
-				// FIXME need to account for this in the assertions that follow this block especially if this failed futureSystemSubscriptionPool is the only one that provides one of the installed products.
 			}
+			
 			
 			// assert that the Status of the installed product is "Future Subscription"
 			List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -763,9 +769,15 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 		// simply assert that we actually did subscribe every installed product to a future subscription pool
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-			Assert.assertEquals(installedProduct.status, "Future Subscription", "Status of every installed product should be a Future Subscription after subscribing all installed products to a future pool.  This Installed Product: "+installedProduct);
-			// If this fails, search the log for a WARNING from the FIXME above
+			// FIXME If this Assert fails, search the log for a WARNING from the FIXME above
 			// If this can't be fixed, then instead of failing here, we should probably remove the product cert so that it does not cause a false pass on the next assertion... finally assert that the overall system is non-compliant
+			// 8/26/2015 ATTEMPTING TO FIXME AS SUGGESTED IN THE COMMENT LINE ABOVE
+			if (!installedProduct.status.equals("Future Subscription") && productIdsProvidedByFutureSubscriptionsThatFailedToAttach.contains(installedProduct.productId)) {
+				log.warning("Employing a workaround by removing installed product '"+installedProduct.productName+"' since we encountered a problem when attempting to attach a future subscription that provided for this installed product.");
+				client.runCommandAndWait("rm -f "+ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",installedProduct.productId, currentProductCerts).file);
+				continue;
+			}
+			Assert.assertEquals(installedProduct.status, "Future Subscription", "Status of every installed product should be a Future Subscription after subscribing all installed products to a future pool.  This Installed Product: "+installedProduct);
 		}
 		
 		// finally assert that the overall system is non-compliant
