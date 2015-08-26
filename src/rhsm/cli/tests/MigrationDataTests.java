@@ -81,7 +81,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"debugTest","AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -855,7 +855,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all of the classic RHN Channels available to a classically registered consumer are accounted for in the in the channel-cert-mapping.txt or is a known exception",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072"},
+			groups={"debugTest","AcceptanceTests","Tier1Tests","blockedByBug-1080072"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="getRhnClassicBaseAndAvailableChildChannelsData",
 			enabled=true)
@@ -2509,6 +2509,25 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1232474");
 			}
 			
+			if (//https://bugzilla.redhat.com/show_bug.cgi?id=1257212#c1
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-ha-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-ha-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-optional-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-optional-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-rs-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-rs-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-supplementary-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-supplementary-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-v2vwin-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-v2vwin-7-beta") ||
+				rhnAvailableChildChannel.equals("") ){
+				// Bug 1257212 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
+				bugIds.add("1257212");
+			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
