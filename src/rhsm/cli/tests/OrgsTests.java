@@ -37,7 +37,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: run the orgs module with valid user credentials and verify the expected organizations are listed",
-			groups={"blockedByBug-719739","blockedByBug-1254353"},
+			groups={"blockedByBug-719739","blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
 			dataProvider="getCredentialsForOrgsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -65,7 +65,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: run the orgs module with invalid user credentials",
-			groups={"blockedByBug-1254353"},
+			groups={"blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
 			dataProvider="getInvalidCredentialsForOrgsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -215,7 +215,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 	}
 	@Test(	description="subscription-manager: orgs with --insecure",
-			groups={"OrgsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1254353"},
+			groups={"OrgsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void OrgsWithInsecure_Test() {

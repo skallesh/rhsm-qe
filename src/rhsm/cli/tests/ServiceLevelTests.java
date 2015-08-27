@@ -252,7 +252,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --list (with invalid credentials)",
-			groups={"blockedByBug-1256960"},
+			groups={"blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelListWithInvalidCredentials_Test() {
@@ -280,7 +280,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --list (with invalid org)",
-			groups={"blockedByBug-796468","blockedByBug-815479","blockedByBug-1256960"},
+			groups={"blockedByBug-796468","blockedByBug-815479","blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=165509)
 	public void ServiceLevelListWithInvalidOrg_Test() {
@@ -1028,7 +1028,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 	}
 	@Test(	description="subscription-manager: service-level list with --insecure",
-			groups={"ServiceLevelListWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1256960"},
+			groups={"ServiceLevelListWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelListWithInsecure_Test() {
