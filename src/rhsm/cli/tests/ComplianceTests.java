@@ -749,7 +749,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			// WARNING: CandlepinTasks could not getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId '2c90af8c49a0ab3d0149a0af28d409f8'. This pool has probably not been subscribed to by authenticator 'testuser1'. (rhsm.cli.tasks.CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId)
 			// WARNING: Pool is restricted to unmapped virtual guests: '2c90af964cba07a6014cba0b1ab80e24'
 			if (entitlementCertFile==null) {
-				log.warning("Encountered a problem trying to attach future subscription '"+futureSystemSubscriptionPool.subscriptionName+"' start date '"+SubscriptionPool.formatDateString(futureSystemSubscriptionPool.startDate)+"'.  Look for two preceeding WARNING messages.  Skipping assertion of installed product status.");
+				log.warning("Encountered a problem trying to attach future subscription '"+futureSystemSubscriptionPool.subscriptionName+"'.  Look for two preceeding WARNING messages.  Skipping assertion of installed product status.");
 				// FIXME need to account for this problem in the assertions that follow this block especially if this failed futureSystemSubscriptionPool is the only one that provides one of the installed products.
 				// 8/26/2015 ATTEMPTING TO FIXME WITH productIdsProvidedByFutureSubscriptionsThatFailedToAttach
 				productIdsProvidedByFutureSubscriptionsThatFailedToAttach.addAll(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, futureSystemSubscriptionPool.poolId));
