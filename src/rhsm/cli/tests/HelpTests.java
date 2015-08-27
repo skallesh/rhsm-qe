@@ -184,11 +184,40 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="subscription-manager-gui --help with no X-Display",
-			groups={"blockedByBug-976689"/*,"blockedByBug-881095" ALSO INCLUDED IN ExpectedCommandLineOptionsData */},
+			groups={"blockedByBug-976689","blockedByBug-881095"/* ALSO INCLUDED IN ExpectedCommandLineOptionsData */},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void CommandLineHelpForGUIWithoutDisplay_Test() {
-		RemoteFileTasks.runCommandAndAssert(client,"subscription-manager-gui --help ",1,"Unable to open a display","");
+//DELETEME		RemoteFileTasks.runCommandAndAssert(client,"subscription-manager-gui --help ",1,"Unable to open a display","");
+		
+		SSHCommandResult result = client.runCommandAndWait("subscription-manager-gui --help");
+		
+		// tolerate both acceptable behaviors
+
+		//	[jsefler@jseflerT5400 ~]$ ssh root@jsefler-6.usersys.redhat.com subscription-manager-gui --help
+		//	Unable to open a display
+		//	[jsefler@jseflerT5400 ~]$ echo $?
+		//	1
+		if (Integer.valueOf(1).equals(result.getExitCode())) {
+			Assert.assertEquals(result.getStdout(), "Unable to open a display","Stdout from calling subscription-manager-gui --help with no X-Display");
+			Assert.assertEquals(result.getStderr(), "","Stderr from calling subscription-manager-gui --help with no X-Display");
+		}
+
+		//	[jsefler@jseflerT5400 ~]$ ssh root@jsefler-7.usersys.redhat.com subscription-manager-gui --help
+		//	Usage: subscription-manager-gui [OPTIONS]
+		//
+		//	Options:
+		//	  -h, --help  show this help message and exit
+		//	  --register  launches the registration dialog on startup
+		//	[jsefler@jseflerT5400 ~]$ echo $?
+		//	0
+		else {	// started working in RHEL7.2 when gui was updated for gtk3
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from calling subscription-manager-gui --help with no X-Display");
+			Assert.assertTrue(!result.getStdout().toLowerCase().contains("traceback"), "Stdout from calling subscription-manager-gui --help with no X-Display appears to display its usage does not report a traceback.");
+			Assert.assertTrue(!result.getStderr().toLowerCase().contains("traceback"), "Stderr from calling subscription-manager-gui --help with no X-Display appears to display its usage does not report a traceback.");
+			Assert.assertTrue(result.getStdout().startsWith("Usage: subscription-manager-gui"), "Stdout from calling subscription-manager-gui --help with no X-Display appears to display its usage.");
+			Assert.assertEquals(result.getStderr(), "","Stderr from calling subscription-manager-gui --help with no X-Display");
+		}
 	}
 	
 	
