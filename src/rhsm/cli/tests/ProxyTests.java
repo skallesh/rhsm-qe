@@ -1333,13 +1333,13 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// repos --list --proxy=www.redhat.com
 		String command = clienttasks.command+" repos --list --proxy=www.redhat.com";
-		Long timeoutMS = Long.valueOf(3/*min*/*60*1000);	// do not wait any longer than this many milliseconds
+		Long timeoutMS = Long.valueOf(5/*min*/*60*1000);	// do not wait any longer than this many milliseconds
 		SSHCommandResult result= client.runCommandAndWait(command, timeoutMS);
 		//	201503301409:07.031 - FINE: ssh root@jsefler-os6.usersys.redhat.com subscription-manager repos --list --proxy=www.redhat.com
 		//	201503301410:07.487 - FINE: Stdout: 
 		//	201503301410:07.487 - FINE: Stderr: Network error, unable to connect to server. Please see /var/log/rhsm/rhsm.log for more information.
 		//	201503301410:07.487 - FINE: ExitCode: 70
-		//            ^^ one minute timeout observed (but I have also seen this take 2m6.615s)
+		//            ^^ one minute timeout observed (but I have also seen this take 4m16.286s)
 		
 		// assert results
 		Integer expectedExitCode = new Integer(255);
