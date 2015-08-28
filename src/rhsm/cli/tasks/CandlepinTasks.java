@@ -827,7 +827,7 @@ schema generation failed
 		String jobDetailAsString = putResourceUsingRESTfulAPI(user, password, url, "/owners/"+owner+"/subscriptions");
 		if (jobDetailAsString==null) {	// indicative of candlepin version > 2.0.0-1 where a PUT on /owners/OWNER-KEY/subscriptions is now a no-op
 			// create a dummy jobDetail
-			jobDetailAsString = "{\"state\" : \"FINISHED\",\"result\" : \"Pools no longer need to be refreshed in candlepin-2.0.  This is a fake jobDetail.\"}";
+			jobDetailAsString = "{\"state\" : \"FINISHED\",\"result\" : \"Attempts to refresh pools is a no-op in candlepin-2.0. Refreshing pools is no longer necessary. This is a fake jobDetail.\"}";
 		}
 		return new JSONObject(jobDetailAsString);
 	}
