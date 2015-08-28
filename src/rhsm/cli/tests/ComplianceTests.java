@@ -219,10 +219,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+//TODO		// The assertion below should probably be updated to tolerate entitlements granted from pools with null/"" support_level regardless of the specified service level
+//			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled (reported by Christine Fouant)
+//				// TODO placeholder
+//			}
+if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productSubscription.serviceLevel.isEmpty()) log.warning("This testcase has an open TODO to tolerate Bug 1223560.");
 			//CASE SENSITIVE ASSERTION Assert.assertEquals(productSubscription.serviceLevel, servicelevel, "When a system has been registered with autosubscribe specifying a common service level, then all consumed product subscriptions must provide that service level.");
 			Assert.assertTrue(servicelevel.equalsIgnoreCase(productSubscription.serviceLevel),
 				"When a system has been registered with autosubscribe specifying a common service level '"+servicelevel+"', then this auto consumed product subscription ("+productSubscription+") must provide case-insensitive match to the requested service level.");
-
 		}
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), servicelevel,
 				"When a system has been registered with autosubscribe specifying a common service level, then the consumer's service level prefernce should be set to that value.");
