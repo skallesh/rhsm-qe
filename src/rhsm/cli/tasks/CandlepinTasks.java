@@ -659,7 +659,7 @@ schema generation failed
 		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+data+headers+put.getURI());
 
 		String response = getHTTPResponseAsString(client, put, authenticator, password);
-		if (response!=null) {
+		if (response!=null && response.startsWith("{")) {
 			JSONObject responseAsJSONObect = new JSONObject(response);
 			if (responseAsJSONObect.has("displayMessage")) {				
 				log.warning("Attempt to PUT resource '"+path+"' failed: "+responseAsJSONObect.getString("displayMessage"));
