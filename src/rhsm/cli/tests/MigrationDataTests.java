@@ -2524,6 +2524,37 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-supplementary-7-beta") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-v2vwin-7-beta-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-v2vwin-7-beta") ||
+				//https://bugzilla.redhat.com/show_bug.cgi?id=1257212#c2
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-hts-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-optional-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-optional-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-supplementary-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-supplementary-7-beta-debuginfo") ||
+				//https://bugzilla.redhat.com/show_bug.cgi?id=1257212#c3
+				rhnAvailableChildChannel.equals("rhel-x86_64-client-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-client-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-client-optional-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-client-optional-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-client-supplementary-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-client-supplementary-7-beta-debuginfo") ||
+				//https://bugzilla.redhat.com/show_bug.cgi?id=1257212#c4
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-optional-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-optional-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-supplementary-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-supplementary-7-beta-debuginfo") ||
+				//https://bugzilla.redhat.com/show_bug.cgi?id=1257212#c5
+				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-optional-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-optional-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-supplementary-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-supplementary-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("") ||
 				rhnAvailableChildChannel.equals("") ){
 				// Bug 1257212 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
 				bugIds.add("1257212");
