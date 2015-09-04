@@ -1021,6 +1021,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.endsWith("-hts-7-beta") ||
+			classicRhnChannel.endsWith("-hts-7-beta-debuginfo") ||
+			classicRhnChannel.endsWith("-v2vwin-7-beta") ||
+		    classicRhnChannel.endsWith("-v2vwin-7-beta-debuginfo")) {
+			// Bug 1257212 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
+			log.warning("(anthomas 09/04/15) Any hts-7-beta and v2v-7-beta channels will be ignored as they do not have any beta content. Please ignore in the future.  https://bugzilla.redhat.com/show_bug.cgi?id=1257212#c6");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
 		/* commented out in favor of bug https://bugzilla.redhat.com/show_bug.cgi?id=1105656#c5
 		if (classicRhnChannel.startsWith("rhel-x86_64-server-productivity-5-beta")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
 			if (!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel)) {
@@ -2554,7 +2563,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-optional-7-beta-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-supplementary-7-beta") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-supplementary-7-beta-debuginfo") ||
-				rhnAvailableChildChannel.equals("") ||
+				//https://bugzilla.redhat.com/show_bug.cgi?id=1257212#c7
+				rhnAvailableChildChannel.equals("rhel-s390x-server-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-hts-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-optional-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-optional-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-supplementary-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-supplementary-7-beta-debuginfo") ||
 				rhnAvailableChildChannel.equals("") ){
 				// Bug 1257212 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
 				bugIds.add("1257212");
