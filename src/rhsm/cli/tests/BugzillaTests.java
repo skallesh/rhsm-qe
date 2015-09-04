@@ -1558,7 +1558,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, modifiedProductIds).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/content", requestBody);	
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
-		Assert.assertContainsNoMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
+		String contentWithIdMessage = "Content with id "+contentId+" could not be found.";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) contentWithIdMessage = "Content with ID \""+contentId+"\" could not be found.";
+		Assert.assertContainsNoMatch(jsonActivationKey.toString(), contentWithIdMessage);
 		String resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
@@ -1567,7 +1569,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		sleep(2*60*1000);
 		 */
 		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
-		Assert.assertEquals(jsonActivationKey.getString("displayMessage"), "Content with id "+contentId+" could not be found.");
+		Assert.assertEquals(jsonActivationKey.getString("displayMessage"), contentWithIdMessage);
 		requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, modifiedProductIds).toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/content", requestBody);
 		resourcePath = "/products/fooproduct";
@@ -1585,9 +1587,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 * The prior call to delete content 99999 should always pass even when it has been added to a product.
 		 * This was fixed by https://bugzilla.redhat.com/show_bug.cgi?id=834125#c17
 		 * Changing the assertion to Assert.assertContainsMatch
-		Assert.assertContainsNoMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
+		Assert.assertContainsNoMatch(jsonActivationKey.toString(), contentWithIdMessage);
 		 */
-		Assert.assertContainsMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
+		Assert.assertContainsMatch(jsonActivationKey.toString(), contentWithIdMessage);
 		jsonProduct = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/" + "fooproduct");
 		Assert.assertContainsNoMatch(jsonProduct, contentId, "After deleting content set '"+contentId+"', it was removed from the product "+"fooproduct");
 		resourcePath = "/products/fooproduct";
