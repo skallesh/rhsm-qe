@@ -4631,5 +4631,29 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
 	}
 	 */
-
+	
+	
+	
+	// THE FOLLOWING BEFORE AND AFTER CLASS METHODS ARE USED TO ELIMINATE
+	// THE INFLUENCE THAT /etc/pki/product-default/ CERTS HAVE ON THESE TESTS
+	// SINCE THESE TESTS PRE-DATE THE INTRODUCTION OF DEFAULT PRODUCT CERTS.
+	@BeforeClass(groups = "setup")
+	public void backupProductDefaultCerts() {
+		log.info("This test class was developed before the addition of /etc/pki/product-default/ certs (Bug 1123029).  Therefore, let's back them up before running this test class.");
+		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
+			if (productCertFile.getPath().startsWith(clienttasks.productCertDefaultDir)) {
+				client.runCommandAndWait("mv "+productCertFile+" "+productCertFile+".bak");
+			}
+		}
+	}
+	@AfterClass(groups = "setup")
+	public void restoreProductDefaultCerts() {
+		client.runCommandAndWait("ls -1 "+clienttasks.productCertDefaultDir+"/*.bak");
+		String lsBakFiles = client.getStdout().trim();
+		if (!lsBakFiles.isEmpty()) {
+			for (String lsFile : Arrays.asList(lsBakFiles.split("\n"))) {
+				client.runCommandAndWait("mv "+lsFile+" "+lsFile.replaceFirst("\\.bak$",""));
+			}
+		}
+	}
 }

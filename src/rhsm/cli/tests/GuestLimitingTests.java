@@ -261,7 +261,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 	
 	// THE FOLLOWING BEFORE AND AFTER CLASS METHODS ARE USED TO ELIMINATE
 	// THE INFLUENCE THAT /etc/pki/product-default/ CERTS HAVE ON THESE TESTS
-	// SINCE THSE TESTS PRE-DATE THE INTRODUCTION OF DEFAULT PRODUCT CERTS.
+	// SINCE THESE TESTS PRE-DATE THE INTRODUCTION OF DEFAULT PRODUCT CERTS.
 	@BeforeClass(groups = "setup")
 	public void backupProductDefaultCerts() {
 		log.info("This test class was developed before the addition of /etc/pki/product-default/ certs (Bug 1123029).  Therefore, let's back them up before running this test class.");
