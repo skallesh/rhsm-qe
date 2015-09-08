@@ -69,6 +69,17 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		}
 		// END OF WORKAROUND
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (sm_serverType.equals(CandlepinType.hosted)) {
+			String bugId = "1261193";	// Bug 1261193 - Datacenter subscriptions in stage candlepin-0.9.51.5-1 should create Temporary pools for their derived products
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this Virtual Data Center test against SKU '"+pool.productId+"' while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
+		
 		// assert that this virtual data center SKU is host_limited
 		Assert.assertTrue(CandlepinTasks.isPoolProductHostLimited(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId), "As a functional requirement for Virtual Data Center SKUs, asserting that the pool's productAttributes contains host_limited=true so that a subscription pool for derivedProductId '"+poolDerivedProductId+"' is available ONLY to mapped virtual guests.");
 		
