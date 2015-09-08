@@ -824,7 +824,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			log.warning("Could not find an entitlement to a RHEL subscription.");
 			return ll;
 		}
-		EntitlementCert rhelEntitlementCert = clienttasks.getEntitlementCertsProvidingProductCert(rhelProductCert).get(0);
+		//EntitlementCert rhelEntitlementCert = clienttasks.getEntitlementCertsProvidingProductCert(rhelProductCert).get(0);
+		EntitlementCert rhelEntitlementCert = rhelEntitlementCerts.get(0);
 		
 		// get the cacert file
 		File caCertFile = new File(clienttasks.getConfParameter("repo_ca_cert"));
@@ -872,6 +873,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			
 			if (release.equals("6.2")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
 			if (release.equals("6.4")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
+			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1261163"); 	//     Bug 1261163 -  uncertain of expected release listing on rhel72 arm system
+			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("ppc64le")) bugIds.add("1261171"); 	//     Bug 1261163 -  uncertain of expected release listing on rhel72 arm system
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
