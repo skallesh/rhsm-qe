@@ -29,7 +29,8 @@
                   :exclusions [org.testng/testng]]
                  [postgresql/postgresql "8.4-701.jdbc4"]
                  [slingshot "0.8.0"]
-                 [test_clj.testng "1.0.1-SNAPSHOT"]]
+                 [test_clj.testng "1.0.1-SNAPSHOT"]
+                 [org.clojure/tools.nrepl "0.2.10"]]
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
                      [lein-eclipse "1.0.0"]]
@@ -39,7 +40,9 @@
   :plugins [[lein2-eclipse "2.0.0"]]
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
-  :javac-options {:debug "on"})
+  :javac-options {:debug "on"}
+  ;:jvm-opts ["-Xdebug" "-Xrunjdwp:transport=dt_socket,address=13172,server=y,suspend=n"]
+  )
 
 (comment
   (do

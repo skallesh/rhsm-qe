@@ -3,12 +3,14 @@
         [rhsm.gui.tasks.tasks]
         rhsm.gui.tasks.tools)
   (:require [rhsm.gui.tasks.test-config :as config]
+            [clojure.tools.nrepl.server :refer [start-server stop-server]]
             [clojure.tools.logging :as log])
   (:import [org.testng.annotations BeforeSuite
             AfterSuite]
            org.testng.SkipException))
 
 ;(def user "testuser")
+(defonce server (atom nil))
 
 (defn run-and-assert
   "Wrapper around run-command that throws a SkipException if the command fails"
@@ -53,6 +55,7 @@
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
   (try
+    (reset! server (start-server :port 13172))
     (config/init)
     (assert-valid-testing-arch)
     (update-ldtpd (:ldtpd-source-url @config/config))
@@ -65,6 +68,7 @@
 
 (defn ^{AfterSuite {:groups ["setup"]}}
   killGUI [_]
+  (stop-server @server)
   (kill-app)
   (log/info "Contents of ldtpd.log:")
   (log/info (:stdout
