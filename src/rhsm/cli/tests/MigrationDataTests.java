@@ -72,7 +72,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"debugTest","AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -81,7 +81,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"debugTest","AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -727,7 +727,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productBaselineRhnChannel+"' to the same productId as dictated in the CDN Product Baseline.");
 	}
 	@Test(	description="Verify that all of the required RHN Channels in the product-certs.json file are accounted for in channel-cert-mapping.txt",
-			groups={"blockedByBug-1025338","blockedByBug-1080072"},
+			groups={"blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1241221"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnChannelFromProductCertsData",
 			enabled=true) // Starting in RHEL65, we are moving away from product-baseline.json and replacing it with product-certs.json
