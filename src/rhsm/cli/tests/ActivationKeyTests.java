@@ -1360,7 +1360,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key, add a service level (for an expired subscription) to it, and then register with the activation key",
-			groups={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			groups={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test","blockedByBug-1262435"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingExpiredServiceLevel_Test() throws JSONException, Exception {
@@ -1396,6 +1396,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 // TODO: the following assert is failing in candlepin 2.0 because the "Expired SLA" is still available from the expired pool.  Because the concept of Refresh Pools has been removed, this test fails.  It will pass again if i can find a new way to force a pool refresh.
+// I opened bug https://bugzilla.redhat.com/show_bug.cgi?id=1262435
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "The exit code from the register command indicates we could not register with activation key '"+keyName+"'.");
 		String expectedStderr = String.format("Service level '%s' is not available to units of organization admin.",expiredServiceLevel);
 		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
