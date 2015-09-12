@@ -20,14 +20,17 @@ import org.testng.annotations.Test;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
+
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ConsumerCert;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
+
 import com.redhat.qe.tools.SSHCommandResult;
 import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
@@ -471,7 +474,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 
         // do something that will fire a create product event
-		testJSONProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" Test Product");
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) {
+			// candlepin 2.0 requires an owner key when creating products
+			testJSONProduct = servertasks.createProductUsingCPC(testOwnerKey, testProductId, testProductId+" Test Product");
+		} else {
+			testJSONProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" Test Product");	
+		}
+
+		
 		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
 		
 		// WORKAROUND
@@ -500,8 +510,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		} else {
 			// candlepin branch 0.3+
 			testJSONPool = servertasks.createSubscriptionUsingCPC(testOwnerKey, testJSONProduct.getString("id"));
-			JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
-			CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
+			
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.0")){	// no more refresh pools in candlepin 2.0
+				JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
+				CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
+			}
 		}
 		String[] newEventTitles = new String[]{"POOL CREATED"};
 
@@ -542,8 +555,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		} else {
 			// candlepin branch 0.3+
 			servertasks.deleteSubscriptionUsingCPC(testJSONPool.getString("id"));
-			JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
-			CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.0")){	// no more refresh pools in candlepin 2.0
+				JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
+				CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
+			}
 		}
 		String[] newEventTitles = new String[]{"POOL DELETED"};
 		

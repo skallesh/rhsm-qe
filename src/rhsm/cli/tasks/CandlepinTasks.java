@@ -3424,6 +3424,17 @@ schema generation failed
 		
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
 	}
+	
+	public JSONObject createProductUsingCPC(String ownerKey, String id, String name) throws JSONException {
+		log.info("Using the ruby client to create_product id='"+id+"' name='"+name+"' for ownerKey='"+ownerKey+"'...");
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc create_product \"%s\" \"%s\" \"%s\"", serverInstallDir+rubyClientDir, ownerKey, id, name);
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+		
+		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
+	}
 
 	public JSONObject createSubscriptionUsingCPC(String ownerKey, String productId) throws JSONException {
 		log.info("Using the ruby client to create_subscription ownerKey='"+ownerKey+"' productId='"+productId+"'...");
