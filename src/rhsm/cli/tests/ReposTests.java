@@ -14,6 +14,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
@@ -313,6 +314,29 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null);
 		//Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
 		Assert.assertEquals(result.getStdout().trim(), "This system has no repositories available through subscriptions.");
+	}
+	
+	
+	@Test(	description="subscription-manager: repos --list should not fail when config rhsm.manage_repos is blank.",
+			groups={"ReposListWhenManageReposIsBlank_Test","blockedByBug-1251853"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposListWhenManageReposIsBlank_Test(){
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// config rhsm.manage_repos to a blank value
+		//clienttasks.config(null, null, true, new String[]{"rhsm", "manage_repos", ""});
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "");
+		
+		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null);
+		//Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
+		Assert.assertEquals(result.getStdout().trim(), "This system has no repositories available through subscriptions.");
+	}
+	@AfterGroups(groups={"setup"}, value={"ReposListWhenManageReposIsBlank_Test"})
+	public void restoreRhsmManageReposAfterGroups() {
+		//clienttasks.config(null, null, true, new String[]{"rhsm", "manage_repos", "1"});
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
 	}
 	
 	

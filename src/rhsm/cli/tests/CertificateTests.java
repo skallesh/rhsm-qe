@@ -89,15 +89,6 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				currentRhelProductCerts.add(productCert);
 			}
 		}
-// DELETEME
-//		// handle RHEL 7
-//		if (currentRhelProductCerts.isEmpty() && clienttasks.redhatReleaseX.equals("7")) {
-//			currentRhelProductCerts = clienttasks.getCurrentProductCerts("rhel-7-.*");
-//		}
-//		// handle Red Hat Enterprise Linux Server for ARM
-//		if (currentRhelProductCerts.isEmpty() && clienttasks.arch.equals("aarch64")) {
-//			currentRhelProductCerts = clienttasks.getCurrentProductCerts("rhsa-.*");
-//		}
 		if (currentRhelProductCerts.size()>1) {
 			log.warning("Found multiple installed RHEL product certs:");
 			for (ProductCert productCert : currentRhelProductCerts) {
@@ -173,6 +164,63 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		Assert.assertNotNull(rhelProductCert,"Found an installed product cert that matches the system's base RHEL release version '"+clienttasks.releasever+"' on arch '"+clienttasks.arch+"':");
 		log.info(rhelProductCert.toString());
+	}
+	
+	
+	@Test(	description="Verify that the installed base RHEL product cert provides the expected tags",
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1259820","blockedByBug-1259839"},
+			dependsOnMethods={"VerifyBaseRHELProductCertIsInstalled_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyBaseRHELProductCertArchAndTags_Test() {
+		
+		ProductCert productCert = clienttasks.getCurrentRhelProductCert();
+		List<String> providedTags = Arrays.asList(productCert.productNamespace.providedTags.split("\\s*,\\s*"));
+		List<String> expectedTags = Arrays.asList("FIXME");
+
+		// assert the product cert arch matches the system
+		String system_arch = clienttasks.arch;
+		if (Arrays.asList("i386","i486","i586","i686").contains(clienttasks.arch)) { // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+			system_arch = "i386";
+		}
+		Assert.assertEquals(productCert.productNamespace.arch,system_arch,"Current RHEL product cert arch.");
+		
+		// determine all of the expected tags
+		// http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/tree/product_ids
+		switch (Integer.valueOf(productCert.productId)) {
+			case 68: // Red Hat Enterprise Linux Desktop
+				expectedTags = Arrays.asList("rhel-#,rhel-#-client".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 69: // Red Hat Enterprise Linux Server
+				expectedTags = Arrays.asList("rhel-#,rhel-#-server".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 71: // Red Hat Enterprise Linux Workstation
+				expectedTags = Arrays.asList("rhel-#,rhel-#-workstation".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 72: // Red Hat Enterprise Linux for IBM z Systems
+				expectedTags = Arrays.asList("rhel-#,rhel-#-ibm-system-z".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 74: // Red Hat Enterprise Linux for IBM POWER
+				expectedTags = Arrays.asList("rhel-#,rhel-#-ibm-power".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 76: // Red Hat Enterprise Linux for Scientific Computing
+				expectedTags = Arrays.asList("rhel-#,rhel-#-computenode".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 279: // Red Hat Enterprise Linux for IBM POWER LE
+				expectedTags = Arrays.asList("rhel-#,rhel-#-ibm-power-le".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 294: // Red Hat Enterprise Linux Server for ARM
+				expectedTags = Arrays.asList("rhel-#,rhel-#-arm".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			default:
+				Assert.fail("Unknown productCert id '"+productCert.productId+"'");
+				break;
+		}
+		
+		// assert the product cert provides all the expected tags
+		for (String expectedTag : expectedTags) {
+			Assert.assertTrue(providedTags.contains(expectedTag),"Actuals RHEL Product Cert tags "+providedTags+" contain expected tag '"+expectedTag+"' for RHEL '"+clienttasks.redhatReleaseX+"' product id '"+productCert.productNamespace.id+"'");
+		}
 	}
 	
 	
@@ -776,7 +824,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			log.warning("Could not find an entitlement to a RHEL subscription.");
 			return ll;
 		}
-		EntitlementCert rhelEntitlementCert = clienttasks.getEntitlementCertsProvidingProductCert(rhelProductCert).get(0);
+		//EntitlementCert rhelEntitlementCert = clienttasks.getEntitlementCertsProvidingProductCert(rhelProductCert).get(0);
+		EntitlementCert rhelEntitlementCert = rhelEntitlementCerts.get(0);
 		
 		// get the cacert file
 		File caCertFile = new File(clienttasks.getConfParameter("repo_ca_cert"));
@@ -824,6 +873,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			
 			if (release.equals("6.2")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
 			if (release.equals("6.4")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
+			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1261163"); 	//     Bug 1261163 -  uncertain of expected release listing on rhel72 arm system
+			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("ppc64le")) bugIds.add("1261171"); 	//     Bug 1261163 -  uncertain of expected release listing on rhel72 arm system
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			

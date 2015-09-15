@@ -727,7 +727,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productBaselineRhnChannel+"' to the same productId as dictated in the CDN Product Baseline.");
 	}
 	@Test(	description="Verify that all of the required RHN Channels in the product-certs.json file are accounted for in channel-cert-mapping.txt",
-			groups={"blockedByBug-1025338","blockedByBug-1080072"},
+			groups={"blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1241221"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnChannelFromProductCertsData",
 			enabled=true) // Starting in RHEL65, we are moving away from product-baseline.json and replacing it with product-certs.json
@@ -1018,6 +1018,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (classicRhnChannel.startsWith("rhel-x86_64-server-6-cf-me-2")) {
 			// Bug 1021664 - Red Hat CloudForms rhel-x86_64-server-6-cf-me-2 channel mappings are missing 
 			log.warning("(degregor 07/29/2014) It turns out that the cf-me-2 for RHEL 6 channels were never actually used.  When CF ME was made available they went straight to cf-me-3.  I've gone and moved the rhel-x86_64-server-6-cf-me-2* channels into the shadow channel family and we can ignore them in the migration data.  https://bugzilla.redhat.com/show_bug.cgi?id=1021664#c3");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.endsWith("-hts-7-beta") ||
+			classicRhnChannel.endsWith("-hts-7-beta-debuginfo") ||
+			classicRhnChannel.endsWith("-v2vwin-7-beta") ||
+		    classicRhnChannel.endsWith("-v2vwin-7-beta-debuginfo")) {
+			// Bug 1257212 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
+			log.warning("(anthomas 09/04/15) Any hts-7-beta and v2v-7-beta channels will be ignored as they do not have any beta content. Please ignore in the future.  https://bugzilla.redhat.com/show_bug.cgi?id=1257212#c6");
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
@@ -2554,7 +2563,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-optional-7-beta-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-supplementary-7-beta") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-supplementary-7-beta-debuginfo") ||
-				rhnAvailableChildChannel.equals("") ||
+				//https://bugzilla.redhat.com/show_bug.cgi?id=1257212#c7
+				rhnAvailableChildChannel.equals("rhel-s390x-server-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-hts-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-optional-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-optional-7-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-supplementary-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-supplementary-7-beta-debuginfo") ||
 				rhnAvailableChildChannel.equals("") ){
 				// Bug 1257212 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
 				bugIds.add("1257212");

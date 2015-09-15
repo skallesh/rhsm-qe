@@ -1360,7 +1360,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key, add a service level (for an expired subscription) to it, and then register with the activation key",
-			groups={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			groups={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test","blockedByBug-1262435"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingExpiredServiceLevel_Test() throws JSONException, Exception {
@@ -1378,7 +1378,6 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 		
 		// call the candlepin api to create an activation key
-		sleep(1*60*1000);	// wait 1 minute for the pool which is about to expire
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 		
 		// register with the activation key - should succeed because the expired pool has not yet been refreshed
@@ -1387,15 +1386,27 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// verify the current serviceLevel equals the value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), expiredServiceLevel, "After registering with an activation key containing a serviceLevel, the current service level is properly set.");
 		
-		// refresh the candlepin pools which will remove the availability of the expired pool
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, jobDetail,"FINISHED", 5*1000, 1);
+		// wait 1 minute for the pool which is about to expire
+		sleep(1*60*1000);
+		log.info("Waiting 1 minute for available pool with service level '"+expiredServiceLevel+"' to expire.");
+		
+		if (clienttasks.isVersion(servertasks.statusVersion, "<", "2.0.0-1")) {
+			// refresh the candlepin pools which will remove the availability of the expired pool
+			JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg);
+			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, jobDetail,"FINISHED", 5*1000, 1);
+		} else {
+			// wait 2 minutes for the candlepin ExpiredPoolsJob to execute
+			sleep(2*60*1000);
+			// assume /etc/candlepin/candlepin.conf setting pinsetter.org.candlepin.pinsetter.tasks.ExpiredPoolsJob.schedule=0 0/2 * * * ?
+			log.info("Waiting 2 minutes for the candlepin ExpiredPoolsJob to execute.  This assumes candlepin.conf pinsetter.org.candlepin.pinsetter.tasks.ExpiredPoolsJob.schedule=0 0/2 * * * ?");
+			
+			// more info at Bug 1262435 -  available service levels from subscription pools that have expired are not getting purged
+		}
 		
 		// register with the activation key - should fail because the expired pool was the only one that supported the expiredServiceLevel
 		SSHCommandResult result = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-// TODO: the following assert is failing in candlepin 2.0 because the "Expired SLA" is still available from the expired pool.  Because the concept of Refresh Pools has been removed, this test fails.  It will pass again if i can find a new way to force a pool refresh.
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "The exit code from the register command indicates we could not register with activation key '"+keyName+"'.");
 		String expectedStderr = String.format("Service level '%s' is not available to units of organization admin.",expiredServiceLevel);
 		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {

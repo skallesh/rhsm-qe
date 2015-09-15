@@ -1555,40 +1555,63 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Map<String,String> attributes = new HashMap<String,String>();
 		attributes.put("sockets", "8");
 		attributes.put("arch", "ALL");
+		JSONObject jsonContentResource;
 		String requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, modifiedProductIds).toString();
-		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/content", requestBody);	
-		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
-		Assert.assertContainsNoMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
-		String resourcePath = "/content/"+contentId;
+		String resourcePath = "/content/";
+//		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+//Why?	CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,resourcePath, requestBody);	
+		resourcePath = "/content/"+contentId;
+//		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+//Why?		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
+		String contentWithIdMessage = "Content with id "+contentId+" could not be found.";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) contentWithIdMessage = "Content with ID \""+contentId+"\" could not be found.";
+
+// temporary fix, -- delete after crog fixes candlepin string upstream
+if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) contentWithIdMessage = "Content with id \""+contentId+"\" could not be found.";
+
+//Why?	Assert.assertContainsNoMatch(jsonActivationKey.toString(), contentWithIdMessage);
+		resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
 		/* restart_rhsmcertd has nothing to do with testing the ability to DELETE a content resource
 		clienttasks.restart_rhsmcertd(null, null, null);
 		sleep(2*60*1000);
 		 */
-		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
-		Assert.assertEquals(jsonActivationKey.getString("displayMessage"), "Content with id "+contentId+" could not be found.");
+		resourcePath = "/content/"+contentId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
+		Assert.assertEquals(jsonContentResource.getString("displayMessage"), contentWithIdMessage);
 		requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, modifiedProductIds).toString();
-		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/content", requestBody);
+		resourcePath = "/content";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,resourcePath, requestBody);
 		resourcePath = "/products/fooproduct";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,resourcePath);	// in case it already exists from prior run
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,sm_clientOrg,"fooname", "fooproduct",null ,attributes, null);
-		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/products/fooproduct/content/"+contentId+"?enabled=false",null);
-		String jsonProduct = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/" + "fooproduct");
+		resourcePath = "/products/fooproduct/content/"+contentId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,resourcePath+"?enabled=false",null);
+		resourcePath = "/products/" + "fooproduct";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		String jsonProduct = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
 		Assert.assertContainsMatch(jsonProduct, contentId, "Added content set '"+contentId+"' to product "+"fooproduct");
 		resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
-		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId));
+		resourcePath = "/content/"+contentId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
 		/* This assertion is reinforcing a bug in candlepin.
 		 * The prior call to delete content 99999 should always pass even when it has been added to a product.
 		 * This was fixed by https://bugzilla.redhat.com/show_bug.cgi?id=834125#c17
 		 * Changing the assertion to Assert.assertContainsMatch
-		Assert.assertContainsNoMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
+		Assert.assertContainsNoMatch(jsonActivationKey.toString(), contentWithIdMessage);
 		 */
-		Assert.assertContainsMatch(jsonActivationKey.toString(), "Content with id "+contentId+" could not be found.");
-		jsonProduct = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/" + "fooproduct");
+		Assert.assertEquals(jsonContentResource.getString("displayMessage"), contentWithIdMessage);
+		resourcePath = "/products/" + "fooproduct";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		jsonProduct = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
 		Assert.assertContainsNoMatch(jsonProduct, contentId, "After deleting content set '"+contentId+"', it was removed from the product "+"fooproduct");
 		resourcePath = "/products/fooproduct";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
@@ -4629,5 +4652,29 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
 	}
 	 */
-
+	
+	
+	
+	// THE FOLLOWING BEFORE AND AFTER CLASS METHODS ARE USED TO ELIMINATE
+	// THE INFLUENCE THAT /etc/pki/product-default/ CERTS HAVE ON THESE TESTS
+	// SINCE THESE TESTS PRE-DATE THE INTRODUCTION OF DEFAULT PRODUCT CERTS.
+	@BeforeClass(groups = "setup")
+	public void backupProductDefaultCerts() {
+		log.info("This test class was developed before the addition of /etc/pki/product-default/ certs (Bug 1123029).  Therefore, let's back them up before running this test class.");
+		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
+			if (productCertFile.getPath().startsWith(clienttasks.productCertDefaultDir)) {
+				client.runCommandAndWait("mv "+productCertFile+" "+productCertFile+".bak");
+			}
+		}
+	}
+	@AfterClass(groups = "setup")
+	public void restoreProductDefaultCerts() {
+		client.runCommandAndWait("ls -1 "+clienttasks.productCertDefaultDir+"/*.bak");
+		String lsBakFiles = client.getStdout().trim();
+		if (!lsBakFiles.isEmpty()) {
+			for (String lsFile : Arrays.asList(lsBakFiles.split("\n"))) {
+				client.runCommandAndWait("mv "+lsFile+" "+lsFile.replaceFirst("\\.bak$",""));
+			}
+		}
+	}
 }

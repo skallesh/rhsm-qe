@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
@@ -203,6 +204,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 	
 	protected String getGuestlimitPool(String guestLimit) throws JSONException, Exception {
 		String poolId=null;
+		providedProductId.clear();
 		for (SubscriptionPool pool : clienttasks
 				.getCurrentlyAvailableSubscriptionPools()) {
 			String GuestLimitAttribute = CandlepinTasks
@@ -216,7 +218,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 				if (!providedProductId.isEmpty()) return poolId; 
 			}
 		}
-		if (providedProductId.isEmpty()) log.warning("Could not find a subscription pool with guest_limit '"+guestLimit+"' that provides a product for this test.");
+		if (providedProductId.isEmpty()) throw new SkipException("Could not find a subscription pool with guest_limit '"+guestLimit+"' that provides a product for this test.");
 		return poolId;
 	}
 
@@ -259,7 +261,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 	
 	// THE FOLLOWING BEFORE AND AFTER CLASS METHODS ARE USED TO ELIMINATE
 	// THE INFLUENCE THAT /etc/pki/product-default/ CERTS HAVE ON THESE TESTS
-	// SINCE THSE TESTS PRE-DATE THE INTRODUCTION OF DEFAULT PRODUCT CERTS.
+	// SINCE THESE TESTS PRE-DATE THE INTRODUCTION OF DEFAULT PRODUCT CERTS.
 	@BeforeClass(groups = "setup")
 	public void backupProductDefaultCerts() {
 		log.info("This test class was developed before the addition of /etc/pki/product-default/ certs (Bug 1123029).  Therefore, let's back them up before running this test class.");
