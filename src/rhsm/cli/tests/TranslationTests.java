@@ -345,25 +345,25 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402","blockedByBug-1061381"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMsdIdDeprecatedSeeAttach_Test() {
-		verifyTranslatedMsdIdContainsSubStringForAllLangs("Deprecated, see attach","attach");
+	public void VerifyMsgIdDeprecatedSeeAttach_Test() {
+		verifyTranslatedMsgIdContainsSubStringForAllLangs("Deprecated, see attach","attach");
 	}
 	
 	@Test(	description="verify that msgid \"Deprecated, see remove\" did NOT translate the command line module \"remove\" for all languages",
 			groups={"blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMsdIdDeprecatedSeeRemove_Test() {
-		verifyTranslatedMsdIdContainsSubStringForAllLangs("Deprecated, see remove","remove");
+	public void VerifyMsgIdDeprecatedSeeRemove_Test() {
+		verifyTranslatedMsgIdContainsSubStringForAllLangs("Deprecated, see remove","remove");
 	}
 	
 	@Test(	description="verify that msgid \"deprecated, see auto-attach-interval\" did NOT translate the command line option \"auto-attach-interval\" for all languages",
 			groups={"blockedByBug-891375","blockedByBug-891434","blockedByBug-891377","blockedByBug-928073","blockedByBug-928082"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMsdIdDeprecatedSeeAutoAttachInterval_Test() {
-		//verifyTranslatedMsdIdContainsSubStringForAllLangs("deprecated, see auto-attach-interval","auto-attach-interval");	// was valid prior to bug 891377 implementation
-		verifyTranslatedMsdIdContainsSubStringForAllLangs("deprecated, see --auto-attach-interval","--auto-attach-interval");	// now that bug 891377 is fixed, this test is effectively now a duplicate of pofilter -t options
+	public void VerifyMsgIdDeprecatedSeeAutoAttachInterval_Test() {
+		//verifyTranslatedMsgIdContainsSubStringForAllLangs("deprecated, see auto-attach-interval","auto-attach-interval");	// was valid prior to bug 891377 implementation
+		verifyTranslatedMsgIdContainsSubStringForAllLangs("deprecated, see --auto-attach-interval","--auto-attach-interval");	// now that bug 891377 is fixed, this test is effectively now a duplicate of pofilter -t options
 	}
 	
 	@Test(	description="verify that translation msgstr does NOT contain paragraph character ¶ unless also in msgid",
@@ -814,7 +814,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		return new File("/usr/share/locale/"+locale+"/LC_MESSAGES/rhsm.mo");
 	}
 	
-	protected void verifyTranslatedMsdIdContainsSubStringForAllLangs(String msgid, String subString) {
+	protected void verifyTranslatedMsgIdContainsSubStringForAllLangs(String msgid, String subString) {
 		if (!translationMsgidSetForSubscriptionManager.contains(msgid)) Assert.fail("Could not find expected msgid \""+msgid+"\".  Has this msgid changed?");
 		boolean warningsFound = false;
 		for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {
