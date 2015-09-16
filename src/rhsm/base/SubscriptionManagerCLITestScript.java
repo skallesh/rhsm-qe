@@ -1477,16 +1477,33 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		String updateSubscriptionPoolEndDateSql = "";
 		String updateSubscriptionPoolStartDateSql = "";
 		if (endDate!=null) {
-			//updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
-			// AbstractCommandLineData.formatDateString does not default to enough significant figures, changing to EntitlementCert.formatDateString...
-			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
-			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+//			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+//			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+			
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0-1")) {
+				updateSubscriptionPoolEndDateSql = "update cp_pool set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id='"+pool.poolId+"';";
+			} else if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.11-1")) {	// candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+				updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+			} else {
+				//updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+				// AbstractCommandLineData.formatDateString does not default to enough significant figures, changing to EntitlementCert.formatDateString...
+				updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+			}
 		}
 		if (startDate!=null) {
-			//updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
-			// AbstractCommandLineData.formatDateString does not default to enough significant figures, changing to EntitlementCert.formatDateString...
-			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
-			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+//			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+//			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+			
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0-1")) {
+				updateSubscriptionPoolStartDateSql = "update cp_pool set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id='"+pool.poolId+"';";
+			} else if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.11-1")) {	// candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+				updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+			} else {
+				//updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+				// AbstractCommandLineData.formatDateString does not default to enough significant figures, changing to EntitlementCert.formatDateString...
+				updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+			}
+
 		}
 		
 		Statement sql = dbConnection.createStatement();

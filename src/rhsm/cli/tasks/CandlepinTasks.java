@@ -53,6 +53,7 @@ import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.EntitlementCert;
 import rhsm.data.RevokedCert;
 
 import com.redhat.qe.Assert;
@@ -3638,7 +3639,7 @@ schema generation failed
 		return dateFormat.format(date.getTime());
 	}
 		
-	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, List<String> providedProducts, List<Map<String, String>> brandingMaps) throws JSONException{
+	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String productId, Integer contractNumber, Integer accountNumber, List<String> providedProducts, List<Map<String, String>> brandingMaps) throws JSONException{
 		
 		/*
 		[root@jsefler-onprem-62server ~]# curl -k --user admin:admin --request POST
@@ -3653,32 +3654,36 @@ schema generation failed
 		
 		JSONObject sub = new JSONObject();
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
-		sub.put("startDate", sdf.format(startDate));
-		sub.put("contractNumber", contractNumber);
-		sub.put("accountNumber", accountNumber);
-		sub.put("endDate", sdf.format(endDate));
-		sub.put("quantity", quantity);
+		if (startDate!=null)		sub.put("startDate", sdf.format(startDate));
+		if (endDate!=null)			sub.put("endDate", sdf.format(endDate));
+		if (contractNumber!=null)	sub.put("contractNumber", contractNumber);
+		if (accountNumber!=null)	sub.put("accountNumber", accountNumber);
+		if (quantity!=null)			sub.put("quantity", quantity);
 
 		List<JSONObject> pprods = new ArrayList<JSONObject>();
-		if (providedProducts!=null) for (String id: providedProducts) {
-			JSONObject jo = new JSONObject();
-			jo.put("id", id);
-			pprods.add(jo);
+		if (providedProducts!=null) {
+			for (String providedProductId: providedProducts) {
+				JSONObject jo = new JSONObject();
+				jo.put("id", providedProductId);
+				pprods.add(jo);
+			}
+			sub.put("providedProducts", pprods);
 		}
-		if (providedProducts!=null) sub.put("providedProducts", pprods);
 		
 		JSONArray jsonBrandings = new JSONArray();
-		if (brandingMaps!=null) for (Map<String,String> brandingMap: brandingMaps) {
-			JSONObject jsonBranding = new JSONObject();
-			for (String key : brandingMap.keySet()) {	// Valid branding keys: "productId", "type", "name"
-				jsonBranding.put(key, brandingMap.get(key));
+		if (brandingMaps!=null) {
+			for (Map<String,String> brandingMap: brandingMaps) {
+				JSONObject jsonBranding = new JSONObject();
+				for (String key : brandingMap.keySet()) {	// Valid branding keys: "productId", "type", "name"
+					jsonBranding.put(key, brandingMap.get(key));
+				}
+				jsonBrandings.put(jsonBranding);
 			}
-			jsonBrandings.put(jsonBranding);
+			sub.put("branding", jsonBrandings);
 		}
-		if (brandingMaps!=null) sub.put("branding", jsonBrandings);
 
 		JSONObject prod = new JSONObject();
-		prod.put("id", product);
+		prod.put("id", productId);
 		
 		sub.put("product", prod);
 
@@ -3724,6 +3729,43 @@ schema generation failed
 		return jsonContentData;
 	}
 	
+	
+	
+	public static String updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String subscriptionId, Calendar startCalendar, Calendar endCalendar) throws JSONException, Exception  {
+
+		// get the existing subscription for default values
+		JSONObject jsonSubscription = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/subscriptions/"+subscriptionId));
+		
+		// create a jsonOwner
+		JSONObject jsonOwner = new JSONObject();
+		jsonOwner.put("key", jsonSubscription.getJSONObject("owner").getString("key"));
+		
+		// create a jsonProduct
+		JSONObject jsonProduct = new JSONObject();
+		jsonProduct.put("id", jsonSubscription.getJSONObject("product").getString("id"));
+		
+		// create a requestBody
+		JSONObject requestBody = new JSONObject();
+		requestBody.put("id", subscriptionId);
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+		if (startCalendar!=null)	requestBody.put("startDate", sdf.format(startCalendar.getTime())); else requestBody.put("startDate", jsonSubscription.getString("startDate"));
+		if (endCalendar!=null)		requestBody.put("endDate", sdf.format(endCalendar.getTime())); else requestBody.put("endDate", jsonSubscription.getString("endDate"));
+		requestBody.put("quantity",jsonSubscription.getInt("quantity"));
+		requestBody.put("owner",jsonOwner);
+		requestBody.put("product",jsonProduct);
+		
+		
+		// update the subscription
+		String httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/subscriptions",requestBody);
+		// httpResponse will be null; not a string representation of the jsonSubscription!  
+		
+		// refresh the pools
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,jsonOwner.getString("key"));
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);
+
+		return httpResponse;
+	}
+
 	
 	/**
 	 * @param authenticator
