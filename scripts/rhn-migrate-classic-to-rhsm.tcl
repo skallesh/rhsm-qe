@@ -81,7 +81,7 @@ if {$slaIndex != "null"} {
 
 
 # interact with the program again so as to catch the remaining stdout and exit code from the program
-set interactiveTimeout 240; 	# use a timeout in case there is an unexpected interactive prompt blocking the program from completing.  IMPORTANT: this timeout must be greater than the time needed for subscription-manager registration with autosubscribe
+set interactiveTimeout 300; 	# use a timeout in case there is an unexpected interactive prompt blocking the program from completing.  IMPORTANT: this timeout must be greater than the time needed for subscription-manager registration with autosubscribe
 interact timeout $interactiveTimeout {puts "WARNING: Timed out after ${interactiveTimeout} seconds expecting ${tool} to have already completed."; exit -1};
 catch wait reason
 exit [lindex $reason 3]
