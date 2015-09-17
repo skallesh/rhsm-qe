@@ -4501,7 +4501,7 @@ if (false) {
 		if (servicelevel!=null)						command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
 		if (matchInstalled!=null && matchInstalled)	command += " --match-installed";
 		if (noOverlap!=null && noOverlap)			command += " --no-overlap";
-		if (matches!=null)							command += " --matches="+String.format(matches.contains(" ")||matches.isEmpty()?"\"%s\"":"%s", matches);	// quote a value containing spaces or is empty
+		if (matches!=null)							command += " --matches="+String.format(matches.contains(" ")||matches.isEmpty()?"\"%s\"":"%s", matches.replaceAll("\"","\\\\\""));	// quote a value containing spaces or is empty and escape double quotes
 		if (poolOnly!=null && poolOnly)				command += " --pool-only";
 		if (proxy!=null)							command += " --proxy="+proxy;
 		if (proxyuser!=null)						command += " --proxyuser="+proxyuser;

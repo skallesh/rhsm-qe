@@ -1170,7 +1170,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// randomly choose one of the consumed Product Subscriptions
 		ProductSubscription randomConsumedProductSubscription = getRandomListItem(consumedProductSubscriptions);
-		
+///*debugTesting*/randomConsumedProductSubscription=ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", "exempt-sla-product-sku", consumedProductSubscriptions);
 		//	+-------------------------------------------+
 		//	   Consumed Subscriptions
 		//	+-------------------------------------------+
@@ -2130,7 +2130,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	// NOTE: This method is not necessary, but adds a little more spice to ListAvailableWithFutureOnDate_Test
-	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
+//debugTest	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
 	public void createFutureSubscriptionPoolBeforeClass() throws Exception {
 		// don't bother attempting to create a subscription unless onPremises
 		//if (!sm_serverType.equals(CandlepinType.standalone)) return;
@@ -2153,7 +2153,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@BeforeClass(groups="setup")
+//debugTest	@BeforeClass(groups="setup")
 	public void createSubscriptionsWithVariationsOnProductAttributeSockets() throws JSONException, Exception {
 		String name,productId, resourcePath;
 		List<String> providedProductIds = new ArrayList<String>();
