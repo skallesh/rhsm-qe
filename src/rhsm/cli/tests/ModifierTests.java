@@ -36,8 +36,9 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getModifierSubscriptionData",
 			enabled=true)
 	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListAfterTheModifiesPoolIsSubscribed_Test(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> poolsModified) throws JSONException, Exception {
-///*debugTesting*/ if (!label.equals("rhel-6-server-eus-optional-rpms")) throw new SkipException("Contact automation maintainer to comment out this line of debugging.");		
-///*debugTesting*/ if (!label.equals("rhel-6-server-eus-supplementary-isos")) throw new SkipException("Contact automation maintainer to comment out this line of debugging.");		
+///*debugTesting*/ if (!label.equals("rhel-6-server-eus-optional-rpms")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");		
+///*debugTesting*/ if (!label.equals("rhel-6-server-eus-supplementary-isos")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");		
+///*debugTesting*/ if (!label.equals("awesomeos-modifier")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");		
 		// remove selected pools from the poolsModified list that are not consumable by this system to avoid: Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'.
 		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		for (SubscriptionPool subscriptionPool : new ArrayList<SubscriptionPool>(poolsModified)) {
