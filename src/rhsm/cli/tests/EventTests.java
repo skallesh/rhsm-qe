@@ -671,6 +671,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // do something that will fire an import created event
 		CandlepinTasks.importConsumerUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey,"/tmp/export.zip");
 		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) {
+			newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED"/*, "SUBSCRIPTION CREATED" is no longer created in candlepin-2.0 */};
+		}
 		List<String> newEventTitlesList = new ArrayList<String>(); newEventTitlesList.addAll(Arrays.asList(newEventTitles));
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
