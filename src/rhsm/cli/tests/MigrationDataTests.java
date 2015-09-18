@@ -2598,6 +2598,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1257212");
 			}
 			
+			if (//https://bugzilla.redhat.com/show_bug.cgi?id=1264470#c1
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("") ){
+				// Bug 1264470 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
+				bugIds.add("1264470");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
