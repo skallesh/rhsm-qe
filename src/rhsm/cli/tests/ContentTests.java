@@ -1103,7 +1103,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// register and attach a RHEL subscription via autosubscribe
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
 		
-		String pkg = "rcs";
+		String pkg = "rcs";	// not available on rhel72 Client
+		pkg = "zsh";
 		if (clienttasks.isPackageInstalled(pkg)) clienttasks.yumRemovePackage(pkg);
 		
 		// stop the rsyslog service
