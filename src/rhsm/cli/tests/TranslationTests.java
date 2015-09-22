@@ -527,6 +527,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"consumer_types","consumer_export","proxy_hostname:proxy_port"}));
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"%(mappingfile)s","%(package)s"}));	// from key: Unable to read mapping file: %(mappingfile)s.\nDo you have the %(package)s package installed?
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"{dateexample}"}));	// from key: Date entered is invalid. Date should be in YYYY-MM-DD format (example: {dateexample})
+		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"&#x2022;"}));	// Unicode bullet character	// msgid "&#x2022; A network connection"	// msgid "&#x2022; The address of a subscription management service (optional)"	// msgid "&#x2022; Your account login"
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();
 		ignoreTheseExceptionalCases.add("View and configure subscription-manager plugins");
@@ -554,6 +555,24 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 						// WARNING: Substring "Red Hat" should remain untranslated in the /usr/share/locale/ru/LC_MESSAGES/rhsm.mo translation: msgid='This system has already been registered with Red Hat using RHN Classic.' msgstr='Система уже зарегистрирована в RHN Classic.'
 						if (translationFile.getPath().contains("/ru/") && subString.equals("Red Hat") && translation.msgid.equals("This system has already been registered with Red Hat using RHN Classic.") && translation.msgstr.equals("Система уже зарегистрирована в RHN Classic.")) {
 							log.info("Exceptional case: Tolerating translated substring \""+subString+"\" in translation "+translation+" because https://translate.google.com/ indicates the reverse translation to be \"The system is already registered to RHN Classic.\" which ommits substring \"Red Hat\".");  // https://translate.google.com/#auto/en/%D0%A1%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%B0%20%D1%83%D0%B6%D0%B5%20%D0%B7%D0%B0%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B0%20%D0%B2%20RHN%20Classic.
+							continue;
+						}
+						
+						// WARNING: Substring "Red Hat" should remain untranslated in the /usr/share/locale/ru/LC_MESSAGES/rhsm.mo translation: msgid='Registration with Red Hat Subscription Management is Done!' msgstr='Система успешно зарегистрирована.'
+						if (translationFile.getPath().contains("/ru/") && subString.equals("Red Hat") && translation.msgid.equals("Registration with Red Hat Subscription Management is Done!") && translation.msgstr.equals("Система успешно зарегистрирована.")) {
+							log.info("Exceptional case: Tolerating translated substring \""+subString+"\" in translation "+translation+" because https://translate.google.com/ indicates the reverse translation to be \"The system is successfully registered.\" which ommits substring \"Red Hat\".");  // https://translate.google.com/#auto/en/%D0%A1%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%B0%20%D1%83%D1%81%D0%BF%D0%B5%D1%88%D0%BD%D0%BE%20%D0%B7%D0%B0%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B0.
+							continue;
+						}
+						
+						// Substring "Red Hat" should remain untranslated in the /usr/share/locale/ru/LC_MESSAGES/rhsm.mo translation: msgid='Your system is being registered again using Red Hat Subscription Management. Red Hat recommends that customers only register once.' msgstr='Попытка повторной регистрации системы с помощью subscription-manager.'
+						if (translationFile.getPath().contains("/ru/") && subString.equals("Red Hat") && translation.msgid.equals("Your system is being registered again using Red Hat Subscription Management. Red Hat recommends that customers only register once.") && translation.msgstr.equals("Попытка повторной регистрации системы с помощью subscription-manager.")) {
+							log.info("Exceptional case: Tolerating translated substring \""+subString+"\" in translation "+translation+" because https://translate.google.com/ indicates the reverse translation to be \"Trying to re-register system via subscription-manager.\" which ommits substring \"Red Hat\".");  // https://translate.google.com/#auto/en/%D0%9F%D0%BE%D0%BF%D1%8B%D1%82%D0%BA%D0%B0%20%D0%BF%D0%BE%D0%B2%D1%82%D0%BE%D1%80%D0%BD%D0%BE%D0%B9%20%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D0%B8%20%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D1%8B%20%D1%81%20%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E%20subscription-manager.
+							continue;
+						}
+						
+						// WARNING: Substring "Red Hat" should remain untranslated in the /usr/share/locale/de_DE/LC_MESSAGES/rhsm.mo translation: msgid='Registration with Red Hat Subscription Management is Done!' msgstr='Die Registrierung bei der Subskriptionsverwaltung ist fertig!'
+						if (translationFile.getPath().contains("/de_DE/") && subString.equals("Red Hat") && translation.msgid.equals("Registration with Red Hat Subscription Management is Done!") && translation.msgstr.equals("Die Registrierung bei der Subskriptionsverwaltung ist fertig!")) {
+							log.info("Exceptional case: Tolerating translated substring \""+subString+"\" in translation "+translation+" because https://translate.google.com/ indicates the reverse translation to be \"Registration with the subscription management is ready!\" which ommits substring \"Red Hat\".");  // https://translate.google.com/#auto/en/Die%20Registrierung%20bei%20der%20Subskriptionsverwaltung%20ist%20fertig!
 							continue;
 						}
 						
