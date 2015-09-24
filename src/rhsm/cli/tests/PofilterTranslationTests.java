@@ -1119,6 +1119,12 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 929218 - [de_DE] pofilter unchanged test is failing
 				if (pofilterTest.equals("unchanged") && translationFile.getName().equals("de_DE.po")) bugIds.add("929218");
 				
+				// Bug 1266127 - pofilter startwhitespace tests fail for many language translations in candlepin master
+				if (pofilterTest.equals("startwhitespace")) bugIds.add("1266127");
+
+				// Bug 1266125 - pofilter endwhitespace tests fail for many language translations in candlepin master
+				if (pofilterTest.equals("endwhitespace")) bugIds.add("1266125");
+		    
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 				ll.add(Arrays.asList(new Object[] {blockedByBzBug, pofilterTest, translationFile}));
 			}
