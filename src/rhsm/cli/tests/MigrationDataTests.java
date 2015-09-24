@@ -1279,6 +1279,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				if (rhnChannel.endsWith("-server-6-cert-beta")) continue;
 				if (rhnChannel.endsWith("-server-6-cert")) continue;
 				
+				// skip Red Hat Certification (for RHEL Server)		// productId 282
+				//	rhel-i386-server-7-cert-beta
+				//	rhel-ppc64-server-7-cert-beta
+				//	rhel-s390x-server-7-cert-beta
+				//	rhel-x86_64-server-7-cert-beta
+				if (rhnChannel.endsWith("-server-7-cert-beta")) continue;
+				if (rhnChannel.endsWith("-server-7-cert")) continue;
+				
 				// skip Red Hat Directory Server
 				//	rhel-x86_64-server-5-rhdirserv-8
 				if (rhnChannel.contains("-rhdirserv-")) continue;
@@ -1364,6 +1372,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
 				bugIds.add("1176260");
 			}
+			
+			// Bug 1263432 - the RHN RHEL Channels 'rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java-beta' map to a '7.1' version cert; should be '7.2 Beta'
+			if (rhnChannel.equals("rhel-x86_64-client-7-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
+				bugIds.add("1263432");
+			}	
 			
 			// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
@@ -2572,9 +2588,23 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-s390x-server-optional-7-beta-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-s390x-server-supplementary-7-beta") ||
 				rhnAvailableChildChannel.equals("rhel-s390x-server-supplementary-7-beta-debuginfo") ||
+				//https://bugzilla.redhat.com/show_bug.cgi?id=1257212#c9
+				rhnAvailableChildChannel.equals("rhel-x86_64-client-7-thirdparty-oracle-java") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java") ||
 				rhnAvailableChildChannel.equals("") ){
 				// Bug 1257212 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
 				bugIds.add("1257212");
+			}
+			
+			if (//https://bugzilla.redhat.com/show_bug.cgi?id=1264470#c1
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("") ){
+				// Bug 1264470 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
+				bugIds.add("1264470");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));

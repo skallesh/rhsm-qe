@@ -89,13 +89,13 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem with --email option (against a standalone candlepin server)",
-			groups={"blockedByBug-726791","blockedByBug-1248833"},
+			groups={"blockedByBug-726791","blockedByBug-1248833","blockedByBug-1263474"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RedeemWithEmail_Test() {
 		String warning = "This test was authored for execution against a standalone candlepin server.";
 		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException(warning);
-		log.warning(warning);
+		log.info(warning);
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);

@@ -149,6 +149,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("couldn't","could not");
 			msgId = msgId.replace("Shouldn't","Should not");
 			msgId = msgId.replace("shouldn't","should not");
+			msgId = msgId.replace("&#x2022;","bullet");
 			//msgId = msgId.replace("'%s'", "%s");	// already fixed by adjustment below
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
 			

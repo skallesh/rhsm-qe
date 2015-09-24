@@ -581,7 +581,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(factMap.get(migrationSystemIdFact), rhnSystemId, "The migration fact '"+migrationSystemIdFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		Assert.assertNotNull(factMap.get(migrationDateFact), "The migration fact '"+migrationDateFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
-		int tol = 180; // tolerance in seconds to assert that the migration_date facts was set within the last few seconds
+		int tol = 300; // tolerance in seconds to assert that the migration_date facts was set within the last few seconds
 		Calendar migrationDate;
 		if (client.runCommandAndWait("date +%Z").getStdout().trim().endsWith("DT")) {	// are we currently on daylight summer/savings time?
 			// determined on Mar 9, 2015 (day after Daylight Summer/Savings Time starts), when date +%Z returns EDT, passing passing null for timeZone will correctly pass the migrationDateFact assertion (Note: passing "EDT" will actually screw it up)

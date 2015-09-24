@@ -1372,10 +1372,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	// TODO correct the pasted description
-	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", 
+	@Test(description = "Implicitly using the consumer cert from a currently registered system, attempt to query the available service levels on a different candlepin server.", 
 			groups = {"DipslayServicelevelWhenRegisteredToDifferentServer","blockedByBug-916362"}, enabled = true)
-	public void DipslayServicelevelWhenRegisteredToDifferentServer() {
+	public void DisplayServicelevelWhenRegisteredToDifferentServer() {
 		String defaultHostname = "subscription.rhn.redhat.com";
 		String defaultPort = "443";
 		String defaultPrefix = "/subscription";
@@ -1389,6 +1388,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			log.warning("For more explanation see https://bugzilla.redhat.com/show_bug.cgi?id=916362#c3");
 			expectedResult = "Unable to verify server's identity: tlsv1 alert unknown ca";
 		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.0-1")) expectedResult = "Invalid credentials.";	// Not sure of the exact commit, but this is technically the best expected result since you are trying to query the service level on a different server using the consumer cert from a different candlepin server.
+
+		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStderr().trim(), expectedResult,"stderr");	
 		} else {
@@ -2182,18 +2184,19 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if refresh Pools w/ Auto-Create Owner Fails", 
+	@Test(description = "verify that refresh pools w/ auto_create_owner succeeds", 
 			groups = { "RefreshPoolsWithAutoCreate","blockedByBug-720487"}, enabled = true)
 	public void RefreshPoolsWithAutoCreate() throws JSONException,Exception {
 		String org="newowner";
-		JSONObject jsonActivationKey = new JSONObject(
-				CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+org));
-		Assert.assertEquals(jsonActivationKey.getString("displayMessage"), "Organization with id newowner could not be found.");
-		new JSONObject(CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/"+org+"/subscriptions?auto_create_owner=true" ));
-		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+org));
-		Assert.assertNotNull(jsonActivationKey.get("created")); 
-		jsonActivationKey= new JSONObject(CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/AnotherOwner/subscriptions?auto_create_owner=false" ));
-		Assert.assertEquals(jsonActivationKey.getString("displayMessage"),"owner with key: AnotherOwner was not found.");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+org); // in case org already exists
+		JSONObject jsonOrg;
+		jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+org));
+		Assert.assertEquals(jsonOrg.getString("displayMessage"), "Organization with id newowner could not be found.");
+		CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/"+org+"/subscriptions?auto_create_owner=true" );
+		jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+org));
+		Assert.assertNotNull(jsonOrg.get("created")); 
+		jsonOrg= new JSONObject(CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/owners/AnotherOwner/subscriptions?auto_create_owner=false" ));
+		Assert.assertEquals(jsonOrg.getString("displayMessage"),"owner with key: AnotherOwner was not found.");
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl, "/owners/"+org);
 	}
 
@@ -2740,7 +2743,9 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify reregister with invalid consumerid", groups = { "VerifyRegisterUsingInavlidConsumerId" }, enabled = true)
+	@Test(	description = "verify reregister with invalid consumerid",
+			groups = { "VerifyRegisterUsingInavlidConsumerId" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 61716)
 	public void VerifyregisterUsingInavlidConsumerId() throws JSONException,
 	Exception {
@@ -2754,10 +2759,11 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 				sm_clientPassword, sm_clientOrg, null, null, null,
 				invalidconsumerId, null, null, null, (String) null, null, null,
 				null, true, null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "The system with UUID "
-				+ consumerId + " has been unregistered");
-		Assert.assertEquals(result.getStderr().trim(), "Consumer with id "
-				+ invalidconsumerId + " could not be found.");
+		String expectedStdout = "The system with UUID " + consumerId + " has been unregistered";
+		String expectedStderr = "Consumer with id " + invalidconsumerId + " could not be found.";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-2")) expectedStdout += String.format("\n"+"Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix"));	// subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89 RHEL7.2 commit 968e6a407054c96291a4e64166c4840529772fff Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "stdout");
+		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "stderr");
 	}
 
 	/**
@@ -3306,10 +3312,10 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify deletion of subscribed product", groups = {
-			"DeleteProductTest", "blockedByBug-684941" }, enabled = true)
-	public void VerifyDeletionOfSubscribedProduct_Test() throws JSONException,
-	Exception {
+	@Test(description = "Verify that Product with UUID '%s' cannot be deleted while subscriptions exist.",
+			groups = {"DeleteProductTest", "blockedByBug-684941" },
+			enabled = true)
+	public void VerifyDeletionOfSubscribedProduct_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(List<String>) null, null, null, null, true, null, null, null, null);
@@ -3318,24 +3324,23 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 				null, null, null, null, null, null);
 		if(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty()){
 			throw new SkipException("no installed products are installed");
-		}
-		else{
+		} else {
 			for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-
 				if (installed.status.equals("Subscribed")) {
 					for (SubscriptionPool AvailSub : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 						if (installed.productName.contains(AvailSub.subscriptionName)) {
 							String resourcePath = "/products/" + AvailSub.productId;
 							if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-							String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,resourcePath);
+							JSONObject jsonConsumer = new JSONObject (CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,resourcePath));
 							//String result=server.runCommandAndWait("tail -5 /var/log/candlepin/candlepin.log | grep req").getStdout();
-							String expect = "\"displayMessage\""+ ":"+ "\"Product with UUID '"+ AvailSub.productId+ "'"+ " cannot be deleted while subscriptions exist.\",\"requestUuid\":\"[a-f,0-9,\\-]{36}\"";
-							Assert.assertContainsMatch(jsonConsumer, expect);
+							String expectedDisplayMessage = "Product with UUID '"+ AvailSub.productId+ "' cannot be deleted while subscriptions exist.";
+							if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) expectedDisplayMessage = "Product with ID '"+AvailSub.productId+"' cannot be deleted while subscriptions exist.";
+							Assert.assertEquals(jsonConsumer.getString("displayMessage"), expectedDisplayMessage);
 						}
 					}
 				}
-			}}
-
+			}
+		}
 	}
 
 	/**
@@ -3619,10 +3624,12 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(!productSubscriptions.isEmpty(), "Autoheal with serviceLevel '"+currentServiceLevel+"' has granted this system some entitlement coverage.");
 		for (ProductSubscription productSubscription : productSubscriptions) {
-			//TODO Fix the exempt service level logic in this loop after RFE Bug 1066088 is implemented
+			//TODO Fix the exempt service level logic in this loop after implementation of Bug 1066088 - [RFE] expose an option to the servicelevels api to return exempt service levels
 			if (!sm_exemptServiceLevelsInUpperCase.contains("Exempt SLA".toUpperCase())) sm_exemptServiceLevelsInUpperCase.add("Exempt SLA".toUpperCase()); //WORKAROUND for bug 1066088
 			if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
 				Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()), "Autohealed subscription '"+productSubscription.productName+"' has been granted with an exempt service level '"+productSubscription.serviceLevel+"'.");		
+			} else if ((productSubscription.serviceLevel==null||productSubscription.serviceLevel.isEmpty()) && clienttasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled (reported by Christine Fouant)
+				log.info("Due to Bug 1223560, Autoheal with serviceLevel '"+currentServiceLevel+"' granted this system coverage from subscription '"+productSubscription.productName+"' which actually has no service level.");
 			} else {
 				Assert.assertEquals(productSubscription.serviceLevel, currentServiceLevel, "Autohealed subscription '"+productSubscription.productName+"' has been granted with the expected service level.");
 			}

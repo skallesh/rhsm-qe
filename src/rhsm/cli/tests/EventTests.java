@@ -256,12 +256,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// fire an modified pool event (and subsequently a modified entitlement event because the pool was modified thereby requiring an entitlement update dropped to the consumer)
 		log.info("To fire a modified pool event (and subsequently a modified entitlement event because the pool is already subscribed too), we will modify pool '"+testPool.poolId+"' by subtracting one month from startdate...");
 		Calendar newStartDate = (Calendar) originalStartDate.clone(); newStartDate.add(Calendar.MONTH, -1);
+		if (false) {	// the following block was used prior to candlepin-2.0.0 and replaced by CandlepinTasks.updateSubscriptionAndRefreshPoolsUsingRESTfulAPI which I think will also work for pre candlepin-2.0.0, but is untested.  <== TODO
 		updateSubscriptionPoolDatesOnDatabase(testPool,newStartDate,null);
-
 		log.info("Now let's refresh the subscription pools to expose the POOL MODIFIED event...");
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
-		
+		} else
+		CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, CandlepinTasks.getSubscriptionIdForPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId),newStartDate,null);
+
 		// assert the consumer feed...
 		List<String> newEventTitles = new ArrayList<String>();
 		//newEventTitles.add("ENTITLEMENT MODIFIED");
@@ -669,6 +671,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // do something that will fire an import created event
 		CandlepinTasks.importConsumerUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey,"/tmp/export.zip");
 		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) {
+			newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED"/*, "SUBSCRIPTION CREATED" is no longer created in candlepin-2.0 */};
+		}
 		List<String> newEventTitlesList = new ArrayList<String>(); newEventTitlesList.addAll(Arrays.asList(newEventTitles));
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011

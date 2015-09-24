@@ -215,7 +215,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			//	Functional -- may confuse the user
 			/*acronyms,*/ "blank", "emails", "filepaths", /*functions,*/ "gconf", /*kdecomments,*/ "long", /*musttranslatewords,*/ "notranslatewords", /*numbers,*/ "options", /*purepunc,*/ /*sentencecount,*/ "short", /*spellcheck,*/ "urls", "unchanged",
 			//	Cosmetic -- make it look better
-			/*brackets, doublequoting, doublespacing,*/ "doublewords", /*endpunc, endwhitespace, puncspacing, simplecaps, simpleplurals, startcaps, singlequoting, startpunc, startwhitespace, validchars */
+			/*brackets, doublequoting, doublespacing,*/ "doublewords", /*endpunc,*/ "endwhitespace", /*puncspacing, simplecaps, simpleplurals, startcaps, singlequoting, startpunc,*/ "startwhitespace", /*validchars */
 			//	Extraction -- useful mainly for extracting certain types of string
 			/*compendiumconflicts, credits, hassuggestion, isfuzzy, isreview,*/ "untranslated");
 	
@@ -506,8 +506,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			// doublewords in the translation to ignore for specific langs
 			if((translationFile.getPath().contains("/pa/"))) ignorableMsgIds.addAll(Arrays.asList("Server URL can not be None"));
 			if((translationFile.getPath().contains("/hi/"))) ignorableMsgIds.addAll(Arrays.asList("Server URL can not be None"));	// more info in bug 861095
-			if((translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("The Subscription Management Service you register with will provide your system with updates and allow additional management.","The subscription management service you register with will provide your system with updates and allow additional management."));	// msgstr "Le service de gestion des abonnements « Subscription Management » avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."
+			if((translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("The Subscription Management Service you register with will provide your system with updates and allow additional management.","The subscription management service you register with will provide your system with updates and allow additional management."));	// msgstr "Le service de gestion des abonnements « Subscription Management » avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."	//	# (pofilter) doublewords: The word 'vous' is repeated
 			if((translationFile.getPath().contains("/or/"))) ignorableMsgIds.addAll(Arrays.asList("Run the initial checks immediately, with no delay.","Run the initial checks immediatly, with no delay.","run the initial checks immediately, with no delay"));
+			if((translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("Registering to: %s:%s%s"));	// msgstr "Enregistrement sur : %s:%s%s"	//	# (pofilter) doublewords: The word ':' is repeated
 		}
 		
 		// *******************************************************************************************
@@ -515,7 +516,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			// common unchanged translations to ignore for all langs
 			ignorableMsgIds.addAll(Arrays.asList(
 						"prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8",
-						"connectionStatusLabel","progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox","autoheal_checkbox","gpgcheck_combobox","gpgcheck_edit_button","gpgcheck_readonly","gpgcheck_remove_button","manage_repositories_dialog","remove_all_overrides_button","repository_listview",
+						"connectionStatusLabel","progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox","autoheal_checkbox","gpgcheck_combobox","gpgcheck_edit_button","gpgcheck_readonly","gpgcheck_remove_button","manage_repositories_dialog","remove_all_overrides_button","repository_listview","apply_button","register_notebook","register_widget_main_vbox","cancel_button",
 						"hostname[:port][/prefix]",
 						//"Enabled (1)",	// this is a string from src/subscription_manager/gui/data/repositories.glade that is marked as translatable="yes", however it is never seen in the GUI because it gets overwritten by string "Enabled" or "Disabled"
 						"python-rhsm: %s","subscription-manager: %s", "python-rhsm: %s", "%s of %s",
@@ -1027,6 +1028,25 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				
 				// Bug 911762 - [te] pofilter blank test is failing against subscription-manager-migration 1.8.X
 				if (pofilterTest.equals("blank") && translationFile.getPath().contains("/te/")) bugIds.add("911762");
+				
+				// Bug 1265347 - pofilter startwhitespace tests fail for many language translations in subscription-manager-1.15
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/ml/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/or/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/ja/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/ko/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/ru/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/hi/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/kn/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/it/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/bn_IN/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/es_ES/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/zh_TW/")) bugIds.add("1265347");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("1265347");
+				
+				// Bug 1265371 - pofilter endwhitespace tests fail for many language translations in subscription-manager-1.15
+				if (pofilterTest.equals("endwhitespace")) bugIds.add("1265371");
 				
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 				ll.add(Arrays.asList(new Object[] {blockedByBzBug, pofilterTest, translationFile}));

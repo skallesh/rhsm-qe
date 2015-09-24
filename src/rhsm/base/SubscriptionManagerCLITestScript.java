@@ -1477,16 +1477,33 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		String updateSubscriptionPoolEndDateSql = "";
 		String updateSubscriptionPoolStartDateSql = "";
 		if (endDate!=null) {
-			//updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
-			// AbstractCommandLineData.formatDateString does not default to enough significant figures, changing to EntitlementCert.formatDateString...
-			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
-			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+//			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+//			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+			
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0-1")) {
+				updateSubscriptionPoolEndDateSql = "update cp_pool set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id='"+pool.poolId+"';";
+			} else if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.11-1")) {	// candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+				updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+			} else {
+				//updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+				// AbstractCommandLineData.formatDateString does not default to enough significant figures, changing to EntitlementCert.formatDateString...
+				updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+EntitlementCert.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+			}
 		}
 		if (startDate!=null) {
-			//updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
-			// AbstractCommandLineData.formatDateString does not default to enough significant figures, changing to EntitlementCert.formatDateString...
-			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
-			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+//			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+//			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+			
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0-1")) {
+				updateSubscriptionPoolStartDateSql = "update cp_pool set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id='"+pool.poolId+"';";
+			} else if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.11-1")) {	// candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+				updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
+			} else {
+				//updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+				// AbstractCommandLineData.formatDateString does not default to enough significant figures, changing to EntitlementCert.formatDateString...
+				updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+EntitlementCert.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
+			}
+
 		}
 		
 		Statement sql = dbConnection.createStatement();
@@ -3382,10 +3399,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			//JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId));	
 			if (!jsonPoolMap.containsKey(modifierPool.poolId)) jsonPoolMap.put(modifierPool.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId+"?include=providedProducts.productId")));
 			JSONObject jsonModifierPool = jsonPoolMap.get(modifierPool.poolId);
+			JSONArray jsonModifierProvidedProducts = jsonModifierPool.getJSONArray("providedProducts");
+			
+			// collect all of the provided product ids for this modifier pool
+			List<String> poolModifierProvidedProductIds = new ArrayList<String>();
+			for (int l = 0; l < jsonModifierProvidedProducts.length(); l++) {
+				JSONObject jsonModifierProvidedProduct = (JSONObject) jsonModifierProvidedProducts.get(l);
+				poolModifierProvidedProductIds.add(jsonModifierProvidedProduct.getString("productId"));
+			}
 			
 			// iterate through each of the providedProducts
-			JSONArray jsonModifierProvidedProducts = jsonModifierPool.getJSONArray("providedProducts");
-			for (int i = 0; i < jsonModifierProvidedProducts.length(); i++) {
+			MODIFIER_LOOP_FOR_ITS_PROVIDED_PRODUCTS : for (int i = 0; i < jsonModifierProvidedProducts.length(); i++) {
 				JSONObject jsonModifierProvidedProduct = (JSONObject) jsonModifierProvidedProducts.get(i);
 				String modifierProvidedProductId = jsonModifierProvidedProduct.getString("productId");
 				
@@ -3429,18 +3453,47 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					//        }
 					if (!type.equalsIgnoreCase("yum")) continue;
 					
+					
 					// does this pool contain productContents that modify other products?
-					if (modifiedProductIds.size()>0) {
+					if (!modifiedProductIds.isEmpty()) {
 						
-						// yes, now its time to find the pools that provide the modifiedProductIds and therefore are considered to be the pools that provide products that are modified
+						// yes it does...  this is truly a modifier pool!
+						
+						// avoid a circular situation, exclude/skip modifier pools that provide a modifier product that modifies a product that is already provided by this pool						
+						boolean doesThisPoolModifyItself = false;
+						for (String modifiedProductId : modifiedProductIds) {
+							if (poolModifierProvidedProductIds.contains(modifiedProductId)) {
+								doesThisPoolModifyItself = true;
+								log.warning("Encountered this circular pool which appears to provide a modifier product id='"+modifierProvidedProductId+"' containing content label '"+label+"' that modifies product ids "+modifiedProductIds+" for which at least one is already among the provided products "+poolModifierProvidedProductIds+" of this pool: "+modifierPool);
+								log.warning("Excluding this pool since it appears to modify itself.  The product modifier and product modified are both among the provided products "+modifierPool.provides);
+								break MODIFIER_LOOP_FOR_ITS_PROVIDED_PRODUCTS;
+							}
+						}
+						
+						// now its time to find the pools that provide the modifiedProductIds and therefore are considered to be the pools that provide products that are modified
 						List<SubscriptionPool> poolsModified = new ArrayList<SubscriptionPool>();
-						LOOP_FOR_ALL_AVAILABLE_POOLS: for (SubscriptionPool poolModified : allAvailablePools) {
+						MODIFIED_LOOP_FOR_ALL_AVAILABLE_POOLS: for (SubscriptionPool poolModified : allAvailablePools) {
+							
 							//JSONObject jsonPoolModified = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId));	
 							if (!jsonPoolMap.containsKey(poolModified.poolId)) jsonPoolMap.put(poolModified.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId+"?include=providedProducts.productId")));
 							JSONObject jsonPoolModified = jsonPoolMap.get(poolModified.poolId);
 							
 							// iterate through each of the providedProducts of the poolModified
 							JSONArray jsonPoolModifiedProvidedProducts = jsonPoolModified.getJSONArray("providedProducts");
+							
+							// collect all of the provided product ids for this modified pool
+							List<String> poolModifiedProvidedProductIds = new ArrayList<String>();
+							for (int l = 0; l < jsonPoolModifiedProvidedProducts.length(); l++) {
+								JSONObject jsonPoolModifiedProvidedProduct = (JSONObject) jsonPoolModifiedProvidedProducts.get(l);
+								poolModifiedProvidedProductIds.add(jsonPoolModifiedProvidedProduct.getString("productId"));
+							}
+							
+							// to avoid a circular situation, exclude/skip pools that provide the same modifier product from poolsModified				
+							if (poolModifiedProvidedProductIds.contains(modifierProvidedProductId)) {
+								log.warning("Excluding modified subscription '"+poolModified.subscriptionName+"' which provides "+poolModified.provides+" from testing since it appears to provide the same modifier product '"+modifierProvidedProductId+"' that we are testing from modifier pool: "+modifierPool);
+								continue;
+							}
+							
 							for (int l = 0; l < jsonPoolModifiedProvidedProducts.length(); l++) {
 								JSONObject jsonPoolModifiedProvidedProduct = (JSONObject) jsonPoolModifiedProvidedProducts.get(l);
 								if (modifiedProductIds.contains(jsonPoolModifiedProvidedProduct.getString("productId"))) {
@@ -3457,7 +3510,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 									
 									poolsModified.add(poolModified);
 									
-									if (limitPoolsModifiedCount!=null && poolsModified.size()>=limitPoolsModifiedCount) break LOOP_FOR_ALL_AVAILABLE_POOLS;
+									if (limitPoolsModifiedCount!=null && poolsModified.size()>=limitPoolsModifiedCount) break MODIFIED_LOOP_FOR_ALL_AVAILABLE_POOLS;
 								}
 							}
 						}

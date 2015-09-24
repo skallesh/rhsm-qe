@@ -330,8 +330,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "");
 		
 		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null);
-		//Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
-		Assert.assertEquals(result.getStdout().trim(), "This system has no repositories available through subscriptions.");
+		Assert.assertEquals(result.getStdout().trim(), "Repositories disabled by configuration.", "Stdout when calling repos with rhsm.manage_repos configured to nothing.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repos with rhsm.manage_repos configured to nothing.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repos with rhsm.manage_repos configured to nothing.");
 	}
 	@AfterGroups(groups={"setup"}, value={"ReposListWhenManageReposIsBlank_Test"})
 	public void restoreRhsmManageReposAfterGroups() {

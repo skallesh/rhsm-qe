@@ -701,6 +701,7 @@ if (false) {
 		pkgs.add(0,"bash-completion");	// used in BashCompletionTests
 		pkgs.add(0,"hunspell");	// used for spellcheck testing
 		pkgs.add(0,"gettext");	// used for Pofilter and Translation testing - msgunfmt
+		pkgs.add(0,"policycoreutils-python");	// used for Docker testing - required by docker-selinux package 
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -4501,7 +4502,7 @@ if (false) {
 		if (servicelevel!=null)						command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
 		if (matchInstalled!=null && matchInstalled)	command += " --match-installed";
 		if (noOverlap!=null && noOverlap)			command += " --no-overlap";
-		if (matches!=null)							command += " --matches="+String.format(matches.contains(" ")||matches.isEmpty()?"\"%s\"":"%s", matches);	// quote a value containing spaces or is empty
+		if (matches!=null)							command += " --matches="+String.format(matches.contains(" ")||matches.isEmpty()?"\"%s\"":"%s", matches.replaceAll("\"","\\\\\""));	// quote a value containing spaces or is empty and escape double quotes
 		if (poolOnly!=null && poolOnly)				command += " --pool-only";
 		if (proxy!=null)							command += " --proxy="+proxy;
 		if (proxyuser!=null)						command += " --proxyuser="+proxyuser;
@@ -4800,8 +4801,9 @@ if (false) {
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos command indicates a success.");
 		
 		// when rhsm.manage_repos is off, this feedback overrides all operations
-		String manage_repos = getConfFileParameter(rhsmConfFile, "rhsm", "manage_repos"); if (manage_repos==null) manage_repos="1";
-		if (manage_repos.equals("0")) {
+		String manage_repos = getConfFileParameter(rhsmConfFile, "rhsm", "manage_repos");
+		if (manage_repos==null) manage_repos="1";
+		if (manage_repos.equals("0") || manage_repos.isEmpty()/*see bug 1251853*/) {
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.","Stdout when rhsm.manage_repos is configured to 0.");
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThe system is not entitled to use any repositories.","Stdout when rhsm.manage_repos is configured to 0.");
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThis system has no repositories available through subscriptions.","Stdout when rhsm.manage_repos is configured to 0.");	// changed by bug 895462
