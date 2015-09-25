@@ -8101,6 +8101,7 @@ if (false) {
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Request failed due to concurrent modification".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("The system is unable to complete the requested transaction".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("object is not iterable".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to serialize objects to JSON.".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("timed out".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase())) {
 			// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
