@@ -518,6 +518,14 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		if (subscriptions==null) subscriptions = false;
 		if (subscriptions) expectedFiles.add("/subscriptions.json");
 		
+		// accommodate new behavior from https://bugzilla.redhat.com/show_bug.cgi?id=1246680#c2 to ignore --subscriptions option
+		if (subscriptions) {
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.15.9-12")) { // RHEL7.2 subscription-manager commit 99f92c23e7da022f1600f7dd6a81e90eefab5c30
+				log.warning("Although the --subscriptions option was requested.  This option is no longer honored as decided in Bug 1246680 and effective in subscription-manager-1.15.9-12 and newer.  Removing /subscriptions.json from the expected collected results.");
+				expectedFiles.remove("/subscriptions.json");
+			}
+		}
+		
 		// exclude the remaining debug files when running the sos option...  unless their configuration is found outside /etc/ to avoid double collection by the sosreport tool; see https://bugzilla.redhat.com/show_bug.cgi?id=1060727#c0
 		if (sos==null) sos = false;
 			
