@@ -1,5 +1,6 @@
 package rhsm.cli.tests;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -1254,6 +1255,14 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+		
+		//	[root@jsefler-7 ~]# rhsm-debug system
+		//	Wrote: /tmp/rhsm-debug-system-20150929-039530.tar.gz
+		// delete the rhsm-debug-system file for the sake of saving space
+		if (attemptResult.getStdout().trim().matches("Wrote: /tmp/rhsm-debug-system-\\d+-\\d+.tar.gz")) {
+			File rhsmDebugSystemFile = new File(attemptResult.getStdout().split(":")[1].trim());	// Wrote: /tmp/rhsm-debug-system-20140115-457636.tar.gz
+			client.runCommandAndWait("rm -f "+rhsmDebugSystemFile);
+		}
 	}
 	
 	
@@ -1282,6 +1291,14 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+		
+		//	[root@jsefler-7 ~]# rhsm-debug system
+		//	Wrote: /tmp/rhsm-debug-system-20150929-039530.tar.gz
+		// delete the rhsm-debug-system file for the sake of saving space
+		if (attemptResult.getStdout().trim().matches("Wrote: /tmp/rhsm-debug-system-\\d+-\\d+.tar.gz")) {
+			File rhsmDebugSystemFile = new File(attemptResult.getStdout().split(":")[1].trim());	// Wrote: /tmp/rhsm-debug-system-20140115-457636.tar.gz
+			client.runCommandAndWait("rm -f "+rhsmDebugSystemFile);
+		}
 		
 		// assert the tail of proxyLog shows the proxyLogGrepPattern
 		if (proxyLogGrepPattern!=null) {
