@@ -125,6 +125,32 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="after registering and subscribing, call rhsm-debug system with --subscriptions option and verify the results",
+			groups={"blockedByBug-1194906","blockedByBug-1246680"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void RhsmDebugSystemWithSubscriptionsAndNoSubscriptions_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.15.9-12")) throw new SkipException("rhsm-debug system --subscriptions --no-subscriptions was not fixed until versions >= subscription-manager-1.15.9-12");
+		
+		// mark the log file
+		String marker = "RhsmDebugSystemWithSubscriptionsAndNoSubscriptions_Test_"+String.valueOf(System.currentTimeMillis());	// using a timestamp on the class marker will help identify the test class during which a denial is logged
+		
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, marker);
+		
+		// run the rhsmDebugSystemTest with --subscriptions --no-subscriptions
+		verifyRhsmDebugSystemTestWithOptions(null,null, null, true, true);
+		
+		//	[root@jsefler-7 ~]# tail -f /var/log/rhsm/rhsm.log
+		//	2015-09-29 15:58:20,957 [INFO] rhsm-debug:5008 @debug_commands.py:98 - The rhsm-debug options '--subscriptions' and '--no-subscriptions' have no effect now.
+		
+		// get the log file
+		String rhsmLogFileTrace = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, marker,"rhsm-debug");
+		
+		String expectedLogInfo = "The rhsm-debug options '--subscriptions' and '--no-subscriptions' have no effect now.";
+		Assert.assertTrue(rhsmLogFileTrace.contains(expectedLogInfo), "The '"+clienttasks.rhsmLogFile+"' contains expected INFO message '"+expectedLogInfo+"' when rhsm-debug system is called with options --subscriptions and --no-subscriptions.");
+	}
+	
+	
 	@Test(	description="after registering and subscribing, call rhsm-debug system with both --no-archive and --destination option and verify the results",
 			groups={"blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
