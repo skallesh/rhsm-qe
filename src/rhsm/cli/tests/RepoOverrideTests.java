@@ -634,11 +634,49 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	protected String rhsmFullRefreshOnYumConfigured = null;
 	
 	
-	
-	
-	
-	
-	
+	@Test(	description="subscription-manager: repos --list should provide feedback when config rhsm.manage_repos is off.",
+			groups={"ReposOverridesWhenManageReposIsOff_Test","blockedByBug-1257943"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposOverridesWhenManageReposIsOff_Test(){
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// config rhsm.manage_repos to an off value
+		//clienttasks.config(null, null, true, new String[]{"rhsm", "manage_repos", "0"});
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "0");
+		
+		SSHCommandResult result;
+		String expectedMsg = "Repositories disabled by configuration.";
+		
+		// list repo overrides (with manage_repo=0)
+		result = clienttasks.repo_override(true, null, (List<String>)null, (List<String>)null, null, null, null, null);
+		Assert.assertTrue(result.getStdout().trim().startsWith(expectedMsg), "Stdout when calling repo-override with rhsm.manage_repos configured to 0 starts with expected message '"+expectedMsg+"'");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repo-override with rhsm.manage_repos configured to 0.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repo-override with rhsm.manage_repos configured to 0.");
+		
+		// add a repo override (with manage_repo=0)
+		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
+		repoOverrideNameValueMap.put("enabled", "false");
+		repoOverrideNameValueMap.put("gpgcheck", "false");
+		result = clienttasks.repo_override(null, null, "test-repo", null, repoOverrideNameValueMap, null, null, null);
+		Assert.assertTrue(result.getStdout().trim().startsWith(expectedMsg), "Stdout when calling repo-override --add with rhsm.manage_repos configured to 0 starts with expected message '"+expectedMsg+"'");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repo-override --add with rhsm.manage_repos configured to 0.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repo-override --add with rhsm.manage_repos configured to 0.");
+		
+		// remove a repo override (with manage_repo=0)
+		result = clienttasks.repo_override(null, null, "test-repo", "gpgcheck", null, null, null, null);
+		Assert.assertTrue(result.getStdout().trim().startsWith(expectedMsg), "Stdout when calling repo-override --remove with rhsm.manage_repos configured to 0 starts with expected message '"+expectedMsg+"'");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repo-override --remove with rhsm.manage_repos configured to 0.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repo-override --remove with rhsm.manage_repos configured to 0.");
+		
+		// TODO could add more repo-override calls to asert expected message
+	}
+	@AfterGroups(groups={"setup"}, value={"ReposOverridesWhenManageReposIsOff_Test"})
+	public void restoreRhsmManageReposAfterGroups() {
+		//clienttasks.config(null, null, true, new String[]{"rhsm", "manage_repos", "1"});
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
+	}
 	
 	
 	
