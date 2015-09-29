@@ -334,10 +334,29 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repos with rhsm.manage_repos configured to nothing.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repos with rhsm.manage_repos configured to nothing.");
 	}
-	@AfterGroups(groups={"setup"}, value={"ReposListWhenManageReposIsBlank_Test"})
+	@AfterGroups(groups={"setup"}, value={"ReposListWhenManageReposIsBlank_Test","ReposListWhenManageReposIsOff_Test"})
 	public void restoreRhsmManageReposAfterGroups() {
 		//clienttasks.config(null, null, true, new String[]{"rhsm", "manage_repos", "1"});
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
+	}
+	
+	
+	@Test(	description="subscription-manager: repos --list should provide feedback when config rhsm.manage_repos is off.",
+			groups={"ReposListWhenManageReposIsOff_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposListWhenManageReposIsOff_Test(){
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		
+		// config rhsm.manage_repos to an off value
+		//clienttasks.config(null, null, true, new String[]{"rhsm", "manage_repos", "0"});
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "0");
+		
+		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), "Repositories disabled by configuration.", "Stdout when calling repos with rhsm.manage_repos configured to 0.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repos with rhsm.manage_repos configured to 0.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repos with rhsm.manage_repos configured to 0.");
 	}
 	
 	
