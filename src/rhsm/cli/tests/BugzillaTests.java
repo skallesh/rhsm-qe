@@ -1566,11 +1566,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 //		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 //Why?		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
 		String contentWithIdMessage = "Content with id "+contentId+" could not be found.";
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) contentWithIdMessage = "Content with ID \""+contentId+"\" could not be found.";
-
-// temporary fix, -- delete after crog fixes candlepin string upstream
-if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) contentWithIdMessage = "Content with id \""+contentId+"\" could not be found.";
-
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.7")) contentWithIdMessage = "Content with ID \""+contentId+"\" could not be found.";	// commit 6b63e346c61789837211828043ad9576a756d0e8
+		
 //Why?	Assert.assertContainsNoMatch(jsonActivationKey.toString(), contentWithIdMessage);
 		resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
@@ -2889,7 +2886,9 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify unsubscribe from multiple invalid serial numbers", groups = { "UnsubscribeFromInvalidMultipleEntitlements" }, enabled = true)
+	@Test(	description = "Verify unsubscribe from multiple invalid serial numbers",
+			groups = {"blockedByBug-1268491", "UnsubscribeFromInvalidMultipleEntitlements" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 50230)
 	public void UnsubscribeFromInvalidMultipleEntitlements()
 			throws JSONException, Exception {
@@ -2897,10 +2896,12 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
-		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
-		}
+		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
+//		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+//			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+//		}
+// too slow, this is faster subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		if(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty())throw new SkipException(
 				"Sufficient pools are not available");
 		for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
