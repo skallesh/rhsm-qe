@@ -1622,8 +1622,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if bind and unbind event is recorded in syslog", 
-			groups = {"VerifyBindAndUnbindInSyslog","blockedByBug-919700"}, enabled = true)
+	@Test(	description = "verify that bind and unbind event is recorded in syslog", 
+			groups = {"VerifyBindAndUnbindInSyslog","blockedByBug-919700"},
+			enabled = true)
 	@ImplementsNitrateTest(caseId=68740)
 	public void VerifyBindAndUnbindInSyslog() throws JSONException,Exception {
 		String logMarker, expectedSyslogMessage, tailFromSyslogFile;
@@ -1639,7 +1640,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : pools) {
 			//	Feb  3 12:08:01 jsefler-7 subscription-manager: Added subscription for 'Awesome OS Stackable guest limit 4' contract '2'
 			//	Feb  3 12:08:01 jsefler-7 subscription-manager: Added subscription for product 'Awesome OS Server Bits'
-			expectedSyslogMessage = String.format("%s: Added subscription for '%s' contract '%s'", clienttasks.command, pool.subscriptionName,pool.contract);
+			//	Oct 2 01:20:52 jsefler-7server subscription-manager: Added subscription for 'Awesome OS Instance Based (Standard Support)' contract 'None'
+			expectedSyslogMessage = String.format("%s: Added subscription for '%s' contract '%s'", clienttasks.command, pool.subscriptionName,pool.contract.isEmpty()?"None":pool.contract);	// Note that a null/missing contract will be reported as None.  Seems reasonable.
 			Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),"After subscribing to '"+pool.subscriptionName+"', syslog '"+clienttasks.messagesLogFile+"' contains expected message '"+expectedSyslogMessage+"'.");
 			for (String providedProduct : pool.provides) {
 				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1016300
@@ -1671,7 +1673,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Large File Support Bits'
 			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Shared Storage Bits'
 			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Management Bits'
-			expectedSyslogMessage = String.format("%s: Removed subscription for '%s' contract '%s'", clienttasks.command, productSubscription.productName,productSubscription.contractNumber);
+			expectedSyslogMessage = String.format("%s: Removed subscription for '%s' contract '%s'", clienttasks.command, productSubscription.productName,productSubscription.contractNumber==null?"None":productSubscription.contractNumber);	// Note that a null/missing contract will be reported as None.  Seems reasonable.
 			Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),"After unsubscribing from '"+productSubscription.productName+"', syslog '"+clienttasks.messagesLogFile+"' contains expected message '"+expectedSyslogMessage+"'.");
 			for (String providedProduct : productSubscription.provides) {
 				expectedSyslogMessage = String.format("%s: Removed subscription for product '%s'", clienttasks.command, providedProduct);
