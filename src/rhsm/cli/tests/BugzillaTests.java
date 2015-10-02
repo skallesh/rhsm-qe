@@ -94,13 +94,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void VerifyrhsmDebugWithNoArchive() throws Exception {
 		String path = "/tmp/rhsmDebug/";
-		client.runCommandAndWait("mkdir "+ path);
+		client.runCommandAndWait("rm -rf "+path+" && mkdir -p "+path);	// pre cleanup
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(path, true, null, null, null, null, null, null));
 		Assert.assertContainsMatch(result.getStdout(), "Wrote: "+path+"rhsm-debug-system");
-
+		client.runCommandAndWait("rm -rf "+path);	// post cleanup
 	}
 
 	/**
