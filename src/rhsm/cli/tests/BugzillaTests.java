@@ -2831,8 +2831,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify healing of installed products without taking future subscriptions into consideration", groups = { "VerifyHealingForFutureSubscription","blockedByBug-907638"}, enabled = true)
-	public void VerifyHealingForFuturesubscription() throws JSONException,
+	@Test(	description = "verify healing of installed products without taking future subscriptions into consideration",
+			groups = {"VerifyHealingForFutureSubscription","blockedByBug-907638"},
+			enabled = true)
+	public void VerifyHealingForFutureSubscription() throws JSONException,
 	Exception {
 		String productId =null;
 
@@ -2840,7 +2842,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.run_rhsmcertd_worker(true);
-		List<InstalledProduct> installedproducts = clienttasks.getCurrentlyInstalledProducts();
+		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();
 		clienttasks.autoheal(null, null, true, null, null, null); // disabling autoheal
 		Calendar now = new GregorianCalendar();
@@ -2850,35 +2852,48 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
 		List<SubscriptionPool> availOnDate = getAvailableFutureSubscriptionsOndate(onDateToTest);
 		if(availOnDate.size()==0) throw new SkipException("Sufficient future pools are not available");
-		clienttasks.subscribe(null, null, availOnDate.get(randomGenerator.nextInt(availOnDate.size())).poolId, null, null, null, null, null, null, null, null, null);
-
-
-		for (InstalledProduct installedproduct : clienttasks
-				.getCurrentlyInstalledProducts()) {
-			if (installedproduct.status.equals("Future Subscription")) {
-
-				productId=installedproduct.productId;
+		SubscriptionPool futureAvailableSubscriptionPool = null;
+		for (SubscriptionPool subscriptionPool : getRandomList(availOnDate)) {
+			// skip future temporary pools to avoid:
+			// 201510051235:34.087 - FINE: ssh root@jsefler-7.usersys.redhat.com subscription-manager subscribe --pool=8a9087905019c618015019c77f500880 (com.redhat.qe.tools.SSHCommandRunner.run)
+			// 201510051235:37.684 - FINE: Stdout: Pool is restricted when it is temporary and begins in the future:  '8a9087905019c618015019c77f500880'
+			if (subscriptionPool.subscriptionType.endsWith("(Temporary)")) continue;
+			List<String> providedProductIdsOfSubscriptionPool = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId);
+			for (String providedProductId : providedProductIdsOfSubscriptionPool) {
+				if (InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, currentlyInstalledProducts)!=null) {
+					futureAvailableSubscriptionPool = subscriptionPool;
+				}
 			}
 		}
-		InstalledProduct installedPro = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, installedproducts);
-	       if(installedPro.status.equals("Not Subscribed"))throw new SkipException("pools are not available for testing");
+		if (futureAvailableSubscriptionPool==null) throw new SkipException("Could not find a viable future subscription that provides for an installed product to test on '"+onDateToTest+"'.");
+		clienttasks.subscribe(null, null, futureAvailableSubscriptionPool.poolId, null, null, null, null, null, null, null, null, null);
+		ProductSubscription futureConsumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", futureAvailableSubscriptionPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
+		String expectedFutureConsumedProductSubscriptionStatusDetails = "Subscription has not begun";
+		Assert.assertTrue(futureConsumedProductSubscription.statusDetails.contains(expectedFutureConsumedProductSubscriptionStatusDetails), "The status details of the future consumed subscription states '"+expectedFutureConsumedProductSubscriptionStatusDetails+"'.");
+		List<String> providedProductIdsOfFutureConsumedProductSubscription = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, futureAvailableSubscriptionPool.poolId);
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		for (String providedProductId : providedProductIdsOfFutureConsumedProductSubscription) {
+			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
+			if (installedProduct!=null) {
+				Assert.assertEquals(installedProduct.status,"Future Subscription","Status of an installed product provided by a future consumed subscription.");
+				productId = installedProduct.productId;
+			}
+		}
+		if (productId==null) throw new SkipException("None of the provided products from consumed future subscription '"+futureConsumedProductSubscription+"' are installed for testing.");
 		clienttasks.autoheal(null, true, null, null, null, null); // enabling autoheal
 		clienttasks.run_rhsmcertd_worker(true);
 		boolean assertedFutureSubscriptionIsNowSubscribed = false;
-		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-				if (installedProduct.productId.equals(productId)) {
-					List<String> installedProductArches = new ArrayList<String>(Arrays.asList(installedProduct.arch.trim().split(" *, *")));	// Note: the arch can be a comma separated list of values
-					if (installedProductArches.contains("x86")) {installedProductArches.addAll(Arrays.asList("i386","i486","i586","i686"));}	// Note: x86 is a general alias to cover all 32-bit intel microprocessors, expand the x86 alias
-					if (installedProductArches.contains(clienttasks.arch) || installedProductArches.contains("ALL")) {
-						Assert.assertEquals(installedProduct.status.trim(),
-								"Subscribed", "Previously installed product '"+installedProduct.productName+"' covered by a Future Subscription should now be covered by a current subscription after auto-healing.");
-						assertedFutureSubscriptionIsNowSubscribed = true;
-					} else {
-						Assert.assertEquals(installedProduct.status.trim(),
-								"Future Subscription", "Mismatching arch installed product '"+installedProduct.productName+"' (arch='"+installedProduct.arch+"') covered by a Future Subscription should remain unchanged after auto-healing.");			
-					}
-				}
-			}
+		InstalledProduct installedProductAfterAutoHealing = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyInstalledProducts());
+		List<String> installedProductArches = new ArrayList<String>(Arrays.asList(installedProductAfterAutoHealing.arch.trim().split(" *, *")));	// Note: the arch can be a comma separated list of values
+		if (installedProductArches.contains("x86")) {installedProductArches.addAll(Arrays.asList("i386","i486","i586","i686"));}	// Note: x86 is a general alias to cover all 32-bit intel microprocessors, expand the x86 alias
+		if (installedProductArches.contains(clienttasks.arch) || installedProductArches.contains("ALL")) {
+			Assert.assertEquals(installedProductAfterAutoHealing.status.trim(),
+					"Subscribed", "Previously installed product '"+installedProductAfterAutoHealing.productName+"' covered by a Future Subscription should now be covered by a current subscription after auto-healing.");
+			assertedFutureSubscriptionIsNowSubscribed = true;
+		} else {
+			Assert.assertEquals(installedProductAfterAutoHealing.status.trim(),
+					"Future Subscription", "Mismatching arch installed product '"+installedProductAfterAutoHealing.productName+"' (arch='"+installedProductAfterAutoHealing.arch+"') covered by a Future Subscription should remain unchanged after auto-healing.");			
+		}
 		
 		Assert.assertTrue(assertedFutureSubscriptionIsNowSubscribed,"Verified at least one previously installed product covered by a Future Subscription is now covered by a current subscription after auto-healing.");
 	}
