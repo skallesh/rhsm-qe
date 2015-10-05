@@ -378,6 +378,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// run rhsm-debug system
 		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, noArchive, sos, noSubscriptions, subscriptions, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
+		clienttasks.logRuntimeErrors(result);
 		
 		// assert results
 		String invalidServerResponseMessage = "The proxy server received an invalid response from an upstream server";
