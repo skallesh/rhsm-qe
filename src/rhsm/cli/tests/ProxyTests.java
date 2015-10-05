@@ -1,5 +1,6 @@
 package rhsm.cli.tests;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -23,9 +24,12 @@ import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
+
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.SubscriptionPool;
+
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -1251,6 +1255,14 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+		
+		//	[root@jsefler-7 ~]# rhsm-debug system
+		//	Wrote: /tmp/rhsm-debug-system-20150929-039530.tar.gz
+		// delete the rhsm-debug-system file for the sake of saving space
+		if (attemptResult.getStdout().trim().matches("Wrote: /tmp/rhsm-debug-system-\\d+-\\d+.tar.gz")) {
+			File rhsmDebugSystemFile = new File(attemptResult.getStdout().split(":")[1].trim());	// Wrote: /tmp/rhsm-debug-system-20140115-457636.tar.gz
+			client.runCommandAndWait("rm -f "+rhsmDebugSystemFile);
+		}
 	}
 	
 	
@@ -1279,6 +1291,14 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+		
+		//	[root@jsefler-7 ~]# rhsm-debug system
+		//	Wrote: /tmp/rhsm-debug-system-20150929-039530.tar.gz
+		// delete the rhsm-debug-system file for the sake of saving space
+		if (attemptResult.getStdout().trim().matches("Wrote: /tmp/rhsm-debug-system-\\d+-\\d+.tar.gz")) {
+			File rhsmDebugSystemFile = new File(attemptResult.getStdout().split(":")[1].trim());	// Wrote: /tmp/rhsm-debug-system-20140115-457636.tar.gz
+			client.runCommandAndWait("rm -f "+rhsmDebugSystemFile);
+		}
 		
 		// assert the tail of proxyLog shows the proxyLogGrepPattern
 		if (proxyLogGrepPattern!=null) {
@@ -2128,6 +2148,26 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getRedeemAttemptsUsingProxyServerDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
+			
+			// Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr
+			
+			// alter expected exitCode and stderr for rows that are normally exitCode=0 against standalone candlepin >= 2.0.7-1
+			if (CandlepinType.standalone.equals(sm_serverType)) {
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.7-1")) {	// candlepin commit 676ce6c2786203a33ec5eedc8dadcd664a62f09e 1263474: Standalone candlepin now returns the expected error message and code
+					if (((Integer)l.get(7)).equals(Integer.valueOf(0))) {	// exit code
+						// get the existing BlockedByBzBug 
+						BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+						List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+						// add Bug 1263474 - subscription-manager redeem is not reporting the response to stdout
+						bugIds.add("1263474");
+						blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+						
+						ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	new Integer(70)/*EX_SOFTWARE*/,	l.get(8),	new String("Standalone candlepin does not support redeeming a subscription.")}));
+						continue;
+					}
+				}
+			}
+			
 			// only block rows where stdout != null with BlockedByBzBug("732499")
 			if (l.get(8)!=null) {
 				// get the existing BlockedByBzBug 
@@ -2153,6 +2193,26 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getRedeemAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
+			
+			// Object blockedByBug, String username, String password, Sring org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern
+			
+			// alter expected exitCode and stderr for rows that are normally exitCode=0 against standalone candlepin >= 2.0.7-1
+			if (CandlepinType.standalone.equals(sm_serverType)) {
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.7-1")) {	// candlepin commit 676ce6c2786203a33ec5eedc8dadcd664a62f09e 1263474: Standalone candlepin now returns the expected error message and code
+					if (((Integer)l.get(11)).equals(Integer.valueOf(0))) {	// exit code
+						// get the existing BlockedByBzBug 
+						BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+						List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+						// add Bug 1263474 - subscription-manager redeem is not reporting the response to stdout
+						bugIds.add("1263474");
+						blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+						
+						ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	new Integer(70)/*EX_SOFTWARE*/,	l.get(12),	new String("Standalone candlepin does not support redeeming a subscription."),	l.get(14),	l.get(15),	l.get(16)}));
+						continue;
+					}
+				}
+			}
+			
 			// only block rows where stdout != null with BlockedByBzBug("732499")
 			if (l.get(12)!=null) {
 				// get the existing BlockedByBzBug 

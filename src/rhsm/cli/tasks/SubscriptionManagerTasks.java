@@ -8013,9 +8013,13 @@ if (false) {
 		}
 		
 		
+		// no reason to suspect an error when ExitCode is 0
+		if (result.getExitCode()!=null) {
+			if (result.getExitCode().equals(0)) {
+				return;
+			}
+		}
 		
-		
-		if (result.getExitCode().equals(0)) return;	// no reason to suspect an error
 		
 		//	ssh root@ibm-p8-01-lp6.rhts.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9814931ea74014933dec2b60673
 		//	Stdout:
@@ -8068,6 +8072,16 @@ if (false) {
 		//	Stderr: 'NoneType' object is not iterable
 		//	ExitCode: 70
 		
+		//	ssh root@ibm-x3550m3-09.lab.eng.brq.redhat.com subscription-manager release --list
+		//	Stdout:
+		//	Stderr: ''
+		//	ExitCode: 70
+		
+		//	ssh root@ibm-x3550m3-08.lab.eng.brq.redhat.com subscription-manager list --installed
+		//	Stdout:
+		//	Stderr:
+		//	ExitCode: null
+		
 		//	2014-04-08 16:41:56,930 [INFO] subscription-manager @managercli.py:299 - Server Versions: {'candlepin': 'Unknown', 'server-type': 'Red Hat Subscription Management'}
 		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:418 - Loaded CA certificates from /etc/rhsm/ca/: candlepin-stage.pem, redhat-uep.pem
 		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:450 - Making request: DELETE /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e
@@ -8101,8 +8115,11 @@ if (false) {
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Request failed due to concurrent modification".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("The system is unable to complete the requested transaction".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("object is not iterable".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to serialize objects to JSON.".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("timed out".toLowerCase()) ||
-			(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase())) {
+			(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("''".toLowerCase()) ||
+			(result.getExitCode()==null)) {
 			// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
 			String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
 			SSHCommandResult getTracebackCommandResult = sshCommandRunner.runCommandAndWaitWithoutLogging(getTracebackCommand);

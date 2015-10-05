@@ -581,6 +581,10 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
 		registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
 		
+		// make sure we are Enforcing selinux
+		RemoteFileTasks.runCommandAndAssert(client, "setenforce 1", Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client, "getenforce", Integer.valueOf(0), "Enforcing",null);
+		
 		// register the host, auto-heal, and get the granted entitlements
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(String)null,null,null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, true, null, null, null, null);

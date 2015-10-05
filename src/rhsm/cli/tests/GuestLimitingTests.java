@@ -33,7 +33,7 @@ import com.redhat.qe.tools.SSHCommandResult;
 @Test(groups = { "GuestLimitingTests","Tier2Tests" })
 public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 	protected String ownerKey = "";
-	protected List<String> providedProductId=null;
+	protected List<String> providedProductIds=new ArrayList<String>();
 	protected String factname="system.entitlements_valid";
 	public static final String factValueForSystemCompliance = "valid"; 			
 	public static final String factValueForSystemNonCompliance = "invalid"; 	
@@ -71,7 +71,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId, jsonData);
 		String pool=getGuestlimitPool(String.valueOf(guestLimit));
 
-		installProductCert(providedProductId.get(randomGenerator.nextInt(providedProductId.size())));
+		installProductCert(providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		//Assert the system compliance 
@@ -112,7 +112,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		System.out.println(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 
 		String pool=getGuestlimitPool(String.valueOf(guestLimit-1));
-		installProductCert(providedProductId.get(randomGenerator.nextInt(providedProductId.size())));
+		installProductCert(providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		//Assert the system compliance 
@@ -132,7 +132,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest","False");
-			factsMap.put(" virt.uuid", "");
+			factsMap.put("virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
 			clienttasks.facts(null, true, null, null, null);
 		}
@@ -151,7 +151,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		jsonData.put("guestIds", expectedGuestIds);
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId, jsonData);
 		String pool=getGuestlimitPool("-1");
-		installProductCert(providedProductId.get(randomGenerator.nextInt(providedProductId.size())));
+		installProductCert(providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		//Assert the system compliance 
@@ -194,7 +194,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId, jsonData);
 		String pool=getGuestlimitPool(String.valueOf(guestLimit));
 
-		installProductCert(providedProductId.get(randomGenerator.nextInt(providedProductId.size())));
+		installProductCert(providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		//Assert the system compliance 
@@ -204,21 +204,17 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript{
 	
 	protected String getGuestlimitPool(String guestLimit) throws JSONException, Exception {
 		String poolId=null;
-		providedProductId.clear();
-		for (SubscriptionPool pool : clienttasks
-				.getCurrentlyAvailableSubscriptionPools()) {
-			String GuestLimitAttribute = CandlepinTasks
-					.getPoolProductAttributeValue(sm_clientUsername,
-							sm_clientPassword, sm_serverUrl, pool.poolId,
-							"guest_limit");
+		providedProductIds.clear();
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			String GuestLimitAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,sm_clientPassword, sm_serverUrl, pool.poolId,"guest_limit");
 			if((!(GuestLimitAttribute == null))&&(GuestLimitAttribute.equals(guestLimit))){
 				poolId=pool.poolId;
-				providedProductId=(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId));
+				providedProductIds=(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId));
 				log.info("Found the following subscription pool with guest_limit '"+guestLimit+"' that provides at least one product: "+pool);
-				if (!providedProductId.isEmpty()) return poolId; 
+				if (!providedProductIds.isEmpty()) return poolId; 
 			}
 		}
-		if (providedProductId.isEmpty()) throw new SkipException("Could not find a subscription pool with guest_limit '"+guestLimit+"' that provides a product for this test.");
+		if (providedProductIds.isEmpty()) throw new SkipException("Could not find a subscription pool with guest_limit '"+guestLimit+"' that provides a product for this test.");
 		return poolId;
 	}
 

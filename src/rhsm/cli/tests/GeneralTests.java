@@ -932,9 +932,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return ll;
 		
 		// due to design changes, this is a decent place to dump old commands that have been removed
-		
-		// String command, int expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-		
+				
 		// negative tests that require the system to be unregistered first...
 		// Object blockedByBug, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr
 		clienttasks.unregister(null,null,null);
@@ -997,7 +995,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1200972"}),clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(64),	"","Error: Must use --auto with --servicelevel."}));
 			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --file=/missing/poolIds.txt",				new Integer(65),	"","Error: The file \"/missing/poolIds.txt\" does not exist or cannot be read."}));	// added by bug 1159974
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.1-1")) {
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-12")) {
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1246680"}),		clienttasks.rhsmDebugSystemCommand(null,null,null,true,true,null,null,null),new Integer(0),	/*"Wrote: /tmp/rhsm-debug-system-\\d+-\\d+.tar.gz"*/null,""}));	// added by bug 1246680 which trumps bug 1194906
+			} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.1-1")) {
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1194906"}),		clienttasks.rhsmDebugSystemCommand(null,null,null,true,true,null,null,null),new Integer(64),	"","Error: You may not use --subscriptions with --no-subscriptions."}));	// added by bug 1194906
 			}
 		} else {	// pre commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688

@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.LogRecord;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
@@ -873,8 +872,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			
 			if (release.equals("6.2")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
 			if (release.equals("6.4")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
-			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1261163"); 	//     Bug 1261163 -  uncertain of expected release listing on rhel72 arm system
-			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("ppc64le")) bugIds.add("1261171"); 	//     Bug 1261163 -  uncertain of expected release listing on rhel72 arm system
+			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1261163"); 	// Bug 1261163 -  uncertain of expected release listing on rhel72 arm system
+			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("ppc64le")) bugIds.add("1261171"); 	// Bug 1261171 - uncertain of expected release listing on rhel72 ppc64le system
+			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7.1")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
+			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7ComputeNode")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
@@ -1035,6 +1036,9 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
+		BlockedByBzBug blockedByBugs = null;
+		List<String> bugids = new ArrayList<String>();
+
 		// Step 0: remove the test package (choose a RHEL package that changes on each release - Release_Notes is a good choice)
 		// https://errata.devel.redhat.com/package/show/zsh
 		//	RHEL-5.8.0 		zsh-4.2.6-6.el5
@@ -1057,8 +1061,12 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3 Beta",	"6.3",	"6.5"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("7") && !clienttasks.redhatReleaseXY.equals("7.0") && !clienttasks.redhatReleaseXY.equals("7.1")) {	// Note: this test depends on an available Release level of 7.0 and 7.1 in the release listing file which will not be available until the rhel 7.2 test cycle; skipping until we test rhel 7.2
+			if (clienttasks.variant.equals("ComputeNode")) bugids.add("1267732");	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server 
+			if (!bugids.isEmpty()) blockedByBugs = new BlockedByBzBug(bugids.toArray(new String[]{}));
+			
+			
 			if (!clienttasks.arch.equals("ppc64le") && !clienttasks.arch.equals("aarch64"))	// ppc64le and aarch64 did not exist on 7.0 nor 7.1; exclude this row on these arches
-			ll.add(Arrays.asList(new Object[]{null,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR" ,	"7.0",		"7.0",	"7.1"}));
+			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR" ,	"7.0",		"7.0",	"7.1"}));
 			//ll.add(Arrays.asList(new Object[]{null,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.0 Beta",	"7.0",	"7.1"}));	// There is no 7.0 Beta product cert id 69 that can be updated.  The 7.0 Beta product cert is product id 226 Everything
 			//TODO UNCOMMENT ON RHEL7.3 TESTING ll.add(Arrays.asList(new Object[]{null,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.1 Beta",	"7.1",	"7.2"}));
 		}

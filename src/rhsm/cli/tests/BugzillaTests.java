@@ -94,13 +94,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void VerifyrhsmDebugWithNoArchive() throws Exception {
 		String path = "/tmp/rhsmDebug/";
-		client.runCommandAndWait("mkdir "+ path);
+		client.runCommandAndWait("rm -rf "+path+" && mkdir -p "+path);	// pre cleanup
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(path, true, null, null, null, null, null, null));
 		Assert.assertContainsMatch(result.getStdout(), "Wrote: "+path+"rhsm-debug-system");
-
+		client.runCommandAndWait("rm -rf "+path);	// post cleanup
 	}
 
 	/**
@@ -1566,11 +1566,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 //		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 //Why?		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
 		String contentWithIdMessage = "Content with id "+contentId+" could not be found.";
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) contentWithIdMessage = "Content with ID \""+contentId+"\" could not be found.";
-
-// temporary fix, -- delete after crog fixes candlepin string upstream
-if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) contentWithIdMessage = "Content with id \""+contentId+"\" could not be found.";
-
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.7")) contentWithIdMessage = "Content with ID \""+contentId+"\" could not be found.";	// commit 6b63e346c61789837211828043ad9576a756d0e8
+		
 //Why?	Assert.assertContainsNoMatch(jsonActivationKey.toString(), contentWithIdMessage);
 		resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
@@ -1625,8 +1622,9 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if bind and unbind event is recorded in syslog", 
-			groups = {"VerifyBindAndUnbindInSyslog","blockedByBug-919700"}, enabled = true)
+	@Test(	description = "verify that bind and unbind event is recorded in syslog", 
+			groups = {"VerifyBindAndUnbindInSyslog","blockedByBug-919700"},
+			enabled = true)
 	@ImplementsNitrateTest(caseId=68740)
 	public void VerifyBindAndUnbindInSyslog() throws JSONException,Exception {
 		String logMarker, expectedSyslogMessage, tailFromSyslogFile;
@@ -1642,7 +1640,8 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 		for (SubscriptionPool pool : pools) {
 			//	Feb  3 12:08:01 jsefler-7 subscription-manager: Added subscription for 'Awesome OS Stackable guest limit 4' contract '2'
 			//	Feb  3 12:08:01 jsefler-7 subscription-manager: Added subscription for product 'Awesome OS Server Bits'
-			expectedSyslogMessage = String.format("%s: Added subscription for '%s' contract '%s'", clienttasks.command, pool.subscriptionName,pool.contract);
+			//	Oct 2 01:20:52 jsefler-7server subscription-manager: Added subscription for 'Awesome OS Instance Based (Standard Support)' contract 'None'
+			expectedSyslogMessage = String.format("%s: Added subscription for '%s' contract '%s'", clienttasks.command, pool.subscriptionName,pool.contract.isEmpty()?"None":pool.contract);	// Note that a null/missing contract will be reported as None.  Seems reasonable.
 			Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),"After subscribing to '"+pool.subscriptionName+"', syslog '"+clienttasks.messagesLogFile+"' contains expected message '"+expectedSyslogMessage+"'.");
 			for (String providedProduct : pool.provides) {
 				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1016300
@@ -1674,7 +1673,7 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Large File Support Bits'
 			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Shared Storage Bits'
 			//	Feb  3 13:32:34 jsefler-7 subscription-manager: Removed subscription for product 'Management Bits'
-			expectedSyslogMessage = String.format("%s: Removed subscription for '%s' contract '%s'", clienttasks.command, productSubscription.productName,productSubscription.contractNumber);
+			expectedSyslogMessage = String.format("%s: Removed subscription for '%s' contract '%s'", clienttasks.command, productSubscription.productName,productSubscription.contractNumber==null?"None":productSubscription.contractNumber);	// Note that a null/missing contract will be reported as None.  Seems reasonable.
 			Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),"After unsubscribing from '"+productSubscription.productName+"', syslog '"+clienttasks.messagesLogFile+"' contains expected message '"+expectedSyslogMessage+"'.");
 			for (String providedProduct : productSubscription.provides) {
 				expectedSyslogMessage = String.format("%s: Removed subscription for product '%s'", clienttasks.command, providedProduct);
@@ -2889,7 +2888,9 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify unsubscribe from multiple invalid serial numbers", groups = { "UnsubscribeFromInvalidMultipleEntitlements" }, enabled = true)
+	@Test(	description = "Verify unsubscribe from multiple invalid serial numbers",
+			groups = {"blockedByBug-1268491", "UnsubscribeFromInvalidMultipleEntitlements" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 50230)
 	public void UnsubscribeFromInvalidMultipleEntitlements()
 			throws JSONException, Exception {
@@ -2897,10 +2898,12 @@ if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
-		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
-		}
+		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null);
+//		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+//			clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+//		}
+// too slow, this is faster subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		if(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty())throw new SkipException(
 				"Sufficient pools are not available");
 		for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
