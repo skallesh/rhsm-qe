@@ -3,8 +3,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure.xml :as xml]
             [clojure.pprint :only pprint]
-            [clojure.tools.cli :as cli]
-            [clojure.tools.nrepl.server :refer [start-server stop-server]])
+            [clojure.tools.cli :as cli])
   (:import [org.testng.xml Parser XmlSuite]
            [org.testng TestNG])
   (:gen-class))
