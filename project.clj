@@ -3,7 +3,7 @@
   :java-source-path "src" ;lein1
   :java-source-paths ["src"]
   :main rhsm.runtestng
-  :aot [#"^rhsm.gui.tests"] ;regex to find tests that testng will run
+  :aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
   :dependencies [[clj-http "0.9.2"]
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
@@ -29,8 +29,7 @@
                   :exclusions [org.testng/testng]]
                  [postgresql/postgresql "8.4-701.jdbc4"]
                  [slingshot "0.8.0"]
-                 [test_clj.testng "1.0.1-SNAPSHOT"]
-                 [org.clojure/tools.nrepl "0.2.10"]]
+                 [test_clj.testng "1.0.1-SNAPSHOT"]]
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
                      [lein-eclipse "1.0.0"]]
