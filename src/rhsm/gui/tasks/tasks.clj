@@ -173,8 +173,188 @@
   (ui click :yes)
   (checkforerror))
 
+
+(defn- register-system []
+  (let [result (ui click :register-system)
+        showing (ui waittillguiexist :register-dialog)]
+    [result showing]))
+
+
+(defn- select-server [server]
+  (when server
+    (ui settextvalue :register-server server))
+  (ui click :register))
+
+
+(defn- set-login-screen
+  "Fills in the username, password, the system to register and whether to
+   auto-attach during registration"
+  [user pw system-name-input skip-autosubscribe]
+  (let [user-result (ui settextvalue :redhat-login user)
+        pw-result (ui settextvalue :password pw)
+        sys-name-result (if system-name-input
+                          (ui settextvalue :system-name system-name-input)
+                          :not-needed)
+        check-auto (ui (setchecked skip-autosubscribe) :skip-autobind)]
+    {:user-result user-result :pw-result pw-result
+     :sys-name-result sys-name-result :check-auto check-auto}))
+
+
+(defn- register-dialog-exists1 [owner]
+  ;; handle owner selection
+  (when (and (bool (ui waittillshowing :owner-view 30)) owner)
+    (if-not (ui rowexist? :owner-view owner)
+      (throw+ {:type :owner-not-available
+               :name owner
+               :msg (str "Not found in 'Owner Selection':" owner)})
+      (ui selectrow :owner-view owner)))
+  (ui click :register)
+  (checkforerror 10))
+
+
+(defn- register-dialog-exists2 [auto-select-sla sla]
+  (if (and auto-select-sla (bool (ui guiexist :register-dialog "Confirm Subscriptions")))
+    ;; sla selection is presented
+    (do
+      (sleep 2000)
+      (when sla
+        (ui click :register-dialog sla))
+      (ui click :register)
+      (sleep 5000)
+      (when (bool (ui guiexist :register-dialog))
+        (ui click :register)))
+    ;; else leave sla dialog open
+    (when sla
+      (ui click :register-dialog sla))
+    ))
+
+(comment
+  "This is the old register function that was refactored...keeping here for now"
+  (defn register
+    "Registers subscription manager by clicking the 'Register System' button in the gui."
+    [username password & {:keys [system-name-input
+                                 skip-autosubscribe
+                                 owner
+                                 sla
+                                 auto-select-sla
+                                 server]
+                          :or   {system-name-input  nil
+                                 skip-autosubscribe true
+                                 owner              nil
+                                 sla                nil
+                                 auto-select-sla    true
+                                 server             nil}}]
+    (ui selecttab :my-installed-products)
+    (if-not (ui showing? :register-system)
+      (throw+ {:type               :already-registered
+               :username           username
+               :password           password
+               :system-name-input  system-name-input
+               :skip-autosubscribe skip-autosubscribe
+               :owner              owner
+               :sla                sla
+               :auto-select-sla    auto-select-sla
+               :server             server
+               :unregister-first   (fn []
+                                     (unregister)
+                                     (register username
+                                               password
+                                               :system-name-input system-name-input
+                                               :skip-autosubscribe skip-autosubscribe
+                                               :owner owner
+                                               :sla sla
+                                               :auto-select-sla auto-select-sla
+                                               :server server))}))
+    (ui click :register-system)
+    (ui waittillguiexist :register-dialog)
+    ;server selection screen
+    (when server (ui settextvalue :register-server server))
+    (ui click :register)
+    (checkforerror)
+    ;login screen
+    (ui settextvalue :redhat-login username)
+    (ui settextvalue :password password)
+    (when system-name-input
+      (ui settextvalue :system-name system-name-input))
+    (ui (setchecked skip-autosubscribe) :skip-autobind)
+    (try+
+      (ui click :register)
+      (checkforerror 10)
+      (if (bool (ui guiexist :register-dialog))
+        (do
+          ;; handle owner selection
+          (if (bool (ui waittillshowing :owner-view 30))
+            (do
+              (when owner (do
+                            (if-not (ui rowexist? :owner-view owner)
+                              (throw+ {:type :owner-not-available
+                                       :name owner
+                                       :msg  (str "Not found in 'Owner Selection':" owner)})
+                              (ui selectrow :owner-view owner))))
+              (ui click :register)
+              (checkforerror 10)))
+          ;;(ui waittillnotshowing :registering 1800)  ;; 30 minutes
+          ))
+      (if                                                   ;(bool (ui guiexist :subscribe-system-dialog))
+        (bool (ui guiexist :register-dialog))
+        (do
+          (if auto-select-sla
+            (do
+              (if (bool (ui guiexist :register-dialog "Confirm Subscriptions"))
+                ;; sla selection is presented
+                (do
+                  (sleep 2000)
+                  (when sla (ui click :register-dialog sla))
+                  (ui click :register)))
+              (sleep 5000)
+              (if (bool (ui guiexist :register-dialog))
+                (ui click :register)))
+            ;; else leave sla dialog open
+            (when sla (ui click :register-dialog sla)))))
+      (checkforerror)
+      (catch Object e
+        ;; this was rewritten, though hackey, this is prefered over adding a hard wait.
+        (let [recovery (fn [h]
+                         (if (= :no-sla-available (:type h))
+                           (throw+ h)
+                           (throw+ (into e {:cancel (fn [] (ui click :register-cancel))}))))]
+          (if-not (:msg e)
+            (let [error (checkforerror)]
+              (if (nil? error)
+                (throw+ e)
+                (recovery error)))
+            (recovery e)))))
+    (sleep 10000)))
+
+
+(defn- final-register [own sla auto & {:keys [skip-auto]
+                                       :or {skip-auto true}}]
+  (try+
+    (ui click :register)
+    (checkforerror 10)
+    (when (bool (ui guiexist :register-dialog))
+      (register-dialog-exists1 own))
+    (when (bool (ui guiexist :register-dialog))
+      (register-dialog-exists2 sla auto))
+    (checkforerror)
+    (catch Object e
+     ;; this was rewritten, though hackey, this is prefered over adding a hard wait.
+      (let [recovery (fn [h]
+                       (if (= :no-sla-available (:type h))
+                         ;; Only if it is :no-sla-available and skip-auto is false, throw it
+                         (when (not skip-auto)
+                           (throw+ h))
+                         ;; If it's some other exception type, throw it
+                         (throw+ (into e {:cancel (fn [] (ui click :register-cancel))}))))]
+       (if-not (:msg e)
+         (let [error (checkforerror)]
+           (if (nil? error)
+             (throw+ e)
+             (recovery error)))
+         (recovery e))))))
+
+
 (defn register
-  "Registers subscription manager by clicking the 'Register System' button in the gui."
   [username password & {:keys [system-name-input
                                skip-autosubscribe
                                owner
@@ -186,88 +366,38 @@
                              owner nil
                              sla nil
                              auto-select-sla true
-                             server nil}}]
-  (ui selecttab :my-installed-products)
-  (if-not (ui showing? :register-system)
-    (throw+ {:type :already-registered
-             :username username
-             :password password
-             :system-name-input system-name-input
-             :skip-autosubscribe skip-autosubscribe
-             :owner owner
-             :sla sla
-             :auto-select-sla auto-select-sla
-             :server server
-             :unregister-first (fn []
-                                 (unregister)
-                                 (register username
-                                           password
-                                           :system-name-input system-name-input
-                                           :skip-autosubscribe skip-autosubscribe
-                                           :owner owner
-                                           :sla sla
-                                           :auto-select-sla auto-select-sla
-                                           :server server))}))
-  (ui click :register-system)
-  (ui waittillguiexist :register-dialog)
-  ;server selection screen
-  (when server (ui settextvalue :register-server server))
-  (ui click :register)
-  (checkforerror)
-  ;login screen
-  (ui settextvalue :redhat-login username)
-  (ui settextvalue :password password)
-  (when system-name-input
-    (ui settextvalue :system-name system-name-input))
-  (ui (setchecked skip-autosubscribe) :skip-autobind)
-  (try+
-   (ui click :register)
-   (checkforerror 10)
-   (if (bool (ui guiexist :register-dialog))
-     (do
-       ;; handle owner selection
-       (if (bool (ui waittillshowing :owner-view 30))
-         (do
-           (when owner (do
-                         (if-not (ui rowexist? :owner-view owner)
-                           (throw+ {:type :owner-not-available
-                                    :name owner
-                                    :msg (str "Not found in 'Owner Selection':" owner)})
-                           (ui selectrow :owner-view owner))))
-           (ui click :register)
-           (checkforerror 10)))
-       ;;(ui waittillnotshowing :registering 1800)  ;; 30 minutes
-       ))
-   (if ;(bool (ui guiexist :subscribe-system-dialog))
-       (bool (ui guiexist :register-dialog))
-     (do
-       (if auto-select-sla
-         (do
-           (if (bool (ui guiexist :register-dialog "Confirm Subscriptions"))
-             ;; sla selection is presented
-             (do
-               (sleep 2000)
-               (when sla (ui click :register-dialog sla))
-               (ui click :register)))
-           (sleep 5000)
-           (if (bool (ui guiexist :register-dialog))
-             (ui click :register)))
-         ;; else leave sla dialog open
-         (when sla (ui click :register-dialog sla)))))
-   (checkforerror)
-   (catch Object e
-     ;; this was rewritten, though hackey, this is prefered over adding a hard wait.
-     (let [recovery (fn [h]
-                      (if (= :no-sla-available (:type h))
-                        (throw+ h)
-                        (throw+ (into e {:cancel (fn [] (ui click :register-cancel))}))))]
-       (if-not (:msg e)
-         (let [error (checkforerror)]
-           (if (nil? error)
-             (throw+ e)
-             (recovery error)))
-         (recovery e)))))
-  (sleep 10000))
+                             server nil}
+                        :as opts}]
+  ;; Rather than define this as a private function, this function will be declared as a closure
+  ;; here so that we can recurse back into register2 as part of unregistration (avoiding the
+  ;; need to forward declare register or select-tab)
+  (letfn [(select-tab []
+            (let [result (ui selecttab :my-installed-products)
+                  there? (ui showing? :register-system)]
+              (when-not there?
+                (let [add-keys {:type :already-registered
+                                :username username
+                                :password password
+                                :unregister-first (fn []
+                                                    (unregister)
+                                                    (register username
+                                                               password
+                                                               :system-name-input system-name-input
+                                                               :skip-autosubscribe skip-autosubscribe
+                                                               :owner owner
+                                                               :sla sla
+                                                               :auto-select-sla auto-select-sla
+                                                               :server server))}
+                      final (merge opts add-keys)]
+                  (throw+ final))
+                result)))]
+    ;; Finally!  All of the helper functions are declared, so let's call them in order
+    (select-tab)
+    (register-system)
+    (select-server server)
+    (set-login-screen username password system-name-input skip-autosubscribe)
+    (final-register owner sla auto-select-sla :skip-auto skip-autosubscribe)))
+
 
 (defn fbshowing?
   "Utility to see if a GUI object in firstboot on a RHEL5 system is showing."
