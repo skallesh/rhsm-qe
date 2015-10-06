@@ -71,6 +71,9 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		
 		// run the rhsmDebugSystemTest with --no-archive
 		verifyRhsmDebugSystemTestWithOptions(null,true, null, null, null);
+		
+		// cleanup disk space
+		removeRhsmDebugSystemArtifacts();
 	}
 	
 	
@@ -87,6 +90,9 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 
 		// run the rhsmDebugSystemTest with a valid destination
 		verifyRhsmDebugSystemTestWithOptions(destination,null, null, null, null);
+		
+		// cleanup disk space 
+		client.runCommandAndWait("rm -rf "+destination);
 	}
 	
 	
@@ -164,6 +170,9 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 
 		// run the rhsmDebugSystemTest with a valid destination
 		verifyRhsmDebugSystemTestWithOptions(destination,true, null, null, null);
+		
+		// cleanup disk space 
+		client.runCommandAndWait("rm -rf "+destination);
 	}
 	
 	
@@ -330,6 +339,34 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		if (originalCaCertDir==null)			originalCaCertDir			= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"rhsm",*/ "ca_cert_dir");
 		if (originalPluginDir==null)			originalPluginDir			= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"rhsm",*/ "pluginDir");
 		if (originalPluginConfDir==null)		originalPluginConfDir		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"rhsm",*/ "pluginConfDir");
+	}
+	
+	@BeforeClass(groups="setup")
+	public void removeRhsmDebugSystemArtifacts() {
+		if (client==null) return;
+
+		//	[root@jsefler-7server ~]# du -ha --max-depth=0 /tmp/rhsm-debug-system-*
+		//	29M	/tmp/rhsm-debug-system-20151004-223549.tar.gz
+		//	29M	/tmp/rhsm-debug-system-20151004-274775.tar.gz
+		//	32K	/tmp/rhsm-debug-system-20151004-279425.tar.gz
+		//	27M	/tmp/rhsm-debug-system-20151004-568563.tar.gz
+		//	29M	/tmp/rhsm-debug-system-20151004-734412.tar.gz
+		//	29M	/tmp/rhsm-debug-system-20151004-798556.tar.gz
+		//	29M	/tmp/rhsm-debug-system-20151004-844173.tar.gz
+		//	18M	/tmp/rhsm-debug-system-20151006-133478.tar.gz
+		//	210M	/tmp/rhsm-debug-system-20151006-502121
+		//	32K	/tmp/rhsm-debug-system-20151006-935021.tar.gz
+		client.runCommandAndWait("rm -rf /tmp/rhsm-debug-system-*");
+				
+		//	[root@jsefler-7server rhsmDebugDestination]# du -ha --max-depth=1 /var/spool/rhsm/debug/
+		//	29M	/var/spool/rhsm/debug/rhsm-debug-system-20150929-922006.tar.gz
+		//	85M	/var/spool/rhsm/debug/rhsm-debug-system-20151004-363703
+		//	30M	/var/spool/rhsm/debug/rhsm-debug-system-20150927-739970.tar.gz
+		//	29M	/var/spool/rhsm/debug/rhsm-debug-system-20151001-400033.tar.gz
+		//	29M	/var/spool/rhsm/debug/rhsm-debug-system-20151001-582606.tar.gz
+		//	29M	/var/spool/rhsm/debug/rhsm-debug-system-20151004-085336.tar.gz
+		//	1.4G	/var/spool/rhsm/debug/
+		client.runCommandAndWait("rm -rf /var/spool/rhsm/debug/rhsm-debug-system-*");
 	}
 	
 	
