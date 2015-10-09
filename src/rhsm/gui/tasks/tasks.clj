@@ -200,7 +200,7 @@
      :sys-name-result sys-name-result :check-auto check-auto}))
 
 
-(defn- register-dialog-exists1 [owner]
+(defn- register-dialog-owners [owner]
   ;; handle owner selection
   (when (and (bool (ui waittillshowing :owner-view 30)) owner)
     (if-not (ui rowexist? :owner-view owner)
@@ -212,7 +212,7 @@
   (checkforerror 10))
 
 
-(defn- register-dialog-exists2 [auto-select-sla sla]
+(defn- register-dialog-sla [auto-select-sla sla]
   (if (and auto-select-sla (bool (ui guiexist :register-dialog "Confirm Subscriptions")))
     ;; sla selection is presented
     (do
@@ -333,9 +333,9 @@
     (ui click :register)
     (checkforerror 10)
     (when (bool (ui guiexist :register-dialog))
-      (register-dialog-exists1 own))
+      (register-dialog-owners own))
     (when (bool (ui guiexist :register-dialog))
-      (register-dialog-exists2 sla auto))
+      (register-dialog-sla sla auto))
     (checkforerror)
     (catch Object e
      ;; this was rewritten, though hackey, this is prefered over adding a hard wait.
@@ -369,7 +369,7 @@
                              server nil}
                         :as opts}]
   ;; Rather than define this as a private function, this function will be declared as a closure
-  ;; here so that we can recurse back into register2 as part of unregistration (avoiding the
+  ;; here so that we can recurse back into register as part of unregistration (avoiding the
   ;; need to forward declare register or select-tab)
   (letfn [(select-tab []
             (let [result (ui selecttab :my-installed-products)
