@@ -6,6 +6,7 @@
             [clojure.tools.logging :as log])
   (:import [org.testng.annotations BeforeSuite
             AfterSuite]
+           [rhsm.base SubscriptionManagerCLITestScript]
            org.testng.SkipException))
 
 ;(def user "testuser")
@@ -53,6 +54,8 @@
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
   (try
+    (let [cliscript (SubscriptionManagerCLITestScript.)]
+      (.setupBeforeSuite cliscript))
     (config/init)
     (assert-valid-testing-arch)
     (update-ldtpd (:ldtpd-source-url @config/config))

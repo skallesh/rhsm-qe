@@ -3,7 +3,7 @@
   :java-source-path "src" ;lein1
   :java-source-paths ["src"]
   :main rhsm.runtestng
-  :aot [#"^rhsm.gui.tests"] ;regex to find tests that testng will run
+  :aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
   :dependencies [[clj-http "0.9.2"]
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
@@ -39,7 +39,9 @@
   :plugins [[lein2-eclipse "2.0.0"]]
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
-  :javac-options {:debug "on"})
+  :javac-options {:debug "on"}
+  ;:jvm-opts ["-Xdebug" "-Xrunjdwp:transport=dt_socket,address=13172,server=y,suspend=n"]
+  )
 
 (comment
   (do

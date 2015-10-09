@@ -56,5 +56,4 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
 
 (defn -main
   [& args]
-  (let [testng (TestNG/privateMain (into-array String args) nil)]
-      (.getStatus testng)))
+  (TestNG/main (into-array String args)))
