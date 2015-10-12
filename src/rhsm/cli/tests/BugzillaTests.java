@@ -997,7 +997,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}else if(isGuest.equalsIgnoreCase("False")){
 			Assert.assertContainsNoMatch(clienttasks.getCurrentlyAllAvailableSubscriptionPools().toString(), poolid);
 		}
-
+		
+		// Note: After attaching this subscription in the subscription-manager-gui, the date range is yellow and an exclamation point icon is displayed in the "My Subscriptions" tab to show the attached subscription is about to expire. 
 	}
 
 	/**
