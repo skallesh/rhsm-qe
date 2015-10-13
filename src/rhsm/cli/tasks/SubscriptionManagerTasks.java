@@ -8077,6 +8077,11 @@ if (false) {
 		//	Stderr: ''
 		//	ExitCode: 70
 		
+		//	ssh root@ibm-z10-44.rhts.eng.bos.redhat.com subscription-manager facts --update
+		//	Stdout: 
+		//	Stderr: 
+		//	ExitCode: 70
+		
 		//	ssh root@ibm-x3550m3-08.lab.eng.brq.redhat.com subscription-manager list --installed
 		//	Stdout:
 		//	Stderr:
@@ -8119,6 +8124,7 @@ if (false) {
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("timed out".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("''".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().trim().isEmpty() ||
 			(result.getExitCode()==null)) {
 			// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
 			String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
@@ -8462,6 +8468,35 @@ if (false) {
 					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2015-10-12 17:58:54,620 [DEBUG] subscription-manager:44349 @connection.py:523 - Making request: PUT /subscription/consumers/d8018dbc-7e66-4c0a-b322-9c28037fd8cf
+			//	2015-10-12 17:58:55,094 [DEBUG] subscription-manager:44349 @connection.py:555 - Response: status=429
+			//	2015-10-12 17:58:55,095 [ERROR] subscription-manager:44349 @managercli.py:1746 -
+			//	Traceback (most recent call last):
+			//	  File "/usr/share/rhsm/subscription_manager/managercli.py", line 1744, in _do_command
+			//	    facts.update_check(self.cp, identity.uuid, force=True)
+			//	  File "/usr/share/rhsm/subscription_manager/cache.py", line 148, in update_check
+			//	    raise re
+			//	RateLimitExceededException
+			
+			// Note: Candlepin-IT has introduced Throttling
+		    // The number of requests within a 30 min periord cannot exceed 60 calls for a specific consumer.
+			// Here are the throttled API rules from aedwards...
+			//    #uri max_request lifetime_seconds methods
+			//    "^/subscription/consumers/([^/]+)/?$" := "60 1800 GET POST PUT",
+			//    "^/subscription/consumers/([^/]+)/entitlements?$" := "60 1800 GET POST",
+			//    "^/subscription/consumers/([^/]+)/entitlements/dry-run?$" := "60 1800 GET",
+			//    "^/subscription/consumers/([^/]+)/events?$" := "60 1800 GET",
+			//    "^/subscription/consumers/([^/]+)/guests?$" := "60 1800 GET",
+			//    "^/subscription/consumers/([^/]+)/host?$" := "60 1800 GET",
+			//    "^/subscription/consumers/([^/]+)/release?$" := "60 1800 GET",
+			//    "^/subscription/consumers/([^/]+)/compliance?$" := "60 1800 GET",
+			//    "^/subscription/consumers/([^/]+)/certificates?$" := "60 1800 GET PUT",
+			//    "^/subscription/consumers/([^/]+)/certificates/serials?$" := "60 1800 GET",
+			//    "^/subscription/hypervisors?$" := "10 600 POST",
 			// END OF WORKAROUND
 		}
 	}
