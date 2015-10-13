@@ -45,7 +45,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		
 		// avoid throttling RateLimitExceededException from IT-Candlepin
 		if (!modifierPoolIds.contains(modifierPool.poolId) && CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
-			// re-register
+			// re-register as a new consumer
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		}
 		modifierPoolIds.add(modifierPool.poolId);

@@ -888,7 +888,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		
-		// conflict siuation: if a subscription provides more than one product that both provide the same content but whose product's arch differs, then it is possible to have the content in both expectedContentLabels and unexpectedContentLabels; expectedContentLabels wins!
+		// conflict situation: if a subscription provides more than one product that both provide the same content but whose product's arch differs, then it is possible to have the content in both expectedContentLabels and unexpectedContentLabels; expectedContentLabels wins!
 		for (ContentNamespace expectedContentNamespace : expectedContentNamespaceSet) {
 			List<ContentNamespace> unexpectedContentNamespaceList = new ArrayList<ContentNamespace>();
 			unexpectedContentNamespaceList.addAll(unexpectedContentNamespaceSet);
@@ -900,6 +900,13 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		if (expectedContentNamespaceSet.isEmpty() && unexpectedContentNamespaceSet.isEmpty()) throw new SkipException("This test is not applicable for a pool whose provided products have no content sets.");
+		
+		// avoid throttling RateLimitExceededException from IT-Candlepin
+		if (!poolIds.contains(pool.poolId) && CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
+			// re-register as a new consumer
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		}
+		poolIds.add(pool.poolId);
 		
 		clienttasks.unsubscribe(true,(BigInteger)null,null,null,null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl));
@@ -995,6 +1002,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			Assert.assertTrue(!actualYumRepoLabels.contains(contentNamespace.label), "As expected, yum repo label '"+contentNamespace.label+"' defined for arches '"+contentNamespace.arches+"' requiredTags '"+contentNamespace.requiredTags+"' is NOT included in in "+clienttasks.redhatRepoFile+" after subscribing to '"+pool.subscriptionName+"' on a '"+clienttasks.arch+"' system.");
 		}
 	}
+	protected Set<String> poolIds = new HashSet<String>();
 	
 	
 	@Test(	description="Verify that all there is at least one available RHEL subscription and that yum content is available for the installed RHEL product cert",
