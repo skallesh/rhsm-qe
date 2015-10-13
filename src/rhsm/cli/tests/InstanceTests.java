@@ -48,7 +48,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 ///*debugTest*/if (pool.productId.equals("RH00076")) throw new SkipException("debugTesting");
 		
 		// avoid throttling RateLimitExceededException from IT-Candlepin
-		if (systemSockets.equals(new Integer(1)) && CandlepinType.hosted.equals(sm_serverType)) {	// strategicly get a new consumer to avoid 60 repeated API calls from the same consumer
+		if (systemSockets.equals(new Integer(1)) && CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 			// re-register
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		}

@@ -1,7 +1,9 @@
 package rhsm.cli.tests;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONException;
 import org.testng.SkipException;
@@ -12,6 +14,8 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
+
+import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
@@ -29,16 +33,23 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 	
-
 	@Test(	description="verify content label for modifier subscription (EUS) is only available in yum repolist after providing subscriptions are entitled",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-958182"},
 			dependsOnGroups={},
 			dataProvider="getModifierSubscriptionData",
 			enabled=true)
 	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListAfterTheModifiesPoolIsSubscribed_Test(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> poolsModified) throws JSONException, Exception {
-///*debugTesting*/ if (!label.equals("rhel-6-server-eus-optional-rpms")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");		
-///*debugTesting*/ if (!label.equals("rhel-6-server-eus-supplementary-isos")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");		
-///*debugTesting*/ if (!label.equals("awesomeos-modifier")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");		
+///*debugTesting*/ if (!label.equals("rhel-6-server-eus-optional-rpms")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");
+///*debugTesting*/ if (!label.equals("rhel-6-server-eus-supplementary-isos")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");
+///*debugTesting*/ if (!label.equals("awesomeos-modifier")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");
+		
+		// avoid throttling RateLimitExceededException from IT-Candlepin
+		if (!modifierPoolIds.contains(modifierPool.poolId) && CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
+			// re-register
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		}
+		modifierPoolIds.add(modifierPool.poolId);
+		
 		// remove selected pools from the poolsModified list that are not consumable by this system to avoid: Pool is restricted to physical systems: '8a9086d344549b0c0144549bf9ae0dd4'.
 		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		for (SubscriptionPool subscriptionPool : new ArrayList<SubscriptionPool>(poolsModified)) {
@@ -140,6 +151,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 	// protected methods ***********************************************************************
 	
 	protected String ownerKey = "";
+	protected Set<String> modifierPoolIds = new HashSet<String>();
 
 	
 	
