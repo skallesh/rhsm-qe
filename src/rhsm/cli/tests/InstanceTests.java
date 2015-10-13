@@ -15,6 +15,7 @@ import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.InstalledProduct;
@@ -44,6 +45,13 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void QuantityNeededToAchieveSocketCompliance_Test(Object bugzilla, Boolean systemIsGuest, Integer systemSockets, SubscriptionPool pool) throws NumberFormatException, JSONException, Exception {
+///*debugTest*/if (pool.productId.equals("RH00076")) throw new SkipException("debugTesting");
+		
+		// avoid throttling RateLimitExceededException from IT-Candlepin
+		if (systemSockets.equals(new Integer(1)) && CandlepinType.hosted.equals(sm_serverType)) {	// strategicly get a new consumer to avoid 60 repeated API calls from the same consumer
+			// re-register
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		}
 		
 		// This dataProvided test was inspired by the following table of scenarios
 		// https://engineering.redhat.com/trac/Entitlement/wiki/InstanceBasedDesign#Scenarios
