@@ -2076,14 +2076,13 @@ schema generation failed
 		    */
 			
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-			String poolId = jsonPool.getString("id");
-			String productName = jsonPool.getString("productName");
-			String contractNumber = jsonPool.getString("contractNumber");
-			if (productName.equals(fromProductName) && contractNumber.equals(fromContractNumber)) {
-				return poolId;
+			if (!jsonPool.isNull("contractNumber")) {
+				if (jsonPool.getString("productName").equals(fromProductName) && jsonPool.getString("contractNumber").equals(fromContractNumber)) {
+					return jsonPool.getString("id");
+				}
 			}
 		}
-		log.warning("CandlepinTasks could not getPoolIdFromProductNameAndContractNumber.");
+		log.warning("CandlepinTasks could not getPoolIdFromProductNameAndContractNumber("+fromProductName+","+fromContractNumber+")");
 		return null;
 	}
 	
