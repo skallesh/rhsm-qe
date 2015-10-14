@@ -130,18 +130,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(	description="verify  Subscription-manager repos --list is deleting certificate imported on system",
+	@Test(	description="verify subscription-manager repos --list does not delete an imported entitlement certificate on a system",
 			groups={"VerifyImportedCertgetsDeletedByRepoCommand","blockedByBug-1160150"},
 			enabled=true)
 	public void VerifyImportedCertgetsDeletedByRepoCommand() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, true, null, null,
+				sm_clientOrg, null, null, null, null, false, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);	// disable
 		SubscriptionPool pool = getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),1).get(0);
 		File importEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,sm_clientUsername, sm_clientPassword,sm_serverUrl);
 		File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
 		File importCertificateFile = new File(importCertificatesDir1+File.separator+importEntitlementCertFile.getName());
+		List<Repo> subscribedReposBefore = clienttasks.getCurrentlySubscribedRepos();
 		client.runCommandAndWait("mkdir -p "+importCertificatesDir1);
 		client.runCommandAndWait("cat "+importEntitlementCertFile+" "+importEntitlementKeyFile+" > "+importCertificateFile);
 		String path =importCertificateFile.getPath();
@@ -150,9 +151,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		int Ceritificate_countBeforeRepoCommand=clienttasks.getCurrentEntitlementCertFiles().size();
 		SSHCommandResult Result=clienttasks.repos_(true, null, null,(String)null, null, null, null, null);
 		int Ceritificate_countAfterRepoCommand=clienttasks.getCurrentEntitlementCertFiles().size();
+		List<Repo> subscribedReposAfter = clienttasks.getCurrentlySubscribedRepos();
 		Assert.assertEquals(Ceritificate_countBeforeRepoCommand, Ceritificate_countAfterRepoCommand);
 		Assert.assertEquals(Result.getExitCode(), new Integer(0));
-		Assert.assertContainsMatch(Result.getStdout().trim(), "Available Repositories in /etc/yum.repos.d/redhat.repo");
+		Assert.assertTrue(subscribedReposBefore.containsAll(subscribedReposAfter) && subscribedReposAfter.containsAll(subscribedReposBefore), "The list of subscribed repos is the same before and after importing the entitlement certificate.");
 	}
 
 
@@ -4326,6 +4328,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@AfterClass(groups = "setup")	// called after class for insurance
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null) return;
+///*debugTest*/ if (false) // do not run restart_rhsmcertd when debugTesting
 		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
 	}
 
