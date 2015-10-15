@@ -763,8 +763,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Map<String, String> factsMap = new HashMap<String, String>();
 		for (String systemArch : Arrays.asList(new String[]{"i386","i586","i686","x86_64","ppc","ppc64","ia64","arm","s390","s390x"})) {
 			
+			// avoid throttling RateLimitExceededException from IT-Candlepin
+			if (CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
+				// re-register as a new consumer
+				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+			} else // clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+			
 			// return all current entitlements (Note: system is already registered by getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists())
-			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+ 			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 			
 			// fake the system's arch and update the facts
 			log.info("Manipulating the system facts into thinking this is a '"+systemArch+"' system...");
@@ -1818,7 +1824,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					
 					// is this arch-based content?
 					if (jsonContent.has("arches") && !jsonContent.isNull("arches")) {
-						ll.add(l);
+						if (!ll.contains(l)) {	// add this row only once
+							ll.add(l);
+						}
 						break;
 					}
 				}
