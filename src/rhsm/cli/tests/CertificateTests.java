@@ -831,6 +831,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		// get the repo url to the currently enabled base RHEL repo (assume it ends in /6/$releasever/$basearch/os
 		// get the list of currently enabled repos
+		
 		//	[root@jsefler-os6 ~]# subscription-manager repos --list-enabled 
 		//	+----------------------------------------------------------+
 		//	    Available Repositories in /etc/yum.repos.d/redhat.repo
@@ -839,27 +840,53 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	Repo Name: Red Hat Enterprise Linux 6 Server (RPMs)
 		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel/server/6/$releasever/$basearch/os
 		//	Enabled:   1
+		
+		//	[root@amd-dinar-01 ~]# subscription-manager repos --list-enabled
+		//	+----------------------------------------------------------+
+		//	    Available Repositories in /etc/yum.repos.d/redhat.repo
+		//	+----------------------------------------------------------+
+		//	Repo ID:   rhel-rs-for-rhel-7-server-eus-rpms
+		//	Repo Name: Red Hat Enterprise Linux Resilient Storage (for RHEL 7 Server) - Extended Update Support (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/eus/rhel/server/7/$releasever/$basearch/resilientstorage/os
+		//	Enabled:   1
+		//
+		//	Repo ID:   rhel-ha-for-rhel-7-server-eus-rpms
+		//	Repo Name: Red Hat Enterprise Linux High Availability (for RHEL 7 Server) - Extended Update Support (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/eus/rhel/server/7/$releasever/$basearch/highavailability/os
+		//	Enabled:   1
+		//
+		//	Repo ID:   rhel-7-server-eus-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Server - Extended Update Support (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/eus/rhel/server/7/$releasever/$basearch/os
+		//	Enabled:   1
+		//
+		//	Repo ID:   rhel-7-server-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Server (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel/server/7/$releasever/$basearch/os
+		//	Enabled:   1
+
 		String rhelRepoUrl = null;
 		for (Repo enabledRepo :  Repo.parse(clienttasks.repos(null, true, false, (String)null,(String)null,null, null, null).getStdout())) {
 			if (enabledRepo.enabled) {
 				if (enabledRepo.repoUrl.endsWith(clienttasks.redhatReleaseX+"/$releasever/$basearch/os")) {
+					// NOTE: I just learned that this will happen when the subscription also provides:  Red Hat Enterprise Linux Server - Extended Update Support
+					// In this case an additional product cert could get installed...
+					//	[root@dell-pe650-02 ~]# wget -nv -O /tmp/productid --ca-certificate=/etc/rhsm/ca/redhat-uep.pem --certificate-type=PEM --certificate=/etc/pki/entitlement/19553491962157768.pem --private-key=/etc/pki/entitlement/19553491962157768-key.pem --private-key-type=pem https://cdn.redhat.com/content/eus/rhel/server/6/6.1/x86_64/os/repodata/productid
+					//	2015-04-29 12:01:28 URL:https://cdn.redhat.com/content/eus/rhel/server/6/6.1/x86_64/os/repodata/productid [2208/2208] -> "/tmp/productid" [1]
+					//	[root@dell-pe650-02 ~]# rct cat-cert /tmp/productid | grep -A8 "Product:"Product:
+					//		ID: 70
+					//		Name: Red Hat Enterprise Linux Server - Extended Update Support
+					//		Version: 6.1
+					//		Arch: x86_64
+					//		Tags: rhel-6-eus-server,rhel-6-server
+					//		Brand Type: 
+					//		Brand Name: 
+					
+					// repoName='Red Hat Enterprise Linux 6 Server - Extended Update Support (RPMs)' repoId='rhel-6-server-eus-rpms' repoUrl='https://cdn.redhat.com/content/eus/rhel/server/6/$releasever/$basearch/os' enabled='true'
+					if (enabledRepo.repoUrl.contains("/eus/")) continue;	// skip Extended Update Support repos
+					
 					if (rhelRepoUrl!=null && !rhelRepoUrl.equals(enabledRepo.repoUrl)) {
-						// NOTE: I just learned that this will happen when the subscription also provides:  Red Hat Enterprise Linux Server - Extended Update Support
-						// In this case an additional product cert could get installed...
-						//	[root@dell-pe650-02 ~]# wget -nv -O /tmp/productid --ca-certificate=/etc/rhsm/ca/redhat-uep.pem --certificate-type=PEM --certificate=/etc/pki/entitlement/19553491962157768.pem --private-key=/etc/pki/entitlement/19553491962157768-key.pem --private-key-type=pem https://cdn.redhat.com/content/eus/rhel/server/6/6.1/x86_64/os/repodata/productid
-						//	2015-04-29 12:01:28 URL:https://cdn.redhat.com/content/eus/rhel/server/6/6.1/x86_64/os/repodata/productid [2208/2208] -> "/tmp/productid" [1]
-						//	[root@dell-pe650-02 ~]# rct cat-cert /tmp/productid | grep -A8 "Product:"Product:
-						//		ID: 70
-						//		Name: Red Hat Enterprise Linux Server - Extended Update Support
-						//		Version: 6.1
-						//		Arch: x86_64
-						//		Tags: rhel-6-eus-server,rhel-6-server
-						//		Brand Type: 
-						//		Brand Name: 
-						
-						// repoName='Red Hat Enterprise Linux 6 Server - Extended Update Support (RPMs)' repoId='rhel-6-server-eus-rpms' repoUrl='https://cdn.redhat.com/content/eus/rhel/server/6/$releasever/$basearch/os' enabled='true'
-						if (enabledRepo.repoUrl.contains("/eus/")) continue;	// skip Extended Update Support repos
-						Assert.fail("Excluding EUS, encountered multiple enabled repos enabled that appear to serve the base RHEL content.  Did not expect this:\n "+rhelRepoUrl+"\n "+enabledRepo.repoUrl);
+						Assert.fail("Excluding EUS, encountered multiple enabled repos that appear to serve the base RHEL content.  Did not expect this:\n "+rhelRepoUrl+"\n "+enabledRepo.repoUrl);
 					}
 					rhelRepoUrl = enabledRepo.repoUrl;
 				}
@@ -945,7 +972,12 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 		// Step 6: install the test package and assert the product id has been upgraded.
 		clienttasks.yumClean("metadata");	// to avoid... Not using downloaded repomd.xml because it is older than what we have:
-		clienttasks.yumInstallPackage(testPackage,"--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
+		String installOptions = "";
+		installOptions += "--disablerepo=beaker-* ";	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
+		installOptions += "--disablerepo=rhel-*-eus-rpms ";	// need to disable the eus repos to avoid releases that do not have content for extended update support
+														//	failure: repodata/repomd.xml from rhel-7-server-eus-rpms: [Errno 256] No more mirrors to try.
+														//	https://cdn.redhat.com/content/eus/rhel/server/7/7.0/x86_64/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found		
+		clienttasks.yumInstallPackage(testPackage,installOptions);
 		// tail -f /var/log/rhsm/rhsm.log
 		//	2014-05-16 12:04:27,444 [DEBUG] yum @productid.py:290 - Checking for product id certs to install or update.
 		//	2014-05-16 12:04:27,449 [DEBUG] yum @productid.py:304 - product cert: 69 repo: rhel-6-server-cf-tools-1-rpms
