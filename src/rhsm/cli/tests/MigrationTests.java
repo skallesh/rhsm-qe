@@ -583,12 +583,24 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(factMap.get(migrationDateFact), "The migration fact '"+migrationDateFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		int tol = 300; // tolerance in seconds to assert that the migration_date facts was set within the last few seconds
 		Calendar migrationDate;
-		if (client.runCommandAndWait("date +%Z").getStdout().trim().endsWith("DT")) {	// are we currently on daylight summer/savings time?
-			// determined on Mar 9, 2015 (day after Daylight Summer/Savings Time starts), when date +%Z returns EDT, passing passing null for timeZone will correctly pass the migrationDateFact assertion (Note: passing "EDT" will actually screw it up)
-			migrationDate = parseDateStringUsingDatePattern(factMap.get(migrationDateFact), "yyyy-MM-dd'T'HH:mm:ss", null);	// NOTE: The .SSS milliseconds was dropped from the date pattern because it was getting confused as seconds from the six digit value in migration.migration_date: 2012-08-08T11:11:15.818782
-		} else {
-			migrationDate = parseDateStringUsingDatePattern(factMap.get(migrationDateFact), "yyyy-MM-dd'T'HH:mm:ss", client.runCommandAndWait("date +%Z").getStdout().trim());	// NOTE: The .SSS milliseconds was dropped from the date pattern because it was getting confused as seconds from the six digit value in migration.migration_date: 2012-08-08T11:11:15.818782
-		}
+/* 10-23-2015 DELETEME AFTER PROVING THAT migrationDateFactWithGMTOffsetTimeZone WORKS
+//		if (client.runCommandAndWait("date +%Z").getStdout().trim().endsWith("DT")) {	// are we currently on daylight summer/savings time?
+//			// determined on Mar 9, 2015 (day after Daylight Summer/Savings Time starts), when date +%Z returns EDT, passing passing null for timeZone will correctly pass the migrationDateFact assertion (Note: passing "EDT" will actually screw it up)
+//			migrationDate = parseDateStringUsingDatePattern(factMap.get(migrationDateFact), "yyyy-MM-dd'T'HH:mm:ss", null);	// NOTE: The .SSS milliseconds was dropped from the date pattern because it was getting confused as seconds from the six digit value in migration.migration_date: 2012-08-08T11:11:15.818782
+//		} else {
+//			migrationDate = parseDateStringUsingDatePattern(factMap.get(migrationDateFact), "yyyy-MM-dd'T'HH:mm:ss", client.runCommandAndWait("date +%Z").getStdout().trim());	// NOTE: The .SSS milliseconds was dropped from the date pattern because it was getting confused as seconds from the six digit value in migration.migration_date: 2012-08-08T11:11:15.818782
+//		}
+*/
+		// the time zone is absent from the value of the migration.migration_date fact (arguably an RFE bug), let's append the GMTOffsetTimeZone of the client
+		//	[root@ibm-hs22-04 ~]# subscription-manager facts | grep migration_date
+		//	migration.migration_date: 2015-10-24T00:01:54.040880
+		//	[root@ibm-hs22-04 ~]# date -d "2015-10-24T00:01:54.040880" -Iseconds
+		//	2015-10-24T00:01:54+0200
+		//	[root@ibm-hs22-04 ~]# date +%Z
+		//	CEST
+		String migrationDateFactWithGMTOffsetTimeZone = client.runCommandAndWait("date -d \""+factMap.get(migrationDateFact)+"\" -Iseconds").getStdout().trim();
+		migrationDate = parseDateStringUsingDatePattern(migrationDateFactWithGMTOffsetTimeZone, "yyyy-MM-dd'T'HH:mm:ssZ", null);
+		
 		long systemTimeInSeconds = Long.valueOf(client.runCommandAndWait("date +%s").getStdout().trim());	// seconds since 1970-01-01 00:00:00 UTC
 		long migratTimeInSeconds = migrationDate.getTimeInMillis()/1000;
 		Assert.assertTrue(systemTimeInSeconds-tol < migratTimeInSeconds && migratTimeInSeconds < systemTimeInSeconds+tol, "The migration date fact '"+factMap.get(migrationDateFact)+"' was set within the last '"+tol+"' seconds (local system time).  Actual diff='"+String.valueOf(systemTimeInSeconds-migratTimeInSeconds)+"' seconds.");
