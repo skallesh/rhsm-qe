@@ -23,6 +23,9 @@
             AfterClass]
            org.testng.SkipException
            [rhsm.cli.tests ImportTests]
+           [rhsm.cli.tasks SubscriptionManagerTasks]
+           [com.redhat.qe.tools RemoteFileTasks SSHCommandRunner]
+           [rhsm.base SubscriptionManagerCLITestScript]
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
 (def importtests (atom nil))
@@ -36,25 +39,52 @@
     ""
     (.substring s n)))
 
+
+(defn setup-entitlement-certs
+  "Generates entitlement certs"
+  []
+  (let [import-test (ImportTests.)
+        client (ImportTests/client)
+        subman-task (SubscriptionManagerTasks. client)
+        user (.-sm_clientUsername import-test)
+        pw (.-sm_clientPassword import-test)
+        org (.-sm_clientOrg import-test)
+        reg-args [user, pw, org, nil, nil, nil, nil, nil, nil, nil,
+                  (cast String nil), nil, nil, nil, true, false, nil, nil, nil]
+        conf-file (.-rhsmConfFile subman-task)
+        reg-res (apply #(.register client %) reg-args)
+        orig-ent-cert-dir (.getConfFileParameter conf-file "entitlementCertDir")
+        imp-cert-dir (.-importCertificatesDir import-test)]
+    (.updateConfFileParameter client conf-file "entitlementCertDir" (.-importEntitlementsDir import-test))
+    (.removeAllCerts import-test false, true, false)
+    (RemoteFileTasks/runCommandAndAssert client (str "mkdir -p " imp-cert-dir) 0)
+    (RemoteFileTasks/runCommandAndAssert client (format "rm -f %s/*" imp-cert-dir) 0)
+    (.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively import-test)
+    (let [entitlements (.getCurrentEntitlementCertFiles client)]
+      ;; unregister, then restore
+      (.unregister client nil nil nil)
+      (.updateConfFileParameter client conf-file "entitlementCertDir" orig-ent-cert-dir)
+      {:entitlements entitlements :reg-res reg-res :ct client :username user :password pw :org org})))
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
   (try
     (skip-if-bz-open "1170761")
-    (if (= "RHEL7" (get-release))
-      (do (base/startup nil)
-          (throw (SkipException.
-                  (str "Cannot generate keyevents in RHEL7 !!
-	                Skipping Test Suite 'Import Tests'.")))))
+    (comment (if (= "RHEL7" (get-release))
+               (do (base/startup nil)
+                   (throw (SkipException.
+                            (str "Cannot generate keyevents in RHEL7 !!
+	                Skipping Test Suite 'Import Tests'."))))))
     (tasks/start-app)
     (reset! importtests (ImportTests.))
     (.restartCertFrequencyBeforeClass @importtests)
     (.setupEntitlemenCertsForImportBeforeClass @importtests)
-    (run-command "subscripton-manager unregister")
+    (run-command "subscription-manager unregister")
     (safe-delete tmpcertpath)
     (run-command (str "mkdir " tmpcertpath))
     (catch Exception e
       (reset! (skip-groups :import) true)
-      (throw e))))
+      (throw e)))) ()
 
 (defn ^{AfterClass {:groups ["cleanup"]
                     :alwaysRun true}}
