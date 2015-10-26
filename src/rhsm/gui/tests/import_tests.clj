@@ -40,31 +40,62 @@
     (.substring s n)))
 
 
+(defmacro get-member
+  "Helper to get a member name from a java object"
+  [memname object]
+  `(.-~memname ~object))
+
+(defn make-import-test
+  []
+  (let [it (ImportTests.)
+        client (ImportTests/client)]
+    [it client]))
+
+
+(defn random-from-pool
+  [coll size]
+  (loop [left size])
+  )
+
+
+(defn make-submantask
+  [ssh-client]
+  (let [subman-task (SubscriptionManagerTasks. ssh-client)]
+    (.initializeFieldsFromConfigFile subman-task)
+    subman-task))
+
+;; The setupEntitlementCertsBeforeSetup would delete all the pem files upon registering, so we use this instead
 (defn setup-entitlement-certs
   "Generates entitlement certs"
-  []
+  [entitle-dir]
   (let [import-test (ImportTests.)
         client (ImportTests/client)
-        subman-task (SubscriptionManagerTasks. client)
+        subman-task (make-submantask client)
         user (.-sm_clientUsername import-test)
         pw (.-sm_clientPassword import-test)
         org (.-sm_clientOrg import-test)
-        reg-args [user, pw, org, nil, nil, nil, nil, nil, nil, nil,
-                  (cast String nil), nil, nil, nil, true, false, nil, nil, nil]
         conf-file (.-rhsmConfFile subman-task)
-        reg-res (apply #(.register client %) reg-args)
-        orig-ent-cert-dir (.getConfFileParameter conf-file "entitlementCertDir")
-        imp-cert-dir (.-importCertificatesDir import-test)]
-    (.updateConfFileParameter client conf-file "entitlementCertDir" (.-importEntitlementsDir import-test))
-    (.removeAllCerts import-test false, true, false)
-    (RemoteFileTasks/runCommandAndAssert client (str "mkdir -p " imp-cert-dir) 0)
-    (RemoteFileTasks/runCommandAndAssert client (format "rm -f %s/*" imp-cert-dir) 0)
-    (.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively import-test)
-    (let [entitlements (.getCurrentEntitlementCertFiles client)]
-      ;; unregister, then restore
-      (.unregister client nil nil nil)
-      (.updateConfFileParameter client conf-file "entitlementCertDir" orig-ent-cert-dir)
-      {:entitlements entitlements :reg-res reg-res :ct client :username user :password pw :org org})))
+        imp-cert-dir "/tmp/sm-importcertificatesdir"
+        imp-ent-cert-dir "/tmp/sm-importentitlementsdir"
+        reg-res (.register ^SubscriptionManagerTasks subman-task user, pw, org, nil, nil, nil, nil, nil, nil, nil, (cast String nil), nil, nil, nil, true, false, nil, nil, nil)
+        orig-ent-cert-dir (.getConfFileParameter subman-task conf-file "entitlementCertDir")
+        update-res (.updateConfFileParameter subman-task conf-file "entitlementCertDir" imp-ent-cert-dir)
+        ]
+    (.removeAllCerts subman-task false, true, false)
+    (RemoteFileTasks/runCommandAndAssert client (str "mkdir -p " imp-cert-dir) (into-array Integer [(Integer. 0) ]))
+    (RemoteFileTasks/runCommandAndAssert client (format "rm -f %s/*" imp-cert-dir) (into-array Integer [(Integer. 0)]))
+
+    (let [subscribe-results (vec (for [pool (.getCurrentlyAvailableSubscriptionPools subman-task)]
+                                   (.subscribe_ subman-task nil nil (.poolId pool) nil nil nil nil nil nil nil nil nil)))
+          entitlements (.getCurrentEntitlementCertFiles subman-task)]
+      ;; Copy all of the entitlement .pem files to entitle-dir because unregistering deletes the *.pem files
+      (RemoteFileTasks/runCommandAndAssert client (format "mkdir -p %s" entitle-dir) (into-array Integer [(Integer. 0)]))
+      (RemoteFileTasks/runCommandAndAssert client (format "cp %s/*.pem %s" imp-ent-cert-dir entitle-dir) (into-array Integer [(Integer. 0)]))
+      ;; unregistering will delete all the entitlements, , then restore
+      (.unregister subman-task nil nil nil)
+      (.updateConfFileParameter subman-task conf-file "entitlementCertDir" orig-ent-cert-dir)
+      {:entitlements entitlements :ct client :username user :password pw :org org
+       :subscribe-results subscribe-results :register-results reg-res :update-results update-res})))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
