@@ -67,8 +67,9 @@ public class SubscriptionManagerTasks {
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String rhsmUpdateFile		= "/var/run/rhsm/update";
 	public final String yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
-	public final String yumPluginConfFileForProductId	= "/etc/yum/pluginconf.d/product-id.conf";
-	public final String yumPluginConfFileForRhn	= "/etc/yum/pluginconf.d/rhnplugin.conf";
+	public final String yumPluginConfFileForProductId			= "/etc/yum/pluginconf.d/product-id.conf";
+	public final String yumPluginConfFileForRhn					= "/etc/yum/pluginconf.d/rhnplugin.conf";
+	public final String yumPluginConfFileForSearchDisabledRepos	= "/etc/yum/pluginconf.d/search-disabled-repos.conf";
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String rhnUp2dateFile		= "/etc/sysconfig/rhn/up2date";
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
@@ -6606,6 +6607,20 @@ if (false) {
 		for (int p=packagesCloned.size()-1; p>=0; p--) packages.add(packagesCloned.get(p));
 
 		return packages;
+	}
+	
+	
+	
+	public String getYumPackageInfo(String pkg, String info) {
+		
+		String command = "yum info "+pkg;
+		if (info!=null) command += " | grep \""+info+"\""; 
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		
+		//	[root@jsefler-7 ~]# yum info ghostscript | grep "From repo"
+		//	From repo   : rhel-7-server-eus-rpms
+		if (info!=null) return result.getStdout().split(":")[1].trim();
+		return result.getStdout().trim();
 	}
 	
 	/**
