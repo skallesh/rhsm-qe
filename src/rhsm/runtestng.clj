@@ -3,7 +3,10 @@
   (:require [clojure.tools.logging :as log]
             [clojure.xml :as xml]
             [clojure.pprint :only pprint]
-            [clojure.tools.cli :as cli])
+            [clojure.tools.cli :as cli]
+            [immuconf.config :as cfg]
+            [rhsm.gui.tasks.test-config :as config]
+            [rhsm.gui.tasks.tasks :as tasks])
   (:import [org.testng.xml Parser XmlSuite]
            [org.testng TestNG])
   (:gen-class))
@@ -57,3 +60,65 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
 (defn -main
   [& args]
   (TestNG/main (into-array String args)))
+
+
+;; Useful when automatically running from the repl since :main is set to this namespace
+
+(defn get-config
+  ([dev-file-path]
+   {:pre [#(.exists (java.io.File. dev-file-path))]}
+   (cfg/load "resources/dev.edn" dev-file-path))
+  ([]
+   (let [home (System/getProperty "user.home")
+         user-edn (format "%s/.rhsm-qe/dev.edn" home)]
+     (println user-edn)
+     (cfg/load "resources/dev.edn" user-edn))))
+
+
+(def dev-config (get-config))
+(println dev-config)
+
+(defn before-suite
+  ([setup]
+   (when setup
+     (let [cliscript (rhsm.base.SubscriptionManagerCLITestScript.)]
+       (.setupBeforeSuite cliscript))
+     (config/init)
+     (tasks/connect)
+     (use 'gnome.ldtp)))
+  ([]
+   (before-suite (:runtestng-beforesuite dev-config))))
+
+(when (:runtestng-setup dev-config)
+  (use '[clojure.repl])
+  (use '[clojure.pprint])
+  (use '[slingshot.slingshot :only (try+ throw+)])
+  (require '[clojure.tools.logging :as log])
+
+  (use :reload-all '[rhsm.gui.tasks.tools])
+  (require :reload-all '[rhsm.gui.tasks.candlepin-tasks :as ctasks]
+           '[rhsm.gui.tasks.rest :as rest]
+           '[rhsm.gui.tests.base :as base]
+           '[rhsm.gui.tests.subscribe_tests :as stest]
+           '[rhsm.gui.tests.register_tests :as rtest]
+           '[rhsm.gui.tests.proxy_tests :as ptest]
+           '[rhsm.gui.tests.rhn_interop_tests :as ritest]
+           '[rhsm.gui.tests.autosubscribe_tests :as atest]
+           '[rhsm.gui.tests.firstboot_tests :as fbtest]
+           '[rhsm.gui.tests.firstboot_proxy_tests :as fptest]
+           '[rhsm.gui.tests.facts_tests :as ftest]
+           '[rhsm.gui.tests.import_tests :as itest]
+           '[rhsm.gui.tests.system_tests :as systest]
+           '[rhsm.gui.tests.stacking_tests :as stktest]
+           '[rhsm.gui.tests.repo_tests :as reptest]
+           '[rhsm.gui.tests.product_status_tests :as pstest]
+           '[rhsm.gui.tests.subscription_status_tests :as substattest]
+           '[rhsm.gui.tests.search_status_tests :as sstattest]
+           '[rhsm.gui.tasks.test-config :as config]
+           '[rhsm.gui.tasks.tasks :as tasks]
+           '[rhsm.gui.tasks.tools :as tools])
+
+
+  ;; We may not always want to do all the BeforeSuite stuff
+  (before-suite (:runtestng-beforesuite dev-config))
+  (log/info "INITIALIZATION COMPLETE!!"))
