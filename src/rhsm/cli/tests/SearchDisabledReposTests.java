@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -169,13 +170,13 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelOptlPackage+"'.");
 		String requiresMessage = "Requires: "+rhelBasePackage;
 		Assert.assertTrue(result.getStderr().contains(requiresMessage),"Stderr from attempt to install '"+rhelOptlPackage+"' contains the require message:\n"+requiresMessage);
-		String usabilityMessage = String.join("\n",
+		String usabilityMessage = StringUtils.join(new String[]{
 				"**********************************************************************",
 				"yum can be configured to try to resolve such errors by temporarily enabling",
 				"disabled repos and searching for missing dependencies.",
 				"To enable this functionality please set 'notify_only=0' in "+clienttasks.yumPluginConfFileForSearchDisabledRepos,
-				"**********************************************************************"
-				);
+				"**********************************************************************"},
+				"\n");
 		Assert.assertTrue(result.getStdout().contains(usabilityMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the usability message:\n"+usabilityMessage);
 	}
 	protected String rhelBasePackage = "ghostscript";		// assume this package is available from rhelBaseRepoId
@@ -240,14 +241,14 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelOptlPackage+"'.");
 		String requiresMessage = "Requires: "+rhelBasePackage;
 		Assert.assertTrue(result.getStderr().contains(requiresMessage),"Stderr from attempt to install '"+rhelOptlPackage+"' contains the require message:\n"+requiresMessage);
-		String promptMessage = String.join("\n",
+		String promptMessage = StringUtils.join(new String[]{
 				"**********************************************************************",
 				"Dependency resolving failed due to missing dependencies.",
 				"Some repositories on your system are disabled, but yum can enable them",
 				"and search for missing dependencies. This will require downloading",
 				"metadata for disabled repositories and may take some time and traffic.",
-				"**********************************************************************"
-				);
+				"**********************************************************************"},
+				"\n");
 		Assert.assertTrue(result.getStdout().contains(promptMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt message:\n"+promptMessage);
 		
 		// confirm that the packages are not installed
@@ -375,22 +376,22 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		// assert more results
 		String requiresMessage = "Requires: "+rhelBasePackage;
 		Assert.assertTrue(result.getStdout().contains(requiresMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the require message:\n"+requiresMessage);
-		String promptMessage = String.join("\n",
+		String promptMessage = StringUtils.join(new String[]{
 				"**********************************************************************",
 				"Dependency resolving failed due to missing dependencies.",
 				"Some repositories on your system are disabled, but yum can enable them",
 				"and search for missing dependencies. This will require downloading",
 				"metadata for disabled repositories and may take some time and traffic.",
-				"**********************************************************************"
-				);
+				"**********************************************************************"},
+				"\n");
 		Assert.assertTrue(result.getStdout().contains(promptMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt message:\n"+promptMessage);
 		String rhelActualRepoId = clienttasks.getYumPackageInfo(rhelBasePackage,"From repo");
-		String resolutionMessage = String.join("\n",
+		String resolutionMessage = StringUtils.join(new String[]{
 				"*******************************************************************",
 				"Dependency resolving was successful thanks to enabling these repositories:",
 				rhelActualRepoId,
-				"*******************************************************************"
-				);
+				"*******************************************************************"},
+				"\n");
 		Assert.assertTrue(result.getStdout().contains(resolutionMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' which requires '"+rhelBasePackage+"' contains the resolution message:\n"+resolutionMessage);
 		
 		
@@ -538,26 +539,26 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		String prompt;
 		String requiresMessage = "Requires: "+rhelBasePackage;
 		Assert.assertTrue(result.getStdout().contains(requiresMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the require message:\n"+requiresMessage);
-		String searchDisabledReposMessage = String.join("\n",
+		String searchDisabledReposMessage = StringUtils.join(new String[]{
 				"**********************************************************************",
 				"Dependency resolving failed due to missing dependencies.",
 				"Some repositories on your system are disabled, but yum can enable them",
 				"and search for missing dependencies. This will require downloading",
 				"metadata for disabled repositories and may take some time and traffic.",
-				"**********************************************************************"
-				);
+				"**********************************************************************"},
+				"\n");
 		Assert.assertTrue(result.getStdout().contains(searchDisabledReposMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' which requires '"+rhelBasePackage+"' contains the search disabled repos message:\n"+searchDisabledReposMessage);
 		prompt = "Enable all repositories and try again? [y/N]: ";
 		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt: "+prompt);
 		prompt = "Is this ok [y/d/N]: ";
 		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt: "+prompt);
 		String rhelActualRepoId = clienttasks.getYumPackageInfo(rhelBasePackage,"From repo");
-		String resolutionMessage = String.join("\n",
+		String resolutionMessage = StringUtils.join(new String[]{
 				"*******************************************************************",
 				"Dependency resolving was successful thanks to enabling these repositories:",
 				rhelActualRepoId,
-				"*******************************************************************"
-				);
+				"*******************************************************************"},
+				"\n");
 		Assert.assertTrue(result.getStdout().contains(resolutionMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' which requires '"+rhelBasePackage+"' contains the resolution message:\n"+resolutionMessage);
 		prompt = "Would you like to permanently enable these repositories? [y/N]: ";
 		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt: "+prompt);
@@ -683,14 +684,14 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		String prompt;
 		String requiresMessage = "Requires: "+rhelBasePackage;
 		Assert.assertTrue(result.getStdout().contains(requiresMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the require message:\n"+requiresMessage);
-		String searchDisabledReposMessage = String.join("\n",
+		String searchDisabledReposMessage = StringUtils.join(new String[]{
 				"**********************************************************************",
 				"Dependency resolving failed due to missing dependencies.",
 				"Some repositories on your system are disabled, but yum can enable them",
 				"and search for missing dependencies. This will require downloading",
 				"metadata for disabled repositories and may take some time and traffic.",
-				"**********************************************************************"
-				);
+				"**********************************************************************"},
+				"\n");
 		Assert.assertTrue(result.getStdout().contains(searchDisabledReposMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' which requires '"+rhelBasePackage+"' contains the search disabled repos message:\n"+searchDisabledReposMessage);
 		prompt = "Enable all repositories and try again? [y/N]: ";
 		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt: "+prompt);
