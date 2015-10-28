@@ -1,9 +1,7 @@
 package rhsm.cli.tests;
 
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
@@ -24,8 +22,11 @@ import rhsm.data.Repo;
 
 /**
  * @author jsefler
- *
- * Bug 1232232 - [RFE] Provide API call to enable/disable yum repositories
+ * 
+ * References:
+ * 		Bug 1232232 - [RFE] Provide API call to enable/disable yum repositories  (RHEL7.2)
+ * 		Bug 1268376 - [RFE] Provide API call to enable/disable yum repositories  (RHEL6.8)
+ * 		http://etherpad.corp.redhat.com/yum-search-disabled-repos-plugin-Testcases
  */
 @Test(groups={"SearchDisabledReposTests","Tier1Tests","AcceptanceTests"})
 public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
@@ -66,7 +67,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Verify that we can register with auto-subscribe to cover the base RHEL product cert; assert enablement of base rhel and optional repo",
-			groups={"debugTest"},
+			groups={},
 			priority=20, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test() throws JSONException, Exception {
@@ -91,7 +92,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		rhelBaseRepoId = String.format("rhel-%s-%s-rpms", clienttasks.redhatReleaseX, clienttasks.variant.toLowerCase());	// rhel-7-server-rpms
 		
 		// determine the optional rhel repo
-		rhelOptlRepoId = rhelBaseRepoId.replaceFirst("-rpms$", "-optional-rpms");	// rhel-7-server-optional-rpms
+		rhelOptionalRepoId = rhelBaseRepoId.replaceFirst("-rpms$", "-optional-rpms");	// rhel-7-server-optional-rpms
 		
 		// determine the eus rhel repo
 		rhelEusRepoId = rhelBaseRepoId.replaceFirst("-rpms$", "-eus-rpms");	// rhel-7-server-eus-rpms
@@ -102,16 +103,64 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(rhelBaseRepo.enabled, "RHEL base repo id '"+rhelBaseRepoId+"' is enabled by default.");
 		
 		// assert the optional rhel repo is disabled	by default
-		Repo rhelOptlRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptlRepoId, subscribedRepos);
-		Assert.assertNotNull(rhelOptlRepo, "RHEL optional repo id '"+rhelOptlRepoId+"' was found in subscribed repos.");
-		Assert.assertTrue(!rhelOptlRepo.enabled, "RHEL optional repo id '"+rhelOptlRepoId+"' is disabled by default.");
+		Repo rhelOptionalRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptionalRepoId, subscribedRepos);
+		Assert.assertNotNull(rhelOptionalRepo, "RHEL optional repo id '"+rhelOptionalRepoId+"' was found in subscribed repos.");
+		Assert.assertTrue(!rhelOptionalRepo.enabled, "RHEL optional repo id '"+rhelOptionalRepoId+"' is disabled by default.");
+		
+		// determine if eus rhel repo is entitled; if not then set it to null
+		Repo rhelEusRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelEusRepoId, subscribedRepos);
+		if (rhelEusRepo==null) rhelEusRepoId=null;
 
 	}
 	protected String rhelBaseRepoId = null;
-	protected String rhelOptlRepoId = null;
+	protected String rhelOptionalRepoId = null;
 	protected String rhelEusRepoId = null;
 	
 	
+	@Test(	description="verify that the search-disabled-repos plugin is not triggered when I attempt to install a package from a disabled repo (because search-disabled-repos plugin should only be triggered to resolve missing dependency packages)",
+			groups={},
+			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
+			priority=25, enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyYumSearchDisabledReposTriggersOnlyOnMissingDependencies_Test() {
+		// make sure rhelBasePackage and rhelOptionalPackage are not installed
+		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
+		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
+		
+		// enable rhelBaseRepoId and disable rhelOptionalRepoId
+		clienttasks.repos(null, null, null, rhelBaseRepoId, rhelOptionalRepoId, null, null, null);
+		
+		// attempt to install a specific package from a disabled repo
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*eus-rpms");	// disable any entitled extended update repos // rhel-7-server-eus-rpms
+
+		// assert results...  should not be able to find package since package is in a disabled repo
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelOptionalPackage+"' from a disabled repo.");
+		String stdoutMessage = "No package "+rhelOptionalPackage+" available.";
+		Assert.assertTrue(result.getStdout().contains(stdoutMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' from a disabled repo contains message:\n"+stdoutMessage);
+		String stderrMessage = "Error: Nothing to do";
+		Assert.assertTrue(result.getStderr().contains(stderrMessage),"Stderr from attempt to install '"+rhelOptionalPackage+"' from a disabled repo contains message:\n"+stderrMessage);
+
+		
+		// enable rhelOptionalRepoId and disable rhelBaseRepoId
+		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null);
+		
+		// attempt to install a specific package from a disabled repo
+		result = clienttasks.yumDoPackageFromRepo_("install", rhelBasePackage, null, "--disablerepo=*eus-rpms");	// disable any entitled extended update repos // rhel-7-server-eus-rpms
+
+		// assert results...  should not be able to find package since package is in a disabled repo
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelBasePackage+"' from a disabled repo.");
+		stdoutMessage = "No package "+rhelBasePackage+" available.";
+		Assert.assertTrue(result.getStdout().contains(stdoutMessage),"Stdout from attempt to install '"+rhelBasePackage+"' from a disabled repo contains message:\n"+stdoutMessage);
+		stderrMessage = "Error: Nothing to do";
+		Assert.assertTrue(result.getStderr().contains(stderrMessage),"Stderr from attempt to install '"+rhelBasePackage+"' from a disabled repo contains message:\n"+stderrMessage);
+		
+		
+		
+
+	}
+	protected String rhelBasePackage		= "ghostscript";		// assume this package is available from rhelBaseRepoId
+	protected String rhelOptionalPackage	= "ghostscript-devel";	// assume this package is available from rhelOptionalRepoId and depends on rhelBasePackage
+
 	
 	@Test(	description="verify yum usability message is presented when the default notify_only=1 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf",
 			groups={},
@@ -119,8 +168,8 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			priority=30, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyNotifyOnlyFeedbackFromYumSearchDisabledRepos_Test() {
-		// make sure rhelBasePackage and rhelOptlPackage are not installed
-		if (clienttasks.isPackageInstalled(rhelOptlPackage)) clienttasks.yumRemovePackage(rhelOptlPackage);
+		// make sure rhelBasePackage and rhelOptionalPackage are not installed
+		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
 		
 		/* should not be needed
@@ -128,11 +177,11 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSearchDisabledRepos, "notify_only", "1");
 		*/
 		
-		// enable rhelOptlRepoId and disable rhelBaseRepoId
-		clienttasks.repos(null, null, null, rhelOptlRepoId, rhelBaseRepoId, null, null, null);
+		// enable rhelOptionalRepoId and disable rhelBaseRepoId
+		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptlPackage, null, "--disablerepo=*eus-rpms");	// disable any entitled extended update repos // rhel-7-server-eus-rpms
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*eus-rpms");	// disable any entitled extended update repos // rhel-7-server-eus-rpms
 
 		//	2015-10-26 15:26:58.217  FINE: ssh root@jsefler-7.usersys.redhat.com yum -y install ghostscript-devel --disableplugin=rhnplugin --disablerepo=*eus-rpms
 		//	2015-10-26 15:27:05.473  FINE: Stdout: 
@@ -167,9 +216,9 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	2015-10-26 15:27:05.504  FINE: ExitCode: 1
 		
 		// assert results
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelOptlPackage+"'.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelOptionalPackage+"'.");
 		String requiresMessage = "Requires: "+rhelBasePackage;
-		Assert.assertTrue(result.getStderr().contains(requiresMessage),"Stderr from attempt to install '"+rhelOptlPackage+"' contains the require message:\n"+requiresMessage);
+		Assert.assertTrue(result.getStderr().contains(requiresMessage),"Stderr from attempt to install '"+rhelOptionalPackage+"' contains the require message:\n"+requiresMessage);
 		String usabilityMessage = StringUtils.join(new String[]{
 				"**********************************************************************",
 				"yum can be configured to try to resolve such errors by temporarily enabling",
@@ -177,10 +226,8 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 				"To enable this functionality please set 'notify_only=0' in "+clienttasks.yumPluginConfFileForSearchDisabledRepos,
 				"**********************************************************************"},
 				"\n");
-		Assert.assertTrue(result.getStdout().contains(usabilityMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the usability message:\n"+usabilityMessage);
+		Assert.assertTrue(result.getStdout().contains(usabilityMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the usability message:\n"+usabilityMessage);
 	}
-	protected String rhelBasePackage = "ghostscript";		// assume this package is available from rhelBaseRepoId
-	protected String rhelOptlPackage = "ghostscript-devel";	// assume this package is available from rhelOptlRepoId and depends on rhelBasePackage
 	
 	
 	
@@ -190,18 +237,18 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			priority=40, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void WithNotifyOnlyOffVerifyYumSearchDisabledReposAssumingNoResponses_Test() {
-		// make sure rhelBasePackage and rhelOptlPackage are not installed
-		if (clienttasks.isPackageInstalled(rhelOptlPackage)) clienttasks.yumRemovePackage(rhelOptlPackage);
+		// make sure rhelBasePackage and rhelOptionalPackage are not installed
+		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
 		
 		// manually turn off notify_only 0
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSearchDisabledRepos, "notify_only", "0");
 		
-		// enable rhelOptlRepoId and disable rhelBaseRepoId
-		clienttasks.repos(null, null, null, rhelOptlRepoId, rhelBaseRepoId, null, null, null);
+		// enable rhelOptionalRepoId and disable rhelBaseRepoId
+		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptlPackage, null, "--assumeno --disablerepo=*eus-rpms");	// disable any entitled extended update repos // rhel-7-server-eus-rpms
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeno --disablerepo=*eus-rpms");	// disable any entitled extended update repos // rhel-7-server-eus-rpms
 		
 		//	2015-10-26 15:54:03.983  FINE: ssh root@jsefler-7.usersys.redhat.com yum -y install ghostscript-devel --disableplugin=rhnplugin --assumeno --disablerepo=*eus-rpms
 		//	2015-10-26 15:54:10.443  FINE: Stdout: 
@@ -238,10 +285,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// assert results
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelOptlPackage+"'.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelOptionalPackage+"'.");
 		String requiresMessage = "Requires: "+rhelBasePackage;
-		Assert.assertTrue(result.getStderr().contains(requiresMessage),"Stderr from attempt to install '"+rhelOptlPackage+"' contains the require message:\n"+requiresMessage);
-		String promptMessage = StringUtils.join(new String[]{
+		Assert.assertTrue(result.getStderr().contains(requiresMessage),"Stderr from attempt to install '"+rhelOptionalPackage+"' contains the require message:\n"+requiresMessage);
+		String searchDisabledReposMessage = StringUtils.join(new String[]{
 				"**********************************************************************",
 				"Dependency resolving failed due to missing dependencies.",
 				"Some repositories on your system are disabled, but yum can enable them",
@@ -249,10 +296,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 				"metadata for disabled repositories and may take some time and traffic.",
 				"**********************************************************************"},
 				"\n");
-		Assert.assertTrue(result.getStdout().contains(promptMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt message:\n"+promptMessage);
+		Assert.assertTrue(result.getStdout().contains(searchDisabledReposMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt message:\n"+searchDisabledReposMessage);
 		
 		// confirm that the packages are not installed
-		Assert.assertTrue(!clienttasks.isPackageInstalled(rhelOptlPackage),"Package '"+rhelOptlPackage+"' is NOT installed.");
+		Assert.assertTrue(!clienttasks.isPackageInstalled(rhelOptionalPackage),"Package '"+rhelOptionalPackage+"' is NOT installed.");
 		Assert.assertTrue(!clienttasks.isPackageInstalled(rhelBasePackage),"Package '"+rhelBasePackage+"' is NOT installed.");
 		
 		// confirm the repo enablement has not changed
@@ -264,9 +311,9 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(!rhelBaseRepo.enabled, "RHEL base repo id '"+rhelBaseRepoId+"' is disabled.");
 		
 		// assert the optional rhel repo is enabled
-		Repo rhelOptlRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptlRepoId, subscribedRepos);
-		Assert.assertNotNull(rhelOptlRepo, "RHEL optional repo id '"+rhelOptlRepoId+"' was found in subscribed repos.");
-		Assert.assertTrue(rhelOptlRepo.enabled, "RHEL optional repo id '"+rhelOptlRepoId+"' is enabled.");
+		Repo rhelOptionalRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptionalRepoId, subscribedRepos);
+		Assert.assertNotNull(rhelOptionalRepo, "RHEL optional repo id '"+rhelOptionalRepoId+"' was found in subscribed repos.");
+		Assert.assertTrue(rhelOptionalRepo.enabled, "RHEL optional repo id '"+rhelOptionalRepoId+"' is enabled.");
 
 	}
 	
@@ -279,18 +326,21 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void WithNotifyOnlyOffVerifyYumSearchDisabledReposAssumingYesResponses_Test() {
 		
-		// make sure rhelBasePackage and rhelOptlPackage are not installed
-		if (clienttasks.isPackageInstalled(rhelOptlPackage)) clienttasks.yumRemovePackage(rhelOptlPackage);
+		// make sure rhelBasePackage and rhelOptionalPackage are not installed
+		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
 		
 		// manually turn off notify_only 0
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSearchDisabledRepos, "notify_only", "0");
 		
-		// enable rhelOptlRepoId and disable rhelBaseRepoId,rhelEusRepoId
-		clienttasks.repos(null, null, null, Arrays.asList(rhelOptlRepoId), Arrays.asList(rhelBaseRepoId,rhelEusRepoId), null, null, null);
+		// enable rhelOptionalRepoId and disable rhelBaseRepoId,rhelEusRepoId
+		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
+		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
+		if (rhelEusRepoId!=null)  disableRepos.add(rhelEusRepoId);
+		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptlPackage, null, "--assumeyes");
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeyes");
 		
 		//	2015-10-26 16:53:19.222  FINE: ssh root@jsefler-7.usersys.redhat.com yum -y install ghostscript-devel --disableplugin=rhnplugin --assumeyes
 		//	2015-10-26 16:53:55.547  FINE: Stdout: 
@@ -367,16 +417,16 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// assert results
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"Exit code from attempt to install '"+rhelOptlPackage+"' that requires '"+rhelBasePackage+"'.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"Exit code from attempt to install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 
 		// confirm that the packages are now installed
-		Assert.assertTrue(clienttasks.isPackageInstalled(rhelOptlPackage),"Package '"+rhelOptlPackage+"' is installed.");
+		Assert.assertTrue(clienttasks.isPackageInstalled(rhelOptionalPackage),"Package '"+rhelOptionalPackage+"' is installed.");
 		Assert.assertTrue(clienttasks.isPackageInstalled(rhelBasePackage),"Package '"+rhelBasePackage+"' is installed.");
 		
 		// assert more results
 		String requiresMessage = "Requires: "+rhelBasePackage;
-		Assert.assertTrue(result.getStdout().contains(requiresMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the require message:\n"+requiresMessage);
-		String promptMessage = StringUtils.join(new String[]{
+		Assert.assertTrue(result.getStdout().contains(requiresMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the require message:\n"+requiresMessage);
+		String searchDisabledReposMessage = StringUtils.join(new String[]{
 				"**********************************************************************",
 				"Dependency resolving failed due to missing dependencies.",
 				"Some repositories on your system are disabled, but yum can enable them",
@@ -384,7 +434,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 				"metadata for disabled repositories and may take some time and traffic.",
 				"**********************************************************************"},
 				"\n");
-		Assert.assertTrue(result.getStdout().contains(promptMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt message:\n"+promptMessage);
+		Assert.assertTrue(result.getStdout().contains(searchDisabledReposMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt message:\n"+searchDisabledReposMessage);
 		String rhelActualRepoId = clienttasks.getYumPackageInfo(rhelBasePackage,"From repo");
 		String resolutionMessage = StringUtils.join(new String[]{
 				"*******************************************************************",
@@ -392,34 +442,32 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 				rhelActualRepoId,
 				"*******************************************************************"},
 				"\n");
-		Assert.assertTrue(result.getStdout().contains(resolutionMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' which requires '"+rhelBasePackage+"' contains the resolution message:\n"+resolutionMessage);
+		Assert.assertTrue(result.getStdout().contains(resolutionMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' which requires '"+rhelBasePackage+"' contains the resolution message:\n"+resolutionMessage);
 		
 		
 		// confirm the repo enablement has not changed
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
 		
 		// assert the optional rhel repo remains enabled
-		Repo rhelOptlRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptlRepoId, subscribedRepos);
-		Assert.assertNotNull(rhelOptlRepo, "RHEL optional repo id '"+rhelOptlRepoId+"' was found in subscribed repos.");
-		Assert.assertTrue(rhelOptlRepo.enabled, "RHEL optional repo id '"+rhelOptlRepoId+"' remains enabled.");
+		Repo rhelOptionalRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptionalRepoId, subscribedRepos);
+		Assert.assertNotNull(rhelOptionalRepo, "RHEL optional repo id '"+rhelOptionalRepoId+"' was found in subscribed repos.");
+		Assert.assertTrue(rhelOptionalRepo.enabled, "RHEL optional repo id '"+rhelOptionalRepoId+"' remains enabled.");
 		
 		// assert the actual rhel repo enablement is persisted.
 		Repo rhelActualRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelActualRepoId, subscribedRepos);
 		Assert.assertNotNull(rhelActualRepo, "RHEL repo id '"+rhelActualRepoId+"' was found in subscribed repos.");
 		Assert.assertTrue(rhelActualRepo.enabled, "RHEL repo id '"+rhelActualRepoId+"' was enabled permanently by the search-disabled-repos plugin.");
 		
-		
 		// assert that the persisted enabled repos appear in the repo-override list
-		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
-		repoOverrideNameValueMap.put("enabled","1");
 		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
-		for (String repoId : Arrays.asList(rhelActualRepoId,rhelOptlRepoId)) {
-			for (String name : repoOverrideNameValueMap.keySet()) {
-				String value = repoOverrideNameValueMap.get(name);
-				String regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
-				Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+repoId+"' name='"+name+"' value='"+value+"'.");
-			}
-		}
+		String name= "enabled",value,regex;
+		value = "1";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelActualRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelActualRepoId+"' name='"+name+"' value='"+value+"'.");
+		value = "1";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelOptionalRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelOptionalRepoId+"' name='"+name+"' value='"+value+"'.");
+		
 	}
 	
 	
@@ -429,19 +477,22 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			priority=60, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void WithNotifyOnlyOffVerifyYumSearchDisabledReposWithYesYesNoResponses_Test() {
-		// make sure rhelBasePackage and rhelOptlPackage are not installed
-		if (clienttasks.isPackageInstalled(rhelOptlPackage)) clienttasks.yumRemovePackage(rhelOptlPackage);
+		// make sure rhelBasePackage and rhelOptionalPackage are not installed
+		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
 		
 		// manually turn off notify_only 0
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSearchDisabledRepos, "notify_only", "0");
 		
-		// enable rhelOptlRepoId and disable rhelBaseRepoId,rhelEusRepoId
-		clienttasks.repos(null, null, null, Arrays.asList(rhelOptlRepoId), Arrays.asList(rhelBaseRepoId,rhelEusRepoId), null, null, null);
+		// enable rhelOptionalRepoId and disable rhelBaseRepoId,rhelEusRepoId
+		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
+		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
+		if (rhelEusRepoId!=null)  disableRepos.add(rhelEusRepoId);
+		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
 		// responding yes, yes, and then no
-		SSHCommandResult result = client.runCommandAndWait("yum install "+rhelOptlPackage+" --disableplugin=rhnplugin "+" << EOF\ny\ny\nN\nEOF");	// interactive yum responses are:  y y N
+		SSHCommandResult result = client.runCommandAndWait("yum install "+rhelOptionalPackage+" --disableplugin=rhnplugin "+" << EOF\ny\ny\nN\nEOF");	// interactive yum responses are:  y y N
 		
 		//	2015-10-27 14:08:13.820  FINE: ssh root@jsefler-7.usersys.redhat.com yum install ghostscript-devel --disableplugin=rhnplugin  << EOF
 		//	y
@@ -530,15 +581,15 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// assert exitCode results
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"Exit code from attempt to successfully install '"+rhelOptlPackage+"' that requires '"+rhelBasePackage+"'.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"Exit code from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 		
 		// assert stderr results
-		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptlPackage+"' that requires '"+rhelBasePackage+"'.");
+		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 
 		// assert stdout results
 		String prompt;
 		String requiresMessage = "Requires: "+rhelBasePackage;
-		Assert.assertTrue(result.getStdout().contains(requiresMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the require message:\n"+requiresMessage);
+		Assert.assertTrue(result.getStdout().contains(requiresMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the require message:\n"+requiresMessage);
 		String searchDisabledReposMessage = StringUtils.join(new String[]{
 				"**********************************************************************",
 				"Dependency resolving failed due to missing dependencies.",
@@ -547,11 +598,11 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 				"metadata for disabled repositories and may take some time and traffic.",
 				"**********************************************************************"},
 				"\n");
-		Assert.assertTrue(result.getStdout().contains(searchDisabledReposMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' which requires '"+rhelBasePackage+"' contains the search disabled repos message:\n"+searchDisabledReposMessage);
+		Assert.assertTrue(result.getStdout().contains(searchDisabledReposMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' which requires '"+rhelBasePackage+"' contains the search disabled repos message:\n"+searchDisabledReposMessage);
 		prompt = "Enable all repositories and try again? [y/N]: ";
-		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt: "+prompt);
+		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt: "+prompt);
 		prompt = "Is this ok [y/d/N]: ";
-		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt: "+prompt);
+		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt: "+prompt);
 		String rhelActualRepoId = clienttasks.getYumPackageInfo(rhelBasePackage,"From repo");
 		String resolutionMessage = StringUtils.join(new String[]{
 				"*******************************************************************",
@@ -559,63 +610,68 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 				rhelActualRepoId,
 				"*******************************************************************"},
 				"\n");
-		Assert.assertTrue(result.getStdout().contains(resolutionMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' which requires '"+rhelBasePackage+"' contains the resolution message:\n"+resolutionMessage);
+		Assert.assertTrue(result.getStdout().contains(resolutionMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' which requires '"+rhelBasePackage+"' contains the resolution message:\n"+resolutionMessage);
 		prompt = "Would you like to permanently enable these repositories? [y/N]: ";
-		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt: "+prompt);
+		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt: "+prompt);
 		
 
 		// confirm that the packages are now installed
-		Assert.assertTrue(clienttasks.isPackageInstalled(rhelOptlPackage),"Package '"+rhelOptlPackage+"' is installed.");
+		Assert.assertTrue(clienttasks.isPackageInstalled(rhelOptionalPackage),"Package '"+rhelOptionalPackage+"' is installed.");
 		Assert.assertTrue(clienttasks.isPackageInstalled(rhelBasePackage),"Package '"+rhelBasePackage+"' is installed.");
 		
 		// confirm the repo enablement has not changed
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
 		
 		// assert the optional rhel repo remains enabled
-		Repo rhelOptlRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptlRepoId, subscribedRepos);
-		Assert.assertNotNull(rhelOptlRepo, "RHEL optional repo id '"+rhelOptlRepoId+"' was found in subscribed repos.");
-		Assert.assertTrue(rhelOptlRepo.enabled, "RHEL optional repo id '"+rhelOptlRepoId+"' remains enabled.");
+		Repo rhelOptionalRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptionalRepoId, subscribedRepos);
+		Assert.assertNotNull(rhelOptionalRepo, "RHEL optional repo id '"+rhelOptionalRepoId+"' was found in subscribed repos.");
+		Assert.assertTrue(rhelOptionalRepo.enabled, "RHEL optional repo id '"+rhelOptionalRepoId+"' remains enabled.");
 		
 		// assert the actual rhel repo enablement is  NOT persisted (since we said N to the prompt).
 		Repo rhelActualRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelActualRepoId, subscribedRepos);
 		Assert.assertNotNull(rhelActualRepo, "RHEL repo id '"+rhelActualRepoId+"' was found in subscribed repos.");
 		Assert.assertTrue(!rhelActualRepo.enabled, "RHEL repo id '"+rhelActualRepoId+"' was NOT enabled permanently by the search-disabled-repos plugin.");
 		
-		// assert that the temporarily enabled repo remains disabled in the repo-override list
+		// assert that disabled base repo remains disabled in the repo-override list
 		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
-		for (String repoId : Arrays.asList(rhelBaseRepoId,rhelEusRepoId,rhelActualRepoId)) {
-			String name = "enabled";
-			String value = "0";
-			String regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
-			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+repoId+"' name='"+name+"' value='"+value+"'.");
+		String name= "enabled",value,regex;
+		value = "0";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelBaseRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelBaseRepoId+"' name='"+name+"' value='"+value+"'.");
+		if (rhelEusRepoId!=null) {
+		value = "0";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelEusRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelEusRepoId+"' name='"+name+"' value='"+value+"'.");
 		}
 		// assert that the enabled optional repo remains enabled in the repo-override list
-		String name = "enabled";
-		String value = "1";
-		String regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelOptlRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
-		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelOptlRepoId+"' name='"+name+"' value='"+value+"'.");
+		value = "1";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelOptionalRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelOptionalRepoId+"' name='"+name+"' value='"+value+"'.");
 
 	}
 	
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and no to the install prompt",
-			groups={"debugTest"},
+			groups={},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=70, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void WithNotifyOnlyOffVerifyYumSearchDisabledReposWithYesNoResponses_Test() {
-		// make sure rhelBasePackage and rhelOptlPackage are not installed
-		if (clienttasks.isPackageInstalled(rhelOptlPackage)) clienttasks.yumRemovePackage(rhelOptlPackage);
+		// make sure rhelBasePackage and rhelOptionalPackage are not installed
+		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
 		
 		// manually turn off notify_only 0
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSearchDisabledRepos, "notify_only", "0");
 		
-		// enable rhelOptlRepoId and disable rhelBaseRepoId,rhelEusRepoId
-		clienttasks.repos(null, null, null, Arrays.asList(rhelOptlRepoId), Arrays.asList(rhelBaseRepoId,rhelEusRepoId), null, null, null);
+		// enable rhelOptionalRepoId and disable rhelBaseRepoId,rhelEusRepoId
+		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
+		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
+		if (rhelEusRepoId!=null)  disableRepos.add(rhelEusRepoId);
+		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
 		// responding yes and then no
-		SSHCommandResult result = client.runCommandAndWait("yum install "+rhelOptlPackage+" --disableplugin=rhnplugin "+" << EOF\ny\nN\nEOF");	// interactive yum responses are:  y y N
+		SSHCommandResult result = client.runCommandAndWait("yum install "+rhelOptionalPackage+" --disableplugin=rhnplugin "+" << EOF\ny\nN\nEOF");	// interactive yum responses are:  y y N
 
 		//	2015-10-27 18:34:34.097  FINE: ssh root@jsefler-7.usersys.redhat.com yum install ghostscript-devel --disableplugin=rhnplugin  << EOF
 		//	y
@@ -675,15 +731,15 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	2015-10-27 18:34:53.875  FINE: ExitCode: 1
 		
 		// assert exitCode results
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to successfully install '"+rhelOptlPackage+"' that requires '"+rhelBasePackage+"'.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 		
 		// assert stderr results
-		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptlPackage+"' that requires '"+rhelBasePackage+"'.");
+		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 
 		// assert stdout results
 		String prompt;
 		String requiresMessage = "Requires: "+rhelBasePackage;
-		Assert.assertTrue(result.getStdout().contains(requiresMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the require message:\n"+requiresMessage);
+		Assert.assertTrue(result.getStdout().contains(requiresMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the require message:\n"+requiresMessage);
 		String searchDisabledReposMessage = StringUtils.join(new String[]{
 				"**********************************************************************",
 				"Dependency resolving failed due to missing dependencies.",
@@ -692,42 +748,44 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 				"metadata for disabled repositories and may take some time and traffic.",
 				"**********************************************************************"},
 				"\n");
-		Assert.assertTrue(result.getStdout().contains(searchDisabledReposMessage),"Stdout from attempt to install '"+rhelOptlPackage+"' which requires '"+rhelBasePackage+"' contains the search disabled repos message:\n"+searchDisabledReposMessage);
+		Assert.assertTrue(result.getStdout().contains(searchDisabledReposMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' which requires '"+rhelBasePackage+"' contains the search disabled repos message:\n"+searchDisabledReposMessage);
 		prompt = "Enable all repositories and try again? [y/N]: ";
-		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt: "+prompt);
+		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt: "+prompt);
 		prompt = "Is this ok [y/d/N]: ";
-		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptlPackage+"' contains the prompt: "+prompt);
+		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt: "+prompt);
 		
 		// confirm that the packages are NOT installed
-		Assert.assertTrue(!clienttasks.isPackageInstalled(rhelOptlPackage),"Package '"+rhelOptlPackage+"' is NOT installed.");
+		Assert.assertTrue(!clienttasks.isPackageInstalled(rhelOptionalPackage),"Package '"+rhelOptionalPackage+"' is NOT installed.");
 		Assert.assertTrue(!clienttasks.isPackageInstalled(rhelBasePackage),"Package '"+rhelBasePackage+"' is NOT installed.");
 		
 		// confirm the repo enablement has not changed
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
 		
 		// assert the optional rhel repo remains enabled
-		Repo rhelOptlRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptlRepoId, subscribedRepos);
-		Assert.assertNotNull(rhelOptlRepo, "RHEL optional repo id '"+rhelOptlRepoId+"' was found in subscribed repos.");
-		Assert.assertTrue(rhelOptlRepo.enabled, "RHEL optional repo id '"+rhelOptlRepoId+"' remains enabled.");
+		Repo rhelOptionalRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptionalRepoId, subscribedRepos);
+		Assert.assertNotNull(rhelOptionalRepo, "RHEL optional repo id '"+rhelOptionalRepoId+"' was found in subscribed repos.");
+		Assert.assertTrue(rhelOptionalRepo.enabled, "RHEL optional repo id '"+rhelOptionalRepoId+"' remains enabled.");
 		
 		// assert the base rhel repo enablement remains disabled
 		Repo rhelBaseRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelBaseRepoId, subscribedRepos);
 		Assert.assertNotNull(rhelBaseRepo, "RHEL repo id '"+rhelBaseRepoId+"' was found in subscribed repos.");
 		Assert.assertTrue(!rhelBaseRepo.enabled, "RHEL repo id '"+rhelBaseRepoId+"' remains disabled.");
 		
-		// assert that repo-overrides remain
+		// assert that disabled base repo remains disabled in the repo-override list
 		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
-		for (String repoId : Arrays.asList(rhelBaseRepoId,rhelEusRepoId)) {
-			String name = "enabled";
-			String value = "0";
-			String regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
-			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+repoId+"' name='"+name+"' value='"+value+"'.");
+		String name= "enabled",value,regex;
+		value = "0";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelBaseRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelBaseRepoId+"' name='"+name+"' value='"+value+"'.");
+		if (rhelEusRepoId!=null) {
+		value = "0";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelEusRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelEusRepoId+"' name='"+name+"' value='"+value+"'.");
 		}
 		// assert that the enabled optional repo remains enabled in the repo-override list
-		String name = "enabled";
-		String value = "1";
-		String regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelOptlRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
-		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelOptlRepoId+"' name='"+name+"' value='"+value+"'.");
+		value = "1";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelOptionalRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelOptionalRepoId+"' name='"+name+"' value='"+value+"'.");
 
 	}
 	
