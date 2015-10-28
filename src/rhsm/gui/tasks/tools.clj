@@ -39,11 +39,11 @@
 (defn run-command
   "Runs a given command on the client using SSHCommandRunner()."
   [command & {:keys [runner]
-                              :or {runner @clientcmd}}]
+              :or {runner @clientcmd}}]
   (let [result (.runCommandAndWait runner command)
-         out (.getStdout result)
-         err (.getStderr result)
-         exit (.getExitCode result)]
+        out (.getStdout result)
+        err (.getStderr result)
+        exit (.getExitCode result)]
      {:stdout out
       :stderr err
       :exitcode exit}))
@@ -171,7 +171,7 @@
     open?))
 
 (defn safe-delete
-  "Asserts if the flie/folder is present before a forced delete"
+  "Asserts if the file/folder is present before a forced delete"
   [path]
   (let [test-fn (fn [cmd] (bash-bool (:exitcode (run-command (str cmd " " path)))))
         del-fn (fn [] (run-command (str "rm -rf " path)))]
@@ -182,3 +182,12 @@
      (test-fn "test -d") (do (del-fn) (log/info "Directory EXISTS and deleted"))
      :else (log/info "File/Directory DOES NOT exist"))
     (verify (not (bash-bool (run-command (str "test -e" path)))))))
+
+(defn trailing-slash?
+  "Tests if a string that represents a path has a trailing slash"
+  [path]
+  (= \/ (last path)))
+
+(defn add-trailing-slash
+  [path]
+  (str path "/"))

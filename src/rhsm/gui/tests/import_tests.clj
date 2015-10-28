@@ -12,7 +12,9 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
+            [clojure.java.io :as cji]
             [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [rhsm.gui.tests.base :as base]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
@@ -28,22 +30,18 @@
            [rhsm.base SubscriptionManagerCLITestScript]
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
-(def importtests (atom nil))
 (def importedcert (atom nil))
 ; paths here have to be lowercase because of rhel5 ldtp's
 ; settextvalue's bullshit
 (def tmpcertpath "/tmp/sm-boguscerts/")
+(def entitlementspath "/tmp/sm-entitlements")
+(def importable-certs-path "/tmp/sm-importcerts")
 
 (defn ^String str-drop [n ^String s]
   (if (< (count s) n)
     ""
     (.substring s n)))
 
-
-(defmacro get-member
-  "Helper to get a member name from a java object"
-  [memname object]
-  `(.-~memname ~object))
 
 (defn make-import-test
   []
@@ -54,8 +52,7 @@
 
 (defn random-from-pool
   [coll size]
-  (loop [left size])
-  )
+  (take size (shuffle coll)))
 
 
 (defn make-submantask
@@ -64,38 +61,44 @@
     (.initializeFieldsFromConfigFile subman-task)
     subman-task))
 
+(defn get-valid-import-cert
+  ([cert-dir]
+   (let [certs (:stdout (run-command (format "ls -A %s" cert-dir)))
+         cert (first (shuffle (split certs #"\n")))]
+     (-> (cji/file cert-dir cert) .getPath)))
+  ([]
+    (get-valid-import-cert importable-certs-path)))
+
+(defn create-import-certs
+  "Creates importable .pem files in cert-dir given valid entitlements in entitle-dir"
+  [cert-dir entitle-dir]
+  (safe-delete cert-dir)
+  (run-command (format "mkdir -p %s" cert-dir))
+  (let [entitlements (split (:stdout (run-command (format "ls -A %s | grep -v key " entitle-dir))) #"\.pem\n")]
+    (doseq [ent entitlements]
+      (let [e (str entitle-dir "/" ent)
+            k (str e "-key.pem")
+            p (str e ".pem")]
+        (run-command (format "cat %s %s > %s/%s.pem" p k cert-dir ent))))))
+
 ;; The setupEntitlementCertsBeforeSetup would delete all the pem files upon registering, so we use this instead
 (defn setup-entitlement-certs
   "Generates entitlement certs"
-  [entitle-dir]
-  (let [import-test (ImportTests.)
-        client (ImportTests/client)
-        subman-task (make-submantask client)
-        user (.-sm_clientUsername import-test)
-        pw (.-sm_clientPassword import-test)
-        org (.-sm_clientOrg import-test)
-        conf-file (.-rhsmConfFile subman-task)
-        imp-cert-dir "/tmp/sm-importcertificatesdir"
-        imp-ent-cert-dir "/tmp/sm-importentitlementsdir"
-        reg-res (.register ^SubscriptionManagerTasks subman-task user, pw, org, nil, nil, nil, nil, nil, nil, nil, (cast String nil), nil, nil, nil, true, false, nil, nil, nil)
-        orig-ent-cert-dir (.getConfFileParameter subman-task conf-file "entitlementCertDir")
-        update-res (.updateConfFileParameter subman-task conf-file "entitlementCertDir" imp-ent-cert-dir)
-        ]
-    (.removeAllCerts subman-task false, true, false)
-    (RemoteFileTasks/runCommandAndAssert client (str "mkdir -p " imp-cert-dir) (into-array Integer [(Integer. 0) ]))
-    (RemoteFileTasks/runCommandAndAssert client (format "rm -f %s/*" imp-cert-dir) (into-array Integer [(Integer. 0)]))
-
-    (let [subscribe-results (vec (for [pool (.getCurrentlyAvailableSubscriptionPools subman-task)]
-                                   (.subscribe_ subman-task nil nil (.poolId pool) nil nil nil nil nil nil nil nil nil)))
-          entitlements (.getCurrentEntitlementCertFiles subman-task)]
-      ;; Copy all of the entitlement .pem files to entitle-dir because unregistering deletes the *.pem files
-      (RemoteFileTasks/runCommandAndAssert client (format "mkdir -p %s" entitle-dir) (into-array Integer [(Integer. 0)]))
-      (RemoteFileTasks/runCommandAndAssert client (format "cp %s/*.pem %s" imp-ent-cert-dir entitle-dir) (into-array Integer [(Integer. 0)]))
-      ;; unregistering will delete all the entitlements, , then restore
-      (.unregister subman-task nil nil nil)
-      (.updateConfFileParameter subman-task conf-file "entitlementCertDir" orig-ent-cert-dir)
-      {:entitlements entitlements :ct client :username user :password pw :org org
-       :subscribe-results subscribe-results :register-results reg-res :update-results update-res})))
+  [imp-ent-cert-dir]
+  (run-command "killall -9 yum")                            ;; prevent yum from blowing up
+  (safe-delete imp-ent-cert-dir)
+  (run-command (format "mkdir -p %s" imp-ent-cert-dir))
+  (let [[user pw org] (for [x [:username :password :owner-key]] (x @config))
+        _ (run-command (format "subscription-manager register --user=%s --password=%s --org=%s" user pw org))
+        orig-ent-cert-dir (tasks/conf-file-value "entitlementCertDir")
+        _ (tasks/set-conf-file-value "entitlementCertDir" imp-ent-cert-dir)
+        pools (random-from-pool (map :id (ctasks/list-available true)) 5)
+        args (apply str " --pool=" (interpose " --pool=" pools))
+        _ (run-command (str "subscription-manager attach " args))]
+    ;; Copy all of the entitlement .pem files to entitle-dir because unregistering deletes the *.pem files
+    (tasks/set-conf-file-value "entitlementCertDir" orig-ent-cert-dir)
+    ;; unregistering will delete all the entitlements, , then restore
+    (run-command "subscription-manager unregister")))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
@@ -106,22 +109,18 @@
                    (throw (SkipException.
                             (str "Cannot generate keyevents in RHEL7 !!
 	                Skipping Test Suite 'Import Tests'."))))))
+    (tasks/kill-app)
+    (setup-entitlement-certs entitlementspath)
+    (create-import-certs importable-certs-path entitlementspath)
     (tasks/start-app)
-    (reset! importtests (ImportTests.))
-    (.restartCertFrequencyBeforeClass @importtests)
-    (.setupEntitlemenCertsForImportBeforeClass @importtests)
-    (run-command "subscription-manager unregister")
-    (safe-delete tmpcertpath)
-    (run-command (str "mkdir " tmpcertpath))
     (catch Exception e
       (reset! (skip-groups :import) true)
-      (throw e)))) ()
+      (throw e))))
 
 (defn ^{AfterClass {:groups ["cleanup"]
                     :alwaysRun true}}
   cleanup_import [_]
   (assert-valid-testing-arch)
-  (.cleanupAfterClass @importtests)
   (tasks/restart-app))
 
 (defn- cert-version-one? []
@@ -144,7 +143,7 @@
   (if-not (cert-version-one?)
     (verify (not (.isBugOpen (BzChecker/getInstance) "860344"))))
   (tasks/restart-app)
-  (let [certlocation (str (.getValidImportCertificate @importtests))
+  (let [certlocation (str (get-valid-import-cert))
         certdir (tasks/conf-file-value "entitlementCertDir")
         cert (last (split certlocation #"/"))
         key (clojure.string/replace cert ".pem" "-key.pem")
@@ -250,7 +249,10 @@
 
 (defn get-random-file
   ([path filter]
-     (let [certsindir (split-lines
+     (let [path (if-not (trailing-slash? path)
+                  (add-trailing-slash path)
+                  path)
+           certsindir (split-lines
                        (:stdout
                         (run-command (str "ls " path filter))))
            tmpcertname (rand-nth certsindir)
@@ -277,7 +279,7 @@
   import_entitlement
   "Asserts that an entitlement cannot be imported."
   [_]
-  (let [certname (get-random-file "/tmp/sm-importentitlementsdir/" " | grep -v key")]
+  (let [certname (get-random-file entitlementspath " | grep -v key")]
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
@@ -286,7 +288,7 @@
   import_key
   "Asserts that a product key cannot be imported."
   [_]
-  (let [certname (get-random-file "/tmp/sm-importentitlementsdir/" " | grep key")]
+  (let [certname (get-random-file entitlementspath " | grep key")]
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
@@ -327,13 +329,3 @@
                       (import-bad-cert "/this_does_not_exist.pem" :cert-does-not-exist))))))
 
 (gen-class-testng)
-
-(comment
-  ;; to run this in the REPL, do this:
-  (do
-    (import '[rhsm.cli.tests ImportTests])
-    (def importtests (atom nil))
-    (def importedcert (atom nil))
-    (reset! importtests (ImportTests.))
-    (.setupBeforeSuite @importtests)
-    (.setupBeforeClass @importtests)))
