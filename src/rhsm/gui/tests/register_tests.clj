@@ -270,14 +270,3 @@
     (to-array-2d [])))
 
 (gen-class-testng)
-
-
-(comment  ;now using testNG dataproviders
-(data-driven simple_register {Test {:groups ["registration"]}}
-  [[(@config :username) (@config :password) "Admin Owner"]
-   [(@config :username) (@config :password) "Snow White"]
-   [(@config :username1) (@config :password1) nil]
-   ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str (@config :username) "   ") (@config :password) nil]
-   ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str "   " (@config :username)) (@config :password) nil]]))
