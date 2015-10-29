@@ -5,7 +5,7 @@
   :main rhsm.runtestng
   :aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
-  :dependencies [[clj-http "0.9.2"]
+  :dependencies [[clj-http "2.0.0"]
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
                  [com.redhat.qe/assertions "1.0.2"]
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
@@ -29,7 +29,9 @@
                   :exclusions [org.testng/testng]]
                  [postgresql/postgresql "8.4-701.jdbc4"]
                  [slingshot "0.8.0"]
-                 [test_clj.testng "1.0.1-SNAPSHOT"]]
+                                        ;[test_clj.testng "1.0.1-SNAPSHOT"]
+                 [test-clj.testng "1.1.0-SNAPSHOT"]
+                 ]
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
                      [lein-eclipse "1.0.0"]]
