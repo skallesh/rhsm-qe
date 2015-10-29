@@ -743,6 +743,9 @@ schema generation failed
 			throw new SkipException("Not authorized to get HTTP response from '"+m.getURI()+"' with credentials: username='"+username+"' password='"+password+"'");
 		}
 		
+		if (response!=null && !response.isEmpty() && !response.startsWith("[") && !response.startsWith("{"))
+			log.warning("Server response is not valid JSON.  Actual response:\n"+response);
+			
 		return response;
 	}
 	
