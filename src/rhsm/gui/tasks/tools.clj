@@ -191,3 +191,12 @@
 (defn add-trailing-slash
   [path]
   (str path "/"))
+
+(defn make-dir
+  "Creates a directory given by path"
+  [^String path]
+  (run-command (format "mkdir -p %s" path)))
+
+(defn random-from-pool
+  [coll size]
+  (take size (shuffle coll)))

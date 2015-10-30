@@ -61,11 +61,14 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
   [& args]
   (TestNG/main (into-array String args)))
 
-
-;; Useful when automatically running from the repl since :main is set to this namespace
-
 (defn get-config
-  ([dev-file-path]
+  "Retrieves the edn file configuration as a map
+
+  Can specify a path the the user's development edn file which will be merged with the
+  resources/dev.edn file.
+
+  dev-file-path: path to the user's dev.edn file"
+  ([^String dev-file-path]
    {:pre [#(.exists (java.io.File. dev-file-path))]}
    (cfg/load "resources/dev.edn" dev-file-path))
   ([]

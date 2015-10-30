@@ -1,6 +1,6 @@
 ;; This config file is intended for development and testing variables
 ;; For any variable which is declared with #immuconf/override, then there
-;; should be a file in $HOME/.uplift/dev.edn which will be used to override
+;; should be a file in $HOME/.rhsm-qe/dev.edn which will be used to override
 ;; the values in this file.  This can be used for any sensitive information
 ;; such as passwords for virtual machines
 {:runtestng-setup #immuconf/default true

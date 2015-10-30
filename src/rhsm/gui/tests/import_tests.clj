@@ -26,8 +26,6 @@
            org.testng.SkipException
            [rhsm.cli.tests ImportTests]
            [rhsm.cli.tasks SubscriptionManagerTasks]
-           [com.redhat.qe.tools RemoteFileTasks SSHCommandRunner]
-           [rhsm.base SubscriptionManagerCLITestScript]
            [com.redhat.qe.auto.bugzilla BzChecker]))
 
 (def importedcert (atom nil))
@@ -42,27 +40,11 @@
     ""
     (.substring s n)))
 
-
-(defn make-import-test
-  []
-  (let [it (ImportTests.)
-        client (ImportTests/client)]
-    [it client]))
-
-
-(defn random-from-pool
-  [coll size]
-  (take size (shuffle coll)))
-
-
-(defn make-submantask
-  [ssh-client]
-  (let [subman-task (SubscriptionManagerTasks. ssh-client)]
-    (.initializeFieldsFromConfigFile subman-task)
-    subman-task))
-
 (defn get-valid-import-cert
-  ([cert-dir]
+  "Returns a random importable cert file from a given directory
+
+  cert-dir: a directory path containing importable certs"
+  ([^String cert-dir]
    (let [certs (:stdout (run-command (format "ls -A %s" cert-dir)))
          cert (first (shuffle (split certs #"\n")))]
      (-> (cji/file cert-dir cert) .getPath)))
@@ -70,10 +52,14 @@
     (get-valid-import-cert importable-certs-path)))
 
 (defn create-import-certs
-  "Creates importable .pem files in cert-dir given valid entitlements in entitle-dir"
-  [cert-dir entitle-dir]
+  "Creates importable .pem files in cert-dir given valid entitlements in entitle-dir
+
+  Concatenates the pem and key-pem files to make importable entitlement certs.  The cert-dir
+  is where the importable certs will be created, and the entitle-dir is the path to where
+  the entitlement pem and key pem files exist"
+  [^String cert-dir ^String entitle-dir]
   (safe-delete cert-dir)
-  (run-command (format "mkdir -p %s" cert-dir))
+  (make-dir cert-dir)
   (let [entitlements (split (:stdout (run-command (format "ls -A %s | grep -v key " entitle-dir))) #"\.pem\n")]
     (doseq [ent entitlements]
       (let [e (str entitle-dir "/" ent)
@@ -81,13 +67,12 @@
             p (str e ".pem")]
         (run-command (format "cat %s %s > %s/%s.pem" p k cert-dir ent))))))
 
-;; The setupEntitlementCertsBeforeSetup would delete all the pem files upon registering, so we use this instead
 (defn setup-entitlement-certs
-  "Generates entitlement certs"
-  [imp-ent-cert-dir]
+  "Generates entitlement certs into directory imp-ent-cert-dir"
+  [^String imp-ent-cert-dir]
   (run-command "killall -9 yum")                            ;; prevent yum from blowing up
   (safe-delete imp-ent-cert-dir)
-  (run-command (format "mkdir -p %s" imp-ent-cert-dir))
+  (make-dir imp-ent-cert-dir)
   (let [[user pw org] (for [x [:username :password :owner-key]] (x @config))
         _ (run-command (format "subscription-manager register --user=%s --password=%s --org=%s" user pw org))
         orig-ent-cert-dir (tasks/conf-file-value "entitlementCertDir")
@@ -104,11 +89,6 @@
   create_certs [_]
   (try
     (skip-if-bz-open "1170761")
-    (comment (if (= "RHEL7" (get-release))
-               (do (base/startup nil)
-                   (throw (SkipException.
-                            (str "Cannot generate keyevents in RHEL7 !!
-	                Skipping Test Suite 'Import Tests'."))))))
     (tasks/kill-app)
     (setup-entitlement-certs entitlementspath)
     (create-import-certs importable-certs-path entitlementspath)

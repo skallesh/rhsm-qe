@@ -948,7 +948,10 @@
     (or all? (= sys-arch product-arch))))
 
 (defmulti import-location
-          "Getting the location text entry is different between RHEL versions"
+          "Will activate the location entry field in the Import Certififates dialog
+
+          Getting the location text entry is different between RHEL versions.  The dispatcher
+          will take a map which should contain a key of :family."
           (fn [m]
             (if (= (:family m) "RHEL7")
               :rhel7
@@ -963,7 +966,14 @@
 (defmethod import-location :rhel7
   [release-info]
   (try+
-    (ui click :enter-location)
+    ;; tab 3x to focus Recent, then down 7x to get to Enter Location
+    (letfn [(kb-short [k]
+                      (ui generatekeyevent k))]
+      (doseq [_ (range 3)]
+        (kb-short "<tab>"))
+      (doseq [_ (range 7)]
+        (kb-short "<down>"))
+      (kb-short "<enter>"))
     (catch Object e nil))
   (when-not (ui showing? :import-dialog "Location:")
     (throw (Exception. "Location entry in Import Certificates not showing"))))
@@ -978,6 +988,7 @@
       (import-location (get-release true)))
     (log/info (format "Going to generate key event: %s" certlocation))
     (ui generatekeyevent certlocation)
+    (sleep 1000)
     (ui click :import-cert)
     (checkforerror)
     (catch Exception e
