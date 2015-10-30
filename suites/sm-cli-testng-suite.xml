@@ -571,6 +571,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: SearchDisabledRepos Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="SearchDisabledReposTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Virtualization Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />

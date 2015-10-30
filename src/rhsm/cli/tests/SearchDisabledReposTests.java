@@ -35,7 +35,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	// Test methods ***********************************************************************
 
 	@Test(	description="verify default configuration for /etc/yum/pluginconf.d/search-disabled-repos.conf; enabled=1 notify_only=1",
-			groups={},
+			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
 			priority=10, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyDefaultConfiguration_Test() {
@@ -88,14 +88,168 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		// get the yum repos
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
 		
-		// determine the base rhel repo
-		rhelBaseRepoId = String.format("rhel-%s-%s-rpms", clienttasks.redhatReleaseX, clienttasks.variant.toLowerCase());	// rhel-7-server-rpms
+		// PLATFORM=RedHatEnterpriseLinux7-Server-aarch64
+		//	Repo ID: rhel-7-for-arm-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Server for ARM (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/arm/7/$releasever/$basearch/os
+		//	Enabled: 1
+		//	
+		//	Repo ID: rhel-7-for-arm-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Server for ARM - Optional (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/arm/7/$releasever/$basearch/optional/os
+		//	Enabled: 0
+		//	
+		//	Repo ID: rhel-7-server-for-arm-beta-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Server for ARM Beta (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/beta/rhel/arm/7/$basearch/os
+		//	Enabled: 1
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) {
+			rhelBaseRepoId = "rhel-7-for-arm-rpms";
+		}
 		
-		// determine the optional rhel repo
-		rhelOptionalRepoId = rhelBaseRepoId.replaceFirst("-rpms$", "-optional-rpms");	// rhel-7-server-optional-rpms
+		// PLATFORM=RedHatEnterpriseLinux7-Server-ppc64le
+		//	Repo ID: rhel-7-for-power-le-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM Power LE (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/power-le/7/$releasever/$basearch/os
+		//	Enabled: 1
+		//	
+		//	Repo ID: rhel-7-for-power-le-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM Power LE - Optional (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/power-le/7/$releasever/$basearch/optional/os
+		//	Enabled: 0
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le")) {
+			rhelBaseRepoId = "rhel-7-for-power-le-rpms";
+		}
 		
-		// determine the eus rhel repo
-		rhelEusRepoId = rhelBaseRepoId.replaceFirst("-rpms$", "-eus-rpms");	// rhel-7-server-eus-rpms
+		// PLATFORM=RedHatEnterpriseLinux7-Server-ppc64
+		//	Repo ID: rhel-7-for-power-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM Power (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/power/7/$releasever/$basearch/os
+		//	Enabled: 1
+		//	
+		//	Repo ID: rhel-7-for-power-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM Power - Optional (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/power/7/$releasever/$basearch/optional/os
+		//	Enabled: 0
+		//	
+		//	Repo ID: rhel-7-for-power-htb-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM Power HTB (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/htb/rhel/power/7/$basearch/os
+		//	Enabled: 1
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64")) {
+			rhelBaseRepoId = "rhel-7-for-power-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinux7-Server-s390x
+		//	Repo ID: rhel-7-for-system-z-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for System Z (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/system-z/7/$releasever/$basearch/os
+		//	Enabled: 1
+		//	
+		//	Repo ID: rhel-7-for-system-z-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for System Z - Optional (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/system-z/7/$releasever/$basearch/optional/os
+		//	Enabled: 0
+		//	
+		//	Repo ID: rhel-7-for-system-z-htb-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for System Z HTB (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/htb/rhel/system-z/7/$basearch/os
+		//	Enabled: 1
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("s390x")) {
+			rhelBaseRepoId = "rhel-7-for-system-z-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinux7-Server-x86_64
+		//	Repo ID: rhel-7-server-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Server (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/server/7/$releasever/$basearch/os
+		//	Enabled: 1
+		//	
+		//	Repo ID: rhel-7-server-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Server - Optional (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/server/7/$releasever/$basearch/optional/os
+		//	Enabled: 0
+		//	
+		//	Repo ID: rhel-7-server-htb-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Server HTB (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/htb/rhel/server/7/$basearch/os
+		//	Enabled: 1
+		//	
+		//	Repo ID: rhel-7-server-eus-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Server - Extended Update Support (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/eus/rhel/server/7/$releasever/$basearch/os
+		//	Enabled: 1
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64")) {
+			rhelBaseRepoId = "rhel-7-server-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinux7-Client-x86_64
+		//	Repo ID: rhel-7-desktop-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Desktop (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/client/7/$releasever/$basearch/os
+		//	Enabled: 1
+		//	
+		//	Repo ID: rhel-7-desktop-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Desktop - Optional (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/client/7/$releasever/$basearch/optional/os
+		//	Enabled: 0
+		//	
+		//	Repo ID: rhel-7-desktop-htb-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Desktop HTB (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/htb/rhel/client/7/$basearch/os
+		//	Enabled: 1
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Client") && clienttasks.arch.equals("x86_64")) {
+			rhelBaseRepoId = "rhel-7-desktop-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinux7-ComputeNode-x86_64
+		//	Repo ID: rhel-7-hpc-node-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for Scientific Computing (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/computenode/7/$releasever/$basearch/os
+		//	Enabled: 1
+		//	
+		//	Repo ID: rhel-7-hpc-node-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for Scientific Computing - Optional (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/computenode/7/$releasever/$basearch/optional/os
+		//	Enabled: 0
+		//	
+		//	Repo ID: rhel-7-hpc-node-htb-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for Scientific Computing HTB (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/htb/rhel/computenode/7/$basearch/os
+		//	Enabled: 1
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("ComputeNode") && clienttasks.arch.equals("x86_64")) {
+			rhelBaseRepoId = "rhel-7-hpc-node-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinux7-Workstation-x86_64
+		//	Repo ID: rhel-7-workstation-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Workstation (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/workstation/7/$releasever/$basearch/os
+		//	Enabled: 1
+		//	
+		//	Repo ID: rhel-7-workstation-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Workstation - Optional (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/workstation/7/$releasever/$basearch/optional/os
+		//	Enabled: 0
+		//	
+		//	Repo ID: rhel-7-workstation-htb-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 Workstation HTB (RPMs)
+		//	Repo URL: https://cdn.redhat.com/content/htb/rhel/workstation/7/$basearch/os
+		//	Enabled: 1
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Workstation") && clienttasks.arch.equals("x86_64")) {
+			rhelBaseRepoId = "rhel-7-workstation-rpms";
+		}
+		
+		
+		// predict the disabled optional repo and potential presence of other enabled repos 
+		if (rhelBaseRepoId!=null) {
+			rhelOptionalRepoId	= rhelBaseRepoId.replaceFirst("-rpms$", "-optional-rpms");
+			rhelEusRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-eus-rpms");
+			rhelBetaRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-beta-rpms");
+			rhelHtbRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-htb-rpms");
+		} else {
+			Assert.fail("Additional automation development is needed in this test to predict the name of the enabled base RHEL repo for RHEL"+clienttasks.redhatReleaseX+" "+clienttasks.variant+" "+clienttasks.arch);
+		}
 		
 		// assert the base rhel repo is enabled by default
 		Repo rhelBaseRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelBaseRepoId, subscribedRepos);
@@ -107,6 +261,14 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNotNull(rhelOptionalRepo, "RHEL optional repo id '"+rhelOptionalRepoId+"' was found in subscribed repos.");
 		Assert.assertTrue(!rhelOptionalRepo.enabled, "RHEL optional repo id '"+rhelOptionalRepoId+"' is disabled by default.");
 		
+		// determine if beta rhel repo is entitled; if not then set it to null
+		Repo rhelBetaRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelBetaRepoId, subscribedRepos);
+		if (rhelBetaRepo==null) rhelBetaRepoId=null;
+		
+		// determine if htb rhel repo is entitled; if not then set it to null
+		Repo rhelHtbRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelHtbRepoId, subscribedRepos);
+		if (rhelHtbRepo==null) rhelHtbRepoId=null;
+		
 		// determine if eus rhel repo is entitled; if not then set it to null
 		Repo rhelEusRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelEusRepoId, subscribedRepos);
 		if (rhelEusRepo==null) rhelEusRepoId=null;
@@ -114,6 +276,8 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	}
 	protected String rhelBaseRepoId = null;
 	protected String rhelOptionalRepoId = null;
+	protected String rhelBetaRepoId = null;
+	protected String rhelHtbRepoId = null;
 	protected String rhelEusRepoId = null;
 	
 	
@@ -131,7 +295,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelBaseRepoId, rhelOptionalRepoId, null, null, null);
 		
 		// attempt to install a specific package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*eus-rpms");	// disable any entitled extended update repos // rhel-7-server-eus-rpms
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled to prevent rhelBasePackage from // rhel-7-server-eus-rpms
 
 		// assert results...  should not be able to find package since package is in a disabled repo
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelOptionalPackage+"' from a disabled repo.");
@@ -145,7 +309,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null);
 		
 		// attempt to install a specific package from a disabled repo
-		result = clienttasks.yumDoPackageFromRepo_("install", rhelBasePackage, null, "--disablerepo=*eus-rpms");	// disable any entitled extended update repos // rhel-7-server-eus-rpms
+		result = clienttasks.yumDoPackageFromRepo_("install", rhelBasePackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
 
 		// assert results...  should not be able to find package since package is in a disabled repo
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelBasePackage+"' from a disabled repo.");
@@ -163,7 +327,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="verify yum usability message is presented when the default notify_only=1 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf",
-			groups={},
+			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=30, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -181,7 +345,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*eus-rpms");	// disable any entitled extended update repos // rhel-7-server-eus-rpms
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
 
 		//	2015-10-26 15:26:58.217  FINE: ssh root@jsefler-7.usersys.redhat.com yum -y install ghostscript-devel --disableplugin=rhnplugin --disablerepo=*eus-rpms
 		//	2015-10-26 15:27:05.473  FINE: Stdout: 
@@ -232,7 +396,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeno responses",
-			groups={},
+			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=40, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -248,7 +412,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeno --disablerepo=*eus-rpms");	// disable any entitled extended update repos // rhel-7-server-eus-rpms
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeno --disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled to prevent  // rhel-7-server-eus-rpms
 		
 		//	2015-10-26 15:54:03.983  FINE: ssh root@jsefler-7.usersys.redhat.com yum -y install ghostscript-devel --disableplugin=rhnplugin --assumeno --disablerepo=*eus-rpms
 		//	2015-10-26 15:54:10.443  FINE: Stdout: 
@@ -320,7 +484,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeyes responses",
-			groups={},
+			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=50, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -336,11 +500,25 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		// enable rhelOptionalRepoId and disable rhelBaseRepoId,rhelEusRepoId
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
-		if (rhelEusRepoId!=null)  disableRepos.add(rhelEusRepoId);
 		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null);
-		
+		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
+		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null);
+		//	2015-10-29 17:51:58.988  FINE: ssh root@ibm-z10-30.rhts.eng.bos.redhat.com subscription-manager repos --disable=*-beta-rpms --disable=*-htb-rpms --disable=*-eus-rpms
+		//	2015-10-29 17:52:08.882  FINE: Stdout: 
+		//	Error: *-htb-rpms is not a valid repository ID. Use --list option to see valid repositories.
+		//	Error: *-eus-rpms is not a valid repository ID. Use --list option to see valid repositories.
+		//	Repository 'rhel-7-for-system-z-satellite-tools-6-beta-rpms' is disabled for this system.
+		//	Repository 'rhel-7-for-system-z-rhn-tools-beta-rpms' is disabled for this system.
+		//	Repository 'rhel-7-for-system-z-optional-beta-rpms' is disabled for this system.
+		//	Repository 'rhel-7-for-system-z-rh-common-beta-rpms' is disabled for this system.
+		//	Repository 'rhel-7-for-system-z-supplementary-beta-rpms' is disabled for this system.
+		//	Repository 'rhel-7-for-system-z-beta-rpms' is disabled for this system.
+		//
+		//	2015-10-29 17:52:08.895  FINE: Stderr: 
+		//	2015-10-29 17:52:08.896  FINE: ExitCode: 1
+				
 		// attempt to install a package that requires another package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeyes");
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeyes --disablerepo=beaker-*");
 		
 		//	2015-10-26 16:53:19.222  FINE: ssh root@jsefler-7.usersys.redhat.com yum -y install ghostscript-devel --disableplugin=rhnplugin --assumeyes
 		//	2015-10-26 16:53:55.547  FINE: Stdout: 
@@ -472,7 +650,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and install followed by no response to keep repos enabled.",
-			groups={},
+			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=60, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -487,12 +665,13 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		// enable rhelOptionalRepoId and disable rhelBaseRepoId,rhelEusRepoId
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
-		if (rhelEusRepoId!=null)  disableRepos.add(rhelEusRepoId);
 		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null);
+		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
+		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
 		// responding yes, yes, and then no
-		SSHCommandResult result = client.runCommandAndWait("yum install "+rhelOptionalPackage+" --disableplugin=rhnplugin "+" << EOF\ny\ny\nN\nEOF");	// interactive yum responses are:  y y N
+		SSHCommandResult result = client.runCommandAndWait("yum install "+rhelOptionalPackage+" --disableplugin=rhnplugin --disablerepo=beaker-* "+" << EOF\ny\ny\nN\nEOF");	// interactive yum responses are:  y y N
 		
 		//	2015-10-27 14:08:13.820  FINE: ssh root@jsefler-7.usersys.redhat.com yum install ghostscript-devel --disableplugin=rhnplugin  << EOF
 		//	y
@@ -638,6 +817,16 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		value = "0";
 		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelBaseRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
 		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelBaseRepoId+"' name='"+name+"' value='"+value+"'.");
+		if (rhelBetaRepoId!=null) {
+		value = "0";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelBetaRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelBetaRepoId+"' name='"+name+"' value='"+value+"'.");
+		}
+		if (rhelHtbRepoId!=null) {
+		value = "0";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelHtbRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelHtbRepoId+"' name='"+name+"' value='"+value+"'.");
+		}
 		if (rhelEusRepoId!=null) {
 		value = "0";
 		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelEusRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
@@ -651,7 +840,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and no to the install prompt",
-			groups={},
+			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=70, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -666,12 +855,13 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		// enable rhelOptionalRepoId and disable rhelBaseRepoId,rhelEusRepoId
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
-		if (rhelEusRepoId!=null)  disableRepos.add(rhelEusRepoId);
 		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null);
+		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
+		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
 		// responding yes and then no
-		SSHCommandResult result = client.runCommandAndWait("yum install "+rhelOptionalPackage+" --disableplugin=rhnplugin "+" << EOF\ny\nN\nEOF");	// interactive yum responses are:  y y N
+		SSHCommandResult result = client.runCommandAndWait("yum install "+rhelOptionalPackage+" --disableplugin=rhnplugin --disablerepo=beaker-* "+" << EOF\ny\nN\nEOF");	// interactive yum responses are:  y y N
 
 		//	2015-10-27 18:34:34.097  FINE: ssh root@jsefler-7.usersys.redhat.com yum install ghostscript-devel --disableplugin=rhnplugin  << EOF
 		//	y
@@ -777,6 +967,16 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		value = "0";
 		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelBaseRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
 		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelBaseRepoId+"' name='"+name+"' value='"+value+"'.");
+		if (rhelBetaRepoId!=null) {
+		value = "0";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelBetaRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelBetaRepoId+"' name='"+name+"' value='"+value+"'.");
+		}
+		if (rhelHtbRepoId!=null) {
+		value = "0";
+		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelHtbRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelHtbRepoId+"' name='"+name+"' value='"+value+"'.");
+		}
 		if (rhelEusRepoId!=null) {
 		value = "0";
 		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelEusRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
@@ -794,7 +994,9 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	
 	// Configuration methods ***********************************************************************
 	
-/* TODO Commented out until we see what yum supports on RHEL6.8
+/* TODO Commented out until we see what yum supports
+ * depends on Bug 1197245 - [RFE] package.xyz from channel_xyz has depsolving problems, --> Missing Dependency [rhel6]
+ * depends on Bug 1188960 - [RFE] package.xyz from channel_xyz has depsolving problems, --> Missing Dependency [rhel7]
 	@BeforeClass(groups="setup")
 	public void determineMinimumYumVersion() throws Exception {
 		if (clienttasks!=null) {
