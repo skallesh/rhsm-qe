@@ -126,7 +126,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :system-name "consumer_name"
          :skip-autobind "auto_bind"
          :register "register_button"
-         :register-cancel "cancel_button"
+         :register-cancel "cancel_button"  ;; PROBABLY doesn't exist anymore
+         :register-close "close_button"
          :owner-view "owner_treeview"
          :registering "Registering"
          :register-proxy-conf "proxy_button"
@@ -177,7 +178,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                :connection-status "connectionStatusLabel"
                :proxy-location "Proxy Location Text"}))
     (define-elements (windows :information-dialog)
-      {:info-ok "OK"})
+      {:info-msg "lbl[A-Za-z]*"
+       :info-ok "OK"})
     (define-elements (windows :warning-dialog)
       {:warn-ok "OK"
        :warn-cancel "Cancel"})

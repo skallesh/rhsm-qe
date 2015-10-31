@@ -172,7 +172,7 @@
     (let [tip (tasks/ui gettextvalue :password-tip)]
       (verify (not (substring? "red.ht" tip))))
     (finally
-      (tasks/ui click :register-cancel))))
+      (tasks/ui click :register-close))))
 
 (defn ^{Test {:groups ["registration"
                        "tier2"
@@ -230,7 +230,7 @@
       (do
        (log/info "Finally Closing Dialog...")
        (if (bool (tasks/ui guiexist :register-dialog))
-         (tasks/ui click :register-cancel))))))
+         (tasks/ui click :register-close))))))
 
 (defn ^{AfterGroups {:groups ["registration"]
                      :value ["activation-register"]

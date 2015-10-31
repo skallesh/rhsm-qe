@@ -15,7 +15,7 @@
                  [com.redhat.qe/ssh-tools "1.0.1-SNAPSHOT"]
                  [com.redhat.qe/testng-listeners "1.0.0"]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
-                 [gnome.ldtp "1.2.0-SNAPSHOT"
+                 [gnome.ldtp "1.2.1-SNAPSHOT"
                   :exclusions [org.clojure/clojure]]
                  [matchure "0.10.1"]
                  [net.java.dev.rome/rome "1.0.0"]

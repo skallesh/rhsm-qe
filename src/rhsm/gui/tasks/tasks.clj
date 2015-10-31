@@ -117,31 +117,38 @@
     (ui launchapp path [] 10)
     (ui waittillwindowexist :firstboot-window 30)))
 
-(defn get-error-msg
-  "Retrieves the error string from the RHSM error dialog."
-  []
-  (.trim (ui getobjectproperty :error-msg "label")))
-
-(defn clear-error-dialog
-  "Clears an error dialog by clicking OK."
-  []
-  (ui click :ok-error))
+(defn get-msg
+  "Retrieves the label/message off an object.
+   Useful for error/question/information dialogs."
+  [object]
+  (.trim (ui getobjectproperty object "label")))
 
 (defn checkforerror
   "Checks for the error dialog for 3 seconds and logs the error message.
   Allows for recovery of the error message.
   @wait: specify the time to wait for the error dialog."
   ([wait]
-     (if (bool (ui waittillwindowexist :error-dialog wait))
-       (let [message (get-error-msg)
-             type (matching-error message)]
-         (clear-error-dialog)
-         (throw+ {:type type
+   (let [dlgs (ui windows-exist ["dlgError" "dlgInformation"] wait)
+         windows (map #(clojure.string/replace % "dlg" "") dlgs)
+         excp (fn [type message window]
+                (throw+ {:type type
                   :msg message
                   :log-warning (fn []
                                  (log/warn
-                                  (format "Got error '%s', message was: '%s'"
-                                          (name type) message)))}))))
+                                  (format "Got %s '%s', message was: '%s'"
+                                          window (name type) message)))}))]
+     (cond (some #{"Error"} windows)
+           (let [win "Error"
+                 message (get-msg :info-msg)
+                 type (matching-error message)]
+             (ui click :info-ok)
+             (excp type message win))
+           (some #{"Information"} windows)
+           (let [win "Information"
+                 message (get-msg :error-msg)
+                 type (matching-error message)]
+             (ui click :ok-error)
+             (excp type message win)))))
   ([] (checkforerror 3)))
 
 (defn set-conf-file-value
@@ -317,7 +324,7 @@
         (let [recovery (fn [h]
                          (if (= :no-sla-available (:type h))
                            (throw+ h)
-                           (throw+ (into e {:cancel (fn [] (ui click :register-cancel))}))))]
+                           (throw+ (into e {:cancel (fn [] (ui click :register-close))}))))]
           (if-not (:msg e)
             (let [error (checkforerror)]
               (if (nil? error)
@@ -345,7 +352,7 @@
                          (when (not skip-auto)
                            (throw+ h))
                          ;; If it's some other exception type, throw it
-                         (throw+ (into e {:cancel (fn [] (ui click :register-cancel))}))))]
+                         (throw+ (into e {:cancel (fn [] (ui click :register-close))}))))]
        (if-not (:msg e)
          (let [error (checkforerror)]
            (if (nil? error)
