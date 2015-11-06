@@ -128,27 +128,27 @@
   Allows for recovery of the error message.
   @wait: specify the time to wait for the error dialog."
   ([wait]
-   (let [dlgs (ui windows-exist ["dlgError" "dlgInformation"] wait)
-         windows (map #(clojure.string/replace % "dlg" "") dlgs)
-         excp (fn [type message window]
-                (throw+ {:type type
-                  :msg message
-                  :log-warning (fn []
-                                 (log/warn
-                                  (format "Got %s '%s', message was: '%s'"
-                                          window (name type) message)))}))]
-     (cond (some #{"Error"} windows)
-           (let [win "Error"
-                 message (get-msg :info-msg)
-                 type (matching-error message)]
-             (ui click :info-ok)
-             (excp type message win))
-           (some #{"Information"} windows)
-           (let [win "Information"
-                 message (get-msg :error-msg)
-                 type (matching-error message)]
-             (ui click :ok-error)
-             (excp type message win)))))
+     (let [dlgs (ui windows-exist ["dlgError" "dlgInformation"] wait)
+           windows (map #(clojure.string/replace % "dlg" "") dlgs)
+           excp (fn [type message window]
+                  (throw+ {:type type
+                           :msg message
+                           :log-warning (fn []
+                                          (log/warn
+                                           (format "Got %s '%s', message was: '%s'"
+                                                   window (name type) message)))}))]
+       (cond (some #{"Error"} windows)
+             (let [win "Error"
+                   message (get-msg :info-msg)
+                   type (matching-error message)]
+               (ui click :info-ok)
+               (excp type message win))
+             (some #{"Information"} windows)
+             (let [win "Information"
+                   message (get-msg :error-msg)
+                   type (matching-error message)]
+               (ui click :ok-error)
+               (excp type message win)))))
   ([] (checkforerror 3)))
 
 (defn set-conf-file-value
