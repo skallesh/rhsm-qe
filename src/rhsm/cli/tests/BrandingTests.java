@@ -31,6 +31,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * @author jsefler
  * 
  * References
+ *  RHEL7 Feature: https://home.corp.redhat.com/wiki/rhel-7-feature-page-flexible-branding
  *  Design Doc: https://mojo.redhat.com/docs/DOC-186259
  *  Dev Test Doc: https://mojo.redhat.com/docs/DOC-21827
  *  TCMS plan link https://tcms.engineering.redhat.com/plan/11066/flex-branding-test-cases
