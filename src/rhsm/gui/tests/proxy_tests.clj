@@ -227,7 +227,7 @@
       (verify (= thrown-error :network-error)))
     (finally
      (if (bool (tasks/ui guiexist :register-dialog))
-       (tasks/ui click :register-cancel))
+       (tasks/ui click :register-close))
      (disable_proxy nil))))
 
 (defn ^{Test {:groups ["proxy"

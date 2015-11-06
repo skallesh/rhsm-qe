@@ -172,7 +172,7 @@
           (do
             ;(throw (Exception. "'Enter Activation Key' window should not be displayed"))
             (sleep 2000)
-            (tasks/ui click :register-cancel)))
+            (tasks/ui click :register-close)))
         (verify (<= (tasks/warn-count) beforesubs))
         (verify (tasks/compliance?))))))
 
@@ -305,7 +305,7 @@
       (verify (= 0 (count error-list))))
     (finally
       (if (bool(tasks/ui guiexist :register-dialog))
-        (tasks/ui click :register-cancel))
+        (tasks/ui click :register-close))
       (tasks/unregister))))
 
 (defn ^{Test {:groups ["autosubscribe"
@@ -337,7 +337,7 @@
         (tasks/ui waittillwindownotexist :register-dialog 80)))
     (verify (substring? "System is properly subscribed" (tasks/ui gettextvalue :overall-status)))
     (finally
-      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-cancel))
+      (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-close))
       (tasks/unregister))))
 
 

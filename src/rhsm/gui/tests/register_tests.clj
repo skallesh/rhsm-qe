@@ -172,7 +172,7 @@
     (let [tip (tasks/ui gettextvalue :password-tip)]
       (verify (not (substring? "red.ht" tip))))
     (finally
-      (tasks/ui click :register-cancel))))
+      (tasks/ui click :register-close))))
 
 (defn ^{Test {:groups ["registration"
                        "tier2"
@@ -230,7 +230,7 @@
       (do
        (log/info "Finally Closing Dialog...")
        (if (bool (tasks/ui guiexist :register-dialog))
-         (tasks/ui click :register-cancel))))))
+         (tasks/ui click :register-close))))))
 
 (defn ^{AfterGroups {:groups ["registration"]
                      :value ["activation-register"]
@@ -270,14 +270,3 @@
     (to-array-2d [])))
 
 (gen-class-testng)
-
-
-(comment  ;now using testNG dataproviders
-(data-driven simple_register {Test {:groups ["registration"]}}
-  [[(@config :username) (@config :password) "Admin Owner"]
-   [(@config :username) (@config :password) "Snow White"]
-   [(@config :username1) (@config :password1) nil]
-   ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str (@config :username) "   ") (@config :password) nil]
-   ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str "   " (@config :username)) (@config :password) nil]]))
