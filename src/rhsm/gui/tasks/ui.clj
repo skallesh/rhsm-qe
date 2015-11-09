@@ -225,7 +225,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :import-dialog)
       {:text-entry-toggle "Type a file name"
        :import-cert "Import"
-       :import-cancel "Cancel"})
+       :import-cancel "Cancel"
+       :enter-location "Enter Location"})
     (define-elements (windows :system-preferences-dialog)
       {:close-system-prefs "Close"
        :autoheal-checkbox "autoheal_checkbox"
