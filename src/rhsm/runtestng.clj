@@ -8,7 +8,8 @@
             [rhsm.gui.tasks.test-config :as config]
             [rhsm.gui.tasks.tasks :as tasks])
   (:import [org.testng.xml Parser XmlSuite]
-           [org.testng TestNG])
+           [org.testng TestNG]
+           (java.io FileNotFoundException))
   (:gen-class))
 
 (defn get-test-names
@@ -69,13 +70,14 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
 
   dev-file-path: path to the user's dev.edn file"
   ([^String dev-file-path]
-   {:pre [#(.exists (java.io.File. dev-file-path))]}
-   (cfg/load "resources/dev.edn" dev-file-path))
+   (try
+     (cfg/load "resources/dev.edn" dev-file-path)
+     (catch Exception e
+       (log/warn "For development testing, please create a ~/.rhsm-qe/dev.edn file"))))
   ([]
    (let [home (System/getProperty "user.home")
          user-edn (format "%s/.rhsm-qe/dev.edn" home)]
-     (println user-edn)
-     (cfg/load "resources/dev.edn" user-edn))))
+     (get-config user-edn))))
 
 
 (def dev-config (get-config))
