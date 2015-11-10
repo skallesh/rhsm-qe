@@ -41,7 +41,8 @@
 (defn ^{Test {:groups ["registration"
                        "tier1"
                        "acceptance"
-                       "blockedByBug-995242"]
+                       "blockedByBug-995242"
+                       "blockedByBug-1251004"]
               :dataProvider "userowners"}}
   simple_register
   "Simple register with known username, password and owner."
