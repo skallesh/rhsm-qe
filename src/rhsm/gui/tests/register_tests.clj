@@ -242,6 +242,22 @@
   (tasks/set-conf-file-value "prefix" (@config :server-prefix))
   (tasks/restart-app))
 
+(defn ^{Test {:groups ["registration"
+                       "tier1"
+                       "blockedByBug-1268102"]}}
+  register_multi_click
+  "Asserts that you can't click the register button multiple times
+   and open multiple register dialogs"
+  [_]
+  (if (not (tasks/ui showing? :register-system))
+    (tasks/unregister))
+  (verify (not-nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
+  (tasks/ui click :register-system)
+  (verify (nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
+  (tasks/ui click :register-system)
+  (verify (distinct? (filter #(substring? "Registration" %) (tasks/ui getwindowlist))))
+  (tasks/ui click :register-close))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
 ;;;;;;;;;;;;;;;;;;;;
