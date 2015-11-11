@@ -139,7 +139,8 @@
 (defn ^{Test {:groups ["facts"
                        "tier2"
                        "blockedByBug-909294"
-                       "blockedByBug-839772"]}}
+                       "blockedByBug-839772"
+                       "blockedByBug-1245557"]}}
   check_available_service_levels
   "Checks that all available service levels are shown in the GUI properly."
   [_]
@@ -169,7 +170,8 @@
                        "tier2"
                        "blockedByBug-909294"
                        "blockedByBug-908954"
-                       "blockedByBug-839772"]}}
+                       "blockedByBug-839772"
+                       "blockedBybug-1245557"]}}
   check_available_releases
   "Checks that all avaiable releases are shown in the GUI properly."
   [_]
