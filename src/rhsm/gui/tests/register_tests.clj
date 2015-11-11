@@ -255,7 +255,7 @@
   (tasks/ui click :register-system)
   (verify (nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
   (tasks/ui click :register-system)
-  (verify (distinct? (filter #(substring? "Registration" %) (tasks/ui getwindowlist))))
+  (verify (apply distinct? (filter #(substring? "Registration" %) (tasks/ui getwindowlist))))
   (tasks/ui click :register-close))
 
 ;;;;;;;;;;;;;;;;;;;;
