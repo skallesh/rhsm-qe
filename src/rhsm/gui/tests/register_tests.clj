@@ -89,7 +89,8 @@
       (verify (bool (tasks/ui guiexist :register-dialog))))))
 
 (data-driven register_bad_credentials {Test {:groups ["registration"
-                                                      "tier1"]}}
+                                                      "tier1"
+                                                      "blockedByBug-1255805"]}}
    [^{Test {:groups ["blockedByBug-718045"
                      "blockedByBug-1194365"
                      "blockedByBug-1249723"]}}
