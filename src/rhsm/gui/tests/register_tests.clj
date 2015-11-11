@@ -73,22 +73,24 @@
 
 (defn register_bad_credentials
   "Checks error messages upon registering with bad credentials."
-  [user pass recovery]
+  [user pass expected-error]
   (skip-if-bz-open "1194365")
   (try+ (tasks/unregister) (catch [:type :not-registered] _))
-  (let [test-fn (fn [username password expected-error-type]
+  (if (bool (tasks/ui guiexist :register-dialog))
+    (tasks/ui closewindow :register-dialog))
+  (let [test-fn (fn [username password]
                   (try+ (tasks/register username password)
                         (catch
-                            [:type expected-error-type]
-                            {:keys [type cancel]}
-                          (cancel) type)))]
-    (let [thrown-error (apply test-fn [user pass recovery])
-          expected-error recovery
-          register-button :register-system]
-     (verify (and (= thrown-error expected-error) (action exists? register-button))))))
+                            [:type expected-error]
+                            {:keys [type]}
+                          type)))]
+    (let [thrown-error (apply test-fn [user pass])]
+      (verify (and (= thrown-error expected-error) (action exists? :register-system)))
+      (verify (bool (tasks/ui guiexist :register-dialog))))))
 
 (data-driven register_bad_credentials {Test {:groups ["registration"
-                                                      "tier1"]}}
+                                                      "tier1"
+                                                      "blockedByBug-1255805"]}}
    [^{Test {:groups ["blockedByBug-718045"
                      "blockedByBug-1194365"
                      "blockedByBug-1249723"]}}
