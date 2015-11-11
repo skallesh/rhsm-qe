@@ -139,15 +139,15 @@
                                                    window (name type) message)))}))]
        (cond (some #{"Error"} windows)
              (let [win "Error"
-                   message (get-msg :info-msg)
-                   type (matching-error message)]
-               (ui click :info-ok)
-               (excp type message win))
-             (some #{"Information"} windows)
-             (let [win "Information"
                    message (get-msg :error-msg)
                    type (matching-error message)]
                (ui click :ok-error)
+               (excp type message win))
+             (some #{"Information"} windows)
+             (let [win "Information"
+                   message (get-msg :info-msg)
+                   type (matching-error message)]
+               (ui click :info-ok)
                (excp type message win)))))
   ([] (checkforerror 3)))
 
