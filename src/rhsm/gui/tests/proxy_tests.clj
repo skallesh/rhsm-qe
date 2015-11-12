@@ -44,7 +44,8 @@
   (verify (not (tasks/ui showing? :register-system))))
 
 (defn ^{Test {:groups ["proxy"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1250348"]
               :priority (int 100)}}
   enable_proxy_auth
   "Asserts that the rhsm.conf file is correctly set after setting a proxy with auth."
@@ -57,7 +58,8 @@
     (tasks/verify-conf-proxies hostname port username password)))
 
 (defn ^{Test {:groups ["proxy"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1250348"]
               :priority (int 101)}}
   enable_proxy_noauth
   "Asserts that the rhsm.conf file is correctly set after setting a proxy without auth."
