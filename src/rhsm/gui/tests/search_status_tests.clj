@@ -66,7 +66,8 @@
 
 (defn ^{Test {:groups ["search_status"
                        "tier2"
-                       "blockedByBug-707041"]}}
+                       "blockedByBug-707041"
+                       "blockedByBug-1248821"]}}
   date_picker_traceback
   "Asserts that the date chooser does not throw a traceback."
   [_]
