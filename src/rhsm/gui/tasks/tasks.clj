@@ -232,6 +232,7 @@
         (ui click :register)))
     ;; else leave sla dialog open
     (when sla
+      (sleep 2000)
       (ui click :register-dialog sla))
     ))
 
