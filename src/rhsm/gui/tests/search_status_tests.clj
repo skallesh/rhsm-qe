@@ -354,6 +354,34 @@
       (verify (empty? (get-sub-name)))
       (verify (= (get-sub-name) subscription)))))
 
+(defn ^{Test {:group ["search_status"
+                      "tier 2"
+                      "blockedByBug-1248729"]}}
+  check_filter_focus
+  "Checks if the filter dialog comes up in a focused state when opened."
+  [_]
+  (try
+    (tasks/register-with-creds :re-register? true)
+    (tasks/ui selecttab :all-available-subscriptions)
+    (tasks/ui click :filters)
+    (tasks/ui waittillwindowexist :filter-dialog 10)
+    (let [items [:match-system
+                 :match-installed
+                 :do-not-overlap
+                 :contain-the-text
+                 :clear-filters
+                 :close-filters]
+          states #{"enabled"
+                   "sensitive"
+                   "showing"
+                   "visible"}
+          objstates (fn [item] (set (tasks/ui getallstates item)))
+          testfn (fn [item] (verify (clojure.set/subset? states (objstates item))))]
+      (doall (map testfn items)))
+    (finally
+      (if (bool (tasks/ui guiexist :filter-dialog))
+        (tasks/ui closewindow :filter-dialog)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;      DATA PROVIDERS      ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
