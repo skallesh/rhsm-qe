@@ -200,3 +200,8 @@
 (defn random-from-pool
   [coll size]
   (take size (shuffle coll)))
+
+(defn no-nil-keys
+  "Ensures that a map has no nil keys"
+  [m]
+  (some #(nil? %) (keys m)))

@@ -47,7 +47,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :question-dialog "Question"
                 ;; does not exist anymore? part of the register-dialog
                 ;:subscribe-system-dialog "Subscribe System"
-                :register-dialog "System Registration"
+                :register-dialog "System Registration"      ;; in RHEL 7.2 is "register_dialog"
                 :search-dialog "Searching"
                 ;;also does not exist anymore > tests have been moved to oldtests folder
                 ;:subscription-assistant-dialog "Subscription Assistant"
@@ -62,7 +62,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :main-window)
       (merge (same-name capitalize [:about
                                     :all-available-subscriptions
-                                    :all-subscriptions-view
+                                    :all-subscriptions-view ;; the table in All Available Subscriptions tab
                                     :attach
                                     :calendar
                                     :configure-proxy
@@ -79,7 +79,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :preferences
                                     :registration-settings
                                     :remove
-                                    :search
+                                    :search                 ;; the Update button in All Available Subscriptions
                                     :update-certificates
                                     :view-system-facts
                                     :repositories

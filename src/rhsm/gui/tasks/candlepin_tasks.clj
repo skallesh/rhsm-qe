@@ -101,6 +101,30 @@
       (get-consumer-owner-key)
       (get-consumer-id))))
 
+(defn- accumulate
+  [m pool]
+  (let [id (:id pool)
+        prod-name (:productName pool)]
+    (assoc m prod-name id)))
+
+(defn get-pool-ids
+  "Gets a map of product names to pool ids"
+  ([owner consumerid & {:keys [all?]
+                        :or   {all? false}}]
+   (reduce accumulate {} (list-available owner consumerid :all? all?)))
+  ([all?]
+   (reduce accumulate {} (list-available all?)))
+  ([]
+    (reduce accumulate {} (list-available))))
+
+(defn get-random-pool-id
+  [& {:keys [owner consumerid all?]
+      :or {all? false}}]
+  (let [randomize (comp first shuffle vals)]
+    (if owner
+      (randomize (get-pool-ids owner consumerid :all? all?))
+      (randomize (get-pool-ids all?)))))
+
 (defn build-product-map
   [& {:keys [all?]
       :or {all? false}}]
