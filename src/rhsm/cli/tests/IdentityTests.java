@@ -377,6 +377,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
 			Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
 		}
+		// RHEL68 TODO  Accommodate new expected results based on bug 1262989 https://github.com/candlepin/subscription-manager/commit/5c48d059bb07b64b92722f249b38aaee7219ab47
 //		Assert.assertEquals(result.getStderr().trim().replace(ignoreStderr, ""),"",			"Stderr expected after the consumer has been deleted on the server-side (ignoring \""+ignoreStderr+"\").");	// 11/20/2012 RHEL64 subscription-manager-1.1.10-1.el6.x86_64  Not sure why this extra ignoreStderr started showing up.
 		
 		result = clienttasks.refresh_(null, null, null);
