@@ -204,6 +204,16 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// skip this data provided row when there are no expectedCompletions left
 			if (expectedCompletions.isEmpty()) continue;
 			
+			// special case for subscription-manager bash completion to include -h and --help in expectedCompletions 
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.2-1")) {	// see subscription-manager commit b39a3e9a615b99c7ba3adaafdd7df999f9714d74
+				if (bashCommand.equals("subscription-manager ")) {
+					// [root@jsefler-7 ~]# subscription-manager --help
+					// Usage: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]
+					expectedCompletions.add("-h");
+					expectedCompletions.add("--help");
+				}
+			}
+			
 			// mark dataProvider rows with a blockedByBzBug where appropriate
 			Set<String> bugIds = new HashSet<String>();
 			
