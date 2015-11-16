@@ -205,3 +205,8 @@
   "Ensures that a map has no nil keys"
   [m]
   (some #(nil? %) (keys m)))
+
+(def keywordize (comp
+                  keyword
+                  #(clojure.string/replace % #"\s+" "-")
+                  clojure.string/lower-case))
