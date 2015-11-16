@@ -318,21 +318,19 @@
         rand-row (rand-int (inc rows))]
     (tasks/ui selectrowindex table rand-row)))
 
+
 (defn cert-map-seq
   "Converts the contents of an entitlement cert into an intermediate map form
   The contents is the text of a certifate (eg output of rct cat-cert some-cert.pem"
   [content]
   (let [section-re #"^\w+:\s+$"
         kv-re #"^\s+(.+):\s*(.+)\n$"
-        keywordize (comp
-                     #(clojure.string/replace % #"\s+" "-")
-                     clojure.string/lower-case)
         section (atom "")]
     (for [line (clojure.string/split content #"\n")]
       (let [line (str line "\n")
             [_ key val] (re-find kv-re line)
             key (try
-                  (keyword (keywordize key))
+                  (keywordize key)
                   (catch Exception e nil))
             newsection (re-matches section-re line)]
         (if (and newsection (not= newsection @section))
@@ -416,19 +414,19 @@
         sub-res (do
                   (tasks/search)
                   (tasks/subscribe subscription))
-        ;; list the consumed subscriptions
-        consumed-before (run-command "subscription-manager list --consumed")
+        ;; TODO: parse the list the consumed subscriptions
+        consumed-before (-> (run-command "subscription-manager list --consumed") :stdout (tasks/parse-list))
         ;; Remove local data
         _ (run-command "subscription-manager clean")
         ;; import the cert associated with the random product we attached
         certmaps (map-all-certs entitlementspath)
         cert-location (rand-pool certmaps)
         _ (tasks/import-cert cert-location)
-        ;; run consumed again, and see if the imported cert is in the list
-        consumed-after (run-command "subscription-manager list --consumed")
+        ;; TODO:  run consumed again, and see if the imported cert is in the list
+        consumed-after (-> (run-command "subscription-manager list --consumed") :stdout (tasks/parse-list))
         ]
     ;; TODO: Verify in the My Subscriptions Tab that the product from the import is there
-    ;; TODO: verify the consumed-before and consumed-after
+    ;; TODO: compare the consumed-before and consumed-after
     ))
 
 (gen-class-testng)
