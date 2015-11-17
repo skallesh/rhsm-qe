@@ -23,6 +23,7 @@
             DataProvider]))
 
 (def sys-log "/var/log/rhsm/rhsm.log")
+(def gui-log "/var/log/ldtpd/ldtpd.log")
 (def ns-log "rhsm.gui.tests.register_tests")
 
 (defn get-userlists [username password]
@@ -189,12 +190,11 @@
   [_]
   (if (not (tasks/ui showing? :register-system))
     (tasks/unregister))
-  (let [log "/var/log/rhsm/rhsm.log"
-        cmdout (atom nil)
+  (let [cmdout (atom nil)
         addput (fn [m] (swap! cmdout str " " (reduce str ((juxt :stdout :stderr) m))))
         logout (get-logging
                 @clientcmd
-                log
+                sys-log
                 "Traceback-register-unregister-GUI-open"
                 nil
                 (addput (run-command
@@ -259,6 +259,26 @@
   (tasks/ui click :register-system)
   (verify (apply distinct? (filter #(substring? "Registration" %) (tasks/ui getwindowlist))))
   (tasks/ui click :register-close))
+
+(defn ^{Test {:groups ["registration"
+                       "tier2"
+                       "blockedByBug-1268094"]}}
+  unregister_traceback
+  "Asserts that a traceback does not occur during unregister
+   when pools are attached."
+  [_]
+  (tasks/register-with-creds :re-register true)
+  (let [avail (shuffle (ctasks/list-available))
+        pools (take 5 (map :id avail))
+        args (str " --pool" (clojure.string/join " --pool=" pools))]
+    (run-command (str "subscription-manager attach" args))
+    (tasks/restart-app)
+    (verify (not (substring? "Traceback" (get-logging
+                                          @clientcmd
+                                          gui-log
+                                          "Unregister-Traceback-Test"
+                                          nil
+                                          (tasks/unregister)))))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
