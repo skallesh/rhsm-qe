@@ -490,10 +490,13 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,null,true, null, null, null, null);
 
 		// get the current base RHEL product cert
+		/* this block of logic does not account for the presence of a /etc/pki/product-default/ cert
 		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
 		List<ProductCert> rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
 		ProductCert rhelProductCert = rhelProductCerts.get(0);
+		*/
+		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
 		
 		// assert that it was autosubscribed
 		InstalledProduct rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductCert.productId, clienttasks.getCurrentlyInstalledProducts());
