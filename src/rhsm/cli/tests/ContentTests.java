@@ -534,7 +534,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			String bugId="1282961"; // Bug 1282961 - Plugin "search-disabled-repos" requires API 2.7. Supported API is 2.6.
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen && clienttasks.redhatReleaseX.equals("6") && clienttasks.isPackageVersion("subscription-manager", ">=", "1.15")) {
-			    Assert.assertEquals((client.getStdout()+client.getStderr()).replace("Plugin \"search-disabled-repos\" requires API 2.7. Supported API is 2.6.", "").trim(),"","Ignoring bug '"+bugId+"' Stdout+Stderr from prior command should be blank due to --quiet option.");
+			    Assert.assertEquals((client.getStdout()+client.getStderr()).replace("Plugin \"search-disabled-repos\" requires API 2.7. Supported API is 2.6.", "").trim(),"","Ignoring bug '"+bugId+"', Stdout+Stderr from prior command should be blank due to --quiet option.");
 			} else
 			// END OF WORKAROUND
 	    	Assert.assertEquals((client.getStdout()+client.getStderr()).trim(),"","Stdout+Stderr from prior command should be blank due to --quiet option.");	// Bug 1017969 - subscription manager plugin ignores yum --quiet
@@ -557,7 +557,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			String bugId="1282961"; // Bug 1282961 - Plugin "search-disabled-repos" requires API 2.7. Supported API is 2.6.
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen && clienttasks.redhatReleaseX.equals("6") && clienttasks.isPackageVersion("subscription-manager", ">=", "1.15")) {
-			    Assert.assertEquals((client.getStdout()+client.getStderr()).replace("Plugin \"search-disabled-repos\" requires API 2.7. Supported API is 2.6.", "").trim(),"","Ignoring bug '"+bugId+"' Stdout+Stderr from prior command should be blank due to --quiet option.");
+			    Assert.assertEquals((client.getStdout()+client.getStderr()).replace("Plugin \"search-disabled-repos\" requires API 2.7. Supported API is 2.6.", "").trim(),"","Ignoring bug '"+bugId+"', Stdout+Stderr from prior command should be blank due to --quiet option.");
 			} else
 			// END OF WORKAROUND
 	    	Assert.assertEquals((client.getStdout()+client.getStderr()).trim(),"","Stdout+Stderr from prior command should be blank due to --quiet option.");	// Bug 1017969 - subscription manager plugin ignores yum --quiet

@@ -7497,6 +7497,14 @@ if (false) {
 		
 		Assert.assertEquals(exitCode, new Integer(0),"Exitcode from attempt to register to RHN Classic.");
 		Assert.assertEquals(stderr.trim(), "","Stderr from attempt to register to RHN Classic.");
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1282961"; // Bug 1282961 - Plugin "search-disabled-repos" requires API 2.7. Supported API is 2.6.
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen && this.redhatReleaseX.equals("6") && this.isPackageVersion("subscription-manager", ">=", "1.15")) {
+			Assert.assertEquals(stdout.replace("Plugin \"search-disabled-repos\" requires API 2.7. Supported API is 2.6.", "").trim(), "","Ignoring bug '"+bugId+"',Stdout from attempt to register to RHN Classic.");
+		} else
+		// END OF WORKAROUND
 		Assert.assertEquals(stdout.trim(), "","Stdout from attempt to register to RHN Classic.");
 		
 		// assert existance of system id file
