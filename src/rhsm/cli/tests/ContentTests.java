@@ -528,7 +528,16 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 //	    String expectedStderr = "This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.";
 //	    Assert.assertTrue(client.getStderr().contains(expectedStderr),"Stderr from prior command should show subscription-manager plugin warning '"+expectedStderr+"'.  See https://bugzilla.redhat.com/show_bug.cgi?id=901612 ");	// 901612 was reverted by 1017354
 	    if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.12-1")) {	// Bug 1017354 - yum subscription-manager plugin puts non-error information on stderr; subscription-manager commit 39eadae14eead4bb79978e52d38da2b3e85cba57
-	    	Assert.assertEquals(client.getStdout()+client.getStderr().trim(),"","Stdout+Stderr from prior command should be blank due to --quiet option.");	// Bug 1017969 - subscription manager plugin ignores yum --quiet
+	    	
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1282961"; // Bug 1282961 - Plugin "search-disabled-repos" requires API 2.7. Supported API is 2.6.
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen && clienttasks.redhatReleaseX.equals("6") && clienttasks.isPackageVersion("subscription-manager", ">=", "1.15")) {
+			    Assert.assertEquals((client.getStdout()+client.getStderr()).replace("Plugin \"search-disabled-repos\" requires API 2.7. Supported API is 2.6.", "").trim(),"","Ignoring bug '"+bugId+"' Stdout+Stderr from prior command should be blank due to --quiet option.");
+			} else
+			// END OF WORKAROUND
+	    	Assert.assertEquals((client.getStdout()+client.getStderr()).trim(),"","Stdout+Stderr from prior command should be blank due to --quiet option.");	// Bug 1017969 - subscription manager plugin ignores yum --quiet
 	    }
 	    Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to exist after unregistering.");
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
@@ -543,7 +552,15 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	    //Assert.assertEquals(client.getStderr().trim(),"","Stderr from prior command");	// changed by Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.
 //		Assert.assertTrue(client.getStderr().contains(expectedStderr),"Stderr from prior command should show subscription-manager plugin warning '"+expectedStderr+"'.  See https://bugzilla.redhat.com/show_bug.cgi?id=901612 ");	// 901612 was reverted by 1017354
 	    if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.12-1")) {	// Bug 1017354 - yum subscription-manager plugin puts non-error information on stderr; subscription-manager commit 39eadae14eead4bb79978e52d38da2b3e85cba57
-	    	Assert.assertEquals(client.getStdout()+client.getStderr().trim(),"","Stdout+Stderr from prior command should be blank due to --quiet option.");	// Bug 1017969 - subscription manager plugin ignores yum --quiet
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1282961"; // Bug 1282961 - Plugin "search-disabled-repos" requires API 2.7. Supported API is 2.6.
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen && clienttasks.redhatReleaseX.equals("6") && clienttasks.isPackageVersion("subscription-manager", ">=", "1.15")) {
+			    Assert.assertEquals((client.getStdout()+client.getStderr()).replace("Plugin \"search-disabled-repos\" requires API 2.7. Supported API is 2.6.", "").trim(),"","Ignoring bug '"+bugId+"' Stdout+Stderr from prior command should be blank due to --quiet option.");
+			} else
+			// END OF WORKAROUND
+	    	Assert.assertEquals((client.getStdout()+client.getStderr()).trim(),"","Stdout+Stderr from prior command should be blank due to --quiet option.");	// Bug 1017969 - subscription manager plugin ignores yum --quiet
 	    }
 		String redhatRepoFileContents2 = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsMatch(redhatRepoFileContents2,regex,null,"File "+clienttasks.redhatRepoFile+" is still infiltrated with excessive blank lines.");
