@@ -85,6 +85,20 @@
     ;; unregistering will delete all the entitlements, , then restore
     (run-command "subscription-manager unregister")))
 
+(defn make-importable-cert
+  "Given a path to entitlement cert, generate an importable cert and store it in import-path"
+  [ent-path import-path]
+  (let [paths (split ent-path #"/")
+        fname (last paths)
+        dir (clojure.string/join "/" (butlast paths))
+        id (re-find #"\d+" fname)
+        key-pem (str dir "/" id "-key.pem")
+        full-import-path (str (if (not (trailing-slash? import-path))
+                                (add-trailing-slash import-path)
+                                import-path) fname)]
+    {:importable-cert full-import-path
+     :result          (run-command (format "cat %s %s > %s/%s.pem" ent-path key-pem import-path id))}))
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
   (try
@@ -373,10 +387,10 @@
   *Args*
   - cert-dir: path to the certificates"
   [cert-dir]
-  (let [files (-> (format "ls -A %s/*.pem" cert-dir) run-command :stdout (split #"\n"))
-        entitle-paths (filter #(not (.contains % "key")) files)]
-    (for [f entitle-paths]
-      (parse-cert f))))
+  (into {} (let [files (-> (format "ls -A %s/*.pem" cert-dir) run-command :stdout (split #"\n"))
+                  entitle-paths (filter #(not (.contains % "key")) files)]
+              (for [f entitle-paths]
+                (parse-cert f)))))
 
 
 (defn cert->poolid
@@ -397,7 +411,6 @@
         matched (filter fltr (map cert->poolid certs))]
     (first matched)))
 
-
 (defn ^{Test {:groups ["import"
                        "tier1"
                        "blockedByBug-1240553"]
@@ -408,25 +421,33 @@
   (tasks/restart-app)
   (try+ (tasks/register-with-creds :re-register? false)
         (catch [:type :already-registered] _))
-  (let [[subscription rand-pool] (first (shuffle (for [[prod id] (ctasks/get-pool-ids)]
+  (let [[subscription rpool] (first (shuffle (for [[prod id] (ctasks/get-pool-ids)]
                                                    [prod id])))
         ;; attach the random subscription
-        sub-res (do
-                  (tasks/search)
-                  (tasks/subscribe subscription))
-        ;; TODO: parse the list the consumed subscriptions
+        _ (do
+            (tasks/search)
+            (tasks/subscribe subscription))
         consumed-before (-> (run-command "subscription-manager list --consumed") :stdout (tasks/parse-list))
-        ;; Remove local data
+        ;; It appears that the :id from (list-available) isn't always the pool-id, so get it it this way
+        rand-pool (-> (filter #(= (:subscription-name %) subscription) consumed-before) first :pool-id)
+        ;; find the certificate associated with the rand-pool id that we just attached
+        certmaps (map-all-certs "/etc/pki/entitlement")
+        cert-file (first (for [[k v] certmaps :when (= rand-pool (get-in v [:Certificate :pool-id]))]
+                           k))
+        entitle-path (str "/etc/pki/entitlement/" cert-file)
+        {:keys [importable-cert]} (make-importable-cert entitle-path importable-certs-path)
+        ;; Remove local data to verify we can still import a cert even if unregistered
         _ (run-command "subscription-manager clean")
         ;; import the cert associated with the random product we attached
-        certmaps (map-all-certs entitlementspath)
-        cert-location (rand-pool certmaps)
-        _ (tasks/import-cert cert-location)
-        ;; TODO:  run consumed again, and see if the imported cert is in the list
-        consumed-after (-> (run-command "subscription-manager list --consumed") :stdout (tasks/parse-list))
-        ]
-    ;; TODO: Verify in the My Subscriptions Tab that the product from the import is there
-    ;; TODO: compare the consumed-before and consumed-after
-    ))
+        _ (tasks/import-cert importable-cert)
+        ;; run consumed again to verify it shows after importing the cert
+        consumed-after (filter #(= rand-pool (:pool-id %))
+                               (-> (run-command "subscription-manager list --consumed") :stdout (tasks/parse-list)))]
+    ;; Make sure that the subscription is consumed, but subman cant give us the status
+    (verify (-> (first consumed-after) :status-details (= "Subscription management service doesn't support Status Details.")))
+    ;; verify that the product we subscribed is showing up in My Subscriptions
+    (tasks/ui selecttab :my-subscriptions)
+    (verify (some #{subscription}
+                  (tasks/get-table-elements :my-subscriptions-view 0)))))
 
 (gen-class-testng)
