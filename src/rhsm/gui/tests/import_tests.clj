@@ -414,40 +414,55 @@
 (defn ^{Test {:groups ["import"
                        "tier1"
                        "blockedByBug-1240553"]
-              :description "Tests if imported cert shows up in both CLI consumed list and
-              the My Subscriptions tab"}}
+              :description "Tests if imported cert shows up in both CLI consumed list and the My Subscriptions tab
+
+              1. Attaches a random subscription
+              2. Finds the entitlement associated with the pool-id of the subscription above
+              3. Creates an importable cert based on the entitlement
+              4. Removes local data via a subscription-manager clean command
+              5. Imports the cert associated with the random product we attached
+              6. Runs the list --consumed command to verify that product is still consumed
+              7. Verifies that the product shows in the My Subscriptions tab"}}
   import_validate_cert_shows_in_consumed
   []
   (tasks/restart-app)
   (try+ (tasks/register-with-creds :re-register? false)
         (catch [:type :already-registered] _))
-  (let [[subscription rpool] (first (shuffle (for [[prod id] (ctasks/get-pool-ids)]
+  (let [[subscription _] (first (shuffle (for [[prod id] (ctasks/get-pool-ids)]
                                                    [prod id])))
-        ;; attach the random subscription
         _ (do
             (tasks/search)
             (tasks/subscribe subscription))
         consumed-before (-> (run-command "subscription-manager list --consumed") :stdout (tasks/parse-list))
-        ;; It appears that the :id from (list-available) isn't always the pool-id, so get it it this way
         rand-pool (-> (filter #(= (:subscription-name %) subscription) consumed-before) first :pool-id)
-        ;; find the certificate associated with the rand-pool id that we just attached
         certmaps (map-all-certs "/etc/pki/entitlement")
         cert-file (first (for [[k v] certmaps :when (= rand-pool (get-in v [:Certificate :pool-id]))]
                            k))
         entitle-path (str "/etc/pki/entitlement/" cert-file)
         {:keys [importable-cert]} (make-importable-cert entitle-path importable-certs-path)
-        ;; Remove local data to verify we can still import a cert even if unregistered
         _ (run-command "subscription-manager clean")
-        ;; import the cert associated with the random product we attached
         _ (tasks/import-cert importable-cert)
-        ;; run consumed again to verify it shows after importing the cert
         consumed-after (filter #(= rand-pool (:pool-id %))
                                (-> (run-command "subscription-manager list --consumed") :stdout (tasks/parse-list)))]
-    ;; Make sure that the subscription is consumed, but subman cant give us the status
     (verify (-> (first consumed-after) :status-details (= "Subscription management service doesn't support Status Details.")))
     ;; verify that the product we subscribed is showing up in My Subscriptions
     (tasks/ui selecttab :my-subscriptions)
     (verify (some #{subscription}
                   (tasks/get-table-elements :my-subscriptions-view 0)))))
+
+
+(defn ^{Test {:groups ["import"
+                       "tier1"
+                       "blockedByBug-1141128"]
+              :dependsOnMethods ["import_validate_cert_shows_in_consumed"]
+              :description "Verifies that a product that was attached via an import can be removed"}}
+  import_validate_cert_removal
+  []
+  ;; We can't be sure which product we imported through the cert, so remove all of them
+  (let [rows (tasks/get-table-elements :my-subscriptions-view 0)]
+    (doseq [prod rows]
+      (tasks/unsubscribe prod))
+    ;; Verify that there are no more subscriptions
+    (verify (= 0 (count (tasks/get-table-elements :my-subscriptions-view 0))))))
 
 (gen-class-testng)
