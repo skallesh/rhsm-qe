@@ -74,35 +74,37 @@
 
 (defn register_bad_credentials
   "Checks error messages upon registering with bad credentials."
-  [user pass expected-error]
+  [register-args expected-error]
   (skip-if-bz-open "1194365")
   (try+ (tasks/unregister) (catch [:type :not-registered] _))
   (if (bool (tasks/ui guiexist :register-dialog))
     (tasks/ui closewindow :register-dialog))
-  (let [test-fn (fn [username password]
-                  (try+ (tasks/register username password)
+  (let [test-fn (fn [args]
+                  (try+ (apply tasks/register args)
                         (catch
                             [:type expected-error]
                             {:keys [type]}
                           type)))]
-    (let [thrown-error (apply test-fn [user pass])]
+    (let [thrown-error (test-fn register-args)]
       (verify (and (= thrown-error expected-error) (action exists? :register-system)))
       (verify (bool (tasks/ui guiexist :register-dialog))))))
 
 (data-driven register_bad_credentials {Test {:groups ["registration"
                                                       "tier1"
-                                                      "blockedByBug-1255805"]}}
+                                                      "blockedByBug-1255805"
+                                                      "blockedByBug-1283749"]}}
    [^{Test {:groups ["blockedByBug-718045"
                      "blockedByBug-1194365"
                      "blockedByBug-1249723"]}}
-    ["sdf" "sdf" :invalid-credentials]
+    [["sdf" "sdf"] :invalid-credentials]
     ;^{Test {:groups ["blockedByBug-719378"]}}
-    ["test user" "password" :invalid-credentials]
-    ["test user" "" :no-password]
-    ["  " "  " :no-username]
-    ["" "" :no-username]
-    ["" "password" :no-username]
-    ["sdf" "" :no-password]])
+    [["test user" "password"] :invalid-credentials]
+    [["test user" ""] :no-password]
+    [["  " "  "] :no-username]
+    [["" ""] :no-username]
+    [["" "password"] :no-username]
+    [["sdf" ""] :no-password]
+    [[(@config :username) (@config :password) :system-name-input ""] :no-system-name]])
 
 (defn ^{Test {:groups ["registration"
                        "tier1"
