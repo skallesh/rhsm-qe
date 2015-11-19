@@ -25,6 +25,10 @@
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
 (def rhsm-gui-pid (atom nil))
 
+(defn connect
+  ([url] (set-url url))
+  ([] (connect (@config :ldtp-url))))
+
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid Credentials|Invalid username or password.*"
                    :no-username #"You must enter a login"
@@ -47,9 +51,30 @@
     (or (some matches-message? (keys known-errors))
         :sm-error)))
 
-(defn connect
-  ([url] (set-url url))
-  ([] (connect (@config :ldtp-url))))
+(defn get-msg
+  "Retrieves the label/message off an object.
+   Useful for error/question/information dialogs."
+  [object]
+  (.trim (ui getobjectproperty object "label")))
+
+(defn checkforerror
+  "Checks for the error dialog for 3 seconds and logs the error message.
+  Allows for recovery of the error message.
+  @wait: specify the time to wait for the error dialog."
+  ([wait]
+     (if (bool (ui waittillwindowexist :error-dialog wait))
+       (let [message (get-msg :error-msg)
+             type (matching-error message)
+             excp (fn [type message]
+                    (throw+ {:type type
+                             :msg message
+                             :log-warning (fn []
+                                            (log/warn
+                                             (format "Got Error '%s', message was: '%s'"
+                                                     (name type) message)))}))]
+         (ui click :ok-error)
+         (excp type message))))
+  ([] (checkforerror 3)))
 
 (defn settext
   "RHEL5 SUCKS"
@@ -116,40 +141,6 @@
   (let [path (@config :firstboot-binary-path)]
     (ui launchapp path [] 10)
     (ui waittillwindowexist :firstboot-window 30)))
-
-(defn get-msg
-  "Retrieves the label/message off an object.
-   Useful for error/question/information dialogs."
-  [object]
-  (.trim (ui getobjectproperty object "label")))
-
-(defn checkforerror
-  "Checks for the error dialog for 3 seconds and logs the error message.
-  Allows for recovery of the error message.
-  @wait: specify the time to wait for the error dialog."
-  ([wait]
-     (let [dlgs (ui windows-exist ["dlgError" "dlgInformation"] wait)
-           windows (map #(clojure.string/replace % "dlg" "") dlgs)
-           excp (fn [type message window]
-                  (throw+ {:type type
-                           :msg message
-                           :log-warning (fn []
-                                          (log/warn
-                                           (format "Got %s '%s', message was: '%s'"
-                                                   window (name type) message)))}))]
-       (cond (some #{"Error"} windows)
-             (let [win "Error"
-                   message (get-msg :error-msg)
-                   type (matching-error message)]
-               (ui click :ok-error)
-               (excp type message win))
-             (some #{"Information"} windows)
-             (let [win "Information"
-                   message (get-msg :info-msg)
-                   type (matching-error message)]
-               (ui click :info-ok)
-               (excp type message win)))))
-  ([] (checkforerror 3)))
 
 (defn set-conf-file-value
   "Edits /etc/rhsm/rhsm.conf to set values within it.
