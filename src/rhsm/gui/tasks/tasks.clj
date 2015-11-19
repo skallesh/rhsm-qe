@@ -41,6 +41,7 @@
                    :cert-does-not-exist #"The following certificate files did not exist"
                    :no-sla-available #"No service level will cover all installed products"
                    :error-getting-subscription #"Pool is restricted to physical systems"
+                   :no-system-name #"You must enter a system name"
                    })
 
 (defn matching-error
