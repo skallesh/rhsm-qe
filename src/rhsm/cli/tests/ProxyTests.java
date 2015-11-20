@@ -731,7 +731,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	// VERSION Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager : version using a proxy server (Positive and Negative Variations)",
-			groups={"blockedByBug-977481"},
+			groups={"blockedByBug-977481","blockedByBug-1284120"},
 			dataProvider="getVersionAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -749,7 +749,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager : status using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={"blockedByBug-977481"},
+			groups={"blockedByBug-977481","blockedByBug-1284120"},
 			dataProvider="getVersionAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	

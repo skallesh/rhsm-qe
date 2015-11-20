@@ -37,7 +37,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="assert that the installed version of subscription-manager is reported by the subscription-manager version module ",
-			groups={"blockedByBug-1241184"},
+			groups={"blockedByBug-1241184","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfSubscriptionManager_Test() {
@@ -54,7 +54,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the installed version of python-rhsm is reported by the subscription-manager version module ",
-			groups={},
+			groups={"blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfPythonRhsm_Test() {
@@ -71,7 +71,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the candlepin sever version is reported by the version module (expect a message to indicate this system is not registered)",
-			groups={"blockedByBug-862308","blockedByBug-868347","blockedByBug-874623"},
+			groups={"blockedByBug-862308","blockedByBug-868347","blockedByBug-874623","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfCandlepinWhenUnregistered_Test() {
@@ -93,7 +93,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the candlepin sever version is reported when not registered AND hostname is bogus (expect a message to indicate this system is not registered)",
-			groups={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test","blockedByBug-843191","blockedByBug-874623"},
+			groups={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test","blockedByBug-843191","blockedByBug-874623","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test() {
@@ -111,7 +111,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the candlepin sever version is reported as Unknown when registered classically AND hostname is bogus",
-			groups={"VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test","blockedByBug-843191"},
+			groups={"VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test","blockedByBug-843191","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test() {
@@ -134,7 +134,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the candlepin sever version and type are reported by the subscription-manager version module",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843649"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843649","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfCandlepinWhenRegistered_Test() {
@@ -164,7 +164,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert the sever version and type when registered to RHN Classic (and simultaneously NOT registered to Subscription Management)",
-			groups={"blockedByBug-852328","VersionOfServerWhenUsingRHNClassic_Test"},
+			groups={"blockedByBug-852328","VersionOfServerWhenUsingRHNClassic_Test","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfServerWhenRegisteredAndUsingRHNClassic_Test() {
@@ -185,7 +185,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		assertServerVersionAndType(servertasks.statusVersion,servertasks.statusRelease,"RHN Classic and Red Hat Subscription Management");	// changed by bug 852328
 	}
 	@Test(	description="assert the sever version and type when registered to RHN Classic (and simultaneously registered to Subscription Management)",
-			groups={"blockedByBug-852328","VersionOfServerWhenUsingRHNClassic_Test"},
+			groups={"blockedByBug-852328","VersionOfServerWhenUsingRHNClassic_Test","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfServerWhenUnregisteredAndUsingRHNClassic_Test() {
@@ -209,7 +209,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that no errors are reported while executing version module while registered and unregistered",
-			groups={"blockedByBug-848409"},
+			groups={"blockedByBug-848409","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyNoErrorWhileCheckingServerVersion_Test() {
