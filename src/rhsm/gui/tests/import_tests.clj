@@ -459,10 +459,9 @@
   import_validate_cert_removal
   []
   ;; We can't be sure which product we imported through the cert, so remove all of them
-  (let [rows (tasks/get-table-elements :my-subscriptions-view 0)]
-    (doseq [prod rows]
-      (tasks/unsubscribe prod))
-    ;; Verify that there are no more subscriptions
-    (verify (= 0 (count (tasks/get-table-elements :my-subscriptions-view 0))))))
+  (tasks/do-to-all-rows-in :my-subscriptions-view 0 tasks/unsubscribe)
+  ;; Verify that there are no more subscriptions
+  (verify (= 0 (count (tasks/get-table-elements :my-subscriptions-view 0)))))
+
 
 (gen-class-testng)
