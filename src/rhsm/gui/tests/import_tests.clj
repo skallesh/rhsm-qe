@@ -377,7 +377,7 @@
   (let [fname (last (split cert #"/"))
         contents (-> (format "rct cat-cert %s" cert) run-command :stdout)
         ms (cert-map-seq contents)
-        filtered (filter #(not (no-nil-keys %)) ms)]
+        filtered (filter #(not (nil-keys? %)) ms)]
     {fname (reduce reduce-parse-cert {} filtered)}))
 
 
