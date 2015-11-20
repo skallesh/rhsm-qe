@@ -85,6 +85,20 @@
     ;; unregistering will delete all the entitlements, , then restore
     (run-command "subscription-manager unregister")))
 
+(defn make-importable-cert
+  "Given a path to entitlement cert, generate an importable cert and store it in import-path"
+  [ent-path import-path]
+  (let [paths (split ent-path #"/")
+        fname (last paths)
+        dir (clojure.string/join "/" (butlast paths))
+        id (re-find #"\d+" fname)
+        key-pem (str dir "/" id "-key.pem")
+        full-import-path (str (if (not (trailing-slash? import-path))
+                                (add-trailing-slash import-path)
+                                import-path) fname)]
+    {:importable-cert full-import-path
+     :result          (run-command (format "cat %s %s > %s/%s.pem" ent-path key-pem import-path id))}))
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
   (try
@@ -307,5 +321,147 @@
                       "/var/log/rhsm/rhsm.log"
                       "import_nonexistant"
                       (import-bad-cert "/this_does_not_exist.pem" :cert-does-not-exist))))))
+
+(defn select-random-row
+  "Selects a random row from a table"
+  [table]
+  (tasks/search :match-system? false
+                :do-not-overlap? false
+                :contain-text nil)
+  (let [rows (tasks/ui getrowcount table)
+        rand-row (rand-int (inc rows))]
+    (tasks/ui selectrowindex table rand-row)))
+
+
+(defn cert-map-seq
+  "Converts the contents of an entitlement cert into an intermediate map form
+  The contents is the text of a certifate (eg output of rct cat-cert some-cert.pem"
+  [content]
+  (let [section-re #"^\w+:\s+$"
+        kv-re #"^\s+(.+):\s*(.+)\n$"
+        section (atom "")]
+    (for [line (clojure.string/split content #"\n")]
+      (let [line (str line "\n")
+            [_ key val] (re-find kv-re line)
+            key (try
+                  (keywordize key)
+                  (catch Exception e nil))
+            newsection (re-matches section-re line)]
+        (if (and newsection (not= newsection @section))
+          (reset! section (-> (clojure.string/trim-newline newsection) (clojure.string/replace #"\:" "") keyword)))
+        {:section @section key val}))))
+
+(defn- reduce-parse-cert
+  "A reducing function that cleans up the intermediate map produced by cert-map-seq
+
+  *Args*
+  - m1: an accumulating map
+  - m2: a map passed in from reduce function"
+  [m1 m2]
+  (let [s (:section m2)
+        kv (dissoc m2 :section)]
+    (if (contains? m1 s)
+      (if (not= s :Content)
+        (assoc-in m1 [s] (merge kv (m1 s)))
+        (assoc-in m1 [s] (conj (m1 s) kv)))
+      (if (not= s :Content)
+        (assoc m1 s kv)
+        (assoc m1 s [kv])))))
+
+(defn parse-cert
+  "Reads a cert file and produces a nice keywordized map
+
+  *Args*
+  - cert: path to the certificate"
+  [cert]
+  (let [fname (last (split cert #"/"))
+        contents (-> (format "rct cat-cert %s" cert) run-command :stdout)
+        ms (cert-map-seq contents)
+        filtered (filter #(not (nil-keys? %)) ms)]
+    {fname (reduce reduce-parse-cert {} filtered)}))
+
+
+(defn map-all-certs
+  "Generates a lazy sequence of all the certs in a pretty map form
+
+  *Args*
+  - cert-dir: path to the certificates"
+  [cert-dir]
+  (into {} (let [files (-> (format "ls -A %s/*.pem" cert-dir) run-command :stdout (split #"\n"))
+                  entitle-paths (filter #(not (.contains % "key")) files)]
+              (for [f entitle-paths]
+                (parse-cert f)))))
+
+
+(defn cert->poolid
+  "Creates a 2 element vector of cert filename and poolid
+
+  *Args*
+  - certmap: a map version of an entitlement cert (as produced by parse-cert"
+  [certmap]
+  (first (for [[ecert data] certmap]
+           [ecert (get-in data [:Certificate :pool-id])])))
+
+
+(defn poolid->cert
+  "Given a poolid and a sequence of certificate maps, find the entitlement file that corresponds
+  to the poolid"
+  [poolid certs]
+  (let [fltr (fn [[ecert id]] (= id poolid))
+        matched (filter fltr (map cert->poolid certs))]
+    (first matched)))
+
+(defn ^{Test {:groups ["import"
+                       "tier1"
+                       "blockedByBug-1240553"]
+              :description "Tests if imported cert shows up in both CLI consumed list and the My Subscriptions tab
+
+              1. Attaches a random subscription
+              2. Finds the entitlement associated with the pool-id of the subscription above
+              3. Creates an importable cert based on the entitlement
+              4. Removes local data via a subscription-manager clean command
+              5. Imports the cert associated with the random product we attached
+              6. Runs the list --consumed command to verify that product is still consumed
+              7. Verifies that the product shows in the My Subscriptions tab"}}
+  import_validate_cert_shows_in_consumed
+  []
+  (tasks/restart-app)
+  (try+ (tasks/register-with-creds :re-register? false)
+        (catch [:type :already-registered] _))
+  (let [[subscription _] (first (shuffle (for [[prod id] (ctasks/get-pool-ids)]
+                                                   [prod id])))
+        _ (do
+            (tasks/search)
+            (tasks/subscribe subscription))
+        consumed-before (-> (run-command "subscription-manager list --consumed") :stdout (tasks/parse-list))
+        rand-pool (-> (filter #(= (:subscription-name %) subscription) consumed-before) first :pool-id)
+        certmaps (map-all-certs "/etc/pki/entitlement")
+        cert-file (first (for [[k v] certmaps :when (= rand-pool (get-in v [:Certificate :pool-id]))]
+                           k))
+        entitle-path (str "/etc/pki/entitlement/" cert-file)
+        {:keys [importable-cert]} (make-importable-cert entitle-path importable-certs-path)
+        _ (run-command "subscription-manager clean")
+        _ (tasks/import-cert importable-cert)
+        consumed-after (filter #(= rand-pool (:pool-id %))
+                               (-> (run-command "subscription-manager list --consumed") :stdout (tasks/parse-list)))]
+    (verify (-> (first consumed-after) :status-details (= "Subscription management service doesn't support Status Details.")))
+    ;; verify that the product we subscribed is showing up in My Subscriptions
+    (tasks/ui selecttab :my-subscriptions)
+    (verify (some #{subscription}
+                  (tasks/get-table-elements :my-subscriptions-view 0)))))
+
+
+(defn ^{Test {:groups ["import"
+                       "tier1"
+                       "blockedByBug-1141128"]
+              :dependsOnMethods ["import_validate_cert_shows_in_consumed"]
+              :description "Verifies that a product that was attached via an import can be removed"}}
+  import_validate_cert_removal
+  []
+  ;; We can't be sure which product we imported through the cert, so remove all of them
+  (tasks/do-to-all-rows-in :my-subscriptions-view 0 tasks/unsubscribe)
+  ;; Verify that there are no more subscriptions
+  (verify (= 0 (count (tasks/get-table-elements :my-subscriptions-view 0)))))
+
 
 (gen-class-testng)

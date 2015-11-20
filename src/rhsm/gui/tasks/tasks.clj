@@ -224,6 +224,7 @@
         (ui click :register)))
     ;; else leave sla dialog open
     (when sla
+      (sleep 2000)
       (ui click :register-dialog sla))
     ))
 
@@ -992,3 +993,36 @@
     (checkforerror)
     (catch Exception e
       (throw e))))
+
+
+(defn parse-list
+  "Scrapes the result of a subman list command into a sequence of maps"
+  [output]
+  (let [lines (drop 3 (clojure.string/split output #"\n"))
+        ;; Split output into sections (delineated by empty lines)
+        sections (vec (->> lines (partition-by #(= "" %)) (filter #(not= "" (first %)))))
+        ;; reducing function: creates a map from a line of output and merges it with coll
+        parse- (fn [coll line]
+                 (merge coll
+                        (let [[_ key val] (re-find #"^(.+):\s*(.+)$" line)
+                              [_ v] (re-find #"^\s+(.+)$" line)]
+                          (if (not v)
+                            (try
+                              {(keywordize key) val}
+                              (catch Exception ex
+                                {}))
+                            (let [current (:provides coll)]
+                              (if (coll? current)
+                                (assoc coll :provides (conj current v))
+                                (assoc coll :provides [current v])))))))]
+    (for [section sections]
+      (reduce parse- {} section))))
+
+(defn subman-list->map
+  "Creates a map where the key is subscription-name, and the value is another map of key-val pairs"
+  [output]
+  (let [rdcr (fn [coll m]
+               (let [sub-name (:subscription-name m)
+                     rem (dissoc m :subscription-name)]
+                 (assoc coll sub-name rem)))]
+    (reduce rdcr {} (parse-list output))))
