@@ -115,7 +115,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			String brandNameStatBeforeUnsubscribing = getCurrentBrandNameFileStat();
 			String prettyNameBeforeUnsubscribing = getCurrentPrettyName();
 			log.info("The flexible brand name prior to unsubscribing from subscription '"+productSubscription.productName+"' is currently '"+brandNameBeforeUnsubscribing+"'.");
-			clienttasks.unsubscribe_(null,productSubscription.serialNumber, null, null, null);
+			clienttasks.unsubscribe_(null,productSubscription.serialNumber, null, null, null, null);
 			verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeUnsubscribing,brandNameStatBeforeUnsubscribing,prettyNameBeforeUnsubscribing,"unsubscribing from '"+productSubscription.productName+"'");
 		}
 	}
@@ -180,7 +180,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhsmcertdHealingUpdateForFlexibleBranding_Test() {
 		// we will start out by removing the current brand name and removing the current entitlements.
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 		client.runCommandAndWait("rm -f "+brandingFile);
 
 		String brandNameBeforeRunningRhsmcertdHealCheck = getCurrentBrandName();

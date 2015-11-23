@@ -486,7 +486,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(productSubscriptions.size()>0, "We should now be consuming an entitlement.");
 
 		// attempt to unsubscribe from it
-		clienttasks.unsubscribe(null, productSubscriptions.get(0).serialNumber, null,null,null);
+		clienttasks.unsubscribe(null, productSubscriptions.get(0).serialNumber, null,null,null, null);
 		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertEquals(productSubscriptions.size(), 0, "We should no longer be consuming the imported entitlement after unsubscribing (while not registered).");
 	}

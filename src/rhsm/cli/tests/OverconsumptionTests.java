@@ -301,7 +301,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 	@AfterClass(groups={"setup"},alwaysRun=true)
 	public void unsubscribeAndUnregisterMultipleSystemsAfterClass() {
 		if (client2tasks!=null) {
-			client2tasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+			client2tasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 			client2tasks.unregister_(null, null, null);
 		}
 
@@ -309,7 +309,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 			
 			for (String systemConsumerId : systemConsumerIds) {
 				client1tasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
-				client1tasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+				client1tasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 				client1tasks.unregister_(null, null, null);
 			}
 			systemConsumerIds.clear();

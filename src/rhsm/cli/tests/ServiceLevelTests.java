@@ -391,7 +391,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 				String expectedStdout = "All installed products are covered by valid entitlements. No need to update subscriptions at this time.";
 				Assert.assertTrue(result.getStdout().trim().startsWith(expectedStdout), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+expectedStdout);
 				Assert.assertEquals(clienttasks.getCurrentServiceLevel(), currentServiceLevel, "When the system is already compliant, an attempt to auto-subscribe with a servicelevel should NOT alter the current service level: "+currentServiceLevel);
-				clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+				clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 			}
 			
 			// auto-subscribe and assert that the requested service level is persisted
@@ -638,7 +638,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		AutoSubscribeWithServiceLevel_Test(null,serviceLevel);
 
 		// return all entitlements
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 		
 		// autosubscribe again without specifying a service level
 		clienttasks.subscribe(true,null,(String)null,(String)null,(String)null,null,null,null,null, null, null, null);

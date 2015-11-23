@@ -71,7 +71,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyComplianceConsidersSystemArch_Test(Object bugzilla, SubscriptionPool pool, String providingProductId, String poolArch) {
 		clienttasks.deleteFactsFileWithOverridingValues(fakeArchFactsFilename);
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 		//OVERKILL InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
 		//OVERKILL Assert.assertEquals(installedProduct.status, "Not Subscribed");
 		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
@@ -232,7 +232,7 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 				"When a system has been registered with autosubscribe specifying a common service level, then the consumer's service level prefernce should be set to that value.");
 	
 		// test autosubscribe (without service level) and assert that the consumed subscriptions provide the same service level as persisted during register
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"Before attempting to autosubscribe with a common servicelevel to become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
 		clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);

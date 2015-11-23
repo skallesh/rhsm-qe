@@ -87,7 +87,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		*/
 		
 		// make sure we are unsubscribed from all subscriptions
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 		
 		// get some attributes from the subscription pool
 		List<String> poolProvidedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
@@ -170,7 +170,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			}
 			
 			// now let's unsubscribe from all entitlements and attempt auto-subscribing
-			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 			
 			// but first, let's pretend that this virtual system is mapped so that we can avoid unmapped_guests_only pools during auto-subscribe
 			factsMap.put("virt.uuid","avoid-unmapped-guests-only");
@@ -391,7 +391,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				} else
 				// END OF WORKAROUND
 				Assert.assertTrue(subProductSubscription.provides.containsAll(productSubscription.provides)&&productSubscription.provides.containsAll(subProductSubscription.provides), "The list of provided products from the consumed subpool '"+subProductSubscription.poolId+"' "+subProductSubscription.provides+" should be the same as the provided products from the consumed hostpool '"+productSubscription.poolId+"' "+productSubscription.provides+".");
-				clienttasks.unsubscribe_(false, subProductSubscription.serialNumber, null, null, null);
+				clienttasks.unsubscribe_(false, subProductSubscription.serialNumber, null, null, null, null);
 			}
 		}
 	}

@@ -118,7 +118,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		
 		// make sure we are not auto healing ourself with any entitlements
 		clienttasks.autoheal(null,null,true,null,null,null);
-		clienttasks.unsubscribe(true, (List<BigInteger>)null, null, null, null);
+		clienttasks.unsubscribe(true, (List<BigInteger>)null, null, null, null, null);
 		
 		// assert no releases are listed
 		Assert.assertTrue(clienttasks.getCurrentlyAvailableReleases(null, null, null).isEmpty(), "No releases should be available without having been entitled to anything.");

@@ -403,7 +403,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult listResultBeforeUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
 		List<String> poolIds = new ArrayList<String>();
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			clienttasks.unsubscribe(true, productSubscription.serialNumber, null, null, null);
+			clienttasks.unsubscribe(true, productSubscription.serialNumber, null, null, null, null);
 			poolIds.add(productSubscription.poolId);
 		}
 		SSHCommandResult listResultAfterUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
@@ -500,7 +500,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult listResultBeforeUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
 		List<String> poolIds = new ArrayList<String>();
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			clienttasks.unsubscribe(true, productSubscription.serialNumber, null, null, null);
+			clienttasks.unsubscribe(true, productSubscription.serialNumber, null, null, null, null);
 			poolIds.add(productSubscription.poolId);
 		}
 		SSHCommandResult listResultAfterUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);

@@ -66,7 +66,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 		log.info("Before beginning this test, we will stop the rhsmcertd so that it does not interfere with this test and make sure we are not subscribed...");
 		clienttasks.stop_rhsmcertd();
-		clienttasks.unsubscribe_(true,(BigInteger)null,null,null,null);
+		clienttasks.unsubscribe_(true,(BigInteger)null,null,null,null, null);
 		
 		// Enable rhsm manage_repos configuration
 		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","1"});
@@ -362,7 +362,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// to avoid interference from an already enabled repo from a prior attached subscription that also
 		// contains this same packages (e.g. -htb- repos versus non -htb- repos) it would be best to remove
 		// all previously attached subscriptions.  actually this will speed up the test
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 		
 		// subscribe to this pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
@@ -476,7 +476,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<BigInteger> serialNumbers = new ArrayList<BigInteger>();
 	    for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 	    	if (serialNumbers.contains(productSubscription.serialNumber)) continue;	// save some time by avoiding redundant unsubscribes
-    		clienttasks.unsubscribe_(null, productSubscription.serialNumber, null, null, null);
+    		clienttasks.unsubscribe_(null, productSubscription.serialNumber, null, null, null, null);
     		serialNumbers.add(productSubscription.serialNumber);
     		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError		
 		}
@@ -787,7 +787,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			} else // clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 			
 			// return all current entitlements (Note: system is already registered by getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists())
- 			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+ 			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 			
 			// fake the system's arch and update the facts
 			log.info("Manipulating the system facts into thinking this is a '"+systemArch+"' system...");
@@ -931,7 +931,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 		poolIds.add(pool.poolId);
 		
-		clienttasks.unsubscribe(true,(BigInteger)null,null,null,null);
+		clienttasks.unsubscribe(true,(BigInteger)null,null,null,null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl));
 		
 		// adjust the expectedContentNamespaces for modified product ids that are not installed
@@ -1100,7 +1100,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				}
 				
 				// unsubscribe
-				clienttasks.unsubscribe(null, rhelEntitlementCert.serialNumber, null, null, null);
+				clienttasks.unsubscribe(null, rhelEntitlementCert.serialNumber, null, null, null, null);
 				
 				rhelSubscriptionIsAvailable = true;
 			}
@@ -1243,7 +1243,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// second, unregister client2 since it is a personal consumer
 		if (client2tasks!=null) {
 			client2tasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, personalConsumerId, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
-			client2tasks.unsubscribe_(true,(BigInteger)null, null, null, null);
+			client2tasks.unsubscribe_(true,(BigInteger)null, null, null, null, null);
 			client2tasks.unregister_(null,null,null);
 		}
 	}

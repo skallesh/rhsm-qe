@@ -391,7 +391,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		}
 		
-		result = clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		result = clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
 		//Assert.assertEquals(result.getStdout().trim(),expectedMsg,"Stdout expected after the consumer has been deleted on the server-side.");
 		//Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");

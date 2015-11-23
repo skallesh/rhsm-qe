@@ -103,7 +103,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
-		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null, null);
 		Assert.assertEquals(result.trim(), productname.trim());
 	}
 	
@@ -131,12 +131,12 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
-		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null, null);
 		Assert.assertEquals(result.trim(), productname.trim());
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
 		result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
-		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null, null);
 		Assert.assertEquals(result.trim(), productname.trim());
 	
 		
@@ -203,7 +203,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		client.runCommandAndWait("rm -rf /root/importedcertDir/importedcert.pem");
 		Assert.assertEquals(result.trim(), productname.trim());
-		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null, null);
 		Assert.assertEquals(result.trim(), productname.trim());
 	}
 	
@@ -228,7 +228,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		String productname="Branded "+consumed.get(randomGenerator.nextInt(consumed.size())).productName;
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
-		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true,(BigInteger)null, null, null, null, null);
 		result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 		Assert.assertEquals(result.trim(), productname.trim());
 	}
@@ -329,7 +329,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		
 
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			if(pool.subscriptionName.contains("Instance")){
 				clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
@@ -366,7 +366,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 			String result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 			Assert.assertEquals(result.trim(), productname.trim());
 			
-			clienttasks.unsubscribe(true,(BigInteger)null, null, null, null);
+			clienttasks.unsubscribe(true,(BigInteger)null, null, null, null, null);
 			result=client.runCommandAndWait("cat "+Brand_Name).getStdout();
 			Assert.assertEquals(result.trim(), productname.trim());
 		}

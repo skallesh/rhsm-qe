@@ -5727,14 +5727,16 @@ if (false) {
 	
 	// unsubscribe module tasks ************************************************************
 	/**
+	 * @param poolIds TODO
 	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public String unsubscribeCommand(Boolean all, List<BigInteger> serials, String proxy, String proxyuser, String proxypassword) {
+	public String unsubscribeCommand(Boolean all, List<BigInteger> serials, List<String> poolIds, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;							command += " unsubscribe";
 		if (all!=null && all)									command += " --all";
 		if (serials!=null)	for (BigInteger serial : serials)	command += " --serial="+serial;
+		if (poolIds!=null)	for (String poolId : poolIds)		command += " --pool="+poolId;
 		if (proxy!=null)										command += " --proxy="+proxy;
 		if (proxyuser!=null)									command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)								command += " --proxypassword="+proxypassword;
@@ -5744,17 +5746,12 @@ if (false) {
 	
 	/**
 	 * unsubscribe without asserting results
+	 * @param poolIds TODO
 	 */
-	public SSHCommandResult unsubscribe_(Boolean all, List<BigInteger> serials, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult unsubscribe_(Boolean all, List<BigInteger> serials, List<String> poolIds, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
-//		String command = this.command;							command += " unsubscribe";
-//		if (all!=null && all)									command += " --all";
-//		if (serials!=null)	for (BigInteger serial : serials)	command += " --serial="+serial;
-//		if (proxy!=null)										command += " --proxy="+proxy;
-//		if (proxyuser!=null)									command += " --proxyuser="+proxyuser;
-//		if (proxypassword!=null)								command += " --proxypassword="+proxypassword;
-		String command = unsubscribeCommand(all, serials, proxy, proxyuser, proxypassword);	
+		String command = unsubscribeCommand(all, serials, poolIds, proxy, proxyuser, proxypassword);	
 
 		if (all!=null && all && serials==null) workaroundForBug844455();
 		
@@ -5765,20 +5762,23 @@ if (false) {
 	}
 	/**
 	 * unsubscribe without asserting results
+	 * @param poolId TODO
 	 */
-	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial, String poolId, String proxy, String proxyuser, String proxypassword) {
 		
 		List<BigInteger> serials = serial==null?null:Arrays.asList(new BigInteger[]{serial});
+		List<String> poolIds = poolId==null?null:Arrays.asList(new String[]{poolId});
 
-		return unsubscribe_(all, serials, proxy, proxyuser, proxypassword);
+		return unsubscribe_(all, serials, poolIds, proxy, proxyuser, proxypassword);
 	}
 	
 	/**
 	 * unsubscribe and assert all results are successful
+	 * @param poolIds TODO
 	 */
-	public SSHCommandResult unsubscribe(Boolean all, List<BigInteger> serials, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult unsubscribe(Boolean all, List<BigInteger> serials, List<String> poolIds, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = unsubscribe_(all, serials, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = unsubscribe_(all, serials, poolIds, proxy, proxyuser, proxypassword);
 		
 		// assert results
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unsubscribe command indicates a success.");
@@ -5788,12 +5788,14 @@ if (false) {
 	
 	/**
 	 * unsubscribe and assert all results are successful
+	 * @param poolId TODO
 	 */
-	public SSHCommandResult unsubscribe(Boolean all, BigInteger serial, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult unsubscribe(Boolean all, BigInteger serial, String poolId, String proxy, String proxyuser, String proxypassword) {
 		
 		List<BigInteger> serials = serial==null?null:Arrays.asList(new BigInteger[]{serial});
+		List<String> poolIds = poolId==null?null:Arrays.asList(new String[]{poolId});
 		
-		return unsubscribe(all, serials, proxy, proxyuser, proxypassword);
+		return unsubscribe(all, serials, poolIds, proxy, proxyuser, proxypassword);
 	}
 	
 	/**
@@ -5811,7 +5813,7 @@ if (false) {
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 
 		log.info("Attempting to unsubscribe from certificate serial: "+ serialNumber);
-		SSHCommandResult result = unsubscribe_(false, serialNumber, null, null, null);
+		SSHCommandResult result = unsubscribe_(false, serialNumber, null, null, null, null);
 		
 		// assert the results
 		String expectedStdoutMsg;
@@ -5904,7 +5906,7 @@ if (false) {
 	 */
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
 
-		unsubscribe(true, (BigInteger)null, null, null, null);
+		unsubscribe(true, (BigInteger)null, null, null, null, null);
 
 		// assert that there are no product subscriptions consumed
 		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),
@@ -5925,7 +5927,7 @@ if (false) {
 	 * Individually unsubscribe from each of the currently consumed product subscriptions.
 	 * This will ultimately issue multiple calls to unsubscribe --serial SERIAL for each of the product subscriptions being consumed. 
 	 */
-	public void unsubscribeFromTheCurrentlyConsumedProductSubscriptionsIndividually() {
+	public void unsubscribeFromTheCurrentlyConsumedProductSubscriptionSerialsIndividually() {
 		log.info("Unsubscribing from each of the currently consumed product subscription serials one at a time...");
 		for(ProductSubscription sub : getCurrentlyConsumedProductSubscriptions())
 			unsubscribeFromProductSubscription(sub);
@@ -5940,7 +5942,7 @@ if (false) {
 	 * This will ultimately issue a single call to unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 for each of the product subscriptions being consumed. 
 	 * @throws Exception 
 	 */
-	public SSHCommandResult unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively() throws Exception {
+	public SSHCommandResult unsubscribeFromTheCurrentlyConsumedProductSubscriptionSerialsCollectively() throws Exception {
 		log.info("Unsubscribing from all of the currently consumed product subscription serials in one collective call...");
 		List<BigInteger> serials = new ArrayList<BigInteger>();
 	
@@ -5963,13 +5965,14 @@ if (false) {
 		}
 		
 		// unsubscribe from all serials collectively
-		SSHCommandResult result = unsubscribe(false,serials,null,null,null);
+		SSHCommandResult result = unsubscribe(false,serials,null,null,null, null);
 		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
 				"Currently no product subscriptions are consumed.");
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0,
 				"This machine has no entitlement certificate files.");
 		return result;
 	}
+	
 	
 	/**
 	 * Collectively unsubscribe from all of the currently consumed serials (in newest to oldest order).
@@ -5991,10 +5994,10 @@ if (false) {
 		}
 		
 		// return unsubscribe --all when no serials are currently consumed
-		if (serials.isEmpty()) return unsubscribe(true,serials,null,null,null); 
+		if (serials.isEmpty()) return unsubscribe(true,serials,null,null,null, null); 
 		
 		// unsubscribe from all serials collectively
-		SSHCommandResult result = unsubscribe(false,serials,null,null,null);
+		SSHCommandResult result = unsubscribe(false,serials,null,null,null, null);
 		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
 				"Currently no product subscriptions are consumed.");
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0,
@@ -6002,6 +6005,45 @@ if (false) {
 		return result;
 	}
 	
+	
+	/**
+	 * Collectively unsubscribe from all of the currently consumed product subscriptions.
+	 * This will ultimately issue a single call to unsubscribe --pool POOLID1 --pool POOLID2 --pool POOLID3 for each of the product subscriptions being consumed. 
+	 * @throws Exception 
+	 */
+	public SSHCommandResult unsubscribeFromTheCurrentlyConsumedProductSubscriptionPoolIdsCollectively() throws Exception {
+		log.info("Unsubscribing from all of the currently consumed product subscription poolids in one collective call...");
+		List<BigInteger> serials = new ArrayList<BigInteger>();
+		List<String> poolIds = new ArrayList<String>();
+	
+		// THIS CREATES PROBLEMS WHEN MODIFIER ENTITLEMENTS ARE BEING CONSUMED; ENTITLEMENTS FROM MODIFIER POOLS COULD REMAIN AFTER THE COLLECTIVE UNSUBSCRIBE
+		//for(ProductSubscription productSubscription : getCurrentlyConsumedProductSubscriptions()) serials.add(sub.serialNumber);
+		
+		// THIS AVOIDS PROBLEMS WHEN MODIFIER ENTITLEMENTS ARE BEING CONSUMED
+		for(ProductSubscription productSubscription : getCurrentlyConsumedProductSubscriptions()) {
+			EntitlementCert entitlementCert = getEntitlementCertCorrespondingToProductSubscription(productSubscription);
+			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
+			String poolHref = jsonEntitlement.getJSONObject("pool").getString("href");
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,poolHref));
+			String poolId = jsonPool.getString("id");
+				
+			if (CandlepinTasks.isPoolAModifier(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, poolId,  SubscriptionManagerBaseTestScript.sm_serverUrl)) {
+				serials.add(0,productSubscription.serialNumber);	// serials to entitlements that modify others should be at the front of the list to be removed, otherwise they will get re-issued under a new serial number when the modified entitlement is removed first.
+				poolIds.add(0,productSubscription.poolId);
+			} else {
+				serials.add(productSubscription.serialNumber);
+				poolIds.add(productSubscription.poolId);
+			}
+		}
+		
+		// unsubscribe from all poolIds collectively
+		SSHCommandResult result = unsubscribe(false,null,poolIds,null,null, null);
+		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
+				"Currently no product subscriptions are consumed.");
+		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0,
+				"This machine has no entitlement certificate files.");
+		return result;
+	}
 	
 	// facts module tasks ************************************************************
 	/**
@@ -7727,7 +7769,7 @@ if (false) {
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("The workaround to avoid an SSLTimeoutError during an unregister or unsubscribe --all is to incrementally unsubscribe reducing the current entitlements to approximately "+tooManyEntitlements+".  Then resume the unregister or unsubscribe --all.");
 				for (int i=entitlementFiles.size()-1; i>=tooManyEntitlements; i--) {
-					unsubscribe_(null, getSerialNumberFromEntitlementCertFile(entitlementFiles.get(i)), null,null,null);
+					unsubscribe_(null, getSerialNumberFromEntitlementCertFile(entitlementFiles.get(i)), null,null,null, null);
 				}
 			}
 		}
@@ -7750,7 +7792,7 @@ if (false) {
 						//serials.add(getEntitlementCertFromEntitlementCertFile(entitlementFiles.get(e)).serialNumber);
 						serials.add(getSerialNumberFromEntitlementCertFile(entitlementFiles.get(e)));
 					}
-					unsubscribe_(null, serials, null, null, null);
+					unsubscribe_(null, serials, null, null, null, null);
 					entitlementFiles = getCurrentEntitlementCertFiles();
 					if (avoidInfiniteLoopSize==entitlementFiles.size()) {break; /* because unsubscribe is failing */} else {avoidInfiniteLoopSize=entitlementFiles.size();}
 				} while (entitlementFiles.size()>tooManyEntitlements);

@@ -374,7 +374,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=false)	// old/disabled test from ssalevan
 	@Deprecated
 	public void SubscribeToASingleEntitlementByProductID_Test_DEPRECATED(){
-		clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsIndividually();
+		clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionSerialsIndividually();
 		SubscriptionPool MCT0696 = new SubscriptionPool("MCT0696", "696");
 		MCT0696.addProductID("Red Hat Directory Server");
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(MCT0696);
@@ -418,7 +418,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Deprecated
 	@ImplementsNitrateTest(caseId=41681)
 	public void SubscribeToRegToken_Test_DEPRECATED(){
-		clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsIndividually();
+		clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionSerialsIndividually();
 		clienttasks.subscribeToRegToken(sm_regtoken);
 	}
 	
@@ -940,7 +940,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//  on the first call to this dataProvided test, unsubscribe all subscriptions OR just unregister to a clean state
 		// this will remove any prior subscribed modifier entitlements to avoid test logic errors in this test.
 		if (firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test) {
-			if (consumerId!=null) clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);	//OR clienttasks.unregister(null,null,null);
+			if (consumerId!=null) clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);	//OR clienttasks.unregister(null,null,null);
 			firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test = false;
 		}
 
@@ -1190,7 +1190,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.clean(null,null,null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer1Id, null, null, null, (String)null, null, null, null, false, false, null, null, null);
 		Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()),"SubscriptionPool '"+consumer1Pool.poolId+"' should NOT be available (because consumer1 is already subscribed to it).");
-		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null);
+		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null, null);
 		consumer1Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
 		Assert.assertEquals(consumer1Pool.quantity, String.valueOf(totalPoolQuantity-consumer2Quantity),"The pool quantity available to consumer1 has incremented by the quantity consumer1 consumed.");
 		
@@ -1200,7 +1200,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//Assert.assertNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should NOT be available (because consumer2 is already subscribed to it).");
 		Assert.assertNotNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should be available even though consumer2 is already subscribed to it because it is multi-entitleable.");
 		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity-consumer2Quantity),"The pool quantity available to consumer2 is still decremented by the quantity consumer2 consumed.");
-		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null);
+		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null, null);
 		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
 		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity),"The pool quantity available to consumer2 has been restored to its original total quantity");
 	}
@@ -1508,7 +1508,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					if (!productCertIdsFound.isEmpty()) {
 						
 						// start testing... autosubscribe and assert the consumed subscriptions are Virtual
-						clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
+						clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
 						clienttasks.subscribe(true, null, null, (String)null, null, null, null, null, null, null, null, null);
 						for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 							Assert.assertEquals(productSubscription.machineType, "Virtual", "Autosubscribing a virtual system should favor granting an entitlement from a Virtual pool that provides "+productCertIdsFound+" over a Physical pool that provides "+productCertIdsFound+"'.");
@@ -1553,7 +1553,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		
 		// call list with --pool-only to get a random list of available poolids
 		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null);
@@ -1593,7 +1593,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		
 		// create an empty file of pool ids
 		String tmpFile = "/tmp/emptyFile.txt";
@@ -1629,7 +1629,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		
 		// call list with --pool-only to get a random list of available poolids
 		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null);
@@ -1645,7 +1645,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null);
 		
 		// return the subscriptions...
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		
 		// now let's run the same poolOnlyListCommand and pipe the results to subscription-manager attach --file - (the hyphen indicates stdin)
 		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, "-", null, null, null);
@@ -1668,7 +1668,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		
 		// now let's run the same poolOnlyListCommand and pipe the results to subscription-manager attach --file - (the hyphen indicates stdin)
 		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, "-", null, null, null);
@@ -1696,7 +1696,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 
 		// first let's run subscribe --auto and collect the results.
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		String subscribeWithAutoCommand = clienttasks.subscribeCommand(true, null, (List<String>) null, (List<String>) null, null, null, null, null, null, null, null, null);
 		//SSHCommandResult subscribeWithAutoCommandResult = client.runCommandAndWait(subscribeWithAutoCommand);
 		SSHCommandResult subscribeWithAutoCommandResult = clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null);
@@ -1704,7 +1704,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		int subscribeWithAutoEntitlementCount = clienttasks.getCurrentEntitlementCertFiles().size();
 
 		// second let's run subscribe without --auto and collect the results.
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		String subscribeWithoutAutoCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, null, null, null, null);
 		//SSHCommandResult subscribeWithoutAutoCommandResult = client.runCommandAndWait(subscribeWithoutAutoCommand);
 		SSHCommandResult subscribeWithoutAutoCommandResult = clienttasks.subscribe(null, null, (String)null, null, null, null, null, null, null, null, null, null);

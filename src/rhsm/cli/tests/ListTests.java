@@ -869,7 +869,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		
 		// get all the available subscription pools
 		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null).getStdout());
@@ -958,7 +958,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		
 		// get all the available subscription pools
 		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null).getStdout());
@@ -1160,7 +1160,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 				
 		// attach all the currently available subscriptions
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
@@ -1269,7 +1269,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 				
 		// attach all the currently available subscriptions
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
@@ -1497,7 +1497,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 				
 		// attach one of all the currently available subscriptions (attaching only one so that some installed products might remain noncompliant)
 		// assemble a list of all the available SubscriptionPool ids
@@ -1557,7 +1557,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 				
 		// attach one of all the currently available subscriptions (attaching only one so that some installed products might remain noncompliant)
 		// assemble a list of all the available SubscriptionPool ids
@@ -1661,7 +1661,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		
 		// test
 		SSHCommandResult result = clienttasks.list(null, true, null, null, null, null, null, null, matchesString, null, null, null, null);
@@ -1766,7 +1766,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 		
 		// get available subscription pools
 		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null).getStdout());
@@ -2324,7 +2324,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups="setup",value="unsubscribeBeforeGroup")
 	public void unsubscribeBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
 	}
 	
 	
