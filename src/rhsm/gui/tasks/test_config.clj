@@ -26,30 +26,46 @@
               (if (= "" val) nil val)))))
 
 (defn get-properties []
-  (let [m (property-map {
+  (let [m (property-map {;proxy information
                          :basicauth-proxy-hostname "sm.basicauthproxy.hostname"
                          :basicauth-proxy-password "sm.basicauthproxy.password"
                          :basicauth-proxy-port "sm.basicauthproxy.port"
                          :basicauth-proxy-username "sm.basicauthproxy.username"
+                         :basicauth-proxy-log (DefaultMapKey. "sm.basicauthproxy.log" "/var/log/squid/access.log")
+                         :noauth-proxy-hostname "sm.noauthproxy.hostname"
+                         :noauth-proxy-port "sm.noauthproxy.port"
+                         :noauth-proxy-log (DefaultMapKey. "sm.noauthproxy.log" "/var/log/tinyproxy.log")
+
+                         ;binary paths
                          :binary-path (DefaultMapKey. "sm.gui.binary" "subscription-manager-gui")
+                         :firstboot-binary-path (DefaultMapKey. "sm.firstboot.binary" "firstboot")
+
+                         ;candlepin/client server information
                          :client-hostname "sm.client1.hostname"
                          :server-hostname "sm.server.hostname"
                          :server-port "sm.server.port"
                          :server-prefix "sm.server.prefix"
-                         :firstboot-binary-path (DefaultMapKey. "sm.firstboot.binary" "firstboot")
-                         :ldtpd-source-url (DefaultMapKey. "sm.ldtpd.sourceUrl" nil)
-                         :noauth-proxy-hostname "sm.noauthproxy.hostname"
-                         :noauth-proxy-port "sm.noauthproxy.port"
+
+                         ;candlepin/client user information
                          :owner-key "sm.client1.org"
                          :password "sm.client1.password"
                          :password1 "sm.client2.password"
+                         :username "sm.client1.username"
+                         :username1 "sm.client2.username"
+
+                         ;ssh
                          :ssh-key-passphrase "sm.sshkey.passphrase"
                          :ssh-key-private (DefaultMapKey. "sm.sshkey.private" ".ssh/id_auto_dsa")
                          :ssh-timeout "sm.ssh.emergencyTimeoutMS"
                          :ssh-user (DefaultMapKey. "sm.ssh.user" "testuser")
                          :ssh-super-user (DefaultMapKey. "sm.ssh.super-user" "root")
-                         :username "sm.client1.username"
-                         :username1 "sm.client2.username"
+
+                         ;sources
+                         :ldtpd-source-url (DefaultMapKey. "sm.ldtpd.sourceUrl" nil)
+
+                         ;logging
+                         :rhsm-log "/var/log/rhsm/rhsm.log"
+                         :ldtp-log "/var/log/ldtpd/ldtpd.log"
                          })]
        (merge m (property-map
                  {:ldtp-url (DefaultMapKey. "sm.ldtp.url"
