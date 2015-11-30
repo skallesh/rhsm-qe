@@ -2607,6 +2607,11 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1264470");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo")) {
+				// Bug 1286842 - 'rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo' channel map is missing from channel-cert-mapping.txt
+				bugIds.add("1286842");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
