@@ -32,8 +32,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 /**
  * @author jsefler
  * 
- * References:
- * https://engineering.redhat.com/trac/Entitlement/wiki/ReleaseVer
+ * Requirement References:
+ *   Bug 642761 - (E4) DESIGN OUT As a user, I would like RHSM to select the correct n release of RHEL server to use
+ *   https://engineering.redhat.com/trac/Entitlement/wiki/ReleaseVer
  * 
  * Note: To see all of the yum vars values, run this:
 [root@jsefler-7 ~]#  python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar, width=1)'
