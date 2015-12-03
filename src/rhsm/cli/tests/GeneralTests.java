@@ -942,7 +942,11 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			// python os.EX_CODES used by devel are listed here http://docs.thefoundry.co.uk/nuke/63/pythonreference/os-module.html  EX_USAGE=64  EX_DATAERR=65  EX_UNAVAILABLE=69  EX_SOFTWARE=70
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --product=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --regtoken=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
-			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --pool=FOO",								new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+			if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) {	// commit 3d2eb4b8ef8e2094311e3872cdb9602b84fed9be     1198178: Adds pool option to remove, unsubscribe command
+				ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --pool=FOO",								new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+			} else {
+				ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --pool=FOO",								new Integer(1),		"",""}));			
+			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe",											new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1162331"}),clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null,null),new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1078091","1119688"}),clienttasks.command+" register --serverurl=https://sat6_fqdn/ --insecure",	new Integer(69),	"","Unable to reach the server at sat6_fqdn:443/"}));
@@ -994,6 +998,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			} else {
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1200972"}),clienttasks.command+" subscribe --pool=123 --servicelevel=foo",				new Integer(64),	"","Error: Must use --auto with --servicelevel."}));
 			}
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1275179"}),			clienttasks.command+" subscribe --quantity=2 --auto",						new Integer(64),	"","Error: --quantity may not be used with an auto-attach"}));	// added by bug 1275179 commit 281c1e5818eefa89bc73ba438c75494e16afc698
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1275179"}),			clienttasks.command+" subscribe --quantity=2",								new Integer(64),	"","Error: --quantity may not be used with an auto-attach"}));	// added by bug 1275179 commit 281c1e5818eefa89bc73ba438c75494e16afc698
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1275179"}),			clienttasks.command+" attach --auto --quantity=2",							new Integer(64),	"","Error: --quantity may not be used with an auto-attach"}));	// added by bug 1275179 commit 281c1e5818eefa89bc73ba438c75494e16afc698
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --file=/missing/poolIds.txt",				new Integer(65),	"","Error: The file \"/missing/poolIds.txt\" does not exist or cannot be read."}));	// added by bug 1159974
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-12")) {
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1246680"}),		clienttasks.rhsmDebugSystemCommand(null,null,null,true,true,null,null,null),new Integer(0),	/*"Wrote: /tmp/rhsm-debug-system-\\d+-\\d+.tar.gz"*/null,""}));	// added by bug 1246680 which trumps bug 1194906
