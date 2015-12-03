@@ -497,7 +497,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Attempt to unsubscribe from a pool id when not registered",
-			groups={"blockedByBug-1198178"},
+			groups={"blockedByBug-1198178", "AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromPoolIdWhenNotRegistered_Test() {
@@ -520,9 +520,22 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// now unsubscribe from the pool number (while not registered)
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "We should be consuming an entitlement (even while not registered)");
-		SSHCommandResult result = clienttasks.unsubscribe(null,null,pool.poolId,null,null,null);
-		Assert.assertEquals(result.getStdout().trim(), "Subscription with serial number "+entitlementCert.serialNumber+" removed from this system", "We should always be able to remove a subscription (even while not registered).");
-		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(), 0, "We should not be consuming any entitlements after unsubscribing (while not registered).");
+		SSHCommandResult result = clienttasks.unsubscribe_(null,null,pool.poolId,null,null,null);
+		if (servertasks.statusCapabilities.contains("remove_by_pool_id")) {
+			Integer expectedExitCode = new Integer(0);
+			Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from a valid pool (while not registered).");
+			Assert.assertEquals(result.getStdout().trim(), "Subscription with serial number "+entitlementCert.serialNumber+" removed from this system", "We should always be able to remove a subscription (even while not registered).");
+			Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(), 0, "We should not be consuming any entitlements after unsubscribing (while not registered).");
+		} else {	// coverage for Bug 1285004 - subscription-manager remove --pool throws: Runtime Error Could not find resource for relative of full path
+			Integer expectedExitCode = new Integer(69);
+			Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from a valid pool (while not registered) (from an incapable candlepin server).");
+			Assert.assertEquals(result.getStdout().trim(), "Error: The registered entitlement server does not support remove --pool.\nInstead, use the remove --serial option.");
+			Assert.assertEquals(result.getStderr().trim(), "");
+			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "After attempts to remove by pool ID against an incapable candlepin should still be consuming an entitlement (even while not registered)");
+			return;
+		}
+		
+		
 	}
 //	
 //	@Test(description="Attempt to unsubscribe from a valid pool id",
@@ -534,7 +547,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //	}
 //	
 	@Test(description="Attempt to unsubscribe when from an invalid pool id",
-			groups={"blockedByBug-1198178"},
+			groups={"blockedByBug-1198178", "AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAnInvalidPoolId_Test() {
@@ -544,10 +557,19 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		String poolId = "1234567890abcdef1234567890abcdef";
 		result = clienttasks.unsubscribe_(null, null, poolId, null, null, null);
-		Integer expectedExitCode = new Integer(1);
-		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from an invalid pool id.");
-		Assert.assertEquals(result.getStdout().trim(), "");
-		Assert.assertEquals(result.getStderr().trim(), "");
+		if (servertasks.statusCapabilities.contains("remove_by_pool_id")) {
+			Integer expectedExitCode = new Integer(1);
+			Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from an invalid pool id.");
+			Assert.assertEquals(result.getStdout().trim(), "");
+			Assert.assertEquals(result.getStderr().trim(), "");			
+		} else {	// coverage for Bug 1285004 - subscription-manager remove --pool throws: Runtime Error Could not find resource for relative of full path
+			Integer expectedExitCode = new Integer(69);
+			Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from an invalid pool id (from an incapable server).");
+			Assert.assertEquals(result.getStdout().trim(), "Error: The registered entitlement server does not support remove --pool.\nInstead, use the remove --serial option.");
+			Assert.assertEquals(result.getStderr().trim(), "");
+			return;
+		}
+
 	}
 	
 	
