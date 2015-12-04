@@ -71,6 +71,15 @@
       nil
       identity)))
 
+(defn get-consumer
+  "Returns the consumer's data"
+  ([consumerid]
+   (rest/get (str (server-url) "/consumers/" consumerid)
+             (@config :username)
+             (@config :password)))
+  ([]
+   (get-consumer (get-consumer-id))))
+
 (defn get-consumer-owner-key
   "Looks up the consumer's owner by consumer-id."
   ([consumerid]
