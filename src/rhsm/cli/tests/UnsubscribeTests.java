@@ -27,7 +27,6 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
- * @author ssalevan
  * @author jsefler
  *
  */
@@ -277,6 +276,57 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		String expectedStdoutMsg = expectedStdoutMsgLabel;
 		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;
 		SSHCommandResult result = clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionSerialsCollectively();
+		//	201512041150:31.105 - FINE: ssh root@jsefler-6.usersys.redhat.com subscription-manager unsubscribe --serial=4651043328648416651 --serial=2129955862705896392 --serial=6036987963107037829 --serial=6517055606227995394 --serial=2413511261042915625 --serial=926011418395876185 --serial=8453228344236558779 --serial=5066796542261309304 --serial=3293732479098570905 --serial=5415112579595928189 --serial=9157726701938581232 --serial=6182970514936389843 --serial=2260599158127862401 --serial=4271127926386632804 --serial=5634936969630756863 --serial=7207476634289399667 --serial=2228491462979865207 --serial=2386453852224823924 --serial=7223061298534444815 --serial=5297175478219818300 --serial=3982095574288257352 --serial=5040485111524274578 --serial=3366381999267298553 --serial=2205964533240272738 --serial=2009203577428614683 --serial=2151906114081820015 --serial=3936210531886609574 --serial=4672997312714367813 --serial=7537851805340427070 --serial=4060809784799304042 --serial=3484999197148046565 --serial=803523513343380611 --serial=7191534188916803249 --serial=1978078461069342056 --serial=3112667572957043871 --serial=8477444878208748895 --serial=4389608640436010689 --serial=2216833362015010963 --serial=1813156641027923146 --serial=6235363562528759967 --serial=8254500161982005905 --serial=8635854683836611062 --serial=2837535867304046524 --serial=6672137066369518129 --serial=6702191060241838270 --serial=695479724906271580 (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201512041151:20.262 - FINE: Stdout: 
+		//	Serial numbers successfully removed at the server:
+		//	   4651043328648416651
+		//	   2129955862705896392
+		//	   6036987963107037829
+		//	   6517055606227995394
+		//	   2413511261042915625
+		//	   926011418395876185
+		//	   8453228344236558779
+		//	   5066796542261309304
+		//	   3293732479098570905
+		//	   5415112579595928189
+		//	   9157726701938581232
+		//	   6182970514936389843
+		//	   2260599158127862401
+		//	   4271127926386632804
+		//	   5634936969630756863
+		//	   7207476634289399667
+		//	   2228491462979865207
+		//	   2386453852224823924
+		//	   7223061298534444815
+		//	   5297175478219818300
+		//	   3982095574288257352
+		//	   5040485111524274578
+		//	   3366381999267298553
+		//	   2205964533240272738
+		//	   2009203577428614683
+		//	   2151906114081820015
+		//	   3936210531886609574
+		//	   4672997312714367813
+		//	   7537851805340427070
+		//	   4060809784799304042
+		//	   3484999197148046565
+		//	   803523513343380611
+		//	   7191534188916803249
+		//	   1978078461069342056
+		//	   3112667572957043871
+		//	   8477444878208748895
+		//	   4389608640436010689
+		//	   2216833362015010963
+		//	   1813156641027923146
+		//	   6235363562528759967
+		//	   8254500161982005905
+		//	   8635854683836611062
+		//	   2837535867304046524
+		//	   6672137066369518129
+		//	   6702191060241838270
+		//	   695479724906271580
+		//	46 local certificates have been deleted.
+		//	201512041151:20.283 - FINE: Stderr: 
 		String actualStdoutMsg = result.getStdout().trim();
 		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
 		
@@ -501,7 +551,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromPoolIdWhenNotRegistered_Test() {
-		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.4-1"/*TODO ACTUAL VALUE "1.16.5-1"*/)) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 	
 		// first make sure we are subscribed to a pool
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
@@ -534,29 +584,80 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "After attempts to remove by pool ID against an incapable candlepin should still be consuming an entitlement (even while not registered)");
 			return;
 		}
-		
-		
 	}
-//	
-//	@Test(description="Attempt to unsubscribe from a valid pool id",
-//			groups={"blockedByBug-1198178"},
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void UnsubscribeFromPool_Test() {
-//		SSHCommandResult result;
-//	}
-//	
+	
+	
+	@Test(description="Attempt to unsubscribe from a valid pool id",
+			groups={"blockedByBug-1198178","AcceptanceTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void UnsubscribeFromPool_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
+		
+		// register and get available pools
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		
+		// find available multi-entitlement (Stackable) pools
+		pools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("subscriptionType", "Stackable", pools);
+		pools = getRandomSubsetOfList(pools, 2);
+		List<String> poolIds = new ArrayList<String>();
+		
+		// attach multiple serials per pool
+		for (SubscriptionPool pool : pools) {
+			clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null,null);
+			clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null,null);
+			poolIds.add(pool.poolId);
+		}
+		
+		// choose a poolId and get serials from that pool
+		SubscriptionPool pool = pools.get(0);
+		List<String> serials = new ArrayList<String>();
+		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+			if (productSubscription.poolId.equals(pool.poolId)) {
+				serials.add(productSubscription.serialNumber.toString());
+			}			
+		}
+		
+		// unsubscribe from poolId
+		SSHCommandResult result = clienttasks.unsubscribe_(null, null, pool.poolId, null, null, null);
+		//	201512041602:26.874 - FINE: ssh root@jsefler-6.usersys.redhat.com subscription-manager unsubscribe --pool=8a908790516a011001516a02646b06c3 (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201512041602:29.304 - FINE: Stdout: 
+		//	Pools successfully removed at the server:
+		//	   8a908790516a011001516a02646b06c3
+		//	Serial numbers successfully removed at the server:
+		//	   4311923290144349918
+		//	   4255296379649237918
+		//	2 local certificates have been deleted.
+		//	201512041602:29.310 - FINE: Stderr: 
+		//	201512041602:29.313 - FINE: ExitCode: 0
+		
+		if (!servertasks.statusCapabilities.contains("remove_by_pool_id")) {
+			Integer expectedExitCode = new Integer(69);
+			Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from an invalid pool id (from an incapable server).");
+			Assert.assertEquals(result.getStdout().trim(), "Error: The registered entitlement server does not support remove --pool.\nInstead, use the remove --serial option.");
+			Assert.assertEquals(result.getStderr().trim(), "");
+			return;
+		}
+		
+		Integer expectedExitCode = new Integer(0);
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Exit code when attempting to unsubscribe from a valid pool id.");
+		//String expectedStdout = String.format("Pools successfully removed at the server:\n   %s\nSerial numbers successfully removed at the server:\n   %s\n   %s\n%d local certificates have been deleted.", pool.poolId, serials.get(0), serials.get(1), serials.size());
+		//Assert.assertEquals(result.getStdout().trim(),expectedStdout,"Stdout when attempting to unsubscribe from a valid pool id.");
+		String expectedStdoutRegex = String.format("Pools successfully removed at the server:\n   %s\nSerial numbers successfully removed at the server:\n   %s\n   %s\n%d local certificates have been deleted.", pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")", serials.size());
+		Assert.assertMatch(result.getStdout().trim(), expectedStdoutRegex);
+	}
+	
+	
 	@Test(description="Attempt to unsubscribe when from an invalid pool id",
 			groups={"blockedByBug-1198178", "AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAnInvalidPoolId_Test() {
-		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.4-1"/*TODO ACTUAL VALUE "1.16.5-1"*/)) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
-
-		SSHCommandResult result;
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		
 		String poolId = "1234567890abcdef1234567890abcdef";
-		result = clienttasks.unsubscribe_(null, null, poolId, null, null, null);
+		SSHCommandResult result = clienttasks.unsubscribe_(null, null, poolId, null, null, null);
 		if (servertasks.statusCapabilities.contains("remove_by_pool_id")) {
 			Integer expectedExitCode = new Integer(1);
 			Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from an invalid pool id.");
@@ -569,145 +670,102 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(result.getStderr().trim(), "");
 			return;
 		}
-
 	}
 	
 	
 	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --pool POOLID1 --pool POOLID2 --pool POOLID3 etc.",
-			groups={"blockedByBug-1198178"},
+			groups={"blockedByBug-1198178","blockedByBug-1288626"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAllPoolIds_Test() throws Exception {
-	
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
+		
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		if (pools.isEmpty()) throw new SkipException("This test requires multiple available pools.");
+		List<String> poolIds = new ArrayList<String>(); for (SubscriptionPool pool : pools) poolIds.add(pool.poolId);
+		
+		// add more serials from multi-entitlement pools (ignoring failures)
+		clienttasks.subscribe_(null, null, poolIds, null, null, null, null, null, null, null, null, null);
 		
 		// unsubscribe from all pool in one call and assert the feedback
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		String expectedStdoutMsgLabel;
-		expectedStdoutMsgLabel = "Successfully unsubscribed serial numbers:";
-		expectedStdoutMsgLabel = "Successfully removed serial numbers:";	// changed by bug 874749
-		expectedStdoutMsgLabel = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
-		String expectedStdoutMsg = expectedStdoutMsgLabel;
-		for (ProductSubscription productSubscription : productSubscriptions) expectedStdoutMsg+="\n   "+productSubscription.serialNumber;
-		SSHCommandResult result = clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionPoolIdsCollectively();
+		String successfulStdoutSerialsMsgLabel;
+		successfulStdoutSerialsMsgLabel = "Successfully unsubscribed serial numbers:";
+		successfulStdoutSerialsMsgLabel = "Successfully removed serial numbers:";	// changed by bug 874749
+		successfulStdoutSerialsMsgLabel = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
+		String successfulStdoutPoolIdsMsgLabel;
+		successfulStdoutPoolIdsMsgLabel = "Pools successfully removed at the server:";
 
-//		201511231656:37.570 - FINE: ssh root@jsefler-6.usersys.redhat.com subscription-manager unsubscribe --pool=8a9087905136504801513651940f049a --pool=8a90879051365048015136519c0d055b --pool=8a9087905136504801513651946b04a7 --pool=8a9087905136504801513651ad77079b --pool=8a9087905136504801513651aa620721 --pool=8a9087905136504801513651ac43076c --pool=8a9087905136504801513651bc6e09aa --pool=8a90879051365048015136519a7c0529 --pool=8a9087905136504801513651a1b1061d --pool=8a9087905136504801513651b9a3094c --pool=8a90879051365048015136519b730556 --pool=8a9087905136504801513651ab5f0741 --pool=8a9087905136504801513651a06705ef --pool=8a9087905136504801513651a51b0689 --pool=8a9087905136504801513651ae9907d4 --pool=8a9087905136504801513651ad370790 --pool=8a9087905136504801513651a86906ed --pool=8a9087905136504801513651b7960927 --pool=8a90879051365048015136519c4c056a --pool=8a9087905136504801513651b4cc08cd --pool=8a9087905136504801513651940f0498 --pool=8a9087905136504801513651a2b7063a --pool=8a9087905136504801513651a79306d5 --pool=8a9087905136504801513651ae6007b9 --pool=8a9087905136504801513651a03305d5 --pool=8a9087905136504801513651b7cf0936 --pool=8a9087905136504801513651a74b06c9 --pool=8a9087905136504801513651946504a4 --pool=8a9087905136504801513651ae8c07c2 --pool=8a9087905136504801513651b56908d7 --pool=8a90879051365048015136519c65056e --pool=8a9087905136504801513651ab860744 --pool=8a90879051365048015136519b510553 --pool=8a90879051365048015136519c7e0572 --pool=8a90879051365048015136519c0c055a --pool=8a9087905136504801513651b21f0872 --pool=8a9087905136504801513651a2430630 --pool=8a9087905136504801513651ae6b07bf --pool=8a9087905136504801513651a222062d --pool=8a9087905136504801513651953b04aa --pool=8a9087905136504801513651bb9f0987 --pool=8a9087905136504801513651b4d708cf --pool=8a9087905136504801513651b892093c --pool=8a9087905136504801513651b3b708bb --pool=8a9087905136504801513651bd1b09b2 --pool=8a9087905136504801513651a88b06f6 --pool=8a9087905136504801513651945604a1 --pool=8a9087905136504801513651940f0499 --pool=8a9087905136504801513651b1320855 --pool=8a9087905136504801513651ba510960 (com.redhat.qe.tools.SSHCommandRunner.run)
-//		201511231657:33.946 - FINE: Stdout: 
-//				Pools successfully removed at the server:
-//				   8a9087905136504801513651940f049a
-//				   8a90879051365048015136519c0d055b
-//				   8a9087905136504801513651946b04a7
-//				   8a9087905136504801513651ad77079b
-//				   8a9087905136504801513651aa620721
-//				   8a9087905136504801513651ac43076c
-//				   8a9087905136504801513651bc6e09aa
-//				   8a90879051365048015136519a7c0529
-//				   8a9087905136504801513651a1b1061d
-//				   8a9087905136504801513651b9a3094c
-//				   8a90879051365048015136519b730556
-//				   8a9087905136504801513651ab5f0741
-//				   8a9087905136504801513651a06705ef
-//				   8a9087905136504801513651a51b0689
-//				   8a9087905136504801513651ae9907d4
-//				   8a9087905136504801513651ad370790
-//				   8a9087905136504801513651a86906ed
-//				   8a9087905136504801513651b7960927
-//				   8a90879051365048015136519c4c056a
-//				   8a9087905136504801513651b4cc08cd
-//				   8a9087905136504801513651940f0498
-//				   8a9087905136504801513651a2b7063a
-//				   8a9087905136504801513651a79306d5
-//				   8a9087905136504801513651ae6007b9
-//				   8a9087905136504801513651a03305d5
-//				   8a9087905136504801513651b7cf0936
-//				   8a9087905136504801513651a74b06c9
-//				   8a9087905136504801513651946504a4
-//				   8a9087905136504801513651ae8c07c2
-//				   8a9087905136504801513651b56908d7
-//				   8a90879051365048015136519c65056e
-//				   8a9087905136504801513651ab860744
-//				   8a90879051365048015136519b510553
-//				   8a90879051365048015136519c7e0572
-//				   8a90879051365048015136519c0c055a
-//				   8a9087905136504801513651b21f0872
-//				   8a9087905136504801513651a2430630
-//				   8a9087905136504801513651ae6b07bf
-//				   8a9087905136504801513651a222062d
-//				   8a9087905136504801513651953b04aa
-//				   8a9087905136504801513651bb9f0987
-//				   8a9087905136504801513651b4d708cf
-//				   8a9087905136504801513651b892093c
-//				   8a9087905136504801513651b3b708bb
-//				   8a9087905136504801513651bd1b09b2
-//				   8a9087905136504801513651a88b06f6
-//				   8a9087905136504801513651945604a1
-//				   8a9087905136504801513651940f0499
-//				   8a9087905136504801513651b1320855
-//				   8a9087905136504801513651ba510960
-//				Serial numbers successfully removed at the server:
-//				   8865613847264050544
-//				   8937932663056862717
-//				   3352861400531049008
-//				   8107962814745856003
-//				   8514271782573332949
-//				   3379403338434026844
-//				   2230666936775183579
-//				   8308968451395741003
-//				   4586491314324784137
-//				   4272506196796138551
-//				   6954921615517830775
-//				   5989421215463254721
-//				   5943365077028716555
-//				   5451105133937383380
-//				   540913060546178696
-//				   2321488702652197498
-//				   6527976241999346087
-//				   1281065381096378847
-//				   8063630644112849733
-//				   4627279254400158893
-//				   553059320341593814
-//				   9113520194945412203
-//				   1969182635042415498
-//				   8092031805817076930
-//				   1608607384704606758
-//				   8724801863941695830
-//				   6136132304224343137
-//				   1257320709611662030
-//				   974287514344160964
-//				   3942542661258455639
-//				   6872685199100058572
-//				   795205590300255994
-//				   8043199114087110511
-//				   7554284445253446388
-//				   6437547335196200428
-//				   610886069112192924
-//				   2371612807931207803
-//				   1825255103217622136
-//				   4721392194135133436
-//				   494987624601866968
-//				   8818140344627161563
-//				   3324677390231539514
-//				   476413584930331937
-//				   5948100966894553797
-//				   5622294921324434158
-//				   1737545389764150239
-//				   255296818612905633
-//				   7365617837899220828
-//				   6885172159399605378
-//				   5667930395615343640
-//				50 local certificates have been deleted.
-//		201511231657:33.989 - FINE: Stderr:
+		String unsuccessfulStdoutSerialsMsgLabel;
+		unsuccessfulStdoutSerialsMsgLabel = "Serial numbers unsuccessfully removed at the server:";
+		String unsuccessfulStdoutPoolsMsgLabel;
+		unsuccessfulStdoutPoolsMsgLabel = "Pools unsuccessfully removed at the server:";
+		
+		Set<String>expectedPoolIds = new HashSet<String>();
+		Set<String>expectedSerials = new HashSet<String>();
+		for (ProductSubscription productSubscription : productSubscriptions) {
+			expectedPoolIds.add(productSubscription.poolId);
+			expectedSerials.add(productSubscription.serialNumber.toString());
+		}
+		
+		SSHCommandResult result = clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionPoolIdsCollectively();
+		//	201511231656:37.570 - FINE: ssh root@jsefler-6.usersys.redhat.com subscription-manager unsubscribe --pool=8a9087905136504801513651940f049a --pool=8a90879051365048015136519c0d055b --pool=8a9087905136504801513651946b04a7 --pool=8a9087905136504801513651ad77079b --pool=8a9087905136504801513651aa620721 --pool=8a9087905136504801513651ac43076c --pool=8a9087905136504801513651bc6e09aa --pool=8a90879051365048015136519a7c0529 --pool=8a9087905136504801513651a1b1061d --pool=8a9087905136504801513651b9a3094c --pool=8a90879051365048015136519b730556 --pool=8a9087905136504801513651ab5f0741 --pool=8a9087905136504801513651a06705ef --pool=8a9087905136504801513651a51b0689 --pool=8a9087905136504801513651ae9907d4 --pool=8a9087905136504801513651ad370790 --pool=8a9087905136504801513651a86906ed --pool=8a9087905136504801513651b7960927 --pool=8a90879051365048015136519c4c056a --pool=8a9087905136504801513651b4cc08cd --pool=8a9087905136504801513651940f0498 --pool=8a9087905136504801513651a2b7063a --pool=8a9087905136504801513651a79306d5 --pool=8a9087905136504801513651ae6007b9 --pool=8a9087905136504801513651a03305d5 --pool=8a9087905136504801513651b7cf0936 --pool=8a9087905136504801513651a74b06c9 --pool=8a9087905136504801513651946504a4 --pool=8a9087905136504801513651ae8c07c2 --pool=8a9087905136504801513651b56908d7 --pool=8a90879051365048015136519c65056e --pool=8a9087905136504801513651ab860744 --pool=8a90879051365048015136519b510553 --pool=8a90879051365048015136519c7e0572 --pool=8a90879051365048015136519c0c055a --pool=8a9087905136504801513651b21f0872 --pool=8a9087905136504801513651a2430630 --pool=8a9087905136504801513651ae6b07bf --pool=8a9087905136504801513651a222062d --pool=8a9087905136504801513651953b04aa --pool=8a9087905136504801513651bb9f0987 --pool=8a9087905136504801513651b4d708cf --pool=8a9087905136504801513651b892093c --pool=8a9087905136504801513651b3b708bb --pool=8a9087905136504801513651bd1b09b2 --pool=8a9087905136504801513651a88b06f6 --pool=8a9087905136504801513651945604a1 --pool=8a9087905136504801513651940f0499 --pool=8a9087905136504801513651b1320855 --pool=8a9087905136504801513651ba510960 (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201511231657:33.946 - FINE: Stdout: 
+		//	Pools successfully removed at the server:
+		//	   8a9087905136504801513651940f049a
+		//	   8a90879051365048015136519c0d055b
+		//	   8a9087905136504801513651946b04a7
+		//	Serial numbers successfully removed at the server:
+		//	   8865613847264050544
+		//	   8937932663056862717
+		//	   3352861400531049008
+		//	   8107962814745856003
+		//	   8514271782573332949
+		//	   3379403338434026844
+		//	   2230666936775183579
+		//	7 local certificates have been deleted.
+		//	201511231657:33.989 - FINE: Stderr:
+		
+		//	201512041343:44.111 - FINE: ssh root@jsefler-6.usersys.redhat.com subscription-manager unsubscribe --pool=8a908790516a011001516a02508b049b --pool=8a908790516a011001516a025891054a --pool=8a908790516a011001516a025dbc05ec --pool=8a908790516a011001516a026b970797 --pool=8a908790516a011001516a0250a1049e --pool=8a908790516a011001516a0264a006d3 --pool=8a908790516a011001516a02646b06c3 --pool=8a908790516a011001516a02511e04a4 --pool=8a908790516a011001516a02762e0904 --pool=8a908790516a011001516a0261720680 --pool=8a908790516a011001516a0265b906e1 --pool=8a908790516a011001516a02714d089b --pool=8a908790516a011001516a0261720680 --pool=8a908790516a011001516a0259dd056e --pool=8a908790516a011001516a02588b0547 --pool=8a908790516a011001516a025a490575 --pool=8a908790516a011001516a02646b06c3 --pool=8a908790516a011001516a0263ac06bb --pool=8a908790516a011001516a026168067d --pool=8a908790516a011001516a025e0e05f9 --pool=8a908790516a011001516a027e6b09db --pool=8a908790516a011001516a0251b504aa --pool=8a908790516a011001516a0274dd08e0 --pool=8a908790516a011001516a026919073f --pool=8a908790516a011001516a02662606f4 --pool=8a908790516a011001516a0278a70937 --pool=8a908790516a011001516a027b7f0984 --pool=8a908790516a011001516a0250650498 --pool=8a908790516a011001516a0264a106d6 --pool=8a908790516a011001516a026b030786 --pool=8a908790516a011001516a0278aa0939 --pool=8a908790516a011001516a0265b906e1 --pool=8a908790516a011001516a02714d089b --pool=8a908790516a011001516a025d6005e8 --pool=8a908790516a011001516a0278a70937 --pool=8a908790516a011001516a0258030542 --pool=8a908790516a011001516a0278aa0939 --pool=8a908790516a011001516a02510504a1 --pool=8a908790516a011001516a0264a106d6 --pool=8a908790516a011001516a02762e0904 --pool=8a908790516a011001516a02588b0547 --pool=8a908790516a011001516a027b930986 --pool=8a908790516a011001516a0260e5066a --pool=8a908790516a011001516a0258e20560 --pool=8a908790516a011001516a025a490575 --pool=8a908790516a011001516a025e0e05f9 --pool=8a908790516a011001516a0269940747 --pool=8a908790516a011001516a026acf0781 --pool=8a908790516a011001516a0251b504aa --pool=8a908790516a011001516a026910073c --pool=8a908790516a011001516a0274c608de --pool=8a908790516a011001516a02710c0899 --pool=8a908790516a011001516a02516304a7 --pool=8a908790516a011001516a0269940747 --pool=8a908790516a011001516a0259b60569 --pool=8a908790516a011001516a0274dd08e0 --pool=8a908790516a011001516a0259dd056e --pool=8a908790516a011001516a02516304a7 --pool=8a908790516a011001516a0269bf074b --pool=8a908790516a011001516a0263ac06bb --pool=8a908790516a011001516a0269bf074b --pool=8a908790516a011001516a026b33078f --pool=8a908790516a011001516a026b030786 --pool=8a908790516a011001516a026acf0781 --pool=8a908790516a011001516a026f8d0869 --pool=8a908790516a011001516a0257ab0529 --pool=8a908790516a011001516a025dbc05ec --pool=8a908790516a011001516a0264a006d3 --pool=8a908790516a011001516a027b930986 (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201512041344:51.518 - FINE: Stdout: 
+		//	Pools successfully removed at the server:
+		//	   8a908790516a011001516a0269bf074b
+		//	   8a908790516a011001516a026b33078f
+		//	   8a908790516a011001516a026f8d0869
+		//	   8a908790516a011001516a0257ab0529
+		//	Pools unsuccessfully removed at the server:
+		//	   8a908790516a011001516a0261720680
+		//	   8a908790516a011001516a02646b06c3
+		//	Serial numbers successfully removed at the server:
+		//	   6147826158890249653
+		//	   2710596911835822689
+		//	   8362938208950031094
+		//	   130483993634735580
+		//	   2732609281506598523
+		//	Serial numbers unsuccessfully removed at the server:
+		//	   8a908790516a011001516a0261720680   <=== Bug 1288626
+		//	   8a908790516a011001516a02646b06c3   <=== Bug 1288626
+		//	5 local certificates have been deleted.
+		//	201512041344:51.520 - FINE: Stderr:  (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)		
 		
 		String actualStdoutMsg = result.getStdout().trim();
 		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
+		Assert.assertTrue(actualStdoutMsg.contains(successfulStdoutPoolIdsMsgLabel), "Stdout from unsubscribing many pool ids contains expected label '"+successfulStdoutPoolIdsMsgLabel+"'.");
+		Assert.assertTrue(actualStdoutMsg.contains(successfulStdoutSerialsMsgLabel), "Stdout from unsubscribing many pool ids contains expected label '"+successfulStdoutSerialsMsgLabel+"'.");
 		
-		// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
-		// NOTE: TIME TO FIX THIS ASSERTION... Assert.assertEquals(result.getStdout().trim(), expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
-		List<String> expectedStdoutMsgAsList = new ArrayList<String>(Arrays.asList(expectedStdoutMsg.split("\n"))); expectedStdoutMsgAsList.remove(expectedStdoutMsgLabel);
-		List<String> actualStdoutMsgAsList = new ArrayList<String>(Arrays.asList(actualStdoutMsg.split("\n"))); actualStdoutMsgAsList.remove(expectedStdoutMsgLabel);
-		Assert.assertTrue(expectedStdoutMsgAsList.containsAll(actualStdoutMsgAsList) && actualStdoutMsgAsList.containsAll(expectedStdoutMsgAsList), "Stdout feedback when unsubscribing from all the currently consumed subscriptions contains all the expected serial numbers:"+expectedStdoutMsg.replace(expectedStdoutMsgLabel, ""));
+		String actualStdoutPoolIdsMsg = actualStdoutMsg.split(successfulStdoutSerialsMsgLabel)[0]; actualStdoutPoolIdsMsg = actualStdoutPoolIdsMsg.replace(successfulStdoutPoolIdsMsgLabel+"\n", "").replace(unsuccessfulStdoutPoolsMsgLabel+"\n", "");
+		String actualStdoutSerialsMsg = actualStdoutMsg.split(successfulStdoutSerialsMsgLabel)[1]; actualStdoutSerialsMsg = actualStdoutSerialsMsg.replace(successfulStdoutSerialsMsgLabel+"\n", "").replace(unsuccessfulStdoutSerialsMsgLabel+"\n", "");
+		
+		Set<String> actualStdoutPoolIds = new HashSet<String>();
+		actualStdoutPoolIds.addAll(Arrays.asList(actualStdoutPoolIdsMsg.trim().split("\\s*\n\\s*")));
+		
+		Set<String> actualStdoutSerials = new HashSet<String>();
+		actualStdoutSerials.addAll(Arrays.asList(actualStdoutSerialsMsg.trim().split("\\s*\n\\s*")));
+		
+		// Note: these assertions will pass regardless if the pools/serial removed were successful or unsuccessful
+		Assert.assertTrue(actualStdoutPoolIds.containsAll(expectedPoolIds) && expectedPoolIds.containsAll(actualStdoutPoolIds), "Stdout feedback when unsubscribing from all the currently consumed subscriptions pool ids contains all the expected pool ids from the list of consumed Product Subscriptions.");
+		Assert.assertTrue(actualStdoutSerials.containsAll(expectedSerials) && expectedSerials.containsAll(actualStdoutSerials), "Stdout feedback when unsubscribing from all the currently consumed subscriptions pool ids contains all the expected serials from the list of consumed Product Subscriptions.");
 	}
 	
 	
