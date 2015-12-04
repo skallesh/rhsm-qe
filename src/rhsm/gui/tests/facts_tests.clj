@@ -248,7 +248,8 @@
 
 (defn ^{Test {:groups ["facts"
                        "tier1"
-                       "blockedByBug-977855"]}}
+                       "blockedByBug-977855"
+                       "blockedByBug-1157383"]}}
   check_persistant_autoheal
   "Asserts that the selection made in the autoheal checkbox is persistant."
   [_]
@@ -269,16 +270,17 @@
                 (tasks/ui waittillwindowexist :system-preferences-dialog 5)
                 (sleep 2000)
                 (tasks/ui c :autoheal-checkbox)
-                ;(println (str "first - c:" c " b:" b))
                 (verify (= b (waittillcheck b 5)))
                 (tasks/ui click :close-system-prefs)
                 (tasks/ui waittillwindownotexist :system-preferences-dialog 5)
+                ;reopen it and verity checked state
                 (tasks/ui click :preferences)
                 (tasks/ui waittillwindowexist :system-preferences-dialog 5)
-                ;(println (str "second - c:" c " b:" b))
                 (verify (= b (waittillcheck b 5)))
                 (tasks/ui click :close-system-prefs)
-                (tasks/ui waittillwindownotexist :system-preferences-dialog 5))]
+                (tasks/ui waittillwindownotexist :system-preferences-dialog 5)
+                ;verify that state is set serverside
+                (verify (= b (:autoheal (ctasks/get-consumer)))))]
       (cpa uncheck false)
       (cpa check true))
     (finally
