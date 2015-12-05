@@ -794,6 +794,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.5-1")) options.add("--pool=POOL_ID");	// added by Bug 1198178 - [RFE] Subscription-manager unsubscribe command should support --pool option	// commit 3d2eb4b8ef8e2094311e3872cdb9602b84fed9be
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -814,6 +815,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.5-1")) options.add("--pool=POOL_ID");	// added by Bug 1198178 - [RFE] Subscription-manager unsubscribe command should support --pool option	// commit 3d2eb4b8ef8e2094311e3872cdb9602b84fed9be
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
