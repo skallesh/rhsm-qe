@@ -21,7 +21,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
  * 
  * 
  */
-@Test(groups = { "StorageTests","Tier3Tests" })
+@Test(groups = { "StorageBandTests","Tier3Tests" })
 public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	Map<String, String> factsMap = new HashMap<String, String>();
 

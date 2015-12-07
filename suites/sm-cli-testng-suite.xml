@@ -284,6 +284,7 @@
 			</run>
 		</groups>
 	</test>
+	
 	<test name="CLI: StorageBand Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
@@ -296,6 +297,7 @@
 			</run>
 		</groups>
 	</test>
+	
 	<test name="CLI: DataCenter Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
