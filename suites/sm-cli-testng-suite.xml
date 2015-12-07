@@ -284,7 +284,18 @@
 			</run>
 		</groups>
 	</test>
-	
+	<test name="CLI: StorageBand Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="StorageBandTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
 	<test name="CLI: DataCenter Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
