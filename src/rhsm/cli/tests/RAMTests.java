@@ -339,5 +339,10 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		return RAMBasedProducts;
 	}
 	
-	
+	// include this AfterClass method as insurance to make sure the next test class
+	// in a suite is not affected by the facts used in this test class
+	@AfterClass(groups = "setup")
+	public void deleteFactsFileWithOverridingValuesAfterClass() throws Exception {
+		if (clienttasks!=null) clienttasks.deleteFactsFileWithOverridingValues();
+	}
 }
