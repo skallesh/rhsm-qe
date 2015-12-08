@@ -528,9 +528,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"%(mappingfile)s","%(package)s"}));	// from key: Unable to read mapping file: %(mappingfile)s.\nDo you have the %(package)s package installed?
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"{dateexample}"}));	// from key: Date entered is invalid. Date should be in YYYY-MM-DD format (example: {dateexample})
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"&#x2022;"}));	// Unicode bullet character	// msgid "&#x2022; A network connection"	// msgid "&#x2022; The address of a subscription management service (optional)"	// msgid "&#x2022; Your account login"
+		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager register --help"}));	// msgid "This system is not yet registered. Try 'subscription-manager register --help' for more information."
+		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager plugins"}));	// msgid "View and configure subscription-manager plugins"
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();
-		ignoreTheseExceptionalCases.add("View and configure subscription-manager plugins");
+		//ignoreTheseExceptionalCases.add("View and configure subscription-manager plugins");	// 12/8/2015 stop ignoring... will be changed by bug 1061407 in https://github.com/candlepin/subscription-manager/pull/1343/
 		ignoreTheseExceptionalCases.add("list subscription-manager plugin hooks");
 		ignoreTheseExceptionalCases.add("list subscription-manager plugin slots");
 		ignoreTheseExceptionalCases.add("list subscription-manager plugins");
