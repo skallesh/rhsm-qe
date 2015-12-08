@@ -1545,28 +1545,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		sql.close();
 	}
 	
-
-	final String iso8601DatePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; 								//"2012-02-08T00:00:00.000+0000"
-	final DateFormat iso8601DateFormat = new SimpleDateFormat(iso8601DatePattern);				//"2012-02-08T00:00:00.000+0000"
-// TODO DELETEME
-//	protected Calendar parse_iso8601DateString(String dateString) {
-//		try{
-//			DateFormat dateFormat = new SimpleDateFormat(iso8601DateString);
-//			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-//			Calendar calendar = new GregorianCalendar();
-//			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
-//			return calendar;
-//		}
-//		catch (ParseException e){
-//			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+iso8601DateString+"':\n"+e.getMessage());
-//			return null;
-//		}
-//	}
+	// 12/8/2015 candlepin dropped the milliseconds on the reported date pattern in candlepin commit 16b18540f84443a19786b2f97773e481ecd3c011 hence these are no longer final
+	//final String iso8601DatePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; 								//"2012-02-08T00:00:00.000+0000"
+	//final DateFormat iso8601DateFormat = new SimpleDateFormat(iso8601DatePattern);				//"2012-02-08T00:00:00.000+0000"
 	protected Calendar parseISO8601DateString(String dateString) {
 		return parseISO8601DateString(dateString, null);
 	}
 	protected Calendar parseISO8601DateString(String dateString, String timeZone) {
-		String datePattern = iso8601DatePattern;
+		String datePattern="'UNEXPECTED DATE PATTERN'";// = iso8601DatePattern;
+		// 12/8/2015 candlepin dropped the milliseconds on the reported date pattern in candlepin commit 16b18540f84443a19786b2f97773e481ecd3c011 https://github.com/candlepin/candlepin/commit/16b18540f84443a19786b2f97773e481ecd3c011
+		//   old: "yyyy-MM-dd'T'HH:mm:ss.SSSZ"	// "startDate": "2015-11-09T03:17:36.000+0000"
+		//   new: "yyyy-MM-dd'T'HH:mm:ssZ"		// "startDate": "2015-12-07T19:00:00-0500"
+		if (dateString.matches("\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d\\d\\d[+-]\\d\\d\\d\\d"))	datePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+		if (dateString.matches("\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d[+-]\\d\\d\\d\\d"))				datePattern = "yyyy-MM-dd'T'HH:mm:ssZ";
+		
 		if (timeZone==null) datePattern = datePattern.replaceFirst("Z$", "");	// strip off final timezone offset symbol from iso8601DatePattern
 		return parseDateStringUsingDatePattern(dateString, datePattern, timeZone);
 	}
@@ -1584,6 +1576,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	protected String formatISO8601DateString(Calendar date) throws UnsupportedEncodingException {
+		// for backward compatibility caused by the date pattern change in candlepin commit 16b18540f84443a19786b2f97773e481ecd3c011, let's always use the old pattern
+		DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");				//"2012-02-08T00:00:00.000+0000"
+		
 		String iso8601FormatedDateString = iso8601DateFormat.format(date.getTime());
 		iso8601FormatedDateString = iso8601FormatedDateString.replaceFirst("(..$)", ":$1");		// "2012-02-08T00:00:00.000+00:00"	// see https://bugzilla.redhat.com/show_bug.cgi?id=720493 // http://books.xmlschemata.org/relaxng/ch19-77049.html requires a colon in the time zone for xsd:dateTime
 		return iso8601FormatedDateString;
