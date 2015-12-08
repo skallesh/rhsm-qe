@@ -1465,6 +1465,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult sshCommandResult;
 		String tooManyContentSetsMsgFormat = "Too many content sets for certificate. Please upgrade to a newer client to use subscription: %s";	// this msgid comes from Candlepin
 		tooManyContentSetsMsgFormat = "Too many content sets for certificate %s. A newer client may be available to address this problem. See kbase https://access.redhat.com/knowledge/node/129003 for more information.";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1"/*TODO FIXME ACTUAL IS "2.0.11-1"*/)) {	// Bug 1190814 - typos in candlepin msgid	// candlepin commit 18ede4fe2943f70b59f14a066a5ebd7b81525fad
+			tooManyContentSetsMsgFormat = "Too many content sets for certificate %s. A newer client may be available to address this problem. See knowledge database https://access.redhat.com/knowledge/node/129003 for more information.";
+		}
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sku, clienttasks.getCurrentlyAvailableSubscriptionPools());
