@@ -2237,6 +2237,15 @@ schema generation failed
 		        "updated": "2011-07-23T00:19:17.631+0000"
 		    }
 		    */
+			
+			String datePattern="'UNEXPECTED DATE PATTERN'";// = iso8601DatePattern;
+			// 12/8/2015 candlepin dropped the milliseconds on the reported date pattern in candlepin commit 16b18540f84443a19786b2f97773e481ecd3c011 https://github.com/candlepin/candlepin/commit/16b18540f84443a19786b2f97773e481ecd3c011
+			//   old: "yyyy-MM-dd'T'HH:mm:ss.SSSZ"	// "startDate": "2015-11-09T03:17:36.000+0000"
+			//   new: "yyyy-MM-dd'T'HH:mm:ssZ"		// "startDate": "2015-12-07T19:00:00-0500"
+			if (jsonEntitlement.getString("created").matches("\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d\\d\\d[+-]\\d\\d\\d\\d"))	datePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+			if (jsonEntitlement.getString("created").matches("\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d[+-]\\d\\d\\d\\d"))				datePattern = "yyyy-MM-dd'T'HH:mm:ssZ";
+			DateFormat iso8601DateFormat = new SimpleDateFormat(datePattern);
+			
 			JSONObject jsonPool = jsonEntitlement.getJSONObject("pool");
 			if (poolId.equals(jsonPool.getString("id"))) {
 				JSONArray jsonCertificates = jsonEntitlement.getJSONArray("certificates");
@@ -2248,7 +2257,6 @@ schema generation failed
 						if (jsonSerialCandidate==null) jsonSerialCandidate=jsonSerial;	// set the first found serial as the candidate
 						
 						// determine if this is the newest serial object that has been created
-						DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");				// "2012-02-08T00:00:00.000+0000"
 						java.util.Date dateSerialCandidateCreated = iso8601DateFormat.parse(jsonSerialCandidate.getString("created"));
 						java.util.Date dateSerialCreated = iso8601DateFormat.parse(jsonSerial.getString("created"));
 						if (dateSerialCreated.after(dateSerialCandidateCreated)) {
