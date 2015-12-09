@@ -1049,7 +1049,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gdk-no-debug=FLAGS");
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gtk-debug=FLAGS");
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gtk-no-debug=FLAGS");
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.3")) {	// commit 3c51d2096ecdd1a7ba6981776bd9aa6959aa2e1e use gtk3 for rhsm-icon
+			if (client.runCommandAndWait("rpm -qf `which rhsm-icon` --requires | egrep '^(gtk|pygtk)'").getStdout().trim().equals("gtk3")) {	// if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.3")) {	// commit 3c51d2096ecdd1a7ba6981776bd9aa6959aa2e1e use gtk3 for rhsm-icon
+				// effectively this happens on RHEL >= 7.2
+				// options not offered by gtk3
 				rhsmIconGtkOptions.remove("--screen=SCREEN");
 				rhsmIconGtkOptions.remove("--sync");
 			}
