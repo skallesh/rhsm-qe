@@ -603,6 +603,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		long systemTimeInSeconds = Long.valueOf(client.runCommandAndWait("date +%s").getStdout().trim());	// seconds since 1970-01-01 00:00:00 UTC
 		long migratTimeInSeconds = migrationDate.getTimeInMillis()/1000;
+		// I do not have a bug number, but on RHEL5 and RHEL6 the migrationDateFactWithGMTOffsetTimeZone is 12 hours slow	// bug would be buried in rpm -qf `which date` => coreutils-5.97-34.el5_8.1  coreutils-8.4-37.el6
+		// RHEL7
+		//	[root@jsefler-7 ~]# date -d "2015-01-01T00:00:00.000000" -Iseconds
+		//	2015-01-01T00:00:00-0500
+		// RHEL6
+		//	[root@jsefler-6 ~]# date -d "2015-01-01T00:00:00.000000" -Iseconds
+		//	2014-12-31T12:00:00-0500
+		// RHEL5
+		//	[root@jsefler-5 ~]# date -d "2015-01-01T00:00:00.000000" -Iseconds
+		//	2014-12-31T12:00:00-0500
+		if (Integer.valueOf(clienttasks.redhatReleaseX) < 7) migratTimeInSeconds += 12/*hours*/*60*60;
 		Assert.assertTrue(systemTimeInSeconds-tol < migratTimeInSeconds && migratTimeInSeconds < systemTimeInSeconds+tol, "The migration date fact '"+factMap.get(migrationDateFact)+"' was set within the last '"+tol+"' seconds (local system time).  Actual diff='"+String.valueOf(systemTimeInSeconds-migratTimeInSeconds)+"' seconds.");
 		
 		// assert we are no longer registered to RHN Classic
