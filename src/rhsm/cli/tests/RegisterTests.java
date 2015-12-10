@@ -1014,8 +1014,16 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// reregister w/ username, password, and consumerid
 		//clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);
-		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (b3c728183c7259841100eeacb7754c727dc523cd)...");
-		clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null,consumerCertBefore.consumerid, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid b3c728183c7259841100eeacb7754c727dc523cd...");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.2-1")) {	// commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99 Doesnt allow using --force with --consumerid
+			//	[root@jsefler-6 ~]# subscription-manager register --username=testuser1 --password=password --consumerid=fc1b9613-2793-4017-8b9f-a8ab85c5ba96 --force
+			//	Error: Can not force registration while attempting to recover registration with consumerid. Please use --force without --consumerid to re-register or use the clean command and try again without --force.
+			log.warning("The original point of this test is not really applicable after 1.16.2-1 where registering with --consumerid and --force has been more explicitly divided into two steps... clean and register --consumerid.");
+			clienttasks.clean(null, null, null);
+			clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null,consumerCertBefore.consumerid, null, null, null, (String)null, null, null, null, Boolean.FALSE, false, null, null, null);
+		} else {
+			clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null,consumerCertBefore.consumerid, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		}
 		
 		// assert that the identity cert has not changed
 		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
