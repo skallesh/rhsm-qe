@@ -112,7 +112,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                  :all-available-support-level-and-type
                                  :all-available-subscription-type
                                  :all-available-subscription])
-                    {:product-id "Product ID Text"
+                    {:all-available-SKU-text "All Available SKU Text"
+                     :product-id "Product ID Text"
                      ;;stacking id removed in BZ 821544
                      :stacking-id "Stacking ID Text"
                      :contract-number "Contract Number Text"
@@ -256,7 +257,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :gpg-check-text "gpgcheck_readonly"
        :gpg-check-combobox "gpgcheck_combobox"
        :gpg-check-edit "gpgcheck_edit_button"
-       :gpg-check-remove "gpgcheck_remove_button"})))
+       :gpg-check-remove "gpgcheck_remove_button"
+       :apply "Apply"})))
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
