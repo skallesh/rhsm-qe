@@ -3176,11 +3176,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
 			JSONObject jsonPool = (JSONObject) l.get(0);
+/* DELETEME replaced by call to parseISO8601DateString
+//			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+//			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+//			Calendar endDate = new GregorianCalendar();
+//			endDate.setTimeInMillis(dateFormat.parse(jsonPool.getString("endDate")).getTime());
+*/
+			Calendar endDate = parseISO8601DateString(jsonPool.getString("endDate"), "GMT");
 			
-			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-			Calendar endDate = new GregorianCalendar();
-			endDate.setTimeInMillis(dateFormat.parse(jsonPool.getString("endDate")).getTime());
 			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, jsonPool.getString("id"));
 
 			String quantity = String.valueOf(jsonPool.getInt("quantity"));
