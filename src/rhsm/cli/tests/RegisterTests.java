@@ -1587,7 +1587,9 @@ Expected Results:
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.15.9-5")) expectedExitCode = Integer.valueOf(1);	// subscription-manager RHEL7.2 commit 84340a0acda9f070e3e0b733e4335059b5dc204e 	// post 1221273: Auto-attach failure should not short-circuit other parts of registration
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --serverurl="+serverurl+" and a bad servicelevel.");
 		String expectedStderr = String.format("Service level 'bad-service' is not available to units of organization %s.",registeredOwnerKey);
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.15.9-5")) {	// subscription-manager RHEL7.2 commit 84340a0acda9f070e3e0b733e4335059b5dc204e 	// post 1221273: Auto-attach failure should not short-circuit other parts of registration
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.3-1")) {	// subscription-manager master commit 7795df84edcb4f4fef08085548f6c2a23f86ceb4 1262919: Added convenience function for printing to stderr
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr after register with --serverurl="+serverurl+" and a bad servicelevel");
+		} else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.15.9-5")) {	// subscription-manager RHEL7.2 commit 84340a0acda9f070e3e0b733e4335059b5dc204e 	// post 1221273: Auto-attach failure should not short-circuit other parts of registration	// subscription-manager master commit fef344066a4d5e40a21188797d6c6197e03a1638 >= subscription-manager-1.16.1-1
 			Assert.assertTrue(sshCommandResult.getStdout().trim().contains(expectedStderr), "Stdout after register with --serverurl="+serverurl+" and a bad servicelevel contains expected '"+expectedStderr+"'.");
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr after register with --serverurl="+serverurl+" and a bad servicelevel");
 		} else {
