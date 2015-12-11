@@ -184,11 +184,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="subscription-manager-gui --help with no X-Display",
-			groups={"blockedByBug-976689","blockedByBug-881095"/* ALSO INCLUDED IN ExpectedCommandLineOptionsData */},
+			groups={"blockedByBug-1290885","blockedByBug-976689","blockedByBug-881095"/* ALSO INCLUDED IN ExpectedCommandLineOptionsData */},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void CommandLineHelpForGUIWithoutDisplay_Test() {
-//DELETEME		RemoteFileTasks.runCommandAndAssert(client,"subscription-manager-gui --help ",1,"Unable to open a display","");
 		
 		SSHCommandResult result = client.runCommandAndWait("subscription-manager-gui --help");
 		
@@ -981,9 +980,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				*/
 				// problem: can't predict which export will work
 				// solution: try several until one works and then use it
-				for (String exportDisplay : Arrays.asList(new String[]{"export DISPLAY=localhost:2", "export DISPLAY=localhost:10.0", "export DISPLAY=:0"})) {
+				for (String exportDisplay : Arrays.asList(new String[]{"export DISPLAY=localhost:2", "export DISPLAY=localhost:10.0", "export DISPLAY=localhost:11.0", "export DISPLAY=:0"})) {
 					String commandHelpWithExportDisplay = exportDisplay+" && "+commandHelp;
-					if (!client.runCommandAndWait(commandHelpWithExportDisplay).getStdout().trim().equals("Unable to open a display")) {
+					if (client.runCommandAndWait(commandHelpWithExportDisplay).getStdout().trim().startsWith("Usage")) {
 						commandHelp = commandHelpWithExportDisplay;
 						break;
 					}
