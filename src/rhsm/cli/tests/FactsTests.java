@@ -967,7 +967,15 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		client2tasks.createFactsFileWithOverridingValues(customFactsMap);
 		
 		// register client2 to the existing consumerid and get the facts from client2
-		Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, true, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.2-1")) {	// commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99 Doesnt allow using --force with --consumerid
+			//	[root@jsefler-6 ~]# subscription-manager register --username=testuser1 --password=password --consumerid=fc1b9613-2793-4017-8b9f-a8ab85c5ba96 --force
+			//	Error: Can not force registration while attempting to recover registration with consumerid. Please use --force without --consumerid to re-register or use the clean command and try again without --force.
+			clienttasks.clean(null, null, null);
+			Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, false, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
+
+		} else {
+			Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, true, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
+		}
 		Map<String,String> client2FactsMap = client2tasks.getFacts();
 
 		// get consumerid's facts from Candlepin again
