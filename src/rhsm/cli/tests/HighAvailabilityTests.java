@@ -514,7 +514,11 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		log.info("Initializing a new product cert directory with the currently installed product certs for this test class...");
 		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+haProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+haProductCertDir+"/*.pem",Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(client,"cp "+clienttasks.productCertDir+"/*.pem "+haProductCertDir,Integer.valueOf(0));
+		if (!RemoteFileTasks.runCommandAndAssert(client,"ls -A "+clienttasks.productCertDir,Integer.valueOf(0)).getStdout().isEmpty()) {
+			RemoteFileTasks.runCommandAndAssert(client,"cp "+clienttasks.productCertDir+"/*.pem "+haProductCertDir,Integer.valueOf(0));
+		}
+		RemoteFileTasks.runCommandAndAssert(client,"cp --no-clobber "+clienttasks.productCertDefaultDir+"/*.pem "+haProductCertDir,Integer.valueOf(0),Integer.valueOf(1));
+
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", haProductCertDir);
 	}
 	
