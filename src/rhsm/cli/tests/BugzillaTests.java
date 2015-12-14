@@ -1175,12 +1175,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.clean(null, null, null);
 		consumerName="consumer";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, consumerName, consumerId, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, null, null, null, null, null);
 		result=clienttasks.identity(null, null, null, null, null, null, null);
 		Assert.assertContainsMatch(result.getStdout(), expected);
 		clienttasks.clean(null, null, null);
 		result=clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, "", consumerId, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, null, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258
 			Assert.assertEquals(result.getStderr().trim(), "Error: system name can not be empty.","stderr");
 		} else {
@@ -1434,13 +1434,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// attempt to attach an entitlement from an expired pool
 		String result=clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null).getStdout();	
 		// Stdout: Unable to attach pool with ID '8a908740438be86501438cd57718376c'.: Subscriptions for awesomeos-onesocketib expired on: 1/3/14 1:21 PM.
-		String expiredOnDatePattern = "M/d/yy h:mm a";	//	1/3/14 1:21 PM
-		DateFormat expiredOnDateFormat = new SimpleDateFormat(expiredOnDatePattern);
-		String expiredOnString = expiredOnDateFormat.format(endDate.getTime());
+	//	String expiredOnDatePattern = "M/d/yy h:mm a";	//	1/3/14 1:21 PM
+	//	DateFormat expiredOnDateFormat = new SimpleDateFormat(expiredOnDatePattern);
+	//	String expiredOnString = expiredOnDateFormat.format(endDate.getTime());
 		/* 
 		String expected="Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+productId+" expired on: "+EndingDate;
 		 */
-		String expected = String.format("Unable to attach pool with ID '%s'.: Subscriptions for %s expired on: %s.",expiringSubscriptionPool.poolId,expiringSubscriptionPool.productId,expiredOnString);
+		String expected = String.format("Pool with id '%s' couldnot be found");
 		Assert.assertEquals(result.trim(), expected);
 	}
 
@@ -2756,7 +2756,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		String invalidconsumerId = randomGenerator.nextInt() + consumerId;
-		System.out.println(invalidconsumerId + "  " + consumerId);
 		SSHCommandResult result = clienttasks.register_(sm_clientUsername,
 				sm_clientPassword, sm_clientOrg, null, null, null,
 				invalidconsumerId, null, null, null, (String) null, null, null,
