@@ -423,7 +423,9 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-5")) expectedExitCode = new Integer(1);	// post RHEL7.2 commit 84340a0acda9f070e3e0b733e4335059b5dc204e bug 1221273
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
- 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-5")) {	// post RHEL7.2 commit 84340a0acda9f070e3e0b733e4335059b5dc204e bug 1221273
+ 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.3-1")) {	// post commit 7795df84edcb4f4fef08085548f6c2a23f86ceb4 bug 1262919: Added convenience function for printing to stderr
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), msg, "Stderr message from an attempt to register with autosubscribe and an unavailable servicelevel.");
+ 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-5")) {	// post RHEL7.2 commit 84340a0acda9f070e3e0b733e4335059b5dc204e bug 1221273
 			Assert.assertTrue(sshCommandResult.getStdout().trim().contains(msg), "Stdout message contains: "+msg);
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr message from an attempt to register with autosubscribe and an unavailable servicelevel.");
  		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
