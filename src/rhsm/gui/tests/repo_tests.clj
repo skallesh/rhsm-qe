@@ -100,7 +100,12 @@
            (throw e)))))
 
 (defn get-repo-information
-  "Returns repository information, including "
+  "Returns repository information, including whether a repo has been modified or not
+
+  Returns a map of
+  repo-id: name of the repo
+  index: the row in the table
+  modified: true if either the enabled or gpgcheck columns were changed, false otherwise"
   []
   (let [rc (tasks/ui getrowcount :repo-table)
         all-repos (for [i (range rc)]
