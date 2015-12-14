@@ -4803,8 +4803,8 @@ if (false) {
 		
 		// when rhsm.manage_repos is off, this feedback overrides all operations
 		String manage_repos = getConfFileParameter(rhsmConfFile, "rhsm", "manage_repos");
-		if (manage_repos==null) manage_repos="1";
-		if (manage_repos.equals("0") || manage_repos.isEmpty()/*see bug 1251853*/) {
+		if (manage_repos==null || manage_repos.isEmpty() /*see bug 1251853*/) manage_repos="1";	// default configuration
+		if (manage_repos.equals("0") ) {
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.","Stdout when rhsm.manage_repos is configured to 0.");
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThe system is not entitled to use any repositories.","Stdout when rhsm.manage_repos is configured to 0.");
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThis system has no repositories available through subscriptions.","Stdout when rhsm.manage_repos is configured to 0.");	// changed by bug 895462
