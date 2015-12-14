@@ -189,6 +189,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 // debugTesting randomly picked standalone non-zero virt_limit pools
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-4", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-unlimited", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-server-basic-dc", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a90879051a127080151a12847570758", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("contract", "", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionType", "Standard (Temporary)", pools);
+
 		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);	// RHEL59: THIS IS GENERATING EXTRA CONSUMER MODIFIED EVENTS THAT WE DON'T REALLY WANT TO TEST 
 		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null);
 		List<String> newEventTitles = new ArrayList<String>();
@@ -312,8 +317,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         
         //ProductSubscription newConsumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", originalConsumedProductSubscription.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());	// can't do this because the serialNumber changes after the pool and entitlement have been modified
         ProductSubscription newConsumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", originalConsumedProductSubscription.productId, clienttasks.getCurrentlyConsumedProductSubscriptions());
-        //AN org.xmlpull.v1.XmlPullParserException IS THROWN WHEN THIS FAILS: Assert.assertEquals(newConsumedProductSubscription.startDate, newStartDate, "After modifing pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
-        Assert.assertEquals(ProductSubscription.formatDateString(newConsumedProductSubscription.startDate), ProductSubscription.formatDateString(newStartDate), "After modifing pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
+        //AN org.xmlpull.v1.XmlPullParserException IS THROWN WHEN THIS FAILS: Assert.assertEquals(newConsumedProductSubscription.startDate, newStartDate, "After modifying pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
+        Assert.assertEquals(ProductSubscription.formatDateString(newConsumedProductSubscription.startDate), ProductSubscription.formatDateString(newStartDate), "After modifying pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
 	}
 	
 	
