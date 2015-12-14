@@ -289,7 +289,7 @@
   check_default_subscription_url
   [_]
   (let [subman-ver (subman-version)
-        rhsm-ver (map->Version {:major "1" :minor "16" :patch "4"})]
+        rhsm-ver (map->Version {:major "1" :minor "16" :patch "6"})]
     (when (< (compare subman-ver rhsm-ver) 0)
       (throw (SkipException. "subscription-manager version is too old for this test")))
     (tasks/restart-app)
