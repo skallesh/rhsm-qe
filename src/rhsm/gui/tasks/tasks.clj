@@ -173,7 +173,7 @@
   (checkforerror))
 
 
-(defn- register-system []
+(defn register-system []
   (let [result (ui click :register-system)
         showing (ui waittillguiexist :register-dialog)]
     [result showing]))

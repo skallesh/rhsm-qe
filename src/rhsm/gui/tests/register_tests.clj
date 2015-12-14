@@ -20,7 +20,9 @@
             BeforeClass
             BeforeGroups
             AfterGroups
-            DataProvider]))
+            DataProvider]
+           [rhsm.gui.tasks.tools Version]
+           (org.testng SkipException)))
 
 (def sys-log "/var/log/rhsm/rhsm.log")
 (def gui-log "/var/log/ldtpd/ldtpd.log")
@@ -281,6 +283,27 @@
                                           "Unregister-Traceback-Test"
                                           nil
                                           (tasks/unregister)))))))
+
+(defn ^{Test {:groups ["registration"
+                       "acceptance"]}}
+  check_default_subscription_url
+  [_]
+  (let [subman-ver (subman-version)
+        rhsm-ver (map->Version {:major "1" :minor "16" :patch "4"})]
+    (when (< (compare subman-ver rhsm-ver) 0)
+      (throw (SkipException. "subscription-manager version is too old for this test")))
+    (tasks/restart-app)
+    ;; unregister if we already are
+    (when (bool (tasks/ui hasstate :register "VISIBLE"))
+      (tasks/unregister))
+    (tasks/register-system)
+    (tasks/ui click :default-server)
+    (sleep 1000)
+    (try
+      (let [url (tasks/ui gettextvalue :register-server)]
+        (verify (= url "subscription.rhsm.redhat.com")))
+      (finally
+        (tasks/ui click :register-close)))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS ;;
