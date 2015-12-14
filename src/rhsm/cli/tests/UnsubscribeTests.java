@@ -412,8 +412,12 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		//expectedStdoutMsg += "Unsuccessfully unsubscribed serial numbers:";	// added by bug 867766	// changed by bug 874749
 		//expectedStdoutMsg += "Unsuccessfully removed serial numbers:";
 		expectedStdoutMsg += "Serial numbers unsuccessfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
-		//for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+String.format("Entitlement Certificate with serial number %s could not be found.", revokedSerial);	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
-		for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+String.format("Entitlement Certificate with serial number '%s' could not be found.", revokedSerial);	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.6-1")) {	// commit 0d80caacf5e9483d4f10424030d6a5b6f472ed88 1285004: Adds check for access to the required manager capabilty
+			for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+revokedSerial;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout			
+		} else {
+			//for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+String.format("Entitlement Certificate with serial number %s could not be found.", revokedSerial);	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
+			for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+String.format("Entitlement Certificate with serial number '%s' could not be found.", revokedSerial);	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout			
+		}
 		Assert.assertEquals(actualStdoutMsg, expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions (including revoked serials).");
 	}
 //TOO MUCH LOGGING FROM TOO MANY ASSERTIONS;  DELETEME IF ABOVE TEST WORKS WELL
@@ -646,6 +650,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		//Assert.assertEquals(result.getStdout().trim(),expectedStdout,"Stdout when attempting to unsubscribe from a valid pool id.");
 		String expectedStdoutRegex = String.format("Pools successfully removed at the server:\n   %s\nSerial numbers successfully removed at the server:\n   %s\n   %s\n%d local certificates have been deleted.", pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")", serials.size());
 		Assert.assertMatch(result.getStdout().trim(), expectedStdoutRegex);
+		Assert.assertEquals(result.getStderr(), "", "Stderr when attempting to unsubscribe from a valid pool id.");
 	}
 	
 	
