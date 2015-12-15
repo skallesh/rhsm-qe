@@ -1598,7 +1598,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void RhnMigrateClassicToRhsmWithInvalidRhnCredentials_Test() {
 		if (sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server NOT be a hosted RHN Classic system.");
+
 		clienttasks.unregister(null,null,null);
+		// register to RHN Classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
+		
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",sm_clientUsername,sm_clientPassword,sm_clientOrg,null, null);
 		String expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1-1")) expectedStdout = "Unable to authenticate to legacy server.  See "+clienttasks.rhsmLogFile+" for more details.";	// changed by commit 20906b8d0a89071529ea41a91356daccb7a4bbf9
