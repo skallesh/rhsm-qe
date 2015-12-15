@@ -379,7 +379,9 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("consumer.json", "consumer json");
 			msgId = msgId.replace("vCPUs", "virtual CPU");
 			msgId = msgId.replace("UUID", "universally unique identifier");
+			msgId = msgId.replace("json", "JavaScript object notation");
 			msgId = msgId.replace("JSON", "JavaScript Object Notation");
+			msgId = msgId.replace("ActivationKey", "Activation Key");
 			msgId = msgId.replace("CDN", "Content Delivery Network");
 			msgId = msgId.replace("GMT[+-]HH:?MM", "Regular Expression");	// "offsets specified in the form of \"GMT[+-]HH:?MM\"."
 			msgId = msgId.replace("Multi-entitlement", "Multiple entitlement");
@@ -387,6 +389,9 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("Multi-Entitleable", "Capability for Multiple Entitlements");
 			msgId = msgId.replace("SKU", "Stock Keeping Unit");
 			msgId = msgId.replace("unmapped", "not mapped");	// unmapped fails on hunspell-1.3.3-3.fc20.x86_64
+			msgId = msgId.replace("Unmapped", "Not mapped");	// unmapped fails on hunspell-1.3.3-3.fc20.x86_64
+			msgId = msgId.replace("uber", "supreme example");	// unmapped fails on hunspell-1.3.3-3.fc20.x86_64
+			msgId = msgId.replace("orgs", "organizations");
 			msgId = msgId.replace("''", "'");	// remove the escaping single quotes
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
 			
