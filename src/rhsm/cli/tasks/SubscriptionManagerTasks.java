@@ -5828,7 +5828,7 @@ if (false) {
 				regexForSerialNumber = "[\\d,]*";
 			}
 			// END OF WORKAROUND
-						
+			
 			//Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
 			//		"Stderr from an attempt to unsubscribe from Entitlement Certificate serial "+serialNumber+" that was not found in "+entitlementCertDir);
 			//Assert.assertContainsMatch(result.getStdout(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
@@ -5838,9 +5838,18 @@ if (false) {
 			expectedStdoutMsg = "Unsuccessfully removed serial numbers:";	// changed by bug 874749
 			expectedStdoutMsg = "Serial numbers unsuccessfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
 			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
-			expectedStdoutMsg = "   Entitlement Certificate with serial number "+serialNumber+" could not be found.";
-			expectedStdoutMsg = "   Entitlement Certificate with serial number '"+serialNumber+"' could not be found.";
-			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
+			if (isPackageVersion("subscription-manager", ">=", "1.16.6-1")) {	// commit 0d80caacf5e9483d4f10424030d6a5b6f472ed88 1285004: Adds check for access to the required manager capabilty
+				//	[root@jsefler-6 ~]# subscription-manager remove --serial 8375727538260415740 --serial 2872676222813362535
+				//	Serial numbers unsuccessfully removed at the server:
+				//	   2872676222813362535
+				//	   8375727538260415740
+				String expectedStdoutRegex = expectedStdoutMsg+"(?:\\n   \\d+)*?\\n   "+serialNumber;
+				Assert.assertContainsMatch(result.getStdout(), expectedStdoutRegex);
+			} else {
+				expectedStdoutMsg = "   Entitlement Certificate with serial number "+serialNumber+" could not be found.";
+				expectedStdoutMsg = "   Entitlement Certificate with serial number '"+serialNumber+"' could not be found.";
+				Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
+			}
 			Assert.assertEquals(result.getStderr(),"", "Stderr from unsubscribe.");
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from unsubscribe when the serial's entitlement cert file ("+certFilePath+") does not exist.");	// changed by bug 873791
 			return false;
