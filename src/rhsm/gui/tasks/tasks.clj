@@ -173,7 +173,7 @@
   (checkforerror))
 
 
-(defn- register-system []
+(defn register-system []
   (let [result (ui click :register-system)
         showing (ui waittillguiexist :register-dialog)]
     [result showing]))
@@ -672,6 +672,23 @@
         command (str "subscription-manager attach "
                      (clojure.string/join (map syntax (vals (mapify all-prods all-pools)))))]
     (:stdout (run-command command))))
+
+(defn subscribe-random
+  "Subscribes to random pools, returning a vector of the pool ids, product names, and the output of attaching"
+  ([size]
+   (let [available-pools (random-from-pool (ctasks/list-available true) size)
+         rdcr (fn [coll p]
+                (let [curr-pools (:pools coll)
+                      curr-prods (:prods coll)
+                      new-coll (assoc coll :pools (conj curr-pools (:id p)))
+                      new-coll (assoc new-coll :prods (conj curr-prods (:productName p)))]
+                  new-coll))
+         {:keys [pools prods]} (reduce rdcr {:pools [] :prods []} available-pools)
+         command (str "subscription-manager attach " (clojure.string/join (map #(format "--pool=%s " %) pools)))]
+     (log/info "Attempting to attach " prods)
+     [pools prods (:stdout (run-command command))]))
+  ([]
+    (subscribe-random 10)))
 
 (defn unsubscribe_all
   "Unsubscribes from everything available"
