@@ -1,5 +1,6 @@
 package rhsm.cli.tests;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -67,17 +68,12 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
-	@Test(	description="given an available SKU, configure the system with custom facts dev_sku=SKU, register the system aconsume it and assert that a pool for the derivedProduct is generated and available only to its guests",
+	@Test(	description="given an available SKU, configure the system with custom facts dev_sku=SKU, register the system with auto-attach and verify several requirements of the attached entitlement",
 			groups={""},
 			dataProvider="getDevSkuData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyDevSku_Test(Object bugzilla, String devSku, String devPlatform) throws JSONException, Exception {
-		
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.8-1") &&
-			SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "!=", "0.9.51.13")) {
-			throw new SkipException("this candlepin version '"+servertasks.statusVersion+"' does not support DevSku functionality.");
-		}
 		
 		// get the JSON product representation of the devSku 
 		String resourcePath = "/products/"+devSku;
@@ -251,14 +247,6 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		// assert that the pool generated has attribute dev_pool: true
 		String devSkuDevPool = CandlepinTasks.getPoolAttributeValue(jsonDevSkuPool, "dev_pool");	// "true" or "false"
 		Assert.assertEquals(Boolean.valueOf(devSkuDevPool), Boolean.TRUE, "The dev_pool attribute on pool '"+devSkuProductSubscription.poolId+"' generated for devSku product '"+devSku+"'.");
-	
-		// assert we can remove the entitlement and re-auto-attach it
-		//TODO
-		
-		// assert that duplicate auto-attachments are dismissed
-		//TODO
-		
-		
 	}
 	
 	@DataProvider(name="getDevSkuData")
@@ -283,12 +271,73 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe verify the attached entitlement can be removed and re-auto-attached",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyDevSkuEntitlementCanBeRemovedAndReAttached_Test() throws JSONException, Exception {
+		
+		// choose a valid dev_sku to test with
+		String devSku=null, devPlatform=null;
+		for (List<Object> l : getRandomList(getDevSkuDataAsListOfLists())) {
+			// get the JSON product representation of the devSku 
+			String resourcePath = "/products/"+l.get(1);
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+			JSONObject jsonDevSkuProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, resourcePath));
+			if (!jsonDevSkuProduct.has("displayMessage")) {
+				// l: Object bugzilla, String devSku, String devPlatform
+				devSku = (String) l.get(1);
+				devPlatform = (String) l.get(2);
+				break;
+			}
+		}
+		if (devSku==null) throw new SkipException("Could not find a valid product to execute this test."); 
+		
+		// instrument the system facts to behave as a vagrant image
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.put("dev_sku",devSku);
+		factsMap.put("dev_platform",devPlatform);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		
+		// register with autosubscribe and force (to unregister anyone that is already registered)
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		
+		// get the autosubscribed productSubscription
+		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(productSubscriptions.size(), 1, "After registering (with autosubscribe) a system with dev_sku fact '"+devSku+"', only one product subscription should be consumed.");
+		ProductSubscription devSkuProductSubscription1 = productSubscriptions.get(0);
+		
+		// remove it
+		clienttasks.unsubscribe(null, devSkuProductSubscription1.serialNumber, null, null, null, null);
+		
+		// re-autosubscribe
+		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
+		
+		// get the re-autosubscribed entitlement
+		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(productSubscriptions.size(), 1, "After re-autosubscribing a system with dev_sku fact '"+devSku+"', only one product subscription should be consumed.");
+		ProductSubscription devSkuProductSubscription2 = productSubscriptions.get(0);
+		
+		// assert the re-autosubscribes product subscriptions match (except for pool id and serial)
+		Assert.assertEquals(ProductSubscription.formatDateString(devSkuProductSubscription2.endDate), ProductSubscription.formatDateString(devSkuProductSubscription1.endDate), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the same end date.");
+		Assert.assertEquals(devSkuProductSubscription2.serviceLevel, devSkuProductSubscription1.serviceLevel, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the same service level.");
+		Assert.assertEquals(devSkuProductSubscription2.quantityUsed, devSkuProductSubscription1.quantityUsed, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the quantity used.");
+		Assert.assertEquals(devSkuProductSubscription2.provides, devSkuProductSubscription1.provides, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription that provides the same products.");
+		Assert.assertTrue(!devSkuProductSubscription2.poolId.equals(devSkuProductSubscription1.poolId), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription from a different pool id.");
+		Assert.assertTrue(!devSkuProductSubscription2.serialNumber.equals(devSkuProductSubscription1.serialNumber), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with a different serial.");
+	}
 	
 	
+	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe and verify that and attempt to redundantly autosubscribed is handled gracefully",
+			groups={"debugTest"},
+			enabled=false)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyRedundantAutosubscribesForDevSkuEntitlementAreHandled_Test() throws JSONException, Exception {
+		// TODO
+	}
 	
 	// Candidates for an automated Test:
 	// TODO CDK Bugs
-	// 1297863 	to account for daylight savings events, dev_sku (CDK) entitlements should add Calendar.DATE units of expires_after to establish the subscription end date 
 	// 1295452 	After altering the dev_sku value in the facts file , two CDK subscriptions exists on the machine 
 	// 1294465 	Runtime Error null is observed while registering a client (cdk env) with a unknown product cert installed 
 	// 1292877 	Runtime Error null is encountered after a secondary auto-attach while consuming a CDK entitlement plus a Standard entitlement 
@@ -298,7 +347,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 	@BeforeClass(groups="setup")
-	public void setupBeforeClass() throws Exception {
+	public void setupBeforeClass() throws IOException, JSONException {
 		// restart candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "false");
@@ -310,7 +359,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	}
 
 	@AfterClass(groups="setup")
-	public void teardownAfterClass() throws Exception {
+	public void teardownAfterClass() throws JSONException, IOException {
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "true");
 			servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
@@ -319,6 +368,13 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
+	@BeforeClass(groups="setup")
+	public void verifyCandlepinVersionBeforeClass() {
+	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.8-1") &&
+		SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "!=", "0.9.51.13")) {
+			throw new SkipException("this candlepin version '"+servertasks.statusVersion+"' does not support DevSku functionality.");
+		}
+	}
 	
 	// Protected methods ***********************************************************************
 
