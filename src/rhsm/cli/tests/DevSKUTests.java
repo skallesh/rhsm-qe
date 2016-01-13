@@ -168,7 +168,9 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, resourcePath));
 			if (jsonProduct.has("displayMessage")) {
 				// indicative that: // Product with ID '69' could not be found.
-				Assert.assertEquals(jsonProduct.getString("displayMessage"),String.format("Product with ID '%s' could not be found.", installedProduct.productId));
+				String expectedDisplayMessage = String.format("Product with UUID '%s' could not be found.",installedProduct.productId);
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) expectedDisplayMessage = String.format("Product with ID '%s' could not be found.",installedProduct.productId);
+				Assert.assertEquals(jsonProduct.getString("displayMessage"),expectedDisplayMessage);
 				log.info("Installed Product ID '"+installedProduct.productId+"' ("+installedProduct.productName+") was not recognized by our candlepin server.  Therefore this product will not be entitled by the devSku.");
 			} else {
 				installedProductIds.add(installedProduct.productId);
