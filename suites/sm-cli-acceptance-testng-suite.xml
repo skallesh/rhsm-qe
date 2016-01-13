@@ -857,6 +857,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: DevSKU Tests">
+		<classes>
+			<class name="rhsm.cli.tests.DevSKUTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: SELinux Tests">
 		<classes>
 			<class name="rhsm.cli.tests.SELinuxTests" />
