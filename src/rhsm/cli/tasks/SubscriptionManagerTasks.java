@@ -6205,6 +6205,16 @@ if (false) {
 		return areAllRequiredTagsProvidedByProductCerts(contentNamespace.requiredTags, productCerts);
 	}
 	
+	public boolean isArchCoveredByArchesInContentNamespace(String arch, ContentNamespace contentNamespace) {
+		List<String> contentNamespaceArches = new ArrayList<String>();
+		contentNamespaceArches.addAll(Arrays.asList(contentNamespace.arches.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+		if (contentNamespaceArches.contains("x86")) {contentNamespaceArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+		if (contentNamespaceArches.contains("ALL")) return true;
+		if (contentNamespaceArches.contains("All")) return true;
+		if (contentNamespaceArches.contains("all")) return true;
+		return contentNamespaceArches.contains(arch);
+	}
+	
 	public boolean areAllRequiredTagsProvidedByProductCerts(String requiredTagsAsString, List<ProductCert> productCerts) {
 		// same some time...  if requiredTagsAsString is null, then effectively the requiredTags are provided by any list of product certs
 		if (requiredTagsAsString==null) return true;
