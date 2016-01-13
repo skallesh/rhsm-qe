@@ -2148,7 +2148,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "EnableAndDisableCertV3","blockedByBug-919700"}, enabled = false)
 	public void EnableAndDisableCertV3() throws JSONException,Exception {
 		String version=null;
-		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "false");
+		servertasks.updateConfFileParameter("candlepin.enable_cert_v3", "false");
 		servertasks.restartTomcat();
 		SubscriptionManagerCLITestScript.sleep( 1*60 * 1000);
 		clienttasks.restart_rhsmcertd(null, null, null);
@@ -2160,14 +2160,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if(version.equals("1.0")){
 				Assert.assertEquals(version, "1.0");
 			}else{
-				servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "true");
+				servertasks.updateConfFileParameter("candlepin.enable_cert_v3", "true");
 				servertasks.restartTomcat();
 				Assert.fail();
 			}
 
 		}
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "true");
+		servertasks.updateConfFileParameter("candlepin.enable_cert_v3", "true");
 		servertasks.restartTomcat();
 		clienttasks.restart_rhsmcertd(null, null, null);
 		SubscriptionManagerCLITestScript.sleep( 1*60*1000);

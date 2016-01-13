@@ -130,7 +130,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
 			//       I suggest manually setting this on hosted and asking calfanso to restart
-			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
+			servertasks.updateConfFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
 			servertasks.cleanOutCRL();
 			servertasks.deploy();
 			server.runCommandAndWait("df -h");server.runCommandAndWait("ls -Slh /var/log/tomcat6 | head");	// log candlepin's starting disk usage (for debugging information only)
@@ -180,99 +180,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			sm_serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
 		}
 		
-		log.info("Installed version of candlepin...");
-		JSONObject jsonStatus =null;
-		try {
-			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
-			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"","","/status"));
-			//The above call works against onpremises, but causes the following against stage
-			//201108251644:10.040 - INFO: SSH alternative to HTTP request: curl -k  --request GET https://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/status (rhsm.cli.tasks.CandlepinTasks.getResourceUsingRESTfulAPI)
-			//201108251644:10.049 - WARNING: Required credentials not available for BASIC <any realm>@rubyvip.web.stage.ext.phx2.redhat.com:80 (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
-			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
-			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*sm_serverAdminUsername*/null,/*sm_serverAdminPassword*/null,sm_serverUrl,"/status"));
-			if (jsonStatus!=null) {
-				servertasks.statusCapabilities.clear();
-				servertasks.statusRelease		= jsonStatus.getString("release");
-				servertasks.statusResult		= jsonStatus.getBoolean("result");
-				servertasks.statusVersion		= jsonStatus.getString("version");
-				servertasks.statusTimeUTC		= jsonStatus.getString("timeUTC");
-				try {
-				servertasks.statusStandalone	= jsonStatus.getBoolean("standalone");
-				} catch(Exception e){log.warning(e.getMessage());log.warning("You should upgrade your candlepin server!");}
-				for (int i=0; i<jsonStatus.getJSONArray("managerCapabilities").length(); i++) {	// not displayed on Katello; see Bug 1097875 - /katello/api/status neglects to report all of the fields that /candlepin/status reports
-					servertasks.statusCapabilities.add(jsonStatus.getJSONArray("managerCapabilities").getString(i));
-				}
-
-				//	# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
-				//	{
-				//	    "release": "1", 
-				//	    "result": true, 
-				//	    "standalone": true, 
-				//	    "timeUTC": "2012-03-08T18:58:07.688+0000", 
-				//	    "version": "0.5.24"
-				//	}
-				
-				//	# curl --stderr /dev/null --insecure --user ***:*** --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/status | python -m simplejson/tool
-				//	{
-				//	    "managerCapabilities": [
-				//	        "cores", 
-				//	        "ram", 
-				//	        "instance_multiplier", 
-				//	        "derived_product", 
-				//	        "cert_v3"
-				//	    ], 
-				//	    "release": "1", 
-				//	    "result": true, 
-				//	    "rulesSource": "DEFAULT", 
-				//	    "rulesVersion": "4.3", 
-				//	    "standalone": false, 
-				//	    "timeUTC": "2013-09-27T13:51:08.783+0000", 
-				//	    "version": "0.8.28"    <=== COULD ALSO BE "0.8.28.0" IF A HOT FIX WAS APPLIED
-				//	}
-				
-				//	# curl -k -u ***:*** https://katellosach.usersys.redhat.com:443/katello/api/status --stderr /dev/null | python -mjson/tool
-				//	{
-				//	    "release": "Katello",
-				//	    "result": true,
-				//	    "standalone": true,
-				//	    "timeUTC": "2014-01-29T09:04:14Z",
-				//	    "version": "1.4.15-1.el6"
-				//	}
-				
-				//	# curl --stderr /dev/null --insecure --request GET https://qe-subman-rhel65.usersys.redhat.com:443/rhsm/status | python -m simplejson/tool
-				//	{
-				//	    "managerCapabilities": [
-				//	        "cores", 
-				//	        "ram", 
-				//	        "instance_multiplier", 
-				//	        "derived_product", 
-				//	        "cert_v3", 
-				//	        "guest_limit", 
-				//	        "vcpu"
-				//	    ], 
-				//	    "release": "Katello", 
-				//	    "result": true, 
-				//	    "rulesSource": "DEFAULT", 
-				//	    "rulesVersion": "5.11", 
-				//	    "standalone": true, 
-				//	    "timeUTC": "2014-09-24T22:03:34Z", 
-				//	    "version": "1.5.0-30.el6sat"
-				//	}
-				
-				//TODO git candlepin version on hosted stage:
-				// curl -s	http://git.corp.redhat.com/cgit/puppet-cfg/modules/candlepin/plain/data/rpm-versions.yaml?h=stage | grep candlepin
-				// candlepin-it-jars: 0.5.26-1
-				// candlepin-jboss: 0.5.26-1.el6
-
-				log.info("Candlepin server '"+sm_serverHostname+"' is running: release="+servertasks.statusRelease+" version="+servertasks.statusVersion+" standalone="+servertasks.statusStandalone+" timeUTC="+servertasks.statusTimeUTC);
-				Assert.assertEquals(servertasks.statusResult, true,"Candlepin status result");
-				Assert.assertTrue(servertasks.statusRelease.matches("\\d+|Katello"), "Candlepin release '"+servertasks.statusRelease+"' matches d+|Katello");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
-				Assert.assertTrue(servertasks.statusVersion.matches("\\d+\\.\\d+\\.\\d+(\\.\\d+)?(-.+)?"), "Candlepin version '"+servertasks.statusVersion+"' matches d+\\.d+\\.d+(\\.d+)?(-.+)? (Note: optional fourth digits indicate a hot fix)");
-			}
-		} catch (Exception e) {
-			// Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
-			log.warning("Ecountered exception while getting the Candlepin server '"+sm_serverHostname+"' version from the /status api: "+e);
-		} 
+		// make a call to the candlepin status API and store the status field values for future reference
+		servertasks.initializeStatus(sm_serverUrl);
 		
 	    File file = new File("test-output/version.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
     	Writer output = new BufferedWriter(new FileWriter(file));
@@ -306,6 +215,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		isSetupBeforeSuiteComplete = true;
 	}
+	
 	
 	/**
 	 * @param ciMessage - the value of an environment variable called CI_MESSAGE
@@ -1039,12 +949,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (!CandlepinType.standalone.equals(sm_serverType)) return;
 		
 		// process all of the subscriptions belonging to ownerKey
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/subscriptions"));	// /subscriptions?include=id&include=product.id
 		List<String> secondarySubscriptionIdsDeleted = new ArrayList<String>();
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			JSONObject jsonProduct = (JSONObject) jsonSubscription.get("product");
 			String productId = jsonProduct.getString("id");
+			
+			// skip all skus not on the list of secondarySkusToDelete
+			if (!secondarySkusToDelete.contains(productId)) continue;
 			
 			// TODO check the startDate and keep future subscriptions
 			
@@ -1060,7 +973,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			secondarySubscriptionIdsDeleted.add(subscriptionId);
 		}
 		
-		// refresh the pools
+		// refresh the pools (only when some secondary subscriptions have been deleted) 
 		if (!secondarySubscriptionIdsDeleted.isEmpty()) {
 			JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,sm_clientOrg);
 			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);

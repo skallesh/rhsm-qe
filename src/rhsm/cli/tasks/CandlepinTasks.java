@@ -270,7 +270,7 @@ public class CandlepinTasks {
 			//path changes caused by commit cddba55bda2cc1b89821a80e6ff23694296f2079 Fix scripts dir for server build.    before candlepin-0.9.22-1
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
 			//started throwing... Stderr: tput: No value for $TERM and no -T specified
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TERM=xterm && export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TERM=xterm && export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTEDTEST=\"hostedtest\" && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
 		} else {
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/proxy && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
@@ -365,6 +365,102 @@ schema generation failed
 		 */
 	}
 	
+	public void initializeStatus(String serverUrl) throws IOException, JSONException {
+		log.info("Installed status of candlepin...");
+		JSONObject jsonStatus=null;
+		try {
+			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
+			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"","","/status"));
+			//The above call works against onpremises, but causes the following against stage
+			//201108251644:10.040 - INFO: SSH alternative to HTTP request: curl -k  --request GET https://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/status (rhsm.cli.tasks.CandlepinTasks.getResourceUsingRESTfulAPI)
+			//201108251644:10.049 - WARNING: Required credentials not available for BASIC <any realm>@rubyvip.web.stage.ext.phx2.redhat.com:80 (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
+			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
+			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*sm_serverAdminUsername*/null,/*sm_serverAdminPassword*/null,serverUrl,"/status"));
+			if (jsonStatus!=null) {
+				statusCapabilities.clear();
+				statusRelease		= jsonStatus.getString("release");
+				statusResult		= jsonStatus.getBoolean("result");
+				statusVersion		= jsonStatus.getString("version");
+				statusTimeUTC		= jsonStatus.getString("timeUTC");
+			try {
+				statusStandalone	= jsonStatus.getBoolean("standalone");
+			} catch(Exception e){log.warning(e.getMessage());log.warning("You should upgrade your candlepin server!");}
+				for (int i=0; i<jsonStatus.getJSONArray("managerCapabilities").length(); i++) {	// not displayed on Katello; see Bug 1097875 - /katello/api/status neglects to report all of the fields that /candlepin/status reports
+					statusCapabilities.add(jsonStatus.getJSONArray("managerCapabilities").getString(i));
+				}
+	
+				//	# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
+				//	{
+				//	    "release": "1", 
+				//	    "result": true, 
+				//	    "standalone": true, 
+				//	    "timeUTC": "2012-03-08T18:58:07.688+0000", 
+				//	    "version": "0.5.24"
+				//	}
+				
+				//	# curl --stderr /dev/null --insecure --user ***:*** --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/status | python -m simplejson/tool
+				//	{
+				//	    "managerCapabilities": [
+				//	        "cores", 
+				//	        "ram", 
+				//	        "instance_multiplier", 
+				//	        "derived_product", 
+				//	        "cert_v3"
+				//	    ], 
+				//	    "release": "1", 
+				//	    "result": true, 
+				//	    "rulesSource": "DEFAULT", 
+				//	    "rulesVersion": "4.3", 
+				//	    "standalone": false, 
+				//	    "timeUTC": "2013-09-27T13:51:08.783+0000", 
+				//	    "version": "0.8.28"    <=== COULD ALSO BE "0.8.28.0" IF A HOT FIX WAS APPLIED
+				//	}
+				
+				//	# curl -k -u ***:*** https://katellosach.usersys.redhat.com:443/katello/api/status --stderr /dev/null | python -mjson/tool
+				//	{
+				//	    "release": "Katello",
+				//	    "result": true,
+				//	    "standalone": true,
+				//	    "timeUTC": "2014-01-29T09:04:14Z",
+				//	    "version": "1.4.15-1.el6"
+				//	}
+				
+				//	# curl --stderr /dev/null --insecure --request GET https://qe-subman-rhel65.usersys.redhat.com:443/rhsm/status | python -m simplejson/tool
+				//	{
+				//	    "managerCapabilities": [
+				//	        "cores", 
+				//	        "ram", 
+				//	        "instance_multiplier", 
+				//	        "derived_product", 
+				//	        "cert_v3", 
+				//	        "guest_limit", 
+				//	        "vcpu"
+				//	    ], 
+				//	    "release": "Katello", 
+				//	    "result": true, 
+				//	    "rulesSource": "DEFAULT", 
+				//	    "rulesVersion": "5.11", 
+				//	    "standalone": true, 
+				//	    "timeUTC": "2014-09-24T22:03:34Z", 
+				//	    "version": "1.5.0-30.el6sat"
+				//	}
+				
+				//TODO git candlepin version on hosted stage:
+				// curl -s	http://git.corp.redhat.com/cgit/puppet-cfg/modules/candlepin/plain/data/rpm-versions.yaml?h=stage | grep candlepin
+				// candlepin-it-jars: 0.5.26-1
+				// candlepin-jboss: 0.5.26-1.el6
+	
+				log.info("Candlepin server '"+serverUrl+"' is running: release="+statusRelease+" version="+statusVersion+" standalone="+statusStandalone+" timeUTC="+statusTimeUTC);
+				Assert.assertEquals(statusResult, true,"Candlepin status result");
+				Assert.assertTrue(statusRelease.matches("\\d+|Katello"), "Candlepin release '"+statusRelease+"' matches d+|Katello");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
+				Assert.assertTrue(statusVersion.matches("\\d+\\.\\d+\\.\\d+(\\.\\d+)?(-.+)?"), "Candlepin version '"+statusVersion+"' matches d+\\.d+\\.d+(\\.d+)?(-.+)? (Note: optional fourth digits indicate a hot fix)");
+			}
+		} catch (Exception e) {
+			// Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
+			log.warning("Ecountered exception while getting the Candlepin server '"+serverUrl+"' version from the /status api: "+e);
+		}
+	}
+	
 	public void reportAPI() throws IOException {
 		
 		/*
@@ -383,11 +479,12 @@ schema generation failed
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then bundle exec buildr candlepin:apicrawl; fi;", Integer.valueOf(0));	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e server/target/candlepin_methods.json ]; then bundle exec buildr clean candlepin:server:apicrawl; fi;", Integer.valueOf(0));	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e server/target/candlepin_methods.json ]; then bundle exec buildr clean candlepin:server:apicrawl; fi;", Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e server/target/candlepin_methods.json ]; then bundle exec buildr clean candlepin:server:apicrawl test=no; fi;", Integer.valueOf(0));
 		log.info("Following is a report of all the candlepin API urls:");
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());		// 9/18/2012 the path appears to have moved
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat server/target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat server/target/candlepin_methods.json | python -m json/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
 	}
 	
 	@Deprecated
@@ -475,14 +572,27 @@ schema generation failed
 	}
 	
 	/**
-	 * Note: Updating the candlepin server conf files requires a restart of the tomact server.
+	 * Update a configuration in the candlepin server conf file (/etc/candlepin/candlepin.conf)<br>
+	 * Note: Updates requires a restart of the tomcat server.
 	 * @param parameter
-	 * @param value
+	 * @param newValue
 	 * 
 	 */
-	public void updateConfigFileParameter(String parameter, String value){
-		Assert.assertEquals(RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value),
-				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
+	public void updateConfFileParameter(String parameter, String newValue){
+		Assert.assertEquals(
+			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+newValue),0,
+			"Updated '"+defaultConfigFile+"' parameter '"+parameter+"' to value: " + newValue);
+	}
+	public void commentConfFileParameter(String parameter){
+		Assert.assertEquals(
+			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=", "#"+parameter+"="),0,
+			"Commented '"+defaultConfigFile+"' parameter: "+parameter);
+	}
+	
+	public void uncommentConfFileParameter(String parameter){
+		Assert.assertEquals(
+			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^#\\s*"+parameter+"\\s*=", parameter+"="),0,
+			"Uncommented '"+defaultConfigFile+"' parameter: "+parameter);
 	}
 	
 	static public String getResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
@@ -3138,6 +3248,17 @@ schema generation failed
 	 * @throws Exception
 	 */
 	public static String getPoolAttributeValue (JSONObject jsonPool, String attributeName) throws JSONException, Exception {
+		return getResourceAttributeValue(jsonPool,attributeName);
+	}
+	
+	/**
+	 * @param jsonResource
+	 * @param attributeName
+	 * @return the String "value" of the pool's attribute with the given "name".  If not found, then null is returned.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static String getResourceAttributeValue (JSONObject jsonResource, String attributeName) throws JSONException, Exception {
 		String attributeValue = null;	// indicates that the pool does NOT have the "attributeName" attribute
 
 		// get the pool for the authenticator
@@ -3215,7 +3336,7 @@ schema generation failed
 
 		//{
 	
-		JSONArray jsonAttributes = jsonPool.getJSONArray("attributes");
+		JSONArray jsonAttributes = jsonResource.getJSONArray("attributes");
 		// loop through the attributes of this pool looking for the attributeName attribute
 		for (int j = 0; j < jsonAttributes.length(); j++) {
 			JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
@@ -3316,21 +3437,35 @@ schema generation failed
 
 	
 	public void restartTomcat() {
+		// what version of tomcat is installed?
+		String tomcat = "tomcat";
+		if (sshCommandRunner.runCommandAndWait("rpm -q tomcat6").getExitCode().equals(Integer.valueOf(0))) tomcat = "tomcat6";
 		
-		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
-		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of tomcat6 running...");
-		sshCommandRunner.runCommandAndWait("df -h");
+//		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
+//		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep "+tomcat+"").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of "+tomcat+" running...");
+//		sshCommandRunner.runCommandAndWait("df -h");
 		
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
 		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart tomcat6.service && systemctl is-active tomcat6.service", Integer.valueOf(0), "^active$", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart "+tomcat+".service && systemctl is-active "+tomcat+".service", Integer.valueOf(0), "^active$", null);
 		} else {	// the old Fedora way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service "+tomcat+" restart",Integer.valueOf(0),"^Starting "+tomcat+": +\\[  OK  \\]$",null);
 		}
+		sleep(10*1000);	// give tomcat a chance to restart
+
 		
-		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
-		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of tomcat6 running...");
-		sshCommandRunner.runCommandAndWait("df -h");
+//		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
+//		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep "+tomcat+"").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of "+tomcat+" running...");
+//		sshCommandRunner.runCommandAndWait("df -h");
+	}
+	
+	public static void sleep(long milliseconds) {
+		log.info("Sleeping for "+milliseconds+" milliseconds...");
+		try {
+			Thread.sleep(milliseconds);
+		} catch (InterruptedException e) {
+			log.info("Sleep interrupted!");
+		}
 	}
 	
 	public List<RevokedCert> getCurrentlyRevokedCerts() {

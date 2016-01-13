@@ -87,7 +87,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = false)
 	public void DisableCertV3ForRamBasedSubscription() throws JSONException,Exception {
 		
-		servertasks.updateConfigFileParameter("candlepin.enable_cert_v3", "false");
+		servertasks.updateConfFileParameter("candlepin.enable_cert_v3", "false");
 		servertasks.restartTomcat();
 		SubscriptionManagerCLITestScript.sleep( 1*60 * 1000);
 		clienttasks.restart_rhsmcertd(null, null, null);
