@@ -5061,8 +5061,6 @@ if (false) {
 	
 	/**
 	 * subscribe WITHOUT asserting results
-	 * @param servicelevel TODO
-	 * @param file TODO
 	 */
 	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 		
@@ -5090,8 +5088,6 @@ if (false) {
 
 	/**
 	 * subscribe WITHOUT asserting results.
-	 * @param servicelevel TODO
-	 * @param file TODO
 	 */
 	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 		
@@ -5106,8 +5102,6 @@ if (false) {
 	
 	/**
 	 * subscribe and assert all results are successful
-	 * @param servicelevel TODO
-	 * @param file TODO
 	 */
 	public SSHCommandResult subscribe(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 
@@ -5184,8 +5178,6 @@ if (false) {
 	
 	/**
 	 * subscribe and assert all results are successful
-	 * @param servicelevel TODO
-	 * @param file TODO
 	 */
 	public SSHCommandResult subscribe(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 
@@ -5220,7 +5212,6 @@ if (false) {
 	
 	/**
 	 * subscribe to the given SubscriptionPool (assumes pool came from the list of available pools)
-	 * @param pool
 	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
 	 */
 	public File subscribeToSubscriptionPool(SubscriptionPool pool, String quantity, String authenticator, String password, String serverUrl)  {
@@ -8588,7 +8579,7 @@ if (false) {
 	/**
 	 * Compare the version of an installed package to a given version. For example...
 	 * @param packageName - "subscription-manager"
-	 * @param comparator - valid values: ">", "<", ">=", "<=", "=="
+	 * @param comparator - valid values: ">", "<", ">=", "<=", "=="  (for not equals functionality, simply ! the return value of "==")
 	 * @param version - "1.10.14-7"
 	 * @return true or false (null is returned when the packageName is not installed)
 	 * 
@@ -8624,6 +8615,12 @@ if (false) {
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <  1.10.14-7.5 is true
 	 */
 	public Boolean isPackageVersion(String packageName, String comparator, String version) {
+		
+		if (!Arrays.asList(">", "<", ">=", "<=", "==").contains(comparator)) {
+			log.warning("Do not know how to use comparator '"+comparator+"'.");
+			return null;
+		}
+		
 		// example package versions:
 		//	libXau-1.0.8-2.1.el7.x86_64
 		//	subscription-manager-1.10.14-7.git.0.798ba5c.el7.x86_64
@@ -8653,7 +8650,18 @@ if (false) {
 	}
 	public Map<String,String> installedPackageVersionMap = new HashMap<String,String>();	// contains key=python-rhsm, value=python-rhsm-0.98.9-1.el5
 	
+	/**
+	 * @param version1
+	 * @param comparator - valid values: ">", "<", ">=", "<=", "=="  (for not equals functionality, simply ! the return value of "==")
+	 * @param version2
+	 * @return
+	 */
 	public static Boolean isVersion(String version1, String comparator, String version2) {
+		if (!Arrays.asList(">", "<", ">=", "<=", "==").contains(comparator)) {
+			log.warning("Do not know how to use comparator '"+comparator+"'.");
+			return null;
+		}
+		
 		String s1 = version1;
 		String s2 = version2;
 		
