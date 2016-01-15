@@ -570,6 +570,8 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			servertasks.restartTomcat();
 			servertasks.initializeStatus(sm_serverUrl);
 		}
+		
+		clienttasks.deleteFactsFileWithOverridingValues();	// to get rid of the dev_sku settings
 	}
 
 	@BeforeClass(groups="setup")
