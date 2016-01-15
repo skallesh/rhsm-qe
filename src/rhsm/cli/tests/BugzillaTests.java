@@ -1816,7 +1816,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, false, null, null, null);
 
 		File expectCertFile = new File(System.getProperty("automation.dir",
-				null) + "/expiredcerts/Expiredcert.pem");
+				null) + "/certs/Expiredcert.pem");
 		RemoteFileTasks.putFile(client.getConnection(),
 				expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate_("/root/Expiredcert.pem");
@@ -2685,7 +2685,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		File expectCertFile = new File(System.getProperty("automation.dir",
-				null) + "/expiredcerts/CertV3.pem");
+				null) + "/certs/CertV3.pem");
 		RemoteFileTasks.putFile(client.getConnection(),
 				expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate_("/root/CertV3.pem");
@@ -3186,7 +3186,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, false, null, null, null);
 
 		File expectCertFile = new File(System.getProperty("automation.dir",
-				null) + "/expiredcerts/Expiredcert.pem");
+				null) + "/certs/Expiredcert.pem");
 		RemoteFileTasks.putFile(client.getConnection(),
 				expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate("/root/Expiredcert.pem");
@@ -3763,7 +3763,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					"No subscriptions are available for testing");
 		}else{
 			File expectCertFile = new File(System.getProperty("automation.dir",
-					null) + "/expiredcerts/Expiredcert.pem");
+					null) + "/certs/Expiredcert.pem");
 			RemoteFileTasks.putFile(client.getConnection(),
 					expectCertFile.toString(), "/root/", "0755");
 			clienttasks.importCertificate_("/root/Expiredcert.pem");

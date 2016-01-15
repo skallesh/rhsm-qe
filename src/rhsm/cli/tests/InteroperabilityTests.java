@@ -85,7 +85,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,false,null,null, null);
 		
 		// import an expired certificate 
-		File expiredCertFile = new File(System.getProperty("automation.dir", null)+"/expiredcerts/Expiredcert.pem");
+		File expiredCertFile = new File(System.getProperty("automation.dir", null)+"/certs/Expiredcert.pem");
 		RemoteFileTasks.putFile(client.getConnection(), expiredCertFile.getPath(), "/tmp/Expiredcert.pem", "0644");
 		clienttasks.importCertificate("/tmp/Expiredcert.pem");
 		EntitlementCert expiredEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(new File("/tmp/Expiredcert.pem"));
