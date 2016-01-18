@@ -2612,6 +2612,30 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1286842");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-ce-1-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-ce-1-beta-debuginfo")) {
+				// Bug 1299620 - rhel-x86_64-server-6-cf-ce-1-beta channel maps are absent from channel-cert-mapping.txt 
+				bugIds.add("1299620");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-se-1-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-se-1-beta-debuginfo")) {
+				// Bug 1299621 - rhel-x86_64-server-6-cf-se-1-beta channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1299621");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-tools-1-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-tools-1-beta-debuginfo")) {
+				// Bug 1299623 - rhel-x86_64-server-6-cf-tools-1-beta channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1299623");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-6-beta-debuginfo")) {
+				// Bug 1299624 - rhel-x86_64-rhev-mgmt-agent-6-beta channel maps are absent from channel-cert-mapping.txt 
+				bugIds.add("1299624");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
