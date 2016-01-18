@@ -29,6 +29,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 import rhsm.base.CandlepinType;
+import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
@@ -328,6 +329,11 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		// register with autosubscribe and force (to unregister anyone that is already registered)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
 		
+		// are we fully compliant? complianceStatus=="valid"
+		String complianceStatus;
+		//complianceStatus = clienttasks.getFactValue("system.entitlements_valid");
+		complianceStatus = CandlepinTasks.getConsumerComplianceStatus(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentConsumerId());
+		
 		// get the autosubscribed productSubscription
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertEquals(productSubscriptions.size(), 1, "After registering (with autosubscribe) a system with dev_sku fact '"+devSku+"', only one product subscription should be consumed.");
@@ -341,13 +347,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(productSubscriptions.size(), 1, "After re-autosubscribing a system with dev_sku fact '"+devSku+"', only one product subscription should be consumed.");
 		ProductSubscription devSkuProductSubscription2 = productSubscriptions.get(0);
 		
-		// assert the re-autosubscribes product subscriptions match (except for pool id and serial since the pool must go when removed)
+		// assert the re-autosubscribes product subscriptions match (except for pool id and serial since the pool must go when a new autosubscribe is required)
 		Assert.assertEquals(ProductSubscription.formatDateString(devSkuProductSubscription2.endDate), ProductSubscription.formatDateString(devSkuProductSubscription1.endDate), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the same end date.");
 		Assert.assertEquals(devSkuProductSubscription2.serviceLevel, devSkuProductSubscription1.serviceLevel, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the same service level.");
 		Assert.assertEquals(devSkuProductSubscription2.quantityUsed, devSkuProductSubscription1.quantityUsed, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the quantity used.");
 		Assert.assertEquals(devSkuProductSubscription2.provides, devSkuProductSubscription1.provides, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription that provides the same products.");
-		Assert.assertTrue(!devSkuProductSubscription2.poolId.equals(devSkuProductSubscription1.poolId), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription from a different pool id.");
-		Assert.assertTrue(!devSkuProductSubscription2.serialNumber.equals(devSkuProductSubscription1.serialNumber), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with a different serial.");
+		if (complianceStatus.equalsIgnoreCase("valid")) {
+			Assert.assertTrue(devSkuProductSubscription2.poolId.equals(devSkuProductSubscription1.poolId), "When system is already compliant, a dev_sku enabled system that has been re-autosubscribed will not be granted another product subscription from a different pool id (should not be needed since system is already green).");
+			Assert.assertTrue(devSkuProductSubscription2.serialNumber.equals(devSkuProductSubscription1.serialNumber), "When system is already compliant, a dev_sku enabled system that has been re-autosubscribed will not be granted another product subscription with a different serial (should not be needed since system is already green).");
+		} else {
+			Assert.assertTrue(!devSkuProductSubscription2.poolId.equals(devSkuProductSubscription1.poolId), "When system is not already compliant, dev_sku enabled system that has been re-autosubscribed is granted another product subscription from a different pool id.");
+			Assert.assertTrue(!devSkuProductSubscription2.serialNumber.equals(devSkuProductSubscription1.serialNumber), "When system is not already compliant, a dev_sku enabled system that has been re-autosubscribed is granted another product subscription with a different serial.");
+		}
 	}
 	
 	
