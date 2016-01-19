@@ -627,16 +627,14 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getDevSkuDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
-//		if (sm_serverType.equals(CandlepinType.standalone)) {
-			// Object bugzilla, String devSku, String devPlatform
-			ll.add(Arrays.asList(new Object[]{null,	"dev-mkt-product"/*Development SKU Product*/, "vagrant"}));	
-			ll.add(Arrays.asList(new Object[]{null,	"dev-sku-product"/*Development SKU Product*/, "vagrant"}));	
-			ll.add(Arrays.asList(new Object[]{null,	"MCT3295"/*Internal Shadow Sku CDK*/, "vagrant"}));
-			ll.add(Arrays.asList(new Object[]{null,	"awesomeos-everything"/*Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390*/, "awesomeos-platform"}));	// chose because since it service_level is not set
-			
-			
-//		}
-
+		// This is a list of valid and invalid SKUs (depending on execution against stage env or onpremise candlepin with TESTDATA deployed)
+		// The invalid SKUs are employed to assert graceful negative testing.
+		// Object bugzilla, String devSku, String devPlatform
+		ll.add(Arrays.asList(new Object[]{null,	"dev-mkt-product"/*Development SKU Product*/, "dev-platform"}));	
+		ll.add(Arrays.asList(new Object[]{null,	"dev-sku-product"/*Development SKU Product*/, "dev-platform"}));	
+		ll.add(Arrays.asList(new Object[]{null,	"MCT3295"/*Internal Shadow Sku CDK*/, "vagrant"}));
+		ll.add(Arrays.asList(new Object[]{null,	"awesomeos-everything"/*Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390*/, "awesomeos-platform"}));	// chose because since it service_level is not set
+		
 		return ll;
 	}
 	
