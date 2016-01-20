@@ -370,6 +370,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: virt-what",
 					"manual: yum >= 3.2.19-15"
 			}));
+			
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.8-1")) {	// commit 88f7183a7f0ab2955995e238cc221af5f4eadc3e	1282961: Update yum version to current RHEL 6.8 one
+				expectedRequiresList.remove("manual: yum >= 3.2.19-15");
+				expectedRequiresList.add("manual: yum >= 3.2.29-73");
+			}
+			
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.16.0-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.16.0");		// RHEL6.8	// commit c52630da1d45aee68c122d39fe92607e9a38ff8e
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.14.3-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.14.2");		// RHEL6.7	// commit 26b7eb90519c5d7f696869344610d49c42dfd918
@@ -409,6 +415,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.remove("manual: pygobject2");
 				expectedRequiresList.add("manual: gobject-introspection");
 				expectedRequiresList.add("manual: pygobject3-base");
+			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.8-1")) {	// commit 88f7183a7f0ab2955995e238cc221af5f4eadc3e	1282961: Update yum version to current RHEL 6.8 one
+				expectedRequiresList.remove("manual: yum >= 3.2.19-15");
+				expectedRequiresList.add("manual: yum >= 3.2.29-73");
 			}
 			
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.15.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.15.0");		// RHEL7.2	// commit a2a4794d9eb7b8d74b0eb4bd27d0b6974b87d716
