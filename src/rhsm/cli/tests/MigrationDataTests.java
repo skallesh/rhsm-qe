@@ -2636,6 +2636,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1299624");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-7") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta-debuginfo")) {
+				// Bug 1300848 - RHN channels to product cert maps for "rhel-x86_64-rhev-mgmt-agent-7*" disappeared
+				bugIds.add("1300848");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
