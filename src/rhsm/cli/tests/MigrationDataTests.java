@@ -423,7 +423,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1299631","blockedByBug-1241221"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
@@ -1062,7 +1062,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1299631","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1161,7 +1161,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="Verify that the expected RHN RHEL channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1299631","blockedByBug-1222712","blockedByBug-1241221"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221"},
 			dataProvider="RhnRhelChannelsFromChannelMappingData",
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
