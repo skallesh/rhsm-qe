@@ -248,7 +248,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 
 	@Test(	description="subscription-manager: use config module to simultaneously remove multiple rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
-			groups={"blockedByBug-735695","blockedByBug-927350"},
+			groups={"blockedByBug-735695","blockedByBug-927350","blockedByBug-1297337"},
 			//dependsOnMethods={"ConfigGetSectionNameValueAndVerifyDefault_Test"}, alwaysRun=true,
 			priority=50,
 			enabled=true)
@@ -414,7 +414,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="verify the default configurations for server hostname:port/prefix after running config removal",
-			groups={"blockedByBug-988085","blockedByBug-1223860","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
+			groups={"blockedByBug-988085","blockedByBug-1223860","blockedByBug-1297337","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test() {
@@ -538,7 +538,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	
 	protected File rhsmConfigBackupFile = new File("/tmp/rhsm.conf.backup");
 	// hard-code defaults
-	protected final Map<String,String> defaultConfFileParameterMap = new HashMap<String,String>(){
+	protected Map<String,String> defaultConfFileParameterMap = new HashMap<String,String>(){
 		// [root@jsefler-os6 ~]# cat /etc/rhsm/rhsm.conf
 		// # Red Hat Subscription Manager Configuration File:
 		//
@@ -624,6 +624,16 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
+	@BeforeClass(groups={"setup"})
+	public void updateDefaultConfFileParameterMapBeforeClass() {
+		if (client==null) return;
+		
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.16.6-1")) {	// python-rhsm commit be526f9b501b7621e8ed89844f4c6172ef3273c2	// 1297337: change server strings to new default
+			// Bug 1297337 - The new default server url "subscription.rhsm.redhat.com" is not provided after clicking "default" button on gui
+			// Bug 1278472 - [RFE] change default registration url to subscription.rhsm.redhat.com
+			defaultConfFileParameterMap.put("server.hostname","subscription.rhsm.redhat.com");
+		}
+	}
 	
 	
 	// Data Providers ***********************************************************************
