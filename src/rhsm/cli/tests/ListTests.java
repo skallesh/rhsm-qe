@@ -851,7 +851,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subcription manager list --available with exact --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: exact match means no wildcards and is case insensitive.",
-			groups={"blockedByBug-1146125", "AcceptanceTests"},
+			groups={"blockedByBug-1146125","AcceptanceTests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithExactMatches_Test() throws JSONException, Exception {
@@ -864,6 +864,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 ///*debugTesting*/ matchInstalled=false; all=false; noOverlap=false;
+		log.info("Testing with all="+all);
+		log.info("Testing with matchInstalled="+matchInstalled);
+		log.info("Testing with noOverlap="+noOverlap);
 		
 		// register if necessary
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
@@ -877,6 +880,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// randomly choose an available pool
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
 ///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", "RH0802940", availableSubscriptionPools);
+		log.info("Testing with randomAvailablePool="+randomAvailablePool);
 		
 		// Test 1: test exact --matches on Subscription Name:
 		matchesString = randomAvailablePool.subscriptionName;
@@ -942,7 +946,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 	}
 	@Test(	description="subscription-manager: subcription manager list --available with wildcard --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
-			groups={"blockedByBug-1146125", "AcceptanceTests"},
+			groups={"blockedByBug-1146125","blockedByBug-1301696","AcceptanceTests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithWildcardMatches_Test() throws JSONException, Exception {
@@ -954,6 +958,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Boolean all = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+///*debugTesting*/ all=true; noOverlap=true; matchInstalled=false;	//  Bug 1301696 - getting unexpected hits on TESTDATA from subscription-manager list --available --matches=*os*
+		log.info("Testing with all="+all);
+		log.info("Testing with matchInstalled="+matchInstalled);
+		log.info("Testing with noOverlap="+noOverlap);
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
@@ -965,6 +973,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// randomly choose an available pool
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
+///*debugTesting*/ randomAvailablePool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-ostree", availableSubscriptionPools);	//  Bug 1301696 - getting unexpected hits on TESTDATA from subscription-manager list --available --matches=*os*
+		log.info("Testing with randomAvailablePool="+randomAvailablePool);
 		
 		//	+-------------------------------------------+
 		//	Available Subscriptions
@@ -1141,6 +1151,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// assert that all of the expectedSubscriptionPoolMatches is identical to the actualSubscriptionPoolsMatches
+		for (SubscriptionPool expectedSubscriptionPool : expectedSubscriptionPoolMatches) {
+			if (!actualSubscriptionPoolsMatches.contains(expectedSubscriptionPool)) {
+				log.warning("The actual list of subscription pools does NOT include this expected pool that matches '"+matchesString+"': "+expectedSubscriptionPool);
+			}
+		}
+		for (SubscriptionPool actualSubscriptionPool : actualSubscriptionPoolsMatches) {
+			if (!expectedSubscriptionPoolMatches.contains(actualSubscriptionPool)) {
+				log.warning("The actual list of subscription pools includes this extraneous pool that should not match '"+matchesString+"': "+actualSubscriptionPool);
+			}
+		}
 		Assert.assertTrue(expectedSubscriptionPoolMatches.containsAll(actualSubscriptionPoolsMatches)&&actualSubscriptionPoolsMatches.containsAll(expectedSubscriptionPoolMatches), "All of the expected available pools with an exact match (ignoring case) on '"+matchesString+"' were returned with the list --available --matches option.");
 
 	}
@@ -1171,6 +1191,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// randomly choose one of the consumed Product Subscriptions
 		ProductSubscription randomConsumedProductSubscription = getRandomListItem(consumedProductSubscriptions);
 ///*debugTesting*/randomConsumedProductSubscription=ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", "exempt-sla-product-sku", consumedProductSubscriptions);
+		log.info("Testing with randomConsumedProductSubscription="+randomConsumedProductSubscription);
+		
 		//	+-------------------------------------------+
 		//	   Consumed Subscriptions
 		//	+-------------------------------------------+
@@ -1282,7 +1304,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 ///*debugTesting 1204311*/randomConsumedProductSubscription=ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c4816e8014c48184d1b1f30", consumedProductSubscriptions);	// SKU: awesomeos-server-basic-dc; System Type: Virtual; Subscription Type: Standard (Temporary)
 ///*debugTesting 1204311*/randomConsumedProductSubscription=ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c4816e8014c48184cec1f16", consumedProductSubscriptions);	// SKU: awesomeos-server-basic-dc; System Type: Physical; Subscription Type: Standard
 ///*debugTesting 1204311*/randomConsumedProductSubscription=ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c4816e8014c48180b350dd0", consumedProductSubscriptions);	// SKU: awesomeos-virt-unlmtd-phys; System Type: Virtual; Subscription Type: Standard; Provides Awesome OS Server Bits
-
+		log.info("Testing with randomConsumedProductSubscription="+randomConsumedProductSubscription);
+		
 		//	+-------------------------------------------+
 		//	   Consumed Subscriptions
 		//	+-------------------------------------------+
@@ -2130,7 +2153,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	// NOTE: This method is not necessary, but adds a little more spice to ListAvailableWithFutureOnDate_Test
-//debugTest	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
+/*debugTest*/	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
 	public void createFutureSubscriptionPoolBeforeClass() throws Exception {
 		// don't bother attempting to create a subscription unless onPremises
 		//if (!sm_serverType.equals(CandlepinType.standalone)) return;
@@ -2153,7 +2176,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-//debugTest	@BeforeClass(groups="setup")
+/*debugTest*/	@BeforeClass(groups="setup")
 	public void createSubscriptionsWithVariationsOnProductAttributeSockets() throws JSONException, Exception {
 		String name,productId, resourcePath;
 		List<String> providedProductIds = new ArrayList<String>();
