@@ -1185,17 +1185,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(clienttasks.subscribe(null,null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity),null,null,null, null, null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to exactly consume the remaining pool quantity should succeed.");
 		
 		// start rolling back the subscribes
+		clienttasks.clean(null,null,null);
 		
 		// restore consumer1, unsubscribe, and assert remaining quantities
-		clienttasks.clean(null,null,null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer1Id, null, null, null, (String)null, null, null, null, false, false, null, null, null);
 		Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()),"SubscriptionPool '"+consumer1Pool.poolId+"' should NOT be available (because consumer1 is already subscribed to it).");
 		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null, null);
 		consumer1Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
 		Assert.assertEquals(consumer1Pool.quantity, String.valueOf(totalPoolQuantity-consumer2Quantity),"The pool quantity available to consumer1 has incremented by the quantity consumer1 consumed.");
+		clienttasks.unregister(null,null,null);
 		
 		// restore consumer2, unsubscribe, and assert remaining quantities
-		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer2Id, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer2Id, null, null, null, (String)null, null, null, null, false, false, null, null, null);
 		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		//Assert.assertNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should NOT be available (because consumer2 is already subscribed to it).");
 		Assert.assertNotNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should be available even though consumer2 is already subscribed to it because it is multi-entitleable.");
@@ -1203,6 +1204,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null, null);
 		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
 		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity),"The pool quantity available to consumer2 has been restored to its original total quantity");
+		clienttasks.unregister(null,null,null);
 	}
 	
 	
