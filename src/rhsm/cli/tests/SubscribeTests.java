@@ -585,7 +585,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			// The WORKAROUND is to tell subscription-manager to clean before registering with the consumerId
 			clienttasks.clean(null, null, null);
 		}
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, null, null, (String)null, null, null, null, /* --force Boolean.TRUE was okay prior to subscription-manager-1.16.2-1 commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99 and 6bd0448c85c10d8a58cae10372f0d4aa323d5c27 changing to */ Boolean.FALSE, false, null, null, null);
 		clienttasks.restart_rhsmcertd(minutes, null, true); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when registered..."; // https://tcms.engineering.redhat.com/case/41692/
