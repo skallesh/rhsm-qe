@@ -2625,7 +2625,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			}
 			
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-tools-1-beta") ||
-				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-tools-1-beta-debuginfo")) {
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-tools-1-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-i386-server-6-cf-tools-1-beta") ||
+				rhnAvailableChildChannel.equals("rhel-i386-server-6-cf-tools-1-beta-debuginfo")) {
 				// Bug 1299623 - rhel-x86_64-server-6-cf-tools-1-beta channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1299623");
 			}
