@@ -789,6 +789,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 		// create a ProductCert corresponding to the productid file
 		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
+		log.info("Actual product cert from CDN '"+rhelRepoUrlToProductId+"': "+productIdCert);
 		
 		// assert the expected productIdCert release version
 		String expectedRelease = release;
@@ -899,6 +900,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			
 			if (release.equals("6.2")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
 			if (release.equals("6.4")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
+			if (release.equals("6.6") && clienttasks.variant.matches("Client|Server") && clienttasks.arch.matches("i\\d86")) bugIds.add("1302409"); 	// Bug 1302409 - cdn.redhat.com has the wrong productId version for rhel 6.6
 			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1261163"); 	// Bug 1261163 -  uncertain of expected release listing on rhel72 arm system
 			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("ppc64le")) bugIds.add("1261171"); 	// Bug 1261171 - uncertain of expected release listing on rhel72 ppc64le system
 			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7.1")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
