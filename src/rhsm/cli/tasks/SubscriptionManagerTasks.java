@@ -8543,6 +8543,13 @@ if (false) {
 					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1302364"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1302364 - Unable to verify server's identity: (104, 'Connection reset by peer')
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
 			// END OF WORKAROUND
 			
 			
