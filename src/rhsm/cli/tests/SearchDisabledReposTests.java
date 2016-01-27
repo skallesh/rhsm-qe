@@ -264,6 +264,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// PLATFORM=RedHatEnterpriseLinux6-Server-s390x
+		//	[root@ibm-z10-41 ~]# subscription-manager repos --list | egrep "rhel-6-for-system-z-(|optional-|eus-|beta-|htb-)rpms"
+		//	Repo ID:   rhel-6-for-system-z-rpms
+		//	Repo ID:   rhel-6-for-system-z-optional-rpms
+		//	Repo ID:   rhel-6-for-system-z-beta-rpms
 		if (clienttasks.redhatReleaseX.equals("6") && clienttasks.variant.equals("Server") && (clienttasks.arch.equals("s390x"))) {
 			rhelBaseRepoId = "rhel-6-for-system-z-rpms";
 		}
