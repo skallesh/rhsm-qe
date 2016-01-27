@@ -37,7 +37,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	// Test methods ***********************************************************************
 
 	@Test(	description="verify default configuration for /etc/yum/pluginconf.d/search-disabled-repos.conf; enabled=1 notify_only=1",
-			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
+			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			priority=10, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyDefaultConfiguration_Test() {
@@ -243,6 +243,57 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		
+		// PLATFORM=RedHatEnterpriseLinux6-Server-i386
+		// PLATFORM=RedHatEnterpriseLinux6-Server-x86_64
+		//	[root@dell-pe1650-01 ~]# subscription-manager repos --list | egrep "rhel-6-server-(|optional-|eus-|beta-|htb-)rpms"
+		//	Repo ID:   rhel-6-server-rpms
+		//	Repo ID:   rhel-6-server-beta-rpms
+		//	Repo ID:   rhel-6-server-eus-rpms
+		//	Repo ID:   rhel-6-server-optional-rpms
+		if (clienttasks.redhatReleaseX.equals("6") && clienttasks.variant.equals("Server") && (clienttasks.arch.matches("i\\d86|x86_64"))) {
+			rhelBaseRepoId = "rhel-6-server-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinux6-Server-ppc64
+		//	[root@ibm-p8-04-lp1 ~]# subscription-manager repos --list | egrep "rhel-6-for-power-(|optional-|eus-|beta-|htb-)rpms"
+		//	Repo ID:   rhel-6-for-power-rpms
+		//	Repo ID:   rhel-6-for-power-optional-rpms
+		//	Repo ID:   rhel-6-for-power-beta-rpms
+		if (clienttasks.redhatReleaseX.equals("6") && clienttasks.variant.equals("Server") && (clienttasks.arch.equals("ppc64"))) {
+			rhelBaseRepoId = "rhel-6-for-power-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinux6-Server-s390x
+		if (clienttasks.redhatReleaseX.equals("6") && clienttasks.variant.equals("Server") && (clienttasks.arch.equals("s390x"))) {
+			rhelBaseRepoId = "rhel-6-for-system-z-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinux6-Client-i386
+		// PLATFORM=RedHatEnterpriseLinux6-Client-x86_64
+		//	[root@ibm-x3650m4-01-vm-01 ~]# subscription-manager repos --list | egrep "rhel-6-desktop-(|optional-|eus-|beta-|htb-)rpms"
+		//	Repo ID:   rhel-6-desktop-rpms
+		//	Repo ID:   rhel-6-desktop-beta-rpms
+		//	Repo ID:   rhel-6-desktop-optional-rpms
+		if (clienttasks.redhatReleaseX.equals("6") && clienttasks.variant.equals("Client") && (clienttasks.arch.matches("i\\d86|x86_64"))) {
+			rhelBaseRepoId = "rhel-6-desktop-rpms";
+		}
+
+		// PLATFORM=RedHatEnterpriseLinux6-ComputeNode-x86_64
+		//	[root@hp-dl585g5-01 ~]# subscription-manager repos --list | egrep " rhel-6-hpc-node-(|optional-|eus-|beta-|htb-)rpms"
+		//	Repo ID:   rhel-6-hpc-node-rpms
+		//	Repo ID:   rhel-6-hpc-node-beta-rpms
+		//	Repo ID:   rhel-6-hpc-node-optional-rpms
+		if (clienttasks.redhatReleaseX.equals("6") && clienttasks.variant.equals("ComputeNode") && (clienttasks.arch.equals("x86_64"))) {
+			rhelBaseRepoId = "rhel-6-hpc-node-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinux6-Workstation-i386
+		// PLATFORM=RedHatEnterpriseLinux6-Workstation-x86_64 
+		if (clienttasks.redhatReleaseX.equals("6") && clienttasks.variant.equals("Workstation") && (clienttasks.arch.matches("i\\d86|x86_64"))) {
+			rhelBaseRepoId = "rhel-6-workstation-rpms";
+		}
+		
+		
 		// predict the disabled optional repo and potential presence of other enabled repos 
 		if (rhelBaseRepoId!=null) {
 			rhelOptionalRepoId	= rhelBaseRepoId.replaceFirst("-rpms$", "-optional-rpms");
@@ -329,7 +380,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="verify yum usability message is presented when the default notify_only=1 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf",
-			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
+			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=30, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -398,7 +449,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeno responses",
-			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
+			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=40, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -486,7 +537,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeyes responses",
-			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
+			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=50, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -652,7 +703,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and install followed by no response to keep repos enabled.",
-			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
+			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=60, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -773,6 +824,19 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			log.warning("Skipping stderr assertion while bugId '"+bugId+"' is open.");
 		} else
 		// END OF WORKAROUND
+		// TEMPORARY WORKAROUND
+		//	[root@hp-dl585g5-01 ~]# cat /tmp/stderr 
+		//	https://cdn.redhat.com/content/dist/rhel/computenode/6/6ComputeNode/x86_64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
+		//	Trying other mirror.
+		//	To address this issue please refer to the below knowledge base article 
+		//
+		//	https://access.redhat.com/articles/1320623
+		//
+		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
+		if (clienttasks.redhatReleaseX.equals("6") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22")) {
+			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] PYCURL ERROR 22 for 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
+		} else
+		// END OF WORKAROUND
 		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 
 		// assert stdout results
@@ -790,7 +854,8 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(result.getStdout().contains(searchDisabledReposMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' which requires '"+rhelBasePackage+"' contains the search disabled repos message:\n"+searchDisabledReposMessage);
 		prompt = "Enable all repositories and try again? [y/N]: ";
 		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt: "+prompt);
-		prompt = "Is this ok [y/d/N]: ";
+		prompt = "Is this ok [y/d/N]: ";	// RHEL7
+		if (clienttasks.redhatReleaseX.equals("6")) prompt = "Is this ok [y/N]: ";	// RHEL6
 		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt: "+prompt);
 		String rhelActualRepoId = clienttasks.getYumPackageInfo(rhelBasePackage,"From repo");
 		String resolutionMessage = StringUtils.join(new String[]{
@@ -850,7 +915,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and no to the install prompt",
-			groups={"blockedByBug-1232232"/*UNCOMMENT FOR RHEL68 ,blockedByBug-1268376*/},
+			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
 			priority=70, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -934,6 +999,19 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 		
 		// assert stderr results
+		// TEMPORARY WORKAROUND
+		//	[root@hp-dl585g5-01 ~]# cat /tmp/stderr 
+		//	https://cdn.redhat.com/content/dist/rhel/computenode/6/6ComputeNode/x86_64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
+		//	Trying other mirror.
+		//	To address this issue please refer to the below knowledge base article 
+		//
+		//	https://access.redhat.com/articles/1320623
+		//
+		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
+		if (clienttasks.redhatReleaseX.equals("6") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22")) {
+			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] PYCURL ERROR 22 for 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
+		} else
+		// END OF WORKAROUND
 		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 
 		// assert stdout results
@@ -951,7 +1029,8 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(result.getStdout().contains(searchDisabledReposMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' which requires '"+rhelBasePackage+"' contains the search disabled repos message:\n"+searchDisabledReposMessage);
 		prompt = "Enable all repositories and try again? [y/N]: ";
 		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt: "+prompt);
-		prompt = "Is this ok [y/d/N]: ";
+		prompt = "Is this ok [y/d/N]: ";	// RHEL7
+		if (clienttasks.redhatReleaseX.equals("6")) prompt = "Is this ok [y/N]: ";	// RHEL6
 		Assert.assertTrue(result.getStdout().contains(prompt),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the prompt: "+prompt);
 		
 		// confirm that the packages are NOT installed
