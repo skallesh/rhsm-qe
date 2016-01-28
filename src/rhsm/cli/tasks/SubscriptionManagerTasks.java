@@ -8578,6 +8578,52 @@ if (false) {
 			}
 			// END OF WORKAROUND
 			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2016-01-27 16:24:22.520  FINE: ssh root@ibm-x3550m3-09.lab.eng.brq.redhat.com subscription-manager unsubscribe --all
+			//	2016-01-27 16:24:50.438  FINE: Stdout: 1 subscription removed at the server.
+			//
+			//	2016-01-27 16:24:50.439  FINE: Stderr: Network error, unable to connect to server. Please see /var/log/rhsm/rhsm.log for more information.
+			//
+			//	2016-01-27 16:24:50.439  FINE: ExitCode: 70
+			//	2016-01-27 16:24:50.439  FINE: ssh root@ibm-x3550m3-09.lab.eng.brq.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2016-01-27 16:24:50.896  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2016-01-27 22:24:33,609 [DEBUG] subscription-manager:23027 @connection.py:557 - Making request: GET /subscription/consumers/162ac9ed-d2aa-45d9-921a-ce3aeaae180d/certificates/serials
+			//	2016-01-27 22:24:51,334 [ERROR] subscription-manager:23027 @entcertlib.py:121 - [Errno -3] Temporary failure in name resolution
+			//	Traceback (most recent call last):
+			//	  File "/usr/share/rhsm/subscription_manager/entcertlib.py", line 119, in perform
+			//	    expected = self._get_expected_serials()
+			//	  File "/usr/share/rhsm/subscription_manager/entcertlib.py", line 254, in _get_expected_serials
+			//	    exp = self.get_certificate_serials_list()
+			//	  File "/usr/share/rhsm/subscription_manager/entcertlib.py", line 234, in get_certificate_serials_list
+			//	    reply = self.uep.getCertificateSerials(identity.uuid)
+			//	  File "/usr/lib/python2.6/site-packages/rhsm/connection.py", line 1145, in getCertificateSerials
+			//	    return self.conn.request_get(method)
+			//	  File "/usr/lib/python2.6/site-packages/rhsm/connection.py", line 681, in request_get
+			//	    return self._request("GET", method)
+			//	  File "/usr/lib/python2.6/site-packages/rhsm/connection.py", line 571, in _request
+			//	    conn.request(request_type, handler, body=body, headers=headers)
+			//	  File "/usr/lib/python2.6/httplib.py", line 936, in request
+			//	    self._send_request(method, url, body, headers)
+			//	  File "/usr/lib/python2.6/httplib.py", line 973, in _send_request
+			//	    self.endheaders()
+			//	  File "/usr/lib/python2.6/httplib.py", line 930, in endheaders
+			//	    self._send_output()
+			//	  File "/usr/lib/python2.6/httplib.py", line 802, in _send_output
+			//	    self.send(msg)
+			//	  File "/usr/lib/python2.6/httplib.py", line 761, in send
+			//	    self.connect()
+			//	  File "/usr/lib/python2.6/site-packages/M2Crypto/httpslib.py", line 51, in connect
+			//	    socket.getaddrinfo(self.host, self.port, 0, socket.SOCK_STREAM):
+			//	gaierror: [Errno -3] Temporary failure in name resolution
+			issue = "[Errno -3] Temporary failure in name resolution";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1302798"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1302798 - gaierror: [Errno -3] Temporary failure in name resolution
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			//	2015-10-12 17:58:54,620 [DEBUG] subscription-manager:44349 @connection.py:523 - Making request: PUT /subscription/consumers/d8018dbc-7e66-4c0a-b322-9c28037fd8cf
