@@ -1002,6 +1002,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//clienttasks.subscribe(true,"".equals(serviceLevel)?String.format("\"%s\"", serviceLevel):serviceLevel, (List<String>)null, (List<String>)null, (List<String>)null, null, null, null, null, null, null);
 		
 		// determine the newly granted entitlement certs
+		List<ProductSubscription> currentlyConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
  		List<EntitlementCert> newlyGrantedEntitlementCerts = new ArrayList<EntitlementCert>();
  		List<EntitlementCert> currentlyGrantedEntitlementCerts = clienttasks.getCurrentEntitlementCerts();
 		for (EntitlementCert entitlementCert : currentlyGrantedEntitlementCerts) {
@@ -1080,8 +1081,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				log.warning("After actually running auto-subscribe, the predicted dry-run pool '"+dryrunSubscriptionPool.poolId+"' was NOT among the attached subscriptions.  This is probably because there is another available pool that also provides the same provided products '"+dryrunSubscriptionPool.provides+"' (at least one of which is installed) which was granted instead of the dry-run pool.");
 				// assert that the warning statement is true
 				// the follow assertion may expectedly fail when the provided products exceeds one.
-				ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("provides", dryrunSubscriptionPool.provides, clienttasks.getCurrentlyConsumedProductSubscriptions());
-				Assert.assertNotNull(consumedProductSubscription, "Found a consumed Product Subscription that provides the same products corresponding to dry-run pool: "+dryrunSubscriptionPool+"  (IF THIS FAILS, SEE WARNING ABOCVE FOR PROBABLE EXPLANATION)");
+				//ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("provides", dryrunSubscriptionPool.provides, currentlyConsumedProductSubscriptions);	// THIS IS NOT SMART ENOUGH TO COMPARE THE provides List FOR EQUALITY, INSTEAD SEARCH FOR ANOTHER POOL BY THE SAME SKU
+				//Assert.assertNotNull(consumedProductSubscription, "Found a consumed Product Subscription that provides the same products corresponding to dry-run pool: "+dryrunSubscriptionPool+"  (IF THIS FAILS, SEE WARNING ABOVE FOR PROBABLE EXPLANATION)");
+				ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", dryrunSubscriptionPool.productId, currentlyConsumedProductSubscriptions);
+				Assert.assertNotNull(consumedProductSubscription, "Found a consumed Product Subscription for the same SKU corresponding to dry-run pool: "+dryrunSubscriptionPool+"  (IF THIS FAILS, SEE WARNING ABOVE FOR PROBABLE EXPLANATION)");
 				Assert.assertEquals(Integer.valueOf(consumedProductSubscription.quantityUsed), quantity, "The actual entitlement quantityUsed matches the dry-run quantity results for pool :"+dryrunSubscriptionPool);
 			} else {
 				Assert.assertNotNull(entitlementCert, "Found an entitlement cert corresponding to dry-run pool: "+dryrunSubscriptionPool);
