@@ -7703,6 +7703,7 @@ if (false) {
 		return runCommandWithLangAndAssert(lang, rhsmCommand, exitCode, stdoutRegexs, stderrRegexs);
 	}
 	public SSHCommandResult runCommandWithLangAndAssert(String lang, String rhsmCommand, Integer exitCode, List<String> stdoutRegexs, List<String> stderrRegexs){
+		// prepend the command with a well formated LANG
 		if (lang==null) {
 			lang="";
 		} else {
@@ -7713,7 +7714,31 @@ if (false) {
 		/* this workaround should no longer be needed after rhel70 fixes by ckozak similar to bugs 1052297 1048325 commit 6fe57f8e6c3c35ac7761b9fa5ac7a6014d69ce20 that employs #!/usr/bin/python -S    sys.setdefaultencoding('utf-8')    import site
 		command = "PYTHONIOENCODING=ascii "+command;	// THIS WORKAROUND IS NEEDED AFTER master commit 056e69dc833919709bbf23d8a7b73a5345f77fdf RHEL6.4 commit 1bc25596afaf294cd217200c605737a43112a378 for bug 800323
 		*/
+		
+		// run the command and assert the expected results
+		/* the problem with this original method call is that we could not intercept Runtime Error, hence the implementation that follows thi block includes a call to logRuntimeErrors()
 		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, exitCode, stdoutRegexs, stderrRegexs);
+		*/
+		
+		// run the command
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		
+		// assert the expected results
+		if (exitCode!=null) {
+			Assert.assertEquals(exitCode, sshCommandResult.getExitCode(),String.format("ExitCode from command '%s'.",command));
+		}
+		if (stdoutRegexs!=null) {
+			for (String regex : stdoutRegexs) {
+				Assert.assertContainsMatch(sshCommandResult.getStdout(),regex,"Stdout",String.format("Stdout from command '%s' contains matches to regex '%s',",command,regex));
+			}
+		}
+		if (stderrRegexs!=null) {
+			for (String regex : stderrRegexs) {
+				Assert.assertContainsMatch(sshCommandResult.getStderr(),regex,"Stderr",String.format("Stderr from command '%s' contains matches to regex '%s',",command,regex));
+			}
+		}
+		return sshCommandResult;
 	}
 	
 	public void setLanguage(String lang){
@@ -8192,6 +8217,7 @@ if (false) {
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Remote server error".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to verify server's identity".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to reach the server".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("Connection reset by peer".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Request failed due to concurrent modification".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("The system is unable to complete the requested transaction".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("object is not iterable".toLowerCase()) ||
