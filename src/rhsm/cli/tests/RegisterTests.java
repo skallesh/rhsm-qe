@@ -1360,21 +1360,24 @@ Expected Results:
 		Assert.assertContainsNoMatch(sshCommandResult.getStderr().trim(), "Traceback.*","Stderr after register with --baseurl="+baseurl+" and other options should not contain a Traceback.");
 	
 		// negative testcase assertions........
-		//if (expectedExitCode.equals(new Integer(255))) {
-		if (Integer.valueOf(expectedExitCode)>1) {
+		if (Integer.valueOf(expectedExitCode)>1) {	// formerly if (expectedExitCode.equals(new Integer(255))) {
 			// assert that the current config remains unchanged when the expectedExitCode is 255
 			//Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm","baseurl"), baseurlBeforeTest, "The rhsm configuration for baseurl should remain unchanged when attempting to register with an invalid baseurl.");
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "baseurl"), baseurlBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [rhsm] baseurl should remain unchanged when attempting to register with an invalid baseurl.");
-			
-			// nothing more to do after these negative testcase assertions
-			return;
+		}
+		
+		// ignored testcase assertions........
+		else if (baseurl.isEmpty()) {
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "baseurl"), baseurlBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [rhsm] baseurl should remain unchanged when attempting to register with an empty baseurl.");
 		}
 		
 		// positive testcase assertions........
-		// assert that the current config has been updated to the new expected baseurl
-		//Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm","baseurl"), baseurlConfigured, "The rhsm configuration for baseurl has been updated to the new baseurl with correct format (https://hostname:443/prefix).");
-		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "baseurl"), baseurlConfigured, "The "+clienttasks.rhsmConfFile+" configuration for [rhsm] baseurl has been updated to the new baseurl with correct format (https://hostname:443/prefix).");
-	
+		else {
+			// assert that the current config has been updated to the new expected baseurl
+			//Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm","baseurl"), baseurlConfigured, "The rhsm configuration for baseurl has been updated to the new baseurl with correct format (https://hostname:443/prefix).");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "baseurl"), baseurlConfigured, "The "+clienttasks.rhsmConfFile+" configuration for [rhsm] baseurl has been updated to the new baseurl with correct format (https://hostname:443/prefix).");
+		}
+		
 //		// TODO maybe assert yumRepos  7/24/2012
 //		for (YumRepo yumRepo : clienttasks.getCurrentlySubscribedYumRepos()) {
 //			Assert.assertTrue(yumRepo.baseurl.matches("^"+baseurlConfigured.replaceFirst("/$","")+"/\\w+.*"),"Newly configured baseurl '"+baseurlConfigured+"' is utilized by yumRepo: "+yumRepo);
@@ -1424,7 +1427,7 @@ Expected Results:
 		ll.add(Arrays.asList(new Object[] {	null,													":900/myapp",								"https://"+defaultHostname+":900/myapp",	new Integer(0),		null,			null}));
 
 		// ignored tests
-		ll.add(Arrays.asList(new Object[] {	null,													"",											ll.get(ll.size()-1).get(2)/* last set */,	new Integer(0),		null,			null}));	
+		ll.add(Arrays.asList(new Object[] {	null,													"",											/*ll.get(ll.size()-1).get(2) last set, assuming the last test row passes */null,	new Integer(0),		null,			null}));	
 	
 		// negative tests
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
