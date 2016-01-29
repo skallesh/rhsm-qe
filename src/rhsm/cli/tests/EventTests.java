@@ -232,7 +232,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"},
+			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597","blockedByBug-1303242"},
 			dependsOnGroups={"EntitlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
