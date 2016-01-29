@@ -3965,7 +3965,7 @@ schema generation failed
 		for (int i = 0; i < jsonPools.length(); i++) {
 			jsonPool = (JSONObject) jsonPools.get(i);
 			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {
-			if (jsonPool.getString("subscriptionId").equals(jsonSubscription.getString("id"))) {
+			if (!jsonPool.isNull("subscriptionId") && jsonPool.getString("subscriptionId").equals(jsonSubscription.getString("id"))) {
 				poolId = jsonPool.getString("id");
 				break;
 			}
