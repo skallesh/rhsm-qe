@@ -1158,8 +1158,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if CLI lets you set consumer nameto empty string and defaults to sm_clientUsername", 
-			groups = { "VerifyConsumerNameTest","blockedByBug-669395"}, enabled = true)
+	@Test(	description = "verify if CLI lets you set consumer nameto empty string and defaults to sm_clientUsername", 
+			groups = { "VerifyConsumerNameTest","blockedByBug-669395"},
+			enabled = true)
 	public void VerifyConsumerNameTest() throws JSONException,Exception {
 		String consumerName="tester";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,
@@ -1175,7 +1176,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.clean(null, null, null);
 		consumerName="consumer";
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, consumerName, consumerId, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, null, null, null, null, null);
 		result=clienttasks.identity(null, null, null, null, null, null, null);
 		Assert.assertContainsMatch(result.getStdout(), expected);
 		clienttasks.clean(null, null, null);
@@ -2749,23 +2750,30 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = { "VerifyRegisterUsingInavlidConsumerId" },
 			enabled = true)
 	@ImplementsNitrateTest(caseId = 61716)
-	public void VerifyregisterUsingInavlidConsumerId() throws JSONException,
+	public void VerifyRegisterUsingInavlidConsumerId() throws JSONException,
 	Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		String invalidconsumerId = randomGenerator.nextInt() + consumerId;
-		System.out.println(invalidconsumerId + "  " + consumerId);
+		log.info("Testing with invalidconsumerId '"+consumerId+"'.");
+		
+		String expectedStdout = "The system with UUID " + consumerId + " has been unregistered";
+		String expectedStderr = "Consumer with id " + invalidconsumerId + " could not be found.";
+		Boolean force=true;
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.2-1")) {	// prior to subscription-manager commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99 and 6bd0448c85c10d8a58cae10372f0d4aa323d5c27	// Can not force registration while attempting to recover registration with consumerid. Please use --force without --consumerid to re-register or use the clean command and try again without --force.
+			clienttasks.unregister(null, null, null);
+			force=false;
+			expectedStdout="";
+		}
 		SSHCommandResult result = clienttasks.register_(sm_clientUsername,
 				sm_clientPassword, sm_clientOrg, null, null, null,
 				invalidconsumerId, null, null, null, (String) null, null, null,
-				null, true, null, null, null, null);
-		String expectedStdout = "The system with UUID " + consumerId + " has been unregistered";
-		String expectedStderr = "Consumer with id " + invalidconsumerId + " could not be found.";
+				null, force, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-2")) expectedStdout += String.format("\n"+"Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix"));	// subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89 RHEL7.2 commit 968e6a407054c96291a4e64166c4840529772fff Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
-		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "stdout");
-		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "stderr");
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout.trim(), "stdout");
+		Assert.assertEquals(result.getStderr().trim(), expectedStderr.trim(), "stderr");
 	}
 
 	/**
@@ -3903,9 +3911,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@Test(description = "Verify that Entitlement Start Dates is the Subscription Start Date ", groups = {
-			"VerifyEntitlementStartDate_Test",
-	"blockedByBug-670831" }, enabled = true)
+	@Test(	description = "Verify that Entitlement Start Dates is the Subscription Start Date ",
+			groups = {"VerifyEntitlementStartDate_Test","blockedByBug-670831" },
+			enabled = true)
 	public void VerifyEntitlementStartDate_Test() throws JSONException,
 	Exception {
 		// unnecessary		clienttasks.autoheal(null, null, true, null, null, null);
@@ -4108,6 +4116,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(assertedFutureSubscriptionIsNowSubscribed,"Verified at least one previously installed product covered by a Future Subscription is now covered by a current subscription after auto-subscribing.");
 	}
 
+/* DELETEME: No need to override these methods from the super class
 	protected Calendar parseISO8601DateString(String dateString, String timeZone) {
 		String iso8601DatePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 		String datePattern = iso8601DatePattern;
@@ -4140,7 +4149,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			return null;
 		}
 	}
-
+*/
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception
