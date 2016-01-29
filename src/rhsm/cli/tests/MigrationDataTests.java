@@ -309,6 +309,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			if (line.trim().startsWith("#")) continue; // skip comments
 			String channel = line.split(":")[0].trim();
 			String productCertFilename = line.split(":")[1].trim();
+			
+			// exclude RHEL7 aus channels // examples: rhel-x86_64-server-7.2.aus rhel-x86_64-server-optional-7.2.aus
+			if (doesStringContainMatches(channel, "-7\\.\\d\\.aus")) {
+				log.info("Ignoring RHEL7 aus channel '"+channel+"'");
+				continue;
+			}
+			
 			actualRhel6AusChannels.add(channel);
 		}
 		
