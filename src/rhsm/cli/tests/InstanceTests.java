@@ -310,13 +310,18 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 					Assert.assertTrue(prodSub.statusDetails.isEmpty(),"Status Details of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be empty.  Actual="+prodSub.statusDetails);
 				}
 				Assert.assertEquals(totalQuantityUsed,Integer.valueOf(expectedQuantityToAchieveCompliance),"Quantity of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
-				Re-implementing a new algorithm below to count the number of system sockets covered and then assert that it autosubscribe successfully met coverage without excess over consumption...*/
+				Re-implementing a new algorithm below to count the number of system sockets covered and then assert that the autosubscribe successfully met coverage without excess over consumption...*/
 				float totalSocketsCovered = 0;	// among the consumed product subscriptions, this is the total stacked accumulation of socket coverage
 				Integer maxIncrementOfPhysicalSocketCoverage = new Integer(0);	// this is the maximum sockets attribute among the pools that provide for the installed products poolProvidedProductIds
 				List<ProductSubscription> productSubscriptions = new ArrayList<ProductSubscription>();
 				for (ProductSubscription prodSub : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 					List<String> thisPoolProvidedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId);
 					if (doesListOverlapList(thisPoolProvidedProductIds, providedProductIdsActuallyInstalled)) {
+//deugTesting
+//if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId, "instance_multiplier")==null)  { // does not have an "instance_multiplier"
+//	log.warning("Ignoring this consumed product subscription's contribution to compliance (it has no instance_multiplier): "+prodSub);	//  not sure if this is the right choice
+//	continue;
+//}		
 						// the consumed quantity from this pool contributes to the socket coverage for installed products poolProvidedProductIds
 						Integer thisPoolInstanceMultiplier = Integer.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId, "instance_multiplier"));
 						Integer thisPoolSockets = Integer.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId, "sockets"));
