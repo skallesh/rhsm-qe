@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -31,7 +32,7 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if you attach 1 quantity of subscriptions,each covering 256 GB on a system with 1024 GB subscription , installed product is partially subscribed", 
-			groups = { "partiallySubscribeStorageBandSubscription"},dataProvider="getStorageBandSubscriptions", enabled = true)
+			groups = {"partiallySubscribeStorageBandSubscription"},dataProvider="getStorageBandSubscriptions", enabled = true)
 	public void partiallySubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
@@ -66,7 +67,7 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 			for (String providedProductId : providedProductIds) {
 				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
 				if (installedProduct!=null) {	
-			Assert.assertEquals(installedProduct.status.trim()," Subscribed","Status of an installed product provided for by a Storage Band entitlement from a pool that covers only 256GB ");	
+			Assert.assertEquals(installedProduct.status.trim(),"Subscribed","Status of an installed product provided for by a Storage Band entitlement from a pool that covers only 256GB ");	
 		}}
 	}
 	
@@ -150,20 +151,25 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	
 	@BeforeClass(groups={"setup"})
 	public void CustomiseCephFacts() throws Exception {
+/* unnecessary
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
+unnecessary */
 		factsMap.clear();
 		factsMap.put("band.storage.usage", "1024");
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 
 	}
-	@BeforeClass(groups={"setup"})
+	@AfterClass(groups={"setup"})
 	public void RemoveCephFacts() throws Exception {
+/* unnecessary
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
 		clienttasks.removeAllFacts();
+unnecessary */
 
+		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 }
