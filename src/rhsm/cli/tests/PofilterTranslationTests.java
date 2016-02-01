@@ -112,6 +112,11 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *      https://engineering.redhat.com/rt/Ticket/Display.html?id=368509
  *      https://bugzilla.redhat.com/show_bug.cgi?id=
  *      
+ *      Subscription Manger 1.16.X Translation Request
+ *      https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.16.X
+ *      https://engineering.redhat.com/rt/Ticket/Display.html?id=
+ *      https://bugzilla.redhat.com/show_bug.cgi?id=1303768
+ *      
  *      Candlepin IT Service Adapters
  *      https://translate.engineering.redhat.com/project/view/candlepin-it-adapters
  *      
