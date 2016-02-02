@@ -1118,6 +1118,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 		// END OF WORKAROUND
 		
+		if (!rhelSubscriptionIsAvailable) {
+			clienttasks.facts_(true, null, null, null, null);
+			log.warning("This test is about to fail and may be due to the lack of an available subscription with enough socket/ram/core support to cover this system.  Visually confirm by reviewing the system facts above.");
+		}
+		
 		Assert.assertTrue(rhelSubscriptionIsAvailable,"Successfully subscribed to at least one available RHEL subscription that provided for our installed RHEL product cert: "+rhelProductCert);
 		Assert.assertTrue(rhelYumContentIsAvailable,"All of the RHEL subscriptions subscribed provided at least one enabled yum content package applicable for our installed RHEL product cert: "+rhelProductCert+" (See WARNINGS logged above for failed subscriptions)");
 	}
