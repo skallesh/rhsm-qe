@@ -1139,7 +1139,7 @@ schema generation failed
 		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
 		// jsonOwner_.getString("href") takes the form /owners/6239231 where 6239231 is the key
 		File href = new File(jsonOwner_.getString("href")); // use a File to represent the path
-		return href.getName();
+		return href.getName();	// return 6239231 from the end of the path /owners/6239231
 	}
 	
 	/**
