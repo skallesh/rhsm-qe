@@ -80,9 +80,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_rhpersonalOrg				= getProperty("sm.rhpersonal.org", null);
 	public String sm_rhpersonalSubproductQuantity =	getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
 	
-	public String sm_rhuiUsername				= getProperty("sm.rhui.username", "");
-	public String sm_rhuiPassword				= getProperty("sm.rhui.password", "");
-	public String sm_rhuiOrg					= getProperty("sm.rhui.org", null);
 	public String sm_rhuiSubscriptionProductId	= getProperty("sm.rhui.subscriptionProductId", "");
 	public String sm_rhuiRepoIdForIsos			= getProperty("sm.rhui.repoIdForIsos", "");
 	public String sm_rhuiDownloadIso			= getProperty("sm.rhui.downloadIso", "");
