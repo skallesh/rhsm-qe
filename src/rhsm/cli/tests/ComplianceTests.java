@@ -250,8 +250,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=110,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},			
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
+	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
 	
@@ -260,8 +261,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=120,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
+	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
@@ -271,8 +273,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=130,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
+	public void VerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
 	}
 	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test")
@@ -297,8 +300,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=210,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByOneCommonServiceLevel_Test() {
+	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByOneCommonServiceLevel_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
 	
@@ -307,8 +311,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=220,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},	
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByOneCommonServiceLevel_Test() {
+	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByOneCommonServiceLevel_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
@@ -318,8 +323,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=230,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test() {
+	public void VerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
 	}
 	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test")
@@ -356,8 +362,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=310,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenSomeProductsAreSubscribable_Test() {
+	public void VerifyRhsmCompliancedWhenSomeProductsAreSubscribable_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.messagesLogFile, TestRecords.action());
 		SSHCommandResult sshCommandResult;
@@ -383,8 +390,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=320,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAttemptsWhenNotCompliantAndSomeProductsAreSubscribable_Test() {
+	public void VerifyAutoSubscribeAttemptsWhenNotCompliantAndSomeProductsAreSubscribable_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		List <EntitlementCert> entitlementCertsBefore = clienttasks.getCurrentEntitlementCerts();
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(!result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is not compliant, an attempt to auto-subscribe should NOT inform us with this message: "+autosubscribeCompliantMessage);
@@ -398,8 +406,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=330,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test() {
+	public void VerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
 	}
 	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test")
@@ -438,8 +447,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=410,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test() {
+	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
 		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
@@ -449,8 +459,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=420,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsAreSubscribable_Test() {
+	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsAreSubscribable_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
@@ -461,8 +472,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=430,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test() {
+	public void VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
 	}
@@ -502,8 +514,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=510,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenNoProductsAreSubscribable_Test() {
+	public void VerifyRhsmCompliancedWhenNoProductsAreSubscribable_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.messagesLogFile, TestRecords.action());
 		SSHCommandResult sshCommandResult;
@@ -529,8 +542,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=520,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAttemptsWhenNotCompliantAndNoProductsAreSubscribable_Test() {
+	public void VerifyAutoSubscribeAttemptsWhenNotCompliantAndNoProductsAreSubscribable_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		List <EntitlementCert> entitlementCertsBefore = clienttasks.getCurrentEntitlementCerts();
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(!result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is not compliant, an attempt to auto-subscribe should NOT inform us with this message: "+autosubscribeCompliantMessage);
@@ -544,8 +558,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=530,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test() {
+	public void VerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
 	}
 	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test")
@@ -582,8 +597,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=610,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},		
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled_Test() {
+	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsInstalledCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsInstalledCompleted="+configureProductCertDirForNoProductsInstalledCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 		SSHCommandResult sshCommandResult;
 
@@ -631,8 +647,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=620,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAbortsWhenNoProductsAreInstalled_Test() {
+	public void VerifyAutoSubscribeAbortsWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsInstalledCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsInstalledCompleted="+configureProductCertDirForNoProductsInstalledCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		SSHCommandResult result = clienttasks.subscribe_(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
 
 		// exceptional result...
@@ -794,8 +811,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=810,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribableInTheFuture_Test() {
+	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableInTheFutureCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableInTheFutureCompleted="+configureProductCertDirForAllProductsSubscribableInTheFutureCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 		SSHCommandResult sshCommandResult;
 
@@ -812,8 +830,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 			priority=830,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test() {
+	public void VerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableInTheFutureCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableInTheFutureCompleted="+configureProductCertDirForAllProductsSubscribableInTheFutureCompleted);
+		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
 	}
 	@AfterGroups(groups={"setup"},value="VerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test")
