@@ -174,14 +174,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
 			if (smt != null) setupClient(smt, serverCaCertFile, generatedProductCertFiles);
 		}
+
+////DELETEME - moved into setupClient(...)
+//		// determine the server URL that will be used for candlepin API calls
+//		if (sm_serverUrl.isEmpty()) {
+//			sm_serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
+//		}
 		
-		// determine the server URL that will be used for candlepin API calls
-		if (sm_serverUrl.equals("")) {
-			sm_serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
-		}
-		
-		// make a call to the candlepin status API and store the status field values for future reference
-		servertasks.initializeStatus(sm_serverUrl);
+		// initialize various servertasks instance variables for future reference
+		servertasks.initialize(clienttasks.candlepinAdminUsername, clienttasks.candlepinAdminPassword, clienttasks.candlepinUrl);
 		
 	    File file = new File("test-output/version.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
     	Writer output = new BufferedWriter(new FileWriter(file));
@@ -485,6 +486,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// transfer copies of all the generated product certs from the candlepin server to the clients
 		log.info("Copying Candlepin generated product certs onto client to simulate installed products...");
 		smt.installProductCerts(generatedProductCertFiles);
+		
+		// initialize variables used to access CandlepinTasks from SubcriptionManagerTasks
+		smt.candlepinAdminUsername = sm_serverAdminUsername;
+		smt.candlepinAdminPassword = sm_serverAdminPassword;
+		smt.candlepinUrl = sm_serverUrl.isEmpty() ? getServerUrl(smt.getConfFileParameter(smt.rhsmConfFile,"hostname"), smt.getConfFileParameter(smt.rhsmConfFile,"port"), smt.getConfFileParameter(smt.rhsmConfFile,"prefix")) : sm_serverUrl;
+		sm_serverUrl = smt.candlepinUrl;	// rewrite it back to sm_serverUrl to make it easier for tests to access
 	}
 	
 	protected static boolean isSetupBeforeSuiteComplete = false;
@@ -3102,7 +3109,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 */
 			Calendar endDate = parseISO8601DateString(jsonPool.getString("endDate"), "GMT");
 			
-			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, jsonPool.getString("id"));
+			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"));
 
 			String quantity = String.valueOf(jsonPool.getInt("quantity"));
 			

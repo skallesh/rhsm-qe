@@ -101,6 +101,10 @@ public class CandlepinTasks {
 	public boolean statusStandalone = false;	// default to false since /status on stage is not readable and is expected to be false
 	public String statusTimeUTC = "";
 	
+	protected String serverUrl = null;
+	protected String adminUsername = null;
+	protected String adminPassword = null;
+	
 	static {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
       	client = new HttpClient(connectionManager);
@@ -365,7 +369,12 @@ schema generation failed
 		 */
 	}
 	
-	public void initializeStatus(String serverUrl) throws IOException, JSONException {
+	public void initialize(String adminUsername, String adminPassword, String serverUrl) throws IOException, JSONException {
+		// hold onto the server url and credentials.
+		this.serverUrl		= serverUrl;
+		this.adminUsername	= adminUsername;
+		this.adminPassword	= adminPassword;
+		
 		log.info("Installed status of candlepin...");
 		JSONObject jsonStatus=null;
 		try {
@@ -375,7 +384,7 @@ schema generation failed
 			//201108251644:10.040 - INFO: SSH alternative to HTTP request: curl -k  --request GET https://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/status (rhsm.cli.tasks.CandlepinTasks.getResourceUsingRESTfulAPI)
 			//201108251644:10.049 - WARNING: Required credentials not available for BASIC <any realm>@rubyvip.web.stage.ext.phx2.redhat.com:80 (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
 			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
-			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*sm_serverAdminUsername*/null,/*sm_serverAdminPassword*/null,serverUrl,"/status"));
+			jsonStatus = new JSONObject(/*CandlepinTasks.*/getResourceUsingRESTfulAPI(/*adminUsername*/null,/*adminPassword*/null,serverUrl,"/status"));
 			if (jsonStatus!=null) {
 				statusCapabilities.clear();
 				statusRelease		= jsonStatus.getString("release");
@@ -457,7 +466,7 @@ schema generation failed
 			}
 		} catch (Exception e) {
 			// Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
-			log.warning("Ecountered exception while getting the Candlepin server '"+serverUrl+"' version from the /status api: "+e);
+			log.warning("Encountered exception while getting the Candlepin server '"+serverUrl+"' version from the /status api: "+e);
 		}
 	}
 	
@@ -637,7 +646,7 @@ schema generation failed
 			//	<hr>
 			//	<address>Apache Server at subscription.rhn.stage.redhat.com Port 443</address>
 			//	</body></html>
-			if (response.contains("502 Proxy Error") && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (response.contains("502 Proxy Error")) {
 				String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
 				// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -2417,11 +2426,6 @@ schema generation failed
 	
 	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
 		
-		// 7/7/2014 TODO TEMPORARY WORKAROUND FOR ERROR: Could not generate DH keypair
-		if (CandlepinType.katello.equals(SubscriptionManagerCLITestScript.sm_serverType)) {
-			return true;
-		}
-		
 		// ask the candlepin server for all of its resources and search for a match to "environments"
 		boolean supportsEnvironments = false;  // assume not
 		JSONArray jsonResources = new JSONArray(getResourceUsingRESTfulAPI(authenticator, password, url, "/"));
@@ -4151,6 +4155,7 @@ schema generation failed
 	
 	
 	// FIXME DEPRECATED METHODS TO BE DELETED AFTER UPDATING CLOJURE TESTS
+	/*
 	@Deprecated
 	public static List<String> getOrgsKeyValueForUser(String server, String port, String prefix, String username, String password, String key) throws JSONException, Exception {
 		return getOrgsKeyValueForUser(username, password, SubscriptionManagerCLITestScript.sm_serverUrl, key);
@@ -4167,7 +4172,7 @@ schema generation failed
 	public static boolean isPoolProductMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
 		return isPoolProductMultiEntitlement (authenticator, password, SubscriptionManagerCLITestScript.sm_serverUrl, poolId);
 	}
-
+	*/
 }
 
 

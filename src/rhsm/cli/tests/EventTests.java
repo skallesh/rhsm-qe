@@ -175,7 +175,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		// 7/30/2012 updating consumer's autoheal to prevent an auto 'ENTITLEMENT CREATED' event
-		CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerCert.consumerid, false);
+		CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerCert.consumerid, false);
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,consumerCert.consumerid);

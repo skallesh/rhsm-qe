@@ -226,7 +226,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			} else
 			// END OF WORKAROUND
 			expectedEndDate.add(Calendar.DATE, Integer.valueOf(defaultExpiresAfter));
-			Assert.assertEquals(ConsumerCert.formatDateString(devSkuEntitlement.validityNotAfter), ConsumerCert.formatDateString(expectedEndDate), "When no expires_after attribute exists on the devSku product, the entitlement's validityNotAfter date defaults to '"+defaultExpiresAfter+"' days after the consumer was registered date ("+ConsumerCert.formatDateString(consumerCert.validityNotBefore)+").");
+			Assert.assertEquals(ConsumerCert.formatDateString(devSkuEntitlement.validityNotAfter), ConsumerCert.formatDateString(expectedEndDate), "When no expires_after attribute exists on the devSku product, the entitlement's validityNotAfter date defaults to '"+defaultExpiresAfter+"' days after the date the consumer was registered ("+ConsumerCert.formatDateString(consumerCert.validityNotBefore)+").");
 		} else {
 			// TEMPORARY WORKAROUND
 			boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -238,7 +238,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			} else
 			// END OF WORKAROUND
 			expectedEndDate.add(Calendar.DATE, Integer.valueOf(devSkuExpiresAfter));
-			Assert.assertEquals(ConsumerCert.formatDateString(devSkuEntitlement.validityNotAfter), ConsumerCert.formatDateString(expectedEndDate), "When an expires_after attribute exists on the devSku product, the entitlement's validityNotAfter is '"+devSkuExpiresAfter+"' days after the consumer was registered date ("+ConsumerCert.formatDateString(consumerCert.validityNotBefore)+").");
+			Assert.assertEquals(ConsumerCert.formatDateString(devSkuEntitlement.validityNotAfter), ConsumerCert.formatDateString(expectedEndDate), "When an expires_after attribute exists on the devSku product, the entitlement's validityNotAfter is '"+devSkuExpiresAfter+"' days after the date the consumer was registered ("+ConsumerCert.formatDateString(consumerCert.validityNotBefore)+").");
 		}
 		
 		// assert that the pool consumed exists with quantity 1
@@ -568,7 +568,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			servertasks.updateConfFileParameter("candlepin.standalone", "false");
 			servertasks.uncommentConfFileParameter("module.config.hosted.configuration.module");
 			servertasks.restartTomcat();
-			servertasks.initializeStatus(sm_serverUrl);
+			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 		}
 		// BEWARE: DO NOT RUN servertasks.refreshPoolsUsingRESTfulAPI(user, password, url, owner) OR IT WILL DELETE ALL SUBSCRIPTIONS AND POOLS IN CANDLEPIN 2.0+
 	}
@@ -579,7 +579,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			servertasks.updateConfFileParameter("candlepin.standalone", "true");
 			servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
 			servertasks.restartTomcat();
-			servertasks.initializeStatus(sm_serverUrl);
+			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 		}
 		
 		clienttasks.deleteFactsFileWithOverridingValues();	// to get rid of the dev_sku settings
