@@ -1422,27 +1422,36 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
 		Date endDate = endCalendar.getTime();	// caution - if the next call to createTestPool does not occur within this minute; endDate will be 1 minute behind reality
 		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
+		Calendar c1 = new GregorianCalendar();
 		SubscriptionPool expiringSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", expiringPoolId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 
 		// attaching from the pool that is about to expire should still be successful
 		File expiringEntitlementFile = clienttasks.subscribeToSubscriptionPool(expiringSubscriptionPool,sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl);
+		/* takes too much time, just unsubscribe without any assertions
 		EntitlementCert expiringEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(expiringEntitlementFile);
 		clienttasks.unsubscribeFromSerialNumber(expiringEntitlementCert.serialNumber);
-
+		*/
+		clienttasks.unsubscribe_(null, clienttasks.getSerialNumberFromEntitlementCertFile(expiringEntitlementFile),null,null,null,null);
+		Calendar c2 = new GregorianCalendar();
+		
 		// wait for the pool to expire
-		sleep(endingMinutesFromNow*60*1000);
+		//sleep(endingMinutesFromNow*60*1000);
+		// trying to reduce the wait time for the expiration by subtracting off some expensive test time
+		sleep(endingMinutesFromNow*60*1000 - (c2.getTimeInMillis()-c1.getTimeInMillis()));
 
-		// attempt to attach an entitlement from an expired pool
+		// attempt to attach an entitlement from the same pool which is now expired
 		String result=clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null).getStdout();	
 		// Stdout: Unable to attach pool with ID '8a908740438be86501438cd57718376c'.: Subscriptions for awesomeos-onesocketib expired on: 1/3/14 1:21 PM.
 		String expiredOnDatePattern = "M/d/yy h:mm a";	//	1/3/14 1:21 PM
 		DateFormat expiredOnDateFormat = new SimpleDateFormat(expiredOnDatePattern);
 		String expiredOnString = expiredOnDateFormat.format(endDate.getTime());
-		/* 
-		String expected="Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+productId+" expired on: "+EndingDate;
-		 */
-		String expected = String.format("Unable to attach pool with ID '%s'.: Subscriptions for %s expired on: %s.",expiringSubscriptionPool.poolId,expiringSubscriptionPool.productId,expiredOnString);
-		Assert.assertEquals(result.trim(), expected);
+		String expectedStdout="Unable to entitle consumer to the pool with id '"+expiringPoolId+"'.: Subscriptions for "+expiringSubscriptionPool.productId+" expired on: "+expiredOnString;
+		expectedStdout = String.format("Unable to attach pool with ID '%s'.: Subscriptions for %s expired on: %s.",expiringSubscriptionPool.poolId,expiringSubscriptionPool.productId,expiredOnString);
+		if (!result.trim().equals(expectedStdout)) {
+			String alternativeStdout = String.format("Pool with id %s could not be found.",expiringPoolId);
+			Assert.assertEquals(result.trim(), alternativeStdout, "Normally, when a pool expires and we attempt to attach it, the result will be '"+expectedStdout+"', however if the candlepin certificate revocation job swoops in immediately before our assertion and cleans out the expired pools, then this will be the expected result.");
+		} else
+		Assert.assertEquals(result.trim(), expectedStdout);
 	}
 
 	/**
@@ -4062,12 +4071,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@Test(description = "Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ", groups = {"VerifyFuturesubscription_Test", "blockedByBug-746035" }, enabled = true)
-	public void VerifyFuturesubscription_Test() throws Exception {
+	@Test(	description = "Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ",
+			groups = {"VerifyFutureSubscription_Test", "blockedByBug-746035" },
+			enabled = true)
+	public void VerifyFutureSubscription_Test() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
-		String productId = null;
 		clienttasks.subscribe(true, null, (String) null, null, null, null,
 				null, null, null, null, null, null);
 		List<InstalledProduct> installedproducts = clienttasks.getCurrentlyInstalledProducts();
@@ -4081,7 +4091,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if(availOnDate.size()==0) throw new SkipException("Sufficient future pools are not available");
 		clienttasks.subscribe(null, null, availOnDate.get(randomGenerator.nextInt(availOnDate.size())).poolId, null, null, null, null, null, null, null, null, null);
 
-
+		String productId = null;
 		for (InstalledProduct installedproduct : clienttasks
 				.getCurrentlyInstalledProducts()) {
 			if (installedproduct.status.equals("Future Subscription")) {
@@ -4089,10 +4099,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				productId=installedproduct.productId;
 			}
 		}
-		InstalledProduct installedPro = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, installedproducts);
-		System.out.println(installedPro);
-       if(installedPro.status.equals("Not Subscribed"))throw new SkipException("pools are not available for testing");
 		Assert.assertTrue(!(productId==null), "Found installed product(s) with a Future Subscription Status needed to attempt this test.");
+		InstalledProduct installedPro = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", productId, installedproducts);
+       if(installedPro.status.equals("Not Subscribed"))throw new SkipException("pools are not available for testing");
 
 		clienttasks.subscribe(true, null, (String) null, null, null, null,
 				null, null, null, null, null, null);
@@ -4674,6 +4683,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (!pools.isEmpty()) {
 			SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); 
 			randomAvailableProductId = pool.productId;
+///*debugTesting*/randomAvailableProductId = "awesomeos-everything";
 		}
 	}
 
