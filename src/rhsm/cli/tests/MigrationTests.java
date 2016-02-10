@@ -599,21 +599,40 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	[root@ibm-hs22-04 ~]# date +%Z
 		//	CEST
 		String migrationDateFactWithGMTOffsetTimeZone = client.runCommandAndWait("date -d \""+factMap.get(migrationDateFact)+"\" -Iseconds").getStdout().trim();
-		migrationDate = parseDateStringUsingDatePattern(migrationDateFactWithGMTOffsetTimeZone, "yyyy-MM-dd'T'HH:mm:ssZ", null);
+		String systemTimeZone = client.runCommandAndWait("date +%Z").getStdout().trim();
+		String systemTimeZoneHHMM = client.runCommandAndWait("date +%:z").getStdout().trim();
+		migrationDate = parseDateStringUsingDatePattern(migrationDateFactWithGMTOffsetTimeZone, "yyyy-MM-dd'T'HH:mm:ssZ", systemTimeZone);
 		
-		long systemTimeInSeconds = Long.valueOf(client.runCommandAndWait("date +%s").getStdout().trim());	// seconds since 1970-01-01 00:00:00 UTC
+		long systemTimeInSeconds = Long.valueOf(client.runCommandAndWait("date +%s").getStdout().trim());	// seconds since 1970-01-01 00:00:00 UTC (will be the same value no matter what TimeZone the system is in
 		long migratTimeInSeconds = migrationDate.getTimeInMillis()/1000;
-		// I do not have a bug number, but on RHEL5 and RHEL6 the migrationDateFactWithGMTOffsetTimeZone is 12 hours slow	// bug would be buried in rpm -qf `which date` => coreutils-5.97-34.el5_8.1  coreutils-8.4-37.el6
-		// RHEL7
+		// I do not have a bug number, but on RHEL5 and RHEL6 the migrationDateFactWithGMTOffsetTimeZone is slow as follows	// bug would be buried in rpm -qf `which date` => coreutils-5.97-34.el5_8.1  coreutils-8.4-37.el6
+		// RHEL7 EST Timezone is good
 		//	[root@jsefler-7 ~]# date -d "2015-01-01T00:00:00.000000" -Iseconds
 		//	2015-01-01T00:00:00-0500
-		// RHEL6
+		// RHEL6 EST Timezone is 12 hours slow
 		//	[root@jsefler-6 ~]# date -d "2015-01-01T00:00:00.000000" -Iseconds
 		//	2014-12-31T12:00:00-0500
-		// RHEL5
+		// RHEL5 EST Timezone is 12 hours slow
 		//	[root@jsefler-5 ~]# date -d "2015-01-01T00:00:00.000000" -Iseconds
 		//	2014-12-31T12:00:00-0500
-		if (Integer.valueOf(clienttasks.redhatReleaseX) < 7) migratTimeInSeconds += 12/*hours*/*60*60;
+		
+		// RHEL7 CET Timezone Time is good
+		//	[root@dell-pe1950-05 ~]# date -d "2015-01-01T00:00:00.000000" -Iseconds
+		//	2015-01-01T00:00:00+0100
+		// RHEL6 CET Timezone is 6 hours slow
+		//	[root@qe-testmachine ~]# date -d "2015-01-01T00:00:00.000000" -Iseconds
+		//	2014-12-31T18:00:00+0100
+		
+		// RHEL6 CST Timezone is 1 hour fast
+		//	[root@ibm-hs22-01 ~]# date -d "2015-01-01T00:00:00.000000" -Iseconds
+		//	2015-01-01T01:00:00+0800
+
+		// workaround on RHEL5 and RHEL6 for coreutils bug
+		if (Integer.valueOf(clienttasks.redhatReleaseX) < 7) {
+			// bump up the time in seconds by taking 7 hours and subtracting the time zone HH:MM offset)  TODO: determine if this formula works during daylight savings time. 
+			migratTimeInSeconds += 7/*hours*/*60*60 - (Integer.parseInt(systemTimeZoneHHMM.split(":")[0])/*hours*/*60*60 + Integer.parseInt(systemTimeZoneHHMM.split(":")[1])/*minutes*/*60);
+		}
+		
 		Assert.assertTrue(systemTimeInSeconds-tol < migratTimeInSeconds && migratTimeInSeconds < systemTimeInSeconds+tol, "The migration date fact '"+factMap.get(migrationDateFact)+"' was set within the last '"+tol+"' seconds (local system time).  Actual diff='"+String.valueOf(systemTimeInSeconds-migratTimeInSeconds)+"' seconds.");
 		
 		// assert we are no longer registered to RHN Classic

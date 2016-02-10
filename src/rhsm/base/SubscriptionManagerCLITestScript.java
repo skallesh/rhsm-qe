@@ -1492,6 +1492,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			DateFormat dateFormat = new SimpleDateFormat(datePattern);	// format="yyyy-MM-dd'T'HH:mm:ss.SSSZ" will parse dateString="2012-02-08T00:00:00.000+0000"
 			if (timeZone!=null) dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));	// timeZone="GMT"
 			Calendar calendar = new GregorianCalendar();
+			if (timeZone!=null) calendar.setTimeZone(TimeZone.getTimeZone(timeZone));
 			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
 			return calendar;
 		}
