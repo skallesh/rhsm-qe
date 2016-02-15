@@ -108,7 +108,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type and virt.uuid",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1018807","blockedByBug-1242409"}, dependsOnGroups={},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1018807","blockedByBug-1242409","blockedByBug-1308732"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VirtFactsReportedOnThisClient_Test() {
@@ -140,6 +140,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(virtUuid, expectedUuid, "subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
 			}
 		} else {
+			// Note: the following assert caught regression Bug 1308732 - subscription-manager system fact virt.uuid: Unknown is reported on physical systems
 			Assert.assertNull(virtUuid, "subscription-manager facts list should NOT report virt.uuid when on a host machine.");		
 		}
 	}
