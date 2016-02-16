@@ -251,6 +251,11 @@ public class CandlepinTasks {
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!|Bundle complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 		
+		//TODO You may encounter this error on Fedora 23
+		// An error occurred while installing rjb (1.4.8), and Bundler cannot continue.
+		// Make sure that `gem install -v '1.4.8' succeeds before bundling
+		// Note: This error was manually solved by:   dnf -y install redhat-rpm-config
+		
 		// delete the keystore to avoid...
 		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin
 		//	Unable to verify server's identity: certificate verify failed
