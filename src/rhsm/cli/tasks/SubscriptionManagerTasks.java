@@ -2299,7 +2299,7 @@ if (false) {
 		
 		//SSHCommandResult factsList = facts_(true, false, null, null, null);
 		String rhsmCommand = factsCommand(true, null, null, null, null);
-		if (grepFilter!=null) rhsmCommand+=" | grep \""+grepFilter+"\"";
+		if (grepFilter!=null) rhsmCommand+=" | grep --text \""+grepFilter+"\"";		// add --text option to avoid "Binary file (standard input) matches"
 		SSHCommandResult factsList = runCommandWithLang(localeVariable, lang, rhsmCommand);
 		String factsListAsString = factsList.getStdout().trim();
 		// # subscription-manager facts --list
