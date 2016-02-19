@@ -292,10 +292,7 @@
         rhsm-ver (map->Version {:major "1" :minor "16" :patch "6"})]
     (when (< (compare subman-ver rhsm-ver) 0)
       (throw (SkipException. "subscription-manager version is too old for this test")))
-    (tasks/restart-app)
-    ;; unregister if we already are
-    (when (bool (tasks/ui hasstate :register "VISIBLE"))
-      (tasks/unregister))
+    (tasks/restart-app :unregister? true)
     (tasks/register-system)
     (tasks/ui click :default-server)
     (sleep 1000)
