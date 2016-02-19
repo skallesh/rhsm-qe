@@ -40,7 +40,7 @@
 (defn server-url
   "Returns the server url as used by the automation. As used by API calls."
   []
-  (SubscriptionManagerBaseTestScript/sm_serverUrl))
+  (:server-url @config))
 
 (defn server-path
   "Returns the full server path as used by the register dialog."
