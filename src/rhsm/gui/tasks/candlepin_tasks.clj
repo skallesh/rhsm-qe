@@ -40,7 +40,13 @@
 (defn server-url
   "Returns the server url as used by the automation. As used by API calls."
   []
-  (:server-url @config))
+  (if (nil? (:server-url @config))
+    (str "https://"
+         (:server-hostname @config)
+         ":"
+         (:server-port @config)
+         (with-starting-slash (:server-prefix @config)))
+    (:server-url @config)))
 
 (defn server-path
   "Returns the full server path as used by the register dialog."

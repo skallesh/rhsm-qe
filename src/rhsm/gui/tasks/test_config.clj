@@ -25,6 +25,14 @@
             (let [val (System/getProperty (mapkey v) (default v))]
               (if (= "" val) nil val)))))
 
+; to avoid a cyclic dependency, adding this in here and in tools.clj
+(defn with-starting-slash
+  "Tests for starting slash and adds if needed"
+  [path]
+  (if (= \/ (first path))
+    path
+    (str "/" path)))
+
 (defn get-properties []
   (let [m (property-map {;proxy information
                          :basicauth-proxy-hostname "sm.basicauthproxy.hostname"
@@ -81,7 +89,11 @@
                               (str "http://" (m :client-hostname) ":4118"))
                   :server-url (DefaultMapKey.
                                 "sm.server.url"
-                                (str "http://" (m :server-hostname) ":" (m :server-port) (m :server-prefix)))}))))
+                                (str "https://"
+                                     (m :server-hostname)
+                                     ":"
+                                     (m :server-port)
+                                     (with-starting-slash (m :server-prefix))))}))))
 
 (def config (atom {}))
 (def clientcmd (atom nil))

@@ -192,6 +192,13 @@
   [path]
   (str path "/"))
 
+(defn with-starting-slash
+  "Tests for starting slash and adds if needed"
+  [path]
+  (if (= \/ (first path))
+    path
+    (str "/" path)))
+
 (defn make-dir
   "Creates a directory given by path"
   [^String path]
