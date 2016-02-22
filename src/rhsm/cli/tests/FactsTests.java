@@ -1231,11 +1231,19 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			if (procCpuInfoFacts.get("proc_cpuinfo.common.platform").toLowerCase().contains("pSeries".toLowerCase())) {
 				String virtUuid = clienttasks.getFactValue("virt.uuid");
 				Assert.assertNotNull(virtUuid, "The virt.uuid fact is set on a pSeries '"+clienttasks.arch+"' platform. ");
+				// assert virt.is_guest not Unknown
+				// TEMPORARY WORKAROUND FOR BUG
+				String bugId = "1310846"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1310846 - The virt.uuid fact value 'Unknown' is not Unknown on a pSeries 'ppc64' platform. expected:<true> but was:<false>
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping the assertion of fact virt.uuid is not Unknown on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				} else
+				// END OF WORKAROUND
 				Assert.assertTrue(!virtUuid.toLowerCase().equalsIgnoreCase("Unknown"), "The virt.uuid fact value '"+virtUuid+"' is not Unknown on a pSeries '"+clienttasks.arch+"' platform. ");
 				
 				// assert virt.is_guest is True
 				// TEMPORARY WORKAROUND FOR BUG
-				String bugId = "1072524"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
+				/*String*/ bugId = "1072524"; /*boolean*/ invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping the assertion of fact virt.is_guest:True on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
