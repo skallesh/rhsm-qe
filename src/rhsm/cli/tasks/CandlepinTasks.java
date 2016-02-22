@@ -3602,6 +3602,17 @@ schema generation failed
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
 	}
 	
+	public JSONObject createPoolUsingCPC(String ownerId, String productId) throws JSONException {
+		log.info("Using the ruby client to create_pool ownerId='"+ownerId+"' productId='"+productId+"'...");
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc create_pool \"%s\" \"%s\"", serverInstallDir+rubyClientDir, ownerId, productId);
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+		
+		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
+	}
+	
 	public JSONObject createPoolUsingCPC(String productId, String productName, String ownerId, String quantity) throws JSONException {
 		log.info("Using the ruby client to create_pool productId='"+productId+"' productName='"+productName+"' ownerId='"+ownerId+"' quantity='"+quantity+"'...");
 		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
