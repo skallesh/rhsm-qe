@@ -189,7 +189,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: facts list reports when the client is running on bare metal",
-			groups={"blockedByBug-726440","VirtFactsWhenClientIsAHost_Test"}, dependsOnGroups={},
+			groups={"blockedByBug-726440","blockedByBug-1308732","VirtFactsWhenClientIsAHost_Test"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70203)
 	public void VirtFactsWhenClientIsAHost_Test() {
@@ -1287,7 +1287,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,	"xen"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"xen\nxen-domU"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"xen\nxen-hvm"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807","757697"}),	"xen\nxen-dom0"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807","757697","1308732"}),	"xen\nxen-dom0"}));
 
 		return ll;
 	}
