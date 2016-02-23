@@ -110,6 +110,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *      Subscription Manger 1.15.X Translation Request
  *      https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.15.X
  *      https://engineering.redhat.com/rt/Ticket/Display.html?id=368509
+ *      https://projects.engineering.redhat.com/browse/GLOBAL-723
  *      https://bugzilla.redhat.com/show_bug.cgi?id=
  *      
  *      Subscription Manger 1.16.X Translation Request
