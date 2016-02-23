@@ -153,8 +153,8 @@ public class CandlepinTasks {
 		// where is catalina.out?
 		if (sshCommandRunner!=null) {
 			// "/var/log/tomcat6/catalina.out" or "/var/log/tomcat/catalina.out"
-			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/catalina.out")) tomcat6LogFile = "/var/log/tomcat6/catalina.out";
-			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/catalina.out")) tomcat6LogFile = "/var/log/tomcat/catalina.out";
+			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/catalina.out")) this.tomcat6LogFile = "/var/log/tomcat6/catalina.out";
+			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/catalina.out")) this.tomcat6LogFile = "/var/log/tomcat/catalina.out";
 		}
 	}
 	
