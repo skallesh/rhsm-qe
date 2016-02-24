@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -180,7 +181,11 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// virt.uuid
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
 		if (host_type.contains("ibm_systemz") || host_type.contains("xen-dom0") || host_type.contains("powervm")) {
-			Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor is contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
+			
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.8-3")) {	// master commit e330f0795879e7aaafac84237cf404aaac11ff7c	// RHEL6.8 commit 2c8c5a0372e9516b0799a31ca6d1b35299d70894	// 1308732: Leave hw fact virt.uuid unset if unknown
+				Assert.assertNull(virtUuid,"subscription-manager facts does NOT report a virt.uuid when it is Unknown (expected when hypervisor contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\")");
+			} else
+			Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
 		} else {
 			String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
 			Assert.assertEquals(virtUuid,expectedUuid,"subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
