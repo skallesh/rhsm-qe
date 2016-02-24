@@ -39,7 +39,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify status of partially covered Ram based products", 
 			groups = {"PartiallySubscribedRamBasedProducts"}, enabled = true)
 	public void PartiallySubscribedRamBasedProducts() throws JSONException,Exception {
-		Integer ram = 50; //GB
+		Integer ram = 20; //GB
 		factsMap.clear();
 		factsMap.put("uname.machine", "x86_64");
 		factsMap.put("cpu.core(s)_per_socket", "1");
@@ -67,9 +67,9 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify healing of partially subscribed Ram/socket based subscription", 
-			groups = { "RamSocketSubscription","blockedByBug-907638"}, enabled = true)
-	public void HealingPartialRamSocketSubscription() throws JSONException,Exception {
+	@Test(description = "verify healing of partially subscribed RAM products covered by stackable RAM-based subscriptions", 
+			groups = { "HealingPartiallySubscribedRamBasedProducts","blockedByBug-907638"}, enabled = true)
+	public void HealingPartiallySubscribedRamBasedProducts() throws JSONException,Exception {
 		PartiallySubscribedRamBasedProducts();
 		clienttasks.autoheal(null, true, null, null, null, null);
 		clienttasks.run_rhsmcertd_worker(true);
