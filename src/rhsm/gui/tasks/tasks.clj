@@ -205,9 +205,10 @@
     (if-not (ui rowexist? :owner-view owner)
       (throw+ {:type :owner-not-available
                :name owner
-               :msg (str "Not found in 'Owner Selection':" owner)})
+               :msg  (str "Not found in 'Owner Selection':" owner)})
       (ui selectrow :owner-view owner)))
-  (ui click :register)
+  (when (ui waittillwindowexist :register-dialog 30)
+    (ui click :register))
   (checkforerror 10))
 
 
