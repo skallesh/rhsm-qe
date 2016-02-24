@@ -1211,6 +1211,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyProcCpuInfoCollection_Test() {
+		// Reference: https://github.com/RedHatQE/rhsm-qe/issues/527
+		
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.16.8-2")) {	// subscription-manager commit f8416137a3b426aa54608116e005df7273abfada 1300805: Add support for ppc64 virt.uuid
 			throw new SkipException("Collection of proc_cpuinfo facts was not available in this version of subscription-manager '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"'.");
 		}
@@ -1218,8 +1220,13 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// this is the list of base facts in English
 		Map<String,String> procCpuInfoFacts = clienttasks.getFacts("proc_cpuinfo.common");
 		
-		// assert that any proc_cpuinfo.common facts are now collected
-		Assert.assertTrue(!procCpuInfoFacts.isEmpty(), "proc_cpuinfo.common facts are now collected on '"+clienttasks.arch+"'.");
+		// assert proc_cpuinfo.common facts are now collected on x86_64/ppc64/ppc64le/aarch64
+		ArrayList<String> procCpuInfoArches = new ArrayList<String>(Arrays.asList("x86_64","ppc64","ppc64le","aarch64"));
+		if (procCpuInfoArches.contains(clienttasks.arch)) {
+			Assert.assertTrue(!procCpuInfoFacts.isEmpty(), "proc_cpuinfo.common facts are now collected on '"+clienttasks.arch+"'.");
+		} else {
+			Assert.assertTrue(procCpuInfoFacts.isEmpty(), "Not expecting proc_cpuinfo.common facts to be collected on '"+clienttasks.arch+"'.  (Current list of expected arches is "+procCpuInfoArches+")");			
+		}
 		
 		// assert specific proc_cpuinfo.common facts are now collected on ppc64*
 		if (clienttasks.arch.startsWith("ppc64")) {
