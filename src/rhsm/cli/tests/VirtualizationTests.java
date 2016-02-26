@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,6 +23,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
@@ -134,15 +136,34 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// dev note: calculation for uuid is done in /usr/share/rhsm/subscription_manager/hwprobe.py def _getVirtUUID(self):
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
 		if (Boolean.parseBoolean(virtIsGuest)) {
-			if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) {
-				Assert.assertEquals(virtUuid, "Unknown", "subscription-manager facts list reports virt.uuid as Unknown when the hypervisor contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
-			} else {
-				String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
-				Assert.assertEquals(virtUuid, expectedUuid, "subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
-			}
+			String expectedUuid = "Unknown";	// if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) expectedUuid = "Unknown";
+			if (RemoteFileTasks.testExists(client, "/system/hypervisor/uuid")) expectedUuid = client.runCommandAndWait("cat /system/hypervisor/uuid").getStdout().trim();
+			if (RemoteFileTasks.testExists(client, "/proc/device-tree/vm,uuid")) expectedUuid = client.runCommandAndWait("cat /proc/device-tree/vm,uuid").getStdout().trim();	// ppc64
+			if (clienttasks.isPackageInstalled("dmidecode")) expectedUuid = client.runCommandAndWait("dmidecode -s system-uuid").getStdout().trim();
+			Assert.assertEquals(virtUuid, expectedUuid, "subscription-manager facts list reports virt.uuid value");
 		} else {
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			if (clienttasks.redhatReleaseX.equals("6") && virtUuid!=null && clienttasks.arch.startsWith("ppc")) {
+				String bugId = "1312431"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1312431 - Add support for detecting ppc64 LPAR as virt guests
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' virtual guest while virt-what bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			// TEMPORARY WORKAROUND FOR BUG
+			if (clienttasks.redhatReleaseX.equals("7") && virtUuid!=null && clienttasks.arch.startsWith("ppc")) {
+				String bugId = "1072524"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' virtual guest while virt-what bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
 			// Note: the following assert caught regression Bug 1308732 - subscription-manager system fact virt.uuid: Unknown is reported on physical systems
-			Assert.assertNull(virtUuid, "subscription-manager facts list should NOT report virt.uuid when on a host machine.");		
+			Assert.assertNull(virtUuid, "subscription-manager facts list should NOT report virt.uuid when on a host machine (indicated when virt-what reports an empty stdout).");		
 		}
 	}
 	
