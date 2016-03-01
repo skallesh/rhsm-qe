@@ -136,10 +136,19 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// dev note: calculation for uuid is done in /usr/share/rhsm/subscription_manager/hwprobe.py def _getVirtUUID(self):
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
 		if (Boolean.parseBoolean(virtIsGuest)) {
-			String expectedUuid = "Unknown";	// if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) expectedUuid = "Unknown";
+			String expectedUuid = "Unknown";	// if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) expectedUuid = "Unknown";	// HARD CODED in src/subscription_manager/hwprobe.py:        no_uuid_platforms = ['powervm_lx86', 'xen-dom0', 'ibm_systemz']
 			if (RemoteFileTasks.testExists(client, "/system/hypervisor/uuid")) expectedUuid = client.runCommandAndWait("cat /system/hypervisor/uuid").getStdout().trim();
 			if (RemoteFileTasks.testExists(client, "/proc/device-tree/vm,uuid")) expectedUuid = client.runCommandAndWait("cat /proc/device-tree/vm,uuid").getStdout().trim();	// ppc64
 			if (clienttasks.isPackageInstalled("dmidecode")) expectedUuid = client.runCommandAndWait("dmidecode -s system-uuid").getStdout().trim();
+			// TEMPORARY WORKAROUND FOR BUG
+			if (virtHostType.contains("ibm_systemz") && expectedUuid.equals("Unknown")) {
+				String bugId = "815598"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 815598 - [RFE] virt.uuid should not be "Unknown" in s390x when list facts
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' virtual guest while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
 			Assert.assertEquals(virtUuid, expectedUuid, "subscription-manager facts list reports virt.uuid value");
 		} else {
 			
