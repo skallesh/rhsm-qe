@@ -2589,13 +2589,13 @@ schema generation failed
 				break;
 			}
 		}
-		virt_only = virt_only==null? false : virt_only;	// the absense of a "virt_only" attribute implies virt_only=false
+		virt_only = virt_only==null? false : virt_only;	// the absence of a "virt_only" attribute implies virt_only=false
 		return virt_only;
 	}
 	
 	public static boolean isPoolProductPhysicalOnly (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
 		String physical_only = getPoolProductAttributeValue(authenticator, password, url, poolId, "physical_only");
-		if (physical_only==null) return false; // the absense of a "physical_only" attribute implies physical_only=false
+		if (physical_only==null) return false; // the absence of a "physical_only" attribute implies physical_only=false
 		return Boolean.valueOf(physical_only);
 	}
 	
@@ -3961,6 +3961,7 @@ schema generation failed
 		
 		// create the subscription
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds, brandingMaps).toString();
+		// curl --stderr /dev/null --insecure --user admin:admin --request POST --data '{"product":{"id":"0-sockets"},"quantity":20,"providedProducts":[{"id":"90001"}],"endDate":"Tue, 15 Mar 2016 12:14:20 -0400","contractNumber":1021091971,"accountNumber":1131685727,"startDate":"Sun, 28 Feb 2016 11:14:20 -0500"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f22-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/owners/" + ownerKey + "/subscriptions",requestBody));
 		
 		if (jsonSubscription.has("displayMessage")) {
@@ -4004,6 +4005,7 @@ schema generation failed
 		String requestBody = CandlepinTasks.createProductRequestBody(name, productId, multiplier, attributes, dependentProductIds).toString();
 		String path = "/products";
 		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0")) path = "/owners/"+ownerKey+"/products";	// products are now defined on a per org basis in candlepin-2.0+
+		// SSH alternative to HTTP request: curl --stderr /dev/null --insecure --user admin:admin --request POST --data '{"multiplier":1,"name":"Awesome OS for systems with sockets value=0","attributes":[{"name":"warning_period","value":"30"},{"name":"variant","value":"server"},{"name":"sockets","value":"0"},{"name":"arch","value":"ALL"},{"name":"type","value":"MKT"},{"name":"version","value":"1.0"}],"id":"0-sockets"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f22-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/products
 		JSONObject jsonProduct = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,path,requestBody));
 		if (jsonProduct.has("displayMessage")) {
 			//log.warning("Product creation appears to have failed: "+jsonProduct.getString("displayMessage"));
