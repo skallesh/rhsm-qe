@@ -207,7 +207,7 @@
                :name owner
                :msg  (str "Not found in 'Owner Selection':" owner)})
       (ui selectrow :owner-view owner)))
-  (when (ui waittillwindowexist :register-dialog 30)
+  (when (bool (ui waittillwindowexist :register-dialog 30))
     (ui click :register))
   (checkforerror 10))
 
