@@ -7915,6 +7915,12 @@ if (false) {
 			String systemUuid = getCurrentConsumerId();
 			if (systemUuid!=null) {	// is registered
 				String virtUuid = getFactValue("virt.uuid");
+				if (virtUuid==null) {	// can occur on s390x where virt.uuid is Unknown/null as demonstrated in Bug 815598 - [RFE] virt.uuid should not be "Unknown" in s390x when list fact 
+					log.warning("Since the virt.uuid on this system is null (Unknown), create a fake virt.uuid and add it as a custom fact so we can include it in the consumer's list of guestIds thereby mapping this virt system as a guest of itself...");
+					virtUuid = "fake-"+String.valueOf(System.currentTimeMillis());	// using a timestamp as a fake virt.uuid
+					Map<String,String> factsMap = new HashMap<String,String>(); factsMap.put("virt.uuid",virtUuid);
+					createFactsFileWithOverridingValues(factsMap);
+				}
 				try {
 					String authenticator = this.currentlyRegisteredUsername!=null?this.currentlyRegisteredUsername:candlepinAdminUsername;
 					String password = this.currentlyRegisteredPassword!=null?this.currentlyRegisteredPassword:candlepinAdminPassword;
