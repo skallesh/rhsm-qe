@@ -139,7 +139,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			String expectedUuid = "Unknown";	// if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) expectedUuid = "Unknown";	// HARD CODED in src/subscription_manager/hwprobe.py:        no_uuid_platforms = ['powervm_lx86', 'xen-dom0', 'ibm_systemz']
 			if (RemoteFileTasks.testExists(client, "/system/hypervisor/uuid")) expectedUuid = client.runCommandAndWait("cat /system/hypervisor/uuid").getStdout().trim();
 			if (RemoteFileTasks.testExists(client, "/proc/device-tree/vm,uuid")) expectedUuid = client.runCommandAndWait("cat /proc/device-tree/vm,uuid").getStdout().trim();	// ppc64
-			if (clienttasks.isPackageInstalled("dmidecode")) expectedUuid = client.runCommandAndWait("dmidecode -s system-uuid").getStdout().trim();
+			if (clienttasks.isPackageInstalled("dmidecode")) expectedUuid = client.runCommandAndWait("dmidecode -s system-uuid").getStdout().trim().toLowerCase();
 			// TEMPORARY WORKAROUND FOR BUG
 			if (virtHostType.contains("ibm_systemz") && expectedUuid.equals("Unknown")) {
 				String bugId = "815598"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 815598 - [RFE] virt.uuid should not be "Unknown" in s390x when list facts
