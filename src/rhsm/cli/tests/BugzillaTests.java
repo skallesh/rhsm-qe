@@ -3937,12 +3937,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			Calendar subStartDate = parseISO8601DateString(jsonPool.getString("startDate"), "GMT");
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool_(pool));
 			Calendar entStartDate = entitlementCert.validityNotBefore;
-			Assert.assertEquals(entStartDate,subStartDate,"The entitlement start date '"
-					+ EntitlementCert.formatDateString(entStartDate)
-					+ "' granted from pool " + pool.poolId
-					+ " should equal its subscription start date '"
-					+ OrderNamespace.formatDateString(subStartDate)
-					+ "'.");
+			Assert.assertTrue(entStartDate.compareTo(subStartDate)==0,""
+					+ "The entitlement start date granted from pool '"+pool.poolId+"' ("+pool.productId+") in '"+entitlementCert.file+"', '"+OrderNamespace.formatDateString(entStartDate)+"', "
+					+ "should match json start date '"+jsonPool.getString("startDate")+"' of the subscription pool it came from.");
 		}
 	}
 
