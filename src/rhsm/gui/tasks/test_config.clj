@@ -69,6 +69,13 @@
                          :username "sm.client1.username"
                          :username1 "sm.client2.username"
 
+                         ; rhsm.conf values
+                         :rhsm-base-url (DefaultMapKey. "sm.rhsm.baseUrl" "https://cdn.redhat.com")
+                         :rhsm-consumer-cert-dir (DefaultMapKey. "sm.rhsm.consumerCertDir" "/etc/pki/consumer")
+                         :sm-rhsm-entitlement-cert-dir (DefaultMapKey.
+                                                         "sm.rhsm.entitlementCertDir" "/etc/pki/entitlement")
+                         :sm-rhsm-product-cert-dir (DefaultMapKey. "sm.rhsm.productCertDir" "/etc/pki/product")
+
                          ;ssh
                          :ssh-key-passphrase "sm.sshkey.passphrase"
                          :ssh-key-private (DefaultMapKey. "sm.sshkey.private" ".ssh/id_auto_dsa")
