@@ -45,7 +45,7 @@
   :javac-options {:debug "on"}
   ;:jvm-opts ["-Xdebug" "-Xrunjdwp:transport=dt_socket,address=13172,server=y,suspend=n"]
 
-  :repl-options {:timeout 120}
+  :repl-options {:timeout 120000}
   )
 
 (comment
