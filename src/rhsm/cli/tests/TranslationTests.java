@@ -35,6 +35,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   Here is the raw rhsm.po file for LANG=pt
  *   http://git.fedorahosted.org/git/?p=subscription-manager.git;a=blob;f=po/pt.po;hb=RHEL6.3
  *   
+ *   Slave Configurations:
+ *     Launch method Launch slave agents on Unix machines vis SSH
+ *       JVM Options  -Dfile.encoding=UTF-8
+ *     Node Properties: 
+ *       Environment variables:   LC_CTYPE  en_US.UTF-8
+ *   
+ *   
  *   https://translate.zanata.org/zanata/project/view/subscription-manager/iter/0.99.X/stats
  *   
  *   https://fedora.transifex.net/projects/p/fedora/
