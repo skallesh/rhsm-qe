@@ -443,6 +443,56 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="assert the rct cat-cert tool does not traceback when run as non-root user.",
+			groups={"blockedByBug-1315901","VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test() {
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		
+		// create a non root user
+		deleteNonRootUser(); // as a precaution
+		RemoteFileTasks.runCommandAndAssert(client, "useradd "+nonRootUser, 0);
+		
+		//	[root@jsefler-6 ~]# su non-root-user --command "rct cat-cert /etc/pki/consumer/cert.pem"
+		//	Traceback (most recent call last):
+		//	  File "/usr/bin/rct", line 49, in <module>
+		//	    sys.exit(abs(main() or 0))
+		//	  File "/usr/bin/rct", line 44, in main
+		//	    return RctCLI().main()
+		//	  File "/usr/share/rhsm/subscription_manager/cli.py", line 160, in main
+		//	    return cmd.main()
+		//	  File "/usr/share/rhsm/rct/commands.py", line 39, in main
+		//	    return_code = self._do_command()
+		//	  File "/usr/share/rhsm/rct/cert_commands.py", line 74, in _do_command
+		//	    cert = self._create_cert()
+		//	  File "/usr/share/rhsm/rct/cert_commands.py", line 43, in _create_cert
+		//	    return certificate.create_from_file(cert_file)
+		//	  File "/usr/lib64/python2.6/site-packages/rhsm/certificate.py", line 59, in create_from_file
+		//	    return _CertFactory().create_from_file(path)
+		//	  File "/usr/lib64/python2.6/site-packages/rhsm/certificate2.py", line 65, in create_from_file
+		//	    pem = open(path, 'r').read()
+		//	IOError: [Errno 13] Permission denied: '/etc/pki/consumer/cert.pem'
+		
+		// attempt to run command "rct cat-cert /etc/pki/consumer/cert.pem" as non-root-user
+		String command = "rct cat-cert "+consumerCert.file.getPath();
+		SSHCommandResult result = client.runCommandAndWait("su "+nonRootUser+" --command '"+command+"'");
+		
+		// assert expected results
+		Assert.assertTrue(!result.getStderr().toLowerCase().contains("Traceback".toLowerCase()), "Stderr from command '"+command+"' run as a non-root user does not contain a traceback.");
+		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from command '"+command+"' run as a non-root user.");
+		Assert.assertEquals(result.getStderr().trim(), "Permission denied", "Stderr from command '"+command+"' run as a non-root user.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from command '"+command+"' run as a non-root user.");
+	}
+	@AfterGroups(groups={"setup"}, value={"VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test"})
+	public void deleteNonRootUser() {
+		client.runCommandAndWait("userdel -rf "+nonRootUser);
+	}
+	protected final String nonRootUser = "non-root-user";
+	
+	
 	@Test(	description="assert that the rct cat-cert tool reports the issuer of consumer/entitlement/product certificates",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-968364"},
 			enabled=true)
