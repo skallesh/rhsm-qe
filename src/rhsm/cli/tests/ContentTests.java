@@ -52,7 +52,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Test methods ***********************************************************************
-
+	
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
 			groups={"EnableDisableManageReposAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-1017866"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs

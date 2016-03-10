@@ -111,6 +111,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// unregister clients in case they are still registered from prior run (DO THIS BEFORE SETTING UP A NEW CANDLEPIN)
 		unregisterClientsAfterSuite();
 		
+		// assert that fips is enabled (or not) as expected before running any tests.
+		if (client1 != null) {
+			Assert.assertEquals(client1.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim(), "crypto.fips_enabled = "+(sm_clientFips?"1":"0"), "Asserting the expected enablement of FIPS on client '"+sm_client1Hostname+"' before running any tests.");
+		}
+		if (client2 != null) {
+			Assert.assertEquals(client2.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim(), "crypto.fips_enabled = "+(sm_clientFips?"1":"0"), "Asserting the expected enablement of FIPS on client '"+sm_client2Hostname+"' before running any tests.");
+		}
 		
 		File serverCaCertFile = null;
 		List<File> generatedProductCertFiles = new ArrayList<File>();
