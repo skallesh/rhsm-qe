@@ -57,7 +57,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 
 	@Test(	description="register and subscribe to expected product subscription",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"FipsTests","AcceptanceTests","Tier1Tests"},
 			dataProvider="getSubscribeData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
@@ -182,7 +182,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify the CDN provides packages for the non-default enabled content set after subscribing to a product subscription",
-			groups={"VerifyPackagesAreAvailable"},
+			groups={"FipsTests","VerifyPackagesAreAvailable"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dataProvider="getDefaultDisabledContentNamespaceData",
 			enabled=true)
@@ -247,7 +247,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="ensure a unique available package can be installed/removed from the enabled repo ",
-			groups={},
+			groups={"FipsTests"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
 			dataProvider="getContentNamespaceData",
