@@ -54,7 +54,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :subscription-redemption-dialog "Subscription Redemption"
                 :system-preferences-dialog "System Preferences"
                 :warning-dialog "Warning"
-                :repositories-dialog "manage_repositories_dialog"}))
+                :repositories-dialog "manage_repositories_dialog"
+                :subscription-attachment-dialog "Subscription Attachment"}))
 
 
 (def elements
@@ -258,7 +259,12 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :gpg-check-combobox "gpgcheck_combobox"
        :gpg-check-edit "gpgcheck_edit_button"
        :gpg-check-remove "gpgcheck_remove_button"
-       :apply "Apply"})))
+       :apply "Apply"})
+    (define-elements (windows :subscription-attachment-dialog)
+                     {:drop-down "Standard"                 ;; comboselect box
+                      :attach-next "register_button"        ;; the Next button
+                      :attach-back "back_button"            ;; the Back button
+                      :attach-close "close_button"})))      ;; the Close button
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
