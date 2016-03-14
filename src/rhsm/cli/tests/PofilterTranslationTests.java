@@ -273,6 +273,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			ignorableMsgIds.add("%%prog %s [OPTIONS] CERT_FILE");
 			ignorableMsgIds.add("%%prog %s [OPTIONS] MANIFEST_FILE");
 			ignorableMsgIds.add("To remove a channel, use 'rhn-channel --remove --channel=<conflicting_channel>'.");
+			ignorableMsgIds.add("consumer_uuid=%s is not a valid consumer_uuid. Not attempting to sync %s cache with server.");
 			ignorableMsgIds.addAll(Arrays.asList(new String[]{"progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox","manage_repositories_dialog","remove_all_overrides_button"}));	// these are various GTK widget ids, not gnome menu items
 		}
 		
