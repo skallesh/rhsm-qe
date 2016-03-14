@@ -149,6 +149,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("couldn't","could not");
 			msgId = msgId.replace("Shouldn't","Should not");
 			msgId = msgId.replace("shouldn't","should not");
+			msgId = msgId.replace("consumerid", "consumer_id");
+			msgId = msgId.replace("consumer_uuid", "consumer_universally_unique_identifier");
 			msgId = msgId.replace("&#x2022;","bullet");
 			//msgId = msgId.replace("'%s'", "%s");	// already fixed by adjustment below
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
@@ -314,6 +316,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+word+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("systemid", "system id");
+				}
+			}
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1188265
+			if (msgId.contains("Editition")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1317613";	// Bug 1317613 - typo in src/subscription_manager/gui/data/ui/selectsla.ui
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring known misspelling of '"+"Awesome Developer Editition"+"' while bug '"+bugId+"' is open.");
+					msgId = msgId.replace("Awesome Developer Editition", "Awesome Developer Edition");
 				}
 			}
 			// END OF WORKAROUND
