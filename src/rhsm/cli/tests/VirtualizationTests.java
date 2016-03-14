@@ -285,6 +285,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		// virt.uuid
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.8-3")) {	// master commit e330f0795879e7aaafac84237cf404aaac11ff7c	// RHEL6.8 commit 2c8c5a0372e9516b0799a31ca6d1b35299d70894	// 1308732: Leave hw fact virt.uuid unset if unknown
+			Assert.assertNull(virtUuid,"subscription-manager facts does NOT report a virt.uuid when it is Unknown (expected when virt-what fails after fix for bug 1308732)");
+		} else
 		Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor is undeterminable (virt-what fails).");
 	}
 	
@@ -311,6 +314,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		// virt.uuid
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.8-3")) {	// master commit e330f0795879e7aaafac84237cf404aaac11ff7c	// RHEL6.8 commit 2c8c5a0372e9516b0799a31ca6d1b35299d70894	// 1308732: Leave hw fact virt.uuid unset if unknown
+			Assert.assertNull(virtUuid,"subscription-manager facts does NOT report a virt.uuid when it is Unknown (expected when virt-what is not installed after fix for bug 1308732)");
+		} else
 		Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when virt-what in not installed.");
 
 	}
