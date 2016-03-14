@@ -247,6 +247,17 @@ public class CandlepinTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install bundler", Integer.valueOf(0), "installed", null);	// probably only needs to be run once
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install buildr", Integer.valueOf(0), "1 gem installed", null);	// probably only needs to be run once
 		*/
+		/* 3/14/2016: Gem::InstallError: byebug requires Ruby version >= 2.0.0.
+		 *     [root@jsefler-f22-candlepin ~]# ruby --version
+		 *     ruby 1.9.3p551 (2014-11-13 revision 48407) [x86_64-linux]
+		 * Solution:
+		 *     [root@jsefler-f22-candlepin ~]# rvm install ruby-2.2.1
+		 *     [root@jsefler-f22-candlepin ~]# rvm --default use ruby-2.2.1
+		 *     [root@jsefler-f22-candlepin ~]# rvm list
+		 *     [root@jsefler-f22-candlepin ~]# gem install bundler
+		 *     [root@jsefler-f22-candlepin ~]# cd candlepin/
+		 *     [root@jsefler-f22-candlepin candlepin]# bundle install
+		 */
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!|Bundle complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
