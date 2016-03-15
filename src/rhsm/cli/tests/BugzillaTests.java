@@ -2947,20 +2947,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		int i = randomGenerator.nextInt(serialnums.size());
 		int j = randomGenerator.nextInt(serialnums.size());
+/* irrelevant for this test case
 		if (i == j) {
 			j = randomGenerator.nextInt(serialnums.size());
-
 		}
+ */
+
 		BigInteger serialOne = serialnums.get(i);
 		BigInteger serialTwo = serialnums.get(j);
 		String result = unsubscribeFromMultipleEntitlementsUsingSerialNumber(
 				serialOne.multiply(serialTwo), serialTwo.multiply(serialOne))
 				.getStdout();
-		String expected = "Serial numbers unsuccessfully removed at the server:" + "\n"
-				+ "   " + serialOne.multiply(serialTwo)
-				+ " is not a valid value for serial" + "\n" + "   "
-				+ serialTwo.multiply(serialOne)
-				+ " is not a valid value for serial";
+		String expected = "";
+		expected +=	"Serial numbers unsuccessfully removed at the server:" + "\n";
+		expected +=	"   " + serialOne.multiply(serialTwo) + " is not a valid value for serial" + "\n";
+		expected +=	"   " + serialTwo.multiply(serialOne) + " is not a valid value for serial";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1")) {	// commit bb482c63d7386b358e5ba32817e729d1b423a421	// Bug 1268491: RestEasy 3 changed behavior when a JAX-RS resource's parameter is not parseable. In the past BadRequestException was handled. Defensively adding the same handling behavior to NotFoundException
+			expected =	"Serial numbers unsuccessfully removed at the server:" + "\n";
+			expected +=	"   " + serialOne.multiply(serialTwo);
+		}
 		Assert.assertEquals(result.trim(), expected);
 	}
 
@@ -2969,8 +2974,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify unsubscribe from multiple subscriptions", groups = {
-			"UnsubscribeFromMultipleEntitlementsTest", "blockedByBug-867766","blockedByBug-906550" }, enabled = true)
+	@Test(	description = "Verify unsubscribe from multiple subscriptions",
+			groups = {"UnsubscribeFromMultipleEntitlementsTest", "blockedByBug-867766","blockedByBug-906550" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 50230)
 	public void UnsubscribeFromMultipleEntitlements() throws JSONException,
 	Exception {
@@ -2993,23 +2999,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				.getCurrentlyConsumedProductSubscriptions()) {
 			serialnums.add(consumed.serialNumber);
 		}
-		/* does not guarantee i != j
+/* does not guarantee i != j
 		int i = randomGenerator.nextInt(serialnums.size());
 		int j = randomGenerator.nextInt(serialnums.size());
 		if (i == j) {
 			j = randomGenerator.nextInt(serialnums.size());
 
 		}
-		 */
+ */
 		BigInteger serialOne = serialnums.get(randomGenerator.nextInt(serialnums.size()));	// serialnums.get(i);
 		serialnums.remove(serialOne);
 		BigInteger serialTwo = serialnums.get(randomGenerator.nextInt(serialnums.size()));	// serialnums.get(j);
-		String result = unsubscribeFromMultipleEntitlementsUsingSerialNumber(
-				serialOne, serialTwo).getStdout();
+		String result = unsubscribeFromMultipleEntitlementsUsingSerialNumber(serialOne, serialTwo).getStdout();
 
-		String expected = "Serial numbers successfully removed at the server:" + "\n" + "   "
-				+ serialOne + "\n" + "   " + serialTwo+ "\n" 
-				+"2 local certificates have been deleted.";
+		String expected = "";
+		expected +=	"Serial numbers successfully removed at the server:" + "\n";
+		expected +=	"   " + serialOne + "\n";
+		expected +=	"   " + serialTwo + "\n";
+		expected += "2 local certificates have been deleted.";
 		Assert.assertEquals(result.trim(), expected);
 	}
 
