@@ -29,6 +29,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (def windows (define-windows
                {:main-window "Subscription Manager"
                 :about-dialog "About Subscription Manager"
+                :credits-dialog "Credits"
+                :license-dialog "License"
                 :contract-selection-dialog "Contract Selection"
                 :date-selection-dialog "Date Selection"
                 :error-dialog "Error"
@@ -246,7 +248,16 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :rhsm-version "subscription manager version*"
        :next-system-check "Next System Check-in*"
        :license "License"
+       :credits "Credits"
        :close-about-dialog "Close"})
+    (define-elements (windows :credits-dialog)
+      {;;these info fields are meant to be used by running gettext on them
+       :close-credits-dialog "Close"}
+      )
+    (define-elements (windows :license-dialog)
+      {;;these info fields are meant to be used by running gettext on them
+       :close-license-dialog "Close"}
+      )
     (define-elements (windows :repositories-dialog)
       {:repo-table "Repository View"
        :repo-message "No repositories are available*"
