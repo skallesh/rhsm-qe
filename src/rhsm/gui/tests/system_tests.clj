@@ -53,6 +53,21 @@
 
 (defn ^{Test {:groups ["system"
                        "tier2"
+                       "blockedByBug-1248664"]}}
+  check_no_gtk_warnings_at_app_start
+  "Asserts that there are not any GTK warning on a console appeared when starting app."
+  [_]
+  (try
+    (let [output (get-logging @clientcmd
+                              ldtpd-log
+                              "check_no_gtk_warnings_at_app_start"
+                              "Gtk-WARNING"
+                              (tasks/start-app))]
+     (verify (not (substring? "Gtk-WARNING" output))))
+   (finally (tasks/kill-app))))
+
+(defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-656896"]}}
   check_libglade_warnings
   "Asserts that the libglade-WARNINGs are corrected."
