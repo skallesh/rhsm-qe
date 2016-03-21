@@ -227,6 +227,41 @@
       (run-command "killall -9 firefox"))))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
+                       "blockedByBug-1254460"]}}
+  check_closing_of_about_window
+  "Asserts that we can close About window by clicking on =x= icon."
+  [_]
+  (tasks/restart-app)
+  (tasks/ui click :about)
+  (tasks/ui waittillwindowexist :about-dialog 10)
+
+  ; credits dialog closing
+  (tasks/ui click :credits)
+  (tasks/ui waittillwindowexist :credits-dialog 10)
+  (tasks/ui click :close-credits-dialog)
+  (verify (not (bool (tasks/ui guiexist :credits-dialog))))
+
+  (tasks/ui click :credits)
+  (tasks/ui waittillwindowexist :credits-dialog 10)
+  (tasks/ui closewindow :credits-dialog)
+  (verify (not (bool (tasks/ui guiexist :credits-dialog))))
+
+  ;license dialog closing
+  (tasks/ui click :license)
+  (tasks/ui waittillwindowexist :license-dialog 10)
+  (tasks/ui click :close-license-dialog)
+  (verify (not (bool (tasks/ui guiexist :license-dialog))))
+
+  (tasks/ui click :license)
+  (tasks/ui waittillwindowexist :license-dialog 10)
+  (tasks/ui closewindow :license-dialog)
+  (verify (not (bool (tasks/ui guiexist :license-dialog))))
+
+  (tasks/ui click :close-about-dialog)
+  )
+
+(defn ^{Test {:groups ["system"
                        "tier1"
                        "blockedByBug-947485"]}}
   open_with_bad_hostname
