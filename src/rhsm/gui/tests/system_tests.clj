@@ -63,7 +63,7 @@
                               "check_no_gtk_warnings_at_app_start"
                               "Gtk-WARNING"
                               (tasks/start-app))]
-     (verify (not (substring? "libglade-WARNING" output))))
+     (verify (not (substring? "Gtk-WARNING" output))))
    (finally (tasks/kill-app))))
 
 (defn ^{Test {:groups ["system"
