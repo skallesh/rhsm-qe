@@ -6,7 +6,7 @@
   :aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
   :dependencies [[clj-http "2.0.0"]
-                 [com.google.code.guice/guice "1.0"] ;; required for new testng
+                 [com.google.code.guice/guice "1.0"]        ;; required for new testng
                  [com.redhat.qe/assertions "1.0.2"]
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
                  [com.redhat.qe/bz-checker "1.0.3-SNAPSHOT"]
@@ -33,7 +33,8 @@
                  ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
-                 [mount "0.1.10"]]
+                 [mount "0.1.10"]
+                 [cheshire "5.5.0"]]
 
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
