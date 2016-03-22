@@ -31,7 +31,8 @@
                  [slingshot "0.8.0"]
                  ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
-                 [levand/immuconf "0.1.0"]]
+                 [levand/immuconf "0.1.0"]
+                 [cheshire "5.5.0"]]
 
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]

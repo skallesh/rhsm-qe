@@ -7,11 +7,13 @@
         [clojure.string :only (trim
                                split
                                join)])
-  (:require [clojure.tools.logging :as log])
+  (:require [clojure.tools.logging :as log]
+            [clojure.set])
   (:import [com.redhat.qe.tools RemoteFileTasks]
                org.testng.SkipException
                [com.redhat.qe.auto.bugzilla BzChecker]
-               [java.lang.Math]))
+               [java.lang.Math]
+               [java.nio.file Files Paths]))
 
 (def skip-groups {:suite (atom false)
                   :autosubscribe (atom false)
@@ -251,3 +253,41 @@
                   (re-find convert-patt version))
         m (assoc m :dev (re-find git-patt (:dev m)))]
     (map->Version m)))
+
+;; functions taken from uplift (we don't need to put uplift in :dependencies just for this)
+(defn varargs [f arg & args]
+  (let [t (class arg)]
+    (f arg (into-array t (if args args [])))))
+
+(defn directory-seq
+  "Returns a sequence of DirectoryStream entries"
+  [^String path]
+  (let [p (varargs #(Paths/get %1 %2) path)
+        ds (Files/newDirectoryStream p)]
+    (for [d ds]
+      d)))
+
+(defn list-files
+  "Returns a listing of files in a directory
+
+  Only works locally"
+  [entries & filters]
+  (let [filters (if (nil? filters)
+                  [(fn [_] true)]
+                  filters)
+        ;; apply the the filter functions to the entries and make them a set
+        filtered (reduce clojure.set/union #{}
+                         (for [f filters]
+                           (set (filter f entries))))]
+    (for [d filtered]
+      (let [name (.toString (.getFileName d))]
+        name))))
+
+(defn file-list
+  [^String path]
+  (let [entries (directory-seq path)]
+    (list-files entries)))
+
+(defn str->Path
+  [path]
+  (Paths/get path (into-array String [])))
