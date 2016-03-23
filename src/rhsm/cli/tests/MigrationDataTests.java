@@ -2665,6 +2665,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1320597");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-hpn-6") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hpn-6-debuginfo")) {
+				// Bug 1320607 - rhel-x86_64-server-hpn-6 channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1320607");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
