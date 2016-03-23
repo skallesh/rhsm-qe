@@ -1177,9 +1177,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!channelsToProductCertFilenamesMap.get(rhnRhelChannel).equalsIgnoreCase("none"), "RHN RHEL Channel '"+rhnRhelChannel+"' does not map to None.");
 		ProductCert rhnRhelProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+channelsToProductCertFilenamesMap.get(rhnRhelChannel)));
 		if (rhnRhelChannel.contains(/*clienttasks.redhatReleaseX+*/"-beta-") || rhnRhelChannel.endsWith(/*clienttasks.redhatReleaseX+*/"-beta")) {
-			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY+" Beta", "RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that matches this RHEL dot release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);			
+			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY+" Beta", "RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that corresponds to this RHEL minor release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);			
 		} else {
-			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY, "RHN RHEL Channel '"+rhnRhelChannel+"' maps to the following product cert that matches this RHEL dot release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);
+			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY, "RHN RHEL Channel '"+rhnRhelChannel+"' maps to the following product cert that corresponds to this RHEL minor release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);
 		}
 	}
 	@DataProvider(name="RhnRhelChannelsFromChannelMappingData")
@@ -1386,7 +1386,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
 				bugIds.add("1263432");
-			}	
+			}
+			
+			// Bug 1320647 - rhn channels 'rhel-ARCH-workstation-6-thirdparty-oracle-java-beta' should maps to the Beta product cert, not the GA cert.
+			if (rhnChannel.equals("rhel-i386-workstation-6-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-workstation-6-thirdparty-oracle-java-beta")) {
+				bugIds.add("1320647");
+			}
 			
 			// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
