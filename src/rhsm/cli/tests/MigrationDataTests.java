@@ -2659,6 +2659,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1320592");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-hpn-fastrack-6") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hpn-fastrack-6-debuginfo")) {
+				// Bug 1320597 - rhel-x86_64-server-hpn-fastrack-6 channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1320597");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
