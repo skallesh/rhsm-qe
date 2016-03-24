@@ -176,9 +176,9 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		expectedEntitlementCertEndDate.add(Calendar.HOUR, 24);
 		//Assert.assertEquals(ConsumerCert.formatDateString(entitlementCert.validityNotAfter), ConsumerCert.formatDateString(expectedEntitlementCertEndDate), "The End Date of the entitlement from a temporary pool should be exactly 24 hours after the registration date of the current consumer '"+ConsumerCert.formatDateString(cert.validityNotBefore)+"'.");
 		// allow for a few seconds of tolerance
-		Calendar expectedEntitlementCertEndDateUpperTolerance = (Calendar) expectedEntitlementCertEndDate.clone(); expectedEntitlementCertEndDateUpperTolerance.add(Calendar.SECOND, +5);
-		Calendar expectedEntitlementCertEndDateLowerTolerance = (Calendar) expectedEntitlementCertEndDate.clone(); expectedEntitlementCertEndDateLowerTolerance.add(Calendar.SECOND, -5);
-		Assert.assertTrue(entitlementCert.validityNotAfter.before(expectedEntitlementCertEndDateUpperTolerance) && entitlementCert.validityNotAfter.after(expectedEntitlementCertEndDateLowerTolerance), "The End Date of the entitlement from a temporary pool '"+ConsumerCert.formatDateString(entitlementCert.validityNotAfter)+"' should be 24 hours (within a few seconds) after the registration date of the current consumer '"+ConsumerCert.formatDateString(cert.validityNotBefore)+"'.");
+		Calendar expectedEntitlementCertEndDateUpperTolerance = (Calendar) expectedEntitlementCertEndDate.clone(); expectedEntitlementCertEndDateUpperTolerance.add(Calendar.SECOND, +25);
+		Calendar expectedEntitlementCertEndDateLowerTolerance = (Calendar) expectedEntitlementCertEndDate.clone(); expectedEntitlementCertEndDateLowerTolerance.add(Calendar.SECOND, -25);
+		Assert.assertTrue(entitlementCert.validityNotAfter.before(expectedEntitlementCertEndDateUpperTolerance) && entitlementCert.validityNotAfter.after(expectedEntitlementCertEndDateLowerTolerance), "The End Date of the entitlement from a temporary pool '"+ConsumerCert.formatDateString(entitlementCert.validityNotAfter)+"' should be 24 hours (within several seconds) after the registration date of the current consumer '"+ConsumerCert.formatDateString(cert.validityNotBefore)+"'.");
 		
 		// assert the Status Details of the attached subscription
 		String expectedStatusDetailsForAnUnmappedGuestsOnlyProductSubscription = "Guest has not been reported on any host and is using a temporary unmapped guest subscription.";
