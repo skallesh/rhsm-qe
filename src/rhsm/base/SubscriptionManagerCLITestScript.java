@@ -116,6 +116,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	    //	https://beaker.engineering.redhat.com/jobs/1259246
 		//	Notice this task... <task name="/distribution/fips/setup-fips-enabled" role="STANDALONE"/>
 		//	How can I make RHEL 6 or RHEL 7 FIPS 140-2 compliant?  https://access.redhat.com/solutions/137833
+		// 
+		// Beaker test_log-Setup.log :: [   FAIL   ] :: FIPS on s390 on RHEL <7.1 is not supported (Assert: expected 0, got 1)
 		if (client1 != null) {
 			Assert.assertEquals(client1.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim(), "crypto.fips_enabled = "+(sm_clientFips?"1":"0"), "Asserting the expected enablement of FIPS on client '"+sm_client1Hostname+"' before running any tests.");
 		}

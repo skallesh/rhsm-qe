@@ -1,5 +1,24 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
+<!-- FIPS NOTES:
+How can I make RHEL 6 or RHEL 7 FIPS 140-2 compliant?
+    https://access.redhat.com/solutions/137833
+    
+Add Beaker Task to make provision system in FIPS mode
+    <task name="/distribution/fips/setup-fips-enabled" role="STANDALONE"/>
+    
+Historical Bugzillas related to FIPS:
+	Bug 902357 - yum crashes in FIPS if a remote repository uses MD5 checksum
+    Bug 920524 - Failed to register a system which in the FIPS mode.
+    Bug 1007707 - Can't use yum to install "dracut-fips" in rhel6.5-alpha-1.1
+    Bug 1008822 - Can't log in the system when use "fips=1" in the grub.conf
+    Bug 1018459 - Failed reboot the system with FIPS enabled.
+    Bug 1045329 - subscription-manager can't work in fips mode.
+    Bug 1158836 - Can't log into the GUI desktop after enable the FIPS mode in RHEL7.1
+
+-->
+
+
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
 <suite name="CLI FIPS TestSuite">
 
