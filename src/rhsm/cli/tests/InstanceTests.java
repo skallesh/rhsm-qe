@@ -88,6 +88,8 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		
 		// make sure we are unsubscribed from all subscriptions
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
+		// NOTE: can throw a Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a908790535c4e7201535ce8eb4e18fa] at org.hibernate.UnresolvableObjectException.throwIfNull:64
+		// when prior dataProvided test fails thereby skipping the last unsubscribe subProductSubscription.serialNumber in this test
 		
 		// get some attributes from the subscription pool
 		List<String> poolProvidedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
@@ -392,10 +394,10 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				String bugId="1256926"; // Bug 1256926 - Instance Based pool appears to be providing extra products than expected
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					log.warning("while bug '"+bugId+"' is open, skipping assertion: The list of provided products from the consumed subpool '"+subProductSubscription.poolId+"' "+subProductSubscription.provides+" should be the same as the provided products from the consumed hostpool '"+productSubscription.poolId+"' "+productSubscription.provides+".");
+					log.warning("while bug '"+bugId+"' is open, skipping assertion: The list of provided products from the consumed subpool '"+subProductSubscription.poolId+"' "+subProductSubscription.provides+" should be a superset of the provided products from the consumed hostpool '"+pool.poolId+"' "+pool.provides+".");
 				} else
 				// END OF WORKAROUND
-				Assert.assertTrue(subProductSubscription.provides.containsAll(productSubscription.provides)&&productSubscription.provides.containsAll(subProductSubscription.provides), "The list of provided products from the consumed subpool '"+subProductSubscription.poolId+"' "+subProductSubscription.provides+" should be the same as the provided products from the consumed hostpool '"+productSubscription.poolId+"' "+productSubscription.provides+".");
+				Assert.assertTrue(subProductSubscription.provides.containsAll(pool.provides)/*DELETEME && pool.provides.containsAll(subProductSubscription.provides)*/, "The list of provided products from the consumed subpool '"+subProductSubscription.poolId+"' "+subProductSubscription.provides+" should be a superset of the provided products from the consumed hostpool '"+pool.poolId+"' "+pool.provides+".  (Superset because a another pool with the same stacking_id could have been auto consumed earlier in this test that provides additional products that were added to the one-sub-pool-per-stack subpool '"+subProductSubscription.poolId+"'.)");
 				clienttasks.unsubscribe_(false, subProductSubscription.serialNumber, null, null, null, null);
 			}
 		}

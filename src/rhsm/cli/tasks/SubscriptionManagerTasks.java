@@ -7413,14 +7413,14 @@ if (false) {
 	public SSHCommandResult yumInstallGroup (String group) {
 		String command = "yum -y groupinstall \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
-		Assert.assertFalse(this.yumGroupList("Available", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is Available after calling '"+command+"'.");
+		Assert.assertTrue(!this.yumGroupList("Available", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is NOT Available after calling '"+command+"'.");
 		return result;
 	}
 	
 	public SSHCommandResult yumRemoveGroup (String group) {
 		String command = "yum -y groupremove \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
-		Assert.assertFalse(this.yumGroupList("Installed", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is Installed after calling '"+command+"'.");
+		Assert.assertTrue(!this.yumGroupList("Installed", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is NOT Installed after calling '"+command+"'.");
 		return result;
 	}
 	
@@ -7714,7 +7714,9 @@ if (false) {
 			lang="LANG="+lang;
 		}
 		String command = lang+" "+rhsmCommand;
+		/* this was an attempt to fix a problem that should have been solved on the jenkins node environment vars
 		command = "LC_CTYPE= "+command;	// also unset LC_CTYPE
+		*/
 		/* this workaround should no longer be needed after rhel70 fixes by ckozak similar to bugs 1052297 1048325 commit 6fe57f8e6c3c35ac7761b9fa5ac7a6014d69ce20 that employs #!/usr/bin/python -S    sys.setdefaultencoding('utf-8')    import site
 		command = "PYTHONIOENCODING=ascii "+command;	// THIS WORKAROUND IS NEEDED AFTER master commit 056e69dc833919709bbf23d8a7b73a5345f77fdf RHEL6.4 commit 1bc25596afaf294cd217200c605737a43112a378 for bug 800323
 		*/

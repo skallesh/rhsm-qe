@@ -68,7 +68,7 @@ Hash: rhsmcertd-worke,rhsmcertd_t,user_tmp_t,file,open
  * 4. restorecon -Rv /usr/lib/python2.7/site-packages
  *
  */
-@Test(groups={"SELinuxTests","AcceptanceTests","Tier1Tests","Tier2Tests","Tier3Tests"})
+@Test(groups={"SELinuxTests","AcceptanceTests","Tier1Tests","Tier2Tests","Tier3Tests","FipsTests"})
 public class SELinuxTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************

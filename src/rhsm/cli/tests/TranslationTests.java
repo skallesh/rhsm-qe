@@ -35,6 +35,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   Here is the raw rhsm.po file for LANG=pt
  *   http://git.fedorahosted.org/git/?p=subscription-manager.git;a=blob;f=po/pt.po;hb=RHEL6.3
  *   
+ *   Slave Configurations:
+ *     Launch method Launch slave agents on Unix machines vis SSH
+ *       JVM Options  -Dfile.encoding=UTF-8
+ *     Node Properties: 
+ *       Environment variables:   LC_CTYPE  en_US.UTF-8
+ *   
+ *   
  *   https://translate.zanata.org/zanata/project/view/subscription-manager/iter/0.99.X/stats
  *   
  *   https://fedora.transifex.net/projects/p/fedora/
@@ -283,6 +290,20 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
+		
+		// TEMPORARY WORKAROUND FOR BUG:
+		if (!translationFilePassed && clienttasks.isPackageVersion("subscription-manager","==", "1.16")) {
+			if (translationFile.getPath().contains("/it/")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1318404"; // Bug 1318404 - [IT] Zanata translations for subscription-manager 1.16 are not 100%
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Missing translations for Lang '"+translationFile.getPath()+"' is a Known Issue for subscription-manager-1.16.  Skipping test while bug '"+bugId+"' is open.");
+				}
+			}
+
+		}
+		// END OF WORKAROUND
 		
 		Assert.assertTrue(translationFilePassed,"Exactly 1 occurance of all the expected translation msgids ("+translationMsgidSetForSubscriptionManager.size()+") were found in translation file '"+translationFile+"'.");
 	}

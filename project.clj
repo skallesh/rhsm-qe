@@ -43,6 +43,7 @@
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
   :javac-options {:debug "on"}
+  ;:javac-options ["-target" "1.7" "-source" "1.7"]
   ;:jvm-opts ["-Xdebug" "-Xrunjdwp:transport=dt_socket,address=13172,server=y,suspend=n"]
 
   :repl-options {:timeout 120000}

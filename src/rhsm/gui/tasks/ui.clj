@@ -29,6 +29,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (def windows (define-windows
                {:main-window "Subscription Manager"
                 :about-dialog "About Subscription Manager"
+                :credits-dialog "Credits"
+                :license-dialog "License"
                 :contract-selection-dialog "Contract Selection"
                 :date-selection-dialog "Date Selection"
                 :error-dialog "Error"
@@ -55,7 +57,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :system-preferences-dialog "System Preferences"
                 :warning-dialog "Warning"
                 :repositories-dialog "manage_repositories_dialog"
-                :subscription-attachment "Subscription Attachment"}))
+                :subscription-attachment-dialog "Subscription Attachment"}))
 
 
 (def elements
@@ -247,7 +249,16 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :rhsm-version "subscription manager version*"
        :next-system-check "Next System Check-in*"
        :license "License"
+       :credits "Credits"
        :close-about-dialog "Close"})
+    (define-elements (windows :credits-dialog)
+      {;;these info fields are meant to be used by running gettext on them
+       :close-credits-dialog "Close"}
+      )
+    (define-elements (windows :license-dialog)
+      {;;these info fields are meant to be used by running gettext on them
+       :close-license-dialog "Close"}
+      )
     (define-elements (windows :repositories-dialog)
       {:repo-table "Repository View"
        :repo-message "No repositories are available*"
@@ -260,7 +271,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :gpg-check-edit "gpgcheck_edit_button"
        :gpg-check-remove "gpgcheck_remove_button"
        :apply "Apply"})
-    (define-elements (windows :subscription-attachment)
+    (define-elements (windows :subscription-attachment-dialog)
                      {:drop-down "Standard"                 ;; comboselect box
                       :attach-next "register_button"        ;; the Next button
                       :attach-back "back_button"            ;; the Back button

@@ -1487,7 +1487,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 	
 	@Test(	description="subscription-manager : register when no_proxy environment variable matches our hostname regardless of proxy configurations and environment variable (Positive and Negative Variations)",
-			groups={"blockedByBug-1266608"},
+			groups={"blockedByBug-1266608","blockedByBug-1285010"},
 			dataProvider="getRegisterAttemptsToVerifyHonoringNoProxyEnvironmentVariableData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	

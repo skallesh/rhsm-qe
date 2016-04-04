@@ -181,7 +181,7 @@
             ;(throw (Exception. "'Enter Activation Key' window should not be displayed"))
             (sleep 2000)
             (tasks/ui click :register-close))
-          (bool (tasks/ui guiexist :subscription-attachment))
+          (bool (tasks/ui guiexist :subscription-attachment-dialog))
           (do
             (tasks/ui comboselect :drop-down "Standard")
             (tasks/ui click :attach-next)                   ;; Called Next button here
