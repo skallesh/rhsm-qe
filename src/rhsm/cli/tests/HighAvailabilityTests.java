@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -18,6 +19,7 @@ import rhsm.data.ProductCert;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -126,6 +128,22 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 				log.info("Skipping assertion that product cert '"+installedProductCert.file+"' (manually installed from generated candlepin TESTDATA) is accounted for in the product database '"+clienttasks.productIdJsonFile+"'.");
 				continue;
 			}
+			// TEMPORARY WORKAROUND
+			if (installedProductCert.productId.equals("135") /* Red Hat Enterprise Linux 6 Server HTB */ || installedProductCert.productId.equals("155") /* Red Hat Enterprise Linux 6 Workstation HTB */) {
+				List<ProductCert> installedProductDefaultCerts = clienttasks.getProductCerts(clienttasks.productCertDefaultDir);
+				if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", installedProductCert.productId, installedProductDefaultCerts) != null) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1318584"; // Bug 1318584 - /etc/pki/product-default/*.pem missing in certain variants 
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						// only skip when the installed HTB product came from the /etc/pki/product-default location due to bug 1318584
+						log.warning("Skipping assertion that Database '"+clienttasks.productIdJsonFile+"' maps installed product id '"+installedProductCert.productId+"' while bug '"+bugId+"' is open.");
+						continue;
+					}
+				}
+			}
+			// END OF WORKAROUND
+			
 			installedProductCertCount++;
 			Assert.assertTrue(productIdRepoMap.containsKey(installedProductCert.productId), "Database '"+clienttasks.productIdJsonFile+"' contains installed product id: "+installedProductCert.productId);
 			log.info("Database '"+clienttasks.productIdJsonFile+"' maps installed product id '"+installedProductCert.productId+"' to repo '"+productIdRepoMap.get(installedProductCert.productId)+"'.");
