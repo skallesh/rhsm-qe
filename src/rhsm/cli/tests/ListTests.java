@@ -905,6 +905,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		} else log.warning("Skipping list --available --matches test on a Provides item since the provides list is empty on our random available subscription: "+randomAvailablePool);		
 		
+		
 		// Test 3: test exact --matches on SKU:
 		matchesString = randomAvailablePool.productId;
 		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
@@ -916,14 +917,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// Test 4: test exact --matches on Contract:
-		matchesString = randomAvailablePool.contract;
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
-		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
-		// also test case insensitivity
-		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
-		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
-		
+		if (randomAvailablePool.contract!=null && !randomAvailablePool.contract.isEmpty()) {
+			matchesString = randomAvailablePool.contract;
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
+			// also test case insensitivity
+			matchesString = randomizeCaseOfCharactersInString(matchesString);
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
+		} else log.warning("Skipping list --available --matches test on a Contract item since it is null on our random available subscription: "+randomAvailablePool);
+
 		
 		// Test 5: test exact --matches on Service Level:
 		if (randomAvailablePool.serviceLevel!=null && !randomAvailablePool.serviceLevel.isEmpty()) {
