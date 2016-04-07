@@ -241,6 +241,7 @@ public class CandlepinTasks {
 		//RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/proxy/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 7300 ");
 		//Assert.assertEquals(RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 7300 "),0,"ExitCode from attempt to modify the gen-certs file so the candlepin cert is valid for more than one year (make it 20 years).");
 		Assert.assertEquals(RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/server/bin/gen-certs", "\\-days 365 ", "\\-days 7300 "),0,"ExitCode from attempt to modify the gen-certs file so the candlepin cert is valid for more than one year (make it 20 years).");
+		// TODO ALTERNATIVE vritant altered candlepin-2.0.11-1 to pass CA_CERT_DAYS during deploy to change the validity end date of the candlepin-ca.crt
 		
 		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "for item in $(for gem in $(gem list | grep -v \"\\*\"); do echo $gem; done | grep -v \"(\" | grep -v \")\"); do echo 'Y' | gem uninstall $item -a; done", Integer.valueOf(0), "Successfully uninstalled", null);	// probably only needs to be run once  // for item in $(for gem in $(gem list | grep -v "\*"); do echo $gem; done | grep -v "(" | grep -v ")"); do echo 'Y' | gem uninstall $item -a; done
