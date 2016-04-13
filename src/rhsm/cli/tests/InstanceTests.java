@@ -45,8 +45,8 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void QuantityNeededToAchieveSocketCompliance_Test(Object bugzilla, Boolean systemIsGuest, Integer systemSockets, SubscriptionPool pool) throws NumberFormatException, JSONException, Exception {
-///*debugTest*/if (pool.productId.equals("RH00076")) throw new SkipException("debugTesting");
-		
+///*debugTest*/if (!pool.productId.equals("RH00003")) throw new SkipException("debugTesting");/*debugTest*/if (systemIsGuest) throw new SkipException("debugTesting");
+
 		// avoid throttling RateLimitExceededException from IT-Candlepin
 		if (systemSockets.equals(new Integer(1)) && CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 			// re-register as a new consumer
@@ -292,13 +292,9 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 					}
 				}
 			}
-
-			// now let's unsubscribe from all entitlements and attempt auto-subscribing
-			/* Using autosubscribe to fill a stack of this instance-based pool will work ONLY when this instance-based subscription pool is the ONLY one available that provides for all of the providedProductIdsActuallyInstalled (Not guarantee-able)
-			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
-			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
-			*/
-			// instead let's attempt auto-subscribing which should complete the stack
+			
+			// now let's attempt autosubscribing which should complete the stack
+			// CAUTION: attempting to autosubscribe to fill a stack of this instance-based pool will work ONLY when this instance-based subscription pool is the ONLY one available that provides for all of the providedProductIdsActuallyInstalled (Not guarantee-able).  However if a second pool with the same stacking_id is consumed, then this assert may work.
 			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null);
 			
 			// assert the total quantity of consumption
@@ -313,9 +309,12 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				}
 				Assert.assertEquals(totalQuantityUsed,Integer.valueOf(expectedQuantityToAchieveCompliance),"Quantity of auto-attached subscription '"+pool.subscriptionName+"' covering '"+poolSockets+"' sockets with instance_multiplier '"+poolInstanceMultiplier+"' expected to achieve compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should be this.");
 				Re-implementing a new algorithm below to count the number of system sockets covered and then assert that the autosubscribe successfully met coverage without excess over consumption...*/
+				boolean assertStackedQuantityOfConsumption = true;	// goal
+				String stackingId = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId,"stacking_id");
+				int numPoolsWithSameStackingId = 0;
 				float totalSocketsCovered = 0;	// among the consumed product subscriptions, this is the total stacked accumulation of socket coverage
 				Integer maxIncrementOfPhysicalSocketCoverage = new Integer(0);	// this is the maximum sockets attribute among the pools that provide for the installed products poolProvidedProductIds
-				List<ProductSubscription> productSubscriptions = new ArrayList<ProductSubscription>();
+//				List<ProductSubscription> productSubscriptions = new ArrayList<ProductSubscription>();
 				for (ProductSubscription prodSub : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 					List<String> thisPoolProvidedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId);
 					if (doesListOverlapList(thisPoolProvidedProductIds, providedProductIdsActuallyInstalled)) {
@@ -323,10 +322,25 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 //if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId, "instance_multiplier")==null)  { // does not have an "instance_multiplier"
 //	log.warning("Ignoring this consumed product subscription's contribution to compliance (it has no instance_multiplier): "+prodSub);	//  not sure if this is the right choice
 //	continue;
-//}		
+//}	
 						// the consumed quantity from this pool contributes to the socket coverage for installed products poolProvidedProductIds
-						Integer thisPoolInstanceMultiplier = Integer.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId, "instance_multiplier"));
-						Integer thisPoolSockets = Integer.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId, "sockets"));
+						String thisPoolInstanceMultiplierAsString = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId, "instance_multiplier");
+						String thisPoolSocketsAsString = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId, "sockets");
+
+						// catching CAUTION case when autosubscribe grants a secondary entitlement unrelated to the already subscribed instance-based subscription 
+						if (thisPoolInstanceMultiplierAsString==null) {
+							assertStackedQuantityOfConsumption = false;
+							thisPoolInstanceMultiplierAsString = "1";	// effectively true and a workaround that will prevent a null pointer in the calculations below
+						}
+						// catching CAUTION case when autosubscribe grants a secondary entitlement unrelated to the already subscribed instance-based subscription 
+						if (thisPoolSocketsAsString==null) {
+							assertStackedQuantityOfConsumption = false;
+							thisPoolSocketsAsString = String.valueOf(systemSockets);	// effectively true and a workaround that will prevent a null pointer in the calculations below
+						}
+						
+						Integer thisPoolInstanceMultiplier = Integer.valueOf(thisPoolInstanceMultiplierAsString);
+						Integer thisPoolSockets = Integer.valueOf(thisPoolSocketsAsString);
+						String thisPoolStackingId = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, prodSub.poolId,"stacking_id");
 						maxIncrementOfPhysicalSocketCoverage=Math.max(maxIncrementOfPhysicalSocketCoverage, thisPoolSockets);
 						float socketsCoveredByThisPool = prodSub.quantityUsed.floatValue()*thisPoolSockets.floatValue()/thisPoolInstanceMultiplier.floatValue();
 						log.info("Attached product subscription '"+prodSub.productName+"' with quantity '"+prodSub.quantityUsed+"' contributes to '"+socketsCoveredByThisPool+"' cpu_socket(s) of coverage.");
@@ -336,9 +350,19 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 							expectedStatusDetails = Arrays.asList(new String[]{"Subscription is current"});	// Bug 1180400 - Status datails is blank in list consumed output
 						}
 						Assert.assertEquals(prodSub.statusDetails, expectedStatusDetails, "Status Details of auto-attached subscription '"+prodSub.productName+"' covering '"+thisPoolSockets+"' sockets with instance_multiplier '"+thisPoolInstanceMultiplier+"' expected to contribute to the full compliance of provided products '"+providedProductIdsActuallyInstalled+"' installed on a physical system with '"+systemSockets+"' cpu_socket(s) should indicate compliance.  Actual="+prodSub.statusDetails);
+						
+						// catching the CAUTION case when a secondary pool may not provide its own completed socket coverage stack for the installed products.
+						if (!stackingId.equals(thisPoolStackingId)) {
+							log.warning("Cannot assert the attempt to autosubscribe completed the socket stack because it appears that an entitlement from a second pool SKU '"+prodSub.productId+"' was granted that does not share the same stacking_id '"+stackingId+"' as instance-based pool '"+pool.productId+"' '"+pool.subscriptionName+"'.  Consequently, excess entitlement consumption has probably occurred.");
+							assertStackedQuantityOfConsumption = false;
+							// instead, assert that this product subscription provided it's own full stack
+							Assert.assertTrue(systemSockets+maxIncrementOfPhysicalSocketCoverage>socketsCoveredByThisPool && socketsCoveredByThisPool>=systemSockets, "After autosubscribing to complete a stacked quantity of subscriptions providing for installed product ids '"+providedProductIdsActuallyInstalled+"', the total cpu_socket(s) coverage of '"+socketsCoveredByThisPool+"' should minimally satistfy the system's physical socket count of '"+systemSockets+"' cpu_socket(s) within '"+maxIncrementOfPhysicalSocketCoverage+"' sockets of excess coverage (assuming that entitlements from ONLY this product subscription '"+prodSub.productId+"' '"+prodSub.productName+"' contributed to stack '"+thisPoolStackingId+"'.).");
+						}
+						else numPoolsWithSameStackingId++;
+						
 					}
 				}
-				Assert.assertTrue(systemSockets+maxIncrementOfPhysicalSocketCoverage>totalSocketsCovered && totalSocketsCovered>=systemSockets, "After auto-subscribing to complete a stacked quantity of subscriptions providing for installed product ids '"+providedProductIdsActuallyInstalled+"', the total cpu_socket(s) coverage of '"+totalSocketsCovered+"' should minimally satistfy the system's physical socket count of '"+systemSockets+"' cpu_socket(s) within '"+maxIncrementOfPhysicalSocketCoverage+"' sockets of excess coverage.");
+				if (assertStackedQuantityOfConsumption) Assert.assertTrue(systemSockets+maxIncrementOfPhysicalSocketCoverage>totalSocketsCovered && totalSocketsCovered>=systemSockets, "After autosubscribing to complete a stacked quantity of subscriptions providing for installed product ids '"+providedProductIdsActuallyInstalled+"', the total cpu_socket(s) coverage of '"+totalSocketsCovered+"' should minimally satistfy the system's physical socket count of '"+systemSockets+"' cpu_socket(s) within '"+maxIncrementOfPhysicalSocketCoverage+"' sockets of excess coverage (entitlements from '"+numPoolsWithSameStackingId+"' pools contributed to this stack).");
 
 			} else log.warning("There are no installed product ids '"+poolProvidedProductIds+"' to assert compliance status of instance-based subscription '"+pool.subscriptionName+"'.");
 			
