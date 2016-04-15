@@ -373,6 +373,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 		
 		// assert the expected log calls
+		RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Debugging post_facts_collection_hook").trim();	// can be used to troubleshoot a failure in the following consumer facts count assertion
 		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running post_facts_collection_hook").trim();
 		expectedLogInfo= Arrays.asList(
 				"Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin",
