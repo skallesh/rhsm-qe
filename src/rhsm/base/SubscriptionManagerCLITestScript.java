@@ -226,7 +226,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client2.runCommandAndWait("uname -a").getStdout();	// Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
 			log.info(infoMsg); output.write(infoMsg+"\n");
-			infoMsg = client2.runCommandAndWait("h").getStdout();	// /etc/yum.repos.d/beaker-Client.repo:baseurl=http://download.eng.bos.redhat.com/rel-eng/RHEL-6.8-20160125.0/compose/Client/i386/os
+			infoMsg = client2.runCommandAndWait("grep RHEL /etc/yum.repos.d/beaker-*.repo | sort | tail -1").getStdout();	// /etc/yum.repos.d/beaker-Client.repo:baseurl=http://download.eng.bos.redhat.com/rel-eng/RHEL-6.8-20160125.0/compose/Client/i386/os
 			log.info(infoMsg); output.write(infoMsg+"\n");
 
 		}
