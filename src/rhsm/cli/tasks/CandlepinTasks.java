@@ -91,6 +91,7 @@ public class CandlepinTasks {
 	public static HttpClient client;
 	CandlepinType serverType = CandlepinType.hosted;
 	public String branch = "";
+	public Integer fedoraReleaseX = new Integer(0);
 	public Integer redhatReleaseX = new Integer(0);
 	
 	// populated from curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/status | python -mjson.tool
@@ -146,8 +147,10 @@ public class CandlepinTasks {
 			// Red Hat Enterprise Linux Server release 6.4 Beta (Santiago)
 			Pattern pattern = Pattern.compile("\\d+");
 			Matcher matcher = pattern.matcher(redhatRelease);
-			Assert.assertTrue(matcher.find(),"Extracted redhatReleaseX '"+matcher.group()+"' from '"+redhatRelease+"'");
-			redhatReleaseX = Integer.valueOf(matcher.group());
+			Assert.assertTrue(matcher.find(),"Extracted releaseX from '"+redhatRelease+"'");
+			if (redhatRelease.startsWith("Fedora")) fedoraReleaseX = Integer.valueOf(matcher.group());
+			if (redhatRelease.startsWith("Red Hat")) redhatReleaseX = Integer.valueOf(matcher.group());
+			Assert.assertTrue(fedoraReleaseX+redhatReleaseX>0,"Determined the OS release running candlepin.");
 		}
 		
 		// where is catalina.out?
@@ -278,15 +281,17 @@ public class CandlepinTasks {
 		
 		// restart some services
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
-		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
+		if (redhatReleaseX>=7 || fedoraReleaseX>=16)	{	// the Fedora 16+ way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);	// Stdout: 24 May 17:53:28 ntpdate[20993]: adjust time server 66.187.233.4 offset -0.000287 sec
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop postgresql.service && systemctl start postgresql.service && systemctl is-active postgresql.service", Integer.valueOf(0), "^active$", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop firewalld.service && systemctl disable firewalld.service && systemctl is-active firewalld.service", null, "^unknown$", null);	// avoid java.net.NoRouteToHostException: No route to host
 		} else {	// the old Fedora way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop && ntpdate clock.redhat.com && service ntpd start && chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd(.*?):\\s+\\[  OK  \\]", null);	// Starting ntpd:  [  OK  ]		// Starting ntpd (via systemctl):  [  OK  ]
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql stop && service postgresql start", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql(.*?):\\s+\\[  OK  \\]", null);	// Starting postgresql service: [  OK  ]	// Starting postgresql (via systemctl):  [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service iptables stop && chkconfig iptables off", Integer.valueOf(0));	// TODO Untested
 		}
 		
-		if (redhatReleaseX>=19)	{	// the Fedora 19+ way...
+		if (redhatReleaseX>=7 || fedoraReleaseX>=19)	{	// the Fedora 19+ way...
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 			//path changes caused by commit cddba55bda2cc1b89821a80e6ff23694296f2079 Fix scripts dir for server build.    before candlepin-0.9.22-1
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
@@ -3467,10 +3472,10 @@ schema generation failed
 //		sshCommandRunner.runCommandAndWait("df -h");
 		
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
-		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart "+tomcat+".service && systemctl is-active "+tomcat+".service", Integer.valueOf(0), "^active$", null);
+		if (redhatReleaseX>=7 || fedoraReleaseX>=16)	{	// the Fedora 16+ way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart "+tomcat+".service && systemctl enable "+tomcat+".service && systemctl is-active "+tomcat+".service", Integer.valueOf(0), "^active$", null);
 		} else {	// the old Fedora way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service "+tomcat+" restart",Integer.valueOf(0),"^Starting "+tomcat+": +\\[  OK  \\]$",null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"chkconfig "+tomcat+" on && service "+tomcat+" restart",Integer.valueOf(0),"^Starting "+tomcat+": +\\[  OK  \\]$",null);
 		}
 		sleep(10*1000);	// give tomcat a chance to restart
 
