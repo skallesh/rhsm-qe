@@ -3039,11 +3039,16 @@ schema generation failed
 	}
 	public static Set<String> getPoolProvidedProductModifiedIds (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
 		Set<String> providedProductModifiedIds = new HashSet<String>();
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));
 		
 		for (String providedProductId : getPoolProvidedProductIds(authenticator,password,url,poolId)) {
 			
 			// get the productContents
-			JSONObject jsonProduct = new JSONObject(getResourceUsingRESTfulAPI(authenticator,password,url,"/products/"+providedProductId));	
+			String path = "/products/"+providedProductId;
+			if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.11")) path = jsonPool.getJSONObject("owner").getString("href")+path;	// products are now defined on a per org basis in candlepin-2.0+
+			
+			JSONObject jsonProduct = new JSONObject(getResourceUsingRESTfulAPI(authenticator,password,url,path));	
 			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 			for (int j = 0; j < jsonProductContents.length(); j++) {
 				JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
