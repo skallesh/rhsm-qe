@@ -1894,7 +1894,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 				// get the product
 				String path = "/products/"+providedProductId;
-				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0")) path = "/owners/"+ownerKey+path;	// products are now defined on a per org basis in candlepin-2.0+
+				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.11")) path = "/owners/"+ownerKey+path;	// products are now defined on a per org basis in candlepin-2.0+
 				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path));	
 				
 				// get the provided product contents
