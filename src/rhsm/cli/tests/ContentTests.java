@@ -1882,14 +1882,20 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<List<Object>> getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String ownerKey = null;
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
+
 
 		for (List<Object> l : getAllAvailableSubscriptionPoolsDataAsListOfLists()) {
 			SubscriptionPool pool = (SubscriptionPool)l.get(0);
+			if (ownerKey==null) ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
 			
 			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
 	
 				// get the product
-				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
+				String path = "/products/"+providedProductId;
+				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0")) path = "/owners/"+ownerKey+path;	// products are now defined on a per org basis in candlepin-2.0+
+				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path));	
 				
 				// get the provided product contents
 				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
