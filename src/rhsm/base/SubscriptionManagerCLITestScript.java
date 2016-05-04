@@ -3319,12 +3319,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 */
 	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists(Integer limitPoolsModifiedCount) throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();	if (!isSetupBeforeSuiteComplete) return ll;
-		
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
+
 		// get the owner key for clientusername, clientpassword
+		String ownerKey = null;
 		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null));
-		//String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
-
+		if (ownerKey==null) ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
 		
 		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
@@ -3351,8 +3352,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				String modifierProvidedProductId = jsonModifierProvidedProduct.getString("productId");
 				
 				// get the productContents
-				//JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId));	
-				if (!jsonProductMap.containsKey(modifierProvidedProductId)) jsonProductMap.put(modifierProvidedProductId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId+"?include=productContent.content")));
+				//JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId));
+				String path = "/products/"+modifierProvidedProductId;
+				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.11")) path = "/owners/"+ownerKey+path;	// products are now defined on a per org basis in candlepin-2.0+
+				if (!jsonProductMap.containsKey(modifierProvidedProductId)) jsonProductMap.put(modifierProvidedProductId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path+"?include=productContent.content")));
 				JSONObject jsonProduct = jsonProductMap.get(modifierProvidedProductId);
 				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 				for (int j = 0; j < jsonProductContents.length(); j++) {
