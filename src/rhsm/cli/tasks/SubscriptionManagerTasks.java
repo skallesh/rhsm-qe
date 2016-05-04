@@ -64,6 +64,7 @@ public class SubscriptionManagerTasks {
 	public final String command				= "subscription-manager";
 	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
+	public final String rhsmLoggingConfFile	= "/etc/rhsm/logging.conf";
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String rhsmUpdateFile		= "/var/run/rhsm/update";
 	public final String yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
@@ -706,7 +707,8 @@ if (false) {
 		pkgs.add(0,"hunspell");	// used for spellcheck testing
 		pkgs.add(0,"gettext");	// used for Pofilter and Translation testing - msgunfmt
 		pkgs.add(0,"policycoreutils-python");	// used for Docker testing - required by docker-selinux package 
-		
+		pkgs.add(0,"net-tools");	// provides netstat which is used to know when vncserver is up
+	
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -1221,7 +1223,8 @@ if (false) {
 	 * @return value of the section.parameter config (null when not found)
 	 */
 	protected String getSectionParameterFromConfigFileContents(String section, String parameter, String confFileContents){
-
+		// TODO: A alternative solution for this task would be to use: https://github.com/pixelb/crudini
+		
 		//	[root@jsefler-onprem-62server ~]# egrep -v  "^\s*(#|$)" /etc/rhsm/rhsm.conf
 		//	[server]
 		//	hostname=jsefler-onprem-62candlepin.usersys.redhat.com

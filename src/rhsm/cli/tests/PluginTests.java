@@ -182,6 +182,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
+		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test1...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -201,15 +204,13 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the expected log calls
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
-		List<String> expectedLogInfo= Arrays.asList(
-				"Running pre_register_consumer_hook in register_consumer_test1.RegisterConsumerTestPlugin",
-				"Running pre_register_consumer_hook 1: system name "+clienttasks.hostname+" is about to be registered.",
-				"Running pre_register_consumer_hook 1: consumer facts count is "+facts.values().size(),
-				"Running post_register_consumer_hook in register_consumer_test1.RegisterConsumerTestPlugin",
-				"Running post_register_consumer_hook 1: consumer uuid "+consumerId+" is now registered.",
-				"");
-		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
-				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
+		List<String> expectedLogInfo = new ArrayList<String>();
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running pre_register_consumer_hook in register_consumer_test1.RegisterConsumerTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_register_consumer_hook 1: system name "+clienttasks.hostname+" is about to be registered.");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_register_consumer_hook 1: consumer facts count is "+facts.values().size());
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_register_consumer_hook in register_consumer_test1.RegisterConsumerTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_register_consumer_hook 1: consumer uuid "+consumerId+" is now registered.");
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 	}
 	
 	@Test(	description="enable another RegisterConsumerTestPlugin and assert the plugins list reports enablement",
@@ -256,6 +257,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
+		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test2...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -274,29 +278,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the expected log calls
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
-		List<String> expectedLogInfo= Arrays.asList(
-				"Running pre_register_consumer_hook in register_consumer_test1.RegisterConsumerTestPlugin",
-				"Running pre_register_consumer_hook 1: system name "+clienttasks.hostname+" is about to be registered.",
-				"Running pre_register_consumer_hook 1: consumer facts count is "+facts.values().size(),
-				"Running pre_register_consumer_hook in register_consumer_test2.RegisterConsumerTestPlugin",
-				"Running pre_register_consumer_hook 2: system name "+clienttasks.hostname+" is about to be registered.",
-				"Running pre_register_consumer_hook 2: consumer facts count is "+facts.values().size(),
-				"Running post_register_consumer_hook in register_consumer_test1.RegisterConsumerTestPlugin",
-				"Running post_register_consumer_hook 1: consumer uuid "+consumerId+" is now registered.",
-				"Running post_register_consumer_hook in register_consumer_test2.RegisterConsumerTestPlugin",
-				"Running post_register_consumer_hook 2: consumer uuid "+consumerId+" is now registered.",
-				"");
-		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
-				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
-//		
-//		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running post_register_consumer_hook").trim();
-//		expectedLogInfo= Arrays.asList(
-//				"Running post_register_consumer_hook in register_consumer1.RegisterConsumerTestPlugin",
-//				"Running post_register_consumer_hook 1: consumer uuid "+consumerId+" is now registered.",
-//				"Running post_register_consumer_hook in register_consumer2.RegisterConsumerTestPlugin",
-//				"Running post_register_consumer_hook 2: consumer uuid "+consumerId+" is now registered.");
-//		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
-//				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
+		List<String> expectedLogInfo = new ArrayList<String>();
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running pre_register_consumer_hook in register_consumer_test1.RegisterConsumerTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_register_consumer_hook 1: system name "+clienttasks.hostname+" is about to be registered.");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_register_consumer_hook 1: consumer facts count is "+facts.values().size());
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running pre_register_consumer_hook in register_consumer_test2.RegisterConsumerTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_register_consumer_hook 2: system name "+clienttasks.hostname+" is about to be registered.");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_register_consumer_hook 2: consumer facts count is "+facts.values().size());
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_register_consumer_hook in register_consumer_test1.RegisterConsumerTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_register_consumer_hook 1: consumer uuid "+consumerId+" is now registered.");
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_register_consumer_hook in register_consumer_test2.RegisterConsumerTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_register_consumer_hook 2: consumer uuid "+consumerId+" is now registered.");
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 	}
 	
 	
@@ -343,6 +336,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
+		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledFactsCollectionTestPluginHooksAreCalled_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -356,12 +352,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running post_facts_collection_hook").trim();
 
 		// assert the expected log calls
-		List<String> expectedLogInfo= Arrays.asList(
-				"Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin",
-				"Running post_facts_collection_hook: consumer facts count is "+facts.values().size(),
-				"");
-		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
-				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
+		List<String> expectedLogInfo = new ArrayList<String>();
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_facts_collection_hook: consumer facts count is "+facts.values().size());
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 		
 		// add 1 extra post_facts_collection_hook_fact and run update
 		Map<String,String> factsMap = new HashMap<String,String>();
@@ -375,12 +369,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// assert the expected log calls
 		RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Debugging post_facts_collection_hook").trim();	// can be used to troubleshoot a failure in the following consumer facts count assertion
 		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running post_facts_collection_hook").trim();
-		expectedLogInfo= Arrays.asList(
-				"Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin",
-				"Running post_facts_collection_hook: consumer facts count is "+(facts.values().size()+1),
-				"");
-		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
-				"The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
+		expectedLogInfo.clear();
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_facts_collection_hook: consumer facts count is "+(facts.values().size()+1));			
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 	}
 	
 	
@@ -431,6 +423,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
+		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		
 		// register and get the current available subscription list
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -457,19 +452,17 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		//	2013-03-16 11:50:14,540 [INFO]  @subscribe_test.py:38 - Running post_subscribe_hook: system just subscribed.
 		
 		// assert the pre/post_subscribe_hooks are called
-		List<String> expectedLogInfo= Arrays.asList(
-				"Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin",	// enabled in prior FactsCollectionTestPlugin Tests 
-				"Running post_facts_collection_hook: consumer facts count is "+facts.values().size(),	// enabled in prior FactsCollectionTestPlugin Tests 
-				"Running pre_subscribe_hook in subscribe_test.SubscribeTestPlugin",
-				"Running pre_subscribe_hook: system is about to subscribe",
-				"Running pre_subscribe_hook: subscribing consumer is "+consumerId,
-				"Running post_subscribe_hook in subscribe_test.SubscribeTestPlugin",
-				"Running post_subscribe_hook: system just subscribed",
-				"Running post_subscribe_hook: subscribed consumer is "+consumerId,
-				"Running post_subscribe_hook: subscribed from pool id "+pool.poolId,
-				"");
-		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
-				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
+		List<String> expectedLogInfo = new ArrayList<String>();
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin");	// enabled in prior FactsCollectionTestPlugin Tests 
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_facts_collection_hook: consumer facts count is "+facts.values().size());	// enabled in prior FactsCollectionTestPlugin Tests 
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running pre_subscribe_hook in subscribe_test.SubscribeTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_subscribe_hook: system is about to subscribe");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_subscribe_hook: subscribing consumer is "+consumerId);
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_subscribe_hook in subscribe_test.SubscribeTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_subscribe_hook: system just subscribed");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_subscribe_hook: subscribed consumer is "+consumerId);
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_subscribe_hook: subscribed from pool id "+pool.poolId);
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
 	}
 	
 	
@@ -535,7 +528,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// get the pre-registered facts on the system
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
-
+		
+		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		
 		// register
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
 
@@ -570,19 +566,17 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		//	2013-06-07 17:47:13,795 [INFO]  @auto_attach_test.py:48 - Running post_auto_attach_hook: auto-attached 15 entitlements
 		
 		// assert the pre/post_subscribe_hooks are called
-		List<String> expectedLogInfo= Arrays.asList(
-				"Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin",	// enabled in prior FactsCollectionTestPlugin Tests 
-				"Running post_facts_collection_hook: consumer facts count is "+facts.values().size(),	// enabled in prior FactsCollectionTestPlugin Tests 
-				"Running pre_auto_attach_hook in auto_attach_test.AutoAttachTestPlugin",
-				"Running pre_auto_attach_hook: system is about to auto-attach",
-				"Running pre_auto_attach_hook: auto-attaching consumer is "+consumerId,
-				"Running post_auto_attach_hook in auto_attach_test.AutoAttachTestPlugin",
-				"Running post_auto_attach_hook: system just auto-attached",
-				"Running post_auto_attach_hook: auto-attached consumer is "+consumerId,
-				"Running post_auto_attach_hook: auto-attached \\d+ entitlements",
-				"");
-		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
-				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
+		List<String> expectedLogInfo = new ArrayList<String>();
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin");	// enabled in prior FactsCollectionTestPlugin Tests 
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_facts_collection_hook: consumer facts count is "+facts.values().size());	// enabled in prior FactsCollectionTestPlugin Tests 
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running pre_auto_attach_hook in auto_attach_test.AutoAttachTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_auto_attach_hook: system is about to auto-attach");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_auto_attach_hook: auto-attaching consumer is "+consumerId);
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_auto_attach_hook in auto_attach_test.AutoAttachTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_auto_attach_hook: system just auto-attached");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_auto_attach_hook: auto-attached consumer is "+consumerId);
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_auto_attach_hook: auto-attached \\d+ entitlements");
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
 	}
 	@AfterGroups(groups={"setup"},value="verifyEnabledAutoAttachTestPluginHooksAreCalled_Test", alwaysRun=true)
 	public void unconfigureRhelProductCertDirAfterGroups() {
@@ -635,6 +629,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test() {
 		removeRhsmLog();
+		
+		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
 		
 		// register
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
@@ -709,18 +706,17 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
  		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
 		
 		// assert the pre/post_product_id_install_hooks are called
-		List<String> expectedLogInfo= Arrays.asList(
-				"Running pre_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin",
-				"Running pre_product_id_install_hook: yum product-id plugin is about to install a product cert",
-				"Running post_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin",
-				"Running post_product_id_install_hook: yum product-id plugin just installed a product cert",
-				//"Running post_product_id_install_hook: 1 product_ids were just installed",	// probably correct, but not necessary to verify post_product_id_install_hook was called
-				"Running post_product_id_install_hook: product_id "+HighAvailabilityTests.haProductId+" was just installed",
-				"");
+ 		List<String> expectedLogInfo = new ArrayList<String>();
+ 		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running pre_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_product_id_install_hook: yum product-id plugin is about to install a product cert");
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_product_id_install_hook: yum product-id plugin just installed a product cert");
+		//if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_product_id_install_hook: 1 product_ids were just installed");	// probably correct, but not necessary to verify post_product_id_install_hook was called
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_product_id_install_hook: product_id "+HighAvailabilityTests.haProductId+" was just installed");
+		
 		// Product Name:   Red Hat Enterprise Linux High Availability (for RHEL Server)
 		// Product ID:     83
-		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
-				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);	
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);	
 	}
 	
 	
@@ -805,6 +801,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
+		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledAllSlotsTestPluginHooksAreCalled_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -840,15 +839,22 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		//	2013-03-16 11:53:23,438 [INFO]  @all_slots_test.py:40 - Running handler for post_subscribe_hook from slot post_subscribe defined in all_slots_test.
 
 		// assert the pre/post_subscribe_hooks are called
-		List<String> expectedLogInfo= Arrays.asList(
-				"Running handler for post_facts_collection_hook from slot post_facts_collection defined in all_slots_test",
-				"Running handler for pre_register_consumer_hook from slot pre_register_consumer defined in all_slots_test",
-				"Running handler for post_register_consumer_hook from slot post_register_consumer defined in all_slots_test",
-				"Running handler for pre_subscribe_hook from slot pre_subscribe defined in all_slots_test",
-				"Running handler for post_subscribe_hook from slot post_subscribe defined in all_slots_test",
-				"");
-		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"),
-				"The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
+		List<String> expectedLogInfo = new ArrayList<String>();
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running handler in all_slots_test.AllSlotsTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running handler for post_facts_collection_hook from slot post_facts_collection defined in all_slots_test");
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running handler in all_slots_test.AllSlotsTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running handler for pre_register_consumer_hook from slot pre_register_consumer defined in all_slots_test");
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running handler in all_slots_test.AllSlotsTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running handler for post_register_consumer_hook from slot post_register_consumer defined in all_slots_test");
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running handler in all_slots_test.AllSlotsTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running handler for post_facts_collection_hook from slot post_facts_collection defined in all_slots_test");
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running handler in all_slots_test.AllSlotsTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running handler for post_facts_collection_hook from slot post_facts_collection defined in all_slots_test");
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running handler in all_slots_test.AllSlotsTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running handler for pre_subscribe_hook from slot pre_subscribe defined in all_slots_test");
+		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running handler in all_slots_test.AllSlotsTestPlugin");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running handler for post_subscribe_hook from slot post_subscribe defined in all_slots_test");
+		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
 	}
 	
 	
