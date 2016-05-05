@@ -3046,7 +3046,7 @@ schema generation failed
 			
 			// get the productContents
 			String path = "/products/"+providedProductId;
-			if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.11")) path = jsonPool.getJSONObject("owner").getString("href")+path;	// products are now defined on a per org basis in candlepin-2.0+
+			if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = jsonPool.getJSONObject("owner").getString("href")+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
 			
 			JSONObject jsonProduct = new JSONObject(getResourceUsingRESTfulAPI(authenticator,password,url,path));	
 			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
@@ -4056,7 +4056,7 @@ schema generation failed
 
 	public static JSONObject addContentToProductUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId, String contentId, Boolean enabled) throws JSONException, Exception  {
 		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
-
+		
 		// add the contentId to the productId
 		String path = String.format("/products/%s/content/%s?enabled=%s",productId,contentId,enabled);
 		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0")) path = "/owners/"+ownerKey+path;	// products are now defined on a per org basis in candlepin-2.0+
