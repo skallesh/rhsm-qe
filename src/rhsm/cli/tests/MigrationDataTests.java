@@ -862,7 +862,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all of the classic RHN Channels available to a classically registered consumer are accounted for in the in the channel-cert-mapping.txt or is a known exception",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="getRhnClassicBaseAndAvailableChildChannelsData",
 			enabled=true)
@@ -1430,6 +1430,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		for (String pkg : new String[]{"subscription-manager-migration", "subscription-manager-migration-data", "expect"}) {
 			Assert.assertTrue(clienttasks.isPackageInstalled(pkg),"Required package '"+pkg+"' is installed for MigrationTests.");
 		}
+		
+		// configure a valid sslCACert in /etc/sysconfig/rhn/up2date
+		setupRhnCACert();
 	}
 	
 	
@@ -2689,6 +2692,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-7-director-debuginfo")) {
 				// Bug 1328628 - rhel-x86_64-server-7-ost-7 channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1328628");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta-debuginfo")) {
+				// Bug 1333545 - rhel-x86_64-server-7-rhevh channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1333545");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
