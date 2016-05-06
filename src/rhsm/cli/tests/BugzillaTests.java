@@ -1563,22 +1563,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonContentResource;
 		String requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, modifiedProductIds).toString();
 		String resourcePath = "/content/";
-//		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-//Why?	CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,resourcePath, requestBody);	
 		resourcePath = "/content/"+contentId;
-//		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-//Why?		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
+
 		String contentWithIdMessage = "Content with id "+contentId+" could not be found.";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.7")) contentWithIdMessage = "Content with ID \""+contentId+"\" could not be found.";	// commit 6b63e346c61789837211828043ad9576a756d0e8
-		
-//Why?	Assert.assertContainsNoMatch(jsonActivationKey.toString(), contentWithIdMessage);
 		resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
-		/* restart_rhsmcertd has nothing to do with testing the ability to DELETE a content resource
-		clienttasks.restart_rhsmcertd(null, null, null);
-		sleep(2*60*1000);
-		 */
 		resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
@@ -2654,15 +2645,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
-		/* unnecessary
-		clienttasks.restart_rhsmcertd(null, null, null);
-		clienttasks.deleteFactsFileWithOverridingValues();
-		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null);
-		 */
-		/* takes too much time to execute; choose a random subset of available pools
-		for (SubscriptionPool subscriptionpool : clienttasks
-				.getCurrentlyAvailableSubscriptionPools()) {
-		 */
+
 		for (SubscriptionPool subscriptionpool : getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),5)) {
 			clienttasks.subscribe_(null, null, subscriptionpool.poolId, null,
 					null, null, null, null, null, null, null, null);
@@ -2755,15 +2738,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
+		clienttasks.clean(null, null, null);
 		String invalidconsumerId = randomGenerator.nextInt() + consumerId;
 		SSHCommandResult result = clienttasks.register_(sm_clientUsername,
 				sm_clientPassword, sm_clientOrg, null, null, null,
 				invalidconsumerId, null, null, null, (String) null, null, null,
-				null, true, null, null, null, null);
+				null, null, null, null, null, null);
 		String expectedStdout = "The system with UUID " + consumerId + " has been unregistered";
 		String expectedStderr = "Consumer with id " + invalidconsumerId + " could not be found.";
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-2")) expectedStdout += String.format("\n"+"Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix"));	// subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89 RHEL7.2 commit 968e6a407054c96291a4e64166c4840529772fff Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
-		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "stdout");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-2")) 
+			{expectedStdout += String.format("\n"+"Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix"));}	// subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89 RHEL7.2 commit 968e6a407054c96291a4e64166c4840529772fff Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
+		else
+		    {Assert.assertEquals(result.getStdout().trim(), expectedStdout, "stdout");}
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "stderr");
 	}
 
@@ -2975,15 +2961,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				.getCurrentlyConsumedProductSubscriptions()) {
 			serialnums.add(consumed.serialNumber);
 		}
-		/* does not guarantee i != j
-		int i = randomGenerator.nextInt(serialnums.size());
-		int j = randomGenerator.nextInt(serialnums.size());
-		if (i == j) {
-			j = randomGenerator.nextInt(serialnums.size());
-
-		}
-		 */
-		BigInteger serialOne = serialnums.get(randomGenerator.nextInt(serialnums.size()));	// serialnums.get(i);
+				BigInteger serialOne = serialnums.get(randomGenerator.nextInt(serialnums.size()));	// serialnums.get(i);
 		serialnums.remove(serialOne);
 		BigInteger serialTwo = serialnums.get(randomGenerator.nextInt(serialnums.size()));	// serialnums.get(j);
 		String result = unsubscribeFromMultipleEntitlementsUsingSerialNumber(
@@ -4539,62 +4517,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {	
-		/* already implemented; calling CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(...)
-
-		Calendar startCalendar = new GregorianCalendar();
-		startCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
-		Date endDate = startCalendar.getTime();
-		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
-		Date startDate = startCalendar.getTime();
-
-		// randomly choose a contract number
-		Integer contractNumber = Integer.valueOf(getRandInt());
-
-		// randomly choose an account number
-		Integer accountNumber = Integer.valueOf(getRandInt());
-
-
-		String productId = randomAvailableProductId;
-
-		providedProducts.add("100000000000002");
-
-		// create the subscription
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();
-		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
-
-		// refresh the pools
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
-
-		// assemble an activeon parameter set to the start date so we can pass it on to the REST API call to find the created pool
-		DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");	
-
-		// "2012-02-08T00:00:00.000+0000"
-		String iso8601FormatedDateString = iso8601DateFormat.format(startDate);
-		iso8601FormatedDateString = iso8601FormatedDateString.replaceFirst("(..$)", ":$1");	
-
-
-		// "2012-02-08T00:00:00.000+00:00"	// see https://bugzilla.redhat.com/show_bug.cgi?id=720493 // http://books.xmlschemata.org/relaxng/ch19-77049.html requires a colon in the time zone for xsd:dateTime
-		String urlEncodedActiveOnDate = java.net.URLEncoder.encode(iso8601FormatedDateString, "UTF-8");	// "2012-02-08T00%3A00%3A00.000%2B00%3A00"	encode the string to escape the colons and plus signs so it can be passed as a parameter on an http call
-
-		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription id activeon startDate
-		String poolId = null;
-		String subscriptionId=null;
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
-		for (int i = 0; i < jsonPools.length(); i++) {
-			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {
-			if (jsonPool.getString("subscriptionId").equals(jsonSubscription.getString("id"))) {
-
-				poolId = jsonPool.getString("id");
-				break;
-			}
-		}
-		Assert.assertNotNull(poolId,"Found newly created pool corresponding to the newly created subscription with id: "+jsonSubscription.getString("id"));
-		log.info("The newly created subscription pool with id '"+poolId+"' will start '"+startingMinutesFromNow+"' minutes from now.");
-		log.info("The newly created subscription pool with id '"+poolId+"' will expire '"+endingMinutesFromNow+"' minutes from now.");
-		return poolId; // return poolId to the newly available SubscriptionPool
-		 */
+		
 		return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId, null,null).getString("id");
 	}
 
