@@ -434,7 +434,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.add("manual: yum >= 3.2.29-73");
 			}
 			
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.15.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.15.0");		// RHEL7.2	// commit a2a4794d9eb7b8d74b0eb4bd27d0b6974b87d716
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.17.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.17.0");		// RHEL7.3	// commit 18d6aa6889b701288f66c14b2f313f04069aa753
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.15.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.15.0");		// RHEL7.2	// commit a2a4794d9eb7b8d74b0eb4bd27d0b6974b87d716
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.13.13-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.10");		// RHEL7.1	// commit 649f5f7a814e05374b5c0ba56f29a59f4925f7ff Use custom JSON encoding function to encode sets.
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.13.6-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.5");		// RHEL7.1
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.12.3-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.12.3");		// RHEL7.1
